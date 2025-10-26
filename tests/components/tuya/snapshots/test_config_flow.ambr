@@ -11,9 +11,11 @@
         't': 'mocked_t',
         'uid': 'mocked_uid',
       }),
-      'user_code': '12345',
+      'user_code': 'test_user_code',
     }),
     'disabled_by': None,
+    'discovery_keys': dict({
+    }),
     'domain': 'tuya',
     'entry_id': <ANY>,
     'minor_version': 1,
@@ -22,7 +24,9 @@
     'pref_disable_new_entities': False,
     'pref_disable_polling': False,
     'source': 'user',
-    'title': '12345',
+    'subentries': list([
+    ]),
+    'title': 'Test Tuya entry',
     'unique_id': '12345',
     'version': 1,
   })
@@ -42,6 +46,8 @@
       'user_code': '12345',
     }),
     'disabled_by': None,
+    'discovery_keys': dict({
+    }),
     'domain': 'tuya',
     'entry_id': <ANY>,
     'minor_version': 1,
@@ -50,6 +56,8 @@
     'pref_disable_new_entities': False,
     'pref_disable_polling': False,
     'source': 'user',
+    'subentries': list([
+    ]),
     'title': 'Old Tuya configuration entry',
     'unique_id': '12345',
     'version': 1,
@@ -93,6 +101,8 @@
         'user_code': '12345',
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'tuya',
       'entry_id': <ANY>,
       'minor_version': 1,
@@ -101,10 +111,14 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
+      'subentries': list([
+      ]),
       'title': 'mocked_username',
       'unique_id': None,
       'version': 1,
     }),
+    'subentries': tuple(
+    ),
     'title': 'mocked_username',
     'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
     'version': 1,

@@ -97,5 +97,14 @@
     "dataType": 1,
     "readonly": 1,
     "unit": ""
+  },
+  "room1_temp_setpoint_boost": {
+    "name": "Room 1 Temp Setpoint Boost",
+    "error": 0,
+    "value": "22.5",
+    "desc": "Boost",
+    "dataType": 1,
+    "readonly": 1,
+    "unit": "°C"
   }
 }

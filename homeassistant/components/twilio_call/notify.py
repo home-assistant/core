@@ -15,7 +15,7 @@ from homeassistant.components.notify import (
 )
 from homeassistant.components.twilio import DATA_TWILIO
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
@@ -53,7 +53,7 @@ class TwilioCallNotificationService(BaseNotificationService):
     def send_message(self, message="", **kwargs):
         """Call to specified target users."""
         if not (targets := kwargs.get(ATTR_TARGET)):
-            _LOGGER.info("At least 1 target is required")
+            _LOGGER.warning("At least 1 target is required")
             return
 
         if message.startswith(("http://", "https://")):

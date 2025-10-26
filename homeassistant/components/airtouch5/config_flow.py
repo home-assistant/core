@@ -32,7 +32,8 @@ class AirTouch5ConfigFlow(ConfigFlow, domain=DOMAIN):
             client = Airtouch5SimpleClient(user_input[CONF_HOST])
             try:
                 await client.test_connection()
-            except Exception:  # noqa: BLE001
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
                 errors = {"base": "cannot_connect"}
             else:
                 await self.async_set_unique_id(user_input[CONF_HOST])

@@ -15,7 +15,7 @@ from homeassistant.components.cloudflare.const import (
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 from homeassistant.util.location import LocationInfo
 
 from . import ENTRY_CONFIG, init_integration

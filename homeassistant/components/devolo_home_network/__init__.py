@@ -2,26 +2,13 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import logging
 from typing import Any
 
 from devolo_plc_api import Device
-from devolo_plc_api.device_api import (
-    ConnectedStationInfo,
-    NeighborAPInfo,
-    UpdateFirmwareCheck,
-    WifiGuestAccessGet,
-)
-from devolo_plc_api.exceptions.device import (
-    DeviceNotFound,
-    DevicePasswordProtected,
-    DeviceUnavailable,
-)
-from devolo_plc_api.plcnet_api import LogicalNetwork
+from devolo_plc_api.exceptions.device import DeviceNotFound
 
 from homeassistant.components import zeroconf
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_PASSWORD,
@@ -29,36 +16,33 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.httpx_client import get_async_client
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     CONNECTED_PLC_DEVICES,
     CONNECTED_WIFI_CLIENTS,
     DOMAIN,
-    FIRMWARE_UPDATE_INTERVAL,
     LAST_RESTART,
-    LONG_UPDATE_INTERVAL,
     NEIGHBORING_WIFI_NETWORKS,
     REGULAR_FIRMWARE,
-    SHORT_UPDATE_INTERVAL,
     SWITCH_GUEST_WIFI,
     SWITCH_LEDS,
 )
+from .coordinator import (
+    DevoloDataUpdateCoordinator,
+    DevoloFirmwareUpdateCoordinator,
+    DevoloHomeNetworkConfigEntry,
+    DevoloHomeNetworkData,
+    DevoloLedSettingsGetCoordinator,
+    DevoloLogicalNetworkCoordinator,
+    DevoloUptimeGetCoordinator,
+    DevoloWifiConnectedStationsGetCoordinator,
+    DevoloWifiGuestAccessGetCoordinator,
+    DevoloWifiNeighborAPsGetCoordinator,
+)
 
 _LOGGER = logging.getLogger(__name__)
-
-type DevoloHomeNetworkConfigEntry = ConfigEntry[DevoloHomeNetworkData]
-
-
-@dataclass
-class DevoloHomeNetworkData:
-    """The devolo Home Network data."""
-
-    device: Device
-    coordinators: dict[str, DataUpdateCoordinator[Any]]
 
 
 async def async_setup_entry(
@@ -67,7 +51,6 @@ async def async_setup_entry(
     """Set up devolo Home Network from a config entry."""
     zeroconf_instance = await zeroconf.async_get_async_instance(hass)
     async_client = get_async_client(hass)
-    device_registry = dr.async_get(hass)
 
     try:
         device = Device(
@@ -80,7 +63,6 @@ async def async_setup_entry(
         )
     except DeviceNotFound as err:
         raise ConfigEntryNotReady(
-            f"Unable to connect to {entry.data[CONF_IP_ADDRESS]}",
             translation_domain=DOMAIN,
             translation_key="connection_failed",
             translation_placeholders={"ip_address": entry.data[CONF_IP_ADDRESS]},
@@ -88,135 +70,52 @@ async def async_setup_entry(
 
     entry.runtime_data = DevoloHomeNetworkData(device=device, coordinators={})
 
-    async def async_update_firmware_available() -> UpdateFirmwareCheck:
-        """Fetch data from API endpoint."""
-        assert device.device
-        update_sw_version(device_registry, device)
-        try:
-            return await device.device.async_check_firmware_available()
-        except DeviceUnavailable as err:
-            raise UpdateFailed(err) from err
-
-    async def async_update_connected_plc_devices() -> LogicalNetwork:
-        """Fetch data from API endpoint."""
-        assert device.plcnet
-        update_sw_version(device_registry, device)
-        try:
-            return await device.plcnet.async_get_network_overview()
-        except DeviceUnavailable as err:
-            raise UpdateFailed(err) from err
-
-    async def async_update_guest_wifi_status() -> WifiGuestAccessGet:
-        """Fetch data from API endpoint."""
-        assert device.device
-        update_sw_version(device_registry, device)
-        try:
-            return await device.device.async_get_wifi_guest_access()
-        except DeviceUnavailable as err:
-            raise UpdateFailed(err) from err
-        except DevicePasswordProtected as err:
-            raise ConfigEntryAuthFailed(
-                err, translation_domain=DOMAIN, translation_key="password_wrong"
-            ) from err
-
-    async def async_update_led_status() -> bool:
-        """Fetch data from API endpoint."""
-        assert device.device
-        update_sw_version(device_registry, device)
-        try:
-            return await device.device.async_get_led_setting()
-        except DeviceUnavailable as err:
-            raise UpdateFailed(err) from err
-
-    async def async_update_last_restart() -> int:
-        """Fetch data from API endpoint."""
-        assert device.device
-        update_sw_version(device_registry, device)
-        try:
-            return await device.device.async_uptime()
-        except DeviceUnavailable as err:
-            raise UpdateFailed(err) from err
-        except DevicePasswordProtected as err:
-            raise ConfigEntryAuthFailed(
-                err, translation_domain=DOMAIN, translation_key="password_wrong"
-            ) from err
-
-    async def async_update_wifi_connected_station() -> list[ConnectedStationInfo]:
-        """Fetch data from API endpoint."""
-        assert device.device
-        update_sw_version(device_registry, device)
-        try:
-            return await device.device.async_get_wifi_connected_station()
-        except DeviceUnavailable as err:
-            raise UpdateFailed(err) from err
-
-    async def async_update_wifi_neighbor_access_points() -> list[NeighborAPInfo]:
-        """Fetch data from API endpoint."""
-        assert device.device
-        update_sw_version(device_registry, device)
-        try:
-            return await device.device.async_get_wifi_neighbor_access_points()
-        except DeviceUnavailable as err:
-            raise UpdateFailed(err) from err
-
     async def disconnect(event: Event) -> None:
         """Disconnect from device."""
         await device.async_disconnect()
 
-    coordinators: dict[str, DataUpdateCoordinator[Any]] = {}
+    coordinators: dict[str, DevoloDataUpdateCoordinator[Any]] = {}
     if device.plcnet:
-        coordinators[CONNECTED_PLC_DEVICES] = DataUpdateCoordinator(
+        coordinators[CONNECTED_PLC_DEVICES] = DevoloLogicalNetworkCoordinator(
             hass,
             _LOGGER,
-            name=CONNECTED_PLC_DEVICES,
-            update_method=async_update_connected_plc_devices,
-            update_interval=LONG_UPDATE_INTERVAL,
+            config_entry=entry,
         )
     if device.device and "led" in device.device.features:
-        coordinators[SWITCH_LEDS] = DataUpdateCoordinator(
+        coordinators[SWITCH_LEDS] = DevoloLedSettingsGetCoordinator(
             hass,
             _LOGGER,
-            name=SWITCH_LEDS,
-            update_method=async_update_led_status,
-            update_interval=SHORT_UPDATE_INTERVAL,
+            config_entry=entry,
         )
     if device.device and "restart" in device.device.features:
-        coordinators[LAST_RESTART] = DataUpdateCoordinator(
+        coordinators[LAST_RESTART] = DevoloUptimeGetCoordinator(
             hass,
             _LOGGER,
-            name=LAST_RESTART,
-            update_method=async_update_last_restart,
-            update_interval=SHORT_UPDATE_INTERVAL,
+            config_entry=entry,
         )
     if device.device and "update" in device.device.features:
-        coordinators[REGULAR_FIRMWARE] = DataUpdateCoordinator(
+        coordinators[REGULAR_FIRMWARE] = DevoloFirmwareUpdateCoordinator(
             hass,
             _LOGGER,
-            name=REGULAR_FIRMWARE,
-            update_method=async_update_firmware_available,
-            update_interval=FIRMWARE_UPDATE_INTERVAL,
+            config_entry=entry,
         )
     if device.device and "wifi1" in device.device.features:
-        coordinators[CONNECTED_WIFI_CLIENTS] = DataUpdateCoordinator(
-            hass,
-            _LOGGER,
-            name=CONNECTED_WIFI_CLIENTS,
-            update_method=async_update_wifi_connected_station,
-            update_interval=SHORT_UPDATE_INTERVAL,
+        coordinators[CONNECTED_WIFI_CLIENTS] = (
+            DevoloWifiConnectedStationsGetCoordinator(
+                hass,
+                _LOGGER,
+                config_entry=entry,
+            )
         )
-        coordinators[NEIGHBORING_WIFI_NETWORKS] = DataUpdateCoordinator(
+        coordinators[NEIGHBORING_WIFI_NETWORKS] = DevoloWifiNeighborAPsGetCoordinator(
             hass,
             _LOGGER,
-            name=NEIGHBORING_WIFI_NETWORKS,
-            update_method=async_update_wifi_neighbor_access_points,
-            update_interval=LONG_UPDATE_INTERVAL,
+            config_entry=entry,
         )
-        coordinators[SWITCH_GUEST_WIFI] = DataUpdateCoordinator(
+        coordinators[SWITCH_GUEST_WIFI] = DevoloWifiGuestAccessGetCoordinator(
             hass,
             _LOGGER,
-            name=SWITCH_GUEST_WIFI,
-            update_method=async_update_guest_wifi_status,
-            update_interval=SHORT_UPDATE_INTERVAL,
+            config_entry=entry,
         )
 
     for coordinator in coordinators.values():
@@ -259,16 +158,3 @@ def platforms(device: Device) -> set[Platform]:
     if device.device and "update" in device.device.features:
         supported_platforms.add(Platform.UPDATE)
     return supported_platforms
-
-
-@callback
-def update_sw_version(device_registry: dr.DeviceRegistry, device: Device) -> None:
-    """Update device registry with new firmware version."""
-    if (
-        device_entry := device_registry.async_get_device(
-            identifiers={(DOMAIN, str(device.serial_number))}
-        )
-    ) and device_entry.sw_version != device.firmware_version:
-        device_registry.async_update_device(
-            device_id=device_entry.id, sw_version=device.firmware_version
-        )

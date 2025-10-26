@@ -11,11 +11,11 @@ import logging
 import threading
 from typing import TYPE_CHECKING, Any
 
+from homeassistant.helpers.recorder import DATA_RECORDER
 from homeassistant.helpers.typing import UndefinedType
 from homeassistant.util.event_type import EventType
 
 from . import entity_registry, purge, statistics
-from .const import DOMAIN
 from .db_schema import Statistics, StatisticsShortTerm
 from .models import StatisticData, StatisticMetaData
 from .util import periodic_db_cleanups, session_scope
@@ -60,19 +60,24 @@ class ChangeStatisticsUnitTask(RecorderTask):
 class ClearStatisticsTask(RecorderTask):
     """Object to store statistics_ids which for which to remove statistics."""
 
+    on_done: Callable[[], None] | None
     statistic_ids: list[str]
 
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
         statistics.clear_statistics(instance, self.statistic_ids)
+        if self.on_done:
+            self.on_done()
 
 
 @dataclass(slots=True)
 class UpdateStatisticsMetadataTask(RecorderTask):
     """Object to store statistics_id and unit for update of statistics metadata."""
 
+    on_done: Callable[[], None] | None
     statistic_id: str
     new_statistic_id: str | None | UndefinedType
+    new_unit_class: str | None | UndefinedType
     new_unit_of_measurement: str | None | UndefinedType
 
     def run(self, instance: Recorder) -> None:
@@ -81,8 +86,11 @@ class UpdateStatisticsMetadataTask(RecorderTask):
             instance,
             self.statistic_id,
             self.new_statistic_id,
+            self.new_unit_class,
             self.new_unit_of_measurement,
         )
+        if self.on_done:
+            self.on_done()
 
 
 @dataclass(slots=True)
@@ -114,8 +122,6 @@ class PurgeTask(RecorderTask):
         if purge.purge_old_data(
             instance, self.purge_before, self.repack, self.apply_filter
         ):
-            with instance.get_session() as session:
-                instance.recorder_runs_manager.load_from_db(session)
             # We always need to do the db cleanups after a purge
             # is finished to ensure the WAL checkpoint and other
             # tasks happen after a vacuum.
@@ -304,7 +310,7 @@ class AddRecorderPlatformTask(RecorderTask):
         hass = instance.hass
         domain = self.domain
         platform = self.platform
-        platforms: dict[str, Any] = hass.data[DOMAIN].recorder_platforms
+        platforms: dict[str, Any] = hass.data[DATA_RECORDER].recorder_platforms
         platforms[domain] = platform
 
 
@@ -313,13 +319,18 @@ class SynchronizeTask(RecorderTask):
     """Ensure all pending data has been committed."""
 
     # commit_before is the default
-    event: asyncio.Event
+    future: asyncio.Future
 
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
         # Does not use a tracked task to avoid
         # blocking shutdown if the recorder is broken
-        instance.hass.loop.call_soon_threadsafe(self.event.set)
+        instance.hass.loop.call_soon_threadsafe(self._set_result_if_not_done)
+
+    def _set_result_if_not_done(self) -> None:
+        """Set the result if not done."""
+        if not self.future.done():
+            self.future.set_result(None)
 
 
 @dataclass(slots=True)

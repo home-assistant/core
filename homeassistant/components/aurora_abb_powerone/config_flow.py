@@ -45,7 +45,7 @@ def validate_and_connect(
         ret[ATTR_SERIAL_NUMBER] = client.serial_number()
         ret[ATTR_MODEL] = f"{client.version()} ({client.pn()})"
         ret[ATTR_FIRMWARE] = client.firmware(1)
-        _LOGGER.info("Returning device info=%s", ret)
+        _LOGGER.debug("Returning device info=%s", ret)
     except AuroraError:
         _LOGGER.warning("Could not connect to device=%s", comport)
         raise

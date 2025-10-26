@@ -28,11 +28,11 @@ TIME_STR_OPTIONS = [
     SelectOptionDict(
         value=DEFAULT_TIME_STR_FORMAT, label=f"14:05 ({DEFAULT_TIME_STR_FORMAT})"
     ),
-    SelectOptionDict(value="%I:%M %p", label="11:05 am (%I:%M %p)"),
+    SelectOptionDict(value="%I:%M %p", label="11:05 AM (%I:%M %p)"),
     SelectOptionDict(value="%Y-%m-%d %H:%M", label="2024-01-01 14:05 (%Y-%m-%d %H:%M)"),
     SelectOptionDict(
         value="%a, %b %d, %Y %I:%M %p",
-        label="Monday, Jan 01, 2024 11:05 am (%a, %b %d, %Y %I:%M %p)",
+        label="Mon, Jan 01, 2024 11:05 AM (%a, %b %d, %Y %I:%M %p)",
     ),
 ]
 
@@ -83,10 +83,6 @@ CONFIG_FLOW = {
         schema=get_schema,
         validate_user_input=validate_duplicate,
     ),
-    "import": SchemaFlowFormStep(
-        schema=get_schema,
-        validate_user_input=validate_duplicate,
-    ),
 }
 OPTIONS_FLOW = {
     "init": SchemaFlowFormStep(
@@ -101,6 +97,7 @@ class WorldclockConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
 
     config_flow = CONFIG_FLOW
     options_flow = OPTIONS_FLOW
+    options_flow_reloads = True
 
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""

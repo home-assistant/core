@@ -165,7 +165,7 @@ async def test_form_wrong_host(
         },
     )
 
-    assert result["errors"] == {"host": "wrong_host"}
+    assert result["errors"] == {"base": "invalid_host"}
 
 
 async def test_form_already_configured(

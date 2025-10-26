@@ -7,7 +7,7 @@ from typing import Any
 
 from homeassistant.core import HomeAssistant
 
-from . import GiosConfigEntry
+from .coordinator import GiosConfigEntry
 
 
 async def async_get_config_entry_diagnostics(

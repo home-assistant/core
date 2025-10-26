@@ -23,12 +23,16 @@ TO_REDACT = {
 def redact_url(data: str) -> str:
     """Redact credentials from string url."""
     url = url_in = yarl.URL(data)
+    # https://github.com/pylint-dev/pylint/issues/3484
+    # pylint: disable-next=using-constant-test
     if url_in.user:
         url = url.with_user("****")
+    # pylint: disable-next=using-constant-test
     if url_in.password:
         url = url.with_password("****")
     if url_in.path != "/":
         url = url.with_path("****")
+    # pylint: disable-next=using-constant-test
     if url_in.query_string:
         url = url.with_query("****=****")
     return str(url)

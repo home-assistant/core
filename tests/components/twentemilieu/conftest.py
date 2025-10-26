@@ -51,7 +51,8 @@ def mock_twentemilieu() -> Generator[MagicMock]:
     """Return a mocked Twente Milieu client."""
     with (
         patch(
-            "homeassistant.components.twentemilieu.TwenteMilieu", autospec=True
+            "homeassistant.components.twentemilieu.coordinator.TwenteMilieu",
+            autospec=True,
         ) as twentemilieu_mock,
         patch(
             "homeassistant.components.twentemilieu.config_flow.TwenteMilieu",

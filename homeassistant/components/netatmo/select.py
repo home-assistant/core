@@ -9,7 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     CONF_URL_ENERGY,
@@ -26,7 +26,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Netatmo energy platform schedule selector."""
 
@@ -70,7 +72,9 @@ class NetatmoScheduleSelect(NetatmoBaseEntity, SelectEntity):
 
         self._attr_unique_id = f"{self.home.entity_id}-schedule-select"
 
-        self._attr_current_option = getattr(self.home.get_selected_schedule(), "name")
+        schedule = self.home.get_selected_schedule()
+        assert schedule
+        self._attr_current_option = schedule.name
         self._attr_options = [
             schedule.name for schedule in self.home.schedules.values() if schedule.name
         ]
@@ -96,12 +100,11 @@ class NetatmoScheduleSelect(NetatmoBaseEntity, SelectEntity):
             return
 
         if data["event_type"] == EVENT_TYPE_SCHEDULE and "schedule_id" in data:
-            self._attr_current_option = getattr(
+            self._attr_current_option = (
                 self.hass.data[DOMAIN][DATA_SCHEDULES][self.home.entity_id].get(
                     data["schedule_id"]
-                ),
-                "name",
-            )
+                )
+            ).name
             self.async_write_ha_state()
 
     async def async_select_option(self, option: str) -> None:
@@ -123,7 +126,9 @@ class NetatmoScheduleSelect(NetatmoBaseEntity, SelectEntity):
     @callback
     def async_update_callback(self) -> None:
         """Update the entity's state."""
-        self._attr_current_option = getattr(self.home.get_selected_schedule(), "name")
+        schedule = self.home.get_selected_schedule()
+        assert schedule
+        self._attr_current_option = schedule.name
         self.hass.data[DOMAIN][DATA_SCHEDULES][self.home.entity_id] = (
             self.home.schedules
         )

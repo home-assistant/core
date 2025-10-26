@@ -13,7 +13,7 @@ from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_MESSAGE,
     ATTR_TITLE,
-    DOMAIN,
+    DOMAIN as NOTIFY_DOMAIN,
     PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     SERVICE_SEND_MESSAGE,
     BaseNotificationService,
@@ -28,9 +28,8 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.helpers.entity_registry as er
+from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .entity import GroupEntity
@@ -115,7 +114,10 @@ class GroupNotifyPlatform(BaseNotificationService):
             tasks.append(
                 asyncio.create_task(
                     self.hass.services.async_call(
-                        DOMAIN, entity[CONF_ACTION], sending_payload, blocking=True
+                        NOTIFY_DOMAIN,
+                        entity[CONF_ACTION],
+                        sending_payload,
+                        blocking=True,
                     )
                 )
             )
@@ -127,7 +129,7 @@ class GroupNotifyPlatform(BaseNotificationService):
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize Notify Group config entry."""
     registry = er.async_get(hass)
@@ -172,7 +174,7 @@ class NotifyGroup(GroupEntity, NotifyEntity):
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message to all members of the group."""
         await self.hass.services.async_call(
-            DOMAIN,
+            NOTIFY_DOMAIN,
             SERVICE_SEND_MESSAGE,
             {
                 ATTR_MESSAGE: message,

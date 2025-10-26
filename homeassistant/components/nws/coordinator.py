@@ -1,7 +1,10 @@
 """The NWS coordinator."""
 
+from __future__ import annotations
+
 from datetime import datetime
 import logging
+from typing import TYPE_CHECKING
 
 from aiohttp import ClientResponseError
 from pynws import NwsNoDataError, SimpleNWS, call_with_retry
@@ -13,6 +16,9 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 from homeassistant.util.dt import utcnow
+
+if TYPE_CHECKING:
+    from . import NWSConfigEntry
 
 from .const import (
     DEBOUNCE_TIME,
@@ -29,9 +35,12 @@ _LOGGER = logging.getLogger(__name__)
 class NWSObservationDataUpdateCoordinator(TimestampDataUpdateCoordinator[None]):
     """Class to manage fetching NWS observation data."""
 
+    config_entry: NWSConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: NWSConfigEntry,
         nws: SimpleNWS,
     ) -> None:
         """Initialize."""
@@ -42,6 +51,7 @@ class NWSObservationDataUpdateCoordinator(TimestampDataUpdateCoordinator[None]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=f"NWS observation station {nws.station}",
             update_interval=DEFAULT_SCAN_INTERVAL,
             request_refresh_debouncer=debounce.Debouncer(

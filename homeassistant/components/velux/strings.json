@@ -2,9 +2,14 @@
   "config": {
     "step": {
       "user": {
-        "title": "Setup Velux",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "discovery_confirm": {
+        "description": "Please enter the password for {name} ({host})",
+        "data": {
           "password": "[%key:common::config_flow::data::password%]"
         }
       }
@@ -21,6 +26,13 @@
     "reboot_gateway": {
       "name": "Reboot gateway",
       "description": "Reboots the KLF200 Gateway."
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "rain_sensor": {
+        "name": "Rain sensor"
+      }
     }
   }
 }

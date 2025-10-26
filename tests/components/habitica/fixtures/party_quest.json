@@ -1,0 +1,31 @@
+{
+  "success": true,
+  "data": {
+    "progress": {
+      "collect": {},
+      "hp": 100
+    },
+    "key": "dustbunnies",
+    "active": true,
+    "leader": "a380546a-94be-4b8e-8a0b-23e0d5c03303",
+    "members": {
+      "a380546a-94be-4b8e-8a0b-23e0d5c03303": true
+    },
+    "extra": {}
+  },
+  "notifications": [
+    {
+      "id": "3f59313f-6d7c-4fff-a8c4-3b153d828c6f",
+      "type": "NEW_CHAT_MESSAGE",
+      "data": {
+        "group": {
+          "id": "94cd398c-2240-4320-956e-6d345cf2c0de",
+          "name": "tests Party"
+        }
+      },
+      "seen": false
+    }
+  ],
+  "userV": 287,
+  "appVersion": "5.29.2"
+}

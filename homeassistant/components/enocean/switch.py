@@ -18,7 +18,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN, LOGGER
-from .device import EnOceanEntity
+from .entity import EnOceanEntity
 
 CONF_CHANNEL = "channel"
 DEFAULT_NAME = "EnOcean Switch"

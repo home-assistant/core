@@ -1,17 +1,18 @@
 """Test Voice Assistant init."""
 
 import asyncio
-from dataclasses import asdict
+from collections.abc import Generator
 import itertools as it
 from pathlib import Path
 import tempfile
-from unittest.mock import ANY, patch
+from unittest.mock import Mock, patch
 import wave
 
+import hass_nabucasa
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components import assist_pipeline, media_source, stt, tts
+from homeassistant.components import assist_pipeline, conversation, stt
 from homeassistant.components.assist_pipeline.const import (
     BYTES_PER_CHUNK,
     CONF_DEBUG_RECORDING_DIR,
@@ -20,29 +21,32 @@ from homeassistant.components.assist_pipeline.const import (
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from . import process_events
 from .conftest import (
     BYTES_ONE_SECOND,
     MockSTTProvider,
     MockSTTProviderEntity,
-    MockTTSProvider,
     MockWakeWordEntity,
     make_10ms_chunk,
 )
 
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
+from tests.typing import WebSocketGenerator
 
 
-def process_events(events: list[assist_pipeline.PipelineEvent]) -> list[dict]:
-    """Process events to remove dynamic values."""
-    processed = []
-    for event in events:
-        as_dict = asdict(event)
-        as_dict.pop("timestamp")
-        if as_dict["type"] == assist_pipeline.PipelineEventType.RUN_START:
-            as_dict["data"]["pipeline"] = ANY
-        processed.append(as_dict)
+@pytest.fixture(autouse=True)
+def mock_chat_session_id() -> Generator[Mock]:
+    """Mock the conversation ID of chat sessions."""
+    with patch(
+        "homeassistant.helpers.chat_session.ulid_now", return_value="mock-ulid"
+    ) as mock_ulid_now:
+        yield mock_ulid_now
 
-    return processed
+
+@pytest.fixture(autouse=True)
+def mock_tts_token() -> Generator[None]:
+    """Mock the TTS token for URLs."""
+    with patch("secrets.token_urlsafe", return_value="mocked-token"):
+        yield
 
 
 async def test_pipeline_from_audio_stream_auto(
@@ -63,21 +67,24 @@ async def test_pipeline_from_audio_stream_auto(
         yield make_10ms_chunk(b"part2")
         yield b""
 
-    await assist_pipeline.async_pipeline_from_audio_stream(
-        hass,
-        context=Context(),
-        event_callback=events.append,
-        stt_metadata=stt.SpeechMetadata(
-            language="",
-            format=stt.AudioFormats.WAV,
-            codec=stt.AudioCodecs.PCM,
-            bit_rate=stt.AudioBitRates.BITRATE_16,
-            sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
-            channel=stt.AudioChannels.CHANNEL_MONO,
-        ),
-        stt_stream=audio_data(),
-        audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
-    )
+    with patch(
+        "homeassistant.components.tts.secrets.token_urlsafe", return_value="test_token"
+    ):
+        await assist_pipeline.async_pipeline_from_audio_stream(
+            hass,
+            context=Context(),
+            event_callback=events.append,
+            stt_metadata=stt.SpeechMetadata(
+                language="",
+                format=stt.AudioFormats.WAV,
+                codec=stt.AudioCodecs.PCM,
+                bit_rate=stt.AudioBitRates.BITRATE_16,
+                sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+                channel=stt.AudioChannels.CHANNEL_MONO,
+            ),
+            stt_stream=audio_data(),
+            audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
+        )
 
     assert process_events(events) == snapshot
     assert len(mock_stt_provider_entity.received) == 2
@@ -109,7 +116,7 @@ async def test_pipeline_from_audio_stream_legacy(
     await client.send_json_auto_id(
         {
             "type": "assist_pipeline/pipeline/create",
-            "conversation_engine": "homeassistant",
+            "conversation_engine": conversation.HOME_ASSISTANT_AGENT,
             "conversation_language": "en-US",
             "language": "en",
             "name": "test_name",
@@ -126,23 +133,26 @@ async def test_pipeline_from_audio_stream_legacy(
     assert msg["success"]
     pipeline_id = msg["result"]["id"]
 
-    # Use the created pipeline
-    await assist_pipeline.async_pipeline_from_audio_stream(
-        hass,
-        context=Context(),
-        event_callback=events.append,
-        stt_metadata=stt.SpeechMetadata(
-            language="en-UK",
-            format=stt.AudioFormats.WAV,
-            codec=stt.AudioCodecs.PCM,
-            bit_rate=stt.AudioBitRates.BITRATE_16,
-            sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
-            channel=stt.AudioChannels.CHANNEL_MONO,
-        ),
-        stt_stream=audio_data(),
-        pipeline_id=pipeline_id,
-        audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
-    )
+    with patch(
+        "homeassistant.components.tts.secrets.token_urlsafe", return_value="test_token"
+    ):
+        # Use the created pipeline
+        await assist_pipeline.async_pipeline_from_audio_stream(
+            hass,
+            context=Context(),
+            event_callback=events.append,
+            stt_metadata=stt.SpeechMetadata(
+                language="en-UK",
+                format=stt.AudioFormats.WAV,
+                codec=stt.AudioCodecs.PCM,
+                bit_rate=stt.AudioBitRates.BITRATE_16,
+                sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+                channel=stt.AudioChannels.CHANNEL_MONO,
+            ),
+            stt_stream=audio_data(),
+            pipeline_id=pipeline_id,
+            audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
+        )
 
     assert process_events(events) == snapshot
     assert len(mock_stt_provider.received) == 2
@@ -174,7 +184,7 @@ async def test_pipeline_from_audio_stream_entity(
     await client.send_json_auto_id(
         {
             "type": "assist_pipeline/pipeline/create",
-            "conversation_engine": "homeassistant",
+            "conversation_engine": conversation.HOME_ASSISTANT_AGENT,
             "conversation_language": "en-US",
             "language": "en",
             "name": "test_name",
@@ -191,23 +201,26 @@ async def test_pipeline_from_audio_stream_entity(
     assert msg["success"]
     pipeline_id = msg["result"]["id"]
 
-    # Use the created pipeline
-    await assist_pipeline.async_pipeline_from_audio_stream(
-        hass,
-        context=Context(),
-        event_callback=events.append,
-        stt_metadata=stt.SpeechMetadata(
-            language="en-UK",
-            format=stt.AudioFormats.WAV,
-            codec=stt.AudioCodecs.PCM,
-            bit_rate=stt.AudioBitRates.BITRATE_16,
-            sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
-            channel=stt.AudioChannels.CHANNEL_MONO,
-        ),
-        stt_stream=audio_data(),
-        pipeline_id=pipeline_id,
-        audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
-    )
+    with patch(
+        "homeassistant.components.tts.secrets.token_urlsafe", return_value="test_token"
+    ):
+        # Use the created pipeline
+        await assist_pipeline.async_pipeline_from_audio_stream(
+            hass,
+            context=Context(),
+            event_callback=events.append,
+            stt_metadata=stt.SpeechMetadata(
+                language="en-UK",
+                format=stt.AudioFormats.WAV,
+                codec=stt.AudioCodecs.PCM,
+                bit_rate=stt.AudioBitRates.BITRATE_16,
+                sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+                channel=stt.AudioChannels.CHANNEL_MONO,
+            ),
+            stt_stream=audio_data(),
+            pipeline_id=pipeline_id,
+            audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
+        )
 
     assert process_events(events) == snapshot
     assert len(mock_stt_provider_entity.received) == 2
@@ -239,7 +252,7 @@ async def test_pipeline_from_audio_stream_no_stt(
     await client.send_json_auto_id(
         {
             "type": "assist_pipeline/pipeline/create",
-            "conversation_engine": "homeassistant",
+            "conversation_engine": conversation.HOME_ASSISTANT_AGENT,
             "conversation_language": "en-US",
             "language": "en",
             "name": "test_name",
@@ -355,25 +368,28 @@ async def test_pipeline_from_audio_stream_wake_word(
 
         yield b""
 
-    await assist_pipeline.async_pipeline_from_audio_stream(
-        hass,
-        context=Context(),
-        event_callback=events.append,
-        stt_metadata=stt.SpeechMetadata(
-            language="",
-            format=stt.AudioFormats.WAV,
-            codec=stt.AudioCodecs.PCM,
-            bit_rate=stt.AudioBitRates.BITRATE_16,
-            sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
-            channel=stt.AudioChannels.CHANNEL_MONO,
-        ),
-        stt_stream=audio_data(),
-        start_stage=assist_pipeline.PipelineStage.WAKE_WORD,
-        wake_word_settings=assist_pipeline.WakeWordSettings(
-            audio_seconds_to_buffer=1.5
-        ),
-        audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
-    )
+    with patch(
+        "homeassistant.components.tts.secrets.token_urlsafe", return_value="test_token"
+    ):
+        await assist_pipeline.async_pipeline_from_audio_stream(
+            hass,
+            context=Context(),
+            event_callback=events.append,
+            stt_metadata=stt.SpeechMetadata(
+                language="",
+                format=stt.AudioFormats.WAV,
+                codec=stt.AudioCodecs.PCM,
+                bit_rate=stt.AudioBitRates.BITRATE_16,
+                sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+                channel=stt.AudioChannels.CHANNEL_MONO,
+            ),
+            stt_stream=audio_data(),
+            start_stage=assist_pipeline.PipelineStage.WAKE_WORD,
+            wake_word_settings=assist_pipeline.WakeWordSettings(
+                audio_seconds_to_buffer=1.5
+            ),
+            audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
+        )
 
     assert process_events(events) == snapshot
 
@@ -639,291 +655,41 @@ async def test_pipeline_saved_audio_empty_queue(
             )
 
 
-async def test_wake_word_detection_aborted(
+async def test_pipeline_from_audio_stream_with_cloud_auth_fail(
     hass: HomeAssistant,
-    mock_stt_provider: MockSTTProvider,
-    mock_wake_word_provider_entity: MockWakeWordEntity,
+    mock_stt_provider_entity: MockSTTProviderEntity,
     init_components,
-    pipeline_data: assist_pipeline.pipeline.PipelineData,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test creating a pipeline from an audio stream with wake word."""
+    """Test creating a pipeline from an audio stream but the cloud authentication fails."""
 
     events: list[assist_pipeline.PipelineEvent] = []
 
     async def audio_data():
-        yield make_10ms_chunk(b"silence!")
-        yield make_10ms_chunk(b"wake word!")
-        yield make_10ms_chunk(b"part1")
-        yield make_10ms_chunk(b"part2")
-        yield b""
+        yield b"audio"
 
-    pipeline_store = pipeline_data.pipeline_store
-    pipeline_id = pipeline_store.async_get_preferred_item()
-    pipeline = assist_pipeline.pipeline.async_get_pipeline(hass, pipeline_id)
-
-    pipeline_input = assist_pipeline.pipeline.PipelineInput(
-        conversation_id=None,
-        device_id=None,
-        stt_metadata=stt.SpeechMetadata(
-            language="",
-            format=stt.AudioFormats.WAV,
-            codec=stt.AudioCodecs.PCM,
-            bit_rate=stt.AudioBitRates.BITRATE_16,
-            sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
-            channel=stt.AudioChannels.CHANNEL_MONO,
-        ),
-        stt_stream=audio_data(),
-        run=assist_pipeline.pipeline.PipelineRun(
+    with patch.object(
+        mock_stt_provider_entity,
+        "async_process_audio_stream",
+        side_effect=hass_nabucasa.auth.Unauthenticated,
+    ):
+        await assist_pipeline.async_pipeline_from_audio_stream(
             hass,
             context=Context(),
-            pipeline=pipeline,
-            start_stage=assist_pipeline.PipelineStage.WAKE_WORD,
-            end_stage=assist_pipeline.PipelineStage.TTS,
             event_callback=events.append,
-            tts_audio_output=None,
-            wake_word_settings=assist_pipeline.WakeWordSettings(
-                audio_seconds_to_buffer=1.5
+            stt_metadata=stt.SpeechMetadata(
+                language="",
+                format=stt.AudioFormats.WAV,
+                codec=stt.AudioCodecs.PCM,
+                bit_rate=stt.AudioBitRates.BITRATE_16,
+                sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+                channel=stt.AudioChannels.CHANNEL_MONO,
             ),
+            stt_stream=audio_data(),
             audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
-        ),
-    )
-    await pipeline_input.validate()
-
-    updates = pipeline.to_json()
-    updates.pop("id")
-    await pipeline_store.async_update_item(
-        pipeline_id,
-        updates,
-    )
-    await pipeline_input.execute()
+        )
 
     assert process_events(events) == snapshot
-
-
-def test_pipeline_run_equality(hass: HomeAssistant, init_components) -> None:
-    """Test that pipeline run equality uses unique id."""
-
-    def event_callback(event):
-        pass
-
-    pipeline = assist_pipeline.pipeline.async_get_pipeline(hass)
-    run_1 = assist_pipeline.pipeline.PipelineRun(
-        hass,
-        context=Context(),
-        pipeline=pipeline,
-        start_stage=assist_pipeline.PipelineStage.STT,
-        end_stage=assist_pipeline.PipelineStage.TTS,
-        event_callback=event_callback,
-    )
-    run_2 = assist_pipeline.pipeline.PipelineRun(
-        hass,
-        context=Context(),
-        pipeline=pipeline,
-        start_stage=assist_pipeline.PipelineStage.STT,
-        end_stage=assist_pipeline.PipelineStage.TTS,
-        event_callback=event_callback,
-    )
-
-    assert run_1 == run_1  # noqa: PLR0124
-    assert run_1 != run_2
-    assert run_1 != 1234
-
-
-async def test_tts_audio_output(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    mock_tts_provider: MockTTSProvider,
-    init_components,
-    pipeline_data: assist_pipeline.pipeline.PipelineData,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test using tts_audio_output with wav sets options correctly."""
-    client = await hass_client()
-    assert await async_setup_component(hass, media_source.DOMAIN, {})
-
-    events: list[assist_pipeline.PipelineEvent] = []
-
-    pipeline_store = pipeline_data.pipeline_store
-    pipeline_id = pipeline_store.async_get_preferred_item()
-    pipeline = assist_pipeline.pipeline.async_get_pipeline(hass, pipeline_id)
-
-    pipeline_input = assist_pipeline.pipeline.PipelineInput(
-        tts_input="This is a test.",
-        conversation_id=None,
-        device_id=None,
-        run=assist_pipeline.pipeline.PipelineRun(
-            hass,
-            context=Context(),
-            pipeline=pipeline,
-            start_stage=assist_pipeline.PipelineStage.TTS,
-            end_stage=assist_pipeline.PipelineStage.TTS,
-            event_callback=events.append,
-            tts_audio_output="wav",
-        ),
-    )
-    await pipeline_input.validate()
-
-    # Verify TTS audio settings
-    assert pipeline_input.run.tts_options is not None
-    assert pipeline_input.run.tts_options.get(tts.ATTR_PREFERRED_FORMAT) == "wav"
-    assert pipeline_input.run.tts_options.get(tts.ATTR_PREFERRED_SAMPLE_RATE) == 16000
-    assert pipeline_input.run.tts_options.get(tts.ATTR_PREFERRED_SAMPLE_CHANNELS) == 1
-
-    with patch.object(mock_tts_provider, "get_tts_audio") as mock_get_tts_audio:
-        await pipeline_input.execute()
-
-        for event in events:
-            if event.type == assist_pipeline.PipelineEventType.TTS_END:
-                # We must fetch the media URL to trigger the TTS
-                assert event.data
-                media_id = event.data["tts_output"]["media_id"]
-                resolved = await media_source.async_resolve_media(hass, media_id, None)
-                await client.get(resolved.url)
-
-        # Ensure that no unsupported options were passed in
-        assert mock_get_tts_audio.called
-        options = mock_get_tts_audio.call_args_list[0].kwargs["options"]
-        extra_options = set(options).difference(mock_tts_provider.supported_options)
-        assert len(extra_options) == 0, extra_options
-
-
-async def test_tts_wav_preferred_format(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    mock_tts_provider: MockTTSProvider,
-    init_components,
-    pipeline_data: assist_pipeline.pipeline.PipelineData,
-) -> None:
-    """Test that preferred format options are given to the TTS system if supported."""
-    client = await hass_client()
-    assert await async_setup_component(hass, media_source.DOMAIN, {})
-
-    events: list[assist_pipeline.PipelineEvent] = []
-
-    pipeline_store = pipeline_data.pipeline_store
-    pipeline_id = pipeline_store.async_get_preferred_item()
-    pipeline = assist_pipeline.pipeline.async_get_pipeline(hass, pipeline_id)
-
-    pipeline_input = assist_pipeline.pipeline.PipelineInput(
-        tts_input="This is a test.",
-        conversation_id=None,
-        device_id=None,
-        run=assist_pipeline.pipeline.PipelineRun(
-            hass,
-            context=Context(),
-            pipeline=pipeline,
-            start_stage=assist_pipeline.PipelineStage.TTS,
-            end_stage=assist_pipeline.PipelineStage.TTS,
-            event_callback=events.append,
-            tts_audio_output="wav",
-        ),
-    )
-    await pipeline_input.validate()
-
-    # Make the TTS provider support preferred format options
-    supported_options = list(mock_tts_provider.supported_options or [])
-    supported_options.extend(
-        [
-            tts.ATTR_PREFERRED_FORMAT,
-            tts.ATTR_PREFERRED_SAMPLE_RATE,
-            tts.ATTR_PREFERRED_SAMPLE_CHANNELS,
-            tts.ATTR_PREFERRED_SAMPLE_BYTES,
-        ]
-    )
-
-    with (
-        patch.object(mock_tts_provider, "_supported_options", supported_options),
-        patch.object(mock_tts_provider, "get_tts_audio") as mock_get_tts_audio,
-    ):
-        await pipeline_input.execute()
-
-        for event in events:
-            if event.type == assist_pipeline.PipelineEventType.TTS_END:
-                # We must fetch the media URL to trigger the TTS
-                assert event.data
-                media_id = event.data["tts_output"]["media_id"]
-                resolved = await media_source.async_resolve_media(hass, media_id, None)
-                await client.get(resolved.url)
-
-        assert mock_get_tts_audio.called
-        options = mock_get_tts_audio.call_args_list[0].kwargs["options"]
-
-        # We should have received preferred format options in get_tts_audio
-        assert options.get(tts.ATTR_PREFERRED_FORMAT) == "wav"
-        assert int(options.get(tts.ATTR_PREFERRED_SAMPLE_RATE)) == 16000
-        assert int(options.get(tts.ATTR_PREFERRED_SAMPLE_CHANNELS)) == 1
-        assert int(options.get(tts.ATTR_PREFERRED_SAMPLE_BYTES)) == 2
-
-
-async def test_tts_dict_preferred_format(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    mock_tts_provider: MockTTSProvider,
-    init_components,
-    pipeline_data: assist_pipeline.pipeline.PipelineData,
-) -> None:
-    """Test that preferred format options are given to the TTS system if supported."""
-    client = await hass_client()
-    assert await async_setup_component(hass, media_source.DOMAIN, {})
-
-    events: list[assist_pipeline.PipelineEvent] = []
-
-    pipeline_store = pipeline_data.pipeline_store
-    pipeline_id = pipeline_store.async_get_preferred_item()
-    pipeline = assist_pipeline.pipeline.async_get_pipeline(hass, pipeline_id)
-
-    pipeline_input = assist_pipeline.pipeline.PipelineInput(
-        tts_input="This is a test.",
-        conversation_id=None,
-        device_id=None,
-        run=assist_pipeline.pipeline.PipelineRun(
-            hass,
-            context=Context(),
-            pipeline=pipeline,
-            start_stage=assist_pipeline.PipelineStage.TTS,
-            end_stage=assist_pipeline.PipelineStage.TTS,
-            event_callback=events.append,
-            tts_audio_output={
-                tts.ATTR_PREFERRED_FORMAT: "flac",
-                tts.ATTR_PREFERRED_SAMPLE_RATE: 48000,
-                tts.ATTR_PREFERRED_SAMPLE_CHANNELS: 2,
-                tts.ATTR_PREFERRED_SAMPLE_BYTES: 2,
-            },
-        ),
-    )
-    await pipeline_input.validate()
-
-    # Make the TTS provider support preferred format options
-    supported_options = list(mock_tts_provider.supported_options or [])
-    supported_options.extend(
-        [
-            tts.ATTR_PREFERRED_FORMAT,
-            tts.ATTR_PREFERRED_SAMPLE_RATE,
-            tts.ATTR_PREFERRED_SAMPLE_CHANNELS,
-            tts.ATTR_PREFERRED_SAMPLE_BYTES,
-        ]
-    )
-
-    with (
-        patch.object(mock_tts_provider, "_supported_options", supported_options),
-        patch.object(mock_tts_provider, "get_tts_audio") as mock_get_tts_audio,
-    ):
-        await pipeline_input.execute()
-
-        for event in events:
-            if event.type == assist_pipeline.PipelineEventType.TTS_END:
-                # We must fetch the media URL to trigger the TTS
-                assert event.data
-                media_id = event.data["tts_output"]["media_id"]
-                resolved = await media_source.async_resolve_media(hass, media_id, None)
-                await client.get(resolved.url)
-
-        assert mock_get_tts_audio.called
-        options = mock_get_tts_audio.call_args_list[0].kwargs["options"]
-
-        # We should have received preferred format options in get_tts_audio
-        assert options.get(tts.ATTR_PREFERRED_FORMAT) == "flac"
-        assert int(options.get(tts.ATTR_PREFERRED_SAMPLE_RATE)) == 48000
-        assert int(options.get(tts.ATTR_PREFERRED_SAMPLE_CHANNELS)) == 2
-        assert int(options.get(tts.ATTR_PREFERRED_SAMPLE_BYTES)) == 2
+    assert len(events) == 4  # run start, stt start, error, run end
+    assert events[2].type == assist_pipeline.PipelineEventType.ERROR
+    assert events[2].data["code"] == "cloud-auth-failed"

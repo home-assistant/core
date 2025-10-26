@@ -9,7 +9,7 @@ import pytest
 
 from homeassistant.components import lifx
 from homeassistant.components.lifx import DOMAIN
-from homeassistant.components.lifx.const import ATTR_POWER
+from homeassistant.components.lifx.const import _ATTR_COLOR_TEMP, ATTR_POWER
 from homeassistant.components.lifx.light import ATTR_INFRARED, ATTR_ZONES
 from homeassistant.components.lifx.manager import (
     ATTR_CLOUD_SATURATION_MAX,
@@ -25,17 +25,18 @@ from homeassistant.components.lifx.manager import (
     SERVICE_EFFECT_MORPH,
     SERVICE_EFFECT_MOVE,
     SERVICE_EFFECT_SKY,
+    SERVICE_PAINT_THEME,
 )
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_BRIGHTNESS_PCT,
+    ATTR_BRIGHTNESS_STEP,
+    ATTR_BRIGHTNESS_STEP_PCT,
     ATTR_COLOR_MODE,
     ATTR_COLOR_NAME,
-    ATTR_COLOR_TEMP,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
-    ATTR_KELVIN,
     ATTR_RGB_COLOR,
     ATTR_SUPPORTED_COLOR_MODES,
     ATTR_TRANSITION,
@@ -844,7 +845,7 @@ async def test_sky_effect(hass: HomeAssistant) -> None:
         SERVICE_EFFECT_SKY,
         {
             ATTR_ENTITY_ID: entity_id,
-            ATTR_PALETTE: [],
+            ATTR_PALETTE: None,
             ATTR_SKY_TYPE: "Clouds",
             ATTR_CLOUD_SATURATION_MAX: 180,
             ATTR_CLOUD_SATURATION_MIN: 50,
@@ -855,7 +856,7 @@ async def test_sky_effect(hass: HomeAssistant) -> None:
     bulb.power_level = 65535
     bulb.effect = {
         "effect": "SKY",
-        "palette": [],
+        "palette": None,
         "sky_type": 2,
         "cloud_saturation_min": 50,
         "cloud_saturation_max": 180,
@@ -1047,6 +1048,104 @@ async def test_lightstrip_move_effect(hass: HomeAssistant) -> None:
     bulb.set_power.reset_mock()
 
 
+@pytest.mark.usefixtures("mock_discovery")
+async def test_paint_theme_service(hass: HomeAssistant) -> None:
+    """Test the firmware flame and morph effects on a matrix device."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=SERIAL
+    )
+    config_entry.add_to_hass(hass)
+    bulb = _mocked_bulb()
+    bulb.power_level = 0
+    bulb.color = [65535, 65535, 65535, 65535]
+    with (
+        _patch_discovery(device=bulb),
+        _patch_config_flow_try_connect(device=bulb),
+        _patch_device(device=bulb),
+    ):
+        await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    entity_id = "light.my_bulb"
+
+    bulb.power_level = 0
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_PAINT_THEME,
+        {ATTR_ENTITY_ID: entity_id, ATTR_TRANSITION: 4, ATTR_THEME: "autumn"},
+        blocking=True,
+    )
+
+    bulb.power_level = 65535
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+
+    assert len(bulb.set_power.calls) == 1
+    assert len(bulb.set_color.calls) == 1
+    call_dict = bulb.set_color.calls[0][1]
+    call_dict.pop("callb")
+    assert call_dict["value"] in [
+        (5643, 65535, 32768, 3500),
+        (15109, 65535, 32768, 3500),
+        (8920, 65535, 32768, 3500),
+        (10558, 65535, 32768, 3500),
+    ]
+    assert call_dict["duration"] == 4000
+    bulb.set_color.reset_mock()
+    bulb.set_power.reset_mock()
+
+    bulb.power_level = 0
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_PAINT_THEME,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_TRANSITION: 6,
+            ATTR_PALETTE: [
+                (0, 100, 255, 3500),
+                (60, 100, 255, 3500),
+                (120, 100, 255, 3500),
+                (180, 100, 255, 3500),
+                (240, 100, 255, 3500),
+                (300, 100, 255, 3500),
+            ],
+        },
+        blocking=True,
+    )
+
+    bulb.power_level = 65535
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+
+    assert len(bulb.set_power.calls) == 1
+    assert len(bulb.set_color.calls) == 1
+    call_dict = bulb.set_color.calls[0][1]
+    call_dict.pop("callb")
+    hue = round(call_dict["value"][0] / 65535 * 360)
+    sat = round(call_dict["value"][1] / 65535 * 100)
+    bri = call_dict["value"][2] >> 8
+    kel = call_dict["value"][3]
+    assert (hue, sat, bri, kel) in [
+        (0, 100, 255, 3500),
+        (60, 100, 255, 3500),
+        (120, 100, 255, 3500),
+        (180, 100, 255, 3500),
+        (240, 100, 255, 3500),
+        (300, 100, 255, 3500),
+    ]
+    assert call_dict["duration"] == 6000
+
+    bulb.set_color.reset_mock()
+    bulb.set_power.reset_mock()
+
+
 async def test_color_light_with_temp(
     hass: HomeAssistant, mock_effect_conductor
 ) -> None:
@@ -1098,8 +1197,8 @@ async def test_color_light_with_temp(
         ColorMode.HS,
     ]
     assert attributes[ATTR_HS_COLOR] == (30.754, 7.122)
-    assert attributes[ATTR_RGB_COLOR] == (255, 246, 236)
-    assert attributes[ATTR_XY_COLOR] == (0.34, 0.339)
+    assert attributes[ATTR_RGB_COLOR] == (255, 246, 237)
+    assert attributes[ATTR_XY_COLOR] == (0.339, 0.338)
     bulb.color = [65535, 65535, 65535, 65535]
 
     await hass.services.async_call(
@@ -1264,7 +1363,7 @@ async def test_white_bulb(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         LIGHT_DOMAIN,
         "turn_on",
-        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP: 400},
+        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP_KELVIN: 2500},
         blocking=True,
     )
     assert bulb.set_color.calls[0][0][0] == [32000, 0, 32000, 2500]
@@ -1638,6 +1737,48 @@ async def test_transitions_color_bulb(hass: HomeAssistant) -> None:
     bulb.set_color.reset_mock()
 
 
+async def test_lifx_set_state_brightness(hass: HomeAssistant) -> None:
+    """Test lifx.set_state works with brightness, brightness_pct and brightness_step."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=SERIAL
+    )
+    config_entry.add_to_hass(hass)
+    bulb = _mocked_bulb_new_firmware()
+    bulb.power_level = 65535
+    bulb.color = [0, 0, 32768, 3500]
+    with (
+        _patch_discovery(device=bulb),
+        _patch_config_flow_try_connect(device=bulb),
+        _patch_device(device=bulb),
+    ):
+        await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    entity_id = "light.my_bulb"
+
+    # brightness_step should convert from 8 bit to 16 bit
+    await hass.services.async_call(
+        DOMAIN,
+        "set_state",
+        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS_STEP: 128},
+        blocking=True,
+    )
+
+    assert bulb.set_color.calls[0][0][0] == [0, 0, 65535, 3500]
+    bulb.set_color.reset_mock()
+
+    # brightness_step_pct should convert from percentage to 16 bit
+    await hass.services.async_call(
+        DOMAIN,
+        "set_state",
+        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS_STEP_PCT: 50},
+        blocking=True,
+    )
+
+    assert bulb.set_color.calls[0][0][0] == [0, 0, 65535, 3500]
+    bulb.set_color.reset_mock()
+
+
 async def test_lifx_set_state_color(hass: HomeAssistant) -> None:
     """Test lifx.set_state works with color names and RGB."""
     config_entry = MockConfigEntry(
@@ -1719,7 +1860,7 @@ async def test_lifx_set_state_color(hass: HomeAssistant) -> None:
 
 
 async def test_lifx_set_state_kelvin(hass: HomeAssistant) -> None:
-    """Test set_state works with old and new kelvin parameter names."""
+    """Test set_state works with kelvin parameter names."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=SERIAL
     )
@@ -1751,15 +1892,6 @@ async def test_lifx_set_state_kelvin(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         DOMAIN,
         "set_state",
-        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 255, ATTR_KELVIN: 3500},
-        blocking=True,
-    )
-    assert bulb.set_color.calls[0][0][0] == [32000, 0, 65535, 3500]
-    bulb.set_color.reset_mock()
-
-    await hass.services.async_call(
-        DOMAIN,
-        "set_state",
         {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 100, ATTR_COLOR_TEMP_KELVIN: 2700},
         blocking=True,
     )
@@ -1769,7 +1901,7 @@ async def test_lifx_set_state_kelvin(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         DOMAIN,
         "set_state",
-        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 255, ATTR_COLOR_TEMP: 400},
+        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 255, _ATTR_COLOR_TEMP: 400},
         blocking=True,
     )
     assert bulb.set_color.calls[0][0][0] == [32000, 0, 65535, 2500]
@@ -2010,7 +2142,12 @@ async def test_light_strip_zones_not_populated_yet(hass: HomeAssistant) -> None:
     assert bulb.set_power.calls[0][0][0] is True
     bulb.set_power.reset_mock()
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
-    await hass.async_block_till_done()
+    with (
+        _patch_discovery(device=bulb),
+        _patch_config_flow_try_connect(device=bulb),
+        _patch_device(device=bulb),
+    ):
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
+        await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON

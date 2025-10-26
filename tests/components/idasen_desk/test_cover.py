@@ -4,31 +4,32 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 from bleak.exc import BleakError
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_POSITION,
     DOMAIN as COVER_DOMAIN,
+    CoverState,
 )
 from homeassistant.const import (
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
     SERVICE_SET_COVER_POSITION,
     SERVICE_STOP_COVER,
-    STATE_CLOSED,
-    STATE_OPEN,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from . import init_integration
+from . import UPDATE_DEBOUNCE_TIME, init_integration
+
+from tests.common import async_fire_time_changed
 
 
 async def test_cover_available(
-    hass: HomeAssistant,
-    mock_desk_api: MagicMock,
+    hass: HomeAssistant, mock_desk_api: MagicMock, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test cover available property."""
     entity_id = "cover.test"
@@ -36,12 +37,15 @@ async def test_cover_available(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
     assert state.attributes[ATTR_CURRENT_POSITION] == 60
 
     mock_desk_api.connect = AsyncMock()
     mock_desk_api.is_connected = False
     mock_desk_api.trigger_update_callback(None)
+
+    freezer.tick(UPDATE_DEBOUNCE_TIME)
+    async_fire_time_changed(hass)
 
     state = hass.states.get(entity_id)
     assert state
@@ -51,11 +55,11 @@ async def test_cover_available(
 @pytest.mark.parametrize(
     ("service", "service_data", "expected_state", "expected_position"),
     [
-        (SERVICE_SET_COVER_POSITION, {ATTR_POSITION: 100}, STATE_OPEN, 100),
-        (SERVICE_SET_COVER_POSITION, {ATTR_POSITION: 0}, STATE_CLOSED, 0),
-        (SERVICE_OPEN_COVER, {}, STATE_OPEN, 100),
-        (SERVICE_CLOSE_COVER, {}, STATE_CLOSED, 0),
-        (SERVICE_STOP_COVER, {}, STATE_OPEN, 60),
+        (SERVICE_SET_COVER_POSITION, {ATTR_POSITION: 100}, CoverState.OPEN, 100),
+        (SERVICE_SET_COVER_POSITION, {ATTR_POSITION: 0}, CoverState.CLOSED, 0),
+        (SERVICE_OPEN_COVER, {}, CoverState.OPEN, 100),
+        (SERVICE_CLOSE_COVER, {}, CoverState.CLOSED, 0),
+        (SERVICE_STOP_COVER, {}, CoverState.OPEN, 60),
     ],
 )
 async def test_cover_services(
@@ -65,13 +69,14 @@ async def test_cover_services(
     service_data: dict[str, Any],
     expected_state: str,
     expected_position: int,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test cover services."""
     entity_id = "cover.test"
     await init_integration(hass)
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
     assert state.attributes[ATTR_CURRENT_POSITION] == 60
     await hass.services.async_call(
         COVER_DOMAIN,
@@ -79,7 +84,9 @@ async def test_cover_services(
         {"entity_id": entity_id, **service_data},
         blocking=True,
     )
-    await hass.async_block_till_done()
+    freezer.tick(UPDATE_DEBOUNCE_TIME)
+    async_fire_time_changed(hass)
+
     state = hass.states.get(entity_id)
     assert state
     assert state.state == expected_state
@@ -114,4 +121,3 @@ async def test_cover_services_exception(
             {"entity_id": entity_id, **service_data},
             blocking=True,
         )
-    await hass.async_block_till_done()

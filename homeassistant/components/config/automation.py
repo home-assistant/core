@@ -5,9 +5,8 @@ from __future__ import annotations
 from typing import Any
 import uuid
 
-from homeassistant.components.automation.config import (
-    DOMAIN,
-    PLATFORM_SCHEMA,
+from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
+from homeassistant.components.automation.config import (  # pylint: disable=hass-component-root-import
     async_validate_config_item,
 )
 from homeassistant.config import AUTOMATION_CONFIG_PATH
@@ -27,13 +26,15 @@ def async_setup(hass: HomeAssistant) -> bool:
         """post_write_hook for Config View that reloads automations."""
         if action != ACTION_DELETE:
             await hass.services.async_call(
-                DOMAIN, SERVICE_RELOAD, {CONF_ID: config_key}
+                AUTOMATION_DOMAIN, SERVICE_RELOAD, {CONF_ID: config_key}
             )
             return
 
         ent_reg = er.async_get(hass)
 
-        entity_id = ent_reg.async_get_entity_id(DOMAIN, DOMAIN, config_key)
+        entity_id = ent_reg.async_get_entity_id(
+            AUTOMATION_DOMAIN, AUTOMATION_DOMAIN, config_key
+        )
 
         if entity_id is None:
             return
@@ -42,11 +43,10 @@ def async_setup(hass: HomeAssistant) -> bool:
 
     hass.http.register_view(
         EditAutomationConfigView(
-            DOMAIN,
+            AUTOMATION_DOMAIN,
             "config",
             AUTOMATION_CONFIG_PATH,
             cv.string,
-            PLATFORM_SCHEMA,
             post_write_hook=hook,
             data_validator=async_validate_config_item,
         )
@@ -68,7 +68,16 @@ class EditAutomationConfigView(EditIdBasedConfigView):
         updated_value = {CONF_ID: config_key}
 
         # Iterate through some keys that we want to have ordered in the output
-        for key in ("alias", "description", "trigger", "condition", "action"):
+        for key in (
+            "alias",
+            "description",
+            "triggers",
+            "trigger",
+            "conditions",
+            "condition",
+            "actions",
+            "action",
+        ):
             if key in new_value:
                 updated_value[key] = new_value[key]
 

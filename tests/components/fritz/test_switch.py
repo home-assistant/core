@@ -12,7 +12,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .const import MOCK_FB_SERVICES, MOCK_USER_DATA
+from .const import MOCK_CALL_DEFLECTION_DATA, MOCK_FB_SERVICES, MOCK_USER_DATA
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -169,24 +169,18 @@ MOCK_WLANCONFIGS_DIFF2_SSID: dict[str, dict] = {
 
 
 @pytest.mark.parametrize(
-    ("fc_data", "expected_wifi_names"),
+    ("fc_data"),
     [
-        (
-            {**MOCK_FB_SERVICES, **MOCK_WLANCONFIGS_SAME_SSID},
-            ["WiFi (2.4Ghz)", "WiFi (5Ghz)"],
-        ),
-        ({**MOCK_FB_SERVICES, **MOCK_WLANCONFIGS_DIFF_SSID}, ["WiFi", "WiFi2"]),
-        (
-            {**MOCK_FB_SERVICES, **MOCK_WLANCONFIGS_DIFF2_SSID},
-            ["WiFi (2.4Ghz)", "WiFi+ (5Ghz)"],
-        ),
+        ({**MOCK_FB_SERVICES, **MOCK_WLANCONFIGS_SAME_SSID}),
+        ({**MOCK_FB_SERVICES, **MOCK_WLANCONFIGS_DIFF_SSID}),
+        ({**MOCK_FB_SERVICES, **MOCK_WLANCONFIGS_DIFF2_SSID}),
+        ({**MOCK_FB_SERVICES, **MOCK_CALL_DEFLECTION_DATA}),
     ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_switch_setup(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    expected_wifi_names: list[str],
     fc_class_mock,
     fh_class_mock,
     snapshot: SnapshotAssertion,
@@ -198,8 +192,5 @@ async def test_switch_setup(
     with patch("homeassistant.components.fritz.PLATFORMS", [Platform.SWITCH]):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
-
-    states = hass.states.async_all()
-    assert len(states) == 3
 
     await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)

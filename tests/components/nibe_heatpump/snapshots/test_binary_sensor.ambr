@@ -1,0 +1,97 @@
+# serializer version: 1
+# name: test_update[Model.F1255-49239-OFF][binary_sensor.eb101_installed_49239-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.eb101_installed_49239',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'EB101 Installed',
+    'platform': 'nibe_heatpump',
+    'previous_unique_id': None,
+    'suggested_object_id': 'eb101_installed_49239',
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'mock_entry_unique_id-49239',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_update[Model.F1255-49239-OFF][binary_sensor.eb101_installed_49239-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'F1255 EB101 Installed',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.eb101_installed_49239',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_update[Model.F1255-49239-ON][binary_sensor.eb101_installed_49239-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.eb101_installed_49239',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'EB101 Installed',
+    'platform': 'nibe_heatpump',
+    'previous_unique_id': None,
+    'suggested_object_id': 'eb101_installed_49239',
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'mock_entry_unique_id-49239',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_update[Model.F1255-49239-ON][binary_sensor.eb101_installed_49239-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'F1255 EB101 Installed',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.eb101_installed_49239',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

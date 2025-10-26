@@ -9,9 +9,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .const import CONF_PAT, CONF_PROJECT
-from .coordinator import AzureDevOpsDataUpdateCoordinator
-
-type AzureDevOpsConfigEntry = ConfigEntry[AzureDevOpsDataUpdateCoordinator]
+from .coordinator import AzureDevOpsConfigEntry, AzureDevOpsDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,11 +20,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AzureDevOpsConfigEntry) 
     """Set up Azure DevOps from a config entry."""
 
     # Create the data update coordinator
-    coordinator = AzureDevOpsDataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        entry=entry,
-    )
+    coordinator = AzureDevOpsDataUpdateCoordinator(hass, entry, _LOGGER)
 
     # Store the coordinator in runtime data
     entry.runtime_data = coordinator

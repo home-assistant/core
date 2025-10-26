@@ -51,6 +51,13 @@
             "on": "mdi:arrow-oscillating",
             "vertical": "mdi:arrow-up-down"
           }
+        },
+        "swing_horizontal_mode": {
+          "default": "mdi:circle-medium",
+          "state": {
+            "off": "mdi:arrow-oscillating-off",
+            "on": "mdi:arrow-expand-horizontal"
+          }
         }
       }
     }
@@ -64,6 +71,9 @@
     },
     "set_swing_mode": {
       "service": "mdi:arrow-oscillating"
+    },
+    "set_swing_horizontal_mode": {
+      "service": "mdi:arrow-expand-horizontal"
     },
     "set_temperature": {
       "service": "mdi:thermometer"

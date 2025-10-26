@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import defaultdict
 from collections.abc import Iterable
 import dataclasses
 from dataclasses import dataclass
@@ -9,7 +10,6 @@ from datetime import datetime
 from typing import Any, Literal, TypedDict
 
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.util import slugify
 from homeassistant.util.dt import utc_from_timestamp, utcnow
 from homeassistant.util.event_type import EventType
 from homeassistant.util.hass_dict import HassKey
@@ -19,7 +19,7 @@ from .normalized_name_base_registry import (
     NormalizedNameBaseRegistryItems,
     normalize_name,
 )
-from .registry import BaseRegistry
+from .registry import BaseRegistry, RegistryIndexType
 from .singleton import singleton
 from .storage import Store
 from .typing import UNDEFINED, UndefinedType
@@ -94,10 +94,41 @@ class FloorRegistryStore(Store[FloorRegistryStoreData]):
         return old_data  # type: ignore[return-value]
 
 
+class FloorRegistryItems(NormalizedNameBaseRegistryItems[FloorEntry]):
+    """Class to hold floor registry items."""
+
+    def __init__(self) -> None:
+        """Initialize the floor registry items."""
+        super().__init__()
+        self._aliases_index: RegistryIndexType = defaultdict(dict)
+
+    def _index_entry(self, key: str, entry: FloorEntry) -> None:
+        """Index an entry."""
+        super()._index_entry(key, entry)
+        for normalized_alias in {normalize_name(alias) for alias in entry.aliases}:
+            self._aliases_index[normalized_alias][key] = True
+
+    def _unindex_entry(
+        self, key: str, replacement_entry: FloorEntry | None = None
+    ) -> None:
+        # always call base class before other indices
+        super()._unindex_entry(key, replacement_entry)
+        entry = self.data[key]
+        if aliases := entry.aliases:
+            for normalized_alias in {normalize_name(alias) for alias in aliases}:
+                self._unindex_entry_value(key, normalized_alias, self._aliases_index)
+
+    def get_floors_for_alias(self, alias: str) -> list[FloorEntry]:
+        """Get floors for alias."""
+        data = self.data
+        normalized_alias = normalize_name(alias)
+        return [data[key] for key in self._aliases_index.get(normalized_alias, ())]
+
+
 class FloorRegistry(BaseRegistry[FloorRegistryStoreData]):
     """Class to hold a registry of floors."""
 
-    floors: NormalizedNameBaseRegistryItems[FloorEntry]
+    floors: FloorRegistryItems
     _floor_data: dict[str, FloorEntry]
 
     def __init__(self, hass: HomeAssistant) -> None:
@@ -126,19 +157,18 @@ class FloorRegistry(BaseRegistry[FloorRegistryStoreData]):
         return self.floors.get_by_name(name)
 
     @callback
+    def async_get_floors_by_alias(self, alias: str) -> list[FloorEntry]:
+        """Get floors by alias."""
+        return self.floors.get_floors_for_alias(alias)
+
+    @callback
     def async_list_floors(self) -> Iterable[FloorEntry]:
         """Get all floors."""
         return self.floors.values()
 
-    @callback
     def _generate_id(self, name: str) -> str:
         """Generate floor ID."""
-        suggestion = suggestion_base = slugify(name)
-        tries = 1
-        while suggestion in self.floors:
-            tries += 1
-            suggestion = f"{suggestion_base}_{tries}"
-        return suggestion
+        return self.floors.generate_id_from_name(name)
 
     @callback
     def async_create(
@@ -151,30 +181,26 @@ class FloorRegistry(BaseRegistry[FloorRegistryStoreData]):
     ) -> FloorEntry:
         """Create a new floor."""
         self.hass.verify_event_loop_thread("floor_registry.async_create")
+
         if floor := self.async_get_floor_by_name(name):
             raise ValueError(
                 f"The name {name} ({floor.normalized_name}) is already in use"
             )
-
-        normalized_name = normalize_name(name)
 
         floor = FloorEntry(
             aliases=aliases or set(),
             icon=icon,
             floor_id=self._generate_id(name),
             name=name,
-            normalized_name=normalized_name,
             level=level,
         )
         floor_id = floor.floor_id
         self.floors[floor_id] = floor
         self.async_schedule_save()
+
         self.hass.bus.async_fire_internal(
             EVENT_FLOOR_REGISTRY_UPDATED,
-            EventFloorRegistryUpdatedData(
-                action="create",
-                floor_id=floor_id,
-            ),
+            EventFloorRegistryUpdatedData(action="create", floor_id=floor_id),
         )
         return floor
 
@@ -215,7 +241,6 @@ class FloorRegistry(BaseRegistry[FloorRegistryStoreData]):
         }
         if name is not UNDEFINED and name != old.name:
             changes["name"] = name
-            changes["normalized_name"] = normalize_name(name)
 
         if not changes:
             return old
@@ -239,18 +264,16 @@ class FloorRegistry(BaseRegistry[FloorRegistryStoreData]):
     async def async_load(self) -> None:
         """Load the floor registry."""
         data = await self._store.async_load()
-        floors = NormalizedNameBaseRegistryItems[FloorEntry]()
+        floors = FloorRegistryItems()
 
         if data is not None:
             for floor in data["floors"]:
-                normalized_name = normalize_name(floor["name"])
                 floors[floor["floor_id"]] = FloorEntry(
                     aliases=set(floor["aliases"]),
                     icon=floor["icon"],
                     floor_id=floor["floor_id"],
                     name=floor["name"],
                     level=floor["level"],
-                    normalized_name=normalized_name,
                     created_at=datetime.fromisoformat(floor["created_at"]),
                     modified_at=datetime.fromisoformat(floor["modified_at"]),
                 )

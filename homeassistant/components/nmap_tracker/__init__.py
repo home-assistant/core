@@ -21,15 +21,17 @@ from homeassistant.components.device_tracker import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EXCLUDE, CONF_HOSTS, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_HOME_INTERVAL,
+    CONF_HOSTS_EXCLUDE,
+    CONF_HOSTS_LIST,
+    CONF_MAC_EXCLUDE,
     CONF_OPTIONS,
     DOMAIN,
     NMAP_TRACKED_DEVICES,
@@ -89,14 +91,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     devices = domain_data.setdefault(NMAP_TRACKED_DEVICES, NmapTrackedDevices())
     scanner = domain_data[entry.entry_id] = NmapDeviceScanner(hass, entry, devices)
     await scanner.async_setup()
-    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
-
-
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Handle options update."""
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -108,6 +104,40 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate config entry."""
+    _LOGGER.debug(
+        "Migrating configuration from version %s.%s", entry.version, entry.minor_version
+    )
+
+    if entry.version > 1:
+        # This means the user has downgraded from a future version
+        return False
+
+    if entry.version == 1:
+        new_options = {**entry.options}
+        if entry.minor_version < 2:
+            new_options[CONF_HOSTS_LIST] = cv.ensure_list_csv(
+                new_options.get(CONF_HOSTS, [])
+            )
+            new_options[CONF_HOSTS_EXCLUDE] = cv.ensure_list_csv(
+                new_options.get(CONF_EXCLUDE, [])
+            )
+            new_options[CONF_MAC_EXCLUDE] = []
+
+    hass.config_entries.async_update_entry(
+        entry, options=new_options, minor_version=2, version=1
+    )
+
+    _LOGGER.debug(
+        "Migration to configuration version %s.%s successful",
+        entry.version,
+        entry.minor_version,
+    )
+
+    return True
 
 
 @callback
@@ -152,6 +182,7 @@ class NmapDeviceScanner:
         self._hosts = None
         self._options = None
         self._exclude = None
+        self._mac_exclude = None
         self._scan_interval = None
 
         self._known_mac_addresses: dict[str, str] = {}
@@ -164,10 +195,9 @@ class NmapDeviceScanner:
         self._scan_interval = timedelta(
             seconds=config.get(CONF_SCAN_INTERVAL, TRACKER_SCAN_INTERVAL)
         )
-        hosts_list = cv.ensure_list_csv(config[CONF_HOSTS])
-        self._hosts = [host for host in hosts_list if host != ""]
-        excludes_list = cv.ensure_list_csv(config[CONF_EXCLUDE])
-        self._exclude = [exclude for exclude in excludes_list if exclude != ""]
+        self._hosts = config.get(CONF_HOSTS_LIST, [])
+        self._exclude = config.get(CONF_HOSTS_EXCLUDE, [])
+        self._mac_exclude = config.get(CONF_MAC_EXCLUDE, [])
         self._options = config[CONF_OPTIONS]
         self.home_interval = timedelta(
             minutes=cv.positive_int(config[CONF_HOME_INTERVAL])
@@ -380,10 +410,15 @@ class NmapDeviceScanner:
             )
             if mac is None:
                 self._async_device_offline(ipv4, "No MAC address found", now)
-                _LOGGER.info("No MAC address found for %s", ipv4)
+                _LOGGER.warning("No MAC address found for %s", ipv4)
                 continue
 
             formatted_mac = format_mac(mac)
+
+            if formatted_mac in self._mac_exclude:
+                _LOGGER.debug("MAC address %s is excluded from tracking", formatted_mac)
+                continue
+
             if (
                 devices.config_entry_owner.setdefault(formatted_mac, entry_id)
                 != entry_id

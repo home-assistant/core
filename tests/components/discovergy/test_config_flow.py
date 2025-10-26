@@ -20,7 +20,7 @@ async def test_form(hass: HomeAssistant, discovergy: AsyncMock) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] is None
+    assert result["errors"] == {}
 
     with patch(
         "homeassistant.components.discovergy.async_setup_entry",
@@ -51,7 +51,7 @@ async def test_reauth(
     config_entry.add_to_hass(hass)
     init_result = await config_entry.start_reauth_flow(hass)
     assert init_result["type"] is FlowResultType.FORM
-    assert init_result["step_id"] == "reauth_confirm"
+    assert init_result["step_id"] == "user"
 
     with patch(
         "homeassistant.components.discovergy.async_setup_entry",
@@ -60,7 +60,7 @@ async def test_reauth(
         configure_result = await hass.config_entries.flow.async_configure(
             init_result["flow_id"],
             {
-                CONF_EMAIL: "test@example.com",
+                CONF_EMAIL: "user@example.org",
                 CONF_PASSWORD: "test-password",
             },
         )
@@ -111,3 +111,30 @@ async def test_form_fail(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test@example.com"
     assert "errors" not in result
+
+
+async def test_reauth_unique_id_mismatch(
+    hass: HomeAssistant, config_entry: MockConfigEntry, discovergy: AsyncMock
+) -> None:
+    """Test reauth flow with unique id mismatch."""
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    with patch(
+        "homeassistant.components.discovergy.async_setup_entry",
+        return_value=True,
+    ):
+        configure_result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_EMAIL: "user2@example.org",
+                CONF_PASSWORD: "test-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+        assert configure_result["type"] is FlowResultType.ABORT
+        assert configure_result["reason"] == "account_mismatch"

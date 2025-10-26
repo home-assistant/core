@@ -12,7 +12,7 @@ from homeassistant.components.homekit_controller.connection import (
     MAX_POLL_FAILURES_TO_DECLARE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from ..common import Helper, setup_accessories_from_file, setup_test_accessories
 

@@ -14,10 +14,15 @@ from homeassistant.components import blueprint
 from homeassistant.components.trace import TRACE_CONFIG_SCHEMA
 from homeassistant.config import config_per_platform, config_without_domain
 from homeassistant.const import (
+    CONF_ACTION,
+    CONF_ACTIONS,
     CONF_ALIAS,
     CONF_CONDITION,
+    CONF_CONDITIONS,
     CONF_DESCRIPTION,
     CONF_ID,
+    CONF_TRIGGER,
+    CONF_TRIGGERS,
     CONF_VARIABLES,
 )
 from homeassistant.core import HomeAssistant
@@ -29,11 +34,9 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.yaml.input import UndefinedSubstitution
 
 from .const import (
-    CONF_ACTION,
     CONF_HIDE_ENTITY,
     CONF_INITIAL_STATE,
     CONF_TRACE,
-    CONF_TRIGGER,
     CONF_TRIGGER_VARIABLES,
     DOMAIN,
     LOGGER,
@@ -52,7 +55,16 @@ _MINIMAL_PLATFORM_SCHEMA = vol.Schema(
 )
 
 
+def _backward_compat_schema(value: Any | None) -> Any:
+    """Backward compatibility for automations."""
+
+    value = cv.renamed(CONF_TRIGGER, CONF_TRIGGERS)(value)
+    value = cv.renamed(CONF_ACTION, CONF_ACTIONS)(value)
+    return cv.renamed(CONF_CONDITION, CONF_CONDITIONS)(value)
+
+
 PLATFORM_SCHEMA = vol.All(
+    _backward_compat_schema,
     cv.deprecated(CONF_HIDE_ENTITY),
     script.make_script_schema(
         {
@@ -63,14 +75,18 @@ PLATFORM_SCHEMA = vol.All(
             vol.Optional(CONF_TRACE, default={}): TRACE_CONFIG_SCHEMA,
             vol.Optional(CONF_INITIAL_STATE): cv.boolean,
             vol.Optional(CONF_HIDE_ENTITY): cv.boolean,
-            vol.Required(CONF_TRIGGER): cv.TRIGGER_SCHEMA,
-            vol.Optional(CONF_CONDITION): cv.CONDITIONS_SCHEMA,
+            vol.Required(CONF_TRIGGERS): cv.TRIGGER_SCHEMA,
+            vol.Optional(CONF_CONDITIONS): cv.CONDITIONS_SCHEMA,
             vol.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
             vol.Optional(CONF_TRIGGER_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
-            vol.Required(CONF_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Required(CONF_ACTIONS): cv.SCRIPT_SCHEMA,
         },
         script.SCRIPT_MODE_SINGLE,
     ),
+)
+
+AUTOMATION_BLUEPRINT_SCHEMA = vol.All(
+    _backward_compat_schema, blueprint.schemas.BLUEPRINT_SCHEMA
 )
 
 
@@ -151,7 +167,9 @@ async def _async_validate_config_item(  # noqa: C901
         uses_blueprint = True
         blueprints = async_get_blueprints(hass)
         try:
-            blueprint_inputs = await blueprints.async_inputs_from_config(config)
+            blueprint_inputs = await blueprints.async_inputs_from_config(
+                _backward_compat_schema(config)
+            )
         except blueprint.BlueprintException as err:
             if warn_on_errors:
                 LOGGER.error(
@@ -199,8 +217,8 @@ async def _async_validate_config_item(  # noqa: C901
     automation_config.raw_config = raw_config
 
     try:
-        automation_config[CONF_TRIGGER] = await async_validate_trigger_config(
-            hass, validated_config[CONF_TRIGGER]
+        automation_config[CONF_TRIGGERS] = await async_validate_trigger_config(
+            hass, validated_config[CONF_TRIGGERS]
         )
     except (
         vol.Invalid,
@@ -216,10 +234,10 @@ async def _async_validate_config_item(  # noqa: C901
         )
         return automation_config
 
-    if CONF_CONDITION in validated_config:
+    if CONF_CONDITIONS in validated_config:
         try:
-            automation_config[CONF_CONDITION] = await async_validate_conditions_config(
-                hass, validated_config[CONF_CONDITION]
+            automation_config[CONF_CONDITIONS] = await async_validate_conditions_config(
+                hass, validated_config[CONF_CONDITIONS]
             )
         except (
             vol.Invalid,
@@ -239,8 +257,8 @@ async def _async_validate_config_item(  # noqa: C901
             return automation_config
 
     try:
-        automation_config[CONF_ACTION] = await script.async_validate_actions_config(
-            hass, validated_config[CONF_ACTION]
+        automation_config[CONF_ACTIONS] = await script.async_validate_actions_config(
+            hass, validated_config[CONF_ACTIONS]
         )
     except (
         vol.Invalid,

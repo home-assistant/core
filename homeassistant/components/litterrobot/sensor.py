@@ -5,9 +5,9 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Generic, cast
+from typing import Any, Generic
 
-from pylitterbot import FeederRobot, LitterRobot, LitterRobot4, Robot
+from pylitterbot import FeederRobot, LitterRobot, LitterRobot4, Pet, Robot
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -17,10 +17,11 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfMass
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
-from . import LitterRobotConfigEntry
-from .entity import LitterRobotEntity, _RobotT
+from .coordinator import LitterRobotConfigEntry
+from .entity import LitterRobotEntity, _WhiskerEntityT
 
 
 def icon_for_gauge_level(gauge_level: int | None = None, offset: int = 0) -> str:
@@ -34,34 +35,13 @@ def icon_for_gauge_level(gauge_level: int | None = None, offset: int = 0) -> str
     return "mdi:gauge-low"
 
 
-@dataclass(frozen=True)
-class RobotSensorEntityDescription(SensorEntityDescription, Generic[_RobotT]):
+@dataclass(frozen=True, kw_only=True)
+class RobotSensorEntityDescription(SensorEntityDescription, Generic[_WhiskerEntityT]):
     """A class that describes robot sensor entities."""
 
     icon_fn: Callable[[Any], str | None] = lambda _: None
-    should_report: Callable[[_RobotT], bool] = lambda _: True
-
-
-class LitterRobotSensorEntity(LitterRobotEntity[_RobotT], SensorEntity):
-    """Litter-Robot sensor entity."""
-
-    entity_description: RobotSensorEntityDescription[_RobotT]
-
-    @property
-    def native_value(self) -> float | datetime | str | None:
-        """Return the state."""
-        if self.entity_description.should_report(self.robot):
-            if isinstance(val := getattr(self.robot, self.entity_description.key), str):
-                return val.lower()
-            return cast(float | datetime | None, val)
-        return None
-
-    @property
-    def icon(self) -> str | None:
-        """Return the icon to use in the frontend, if any."""
-        if (icon := self.entity_description.icon_fn(self.state)) is not None:
-            return icon
-        return super().icon
+    last_reset_fn: Callable[[], datetime | None] = lambda: None
+    value_fn: Callable[[_WhiskerEntityT], float | datetime | str | None]
 
 
 ROBOT_SENSOR_MAP: dict[type[Robot], list[RobotSensorEntityDescription]] = {
@@ -72,24 +52,34 @@ ROBOT_SENSOR_MAP: dict[type[Robot], list[RobotSensorEntityDescription]] = {
             native_unit_of_measurement=PERCENTAGE,
             icon_fn=lambda state: icon_for_gauge_level(state, 10),
             state_class=SensorStateClass.MEASUREMENT,
+            value_fn=lambda robot: robot.waste_drawer_level,
         ),
         RobotSensorEntityDescription[LitterRobot](
             key="sleep_mode_start_time",
             translation_key="sleep_mode_start_time",
             device_class=SensorDeviceClass.TIMESTAMP,
-            should_report=lambda robot: robot.sleep_mode_enabled,
+            value_fn=(
+                lambda robot: (
+                    robot.sleep_mode_start_time if robot.sleep_mode_enabled else None
+                )
+            ),
         ),
         RobotSensorEntityDescription[LitterRobot](
             key="sleep_mode_end_time",
             translation_key="sleep_mode_end_time",
             device_class=SensorDeviceClass.TIMESTAMP,
-            should_report=lambda robot: robot.sleep_mode_enabled,
+            value_fn=(
+                lambda robot: (
+                    robot.sleep_mode_end_time if robot.sleep_mode_enabled else None
+                )
+            ),
         ),
         RobotSensorEntityDescription[LitterRobot](
             key="last_seen",
             translation_key="last_seen",
             device_class=SensorDeviceClass.TIMESTAMP,
             entity_category=EntityCategory.DIAGNOSTIC,
+            value_fn=lambda robot: robot.last_seen,
         ),
         RobotSensorEntityDescription[LitterRobot](
             key="status_code",
@@ -123,15 +113,45 @@ ROBOT_SENSOR_MAP: dict[type[Robot], list[RobotSensorEntityDescription]] = {
                 "sdf",
                 "spf",
             ],
+            value_fn=(
+                lambda robot: status.lower() if (status := robot.status_code) else None
+            ),
+        ),
+        RobotSensorEntityDescription[LitterRobot](
+            key="total_cycles",
+            translation_key="total_cycles",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            value_fn=lambda robot: robot.cycle_count,
         ),
     ],
     LitterRobot4: [
+        RobotSensorEntityDescription[LitterRobot4](
+            key="hopper_status",
+            translation_key="hopper_status",
+            device_class=SensorDeviceClass.ENUM,
+            options=[
+                "enabled",
+                "disabled",
+                "motor_fault_short",
+                "motor_ot_amps",
+                "motor_disconnected",
+                "empty",
+            ],
+            value_fn=(
+                lambda robot: (
+                    status.name.lower() if (status := robot.hopper_status) else None
+                )
+            ),
+        ),
         RobotSensorEntityDescription[LitterRobot4](
             key="litter_level",
             translation_key="litter_level",
             native_unit_of_measurement=PERCENTAGE,
             icon_fn=lambda state: icon_for_gauge_level(state, 10),
             state_class=SensorStateClass.MEASUREMENT,
+            value_fn=lambda robot: robot.litter_level,
         ),
         RobotSensorEntityDescription[LitterRobot4](
             key="pet_weight",
@@ -139,32 +159,110 @@ ROBOT_SENSOR_MAP: dict[type[Robot], list[RobotSensorEntityDescription]] = {
             native_unit_of_measurement=UnitOfMass.POUNDS,
             device_class=SensorDeviceClass.WEIGHT,
             state_class=SensorStateClass.MEASUREMENT,
+            value_fn=lambda robot: robot.pet_weight,
         ),
     ],
     FeederRobot: [
+        RobotSensorEntityDescription[FeederRobot](
+            key="food_dispensed_today",
+            translation_key="food_dispensed_today",
+            state_class=SensorStateClass.TOTAL,
+            last_reset_fn=dt_util.start_of_local_day,
+            value_fn=(
+                lambda robot: (
+                    robot.get_food_dispensed_since(dt_util.start_of_local_day())
+                )
+            ),
+        ),
         RobotSensorEntityDescription[FeederRobot](
             key="food_level",
             translation_key="food_level",
             native_unit_of_measurement=PERCENTAGE,
             icon_fn=lambda state: icon_for_gauge_level(state, 10),
             state_class=SensorStateClass.MEASUREMENT,
-        )
+            value_fn=lambda robot: robot.food_level,
+        ),
+        RobotSensorEntityDescription[FeederRobot](
+            key="last_feeding",
+            translation_key="last_feeding",
+            device_class=SensorDeviceClass.TIMESTAMP,
+            value_fn=(
+                lambda robot: (
+                    robot.last_feeding["timestamp"] if robot.last_feeding else None
+                )
+            ),
+        ),
+        RobotSensorEntityDescription[FeederRobot](
+            key="next_feeding",
+            translation_key="next_feeding",
+            device_class=SensorDeviceClass.TIMESTAMP,
+            value_fn=lambda robot: robot.next_feeding,
+        ),
     ],
 }
+
+PET_SENSORS: list[RobotSensorEntityDescription] = [
+    RobotSensorEntityDescription[Pet](
+        key="weight",
+        device_class=SensorDeviceClass.WEIGHT,
+        native_unit_of_measurement=UnitOfMass.POUNDS,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda pet: pet.weight,
+    ),
+    RobotSensorEntityDescription[Pet](
+        key="visits_today",
+        translation_key="visits_today",
+        state_class=SensorStateClass.TOTAL,
+        last_reset_fn=dt_util.start_of_local_day,
+        value_fn=lambda pet: pet.get_visits_since(dt_util.start_of_local_day()),
+    ),
+]
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: LitterRobotConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Litter-Robot sensors using config entry."""
-    hub = entry.runtime_data
-    entities = [
-        LitterRobotSensorEntity(robot=robot, hub=hub, description=description)
-        for robot in hub.account.robots
+    coordinator = entry.runtime_data
+    entities: list[LitterRobotSensorEntity] = [
+        LitterRobotSensorEntity(
+            robot=robot, coordinator=coordinator, description=description
+        )
+        for robot in coordinator.account.robots
         for robot_type, entity_descriptions in ROBOT_SENSOR_MAP.items()
         if isinstance(robot, robot_type)
         for description in entity_descriptions
     ]
+    entities.extend(
+        LitterRobotSensorEntity(
+            robot=pet, coordinator=coordinator, description=description
+        )
+        for pet in coordinator.account.pets
+        for description in PET_SENSORS
+    )
     async_add_entities(entities)
+
+
+class LitterRobotSensorEntity(LitterRobotEntity[_WhiskerEntityT], SensorEntity):
+    """Litter-Robot sensor entity."""
+
+    entity_description: RobotSensorEntityDescription[_WhiskerEntityT]
+
+    @property
+    def native_value(self) -> float | datetime | str | None:
+        """Return the state."""
+        return self.entity_description.value_fn(self.robot)
+
+    @property
+    def icon(self) -> str | None:
+        """Return the icon to use in the frontend, if any."""
+        if (icon := self.entity_description.icon_fn(self.state)) is not None:
+            return icon
+        return super().icon
+
+    @property
+    def last_reset(self) -> datetime | None:
+        """Return the time when the sensor was last reset, if any."""
+        return self.entity_description.last_reset_fn() or super().last_reset

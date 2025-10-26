@@ -5,7 +5,7 @@
       "user": {
         "title": "Fill in your information",
         "data": {
-          "ip_address": "Hostname or IP Address",
+          "ip_address": "Hostname or IP address",
           "password": "[%key:common::config_flow::data::password%]",
           "port": "[%key:common::config_flow::data::port%]"
         }
@@ -157,7 +157,7 @@
     },
     "unpause_watering": {
       "name": "Unpause all watering",
-      "description": "Unpauses all paused watering activities.",
+      "description": "Resumes all paused watering activities.",
       "fields": {
         "device_id": {
           "name": "[%key:component::rainmachine::services::pause_watering::fields::device_id::name%]",
@@ -167,7 +167,7 @@
     },
     "push_flow_meter_data": {
       "name": "Push flow meter data",
-      "description": "Push flow meter data to the RainMachine device.",
+      "description": "Sends flow meter data from Home Assistant to the RainMachine device.",
       "fields": {
         "device_id": {
           "name": "[%key:component::rainmachine::services::pause_watering::fields::device_id::name%]",
@@ -185,7 +185,7 @@
     },
     "push_weather_data": {
       "name": "Push weather data",
-      "description": "Push weather data from Home Assistant to the RainMachine device.\nLocal Weather Push service should be enabled from Settings > Weather > Developer tab for RainMachine to consider the values being sent. Units must be sent in metric; no conversions are performed by the integraion.\nSee details of RainMachine API Here: https://rainmachine.docs.apiary.io/#reference/weather-services/parserdata/post.",
+      "description": "Sends weather data from Home Assistant to the RainMachine device.\nLocal Weather Push service should be enabled from Settings > Weather > Developer tab for RainMachine to consider the values being sent. Units must be sent in metric; no conversions are performed by the integraion.\nSee details of RainMachine API here: https://rainmachine.docs.apiary.io/#reference/weather-services/parserdata/post.",
       "fields": {
         "device_id": {
           "name": "[%key:component::rainmachine::services::pause_watering::fields::device_id::name%]",
@@ -193,15 +193,15 @@
         },
         "timestamp": {
           "name": "Timestamp",
-          "description": "UNIX Timestamp for the weather data. If omitted, the RainMachine device's local time at the time of the call is used."
+          "description": "UNIX timestamp for the weather data. If omitted, the RainMachine device's local time at the time of the call is used."
         },
         "mintemp": {
-          "name": "Min temp",
-          "description": "Minimum temperature (°C)."
+          "name": "Min temperature",
+          "description": "Minimum temperature in current period (°C)."
         },
         "maxtemp": {
-          "name": "Max temp",
-          "description": "Maximum temperature (°C)."
+          "name": "Max temperature",
+          "description": "Maximum temperature in current period (°C)."
         },
         "temperature": {
           "name": "Temperature",
@@ -209,11 +209,11 @@
         },
         "wind": {
           "name": "Wind speed",
-          "description": "Wind speed (m/s)."
+          "description": "Current wind speed (m/s)."
         },
         "solarrad": {
           "name": "Solar radiation",
-          "description": "Solar radiation (MJ/m²/h)."
+          "description": "Current solar radiation (MJ/m²/h)."
         },
         "et": {
           "name": "Evapotranspiration",
@@ -229,29 +229,29 @@
         },
         "minrh": {
           "name": "Min relative humidity",
-          "description": "Min relative humidity (%RH)."
+          "description": "Minimum relative humidity in current period (%RH)."
         },
         "maxrh": {
           "name": "Max relative humidity",
-          "description": "Max relative humidity (%RH)."
+          "description": "Maximum relative humidity in current period (%RH)."
         },
         "condition": {
           "name": "Weather condition code",
           "description": "Current weather condition code (WNUM)."
         },
         "pressure": {
-          "name": "Barametric pressure",
-          "description": "Barametric pressure (kPa)."
+          "name": "Barometric pressure",
+          "description": "Current barometric pressure (kPa)."
         },
         "dewpoint": {
           "name": "Dew point",
-          "description": "Dew point (°C)."
+          "description": "Current dew point (°C)."
         }
       }
     },
     "unrestrict_watering": {
       "name": "Unrestrict all watering",
-      "description": "Unrestrict all watering activities.",
+      "description": "Removes all watering restrictions.",
       "fields": {
         "device_id": {
           "name": "[%key:component::rainmachine::services::pause_watering::fields::device_id::name%]",

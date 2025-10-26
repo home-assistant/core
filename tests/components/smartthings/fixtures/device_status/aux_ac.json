@@ -1,0 +1,69 @@
+{
+  "components": {
+    "main": {
+      "partyvoice23922.vtempset": {
+        "vtemp": {
+          "value": 20,
+          "unit": "C",
+          "timestamp": "2024-12-05T20:03:33.161Z"
+        }
+      },
+      "airConditionerFanMode": {
+        "fanMode": {
+          "value": "auto",
+          "timestamp": "2024-12-05T20:03:32.930Z"
+        },
+        "supportedAcFanModes": {
+          "value": null
+        },
+        "availableAcFanModes": {
+          "value": null
+        }
+      },
+      "temperatureMeasurement": {
+        "temperatureRange": {
+          "value": null
+        },
+        "temperature": {
+          "value": 20.0,
+          "unit": "C",
+          "timestamp": "2024-12-05T20:03:33.066Z"
+        }
+      },
+      "airConditionerMode": {
+        "availableAcModes": {
+          "value": null
+        },
+        "supportedAcModes": {
+          "value": null
+        },
+        "airConditionerMode": {
+          "value": "cool",
+          "timestamp": "2024-12-05T20:03:32.845Z"
+        }
+      },
+      "fanSpeed": {
+        "fanSpeed": {
+          "value": 0,
+          "timestamp": "2024-12-05T20:03:33.334Z"
+        }
+      },
+      "thermostatCoolingSetpoint": {
+        "coolingSetpointRange": {
+          "value": null
+        },
+        "coolingSetpoint": {
+          "value": 20.0,
+          "unit": "C",
+          "timestamp": "2024-12-05T20:03:33.243Z"
+        }
+      },
+      "switch": {
+        "switch": {
+          "value": "off",
+          "timestamp": "2024-12-05T20:03:32.662Z"
+        }
+      }
+    }
+  }
+}

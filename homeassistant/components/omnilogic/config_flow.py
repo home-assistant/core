@@ -34,19 +34,13 @@ class OmniLogicConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
-        return OptionsFlowHandler(config_entry)
+        return OptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
-
-        config_entry = self._async_current_entries()
-        if config_entry:
-            return self.async_abort(reason="single_instance_allowed")
-
-        errors = {}
 
         if user_input is not None:
             username = user_input[CONF_USERNAME]
@@ -83,10 +77,6 @@ class OmniLogicConfigFlow(ConfigFlow, domain=DOMAIN):
 
 class OptionsFlowHandler(OptionsFlow):
     """Handle Omnilogic client options."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None

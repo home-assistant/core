@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/caldav",
   "iot_class": "cloud_polling",
   "loggers": ["caldav", "vobject"],
-  "requirements": ["caldav==1.3.9"]
+  "requirements": ["caldav==1.6.0", "icalendar==6.3.1"]
 }

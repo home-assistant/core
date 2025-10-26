@@ -7,6 +7,7 @@ from typing import Any
 
 from motionblinds import DEVICE_TYPES_WIFI, ParseException
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -25,21 +26,22 @@ _LOGGER = logging.getLogger(__name__)
 class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
     """Class to manage fetching data from single endpoint."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: ConfigEntry,
         logger: logging.Logger,
         coordinator_info: dict[str, Any],
-        *,
-        name: str,
-        update_interval: timedelta,
     ) -> None:
         """Initialize global data updater."""
         super().__init__(
             hass,
             logger,
-            name=name,
-            update_interval=update_interval,
+            config_entry=config_entry,
+            name=config_entry.title,
+            update_interval=timedelta(seconds=UPDATE_INTERVAL),
         )
 
         self.api_lock = coordinator_info[KEY_API_LOCK]

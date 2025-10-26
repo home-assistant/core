@@ -7,14 +7,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant.components.emoncms.const import CONF_ONLY_INCLUDE_FEEDID, DOMAIN
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_ID,
-    CONF_PLATFORM,
-    CONF_URL,
-    CONF_VALUE_TEMPLATE,
-)
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.const import CONF_API_KEY, CONF_URL
 
 from tests.common import MockConfigEntry
 
@@ -50,35 +43,7 @@ FLOW_RESULT = {
 
 SENSOR_NAME = "emoncms@1.1.1.1"
 
-YAML_BASE = {
-    CONF_PLATFORM: "emoncms",
-    CONF_API_KEY: "my_api_key",
-    CONF_ID: 1,
-    CONF_URL: "http://1.1.1.1",
-}
-
-YAML = {
-    **YAML_BASE,
-    CONF_ONLY_INCLUDE_FEEDID: [1],
-}
-
-
-@pytest.fixture
-def emoncms_yaml_config() -> ConfigType:
-    """Mock emoncms yaml configuration."""
-    return {"sensor": YAML}
-
-
-@pytest.fixture
-def emoncms_yaml_config_with_template() -> ConfigType:
-    """Mock emoncms yaml conf with template parameter."""
-    return {"sensor": {**YAML, CONF_VALUE_TEMPLATE: "{{ value | float + 1500 }}"}}
-
-
-@pytest.fixture
-def emoncms_yaml_config_no_include_only_feed_id() -> ConfigType:
-    """Mock emoncms yaml configuration without include_only_feed_id parameter."""
-    return {"sensor": YAML_BASE}
+UNIQUE_ID = "123-53535292"
 
 
 @pytest.fixture
@@ -88,6 +53,21 @@ def config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         title=SENSOR_NAME,
         data=FLOW_RESULT,
+    )
+
+
+FLOW_RESULT_SECOND_URL = copy.deepcopy(FLOW_RESULT)
+FLOW_RESULT_SECOND_URL[CONF_URL] = "http://1.1.1.2"
+
+
+@pytest.fixture
+def config_entry_unique_id() -> MockConfigEntry:
+    """Mock emoncms config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title=SENSOR_NAME,
+        data=FLOW_RESULT_SECOND_URL,
+        unique_id=UNIQUE_ID,
     )
 
 
@@ -143,4 +123,5 @@ async def emoncms_client() -> AsyncGenerator[AsyncMock]:
     ):
         client = mock_client.return_value
         client.async_request.return_value = {"success": True, "message": FEEDS}
+        client.async_get_uuid.return_value = UNIQUE_ID
         yield client

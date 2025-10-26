@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from pyenphase import Envoy
 
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import DOMAIN, PLATFORMS
 from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
@@ -18,7 +20,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> b
     """Set up Enphase Envoy from a config entry."""
 
     host = entry.data[CONF_HOST]
-    envoy = Envoy(host, get_async_client(hass, verify_ssl=False))
+    session = async_create_clientsession(hass, verify_ssl=False)
+    envoy = Envoy(host, session)
     coordinator = EnphaseUpdateCoordinator(hass, envoy, entry)
 
     await coordinator.async_config_entry_first_refresh()
@@ -32,9 +35,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> b
         # wait for the next discovery to find the device at its new address
         # and update the config entry so we do not mix up devices.
         raise ConfigEntryNotReady(
-            f"Unexpected device found at {host}; expected {entry.unique_id}, "
-            f"found {envoy.serial_number}"
+            translation_domain=DOMAIN,
+            translation_key="unexpected_device",
+            translation_placeholders={
+                "host": host,
+                "expected_serial": str(entry.unique_id),
+                "actual_serial": str(envoy.serial_number),
+            },
         )
+
+    # register envoy before via_device is used
+    device_registry = dr.async_get(hass)
+    if TYPE_CHECKING:
+        assert envoy.serial_number
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, envoy.serial_number)},
+        manufacturer="Enphase",
+        name=coordinator.name,
+        model=envoy.envoy_model,
+        sw_version=str(envoy.firmware),
+        hw_version=envoy.part_number,
+        serial_number=envoy.serial_number,
+    )
 
     entry.runtime_data = coordinator
 
@@ -45,8 +68,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> bool:
     """Unload a config entry."""
-    coordinator: EnphaseUpdateCoordinator = entry.runtime_data
+    coordinator = entry.runtime_data
     coordinator.async_cancel_token_refresh()
+    coordinator.async_cancel_firmware_refresh()
+    coordinator.async_cancel_mac_verification()
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 

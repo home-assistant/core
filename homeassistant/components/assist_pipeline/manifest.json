@@ -1,7 +1,8 @@
 {
   "domain": "assist_pipeline",
   "name": "Assist pipeline",
-  "codeowners": ["@balloob", "@synesthesiam"],
+  "after_dependencies": ["repairs"],
+  "codeowners": ["@synesthesiam", "@arturpragacz"],
   "dependencies": ["conversation", "stt", "tts", "wake_word"],
   "documentation": "https://www.home-assistant.io/integrations/assist_pipeline",
   "integration_type": "system",

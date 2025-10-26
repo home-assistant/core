@@ -9,7 +9,7 @@ from aiotankerkoenig import GasType, Station
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CURRENCY_EURO
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     ATTR_BRAND,
@@ -24,13 +24,16 @@ from .const import (
 from .coordinator import TankerkoenigConfigEntry, TankerkoenigDataUpdateCoordinator
 from .entity import TankerkoenigCoordinatorEntity
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TankerkoenigConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the tankerkoenig sensors."""
     coordinator = entry.runtime_data
@@ -107,7 +110,14 @@ class FuelPriceSensor(TankerkoenigCoordinatorEntity, SensorEntity):
         self._attr_extra_state_attributes = attrs
 
     @property
-    def native_value(self) -> float:
+    def native_value(self) -> float | None:
         """Return the current price for the fuel type."""
         info = self.coordinator.data[self._station_id]
-        return getattr(info, self._fuel_type)
+        result = None
+        if self._fuel_type is GasType.E10:
+            result = info.e10
+        elif self._fuel_type is GasType.E5:
+            result = info.e5
+        else:
+            result = info.diesel
+        return result

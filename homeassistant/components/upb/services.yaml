@@ -49,7 +49,7 @@ link_deactivate:
   target:
     entity:
       integration: upb
-      domain: light
+      domain: scene
 
 link_goto:
   target:

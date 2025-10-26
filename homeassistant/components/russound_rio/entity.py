@@ -4,11 +4,12 @@ from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
 from typing import Any, Concatenate
 
-from aiorussound import Controller, RussoundTcpConnectionHandler
+from aiorussound import Controller, RussoundClient
+from aiorussound.models import CallbackType
+from aiorussound.rio import ZoneControlSurface
 
-from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN, RUSSOUND_RIO_EXCEPTIONS
@@ -26,7 +27,12 @@ def command[_EntityT: RussoundBaseEntity, **_P](
             await func(self, *args, **kwargs)
         except RUSSOUND_RIO_EXCEPTIONS as exc:
             raise HomeAssistantError(
-                f"Error executing {func.__name__} on entity {self.entity_id},"
+                translation_domain=DOMAIN,
+                translation_key="command_error",
+                translation_placeholders={
+                    "function_name": func.__name__,
+                    "entity_id": self.entity_id,
+                },
             ) from exc
 
     return decorator
@@ -41,53 +47,53 @@ class RussoundBaseEntity(Entity):
     def __init__(
         self,
         controller: Controller,
+        zone_id: int | None = None,
     ) -> None:
         """Initialize the entity."""
-        self._instance = controller.instance
+        self._client = controller.client
         self._controller = controller
         self._primary_mac_address = (
-            controller.mac_address or controller.parent_controller.mac_address
+            controller.mac_address or self._client.controllers[1].mac_address
         )
         self._device_identifier = (
             self._controller.mac_address
             or f"{self._primary_mac_address}-{self._controller.controller_id}"
         )
+        self._zone_id = zone_id
+        if not zone_id:
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, self._device_identifier)},
+            )
+            return
+        zone = controller.zones[zone_id]
         self._attr_device_info = DeviceInfo(
-            # Use MAC address of Russound device as identifier
-            identifiers={(DOMAIN, self._device_identifier)},
+            identifiers={(DOMAIN, f"{self._device_identifier}-{zone_id}")},
+            name=zone.name,
             manufacturer="Russound",
-            name=controller.controller_type,
             model=controller.controller_type,
             sw_version=controller.firmware_version,
+            suggested_area=zone.name,
+            via_device=(DOMAIN, self._device_identifier),
         )
-        if isinstance(self._instance.connection_handler, RussoundTcpConnectionHandler):
-            self._attr_device_info["configuration_url"] = (
-                f"http://{self._instance.connection_handler.host}"
-            )
-        if controller.parent_controller:
-            self._attr_device_info["via_device"] = (
-                DOMAIN,
-                controller.parent_controller.mac_address,
-            )
-        else:
-            self._attr_device_info["connections"] = {
-                (CONNECTION_NETWORK_MAC, controller.mac_address)
-            }
 
-    @callback
-    def _is_connected_updated(self, connected: bool) -> None:
-        """Update the state when the device is ready to receive commands or is unavailable."""
-        self._attr_available = connected
+    @property
+    def _zone(self) -> ZoneControlSurface:
+        assert self._zone_id
+        return self._controller.zones[self._zone_id]
+
+    async def _state_update_callback(
+        self, _client: RussoundClient, _callback_type: CallbackType
+    ) -> None:
+        """Call when the device is notified of changes."""
+        if _callback_type == CallbackType.CONNECTION:
+            self._attr_available = _client.is_connected()
+        self._controller = _client.controllers[self._controller.controller_id]
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-        self._instance.connection_handler.add_connection_callback(
-            self._is_connected_updated
-        )
+        """Register callback handlers."""
+        await self._client.register_state_update_callbacks(self._state_update_callback)
 
     async def async_will_remove_from_hass(self) -> None:
         """Remove callbacks."""
-        self._instance.connection_handler.remove_connection_callback(
-            self._is_connected_updated
-        )
+        self._client.unregister_state_update_callbacks(self._state_update_callback)

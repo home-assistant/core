@@ -16,6 +16,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
     CONF_TYPE,
@@ -25,7 +26,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
@@ -75,7 +79,7 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize min/max/mean config entry."""
     registry = er.async_get(hass)
@@ -275,13 +279,18 @@ class MinMaxSensor(SensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the sensor."""
+        attributes: dict[str, list[str] | str | None] = {
+            ATTR_ENTITY_ID: self._entity_ids
+        }
+
         if self._sensor_type == "min":
-            return {ATTR_MIN_ENTITY_ID: self.min_entity_id}
-        if self._sensor_type == "max":
-            return {ATTR_MAX_ENTITY_ID: self.max_entity_id}
-        if self._sensor_type == "last":
-            return {ATTR_LAST_ENTITY_ID: self.last_entity_id}
-        return None
+            attributes[ATTR_MIN_ENTITY_ID] = self.min_entity_id
+        elif self._sensor_type == "max":
+            attributes[ATTR_MAX_ENTITY_ID] = self.max_entity_id
+        elif self._sensor_type == "last":
+            attributes[ATTR_LAST_ENTITY_ID] = self.last_entity_id
+
+        return attributes
 
     @callback
     def _async_min_max_sensor_state_listener(

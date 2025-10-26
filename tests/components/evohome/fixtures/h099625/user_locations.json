@@ -3,6 +3,7 @@
     "locationInfo": {
       "locationId": "111111",
       "name": "My Home",
+      "useDaylightSaveSwitching": true,
       "timeZone": {
         "timeZoneId": "FLEStandardTime",
         "displayName": "(UTC+02:00) Helsinki, Kyiv, Riga, Sofia, Tallinn, Vilnius",

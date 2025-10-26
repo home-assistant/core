@@ -48,7 +48,7 @@ async def test_get_triggers(
     )
     hass.states.async_set(
         entity_entry.entity_id,
-        const.HVAC_MODE_COOL,
+        HVACMode.COOL,
         {
             const.ATTR_HVAC_ACTION: HVACAction.IDLE,
             const.ATTR_CURRENT_HUMIDITY: 23,
@@ -354,7 +354,12 @@ async def test_get_trigger_capabilities_hvac_mode(hass: HomeAssistant) -> None:
             "required": True,
             "type": "select",
         },
-        {"name": "for", "optional": True, "type": "positive_time_period_dict"},
+        {
+            "name": "for",
+            "optional": True,
+            "required": False,
+            "type": "positive_time_period_dict",
+        },
     ]
 
 
@@ -389,13 +394,20 @@ async def test_get_trigger_capabilities_temp_humid(
             "description": {"suffix": suffix},
             "name": "above",
             "optional": True,
+            "required": False,
             "type": "float",
         },
         {
             "description": {"suffix": suffix},
             "name": "below",
             "optional": True,
+            "required": False,
             "type": "float",
         },
-        {"name": "for", "optional": True, "type": "positive_time_period_dict"},
+        {
+            "name": "for",
+            "optional": True,
+            "required": False,
+            "type": "positive_time_period_dict",
+        },
     ]

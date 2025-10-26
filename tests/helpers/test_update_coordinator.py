@@ -1,9 +1,11 @@
 """Tests for the update coordinator."""
 
+import asyncio
 from datetime import datetime, timedelta
 import logging
 from unittest.mock import AsyncMock, Mock, patch
 import urllib.error
+import weakref
 
 import aiohttp
 from freezegun.api import FrozenDateTimeFactory
@@ -12,13 +14,13 @@ import requests
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import CoreState, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, CoreState, HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryError,
     ConfigEntryNotReady,
 )
-from homeassistant.helpers import update_coordinator
+from homeassistant.helpers import frame, update_coordinator
 from homeassistant.util.dt import utcnow
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -57,7 +59,9 @@ KNOWN_ERRORS: list[tuple[Exception, type[Exception], str]] = [
 
 
 def get_crd(
-    hass: HomeAssistant, update_interval: timedelta | None
+    hass: HomeAssistant,
+    update_interval: timedelta | None,
+    config_entry: config_entries.ConfigEntry | None = None,
 ) -> update_coordinator.DataUpdateCoordinator[int]:
     """Make coordinator mocks."""
     calls = 0
@@ -70,6 +74,7 @@ def get_crd(
     return update_coordinator.DataUpdateCoordinator[int](
         hass,
         _LOGGER,
+        config_entry=config_entry,
         name="test",
         update_method=refresh,
         update_interval=update_interval,
@@ -121,8 +126,7 @@ async def test_async_refresh(
 
 
 async def test_shutdown(
-    hass: HomeAssistant,
-    crd: update_coordinator.DataUpdateCoordinator[int],
+    hass: HomeAssistant, crd: update_coordinator.DataUpdateCoordinator[int]
 ) -> None:
     """Test async_shutdown for update coordinator."""
     assert crd.data is None
@@ -158,13 +162,10 @@ async def test_shutdown(
 
 
 async def test_shutdown_on_entry_unload(
-    hass: HomeAssistant,
-    crd: update_coordinator.DataUpdateCoordinator[int],
+    hass: HomeAssistant, crd: update_coordinator.DataUpdateCoordinator[int]
 ) -> None:
     """Test shutdown is requested on entry unload."""
     entry = MockConfigEntry()
-    config_entries.current_entry.set(entry)
-
     calls = 0
 
     async def _refresh() -> int:
@@ -175,6 +176,7 @@ async def test_shutdown_on_entry_unload(
     crd = update_coordinator.DataUpdateCoordinator[int](
         hass,
         _LOGGER,
+        config_entry=entry,
         name="test",
         update_method=_refresh,
         update_interval=DEFAULT_UPDATE_INTERVAL,
@@ -191,8 +193,7 @@ async def test_shutdown_on_entry_unload(
 
 
 async def test_shutdown_on_hass_stop(
-    hass: HomeAssistant,
-    crd: update_coordinator.DataUpdateCoordinator[int],
+    hass: HomeAssistant, crd: update_coordinator.DataUpdateCoordinator[int]
 ) -> None:
     """Test shutdown can be shutdown on STOP event."""
     calls = 0
@@ -205,6 +206,7 @@ async def test_shutdown_on_hass_stop(
     crd = update_coordinator.DataUpdateCoordinator[int](
         hass,
         _LOGGER,
+        config_entry=None,
         name="test",
         update_method=_refresh,
         update_interval=DEFAULT_UPDATE_INTERVAL,
@@ -404,6 +406,70 @@ async def test_update_interval_not_present(
     assert crd.data is None
 
 
+async def test_update_locks(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    crd: update_coordinator.DataUpdateCoordinator[int],
+) -> None:
+    """Test update interval works."""
+    start = asyncio.Event()
+    block = asyncio.Event()
+
+    async def _update_method() -> int:
+        start.set()
+        await block.wait()
+        block.clear()
+        return 0
+
+    crd.update_method = _update_method
+
+    # Add subscriber
+    update_callback = Mock()
+    crd.async_add_listener(update_callback)
+
+    assert crd.update_interval
+
+    # Trigger timed update, ensure it is started
+    freezer.tick(crd.update_interval)
+    async_fire_time_changed(hass)
+    await start.wait()
+    start.clear()
+
+    # Trigger direct update
+    task = hass.async_create_background_task(crd.async_refresh(), "", eager_start=True)
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+
+    # Ensure it has not started
+    assert not start.is_set()
+
+    # Unblock interval update
+    block.set()
+
+    # Check that direct update starts
+    await start.wait()
+    start.clear()
+
+    # Request update. This should not be blocking
+    # since the lock is held, it should be queued
+    await crd.async_request_refresh()
+    assert not start.is_set()
+
+    # Unblock second update
+    block.set()
+    # Check that task finishes
+    await task
+
+    # Check that queued update starts
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await start.wait()
+    start.clear()
+
+    # Unblock queued update
+    block.set()
+
+
 async def test_refresh_recover(
     crd: update_coordinator.DataUpdateCoordinator[int], caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -539,8 +605,8 @@ async def test_stop_refresh_on_ha_stop(
     ["update_method", "setup_method"],
 )
 async def test_async_config_entry_first_refresh_failure(
+    hass: HomeAssistant,
     err_msg: tuple[Exception, type[Exception], str],
-    crd: update_coordinator.DataUpdateCoordinator[int],
     method: str,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -550,6 +616,11 @@ async def test_async_config_entry_first_refresh_failure(
     will be caught by config_entries.async_setup which will log it with
     a decreasing level of logging once the first message is logged.
     """
+    entry = MockConfigEntry()
+    entry._async_set_state(
+        hass, config_entries.ConfigEntryState.SETUP_IN_PROGRESS, None
+    )
+    crd = get_crd(hass, DEFAULT_UPDATE_INTERVAL, entry)
     setattr(crd, method, AsyncMock(side_effect=err_msg[0]))
 
     with pytest.raises(ConfigEntryNotReady):
@@ -572,8 +643,8 @@ async def test_async_config_entry_first_refresh_failure(
     ["update_method", "setup_method"],
 )
 async def test_async_config_entry_first_refresh_failure_passed_through(
+    hass: HomeAssistant,
     err_msg: tuple[Exception, type[Exception], str],
-    crd: update_coordinator.DataUpdateCoordinator[int],
     method: str,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -583,6 +654,11 @@ async def test_async_config_entry_first_refresh_failure_passed_through(
     will be caught by config_entries.async_setup which will log it with
     a decreasing level of logging once the first message is logged.
     """
+    entry = MockConfigEntry()
+    entry._async_set_state(
+        hass, config_entries.ConfigEntryState.SETUP_IN_PROGRESS, None
+    )
+    crd = get_crd(hass, DEFAULT_UPDATE_INTERVAL, entry)
     setattr(crd, method, AsyncMock(side_effect=err_msg[0]))
 
     with pytest.raises(err_msg[1]):
@@ -593,11 +669,13 @@ async def test_async_config_entry_first_refresh_failure_passed_through(
     assert err_msg[2] not in caplog.text
 
 
-async def test_async_config_entry_first_refresh_success(
-    crd: update_coordinator.DataUpdateCoordinator[int], caplog: pytest.LogCaptureFixture
-) -> None:
+async def test_async_config_entry_first_refresh_success(hass: HomeAssistant) -> None:
     """Test first refresh successfully."""
-
+    entry = MockConfigEntry()
+    entry._async_set_state(
+        hass, config_entries.ConfigEntryState.SETUP_IN_PROGRESS, None
+    )
+    crd = get_crd(hass, DEFAULT_UPDATE_INTERVAL, entry)
     crd.setup_method = AsyncMock()
     await crd.async_config_entry_first_refresh()
 
@@ -605,13 +683,67 @@ async def test_async_config_entry_first_refresh_success(
     crd.setup_method.assert_called_once()
 
 
+async def test_async_config_entry_first_refresh_invalid_state(
+    hass: HomeAssistant,
+) -> None:
+    """Test first refresh fails due to invalid state."""
+    entry = MockConfigEntry()
+    crd = get_crd(hass, DEFAULT_UPDATE_INTERVAL, entry)
+    crd.setup_method = AsyncMock()
+    with pytest.raises(
+        RuntimeError,
+        match="Detected code that uses `async_config_entry_first_refresh`, which "
+        "is only supported when entry state is ConfigEntryState.SETUP_IN_PROGRESS, "
+        "but it is in state ConfigEntryState.NOT_LOADED. Please report this issue",
+    ):
+        await crd.async_config_entry_first_refresh()
+
+    assert crd.last_update_success is True
+    crd.setup_method.assert_not_called()
+
+
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_async_config_entry_first_refresh_invalid_state_in_integration(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test first refresh successfully, despite wrong state."""
+    entry = MockConfigEntry()
+    crd = get_crd(hass, DEFAULT_UPDATE_INTERVAL, entry)
+    crd.setup_method = AsyncMock()
+
+    await crd.async_config_entry_first_refresh()
+    assert crd.last_update_success is True
+    crd.setup_method.assert_called()
+    assert (
+        "Detected that integration 'hue' uses `async_config_entry_first_refresh`, which "
+        "is only supported when entry state is ConfigEntryState.SETUP_IN_PROGRESS, "
+        "but it is in state ConfigEntryState.NOT_LOADED at "
+        "homeassistant/components/hue/light.py, line 23: self.light.is_on. "
+        "This will stop working in Home Assistant 2025.11"
+    ) in caplog.text
+
+
+async def test_async_config_entry_first_refresh_no_entry(hass: HomeAssistant) -> None:
+    """Test first refresh successfully."""
+    crd = get_crd(hass, DEFAULT_UPDATE_INTERVAL, None)
+    crd.setup_method = AsyncMock()
+    with pytest.raises(
+        ConfigEntryError,
+        match="Detected code that uses `async_config_entry_first_refresh`,"
+        " which is only supported for coordinators with a config entry",
+    ):
+        await crd.async_config_entry_first_refresh()
+
+    assert crd.last_update_success is True
+    crd.setup_method.assert_not_called()
+
+
 async def test_not_schedule_refresh_if_system_option_disable_polling(
     hass: HomeAssistant,
 ) -> None:
     """Test we do not schedule a refresh if disable polling in config entry."""
     entry = MockConfigEntry(pref_disable_polling=True)
-    config_entries.current_entry.set(entry)
-    crd = get_crd(hass, DEFAULT_UPDATE_INTERVAL)
+    crd = get_crd(hass, DEFAULT_UPDATE_INTERVAL, entry)
     crd.async_add_listener(lambda: None)
     assert crd._unsub_refresh is None
 
@@ -651,7 +783,7 @@ async def test_async_set_update_error(
 
 
 async def test_only_callback_on_change_when_always_update_is_false(
-    crd: update_coordinator.DataUpdateCoordinator[int], caplog: pytest.LogCaptureFixture
+    crd: update_coordinator.DataUpdateCoordinator[int],
 ) -> None:
     """Test we do not callback listeners unless something has actually changed when always_update is false."""
     update_callback = Mock()
@@ -721,7 +853,7 @@ async def test_only_callback_on_change_when_always_update_is_false(
 
 
 async def test_always_callback_when_always_update_is_true(
-    crd: update_coordinator.DataUpdateCoordinator[int], caplog: pytest.LogCaptureFixture
+    crd: update_coordinator.DataUpdateCoordinator[int],
 ) -> None:
     """Test we callback listeners even though the data is the same when always_update is True."""
     update_callback = Mock()
@@ -775,6 +907,7 @@ async def test_timestamp_date_update_coordinator(hass: HomeAssistant) -> None:
     crd = update_coordinator.TimestampDataUpdateCoordinator[int](
         hass,
         _LOGGER,
+        config_entry=None,
         name="test",
         update_method=refresh,
         update_interval=timedelta(seconds=10),
@@ -795,3 +928,192 @@ async def test_timestamp_date_update_coordinator(hass: HomeAssistant) -> None:
     unsub()
     await crd.async_refresh()
     assert len(last_update_success_times) == 1
+
+
+@pytest.mark.parametrize(
+    "integration_frame_path", ["homeassistant/components/my_integration"]
+)
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_config_entry(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test behavior of coordinator.entry."""
+    entry = MockConfigEntry()
+
+    # Explicit None is OK
+    crd = update_coordinator.DataUpdateCoordinator[int](
+        hass, _LOGGER, name="test", config_entry=None
+    )
+    assert crd.config_entry is None
+    assert (
+        "Detected that integration 'my_integration' relies on ContextVar"
+        not in caplog.text
+    )
+
+    # Explicit entry is OK
+    caplog.clear()
+    crd = update_coordinator.DataUpdateCoordinator[int](
+        hass, _LOGGER, name="test", config_entry=entry
+    )
+    assert crd.config_entry is entry
+    assert (
+        "Detected that integration 'my_integration' relies on ContextVar"
+        not in caplog.text
+    )
+
+    # Explicit entry different from ContextVar not recommended, but should work
+    another_entry = MockConfigEntry()
+    caplog.clear()
+    crd = update_coordinator.DataUpdateCoordinator[int](
+        hass, _LOGGER, name="test", config_entry=another_entry
+    )
+    assert crd.config_entry is another_entry
+    assert (
+        "Detected that integration 'my_integration' relies on ContextVar"
+        not in caplog.text
+    )
+
+    # Default without context should log a warning
+    caplog.clear()
+    crd = update_coordinator.DataUpdateCoordinator[int](hass, _LOGGER, name="test")
+    assert crd.config_entry is None
+    assert (
+        "Detected that integration 'my_integration' relies on ContextVar, "
+        "but should pass the config entry explicitly."
+    ) in caplog.text
+
+    # Default with context should log a warning
+    caplog.clear()
+    frame._REPORTED_INTEGRATIONS.clear()
+    config_entries.current_entry.set(entry)
+    crd = update_coordinator.DataUpdateCoordinator[int](hass, _LOGGER, name="test")
+    assert (
+        "Detected that integration 'my_integration' relies on ContextVar, "
+        "but should pass the config entry explicitly."
+    ) in caplog.text
+    assert crd.config_entry is entry
+
+
+@pytest.mark.parametrize("integration_frame_path", ["custom_components/my_integration"])
+@pytest.mark.usefixtures("hass", "mock_integration_frame")
+async def test_config_entry_custom_integration(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test behavior of coordinator.entry for custom integrations."""
+    entry = MockConfigEntry(domain="custom_integration")
+
+    # Default without context should be None
+    crd = update_coordinator.DataUpdateCoordinator[int](hass, _LOGGER, name="test")
+
+    assert crd.config_entry is None
+    # Should not log any warnings about ContextVar usage for custom integrations
+    frame_records = [
+        record
+        for record in caplog.records
+        if record.name == "homeassistant.helpers.frame"
+        and record.levelno >= logging.WARNING
+    ]
+    assert len(frame_records) == 0
+
+    # Explicit None is OK
+    caplog.clear()
+
+    crd = update_coordinator.DataUpdateCoordinator[int](
+        hass, _LOGGER, name="test", config_entry=None
+    )
+
+    assert crd.config_entry is None
+    assert (
+        "Detected that integration 'my_integration' relies on ContextVar"
+        not in caplog.text
+    )
+
+    # Explicit entry is OK
+    caplog.clear()
+
+    crd = update_coordinator.DataUpdateCoordinator[int](
+        hass, _LOGGER, name="test", config_entry=entry
+    )
+
+    assert crd.config_entry is entry
+    frame_records = [
+        record
+        for record in caplog.records
+        if record.name == "homeassistant.helpers.frame"
+        and record.levelno >= logging.WARNING
+    ]
+    assert len(frame_records) == 0
+
+    # set ContextVar
+    config_entries.current_entry.set(entry)
+
+    # Default with ContextVar should match the ContextVar
+    caplog.clear()
+
+    crd = update_coordinator.DataUpdateCoordinator[int](hass, _LOGGER, name="test")
+
+    assert crd.config_entry is entry
+    frame_records = [
+        record
+        for record in caplog.records
+        if record.name == "homeassistant.helpers.frame"
+        and record.levelno >= logging.WARNING
+    ]
+    assert len(frame_records) == 0
+
+    # Explicit entry different from ContextVar not recommended, but should work
+    another_entry = MockConfigEntry()
+    caplog.clear()
+
+    crd = update_coordinator.DataUpdateCoordinator[int](
+        hass, _LOGGER, name="test", config_entry=another_entry
+    )
+
+    assert crd.config_entry is another_entry
+    frame_records = [
+        record
+        for record in caplog.records
+        if record.name == "homeassistant.helpers.frame"
+        and record.levelno >= logging.WARNING
+    ]
+    assert len(frame_records) == 0
+
+
+async def test_listener_unsubscribe_releases_coordinator(hass: HomeAssistant) -> None:
+    """Test listener subscribe/unsubscribe releases parent class.
+
+    See https://github.com/home-assistant/core/issues/137237
+    And https://github.com/home-assistant/core/pull/137338
+    """
+
+    class Subscriber:
+        _unsub: CALLBACK_TYPE | None = None
+
+        def start_listen(
+            self, coordinator: update_coordinator.DataUpdateCoordinator
+        ) -> None:
+            self._unsub = coordinator.async_add_listener(lambda: None)
+
+        def stop_listen(self) -> None:
+            self._unsub()
+            self._unsub = None
+
+    coordinator = update_coordinator.DataUpdateCoordinator[int](
+        hass, _LOGGER, config_entry=None, name="test"
+    )
+    subscriber = Subscriber()
+    subscriber.start_listen(coordinator)
+
+    # Keep weak reference to the coordinator
+    weak_ref = weakref.ref(coordinator)
+    assert weak_ref() is not None
+
+    # Unload the subscriber, then shutdown the coordinator
+    subscriber.stop_listen()
+    await coordinator.async_shutdown()
+    del coordinator
+
+    # Ensure the coordinator is released
+    assert weak_ref() is None

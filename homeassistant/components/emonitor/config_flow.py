@@ -7,12 +7,12 @@ from aioemonitor import Emonitor
 import aiohttp
 import voluptuous as vol
 
-from homeassistant.components import dhcp
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from . import name_short_mac
 from .const import DOMAIN
@@ -69,7 +69,7 @@ class EmonitorConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle dhcp discovery."""
         self.discovered_ip = discovery_info.ip
@@ -92,6 +92,7 @@ class EmonitorConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Attempt to confirm."""
+        assert self.discovered_ip is not None
         if user_input is not None:
             return self.async_create_entry(
                 title=self.discovered_info["title"],

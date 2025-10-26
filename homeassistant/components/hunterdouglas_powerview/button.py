@@ -22,7 +22,7 @@ from homeassistant.components.button import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import PowerviewShadeUpdateCoordinator
 from .entity import ShadeEntity
@@ -74,7 +74,7 @@ BUTTONS_SHADE: Final = [
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: PowerviewConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the hunter douglas advanced feature buttons."""
     pv_entry = entry.runtime_data

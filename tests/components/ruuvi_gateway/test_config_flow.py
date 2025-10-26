@@ -6,10 +6,10 @@ from aioruuvigateway.excs import CannotConnect, InvalidAuth
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import dhcp
 from homeassistant.components.ruuvi_gateway.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .consts import (
     BASE_DATA,
@@ -32,7 +32,7 @@ DHCP_DATA = {**BASE_DATA, "host": DHCP_IP}
             BASE_DATA,
         ),
         (
-            dhcp.DhcpServiceInfo(
+            DhcpServiceInfo(
                 hostname="RuuviGateway1234",
                 ip=DHCP_IP,
                 macaddress="1234567890ab",

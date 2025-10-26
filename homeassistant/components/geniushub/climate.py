@@ -11,7 +11,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import GeniusHubConfigEntry
 from .entity import GeniusHeatingZone
@@ -29,7 +29,7 @@ GH_ZONES = ["radiator", "wet underfloor"]
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: GeniusHubConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Genius Hub climate entities."""
 
@@ -51,7 +51,6 @@ class GeniusClimateZone(GeniusHeatingZone, ClimateEntity):
         | ClimateEntityFeature.TURN_OFF
         | ClimateEntityFeature.TURN_ON
     )
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, broker, zone) -> None:
         """Initialize the climate device."""

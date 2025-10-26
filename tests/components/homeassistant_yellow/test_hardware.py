@@ -13,6 +13,7 @@ from tests.common import MockConfigEntry, MockModule, mock_integration
 from tests.typing import WebSocketGenerator
 
 
+@pytest.mark.usefixtures("supervisor_client")
 async def test_hardware_info(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, addon_store_info
 ) -> None:
@@ -58,13 +59,14 @@ async def test_hardware_info(
                 "config_entries": [config_entry.entry_id],
                 "dongle": None,
                 "name": "Home Assistant Yellow",
-                "url": "https://yellow.home-assistant.io/documentation/",
+                "url": "https://support.nabucasa.com/hc/en-us/categories/24734575925149-Home-Assistant-Yellow",
             }
         ]
     }
 
 
 @pytest.mark.parametrize("os_info", [None, {"board": None}, {"board": "other"}])
+@pytest.mark.usefixtures("supervisor_client")
 async def test_hardware_info_fail(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, os_info, addon_store_info
 ) -> None:

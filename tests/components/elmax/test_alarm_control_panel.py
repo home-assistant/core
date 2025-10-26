@@ -3,9 +3,9 @@
 from datetime import timedelta
 from unittest.mock import patch
 
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.elmax import POLLING_SECONDS
+from homeassistant.components.elmax.const import POLLING_SECONDS
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er

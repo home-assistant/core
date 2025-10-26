@@ -148,7 +148,7 @@ async def test_allowlist(hass: HomeAssistant, mock_client) -> None:
     ]
 
     for test in tests:
-        hass.states.async_set(test.id, "not blank")
+        hass.states.async_set(test.id, "on")
         await hass.async_block_till_done()
 
         was_called = publish_client.publish.call_count == 1
@@ -178,7 +178,7 @@ async def test_denylist(hass: HomeAssistant, mock_client) -> None:
     ]
 
     for test in tests:
-        hass.states.async_set(test.id, "not blank")
+        hass.states.async_set(test.id, "on")
         await hass.async_block_till_done()
 
         was_called = publish_client.publish.call_count == 1

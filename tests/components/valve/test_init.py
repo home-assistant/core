@@ -11,21 +11,18 @@ from homeassistant.components.valve import (
     ValveEntity,
     ValveEntityDescription,
     ValveEntityFeature,
+    ValveState,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_SET_VALVE_POSITION,
     SERVICE_TOGGLE,
-    STATE_CLOSED,
-    STATE_CLOSING,
-    STATE_OPEN,
-    STATE_OPENING,
     STATE_UNAVAILABLE,
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from tests.common import (
     MockConfigEntry,
@@ -177,7 +174,7 @@ def mock_config_entry(hass: HomeAssistant) -> tuple[MockConfigEntry, list[ValveE
     async def async_setup_entry_platform(
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Set up test platform via config entry."""
         async_add_entities(entities)
@@ -349,19 +346,19 @@ def set_valve_position(ent, position) -> None:
 
 def is_open(hass: HomeAssistant, ent: ValveEntity) -> bool:
     """Return if the valve is closed based on the statemachine."""
-    return hass.states.is_state(ent.entity_id, STATE_OPEN)
+    return hass.states.is_state(ent.entity_id, ValveState.OPEN)
 
 
 def is_opening(hass: HomeAssistant, ent: ValveEntity) -> bool:
     """Return if the valve is closed based on the statemachine."""
-    return hass.states.is_state(ent.entity_id, STATE_OPENING)
+    return hass.states.is_state(ent.entity_id, ValveState.OPENING)
 
 
 def is_closed(hass: HomeAssistant, ent: ValveEntity) -> bool:
     """Return if the valve is closed based on the statemachine."""
-    return hass.states.is_state(ent.entity_id, STATE_CLOSED)
+    return hass.states.is_state(ent.entity_id, ValveState.CLOSED)
 
 
 def is_closing(hass: HomeAssistant, ent: ValveEntity) -> bool:
     """Return if the valve is closed based on the statemachine."""
-    return hass.states.is_state(ent.entity_id, STATE_CLOSING)
+    return hass.states.is_state(ent.entity_id, ValveState.CLOSING)

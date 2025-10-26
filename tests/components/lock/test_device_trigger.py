@@ -7,22 +7,13 @@ from pytest_unordered import unordered
 
 from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.components.lock import DOMAIN, LockEntityFeature
-from homeassistant.const import (
-    STATE_JAMMED,
-    STATE_LOCKED,
-    STATE_LOCKING,
-    STATE_OPEN,
-    STATE_OPENING,
-    STATE_UNLOCKED,
-    STATE_UNLOCKING,
-    EntityCategory,
-)
+from homeassistant.components.lock import DOMAIN, LockEntityFeature, LockState
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import (
     MockConfigEntry,
@@ -164,7 +155,12 @@ async def test_get_trigger_capabilities(
         )
         assert capabilities == {
             "extra_fields": [
-                {"name": "for", "optional": True, "type": "positive_time_period_dict"}
+                {
+                    "name": "for",
+                    "optional": True,
+                    "required": False,
+                    "type": "positive_time_period_dict",
+                }
             ]
         }
 
@@ -196,7 +192,12 @@ async def test_get_trigger_capabilities_legacy(
         )
         assert capabilities == {
             "extra_fields": [
-                {"name": "for", "optional": True, "type": "positive_time_period_dict"}
+                {
+                    "name": "for",
+                    "optional": True,
+                    "required": False,
+                    "type": "positive_time_period_dict",
+                }
             ]
         }
 
@@ -218,7 +219,7 @@ async def test_if_fires_on_state_change(
         DOMAIN, "test", "5678", device_id=device_entry.id
     )
 
-    hass.states.async_set(entry.entity_id, STATE_UNLOCKED)
+    hass.states.async_set(entry.entity_id, LockState.UNLOCKED)
 
     assert await async_setup_component(
         hass,
@@ -287,7 +288,7 @@ async def test_if_fires_on_state_change(
     )
 
     # Fake that the entity is turning on.
-    hass.states.async_set(entry.entity_id, STATE_LOCKED)
+    hass.states.async_set(entry.entity_id, LockState.LOCKED)
     await hass.async_block_till_done()
     assert len(service_calls) == 1
     assert (
@@ -296,7 +297,7 @@ async def test_if_fires_on_state_change(
     )
 
     # Fake that the entity is turning off.
-    hass.states.async_set(entry.entity_id, STATE_UNLOCKED)
+    hass.states.async_set(entry.entity_id, LockState.UNLOCKED)
     await hass.async_block_till_done()
     assert len(service_calls) == 2
     assert (
@@ -305,7 +306,7 @@ async def test_if_fires_on_state_change(
     )
 
     # Fake that the entity is opens.
-    hass.states.async_set(entry.entity_id, STATE_OPEN)
+    hass.states.async_set(entry.entity_id, LockState.OPEN)
     await hass.async_block_till_done()
     assert len(service_calls) == 3
     assert (
@@ -331,7 +332,7 @@ async def test_if_fires_on_state_change_legacy(
         DOMAIN, "test", "5678", device_id=device_entry.id
     )
 
-    hass.states.async_set(entry.entity_id, STATE_UNLOCKED)
+    hass.states.async_set(entry.entity_id, LockState.UNLOCKED)
 
     assert await async_setup_component(
         hass,
@@ -362,7 +363,7 @@ async def test_if_fires_on_state_change_legacy(
     )
 
     # Fake that the entity is turning on.
-    hass.states.async_set(entry.entity_id, STATE_LOCKED)
+    hass.states.async_set(entry.entity_id, LockState.LOCKED)
     await hass.async_block_till_done()
     assert len(service_calls) == 1
     assert (
@@ -388,7 +389,7 @@ async def test_if_fires_on_state_change_with_for(
         DOMAIN, "test", "5678", device_id=device_entry.id
     )
 
-    hass.states.async_set(entry.entity_id, STATE_UNLOCKED)
+    hass.states.async_set(entry.entity_id, LockState.UNLOCKED)
 
     assert await async_setup_component(
         hass,
@@ -511,7 +512,7 @@ async def test_if_fires_on_state_change_with_for(
     await hass.async_block_till_done()
     assert len(service_calls) == 0
 
-    hass.states.async_set(entry.entity_id, STATE_LOCKED)
+    hass.states.async_set(entry.entity_id, LockState.LOCKED)
     await hass.async_block_till_done()
     assert len(service_calls) == 0
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
@@ -523,7 +524,7 @@ async def test_if_fires_on_state_change_with_for(
         == f"turn_off device - {entry.entity_id} - unlocked - locked - 0:00:05"
     )
 
-    hass.states.async_set(entry.entity_id, STATE_UNLOCKING)
+    hass.states.async_set(entry.entity_id, LockState.UNLOCKING)
     await hass.async_block_till_done()
     assert len(service_calls) == 1
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=16))
@@ -535,7 +536,7 @@ async def test_if_fires_on_state_change_with_for(
         == f"turn_on device - {entry.entity_id} - locked - unlocking - 0:00:05"
     )
 
-    hass.states.async_set(entry.entity_id, STATE_JAMMED)
+    hass.states.async_set(entry.entity_id, LockState.JAMMED)
     await hass.async_block_till_done()
     assert len(service_calls) == 2
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=21))
@@ -547,7 +548,7 @@ async def test_if_fires_on_state_change_with_for(
         == f"turn_off device - {entry.entity_id} - unlocking - jammed - 0:00:05"
     )
 
-    hass.states.async_set(entry.entity_id, STATE_LOCKING)
+    hass.states.async_set(entry.entity_id, LockState.LOCKING)
     await hass.async_block_till_done()
     assert len(service_calls) == 3
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=27))
@@ -559,7 +560,7 @@ async def test_if_fires_on_state_change_with_for(
         == f"turn_on device - {entry.entity_id} - jammed - locking - 0:00:05"
     )
 
-    hass.states.async_set(entry.entity_id, STATE_OPENING)
+    hass.states.async_set(entry.entity_id, LockState.OPENING)
     await hass.async_block_till_done()
     assert len(service_calls) == 4
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=27))

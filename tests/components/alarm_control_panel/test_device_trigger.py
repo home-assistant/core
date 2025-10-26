@@ -9,22 +9,14 @@ from homeassistant.components import automation
 from homeassistant.components.alarm_control_panel import (
     DOMAIN,
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
 )
 from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_ARMED_VACATION,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_PENDING,
-    STATE_ALARM_TRIGGERED,
-    EntityCategory,
-)
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import (
     MockConfigEntry,
@@ -199,7 +191,12 @@ async def test_get_trigger_capabilities(
         )
         assert capabilities == {
             "extra_fields": [
-                {"name": "for", "optional": True, "type": "positive_time_period_dict"}
+                {
+                    "name": "for",
+                    "optional": True,
+                    "required": False,
+                    "type": "positive_time_period_dict",
+                }
             ]
         }
 
@@ -234,7 +231,12 @@ async def test_get_trigger_capabilities_legacy(
         )
         assert capabilities == {
             "extra_fields": [
-                {"name": "for", "optional": True, "type": "positive_time_period_dict"}
+                {
+                    "name": "for",
+                    "optional": True,
+                    "required": False,
+                    "type": "positive_time_period_dict",
+                }
             ]
         }
 
@@ -256,7 +258,7 @@ async def test_if_fires_on_state_change(
         DOMAIN, "test", "5678", device_id=device_entry.id
     )
 
-    hass.states.async_set(entry.entity_id, STATE_ALARM_PENDING)
+    hass.states.async_set(entry.entity_id, AlarmControlPanelState.PENDING)
 
     assert await async_setup_component(
         hass,
@@ -400,7 +402,7 @@ async def test_if_fires_on_state_change(
     )
 
     # Fake that the entity is triggered.
-    hass.states.async_set(entry.entity_id, STATE_ALARM_TRIGGERED)
+    hass.states.async_set(entry.entity_id, AlarmControlPanelState.TRIGGERED)
     await hass.async_block_till_done()
     assert len(service_calls) == 1
     assert (
@@ -409,7 +411,7 @@ async def test_if_fires_on_state_change(
     )
 
     # Fake that the entity is disarmed.
-    hass.states.async_set(entry.entity_id, STATE_ALARM_DISARMED)
+    hass.states.async_set(entry.entity_id, AlarmControlPanelState.DISARMED)
     await hass.async_block_till_done()
     assert len(service_calls) == 2
     assert (
@@ -418,7 +420,7 @@ async def test_if_fires_on_state_change(
     )
 
     # Fake that the entity is armed home.
-    hass.states.async_set(entry.entity_id, STATE_ALARM_ARMED_HOME)
+    hass.states.async_set(entry.entity_id, AlarmControlPanelState.ARMED_HOME)
     await hass.async_block_till_done()
     assert len(service_calls) == 3
     assert (
@@ -427,7 +429,7 @@ async def test_if_fires_on_state_change(
     )
 
     # Fake that the entity is armed away.
-    hass.states.async_set(entry.entity_id, STATE_ALARM_ARMED_AWAY)
+    hass.states.async_set(entry.entity_id, AlarmControlPanelState.ARMED_AWAY)
     await hass.async_block_till_done()
     assert len(service_calls) == 4
     assert (
@@ -436,7 +438,7 @@ async def test_if_fires_on_state_change(
     )
 
     # Fake that the entity is armed night.
-    hass.states.async_set(entry.entity_id, STATE_ALARM_ARMED_NIGHT)
+    hass.states.async_set(entry.entity_id, AlarmControlPanelState.ARMED_NIGHT)
     await hass.async_block_till_done()
     assert len(service_calls) == 5
     assert (
@@ -445,7 +447,7 @@ async def test_if_fires_on_state_change(
     )
 
     # Fake that the entity is armed vacation.
-    hass.states.async_set(entry.entity_id, STATE_ALARM_ARMED_VACATION)
+    hass.states.async_set(entry.entity_id, AlarmControlPanelState.ARMED_VACATION)
     await hass.async_block_till_done()
     assert len(service_calls) == 6
     assert (
@@ -471,7 +473,7 @@ async def test_if_fires_on_state_change_with_for(
         DOMAIN, "test", "5678", device_id=device_entry.id
     )
 
-    hass.states.async_set(entry.entity_id, STATE_ALARM_DISARMED)
+    hass.states.async_set(entry.entity_id, AlarmControlPanelState.DISARMED)
 
     assert await async_setup_component(
         hass,
@@ -506,7 +508,7 @@ async def test_if_fires_on_state_change_with_for(
     await hass.async_block_till_done()
     assert len(service_calls) == 0
 
-    hass.states.async_set(entry.entity_id, STATE_ALARM_TRIGGERED)
+    hass.states.async_set(entry.entity_id, AlarmControlPanelState.TRIGGERED)
     await hass.async_block_till_done()
     assert len(service_calls) == 0
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
@@ -536,7 +538,7 @@ async def test_if_fires_on_state_change_legacy(
         DOMAIN, "test", "5678", device_id=device_entry.id
     )
 
-    hass.states.async_set(entry.entity_id, STATE_ALARM_DISARMED)
+    hass.states.async_set(entry.entity_id, AlarmControlPanelState.DISARMED)
 
     assert await async_setup_component(
         hass,
@@ -570,7 +572,7 @@ async def test_if_fires_on_state_change_legacy(
     await hass.async_block_till_done()
     assert len(service_calls) == 0
 
-    hass.states.async_set(entry.entity_id, STATE_ALARM_TRIGGERED)
+    hass.states.async_set(entry.entity_id, AlarmControlPanelState.TRIGGERED)
     await hass.async_block_till_done()
     assert len(service_calls) == 1
     assert (

@@ -10,14 +10,16 @@ from pypck.module import GroupConnection, ModuleConnection
 import pytest
 
 from homeassistant.components.lcn import PchkConnectionManager
+from homeassistant.components.lcn.config_flow import LcnFlowHandler
 from homeassistant.components.lcn.const import DOMAIN
 from homeassistant.components.lcn.helpers import AddressType, generate_unique_id
 from homeassistant.const import CONF_ADDRESS, CONF_DEVICES, CONF_ENTITIES, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, load_fixture
+
+LATEST_CONFIG_ENTRY_VERSION = (LcnFlowHandler.VERSION, LcnFlowHandler.MINOR_VERSION)
 
 
 class MockModuleConnection(ModuleConnection):
@@ -71,7 +73,9 @@ class MockPchkConnectionManager(PchkConnectionManager):
     send_command = AsyncMock()
 
 
-def create_config_entry(name: str) -> MockConfigEntry:
+def create_config_entry(
+    name: str, version: tuple[int, int] = LATEST_CONFIG_ENTRY_VERSION
+) -> MockConfigEntry:
     """Set up config entries with configuration data."""
     fixture_filename = f"lcn/config_entry_{name}.json"
     entry_data = json.loads(load_fixture(fixture_filename))
@@ -84,11 +88,13 @@ def create_config_entry(name: str) -> MockConfigEntry:
 
     title = entry_data[CONF_HOST]
     return MockConfigEntry(
-        entry_id=fixture_filename,
+        entry_id=fixture_filename.replace(".", "_"),
         domain=DOMAIN,
         title=title,
         data=entry_data,
         options=options,
+        version=version[0],
+        minor_version=version[1],
     )
 
 
@@ -125,15 +131,6 @@ async def init_integration(
         await hass.async_block_till_done()
 
     return lcn_connection
-
-
-async def setup_component(hass: HomeAssistant) -> None:
-    """Set up the LCN component."""
-    fixture_filename = "lcn/config.json"
-    config_data = json.loads(load_fixture(fixture_filename))
-
-    await async_setup_component(hass, DOMAIN, config_data)
-    await hass.async_block_till_done()
 
 
 def get_device(

@@ -2,7 +2,7 @@
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
 )
@@ -26,10 +26,10 @@ async def test_significant_change() -> None:
 
     # Color temp
     assert not async_check_significant_change(
-        None, "on", {ATTR_COLOR_TEMP: 60}, "on", {ATTR_COLOR_TEMP: 64}
+        None, "on", {ATTR_COLOR_TEMP_KELVIN: 2000}, "on", {ATTR_COLOR_TEMP_KELVIN: 2049}
     )
     assert async_check_significant_change(
-        None, "on", {ATTR_COLOR_TEMP: 60}, "on", {ATTR_COLOR_TEMP: 65}
+        None, "on", {ATTR_COLOR_TEMP_KELVIN: 2000}, "on", {ATTR_COLOR_TEMP_KELVIN: 2050}
     )
 
     # Effect

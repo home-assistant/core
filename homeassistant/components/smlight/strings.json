@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "description": "Set up SMLIGHT Zigbee Integration",
+        "description": "Set up SMLIGHT Zigbee integration",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
         },
@@ -15,6 +15,10 @@
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "Username for the device's web login.",
+          "password": "Password for the device's web login."
         }
       },
       "reauth_confirm": {
@@ -23,6 +27,10 @@
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "[%key:component::smlight::config::step::auth::data_description::username%]",
+          "password": "[%key:component::smlight::config::step::auth::data_description::password%]"
         }
       },
       "confirm_discovery": {
@@ -38,13 +46,20 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "reauth_failed": "[%key:common::config_flow::error::invalid_auth%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unsupported_device": "This device is not yet supported by the SMLIGHT integration"
     }
   },
   "entity": {
     "binary_sensor": {
       "ethernet": {
         "name": "Ethernet"
+      },
+      "internet": {
+        "name": "Internet"
+      },
+      "vpn": {
+        "name": "VPN"
       },
       "wifi": {
         "name": "Wi-Fi"
@@ -68,6 +83,29 @@
       },
       "socket_uptime": {
         "name": "Zigbee uptime"
+      },
+      "device_mode": {
+        "name": "Connection mode",
+        "state": {
+          "eth": "Ethernet",
+          "wifi": "Wi-Fi",
+          "usb": "USB"
+        }
+      },
+      "firmware_channel": {
+        "name": "Firmware channel",
+        "state": {
+          "dev": "Development",
+          "release": "Stable"
+        }
+      },
+      "zigbee_type": {
+        "name": "Zigbee type",
+        "state": {
+          "coordinator": "Coordinator",
+          "router": "Router",
+          "thread": "Thread"
+        }
       }
     },
     "button": {
@@ -79,6 +117,9 @@
       },
       "zigbee_flash_mode": {
         "name": "Zigbee flash mode"
+      },
+      "reconnect_zigbee_router": {
+        "name": "Reconnect Zigbee router"
       }
     },
     "switch": {
@@ -90,7 +131,26 @@
       },
       "night_mode": {
         "name": "LED night mode"
+      },
+      "vpn_enabled": {
+        "name": "VPN enabled"
       }
+    },
+    "update": {
+      "core_update": {
+        "name": "Core firmware"
+      },
+      "zigbee_update": {
+        "name": "Zigbee firmware"
+      }
+    }
+  },
+  "exceptions": {
+    "firmware_update_failed": {
+      "message": "Firmware update failed for {device_name}."
+    },
+    "cannot_connect_device": {
+      "message": "An error occurred while connecting to the SMLIGHT device: {error}."
     }
   },
   "issues": {

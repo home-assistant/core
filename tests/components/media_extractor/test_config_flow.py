@@ -1,7 +1,7 @@
 """Tests for the Media extractor config flow."""
 
 from homeassistant.components.media_extractor.const import DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -41,16 +41,3 @@ async def test_single_instance_allowed(hass: HomeAssistant) -> None:
 
     assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "single_instance_allowed"
-
-
-async def test_import_flow(hass: HomeAssistant, mock_setup_entry) -> None:
-    """Test import flow."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}
-    )
-
-    assert result.get("type") is FlowResultType.CREATE_ENTRY
-    assert result.get("title") == "Media extractor"
-    assert result.get("data") == {}
-    assert result.get("options") == {}
-    assert len(mock_setup_entry.mock_calls) == 1

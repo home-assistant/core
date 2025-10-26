@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.device_tracker import ScannerEntity, SourceType
+from homeassistant.components.device_tracker import ScannerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -25,7 +25,9 @@ _LOGGER = logging.getLogger(__package__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up device tracker for Ruckus component."""
     coordinator = hass.data[DOMAIN][entry.entry_id][COORDINATOR]
@@ -69,7 +71,7 @@ def restore_entities(
     registry: er.EntityRegistry,
     coordinator: RuckusDataUpdateCoordinator,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
     tracked: set[str],
 ) -> None:
     """Restore clients that are not a part of active clients list."""
@@ -121,8 +123,3 @@ class RuckusDevice(CoordinatorEntity, ScannerEntity):
     def is_connected(self) -> bool:
         """Return true if the device is connected to the network."""
         return self._mac in self.coordinator.data[KEY_SYS_CLIENTS]
-
-    @property
-    def source_type(self) -> SourceType:
-        """Return the source type."""
-        return SourceType.ROUTER

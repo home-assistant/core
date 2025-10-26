@@ -39,19 +39,5 @@
         }
       }
     }
-  },
-  "issues": {
-    "deprecated_yaml_import_issue_unknown": {
-      "title": "The Enigma2 YAML configuration import failed",
-      "description": "Configuring Enigma2 using YAML is being removed but there was an error importing your YAML configuration.\n\nEnsure connection to the device works, the authentication details are correct and restart Home Assistant to try again or remove the Enigma2 YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
-    },
-    "deprecated_yaml_import_issue_invalid_auth": {
-      "title": "The Enigma2 YAML configuration import failed",
-      "description": "Configuring Enigma2 using YAML is being removed but there was an error importing your YAML configuration.\n\nEnsure the authentication details are correct and restart Home Assistant to try again or remove the Enigma2 YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
-    },
-    "deprecated_yaml_import_issue_cannot_connect": {
-      "title": "The Enigma2 YAML configuration import failed",
-      "description": "Configuring Enigma2 using YAML is being removed but there was an error importing your YAML configuration.\n\nEnsure connection to the device works and restart Home Assistant to try again or remove the Enigma2 YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
-    }
   }
 }

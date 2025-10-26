@@ -18,21 +18,21 @@ from homeassistant.core import HomeAssistant
 
 from ..common import async_wait_recording_done
 
-from tests.typing import RecorderInstanceGenerator
+from tests.typing import RecorderInstanceContextManager
 
 
 @pytest.fixture
 async def mock_recorder_before_hass(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
 ) -> None:
     """Set up recorder."""
 
 
 @pytest.mark.parametrize("enable_schema_validation", [True])
 @pytest.mark.parametrize("db_engine", ["mysql", "postgresql"])
+@pytest.mark.usefixtures("recorder_mock")
 async def test_validate_db_schema(
     hass: HomeAssistant,
-    recorder_mock: Recorder,
     caplog: pytest.LogCaptureFixture,
     db_engine: str,
     recorder_dialect_name: None,

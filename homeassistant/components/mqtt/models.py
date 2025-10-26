@@ -364,6 +364,15 @@ class EntityTopicState:
             entity_id, entity = self.subscribe_calls.popitem()
             try:
                 entity.async_write_ha_state()
+            except ValueError as exc:
+                _LOGGER.error(
+                    "Value error while updating state of %s, topic: "
+                    "'%s' with payload: %s: %s",
+                    entity_id,
+                    msg.topic,
+                    msg.payload,
+                    exc,
+                )
             except Exception:
                 _LOGGER.exception(
                     "Exception raised while updating state of %s, topic: "
@@ -408,6 +417,52 @@ class MqttData:
     state_write_requests: EntityTopicState = field(default_factory=EntityTopicState)
     subscriptions_to_restore: set[Subscription] = field(default_factory=set)
     tags: dict[str, dict[str, MQTTTagScanner]] = field(default_factory=dict)
+
+
+@dataclass(slots=True)
+class MqttComponentConfig:
+    """(component, object_id, node_id, discovery_payload)."""
+
+    component: str
+    object_id: str
+    node_id: str | None
+    discovery_payload: MQTTDiscoveryPayload
+
+
+class DeviceMqttOptions(TypedDict, total=False):
+    """Hold the shared MQTT specific options for an MQTT device."""
+
+    qos: int
+
+
+class MqttDeviceData(TypedDict, total=False):
+    """Hold the data for an MQTT device."""
+
+    name: str
+    identifiers: str
+    configuration_url: str
+    sw_version: str
+    hw_version: str
+    model: str
+    model_id: str
+    mqtt_settings: DeviceMqttOptions
+
+
+class MqttAvailabilityData(TypedDict, total=False):
+    """Hold the availability configuration for a device."""
+
+    availability_topic: str
+    availability_template: str
+    payload_available: str
+    payload_not_available: str
+
+
+class MqttSubentryData(TypedDict, total=False):
+    """Hold the data for a MQTT subentry."""
+
+    device: MqttDeviceData
+    components: dict[str, dict[str, Any]]
+    availability: MqttAvailabilityData
 
 
 DATA_MQTT: HassKey[MqttData] = HassKey("mqtt")

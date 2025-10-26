@@ -36,7 +36,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.helpers import entity_registry as er
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 from homeassistant.util.event_type import EventType
 
 from .const import (
@@ -115,9 +115,9 @@ class EventProcessor:
         include_entity_name: bool = True,
     ) -> None:
         """Init the event stream."""
-        assert not (
-            context_id and (entity_ids or device_ids)
-        ), "can't pass in both context_id and (entity_ids or device_ids)"
+        assert not (context_id and (entity_ids or device_ids)), (
+            "can't pass in both context_id and (entity_ids or device_ids)"
+        )
         self.hass = hass
         self.ent_reg = er.async_get(hass)
         self.event_types = event_types

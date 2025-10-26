@@ -204,9 +204,9 @@ async def test_browse_media_root_multiple_consoles(
     await hass.config_entries.async_setup(ufp.entry.entry_id)
     await hass.async_block_till_done()
 
-    bootstrap2 = bootstrap.copy()
+    bootstrap2 = bootstrap.model_copy()
     bootstrap2._has_media = True
-    bootstrap2.nvr = bootstrap.nvr.copy()
+    bootstrap2.nvr = bootstrap.nvr.model_copy()
     bootstrap2.nvr.id = "test_id2"
     bootstrap2.nvr.mac = "A2E00C826924"
     bootstrap2.nvr.name = "UnifiProtect2"
@@ -234,6 +234,7 @@ async def test_browse_media_root_multiple_consoles(
                 "host": "1.1.1.2",
                 "username": "test-username",
                 "password": "test-password",
+                "api_key": "test-api-key",
                 "id": "UnifiProtect2",
                 "port": 443,
                 "verify_ssl": False,
@@ -270,9 +271,9 @@ async def test_browse_media_root_multiple_consoles_only_one_media(
     await hass.config_entries.async_setup(ufp.entry.entry_id)
     await hass.async_block_till_done()
 
-    bootstrap2 = bootstrap.copy()
+    bootstrap2 = bootstrap.model_copy()
     bootstrap2._has_media = False
-    bootstrap2.nvr = bootstrap.nvr.copy()
+    bootstrap2.nvr = bootstrap.nvr.model_copy()
     bootstrap2.nvr.id = "test_id2"
     bootstrap2.nvr.mac = "A2E00C826924"
     bootstrap2.nvr.name = "UnifiProtect2"
@@ -669,7 +670,7 @@ async def test_browse_media_recent_truncated(
                 model=ModelType.EVENT,
                 id="test_event_id",
                 type=EventType.RING,
-                start=datetime(1000, 1, 1, 0, 0, 0),
+                start=datetime(2000, 1, 1, 0, 0, 0),
                 end=None,
                 score=100,
                 smart_detect_types=[],
@@ -683,7 +684,7 @@ async def test_browse_media_recent_truncated(
                 model=ModelType.EVENT,
                 id="test_event_id",
                 type=EventType.MOTION,
-                start=datetime(1000, 1, 1, 0, 0, 0),
+                start=datetime(2000, 1, 1, 0, 0, 0),
                 end=None,
                 score=100,
                 smart_detect_types=[],
@@ -697,7 +698,7 @@ async def test_browse_media_recent_truncated(
                 model=ModelType.EVENT,
                 id="test_event_id",
                 type=EventType.SMART_DETECT,
-                start=datetime(1000, 1, 1, 0, 0, 0),
+                start=datetime(2000, 1, 1, 0, 0, 0),
                 end=None,
                 score=100,
                 smart_detect_types=["person"],
@@ -706,7 +707,7 @@ async def test_browse_media_recent_truncated(
                 metadata={
                     "detected_thumbnails": [
                         {
-                            "clock_best_wall": datetime(1000, 1, 1, 0, 0, 0),
+                            "clock_best_wall": datetime(2000, 1, 1, 0, 0, 0),
                             "type": "person",
                             "cropped_id": "event_id",
                         }
@@ -720,7 +721,7 @@ async def test_browse_media_recent_truncated(
                 model=ModelType.EVENT,
                 id="test_event_id",
                 type=EventType.SMART_DETECT,
-                start=datetime(1000, 1, 1, 0, 0, 0),
+                start=datetime(2000, 1, 1, 0, 0, 0),
                 end=None,
                 score=100,
                 smart_detect_types=["vehicle", "person"],
@@ -734,7 +735,7 @@ async def test_browse_media_recent_truncated(
                 model=ModelType.EVENT,
                 id="test_event_id",
                 type=EventType.SMART_DETECT,
-                start=datetime(1000, 1, 1, 0, 0, 0),
+                start=datetime(2000, 1, 1, 0, 0, 0),
                 end=None,
                 score=100,
                 smart_detect_types=["vehicle", "licensePlate"],
@@ -748,7 +749,7 @@ async def test_browse_media_recent_truncated(
                 model=ModelType.EVENT,
                 id="test_event_id",
                 type=EventType.SMART_DETECT,
-                start=datetime(1000, 1, 1, 0, 0, 0),
+                start=datetime(2000, 1, 1, 0, 0, 0),
                 end=None,
                 score=100,
                 smart_detect_types=["vehicle", "licensePlate"],
@@ -758,7 +759,7 @@ async def test_browse_media_recent_truncated(
                     "license_plate": {"name": "ABC1234", "confidence_level": 95},
                     "detected_thumbnails": [
                         {
-                            "clock_best_wall": datetime(1000, 1, 1, 0, 0, 0),
+                            "clock_best_wall": datetime(2000, 1, 1, 0, 0, 0),
                             "type": "vehicle",
                             "cropped_id": "event_id",
                         }
@@ -772,7 +773,7 @@ async def test_browse_media_recent_truncated(
                 model=ModelType.EVENT,
                 id="test_event_id",
                 type=EventType.SMART_DETECT,
-                start=datetime(1000, 1, 1, 0, 0, 0),
+                start=datetime(2000, 1, 1, 0, 0, 0),
                 end=None,
                 score=100,
                 smart_detect_types=["vehicle", "licensePlate"],
@@ -782,7 +783,7 @@ async def test_browse_media_recent_truncated(
                     "license_plate": {"name": "ABC1234", "confidence_level": 95},
                     "detected_thumbnails": [
                         {
-                            "clock_best_wall": datetime(1000, 1, 1, 0, 0, 0),
+                            "clock_best_wall": datetime(2000, 1, 1, 0, 0, 0),
                             "type": "vehicle",
                             "cropped_id": "event_id",
                             "attributes": {
@@ -802,7 +803,7 @@ async def test_browse_media_recent_truncated(
                 model=ModelType.EVENT,
                 id="test_event_id",
                 type=EventType.SMART_DETECT,
-                start=datetime(1000, 1, 1, 0, 0, 0),
+                start=datetime(2000, 1, 1, 0, 0, 0),
                 end=None,
                 score=100,
                 smart_detect_types=["vehicle", "licensePlate"],
@@ -812,7 +813,7 @@ async def test_browse_media_recent_truncated(
                     "license_plate": {"name": "ABC1234", "confidence_level": 95},
                     "detected_thumbnails": [
                         {
-                            "clock_best_wall": datetime(1000, 1, 1, 0, 0, 0),
+                            "clock_best_wall": datetime(2000, 1, 1, 0, 0, 0),
                             "type": "vehicle",
                             "cropped_id": "event_id",
                             "attributes": {
@@ -823,7 +824,7 @@ async def test_browse_media_recent_truncated(
                             },
                         },
                         {
-                            "clock_best_wall": datetime(1000, 1, 1, 0, 0, 0),
+                            "clock_best_wall": datetime(2000, 1, 1, 0, 0, 0),
                             "type": "person",
                             "cropped_id": "event_id",
                         },
@@ -837,7 +838,7 @@ async def test_browse_media_recent_truncated(
                 model=ModelType.EVENT,
                 id="test_event_id",
                 type=EventType.SMART_DETECT,
-                start=datetime(1000, 1, 1, 0, 0, 0),
+                start=datetime(2000, 1, 1, 0, 0, 0),
                 end=None,
                 score=100,
                 smart_detect_types=["vehicle"],
@@ -846,7 +847,7 @@ async def test_browse_media_recent_truncated(
                 metadata={
                     "detected_thumbnails": [
                         {
-                            "clock_best_wall": datetime(1000, 1, 1, 0, 0, 0),
+                            "clock_best_wall": datetime(2000, 1, 1, 0, 0, 0),
                             "type": "vehicle",
                             "cropped_id": "event_id",
                             "attributes": {
@@ -870,7 +871,7 @@ async def test_browse_media_recent_truncated(
                 model=ModelType.EVENT,
                 id="test_event_id",
                 type=EventType.SMART_AUDIO_DETECT,
-                start=datetime(1000, 1, 1, 0, 0, 0),
+                start=datetime(2000, 1, 1, 0, 0, 0),
                 end=None,
                 score=100,
                 smart_detect_types=["alrmSpeak"],

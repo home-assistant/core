@@ -2,9 +2,15 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
-from pytraccar import ApiClient, ServerModel, TraccarException
+from pytraccar import (
+    ApiClient,
+    ServerModel,
+    TraccarAuthenticationException,
+    TraccarException,
+)
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -160,36 +166,62 @@ class TraccarServerConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Import an entry."""
-        configured_port = str(import_data[CONF_PORT])
-        self._async_abort_entries_match(
-            {
-                CONF_HOST: import_data[CONF_HOST],
-                CONF_PORT: configured_port,
+    async def async_step_reauth(
+        self, _entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle configuration by re-auth."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self,
+        user_input: dict[str, Any] | None = None,
+    ) -> ConfigFlowResult:
+        """Handle reauth flow."""
+        reauth_entry = self._get_reauth_entry()
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            test_data = {
+                **reauth_entry.data,
+                **user_input,
             }
+            try:
+                await self._get_server_info(test_data)
+            except TraccarAuthenticationException:
+                LOGGER.error("Invalid credentials for Traccar Server")
+                errors["base"] = "invalid_auth"
+            except TraccarException as exception:
+                LOGGER.error("Unable to connect to Traccar Server: %s", exception)
+                errors["base"] = "cannot_connect"
+            except Exception:  # noqa: BLE001
+                LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    data_updates=user_input,
+                )
+        username = (
+            user_input[CONF_USERNAME]
+            if user_input
+            else reauth_entry.data[CONF_USERNAME]
         )
-        if "all_events" in (imported_events := import_data.get("event", [])):
-            events = list(EVENTS.values())
-        else:
-            events = imported_events
-        return self.async_create_entry(
-            title=f"{import_data[CONF_HOST]}:{configured_port}",
-            data={
-                CONF_HOST: import_data[CONF_HOST],
-                CONF_PORT: configured_port,
-                CONF_SSL: import_data.get(CONF_SSL, False),
-                CONF_VERIFY_SSL: import_data.get(CONF_VERIFY_SSL, True),
-                CONF_USERNAME: import_data[CONF_USERNAME],
-                CONF_PASSWORD: import_data[CONF_PASSWORD],
-            },
-            options={
-                CONF_MAX_ACCURACY: import_data[CONF_MAX_ACCURACY],
-                CONF_EVENTS: events,
-                CONF_CUSTOM_ATTRIBUTES: import_data.get("monitored_conditions", []),
-                CONF_SKIP_ACCURACY_FILTER_FOR: import_data.get(
-                    "skip_accuracy_filter_on", []
-                ),
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_USERNAME, default=username): TextSelector(
+                        TextSelectorConfig(type=TextSelectorType.EMAIL)
+                    ),
+                    vol.Required(CONF_PASSWORD): TextSelector(
+                        TextSelectorConfig(type=TextSelectorType.PASSWORD)
+                    ),
+                }
+            ),
+            errors=errors,
+            description_placeholders={
+                CONF_HOST: reauth_entry.data[CONF_HOST],
+                CONF_PORT: reauth_entry.data[CONF_PORT],
             },
         )
 

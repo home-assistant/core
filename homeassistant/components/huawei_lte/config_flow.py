@@ -21,7 +21,6 @@ from requests.exceptions import SSLError, Timeout
 from url_normalize import url_normalize
 import voluptuous as vol
 
-from homeassistant.components import ssdp
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -38,11 +37,21 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import callback
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_MANUFACTURER,
+    ATTR_UPNP_MODEL_NAME,
+    ATTR_UPNP_PRESENTATION_URL,
+    ATTR_UPNP_SERIAL,
+    ATTR_UPNP_UDN,
+    SsdpServiceInfo,
+)
 
 from .const import (
     CONF_MANUFACTURER,
     CONF_TRACK_WIRED_CLIENTS,
     CONF_UNAUTHENTICATED_MODE,
+    CONF_UPNP_UDN,
     CONNECTION_TIMEOUT,
     DEFAULT_DEVICE_NAME,
     DEFAULT_NOTIFY_SERVICE_NAME,
@@ -55,18 +64,22 @@ from .utils import get_device_macs, non_verifying_requests_session
 _LOGGER = logging.getLogger(__name__)
 
 
-class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
-    """Handle Huawei LTE config flow."""
+class HuaweiLteConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Huawei LTE config flow."""
 
     VERSION = 3
+
+    manufacturer: str | None = None
+    upnp_udn: str | None = None
+    url: str | None = None
 
     @staticmethod
     @callback
     def async_get_options_flow(
         config_entry: ConfigEntry,
-    ) -> OptionsFlowHandler:
+    ) -> HuaweiLteOptionsFlow:
         """Get options flow."""
-        return OptionsFlowHandler(config_entry)
+        return HuaweiLteOptionsFlow()
 
     async def _async_show_user_form(
         self,
@@ -81,10 +94,7 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(
                         CONF_URL,
-                        default=user_input.get(
-                            CONF_URL,
-                            self.context.get(CONF_URL, ""),
-                        ),
+                        default=user_input.get(CONF_URL, self.url or ""),
                     ): str,
                     vol.Optional(
                         CONF_VERIFY_SSL,
@@ -102,6 +112,9 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors or {},
+            description_placeholders={
+                "sample_ip": "http://192.168.X.1",
+            },
         )
 
     async def _async_show_reauth_form(
@@ -122,6 +135,9 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors or {},
+            description_placeholders={
+                "sample_ip": "http://192.168.X.1",
+            },
         )
 
     async def _connect(
@@ -171,8 +187,8 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         except Timeout:
             _LOGGER.warning("Connection timeout", exc_info=True)
             errors[CONF_URL] = "connection_timeout"
-        except Exception:  # noqa: BLE001
-            _LOGGER.warning("Unknown error connecting to device", exc_info=True)
+        except Exception:
+            _LOGGER.exception("Unknown error connecting to device")
             errors[CONF_URL] = "unknown"
         return conn
 
@@ -181,8 +197,8 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         try:
             conn.close()
             conn.requests_session.close()
-        except Exception:  # noqa: BLE001
-            _LOGGER.debug("Disconnect error", exc_info=True)
+        except Exception:
+            _LOGGER.exception("Disconnect error")
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -241,7 +257,8 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         user_input.update(
             {
                 CONF_MAC: get_device_macs(info, wlan_settings),
-                CONF_MANUFACTURER: self.context.get(CONF_MANUFACTURER),
+                CONF_MANUFACTURER: self.manufacturer,
+                CONF_UPNP_UDN: self.upnp_udn,
             }
         )
 
@@ -262,24 +279,26 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(title=title, data=user_input)
 
     async def async_step_ssdp(
-        self, discovery_info: ssdp.SsdpServiceInfo
+        self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle SSDP initiated config flow."""
 
         if TYPE_CHECKING:
             assert discovery_info.ssdp_location
         url = url_normalize(
-            discovery_info.upnp.get(
-                ssdp.ATTR_UPNP_PRESENTATION_URL,
-                f"http://{urlparse(discovery_info.ssdp_location).hostname}/",
-            )
+            discovery_info.upnp.get(ATTR_UPNP_PRESENTATION_URL)
+            or f"http://{urlparse(discovery_info.ssdp_location).hostname}/"
         )
+        if TYPE_CHECKING:
+            # url_normalize only returns None if passed None, and we don't do that
+            assert url is not None
 
-        unique_id = discovery_info.upnp.get(
-            ssdp.ATTR_UPNP_SERIAL, discovery_info.upnp[ssdp.ATTR_UPNP_UDN]
-        )
+        upnp_udn = discovery_info.upnp.get(ATTR_UPNP_UDN)
+        unique_id = discovery_info.upnp.get(ATTR_UPNP_SERIAL, upnp_udn)
         await self.async_set_unique_id(unique_id)
-        self._abort_if_unique_id_configured(updates={CONF_URL: url})
+        self._abort_if_unique_id_configured(
+            updates={CONF_UPNP_UDN: upnp_udn, CONF_URL: url}
+        )
 
         def _is_supported_device() -> bool:
             """See if we are looking at a possibly supported device.
@@ -301,12 +320,17 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         self.context.update(
             {
                 "title_placeholders": {
-                    CONF_NAME: discovery_info.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME)
-                },
-                CONF_MANUFACTURER: discovery_info.upnp.get(ssdp.ATTR_UPNP_MANUFACTURER),
-                CONF_URL: url,
+                    CONF_NAME: (
+                        discovery_info.upnp.get(ATTR_UPNP_MODEL_NAME)
+                        or discovery_info.upnp.get(ATTR_UPNP_FRIENDLY_NAME)
+                        or "Huawei LTE"
+                    )
+                }
             }
         )
+        self.manufacturer = discovery_info.upnp.get(ATTR_UPNP_MANUFACTURER)
+        self.upnp_udn = upnp_udn
+        self.url = url
         return await self._async_show_user_form()
 
     async def async_step_reauth(
@@ -319,8 +343,7 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
-        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        assert entry
+        entry = self._get_reauth_entry()
         if not user_input:
             return await self._async_show_reauth_form(
                 user_input={
@@ -339,17 +362,11 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 user_input=user_input, errors=errors
             )
 
-        self.hass.config_entries.async_update_entry(entry, data=new_data)
-        await self.hass.config_entries.async_reload(entry.entry_id)
-        return self.async_abort(reason="reauth_successful")
+        return self.async_update_reload_and_abort(entry, data=new_data)
 
 
-class OptionsFlowHandler(OptionsFlow):
+class HuaweiLteOptionsFlow(OptionsFlow):
     """Huawei LTE options flow."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -395,4 +412,10 @@ class OptionsFlowHandler(OptionsFlow):
                 ): bool,
             }
         )
-        return self.async_show_form(step_id="init", data_schema=data_schema)
+        return self.async_show_form(
+            step_id="init",
+            data_schema=data_schema,
+            description_placeholders={
+                "sample_ip": "http://192.168.X.1",
+            },
+        )

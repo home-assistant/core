@@ -29,13 +29,13 @@ _LOGGER = logging.getLogger(__name__)
 class EagleDataCoordinator(DataUpdateCoordinator):
     """Get the latest data from the Eagle device."""
 
+    config_entry: ConfigEntry
     eagle100_reader: Eagle100Reader | None = None
     eagle200_meter: aioeagle.ElectricMeter | None = None
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize the data object."""
-        self.entry = entry
-        if self.type == TYPE_EAGLE_100:
+        if config_entry.data[CONF_TYPE] == TYPE_EAGLE_100:
             self.model = "EAGLE-100"
             update_method = self._async_update_data_100
         else:
@@ -45,7 +45,8 @@ class EagleDataCoordinator(DataUpdateCoordinator):
         super().__init__(
             hass,
             _LOGGER,
-            name=entry.data[CONF_CLOUD_ID],
+            config_entry=config_entry,
+            name=config_entry.data[CONF_CLOUD_ID],
             update_interval=timedelta(seconds=30),
             update_method=update_method,
         )
@@ -53,17 +54,12 @@ class EagleDataCoordinator(DataUpdateCoordinator):
     @property
     def cloud_id(self):
         """Return the cloud ID."""
-        return self.entry.data[CONF_CLOUD_ID]
-
-    @property
-    def type(self):
-        """Return entry type."""
-        return self.entry.data[CONF_TYPE]
+        return self.config_entry.data[CONF_CLOUD_ID]
 
     @property
     def hardware_address(self):
         """Return hardware address of meter."""
-        return self.entry.data[CONF_HARDWARE_ADDRESS]
+        return self.config_entry.data[CONF_HARDWARE_ADDRESS]
 
     @property
     def is_connected(self):
@@ -79,8 +75,8 @@ class EagleDataCoordinator(DataUpdateCoordinator):
             hub = aioeagle.EagleHub(
                 aiohttp_client.async_get_clientsession(self.hass),
                 self.cloud_id,
-                self.entry.data[CONF_INSTALL_CODE],
-                host=self.entry.data[CONF_HOST],
+                self.config_entry.data[CONF_INSTALL_CODE],
+                host=self.config_entry.data[CONF_HOST],
             )
             eagle200_meter = aioeagle.ElectricMeter.create_instance(
                 hub, self.hardware_address
@@ -115,8 +111,8 @@ class EagleDataCoordinator(DataUpdateCoordinator):
         if self.eagle100_reader is None:
             self.eagle100_reader = Eagle100Reader(
                 self.cloud_id,
-                self.entry.data[CONF_INSTALL_CODE],
-                self.entry.data[CONF_HOST],
+                self.config_entry.data[CONF_INSTALL_CODE],
+                self.config_entry.data[CONF_HOST],
             )
 
         out = {}

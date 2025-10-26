@@ -8,13 +8,12 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
 from .coordinator import RainbirdUpdateCoordinator
+from .types import RainbirdConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,11 +26,11 @@ RAIN_SENSOR_ENTITY_DESCRIPTION = BinarySensorEntityDescription(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: RainbirdConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entry for a Rain Bird binary_sensor."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id].coordinator
+    coordinator = config_entry.runtime_data.coordinator
     async_add_entities([RainBirdSensor(coordinator, RAIN_SENSOR_ENTITY_DESCRIPTION)])
 
 

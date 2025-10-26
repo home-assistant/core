@@ -8,6 +8,8 @@
         'username': '**REDACTED**',
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'ecovacs',
       'minor_version': 1,
       'options': dict({
@@ -15,6 +17,8 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
+      'subentries': list([
+      ]),
       'title': '**REDACTED**',
       'unique_id': None,
       'version': 1,
@@ -59,6 +63,8 @@
         'username': '**REDACTED**',
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'ecovacs',
       'minor_version': 1,
       'options': dict({
@@ -66,6 +72,8 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
+      'subentries': list([
+      ]),
       'title': '**REDACTED**',
       'unique_id': None,
       'version': 1,

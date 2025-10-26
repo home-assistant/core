@@ -2,6 +2,7 @@
 # name: test_diagnostics
   dict({
     'audio': dict({
+      'available': True,
       'volume': 100,
       'volume_limit': dict({
         'range_max': 100,
@@ -14,7 +15,7 @@
     }),
     'bluetooth': dict({
       'active': False,
-      'address': 'AA:BB:CC:DD:EE:FF',
+      'address': 'AA:BB:CC:DD:EE:EE',
       'available': True,
       'discoverable': True,
       'name': '**REDACTED**',
@@ -23,9 +24,21 @@
     'device_id': '**REDACTED**',
     'display': dict({
       'brightness': 100,
+      'brightness_limit': dict({
+        'range_max': 100,
+        'range_min': 2,
+      }),
       'brightness_mode': 'auto',
+      'brightness_range': dict({
+        'range_max': 100,
+        'range_min': 0,
+      }),
       'display_type': 'mixed',
       'height': 8,
+      'on': None,
+      'screensaver': dict({
+        'enabled': False,
+      }),
       'width': 37,
     }),
     'mode': 'auto',
@@ -33,6 +46,7 @@
     'name': '**REDACTED**',
     'os_version': '2.2.2',
     'serial_number': '**REDACTED**',
+    'update': None,
     'wifi': dict({
       'active': True,
       'available': True,

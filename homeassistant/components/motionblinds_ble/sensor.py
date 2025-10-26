@@ -6,7 +6,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 import logging
 from math import ceil
-from typing import Generic, TypeVar
 
 from motionblindsble.const import (
     MotionBlindType,
@@ -28,7 +27,7 @@ from homeassistant.const import (
     EntityCategory,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import (
@@ -45,11 +44,9 @@ _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
-_T = TypeVar("_T")
-
 
 @dataclass(frozen=True, kw_only=True)
-class MotionblindsBLESensorEntityDescription(SensorEntityDescription, Generic[_T]):
+class MotionblindsBLESensorEntityDescription[_T](SensorEntityDescription):
     """Entity description of a sensor entity with initial_value attribute."""
 
     initial_value: str | None = None
@@ -95,7 +92,9 @@ SENSORS: tuple[MotionblindsBLESensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensor entities based on a config entry."""
 
@@ -110,7 +109,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class MotionblindsBLESensorEntity(MotionblindsBLEEntity, SensorEntity, Generic[_T]):
+class MotionblindsBLESensorEntity[_T](MotionblindsBLEEntity, SensorEntity):
     """Representation of a sensor entity."""
 
     entity_description: MotionblindsBLESensorEntityDescription[_T]

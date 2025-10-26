@@ -39,7 +39,7 @@
           "idle": "[%key:common::state::idle%]",
           "cook": "Cooking",
           "low_water": "Low water",
-          "ota": "Ota",
+          "ota": "OTA update",
           "provisioning": "Provisioning",
           "high_temp": "High temperature",
           "device_failure": "Device failure"

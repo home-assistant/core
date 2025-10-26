@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/fireservicerota",
   "iot_class": "cloud_polling",
   "loggers": ["pyfireservicerota"],
-  "requirements": ["pyfireservicerota==0.0.43"]
+  "requirements": ["pyfireservicerota==0.0.46"]
 }

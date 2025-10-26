@@ -15,7 +15,7 @@
   "options": {
     "step": {
       "init": {
-        "description": "You can login to your OpenSky account to increase the update frequency.",
+        "description": "You can log in to your OpenSky account to increase the update frequency.",
         "data": {
           "radius": "[%key:component::opensky::config::step::user::data::radius%]",
           "altitude": "[%key:component::opensky::config::step::user::data::altitude%]",

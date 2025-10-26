@@ -6,12 +6,12 @@
           "port": "[%key:common::config_flow::data::port%]",
           "protocol": "Protocol",
           "account": "Account ID",
-          "encryption_key": "Encryption Key",
-          "ping_interval": "Ping Interval (min)",
+          "encryption_key": "Encryption key",
+          "ping_interval": "Ping interval (min)",
           "zones": "Number of zones for the account",
           "additional_account": "Additional accounts"
         },
-        "title": "Create a connection for SIA based alarm systems."
+        "title": "Create a connection for SIA-based alarm systems"
       },
       "additional_account": {
         "data": {
@@ -21,7 +21,7 @@
           "zones": "[%key:component::sia::config::step::user::data::zones%]",
           "additional_account": "[%key:component::sia::config::step::user::data::additional_account%]"
         },
-        "title": "Add another account to the current port."
+        "title": "Add another account to the current port"
       }
     },
     "abort": {
@@ -45,7 +45,7 @@
           "zones": "[%key:component::sia::config::step::user::data::zones%]"
         },
         "description": "Set the options for account: {account}",
-        "title": "Options for the SIA Setup."
+        "title": "Options for the SIA setup"
       }
     }
   }

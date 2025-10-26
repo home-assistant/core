@@ -15,13 +15,16 @@ from roborock.version_1_apis.roborock_client_v1 import AttributeCache
 from homeassistant.components.time import TimeEntity, TimeEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import RoborockConfigEntry
-from .coordinator import RoborockDataUpdateCoordinator
-from .device import RoborockEntityV1
+from .const import DOMAIN
+from .coordinator import RoborockConfigEntry, RoborockDataUpdateCoordinator
+from .entity import RoborockEntityV1
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -113,7 +116,7 @@ TIME_DESCRIPTIONS: list[RoborockTimeDescription] = [
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: RoborockConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Roborock time platform."""
     possible_entities: list[
@@ -172,6 +175,12 @@ class RoborockTimeEntity(RoborockEntityV1, TimeEntity):
 
     async def async_set_value(self, value: time) -> None:
         """Set the time."""
-        await self.entity_description.update_value(
-            self.get_cache(self.entity_description.cache_key), value
-        )
+        try:
+            await self.entity_description.update_value(
+                self.get_cache(self.entity_description.cache_key), value
+            )
+        except RoborockException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="update_options_failed",
+            ) from err

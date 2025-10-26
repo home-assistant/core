@@ -2,10 +2,11 @@
 
 import asyncio
 from datetime import timedelta
+import logging
 from typing import Any, cast
 from unittest.mock import patch
 
-from aiohttp import WSMsgType, WSServerHandshakeError, web
+from aiohttp import ServerDisconnectedError, WSMsgType, web
 import pytest
 
 from homeassistant.components.websocket_api import (
@@ -16,10 +17,15 @@ from homeassistant.components.websocket_api import (
 )
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from tests.common import async_fire_time_changed
-from tests.typing import MockHAClientWebSocket, WebSocketGenerator
+from tests.common import async_call_logger_set_level, async_fire_time_changed
+from tests.typing import (
+    ClientSessionGenerator,
+    MockHAClientWebSocket,
+    WebSocketGenerator,
+)
 
 
 @pytest.fixture
@@ -241,7 +247,7 @@ async def test_pending_msg_peak(
     instance: http.WebSocketHandler = cast(http.WebSocketHandler, setup_instance)
 
     # Fill the queue past the allowed peak
-    for _ in range(10):
+    for _ in range(20):
         instance._send_message({"overload": "message"})
 
     async_fire_time_changed(
@@ -251,7 +257,7 @@ async def test_pending_msg_peak(
     msg = await websocket_client.receive()
     assert msg.type is WSMsgType.CLOSE
     assert "Client unable to keep up with pending messages" in caplog.text
-    assert "Stayed over 5 for 5 seconds" in caplog.text
+    assert "Stayed over 5 for 10 seconds" in caplog.text
     assert "overload" in caplog.text
 
 
@@ -374,7 +380,7 @@ async def test_prepare_fail_timeout(
             "homeassistant.components.websocket_api.http.web.WebSocketResponse.prepare",
             side_effect=(TimeoutError, web.WebSocketResponse.prepare),
         ),
-        pytest.raises(WSServerHandshakeError),
+        pytest.raises(ServerDisconnectedError),
     ):
         await hass_ws_client(hass)
 
@@ -392,11 +398,53 @@ async def test_prepare_fail_connection_reset(
             "homeassistant.components.websocket_api.http.web.WebSocketResponse.prepare",
             side_effect=(ConnectionResetError, web.WebSocketResponse.prepare),
         ),
-        pytest.raises(WSServerHandshakeError),
+        pytest.raises(ServerDisconnectedError),
     ):
         await hass_ws_client(hass)
 
     assert "Connection reset by peer while preparing WebSocket" in caplog.text
+
+
+async def test_auth_timeout_logs_at_debug(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test auth timeout is logged at debug level not warning."""
+    # Setup websocket API
+    assert await async_setup_component(hass, "websocket_api", {})
+
+    client = await hass_client()
+
+    # Patch the auth timeout to be very short (0.001 seconds)
+    with (
+        caplog.at_level(logging.DEBUG, "homeassistant.components.websocket_api"),
+        patch(
+            "homeassistant.components.websocket_api.http.AUTH_MESSAGE_TIMEOUT", 0.001
+        ),
+    ):
+        # Try to connect - will timeout quickly since we don't send auth
+        ws = await client.ws_connect("/api/websocket")
+        # Wait a bit for the timeout to trigger and cleanup to complete
+        await asyncio.sleep(0.1)
+        await ws.close()
+        await asyncio.sleep(0.1)
+
+        # Check that "Did not receive auth message" is logged at debug, not warning
+        debug_messages = [
+            r.message for r in caplog.records if r.levelno == logging.DEBUG
+        ]
+        assert any(
+            "Disconnected during auth phase: Did not receive auth message" in msg
+            for msg in debug_messages
+        )
+
+        # Check it's NOT logged at warning level
+        warning_messages = [
+            r.message for r in caplog.records if r.levelno >= logging.WARNING
+        ]
+        for msg in warning_messages:
+            assert "Did not receive auth message" not in msg
 
 
 async def test_enable_coalesce(
@@ -523,3 +571,28 @@ async def test_binary_message(
     assert "Received binary message for non-existing handler 0" in caplog.text
     assert "Received binary message for non-existing handler 3" in caplog.text
     assert "Received binary message for non-existing handler 10" in caplog.text
+
+
+async def test_enable_disable_debug_logging(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test enabling and disabling debug logging."""
+    assert await async_setup_component(hass, "logger", {"logger": {}})
+    async with async_call_logger_set_level(
+        "homeassistant.components.websocket_api", "DEBUG", hass=hass, caplog=caplog
+    ):
+        await websocket_client.send_json({"id": 1, "type": "ping"})
+        msg = await websocket_client.receive_json()
+        assert msg["id"] == 1
+        assert msg["type"] == "pong"
+        assert 'Sending b\'{"id":1,"type":"pong"}\'' in caplog.text
+    async with async_call_logger_set_level(
+        "homeassistant.components.websocket_api", "WARNING", hass=hass, caplog=caplog
+    ):
+        await websocket_client.send_json({"id": 2, "type": "ping"})
+        msg = await websocket_client.receive_json()
+        assert msg["id"] == 2
+        assert msg["type"] == "pong"
+        assert 'Sending b\'{"id":2,"type":"pong"}\'' not in caplog.text

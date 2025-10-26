@@ -9,7 +9,7 @@ from wled import LiveDataOverride
 from homeassistant.components.select import SelectEntity
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import WLEDConfigEntry
 from .coordinator import WLEDDataUpdateCoordinator
@@ -22,7 +22,7 @@ PARALLEL_UPDATES = 1
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: WLEDConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up WLED select based on a config entry."""
     coordinator = entry.runtime_data
@@ -79,9 +79,6 @@ class WLEDPresetSelect(WLEDEntity, SelectEntity):
         super().__init__(coordinator=coordinator)
 
         self._attr_unique_id = f"{coordinator.data.info.mac_address}_preset"
-        self._attr_options = [
-            preset.name for preset in self.coordinator.data.presets.values()
-        ]
 
     @property
     def available(self) -> bool:
@@ -99,6 +96,14 @@ class WLEDPresetSelect(WLEDEntity, SelectEntity):
             return preset.name
         return None
 
+    @property
+    def options(self) -> list[str]:
+        """Return a list of selectable options."""
+        sorted_values = sorted(
+            self.coordinator.data.presets.values(), key=lambda preset: preset.name
+        )
+        return [preset.name for preset in sorted_values]
+
     @wled_exception_handler
     async def async_select_option(self, option: str) -> None:
         """Set WLED segment to the selected preset."""
@@ -115,9 +120,6 @@ class WLEDPlaylistSelect(WLEDEntity, SelectEntity):
         super().__init__(coordinator=coordinator)
 
         self._attr_unique_id = f"{coordinator.data.info.mac_address}_playlist"
-        self._attr_options = [
-            playlist.name for playlist in self.coordinator.data.playlists.values()
-        ]
 
     @property
     def available(self) -> bool:
@@ -134,6 +136,14 @@ class WLEDPlaylistSelect(WLEDEntity, SelectEntity):
         ):
             return playlist.name
         return None
+
+    @property
+    def options(self) -> list[str]:
+        """Return a list of selectable options."""
+        sorted_values = sorted(
+            self.coordinator.data.playlists.values(), key=lambda playlist: playlist.name
+        )
+        return [playlist.name for playlist in sorted_values]
 
     @wled_exception_handler
     async def async_select_option(self, option: str) -> None:
@@ -159,9 +169,6 @@ class WLEDPaletteSelect(WLEDEntity, SelectEntity):
             self._attr_translation_placeholders = {"segment": str(segment)}
 
         self._attr_unique_id = f"{coordinator.data.info.mac_address}_palette_{segment}"
-        self._attr_options = [
-            palette.name for palette in self.coordinator.data.palettes.values()
-        ]
         self._segment = segment
 
     @property
@@ -177,9 +184,22 @@ class WLEDPaletteSelect(WLEDEntity, SelectEntity):
     @property
     def current_option(self) -> str | None:
         """Return the current selected color palette."""
-        return self.coordinator.data.palettes[
-            int(self.coordinator.data.state.segments[self._segment].palette_id)
-        ].name
+        if not self.coordinator.data.palettes:
+            return None
+        if (segment := self.coordinator.data.state.segments.get(self._segment)) is None:
+            return None
+        palette_id = int(segment.palette_id)
+        if (palette := self.coordinator.data.palettes.get(palette_id)) is None:
+            return None
+        return palette.name
+
+    @property
+    def options(self) -> list[str]:
+        """Return a list of selectable options."""
+        sorted_values = sorted(
+            self.coordinator.data.palettes.values(), key=lambda palette: palette.name
+        )
+        return [palette.name for palette in sorted_values]
 
     @wled_exception_handler
     async def async_select_option(self, option: str) -> None:
@@ -191,7 +211,7 @@ class WLEDPaletteSelect(WLEDEntity, SelectEntity):
 def async_update_segments(
     coordinator: WLEDDataUpdateCoordinator,
     current_ids: set[int],
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Update segments."""
     segment_ids = {

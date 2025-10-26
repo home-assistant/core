@@ -6,13 +6,20 @@ from unittest.mock import AsyncMock, Mock, patch
 from mozart_api.models import (
     Action,
     BeolinkPeer,
+    BeolinkSelf,
     ContentItem,
+    ListeningMode,
+    ListeningModeFeatures,
+    ListeningModeRef,
+    ListeningModeTrigger,
     PlaybackContentMetadata,
     PlaybackProgress,
     PlaybackState,
+    PlayQueueSettings,
     ProductState,
     RemoteMenuItem,
     RenderingState,
+    SoftwareUpdateState,
     SoftwareUpdateStatus,
     Source,
     SourceArray,
@@ -26,10 +33,22 @@ from homeassistant.core import HomeAssistant
 
 from .const import (
     TEST_DATA_CREATE_ENTRY,
+    TEST_DATA_CREATE_ENTRY_2,
     TEST_FRIENDLY_NAME,
+    TEST_FRIENDLY_NAME_3,
+    TEST_FRIENDLY_NAME_4,
+    TEST_HOST_3,
+    TEST_HOST_4,
     TEST_JID_1,
+    TEST_JID_3,
+    TEST_JID_4,
     TEST_NAME,
+    TEST_NAME_2,
     TEST_SERIAL_NUMBER,
+    TEST_SERIAL_NUMBER_2,
+    TEST_SOUND_MODE,
+    TEST_SOUND_MODE_2,
+    TEST_SOUND_MODE_NAME,
 )
 
 from tests.common import MockConfigEntry
@@ -37,7 +56,7 @@ from tests.common import MockConfigEntry
 
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
-    """Mock config entry."""
+    """Mock config entry for Beosound Balance."""
     return MockConfigEntry(
         domain=DOMAIN,
         unique_id=TEST_SERIAL_NUMBER,
@@ -47,15 +66,62 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-async def mock_media_player(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_mozart_client: AsyncMock,
+def mock_config_entry_core() -> MockConfigEntry:
+    """Mock config entry for Beoconnect Core."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_SERIAL_NUMBER_2,
+        data=TEST_DATA_CREATE_ENTRY_2,
+        title=TEST_NAME_2,
+    )
+
+
+async def mock_websocket_connection(
+    hass: HomeAssistant, mock_mozart_client: AsyncMock
 ) -> None:
-    """Mock media_player entity."""
+    """Register and receive initial WebSocket notifications."""
+
+    # Currently only add notifications that are used.
+
+    # Register callbacks.
+    volume_callback = mock_mozart_client.get_volume_notifications.call_args[0][0]
+    source_change_callback = (
+        mock_mozart_client.get_source_change_notifications.call_args[0][0]
+    )
+    playback_state_callback = (
+        mock_mozart_client.get_playback_state_notifications.call_args[0][0]
+    )
+    playback_metadata_callback = (
+        mock_mozart_client.get_playback_metadata_notifications.call_args[0][0]
+    )
+
+    # Trigger callbacks. Try to use existing data
+    volume_callback(mock_mozart_client.get_product_state.return_value.volume)
+    source_change_callback(
+        mock_mozart_client.get_product_state.return_value.playback.source
+    )
+    playback_state_callback(
+        mock_mozart_client.get_product_state.return_value.playback.state
+    )
+    playback_metadata_callback(
+        mock_mozart_client.get_product_state.return_value.playback.metadata
+    )
+    await hass.async_block_till_done()
+
+
+@pytest.fixture(name="integration")
+async def integration_fixture(
+    hass: HomeAssistant,
+    mock_mozart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Set up the Bang & Olufsen integration."""
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await mock_websocket_connection(hass, mock_mozart_client)
 
 
 @pytest.fixture
@@ -74,12 +140,12 @@ def mock_mozart_client() -> Generator[AsyncMock]:
 
         # REST API client methods
         client.get_beolink_self = AsyncMock()
-        client.get_beolink_self.return_value = BeolinkPeer(
+        client.get_beolink_self.return_value = BeolinkSelf(
             friendly_name=TEST_FRIENDLY_NAME, jid=TEST_JID_1
         )
         client.get_softwareupdate_status = AsyncMock()
         client.get_softwareupdate_status.return_value = SoftwareUpdateStatus(
-            software_version="1.0.0", state=""
+            software_version="1.0.0", state=SoftwareUpdateState()
         )
         client.get_product_state = AsyncMock()
         client.get_product_state.return_value = ProductState(
@@ -94,21 +160,29 @@ def mock_mozart_client() -> Generator[AsyncMock]:
         client.get_available_sources = AsyncMock()
         client.get_available_sources.return_value = SourceArray(
             items=[
-                # Is in the HIDDEN_SOURCE_IDS constant, so should not be user selectable
+                # Is not playable, so should not be user selectable
                 Source(
                     name="AirPlay",
                     id="airPlay",
                     is_enabled=True,
                     is_multiroom_available=False,
                 ),
-                # The only available source
+                # The only available beolink source
                 Source(
                     name="Tidal",
                     id="tidal",
                     is_enabled=True,
                     is_multiroom_available=True,
+                    is_playable=True,
                 ),
-                # Is disabled, so should not be user selectable
+                Source(
+                    name="Line-In",
+                    id="lineIn",
+                    is_enabled=True,
+                    is_multiroom_available=False,
+                    is_playable=True,
+                ),
+                # Is disabled and not playable, so should not be user selectable
                 Source(
                     name="Powerlink",
                     id="pl",
@@ -227,6 +301,65 @@ def mock_mozart_client() -> Generator[AsyncMock]:
                 id="64c9da45-3682-44a4-8030-09ed3ef44160",
             ),
         }
+        client.get_beolink_peers = AsyncMock()
+        client.get_beolink_peers.return_value = [
+            BeolinkPeer(
+                friendly_name=TEST_FRIENDLY_NAME_3,
+                jid=TEST_JID_3,
+                ip_address=TEST_HOST_3,
+            ),
+            BeolinkPeer(
+                friendly_name=TEST_FRIENDLY_NAME_4,
+                jid=TEST_JID_4,
+                ip_address=TEST_HOST_4,
+            ),
+        ]
+        client.get_beolink_listeners = AsyncMock()
+        client.get_beolink_listeners.return_value = [
+            BeolinkPeer(
+                friendly_name=TEST_FRIENDLY_NAME_3,
+                jid=TEST_JID_3,
+                ip_address=TEST_HOST_3,
+            ),
+            BeolinkPeer(
+                friendly_name=TEST_FRIENDLY_NAME_4,
+                jid=TEST_JID_4,
+                ip_address=TEST_HOST_4,
+            ),
+        ]
+
+        client.get_listening_mode_set = AsyncMock()
+        client.get_listening_mode_set.return_value = [
+            ListeningMode(
+                id=TEST_SOUND_MODE,
+                name=TEST_SOUND_MODE_NAME,
+                features=ListeningModeFeatures(),
+                triggers=[ListeningModeTrigger()],
+            ),
+            ListeningMode(
+                id=TEST_SOUND_MODE_2,
+                name=TEST_SOUND_MODE_NAME,
+                features=ListeningModeFeatures(),
+                triggers=[ListeningModeTrigger()],
+            ),
+            ListeningMode(
+                id=345,
+                name=f"{TEST_SOUND_MODE_NAME} 2",
+                features=ListeningModeFeatures(),
+                triggers=[ListeningModeTrigger()],
+            ),
+        ]
+        client.get_active_listening_mode = AsyncMock()
+        client.get_active_listening_mode.return_value = ListeningModeRef(
+            href="",
+            id=123,
+        )
+        client.get_settings_queue = AsyncMock()
+        client.get_settings_queue.return_value = PlayQueueSettings(
+            repeat="none",
+            shuffle=False,
+        )
+
         client.post_standby = AsyncMock()
         client.set_current_volume_level = AsyncMock()
         client.set_volume_mute = AsyncMock()
@@ -241,6 +374,14 @@ def mock_mozart_client() -> Generator[AsyncMock]:
         client.add_to_queue = AsyncMock()
         client.post_remote_trigger = AsyncMock()
         client.set_active_source = AsyncMock()
+        client.post_beolink_expand = AsyncMock()
+        client.join_beolink_peer = AsyncMock()
+        client.post_beolink_unexpand = AsyncMock()
+        client.post_beolink_leave = AsyncMock()
+        client.post_beolink_allstandby = AsyncMock()
+        client.join_latest_beolink_experience = AsyncMock()
+        client.activate_listening_mode = AsyncMock()
+        client.set_settings_queue = AsyncMock()
 
         # Non-REST API client methods
         client.check_device_connection = AsyncMock()

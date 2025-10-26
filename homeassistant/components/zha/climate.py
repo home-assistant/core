@@ -30,7 +30,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PRECISION_TENTHS, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import ZHAEntity
 from .helpers import (
@@ -66,7 +66,7 @@ ZHA_TO_HA_HVAC_ACTION = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Zigbee Home Automation sensor from config entry."""
     zha_data = get_zha_data(hass)
@@ -88,7 +88,6 @@ class Thermostat(ZHAEntity, ClimateEntity):
     _attr_precision = PRECISION_TENTHS
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key: str = "thermostat"
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, entity_data: EntityData, **kwargs: Any) -> None:
         """Initialize the ZHA thermostat entity."""

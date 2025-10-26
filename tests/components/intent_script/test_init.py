@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from homeassistant import config as hass_config
 from homeassistant.components.intent_script import DOMAIN
-from homeassistant.const import SERVICE_RELOAD
+from homeassistant.const import ATTR_FRIENDLY_NAME, SERVICE_RELOAD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
@@ -235,17 +235,31 @@ async def test_intent_script_targets(
     floor_1 = floor_registry.async_create("first floor")
     kitchen = area_registry.async_get_or_create("kitchen")
     area_registry.async_update(kitchen.id, floor_id=floor_1.floor_id)
+    bathroom = area_registry.async_get_or_create("bathroom")
     entity_registry.async_get_or_create(
-        "light", "demo", "1234", suggested_object_id="kitchen"
+        "light", "demo", "kitchen", suggested_object_id="kitchen"
     )
     entity_registry.async_update_entity("light.kitchen", area_id=kitchen.id)
-    hass.states.async_set("light.kitchen", "off")
+    hass.states.async_set(
+        "light.kitchen", "off", attributes={ATTR_FRIENDLY_NAME: "overhead light"}
+    )
+    entity_registry.async_get_or_create(
+        "light", "demo", "bathroom", suggested_object_id="bathroom"
+    )
+    entity_registry.async_update_entity("light.bathroom", area_id=bathroom.id)
+    hass.states.async_set(
+        "light.bathroom", "off", attributes={ATTR_FRIENDLY_NAME: "overhead light"}
+    )
 
     response = await intent.async_handle(
         hass,
         "test",
         "Targets",
-        {"name": {"value": "kitchen"}, "domain": {"value": "light"}},
+        {
+            "name": {"value": "overhead light"},
+            "domain": {"value": "light"},
+            "preferred_area_id": {"value": "kitchen"},
+        },
     )
     assert len(calls) == 1
     assert calls[0].data["targets"] == {"entities": ["light.kitchen"]}

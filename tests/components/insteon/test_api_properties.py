@@ -1,5 +1,6 @@
 """Test the Insteon properties APIs."""
 
+import asyncio
 import json
 from typing import Any
 from unittest.mock import AsyncMock, patch
@@ -156,6 +157,7 @@ async def test_get_read_only_properties(
         msg = await ws_client.receive_json()
         assert msg["success"]
         assert len(msg["result"]["properties"]) == 15
+    await asyncio.sleep(1)
 
 
 async def test_get_unknown_properties(
@@ -492,7 +494,7 @@ async def test_bad_address(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, kpl_properties_data
 ) -> None:
     """Test for a bad Insteon address."""
-    ws_client, devices = await _setup(
+    ws_client, _devices = await _setup(
         hass, hass_ws_client, "33.33.33", kpl_properties_data
     )
 

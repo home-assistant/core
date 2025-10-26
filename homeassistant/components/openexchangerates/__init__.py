@@ -33,6 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     update_interval = BASE_UPDATE_INTERVAL * (len(existing_coordinator_for_api_key) + 1)
     coordinator = OpenexchangeratesCoordinator(
         hass,
+        entry,
         async_get_clientsession(hass),
         api_key,
         base,

@@ -4,11 +4,11 @@ from __future__ import annotations
 
 from pyoctoprintapi import OctoprintClient, WebcamSettings
 
-from homeassistant.components.mjpeg.camera import MjpegCamera
+from homeassistant.components.mjpeg import MjpegCamera
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import OctoprintDataUpdateCoordinator
@@ -18,7 +18,7 @@ from .const import DOMAIN
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the available OctoPrint camera."""
     coordinator: OctoprintDataUpdateCoordinator = hass.data[DOMAIN][

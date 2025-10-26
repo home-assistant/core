@@ -9,10 +9,9 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.util.json import JsonValueType
 
-from .const import DOMAIN, VALID_UNITS, WeatherEntityFeature
+from .const import DATA_COMPONENT, DOMAIN, VALID_UNITS, WeatherEntityFeature
 
 FORECAST_TYPE_TO_FLAG = {
     "daily": WeatherEntityFeature.FORECAST_DAILY,
@@ -56,13 +55,10 @@ async def ws_subscribe_forecast(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Subscribe to weather forecasts."""
-    from . import WeatherEntity  # pylint: disable=import-outside-toplevel
-
-    component: EntityComponent[WeatherEntity] = hass.data[DOMAIN]
     entity_id: str = msg["entity_id"]
     forecast_type: Literal["daily", "hourly", "twice_daily"] = msg["forecast_type"]
 
-    if not (entity := component.get_entity(msg["entity_id"])):
+    if not (entity := hass.data[DATA_COMPONENT].get_entity(msg["entity_id"])):
         connection.send_error(
             msg["id"],
             "invalid_entity_id",

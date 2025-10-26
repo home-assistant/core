@@ -27,7 +27,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import IntegrationError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import LektricoConfigEntry, LektricoDeviceDataUpdateCoordinator
@@ -41,17 +41,34 @@ class LektricoSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[dict[str, Any]], StateType]
 
 
+LIMIT_REASON_OPTIONS = [
+    "no_limit",
+    "installation_current",
+    "user_limit",
+    "dynamic_limit",
+    "schedule",
+    "em_offline",
+    "em",
+    "ocpp",
+    "overtemperature",
+    "switching_phases",
+    "1p_charging_disabled",
+]
+
+
 SENSORS_FOR_CHARGERS: tuple[LektricoSensorEntityDescription, ...] = (
     LektricoSensorEntityDescription(
         key="state",
         device_class=SensorDeviceClass.ENUM,
         options=[
             "available",
+            "charging",
             "connected",
+            "error",
+            "locked",
             "need_auth",
             "paused",
-            "charging",
-            "error",
+            "paused_by_scheduler",
             "updating_firmware",
         ],
         translation_key="state",
@@ -104,17 +121,12 @@ SENSORS_FOR_CHARGERS: tuple[LektricoSensorEntityDescription, ...] = (
         key="limit_reason",
         translation_key="limit_reason",
         device_class=SensorDeviceClass.ENUM,
-        options=[
-            "no_limit",
-            "installation_current",
-            "user_limit",
-            "dynamic_limit",
-            "schedule",
-            "em_offline",
-            "em",
-            "ocpp",
-        ],
-        value_fn=lambda data: str(data["current_limit_reason"]),
+        options=LIMIT_REASON_OPTIONS,
+        value_fn=lambda data: (
+            str(data["current_limit_reason"])
+            if str(data["current_limit_reason"]) in LIMIT_REASON_OPTIONS
+            else None
+        ),
     ),
 )
 
@@ -271,7 +283,7 @@ SENSORS_FOR_LB_3_PHASE: tuple[LektricoSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: LektricoConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Lektrico charger based on a config entry."""
     coordinator = entry.runtime_data

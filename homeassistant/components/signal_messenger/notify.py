@@ -11,11 +11,12 @@ import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_DATA,
+    ATTR_TARGET,
     PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
@@ -98,9 +99,11 @@ class SignalNotificationService(BaseNotificationService):
         self._signal_cli_rest_api = signal_cli_rest_api
 
     def send_message(self, message: str = "", **kwargs: Any) -> None:
-        """Send a message to a one or more recipients. Additionally a file can be attached."""
+        """Send a message to one or more recipients. Additionally a file can be attached."""
 
         _LOGGER.debug("Sending signal message")
+
+        recipients: list[str] = kwargs.get(ATTR_TARGET) or self._recp_nrs
 
         data = kwargs.get(ATTR_DATA)
 
@@ -117,7 +120,7 @@ class SignalNotificationService(BaseNotificationService):
         try:
             self._signal_cli_rest_api.send_message(
                 message,
-                self._recp_nrs,
+                recipients,
                 filenames,
                 attachments_as_bytes,
                 text_mode="normal" if data is None else data.get(ATTR_TEXTMODE),
@@ -166,12 +169,11 @@ class SignalNotificationService(BaseNotificationService):
                     and int(str(resp.headers.get("Content-Length")))
                     > attachment_size_limit
                 ):
+                    content_length = int(str(resp.headers.get("Content-Length")))
                     raise ValueError(  # noqa: TRY301
-                        "Attachment too large (Content-Length reports {}). Max size: {}"
-                        " bytes".format(
-                            int(str(resp.headers.get("Content-Length"))),
-                            CONF_MAX_ALLOWED_DOWNLOAD_SIZE_BYTES,
-                        )
+                        "Attachment too large (Content-Length reports "
+                        f"{content_length}). Max size: "
+                        f"{CONF_MAX_ALLOWED_DOWNLOAD_SIZE_BYTES} bytes"
                     )
 
                 size = 0

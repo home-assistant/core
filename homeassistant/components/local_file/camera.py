@@ -4,48 +4,29 @@ from __future__ import annotations
 
 import logging
 import mimetypes
-import os
 
 import voluptuous as vol
 
-from homeassistant.components.camera import (
-    PLATFORM_SCHEMA as CAMERA_PLATFORM_SCHEMA,
-    Camera,
-)
+from homeassistant.components.camera import Camera
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_FILE_PATH, CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady, ServiceValidationError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DEFAULT_NAME, SERVICE_UPDATE_FILE_PATH
+from .const import SERVICE_UPDATE_FILE_PATH
+from .util import check_file_path_access
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = CAMERA_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_FILE_PATH): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
 
-
-def check_file_path_access(file_path: str) -> bool:
-    """Check that filepath given is readable."""
-    if not os.access(file_path, os.R_OK):
-        return False
-    return True
-
-
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Camera that works with local files."""
-    file_path: str = config[CONF_FILE_PATH]
+    """Set up the Camera for local file from a config entry."""
 
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
@@ -56,19 +37,25 @@ async def async_setup_platform(
         "update_file_path",
     )
 
-    if not await hass.async_add_executor_job(check_file_path_access, file_path):
-        raise PlatformNotReady(f"File path {file_path} is not readable")
-
-    async_add_entities([LocalFile(config[CONF_NAME], file_path)])
+    async_add_entities(
+        [
+            LocalFile(
+                entry.options[CONF_NAME],
+                entry.options[CONF_FILE_PATH],
+                entry.entry_id,
+            )
+        ]
+    )
 
 
 class LocalFile(Camera):
     """Representation of a local file camera."""
 
-    def __init__(self, name: str, file_path: str) -> None:
+    def __init__(self, name: str, file_path: str, unique_id: str) -> None:
         """Initialize Local File Camera component."""
         super().__init__()
         self._attr_name = name
+        self._attr_unique_id = unique_id
         self._file_path = file_path
         # Set content type of local file
         content, _ = mimetypes.guess_type(file_path)

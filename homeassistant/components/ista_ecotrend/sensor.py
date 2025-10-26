@@ -8,6 +8,7 @@ import datetime
 from enum import StrEnum
 import logging
 
+from homeassistant.components.recorder.models import StatisticMeanType
 from homeassistant.components.recorder.models.statistics import (
     StatisticData,
     StatisticMetaData,
@@ -30,16 +31,18 @@ from homeassistant.helpers.device_registry import (
     DeviceEntryType,
     DeviceInfo,
 )
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util.unit_conversion import EnergyConverter, VolumeConverter
 
-from . import IstaConfigEntry
 from .const import DOMAIN
-from .coordinator import IstaCoordinator
+from .coordinator import IstaConfigEntry, IstaCoordinator
 from .util import IstaConsumptionType, IstaValueType, get_native_value, get_statistics
 
 _LOGGER = logging.getLogger(__name__)
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -47,6 +50,7 @@ class IstaSensorEntityDescription(SensorEntityDescription):
     """Ista EcoTrend Sensor Description."""
 
     consumption_type: IstaConsumptionType
+    unit_class: str | None = None
     value_type: IstaValueType | None = None
 
 
@@ -71,7 +75,6 @@ SENSOR_DESCRIPTIONS: tuple[IstaSensorEntityDescription, ...] = (
         translation_key=IstaSensorEntity.HEATING,
         suggested_display_precision=0,
         consumption_type=IstaConsumptionType.HEATING,
-        native_unit_of_measurement="units",
         state_class=SensorStateClass.TOTAL,
     ),
     IstaSensorEntityDescription(
@@ -83,6 +86,7 @@ SENSOR_DESCRIPTIONS: tuple[IstaSensorEntityDescription, ...] = (
         suggested_display_precision=1,
         consumption_type=IstaConsumptionType.HEATING,
         value_type=IstaValueType.ENERGY,
+        unit_class=EnergyConverter.UNIT_CLASS,
     ),
     IstaSensorEntityDescription(
         key=IstaSensorEntity.HEATING_COST,
@@ -103,6 +107,7 @@ SENSOR_DESCRIPTIONS: tuple[IstaSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL,
         suggested_display_precision=1,
         consumption_type=IstaConsumptionType.HOT_WATER,
+        unit_class=VolumeConverter.UNIT_CLASS,
     ),
     IstaSensorEntityDescription(
         key=IstaSensorEntity.HOT_WATER_ENERGY,
@@ -113,6 +118,7 @@ SENSOR_DESCRIPTIONS: tuple[IstaSensorEntityDescription, ...] = (
         suggested_display_precision=1,
         consumption_type=IstaConsumptionType.HOT_WATER,
         value_type=IstaValueType.ENERGY,
+        unit_class=EnergyConverter.UNIT_CLASS,
     ),
     IstaSensorEntityDescription(
         key=IstaSensorEntity.HOT_WATER_COST,
@@ -134,6 +140,7 @@ SENSOR_DESCRIPTIONS: tuple[IstaSensorEntityDescription, ...] = (
         suggested_display_precision=1,
         entity_registry_enabled_default=False,
         consumption_type=IstaConsumptionType.WATER,
+        unit_class=VolumeConverter.UNIT_CLASS,
     ),
     IstaSensorEntityDescription(
         key=IstaSensorEntity.WATER_COST,
@@ -152,7 +159,7 @@ SENSOR_DESCRIPTIONS: tuple[IstaSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: IstaConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the ista EcoTrend sensors."""
 
@@ -183,12 +190,12 @@ class IstaSensor(CoordinatorEntity[IstaCoordinator], SensorEntity):
         self.consumption_unit = consumption_unit
         self.entity_description = entity_description
         self._attr_unique_id = f"{consumption_unit}_{entity_description.key}"
+        address = coordinator.details[consumption_unit]["address"]
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             manufacturer="ista SE",
             model="ista EcoTrend",
-            name=f"{coordinator.details[consumption_unit]["address"]["street"]} "
-            f"{coordinator.details[consumption_unit]["address"]["houseNumber"]}".strip(),
+            name=f"{address['street']} {address['houseNumber']}".strip(),
             configuration_url="https://ecotrend.ista.de/",
             identifiers={(DOMAIN, consumption_unit)},
         )
@@ -270,11 +277,12 @@ class IstaSensor(CoordinatorEntity[IstaCoordinator], SensorEntity):
             ]
 
             metadata: StatisticMetaData = {
-                "has_mean": False,
+                "mean_type": StatisticMeanType.NONE,
                 "has_sum": True,
                 "name": f"{self.device_entry.name} {self.name}",
                 "source": DOMAIN,
                 "statistic_id": statistic_id,
+                "unit_class": self.entity_description.unit_class,
                 "unit_of_measurement": self.entity_description.native_unit_of_measurement,
             }
             if statistics:

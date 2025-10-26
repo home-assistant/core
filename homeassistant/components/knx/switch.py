@@ -1,4 +1,4 @@
-"""Support for KNX/IP switches."""
+"""Support for KNX switch entities."""
 
 from __future__ import annotations
 
@@ -18,42 +18,35 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
-    AddEntitiesCallback,
+    AddConfigEntryEntitiesCallback,
     async_get_current_platform,
 )
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 
-from . import KNXModule
 from .const import (
     CONF_INVERT,
     CONF_RESPOND_TO_READ,
     CONF_SYNC_STATE,
-    DATA_KNX_CONFIG,
     DOMAIN,
     KNX_ADDRESS,
+    KNX_MODULE_KEY,
 )
-from .knx_entity import KnxUiEntity, KnxUiEntityPlatformController, KnxYamlEntity
+from .entity import KnxUiEntity, KnxUiEntityPlatformController, KnxYamlEntity
+from .knx_module import KNXModule
 from .schema import SwitchSchema
-from .storage.const import (
-    CONF_DEVICE_INFO,
-    CONF_ENTITY,
-    CONF_GA_PASSIVE,
-    CONF_GA_STATE,
-    CONF_GA_SWITCH,
-    CONF_GA_WRITE,
-)
+from .storage.const import CONF_ENTITY, CONF_GA_SWITCH
+from .storage.util import ConfigExtractor
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: config_entries.ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up switch(es) for KNX platform."""
-    knx_module: KNXModule = hass.data[DOMAIN]
+    knx_module = hass.data[KNX_MODULE_KEY]
     platform = async_get_current_platform()
     knx_module.config_store.add_platform(
         platform=Platform.SWITCH,
@@ -65,7 +58,7 @@ async def async_setup_entry(
     )
 
     entities: list[KnxYamlEntity | KnxUiEntity] = []
-    if yaml_platform_config := hass.data[DATA_KNX_CONFIG].get(Platform.SWITCH):
+    if yaml_platform_config := knx_module.config_yaml.get(Platform.SWITCH):
         entities.extend(
             KnxYamlSwitch(knx_module, entity_config)
             for entity_config in yaml_platform_config
@@ -133,27 +126,24 @@ class KnxYamlSwitch(_KnxSwitch, KnxYamlEntity):
 class KnxUiSwitch(_KnxSwitch, KnxUiEntity):
     """Representation of a KNX switch configured from UI."""
 
-    _attr_has_entity_name = True
     _device: XknxSwitch
 
     def __init__(
         self, knx_module: KNXModule, unique_id: str, config: dict[str, Any]
     ) -> None:
         """Initialize KNX switch."""
-        self._knx_module = knx_module
+        super().__init__(
+            knx_module=knx_module,
+            unique_id=unique_id,
+            entity_config=config[CONF_ENTITY],
+        )
+        knx_conf = ConfigExtractor(config[DOMAIN])
         self._device = XknxSwitch(
             knx_module.xknx,
             name=config[CONF_ENTITY][CONF_NAME],
-            group_address=config[DOMAIN][CONF_GA_SWITCH][CONF_GA_WRITE],
-            group_address_state=[
-                config[DOMAIN][CONF_GA_SWITCH][CONF_GA_STATE],
-                *config[DOMAIN][CONF_GA_SWITCH][CONF_GA_PASSIVE],
-            ],
-            respond_to_read=config[DOMAIN][CONF_RESPOND_TO_READ],
-            sync_state=config[DOMAIN][CONF_SYNC_STATE],
-            invert=config[DOMAIN][CONF_INVERT],
+            group_address=knx_conf.get_write(CONF_GA_SWITCH),
+            group_address_state=knx_conf.get_state_and_passive(CONF_GA_SWITCH),
+            respond_to_read=knx_conf.get(CONF_RESPOND_TO_READ),
+            sync_state=knx_conf.get(CONF_SYNC_STATE),
+            invert=knx_conf.get(CONF_INVERT),
         )
-        self._attr_entity_category = config[CONF_ENTITY][CONF_ENTITY_CATEGORY]
-        self._attr_unique_id = unique_id
-        if device_info := config[CONF_ENTITY].get(CONF_DEVICE_INFO):
-            self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, device_info)})

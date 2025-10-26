@@ -11,8 +11,8 @@ from aiohttp.client_exceptions import ServerDisconnectedError
 from brunt import BruntClientAsync
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 
 from .const import DOMAIN
 
@@ -56,8 +56,6 @@ class BruntConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _reauth_entry: ConfigEntry | None = None
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -82,22 +80,22 @@ class BruntConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
-        self._reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
-        assert self._reauth_entry
-        username = self._reauth_entry.data[CONF_USERNAME]
+        reauth_entry = self._get_reauth_entry()
+        username = reauth_entry.data[CONF_USERNAME]
         if user_input is None:
             return self.async_show_form(
                 step_id="reauth_confirm",
                 data_schema=REAUTH_SCHEMA,
-                description_placeholders={"username": username},
+                description_placeholders={
+                    CONF_USERNAME: username,
+                    CONF_NAME: reauth_entry.title,
+                },
             )
         user_input[CONF_USERNAME] = username
         errors = await validate_input(user_input)
@@ -106,9 +104,10 @@ class BruntConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id="reauth_confirm",
                 data_schema=REAUTH_SCHEMA,
                 errors=errors,
-                description_placeholders={"username": username},
+                description_placeholders={
+                    CONF_USERNAME: username,
+                    CONF_NAME: reauth_entry.title,
+                },
             )
 
-        self.hass.config_entries.async_update_entry(self._reauth_entry, data=user_input)
-        await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
-        return self.async_abort(reason="reauth_successful")
+        return self.async_update_reload_and_abort(reauth_entry, data=user_input)

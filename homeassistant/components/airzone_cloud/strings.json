@@ -32,9 +32,20 @@
       "air_quality": {
         "name": "Air Quality mode",
         "state": {
-          "off": "Off",
-          "on": "On",
-          "auto": "Auto"
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]",
+          "auto": "[%key:common::state::auto%]"
+        }
+      },
+      "modes": {
+        "name": "Mode",
+        "state": {
+          "cool": "[%key:component::climate::entity_component::_::state::cool%]",
+          "dry": "[%key:component::climate::entity_component::_::state::dry%]",
+          "fan": "[%key:component::climate::entity_component::_::state::fan_only%]",
+          "heat": "[%key:component::climate::entity_component::_::state::heat%]",
+          "heat_cool": "[%key:component::climate::entity_component::_::state::heat_cool%]",
+          "stop": "Stop"
         }
       }
     },

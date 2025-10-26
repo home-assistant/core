@@ -1,103 +1,190 @@
 {
   "code": 0,
+  "traceId": "1234",
+  "msg": null,
   "result": {
     "list": [
       {
+        "deviceRegion": "US",
+        "isOwner": true,
         "cid": "200s-humidifier",
         "deviceType": "Classic200S",
         "deviceName": "Humidifier 200s",
-        "subDeviceNo": null,
+        "deviceImg": "",
+        "type": "",
+        "connectionType": "",
+        "uuid": "00000000-1111-2222-3333-444444444444",
+        "configModule": "configModule",
+        "subDeviceNo": 4321,
         "deviceStatus": "on",
-        "connectionStatus": "online",
-        "uuid": "00000000-1111-2222-3333-444444444444"
+        "connectionStatus": "online"
       },
       {
+        "deviceRegion": "US",
+        "isOwner": true,
         "cid": "600s-humidifier",
         "deviceType": "LUH-A602S-WUS",
         "deviceName": "Humidifier 600S",
+        "deviceImg": "https://image.vesync.com/defaultImages/LV_600S_Series/icon_lv600s_humidifier_160.png",
+        "type": "",
+        "connectionType": "",
         "subDeviceNo": null,
         "deviceStatus": "off",
         "connectionStatus": "online",
         "uuid": "00000000-1111-2222-3333-555555555555",
-        "deviceImg": "https://image.vesync.com/defaultImages/LV_600S_Series/icon_lv600s_humidifier_160.png",
         "configModule": "WFON_AHM_LUH-A602S-WUS_US",
         "currentFirmVersion": null,
         "subDeviceType": null
       },
       {
+        "deviceRegion": "US",
+        "isOwner": true,
         "cid": "air-purifier",
         "deviceType": "LV-PUR131S",
         "deviceName": "Air Purifier 131s",
+        "deviceImg": "",
+        "type": "",
+        "connectionType": "",
         "subDeviceNo": null,
         "deviceStatus": "on",
-        "connectionStatus": "online"
+        "connectionStatus": "online",
+        "uuid": "00000000-1111-2222-3333-444444444444",
+        "configModule": "configModule"
       },
       {
+        "deviceRegion": "US",
+        "isOwner": true,
         "cid": "asd_sdfKIHG7IJHGwJGJ7GJ_ag5h3G55",
         "deviceType": "Core200S",
         "deviceName": "Air Purifier 200s",
         "subDeviceNo": null,
         "deviceStatus": "on",
+        "deviceImg": "",
         "type": "wifi-air",
-        "connectionStatus": "online"
+        "connectionType": "",
+        "connectionStatus": "online",
+        "uuid": "00000000-1111-2222-3333-444444444444",
+        "configModule": "configModule"
       },
       {
+        "deviceRegion": "US",
+        "isOwner": true,
         "cid": "400s-purifier",
         "deviceType": "LAP-C401S-WJP",
         "deviceName": "Air Purifier 400s",
+        "deviceImg": "",
         "subDeviceNo": null,
-        "deviceStatus": "on",
         "type": "wifi-air",
-        "connectionStatus": "online"
+        "connectionType": "",
+        "deviceStatus": "on",
+        "connectionStatus": "online",
+        "uuid": "00000000-1111-2222-3333-444444444444",
+        "configModule": "configModule"
       },
       {
+        "deviceRegion": "US",
+        "isOwner": true,
         "cid": "600s-purifier",
         "deviceType": "LAP-C601S-WUS",
         "deviceName": "Air Purifier 600s",
+        "deviceImg": "",
         "subDeviceNo": null,
         "type": "wifi-air",
+        "connectionType": "",
         "deviceStatus": "on",
-        "connectionStatus": "online"
+        "connectionStatus": "online",
+        "uuid": "00000000-1111-2222-3333-444444444444",
+        "configModule": "configModule"
       },
       {
+        "deviceRegion": "US",
+        "isOwner": true,
         "cid": "dimmable-bulb",
         "deviceType": "ESL100",
         "deviceName": "Dimmable Light",
+        "deviceImg": "",
+        "type": "",
+        "connectionType": "",
         "subDeviceNo": null,
         "deviceStatus": "on",
-        "connectionStatus": "online"
+        "connectionStatus": "online",
+        "uuid": "00000000-1111-2222-3333-444444444444",
+        "configModule": "configModule"
       },
       {
+        "deviceRegion": "US",
+        "isOwner": true,
         "cid": "tunable-bulb",
         "deviceType": "ESL100CW",
         "deviceName": "Temperature Light",
+        "deviceImg": "",
+        "type": "",
+        "connectionType": "",
         "subDeviceNo": null,
         "deviceStatus": "on",
-        "connectionStatus": "online"
+        "connectionStatus": "online",
+        "uuid": "00000000-1111-2222-3333-444444444444",
+        "configModule": "configModule"
       },
       {
+        "deviceRegion": "US",
+        "isOwner": true,
         "cid": "outlet",
         "deviceType": "wifi-switch-1.3",
         "deviceName": "Outlet",
+        "deviceImg": "",
+        "type": "",
+        "connectionType": "",
         "subDeviceNo": null,
         "deviceStatus": "on",
-        "connectionStatus": "online"
+        "connectionStatus": "online",
+        "uuid": "00000000-1111-2222-3333-444444444444",
+        "configModule": "configModule"
       },
       {
+        "deviceRegion": "US",
+        "isOwner": true,
         "cid": "switch",
         "deviceType": "ESWL01",
         "deviceName": "Wall Switch",
+        "deviceImg": "",
+        "type": "",
+        "connectionType": "",
         "subDeviceNo": null,
         "deviceStatus": "on",
-        "connectionStatus": "online"
+        "connectionStatus": "online",
+        "uuid": "00000000-1111-2222-3333-444444444444",
+        "configModule": "configModule"
       },
       {
+        "deviceRegion": "US",
+        "isOwner": true,
         "cid": "dimmable-switch",
         "deviceType": "ESWD16",
         "deviceName": "Dimmer Switch",
+        "deviceImg": "",
+        "type": "",
+        "connectionType": "",
         "subDeviceNo": null,
         "deviceStatus": "on",
-        "connectionStatus": "online"
+        "connectionStatus": "online",
+        "uuid": "00000000-1111-2222-3333-444444444444",
+        "configModule": "configModule"
+      },
+      {
+        "deviceRegion": "US",
+        "isOwner": true,
+        "cid": "smarttowerfan",
+        "deviceType": "LTF-F422S-KEU",
+        "deviceName": "SmartTowerFan",
+        "deviceImg": "",
+        "type": "",
+        "connectionType": "",
+        "subDeviceNo": null,
+        "deviceStatus": "on",
+        "connectionStatus": "online",
+        "uuid": "00000000-1111-2222-3333-444444444444",
+        "configModule": "configModule"
       }
     ]
   }

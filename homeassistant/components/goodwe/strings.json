@@ -36,7 +36,7 @@
         "name": "Inverter operation mode",
         "state": {
           "general": "General mode",
-          "off_grid": "Off grid mode",
+          "off_grid": "Off-grid mode",
           "backup": "Backup mode",
           "eco": "Eco mode",
           "peak_shaving": "Peak shaving mode",

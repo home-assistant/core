@@ -1,4 +1,4 @@
-"""Support for KNX/IP select entities."""
+"""Support for KNX select entities."""
 
 from __future__ import annotations
 
@@ -16,32 +16,31 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 
-from . import KNXModule
 from .const import (
     CONF_PAYLOAD_LENGTH,
     CONF_RESPOND_TO_READ,
     CONF_STATE_ADDRESS,
     CONF_SYNC_STATE,
-    DATA_KNX_CONFIG,
-    DOMAIN,
     KNX_ADDRESS,
+    KNX_MODULE_KEY,
 )
-from .knx_entity import KnxYamlEntity
+from .entity import KnxYamlEntity
+from .knx_module import KNXModule
 from .schema import SelectSchema
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: config_entries.ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up select(s) for KNX platform."""
-    knx_module: KNXModule = hass.data[DOMAIN]
-    config: list[ConfigType] = hass.data[DATA_KNX_CONFIG][Platform.SELECT]
+    knx_module = hass.data[KNX_MODULE_KEY]
+    config: list[ConfigType] = knx_module.config_yaml[Platform.SELECT]
 
     async_add_entities(KNXSelect(knx_module, entity_config) for entity_config in config)
 

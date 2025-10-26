@@ -34,7 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 DATA_API_PASSWORD: Final = "api_password"
 DATA_SIGN_SECRET: Final = "http.auth.sign_secret"
 SIGN_QUERY_PARAM: Final = "authSig"
-SAFE_QUERY_PARAMS: Final = ["height", "width"]
+SAFE_QUERY_PARAMS: Final = frozenset(("height", "width"))
 
 STORAGE_VERSION = 1
 STORAGE_KEY = "http.auth"
@@ -223,7 +223,7 @@ async def async_setup_auth(
         # We first start with a string check to avoid parsing query params
         # for every request.
         elif (
-            request.method == "GET"
+            request.method in ["GET", "HEAD"]
             and SIGN_QUERY_PARAM in request.query_string
             and async_validate_signed_request(request)
         ):

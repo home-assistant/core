@@ -6,6 +6,12 @@
       },
       "custom_integrations": {
         "default": "mdi:puzzle-edit"
+      },
+      "total_active_installations": {
+        "default": "mdi:puzzle"
+      },
+      "total_reports_integrations": {
+        "default": "mdi:puzzle"
       }
     }
   }

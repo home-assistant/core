@@ -12,7 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -45,7 +45,9 @@ SENSORS = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
@@ -57,7 +59,7 @@ async def async_setup_entry(
                 coordinator,
                 SensorEntityDescription(
                     key="zigbee:Price",
-                    translation_key="meter_price",
+                    translation_key="energy_price",
                     native_unit_of_measurement=f"{coordinator.data['zigbee:PriceCurrency']}/{UnitOfEnergy.KILO_WATT_HOUR}",
                     state_class=SensorStateClass.MEASUREMENT,
                 ),

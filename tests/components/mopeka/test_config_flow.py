@@ -81,6 +81,39 @@ async def test_async_step_user_with_found_devices(hass: HomeAssistant) -> None:
     assert result2["result"].unique_id == "aa:bb:cc:dd:ee:ff"
 
 
+async def test_async_step_user_replace_ignored(hass: HomeAssistant) -> None:
+    """Test setup from service info can replace an ignored entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=PRO_SERVICE_INFO.address,
+        data={},
+        source=config_entries.SOURCE_IGNORE,
+    )
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.mopeka.config_flow.async_discovered_service_info",
+        return_value=[PRO_SERVICE_INFO],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    with patch("homeassistant.components.mopeka.async_setup_entry", return_value=True):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"address": "aa:bb:cc:dd:ee:ff"},
+        )
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "Pro Plus EEFF"
+    assert CONF_MEDIUM_TYPE in result2["data"]
+    assert result2["data"][CONF_MEDIUM_TYPE] in [
+        medium_type.value for medium_type in MediumType
+    ]
+    assert result2["result"].unique_id == "aa:bb:cc:dd:ee:ff"
+
+
 async def test_async_step_user_device_added_between_steps(hass: HomeAssistant) -> None:
     """Test the device gets added via another flow between steps."""
     with patch(

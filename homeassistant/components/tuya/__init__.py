@@ -83,11 +83,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> bool
     # Register known device IDs
     device_registry = dr.async_get(hass)
     for device in manager.device_map.values():
+        LOGGER.debug(
+            "Register device %s (online: %s): %s (function: %s, status range: %s)",
+            device.id,
+            device.online,
+            device.status,
+            device.function,
+            device.status_range,
+        )
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, device.id)},
             manufacturer="Tuya",
             name=device.name,
+            # Note: the model is overridden via entity.device_info property
+            # when the entity is created. If no entities are generated, it will
+            # stay as unsupported
             model=f"{device.product_name} (unsupported)",
             model_id=device.product_id,
         )
@@ -146,19 +157,42 @@ class DeviceListener(SharingDeviceListener):
         self.hass = hass
         self.manager = manager
 
-    def update_device(self, device: CustomerDevice) -> None:
-        """Update device status."""
+    def update_device(
+        self,
+        device: CustomerDevice,
+        updated_status_properties: list[str] | None = None,
+        dp_timestamps: dict | None = None,
+    ) -> None:
+        """Update device status with optional DP timestamps."""
         LOGGER.debug(
-            "Received update for device %s: %s",
+            "Received update for device %s (online: %s): %s"
+            " (updated properties: %s, dp_timestamps: %s)",
             device.id,
-            self.manager.device_map[device.id].status,
+            device.online,
+            device.status,
+            updated_status_properties,
+            dp_timestamps,
         )
-        dispatcher_send(self.hass, f"{TUYA_HA_SIGNAL_UPDATE_ENTITY}_{device.id}")
+        dispatcher_send(
+            self.hass,
+            f"{TUYA_HA_SIGNAL_UPDATE_ENTITY}_{device.id}",
+            updated_status_properties,
+            dp_timestamps,
+        )
 
     def add_device(self, device: CustomerDevice) -> None:
         """Add device added listener."""
         # Ensure the device isn't present stale
         self.hass.add_job(self.async_remove_device, device.id)
+
+        LOGGER.debug(
+            "Add device %s (online: %s): %s (function: %s, status range: %s)",
+            device.id,
+            device.online,
+            device.status,
+            device.function,
+            device.status_range,
+        )
 
         dispatcher_send(self.hass, TUYA_DISCOVERY_NEW, [device.id])
 

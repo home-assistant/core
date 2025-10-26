@@ -1,296 +1,351 @@
 """Provides a switch for Home Connect."""
 
-from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, cast
 
-from homeconnect.api import HomeConnectError
+from aiohomeconnect.model import OptionKey, SettingKey
+from aiohomeconnect.model.error import HomeConnectError
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICE, CONF_ENTITIES
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
-from .api import ConfigEntryAuth
-from .const import (
-    ATTR_VALUE,
-    BSH_ACTIVE_PROGRAM,
-    BSH_CHILD_LOCK_STATE,
-    BSH_OPERATION_STATE,
-    BSH_POWER_ON,
-    BSH_POWER_STATE,
-    DOMAIN,
-    REFRIGERATION_DISPENSER,
-    REFRIGERATION_SUPERMODEFREEZER,
-    REFRIGERATION_SUPERMODEREFRIGERATOR,
-)
-from .entity import HomeConnectDevice, HomeConnectEntity
+from .common import setup_home_connect_entry
+from .const import BSH_POWER_OFF, BSH_POWER_ON, BSH_POWER_STANDBY, DOMAIN
+from .coordinator import HomeConnectApplianceData, HomeConnectConfigEntry
+from .entity import HomeConnectEntity, HomeConnectOptionEntity
+from .utils import get_dict_from_home_connect_error
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 1
 
-@dataclass(frozen=True, kw_only=True)
-class HomeConnectSwitchEntityDescription(SwitchEntityDescription):
-    """Switch entity description."""
-
-    on_key: str
-
-
-SWITCHES: tuple[HomeConnectSwitchEntityDescription, ...] = (
-    HomeConnectSwitchEntityDescription(
-        key="Supermode Freezer",
-        on_key=REFRIGERATION_SUPERMODEFREEZER,
+SWITCHES = (
+    SwitchEntityDescription(
+        key=SettingKey.BSH_COMMON_CHILD_LOCK,
+        translation_key="child_lock",
     ),
-    HomeConnectSwitchEntityDescription(
-        key="Supermode Refrigerator",
-        on_key=REFRIGERATION_SUPERMODEREFRIGERATOR,
+    SwitchEntityDescription(
+        key=SettingKey.CONSUMER_PRODUCTS_COFFEE_MAKER_CUP_WARMER,
+        translation_key="cup_warmer",
     ),
-    HomeConnectSwitchEntityDescription(
-        key="Dispenser Enabled",
-        on_key=REFRIGERATION_DISPENSER,
-        translation_key="refrigeration_dispenser",
+    SwitchEntityDescription(
+        key=SettingKey.REFRIGERATION_FRIDGE_FREEZER_SUPER_MODE_FREEZER,
+        translation_key="freezer_super_mode",
+    ),
+    SwitchEntityDescription(
+        key=SettingKey.REFRIGERATION_FRIDGE_FREEZER_SUPER_MODE_REFRIGERATOR,
+        translation_key="refrigerator_super_mode",
+    ),
+    SwitchEntityDescription(
+        key=SettingKey.REFRIGERATION_COMMON_ECO_MODE,
+        translation_key="eco_mode",
+    ),
+    SwitchEntityDescription(
+        key=SettingKey.COOKING_OVEN_SABBATH_MODE,
+        translation_key="sabbath_mode",
+    ),
+    SwitchEntityDescription(
+        key=SettingKey.REFRIGERATION_COMMON_SABBATH_MODE,
+        translation_key="sabbath_mode",
+    ),
+    SwitchEntityDescription(
+        key=SettingKey.REFRIGERATION_COMMON_VACATION_MODE,
+        translation_key="vacation_mode",
+    ),
+    SwitchEntityDescription(
+        key=SettingKey.REFRIGERATION_COMMON_FRESH_MODE,
+        translation_key="fresh_mode",
+    ),
+    SwitchEntityDescription(
+        key=SettingKey.REFRIGERATION_COMMON_DISPENSER_ENABLED,
+        translation_key="dispenser_enabled",
+    ),
+    SwitchEntityDescription(
+        key=SettingKey.REFRIGERATION_COMMON_DOOR_ASSISTANT_FRIDGE,
+        translation_key="door_assistant_fridge",
+    ),
+    SwitchEntityDescription(
+        key=SettingKey.REFRIGERATION_COMMON_DOOR_ASSISTANT_FREEZER,
+        translation_key="door_assistant_freezer",
     ),
 )
+
+
+POWER_SWITCH_DESCRIPTION = SwitchEntityDescription(
+    key=SettingKey.BSH_COMMON_POWER_STATE,
+    translation_key="power",
+)
+
+SWITCH_OPTIONS = (
+    SwitchEntityDescription(
+        key=OptionKey.CONSUMER_PRODUCTS_COFFEE_MAKER_MULTIPLE_BEVERAGES,
+        translation_key="multiple_beverages",
+    ),
+    SwitchEntityDescription(
+        key=OptionKey.DISHCARE_DISHWASHER_INTENSIV_ZONE,
+        translation_key="intensiv_zone",
+    ),
+    SwitchEntityDescription(
+        key=OptionKey.DISHCARE_DISHWASHER_BRILLIANCE_DRY,
+        translation_key="brilliance_dry",
+    ),
+    SwitchEntityDescription(
+        key=OptionKey.DISHCARE_DISHWASHER_VARIO_SPEED_PLUS,
+        translation_key="vario_speed_plus",
+    ),
+    SwitchEntityDescription(
+        key=OptionKey.DISHCARE_DISHWASHER_SILENCE_ON_DEMAND,
+        translation_key="silence_on_demand",
+    ),
+    SwitchEntityDescription(
+        key=OptionKey.DISHCARE_DISHWASHER_HALF_LOAD,
+        translation_key="half_load",
+    ),
+    SwitchEntityDescription(
+        key=OptionKey.DISHCARE_DISHWASHER_EXTRA_DRY,
+        translation_key="extra_dry",
+    ),
+    SwitchEntityDescription(
+        key=OptionKey.DISHCARE_DISHWASHER_HYGIENE_PLUS,
+        translation_key="hygiene_plus",
+    ),
+    SwitchEntityDescription(
+        key=OptionKey.DISHCARE_DISHWASHER_ECO_DRY,
+        translation_key="eco_dry",
+    ),
+    SwitchEntityDescription(
+        key=OptionKey.DISHCARE_DISHWASHER_ZEOLITE_DRY,
+        translation_key="zeolite_dry",
+    ),
+    SwitchEntityDescription(
+        key=OptionKey.COOKING_OVEN_FAST_PRE_HEAT,
+        translation_key="fast_pre_heat",
+    ),
+    SwitchEntityDescription(
+        key=OptionKey.LAUNDRY_CARE_WASHER_I_DOS_1_ACTIVE,
+        translation_key="i_dos1_active",
+    ),
+    SwitchEntityDescription(
+        key=OptionKey.LAUNDRY_CARE_WASHER_I_DOS_2_ACTIVE,
+        translation_key="i_dos2_active",
+    ),
+)
+
+
+def _get_entities_for_appliance(
+    entry: HomeConnectConfigEntry,
+    appliance: HomeConnectApplianceData,
+) -> list[HomeConnectEntity]:
+    """Get a list of entities."""
+    entities: list[HomeConnectEntity] = []
+    if SettingKey.BSH_COMMON_POWER_STATE in appliance.settings:
+        entities.append(
+            HomeConnectPowerSwitch(
+                entry.runtime_data, appliance, POWER_SWITCH_DESCRIPTION
+            )
+        )
+    entities.extend(
+        HomeConnectSwitch(entry.runtime_data, appliance, description)
+        for description in SWITCHES
+        if description.key in appliance.settings
+    )
+    return entities
+
+
+def _get_option_entities_for_appliance(
+    entry: HomeConnectConfigEntry,
+    appliance: HomeConnectApplianceData,
+) -> list[HomeConnectOptionEntity]:
+    """Get a list of currently available option entities."""
+    return [
+        HomeConnectSwitchOptionEntity(entry.runtime_data, appliance, description)
+        for description in SWITCH_OPTIONS
+        if description.key in appliance.options
+    ]
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: HomeConnectConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Home Connect switch."""
-
-    def get_entities():
-        """Get a list of entities."""
-        entities = []
-        hc_api: ConfigEntryAuth = hass.data[DOMAIN][config_entry.entry_id]
-        for device_dict in hc_api.devices:
-            entity_dicts = device_dict.get(CONF_ENTITIES, {}).get("switch", [])
-            entity_list = [HomeConnectProgramSwitch(**d) for d in entity_dicts]
-            entity_list += [HomeConnectPowerSwitch(device_dict[CONF_DEVICE])]
-            entity_list += [HomeConnectChildLockSwitch(device_dict[CONF_DEVICE])]
-            # Auto-discover entities
-            hc_device: HomeConnectDevice = device_dict[CONF_DEVICE]
-            entities.extend(
-                HomeConnectSwitch(device=hc_device, entity_description=description)
-                for description in SWITCHES
-                if description.on_key in hc_device.appliance.status
-            )
-            entities.extend(entity_list)
-
-        return entities
-
-    async_add_entities(await hass.async_add_executor_job(get_entities), True)
+    setup_home_connect_entry(
+        entry,
+        _get_entities_for_appliance,
+        async_add_entities,
+        _get_option_entities_for_appliance,
+    )
 
 
 class HomeConnectSwitch(HomeConnectEntity, SwitchEntity):
     """Generic switch class for Home Connect Binary Settings."""
 
-    entity_description: HomeConnectSwitchEntityDescription
-    _attr_available: bool = False
-
-    def __init__(
-        self,
-        device: HomeConnectDevice,
-        entity_description: HomeConnectSwitchEntityDescription,
-    ) -> None:
-        """Initialize the entity."""
-        self.entity_description = entity_description
-        super().__init__(device=device, desc=entity_description.key)
-
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on setting."""
-
-        _LOGGER.debug("Turning on %s", self.entity_description.key)
         try:
-            await self.hass.async_add_executor_job(
-                self.device.appliance.set_setting, self.entity_description.on_key, True
+            await self.coordinator.client.set_setting(
+                self.appliance.info.ha_id,
+                setting_key=SettingKey(self.bsh_key),
+                value=True,
             )
         except HomeConnectError as err:
-            _LOGGER.error("Error while trying to turn on: %s", err)
             self._attr_available = False
-            return
-
-        self._attr_available = True
-        self.async_entity_update()
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="turn_on",
+                translation_placeholders={
+                    **get_dict_from_home_connect_error(err),
+                    "entity_id": self.entity_id,
+                    "key": self.bsh_key,
+                },
+            ) from err
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off setting."""
-
-        _LOGGER.debug("Turning off %s", self.entity_description.key)
         try:
-            await self.hass.async_add_executor_job(
-                self.device.appliance.set_setting, self.entity_description.on_key, False
+            await self.coordinator.client.set_setting(
+                self.appliance.info.ha_id,
+                setting_key=SettingKey(self.bsh_key),
+                value=False,
             )
         except HomeConnectError as err:
-            _LOGGER.error("Error while trying to turn off: %s", err)
             self._attr_available = False
-            return
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="turn_off",
+                translation_placeholders={
+                    **get_dict_from_home_connect_error(err),
+                    "entity_id": self.entity_id,
+                    "key": self.bsh_key,
+                },
+            ) from err
 
-        self._attr_available = True
-        self.async_entity_update()
-
-    async def async_update(self) -> None:
+    def update_native_value(self) -> None:
         """Update the switch's status."""
-
-        self._attr_is_on = self.device.appliance.status.get(
-            self.entity_description.on_key, {}
-        ).get(ATTR_VALUE)
-        self._attr_available = True
-        _LOGGER.debug(
-            "Updated %s, new state: %s",
-            self.entity_description.key,
-            self._attr_is_on,
-        )
-
-
-class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
-    """Switch class for Home Connect."""
-
-    def __init__(self, device, program_name):
-        """Initialize the entity."""
-        desc = " ".join(["Program", program_name.split(".")[-1]])
-        if device.appliance.type == "WasherDryer":
-            desc = " ".join(
-                ["Program", program_name.split(".")[-3], program_name.split(".")[-1]]
-            )
-        super().__init__(device, desc)
-        self.program_name = program_name
-
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Start the program."""
-        _LOGGER.debug("Tried to turn on program %s", self.program_name)
-        try:
-            await self.hass.async_add_executor_job(
-                self.device.appliance.start_program, self.program_name
-            )
-        except HomeConnectError as err:
-            _LOGGER.error("Error while trying to start program: %s", err)
-        self.async_entity_update()
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Stop the program."""
-        _LOGGER.debug("Tried to stop program %s", self.program_name)
-        try:
-            await self.hass.async_add_executor_job(self.device.appliance.stop_program)
-        except HomeConnectError as err:
-            _LOGGER.error("Error while trying to stop program: %s", err)
-        self.async_entity_update()
-
-    async def async_update(self) -> None:
-        """Update the switch's status."""
-        state = self.device.appliance.status.get(BSH_ACTIVE_PROGRAM, {})
-        if state.get(ATTR_VALUE) == self.program_name:
-            self._attr_is_on = True
-        else:
-            self._attr_is_on = False
-        _LOGGER.debug("Updated, new state: %s", self._attr_is_on)
+        self._attr_is_on = self.appliance.settings[SettingKey(self.bsh_key)].value
 
 
 class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
     """Power switch class for Home Connect."""
 
-    def __init__(self, device):
-        """Initialize the entity."""
-        super().__init__(device, "Power")
+    power_off_state: str | None | UndefinedType = UNDEFINED
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Switch the device on."""
-        _LOGGER.debug("Tried to switch on %s", self.name)
         try:
-            await self.hass.async_add_executor_job(
-                self.device.appliance.set_setting, BSH_POWER_STATE, BSH_POWER_ON
+            await self.coordinator.client.set_setting(
+                self.appliance.info.ha_id,
+                setting_key=SettingKey.BSH_COMMON_POWER_STATE,
+                value=BSH_POWER_ON,
             )
         except HomeConnectError as err:
-            _LOGGER.error("Error while trying to turn on device: %s", err)
             self._attr_is_on = False
-        self.async_entity_update()
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="power_on",
+                translation_placeholders={
+                    **get_dict_from_home_connect_error(err),
+                    "appliance_name": self.appliance.info.name,
+                },
+            ) from err
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Switch the device off."""
-        _LOGGER.debug("tried to switch off %s", self.name)
+        if self.power_off_state is UNDEFINED:
+            await self.async_fetch_power_off_state()
+            if self.power_off_state is UNDEFINED:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="unable_to_retrieve_turn_off",
+                    translation_placeholders={
+                        "appliance_name": self.appliance.info.name
+                    },
+                )
+
+        if self.power_off_state is None:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="turn_off_not_supported",
+                translation_placeholders={"appliance_name": self.appliance.info.name},
+            )
         try:
-            await self.hass.async_add_executor_job(
-                self.device.appliance.set_setting,
-                BSH_POWER_STATE,
-                self.device.power_off_state,
+            await self.coordinator.client.set_setting(
+                self.appliance.info.ha_id,
+                setting_key=SettingKey.BSH_COMMON_POWER_STATE,
+                value=self.power_off_state,
             )
         except HomeConnectError as err:
-            _LOGGER.error("Error while trying to turn off device: %s", err)
             self._attr_is_on = True
-        self.async_entity_update()
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="power_off",
+                translation_placeholders={
+                    **get_dict_from_home_connect_error(err),
+                    "appliance_name": self.appliance.info.name,
+                    "value": self.power_off_state,
+                },
+            ) from err
 
-    async def async_update(self) -> None:
-        """Update the switch's status."""
-        if (
-            self.device.appliance.status.get(BSH_POWER_STATE, {}).get(ATTR_VALUE)
-            == BSH_POWER_ON
-        ):
+    def update_native_value(self) -> None:
+        """Set the value of the entity."""
+        power_state = self.appliance.settings[SettingKey.BSH_COMMON_POWER_STATE]
+        value = cast(str, power_state.value)
+        if value == BSH_POWER_ON:
             self._attr_is_on = True
         elif (
-            self.device.appliance.status.get(BSH_POWER_STATE, {}).get(ATTR_VALUE)
-            == self.device.power_off_state
+            isinstance(self.power_off_state, str)
+            and self.power_off_state
+            and value == self.power_off_state
         ):
             self._attr_is_on = False
-        elif self.device.appliance.status.get(BSH_OPERATION_STATE, {}).get(
-            ATTR_VALUE, None
-        ) in [
-            "BSH.Common.EnumType.OperationState.Ready",
-            "BSH.Common.EnumType.OperationState.DelayedStart",
-            "BSH.Common.EnumType.OperationState.Run",
-            "BSH.Common.EnumType.OperationState.Pause",
-            "BSH.Common.EnumType.OperationState.ActionRequired",
-            "BSH.Common.EnumType.OperationState.Aborting",
-            "BSH.Common.EnumType.OperationState.Finished",
+        elif self.power_off_state is UNDEFINED and value in [
+            BSH_POWER_OFF,
+            BSH_POWER_STANDBY,
         ]:
-            self._attr_is_on = True
-        elif (
-            self.device.appliance.status.get(BSH_OPERATION_STATE, {}).get(ATTR_VALUE)
-            == "BSH.Common.EnumType.OperationState.Inactive"
-        ):
+            self.power_off_state = value
             self._attr_is_on = False
         else:
             self._attr_is_on = None
-        _LOGGER.debug("Updated, new state: %s", self._attr_is_on)
+
+    async def async_fetch_power_off_state(self) -> None:
+        """Fetch the power off state."""
+        data = self.appliance.settings[SettingKey.BSH_COMMON_POWER_STATE]
+
+        if not data.constraints or not data.constraints.allowed_values:
+            try:
+                data = await self.coordinator.client.get_setting(
+                    self.appliance.info.ha_id,
+                    setting_key=SettingKey.BSH_COMMON_POWER_STATE,
+                )
+            except HomeConnectError as err:
+                _LOGGER.error("An error occurred fetching the power settings: %s", err)
+                return
+        if not data.constraints or not data.constraints.allowed_values:
+            return
+
+        if BSH_POWER_OFF in data.constraints.allowed_values:
+            self.power_off_state = BSH_POWER_OFF
+        elif BSH_POWER_STANDBY in data.constraints.allowed_values:
+            self.power_off_state = BSH_POWER_STANDBY
+        else:
+            self.power_off_state = None
 
 
-class HomeConnectChildLockSwitch(HomeConnectEntity, SwitchEntity):
-    """Child lock switch class for Home Connect."""
-
-    def __init__(self, device) -> None:
-        """Initialize the entity."""
-        super().__init__(device, "ChildLock")
+class HomeConnectSwitchOptionEntity(HomeConnectOptionEntity, SwitchEntity):
+    """Switch option class for Home Connect."""
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Switch child lock on."""
-        _LOGGER.debug("Tried to switch child lock on device: %s", self.name)
-        try:
-            await self.hass.async_add_executor_job(
-                self.device.appliance.set_setting, BSH_CHILD_LOCK_STATE, True
-            )
-        except HomeConnectError as err:
-            _LOGGER.error("Error while trying to turn on child lock on device: %s", err)
-            self._attr_is_on = False
-        self.async_entity_update()
+        """Turn on the option."""
+        await self.async_set_option(True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Switch child lock off."""
-        _LOGGER.debug("Tried to switch off child lock on device: %s", self.name)
-        try:
-            await self.hass.async_add_executor_job(
-                self.device.appliance.set_setting, BSH_CHILD_LOCK_STATE, False
-            )
-        except HomeConnectError as err:
-            _LOGGER.error(
-                "Error while trying to turn off child lock on device: %s", err
-            )
-            self._attr_is_on = True
-        self.async_entity_update()
+        """Turn off the option."""
+        await self.async_set_option(False)
 
-    async def async_update(self) -> None:
-        """Update the switch's status."""
-        self._attr_is_on = False
-        if self.device.appliance.status.get(BSH_CHILD_LOCK_STATE, {}).get(ATTR_VALUE):
-            self._attr_is_on = True
-        _LOGGER.debug("Updated child lock, new state: %s", self._attr_is_on)
+    def update_native_value(self) -> None:
+        """Set the value of the entity."""
+        self._attr_is_on = cast(bool | None, self.option_value)

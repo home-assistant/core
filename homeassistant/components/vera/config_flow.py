@@ -17,7 +17,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_EXCLUDE, CONF_LIGHTS, CONF_SOURCE
 from homeassistant.core import callback
@@ -73,12 +73,8 @@ def options_data(user_input: dict[str, str]) -> dict[str, list[int]]:
     )
 
 
-class OptionsFlowHandler(OptionsFlow):
+class OptionsFlowHandler(OptionsFlowWithReload):
     """Options for the component."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Init object."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self,
@@ -94,6 +90,10 @@ class OptionsFlowHandler(OptionsFlow):
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema(options_schema(self.config_entry.options)),
+            description_placeholders={
+                "sample_ip": "http://192.168.1.161:3480",
+                "documentation_url": "https://www.home-assistant.io/integrations/vera/",
+            },
         )
 
 
@@ -104,7 +104,7 @@ class VeraFlowHandler(ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowHandler:
         """Get the options flow."""
-        return OptionsFlowHandler(config_entry)
+        return OptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -125,6 +125,10 @@ class VeraFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {vol.Required(CONF_CONTROLLER): str, **options_schema()}
             ),
+            description_placeholders={
+                "sample_ip": "http://192.168.1.161:3480",
+                "documentation_url": "https://www.home-assistant.io/integrations/vera/",
+            },
         )
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:

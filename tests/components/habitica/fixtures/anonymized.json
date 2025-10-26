@@ -1,0 +1,661 @@
+{
+  "success": true,
+  "data": {
+    "user": {
+      "auth": {
+        "timestamps": {
+          "created": "2024-10-10T15:57:01.106Z",
+          "loggedin": "2024-11-27T19:34:28.887Z",
+          "updated": "2024-11-27T20:05:19.047Z"
+        }
+      },
+      "achievements": {
+        "ultimateGearSets": {
+          "healer": false,
+          "wizard": false,
+          "rogue": false,
+          "warrior": false
+        },
+        "streak": 0,
+        "perfect": 2,
+        "quests": {},
+        "completedTask": true,
+        "partyUp": true,
+        "snowball": 1,
+        "spookySparkles": 1,
+        "seafoam": 1,
+        "shinySeed": 1,
+        "createdTask": true
+      },
+      "backer": {},
+      "purchased": {
+        "ads": false,
+        "txnCount": 0,
+        "skin": {},
+        "hair": {},
+        "shirt": {},
+        "background": {
+          "violet": true,
+          "blue": true,
+          "green": true,
+          "purple": true,
+          "red": true,
+          "yellow": true
+        }
+      },
+      "flags": {
+        "tour": {
+          "intro": -1,
+          "classes": -1,
+          "stats": -1,
+          "tavern": -1,
+          "party": -1,
+          "guilds": -1,
+          "challenges": -1,
+          "market": -1,
+          "pets": -1,
+          "mounts": -1,
+          "hall": -1,
+          "equipment": -1,
+          "groupPlans": -1
+        },
+        "tutorial": {
+          "common": {
+            "habits": true,
+            "dailies": true,
+            "todos": true,
+            "rewards": true,
+            "party": true,
+            "pets": true,
+            "gems": true,
+            "skills": true,
+            "classes": true,
+            "tavern": true,
+            "equipment": true,
+            "items": true,
+            "mounts": true,
+            "inbox": true,
+            "stats": true
+          },
+          "ios": {
+            "addTask": false,
+            "editTask": false,
+            "deleteTask": false,
+            "filterTask": false,
+            "groupPets": false,
+            "inviteParty": false,
+            "reorderTask": false
+          }
+        },
+        "verifiedUsername": true,
+        "customizationsNotification": true,
+        "showTour": true,
+        "dropsEnabled": false,
+        "itemsEnabled": true,
+        "lastNewStuffRead": "",
+        "rewrite": true,
+        "classSelected": false,
+        "rebirthEnabled": false,
+        "levelDrops": {},
+        "recaptureEmailsPhase": 0,
+        "weeklyRecapEmailsPhase": 0,
+        "lastWeeklyRecap": "2024-10-10T15:57:01.106Z",
+        "communityGuidelinesAccepted": true,
+        "cronCount": 6,
+        "welcomed": true,
+        "armoireEnabled": true,
+        "armoireOpened": false,
+        "armoireEmpty": false,
+        "cardReceived": false,
+        "warnedLowHealth": true,
+        "thirdPartyTools": "2024-11-27T19:32:18.826Z",
+        "newStuff": false
+      },
+      "history": {
+        "exp": [
+          {
+            "date": "2024-10-30T19:37:01.970Z",
+            "value": 24
+          },
+          {
+            "date": "2024-10-31T23:33:14.972Z",
+            "value": 48
+          },
+          {
+            "date": "2024-11-05T18:25:04.681Z",
+            "value": 66
+          },
+          {
+            "date": "2024-11-21T15:09:07.501Z",
+            "value": 66
+          },
+          {
+            "date": "2024-11-22T00:41:21.137Z",
+            "value": 66
+          },
+          {
+            "date": "2024-11-27T19:34:28.887Z",
+            "value": 66
+          }
+        ],
+        "todos": [
+          {
+            "date": "2024-10-30T19:37:01.970Z",
+            "value": -5
+          },
+          {
+            "date": "2024-10-31T23:33:14.972Z",
+            "value": -10.129783523135325
+          },
+          {
+            "date": "2024-11-05T18:25:04.681Z",
+            "value": -16.396221153338182
+          },
+          {
+            "date": "2024-11-21T15:09:07.501Z",
+            "value": -22.8326979965846
+          },
+          {
+            "date": "2024-11-22T00:41:21.137Z",
+            "value": -29.448636229365235
+          },
+          {
+            "date": "2024-11-27T19:34:28.887Z",
+            "value": -36.25425987861077
+          }
+        ]
+      },
+      "items": {
+        "gear": {
+          "equipped": {
+            "armor": "armor_base_0",
+            "head": "head_base_0",
+            "shield": "shield_base_0"
+          },
+          "costume": {
+            "armor": "armor_base_0",
+            "head": "head_base_0",
+            "shield": "shield_base_0"
+          },
+          "owned": {
+            "headAccessory_special_blackHeadband": true,
+            "headAccessory_special_blueHeadband": true,
+            "headAccessory_special_greenHeadband": true,
+            "headAccessory_special_pinkHeadband": true,
+            "headAccessory_special_redHeadband": true,
+            "headAccessory_special_whiteHeadband": true,
+            "headAccessory_special_yellowHeadband": true,
+            "eyewear_special_blackTopFrame": true,
+            "eyewear_special_blueTopFrame": true,
+            "eyewear_special_greenTopFrame": true,
+            "eyewear_special_pinkTopFrame": true,
+            "eyewear_special_redTopFrame": true,
+            "eyewear_special_whiteTopFrame": true,
+            "eyewear_special_yellowTopFrame": true,
+            "eyewear_special_blackHalfMoon": true,
+            "eyewear_special_blueHalfMoon": true,
+            "eyewear_special_greenHalfMoon": true,
+            "eyewear_special_pinkHalfMoon": true,
+            "eyewear_special_redHalfMoon": true,
+            "eyewear_special_whiteHalfMoon": true,
+            "eyewear_special_yellowHalfMoon": true,
+            "armor_special_bardRobes": true,
+            "head_special_bardHat": true
+          }
+        },
+        "special": {
+          "snowball": 0,
+          "spookySparkles": 0,
+          "shinySeed": 0,
+          "seafoam": 0,
+          "valentine": 0,
+          "nye": 0,
+          "greeting": 0,
+          "greetingReceived": [],
+          "thankyou": 0,
+          "thankyouReceived": [],
+          "birthday": 0,
+          "birthdayReceived": [],
+          "congrats": 0,
+          "congratsReceived": [],
+          "getwell": 0,
+          "getwellReceived": [],
+          "goodluck": 0,
+          "goodluckReceived": []
+        },
+        "lastDrop": {
+          "count": 0,
+          "date": "2024-11-05T18:25:04.619Z"
+        },
+        "currentPet": "",
+        "currentMount": "",
+        "pets": {},
+        "eggs": {
+          "BearCub": 1,
+          "Cactus": 1,
+          "Wolf": 1,
+          "Dragon": 1
+        },
+        "hatchingPotions": {
+          "Skeleton": 1,
+          "Zombie": 1,
+          "RoyalPurple": 1
+        },
+        "food": {
+          "Candy_Red": 1,
+          "Chocolate": 1,
+          "Meat": 1,
+          "CottonCandyPink": 1
+        },
+        "mounts": {},
+        "quests": {
+          "dustbunnies": 1
+        }
+      },
+      "party": {
+        "quest": {
+          "progress": {
+            "up": 0,
+            "down": 0,
+            "collectedItems": 0,
+            "collect": {}
+          },
+          "RSVPNeeded": true,
+          "key": "dustbunnies",
+          "completed": null
+        },
+        "order": "level",
+        "orderAscending": "ascending",
+        "_id": "94cd398c-2240-4320-956e-6d345cf2c0de"
+      },
+      "preferences": {
+        "hair": {
+          "color": "red",
+          "base": 3,
+          "bangs": 1,
+          "beard": 0,
+          "mustache": 0,
+          "flower": 1
+        },
+        "emailNotifications": {
+          "unsubscribeFromAll": false,
+          "newPM": true,
+          "kickedGroup": true,
+          "wonChallenge": true,
+          "giftedGems": true,
+          "giftedSubscription": true,
+          "invitedParty": true,
+          "invitedGuild": true,
+          "questStarted": true,
+          "invitedQuest": true,
+          "importantAnnouncements": true,
+          "weeklyRecaps": true,
+          "onboarding": true,
+          "majorUpdates": true,
+          "subscriptionReminders": true,
+          "contentRelease": true
+        },
+        "pushNotifications": {
+          "unsubscribeFromAll": false,
+          "newPM": true,
+          "wonChallenge": true,
+          "giftedGems": true,
+          "giftedSubscription": true,
+          "invitedParty": true,
+          "invitedGuild": true,
+          "questStarted": true,
+          "invitedQuest": true,
+          "majorUpdates": true,
+          "mentionParty": true,
+          "mentionJoinedGuild": true,
+          "mentionUnjoinedGuild": true,
+          "partyActivity": true,
+          "contentRelease": true
+        },
+        "suppressModals": {
+          "levelUp": false,
+          "hatchPet": false,
+          "raisePet": false,
+          "streak": false
+        },
+        "tasks": {
+          "activeFilter": {
+            "habit": "all",
+            "daily": "all",
+            "todo": "remaining",
+            "reward": "all"
+          },
+          "groupByChallenge": false,
+          "confirmScoreNotes": false,
+          "mirrorGroupTasks": []
+        },
+        "language": "de",
+        "dayStart": 0,
+        "size": "slim",
+        "hideHeader": false,
+        "skin": "915533",
+        "shirt": "blue",
+        "timezoneOffset": -60,
+        "sound": "rosstavoTheme",
+        "chair": "none",
+        "allocationMode": "flat",
+        "autoEquip": true,
+        "costume": false,
+        "dateFormat": "MM/dd/yyyy",
+        "sleep": false,
+        "stickyHeader": true,
+        "disableClasses": false,
+        "newTaskEdit": false,
+        "dailyDueDefaultView": false,
+        "advancedCollapsed": false,
+        "toolbarCollapsed": false,
+        "reverseChatOrder": false,
+        "developerMode": false,
+        "displayInviteToPartyWhenPartyIs1": true,
+        "webhooks": {},
+        "improvementCategories": [],
+        "background": "violet",
+        "timezoneOffsetAtLastCron": -60
+      },
+      "stats": {
+        "buffs": {
+          "str": 0,
+          "int": 0,
+          "per": 0,
+          "con": 0,
+          "stealth": 0,
+          "streaks": false,
+          "seafoam": false,
+          "shinySeed": false,
+          "snowball": false,
+          "spookySparkles": false
+        },
+        "training": {
+          "int": 0,
+          "per": 0,
+          "str": 0,
+          "con": 0
+        },
+        "hp": 25.40000000000002,
+        "mp": 32,
+        "exp": 41,
+        "gp": 11.100978952781748,
+        "lvl": 2,
+        "class": "warrior",
+        "points": 2,
+        "str": 0,
+        "con": 0,
+        "int": 0,
+        "per": 0,
+        "toNextLevel": 50,
+        "maxHealth": 50,
+        "maxMP": 32
+      },
+      "inbox": {
+        "newMessages": 0,
+        "optOut": false,
+        "blocks": [],
+        "messages": {}
+      },
+      "tasksOrder": {
+        "habits": ["30923acd-3b4c-486d-9ef3-c8f57cf56049"],
+        "dailys": ["6e53f1f5-a315-4edd-984d-8d762e4a08ef"],
+        "todos": ["e6e06dc6-c887-4b86-b175-b99cc2e20fdf"],
+        "rewards": ["2fbf11a5-ab1e-4fb7-97f0-dfb5c45c96a9"]
+      },
+      "_id": "ffce870c-3ff3-4fa4-bad1-87612e52b8e7",
+      "_v": 131,
+      "balance": 0,
+      "_subSignature": "NOT_RUNNING",
+      "challenges": [],
+      "guilds": [],
+      "loginIncentives": 6,
+      "invitesSent": 0,
+      "pinnedItemsOrder": [],
+      "lastCron": "2024-11-27T19:34:28.887Z",
+      "tags": [
+        {
+          "id": "c1a35186-9895-4ac0-9cd7-49e7bb875695",
+          "name": "tag",
+          "challenge": "challenge"
+        },
+        {
+          "id": "53d1deb8-ed2b-4f94-bbfc-955e9e92aa98",
+          "name": "tag",
+          "challenge": "challenge"
+        },
+        {
+          "id": "29bf6a99-536f-446b-838f-a81d41e1ed4d",
+          "name": "tag",
+          "challenge": "challenge"
+        },
+        {
+          "id": "1b1297e7-4fd8-460a-b148-e92d7bcfa9a5",
+          "name": "tag",
+          "challenge": "challenge"
+        },
+        {
+          "id": "05e6cf40-48ea-415a-9b8b-e2ecad258ef6",
+          "name": "tag",
+          "challenge": "challenge"
+        },
+        {
+          "id": "fe53f179-59d8-4c28-9bf7-b9068ab552a4",
+          "name": "tag",
+          "challenge": "challenge"
+        },
+        {
+          "id": "c44e9e8c-4bff-42df-98d5-1a1a7b69eada",
+          "name": "tag",
+          "challenge": "challenge"
+        }
+      ],
+      "extra": {},
+      "pushDevices": [],
+      "pinnedItems": [
+        {
+          "path": "gear.flat.weapon_warrior_0",
+          "type": "marketGear"
+        },
+        {
+          "path": "gear.flat.armor_warrior_1",
+          "type": "marketGear"
+        },
+        {
+          "path": "gear.flat.shield_warrior_1",
+          "type": "marketGear"
+        },
+        {
+          "path": "gear.flat.head_warrior_1",
+          "type": "marketGear"
+        },
+        {
+          "path": "potion",
+          "type": "potion"
+        },
+        {
+          "path": "armoire",
+          "type": "armoire"
+        }
+      ],
+      "unpinnedItems": [],
+      "id": "ffce870c-3ff3-4fa4-bad1-87612e52b8e7"
+    },
+    "tasks": [
+      {
+        "challenge": {},
+        "group": {
+          "completedBy": {},
+          "assignedUsers": []
+        },
+        "_id": "30923acd-3b4c-486d-9ef3-c8f57cf56049",
+        "up": true,
+        "down": false,
+        "counterUp": 0,
+        "counterDown": 0,
+        "frequency": "daily",
+        "history": [],
+        "type": "habit",
+        "text": "task text",
+        "notes": "task notes",
+        "tags": [],
+        "value": 0,
+        "priority": 1,
+        "attribute": "str",
+        "byHabitica": false,
+        "reminders": [],
+        "createdAt": "2024-10-10T15:57:14.287Z",
+        "updatedAt": "2024-10-10T15:57:14.287Z",
+        "userId": "ffce870c-3ff3-4fa4-bad1-87612e52b8e7",
+        "id": "30923acd-3b4c-486d-9ef3-c8f57cf56049"
+      },
+      {
+        "challenge": {},
+        "group": {
+          "completedBy": {},
+          "assignedUsers": []
+        },
+        "_id": "e6e06dc6-c887-4b86-b175-b99cc2e20fdf",
+        "completed": false,
+        "collapseChecklist": false,
+        "type": "todo",
+        "text": "task text",
+        "notes": "task notes",
+        "tags": [],
+        "value": -6.418582324043852,
+        "priority": 1,
+        "attribute": "str",
+        "byHabitica": true,
+        "checklist": [],
+        "reminders": [],
+        "createdAt": "2024-10-10T15:57:14.290Z",
+        "updatedAt": "2024-11-27T19:34:29.001Z",
+        "userId": "ffce870c-3ff3-4fa4-bad1-87612e52b8e7",
+        "id": "e6e06dc6-c887-4b86-b175-b99cc2e20fdf"
+      },
+      {
+        "challenge": {},
+        "group": {
+          "completedBy": {},
+          "assignedUsers": []
+        },
+        "_id": "2fbf11a5-ab1e-4fb7-97f0-dfb5c45c96a9",
+        "type": "reward",
+        "text": "task text",
+        "notes": "task notes",
+        "tags": [],
+        "value": 10,
+        "priority": 1,
+        "attribute": "str",
+        "byHabitica": false,
+        "reminders": [],
+        "createdAt": "2024-10-10T15:57:14.290Z",
+        "updatedAt": "2024-10-10T15:57:14.290Z",
+        "userId": "ffce870c-3ff3-4fa4-bad1-87612e52b8e7",
+        "id": "2fbf11a5-ab1e-4fb7-97f0-dfb5c45c96a9"
+      },
+      {
+        "repeat": {
+          "m": true,
+          "t": true,
+          "w": true,
+          "th": true,
+          "f": true,
+          "s": true,
+          "su": true
+        },
+        "challenge": {},
+        "group": {
+          "completedBy": {},
+          "assignedUsers": []
+        },
+        "_id": "6e53f1f5-a315-4edd-984d-8d762e4a08ef",
+        "frequency": "weekly",
+        "everyX": 1,
+        "streak": 0,
+        "nextDue": [
+          "2024-11-27T23:00:00.000Z",
+          "2024-11-28T23:00:00.000Z",
+          "2024-11-29T23:00:00.000Z",
+          "2024-12-01T23:00:00.000Z",
+          "2024-12-02T23:00:00.000Z",
+          "2024-12-03T23:00:00.000Z"
+        ],
+        "yesterDaily": true,
+        "history": [
+          {
+            "date": 1730317021817,
+            "value": 1,
+            "isDue": true,
+            "completed": true
+          },
+          {
+            "date": 1730417594890,
+            "value": 1.9747,
+            "isDue": true,
+            "completed": true
+          },
+          {
+            "date": 1730831104730,
+            "value": 1.024043774264157,
+            "isDue": true,
+            "completed": false
+          },
+          {
+            "date": 1732201747573,
+            "value": 0.049944135963563174,
+            "isDue": true,
+            "completed": false
+          },
+          {
+            "date": 1732236081228,
+            "value": -0.9487768368544092,
+            "isDue": true,
+            "completed": false
+          },
+          {
+            "date": 1732736068973,
+            "value": -1.973387732005249,
+            "isDue": true,
+            "completed": false
+          }
+        ],
+        "completed": false,
+        "collapseChecklist": false,
+        "type": "daily",
+        "text": "task text",
+        "notes": "task notes",
+        "tags": [],
+        "value": -1.973387732005249,
+        "priority": 1,
+        "attribute": "str",
+        "byHabitica": false,
+        "startDate": "2024-10-09T22:00:00.000Z",
+        "daysOfMonth": [],
+        "weeksOfMonth": [],
+        "checklist": [],
+        "reminders": [],
+        "createdAt": "2024-10-10T15:57:14.304Z",
+        "updatedAt": "2024-11-27T19:34:29.001Z",
+        "userId": "ffce870c-3ff3-4fa4-bad1-87612e52b8e7",
+        "isDue": true,
+        "id": "6e53f1f5-a315-4edd-984d-8d762e4a08ef"
+      }
+    ]
+  },
+  "notifications": [
+    {
+      "id": "35708dfc-74c6-4352-97d3-8aeddbb31d20",
+      "type": "NEW_CHAT_MESSAGE",
+      "data": {
+        "group": {
+          "id": "94cd398c-2240-4320-956e-6d345cf2c0de",
+          "name": "tests Party"
+        }
+      },
+      "seen": false
+    }
+  ],
+  "userV": 131,
+  "appVersion": "5.29.2"
+}

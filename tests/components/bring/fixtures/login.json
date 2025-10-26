@@ -1,0 +1,12 @@
+{
+  "uuid": "4d717571-174a-4bc1-ab24-929c7227ca43",
+  "publicUuid": "9a21fdfc-63a4-441a-afc1-ef3030605a9d",
+  "email": "test-email",
+  "name": "Bring",
+  "photoPath": "",
+  "bringListUUID": "e542eef6-dba7-4c31-a52c-29e6ab9d83a5",
+  "access_token": "ACCESS_TOKEN",
+  "refresh_token": "REFRESH_TOKEN",
+  "token_type": "Bearer",
+  "expires_in": 604799
+}

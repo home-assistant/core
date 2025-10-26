@@ -13,6 +13,11 @@ OTBR_MULTIPAN_URL = "http://core-silabs-multiprotocol:8081"
 OTBR_NON_MULTIPAN_URL = "/dev/ttyAMA1"
 
 
+@pytest.fixture(autouse=True)
+def mock_supervisor_client(supervisor_client: AsyncMock) -> None:
+    """Mock supervisor client."""
+
+
 async def test_get_allowed_channel(
     hass: HomeAssistant, multiprotocol_addon_manager_mock
 ) -> None:

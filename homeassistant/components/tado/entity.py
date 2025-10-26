@@ -1,21 +1,30 @@
 """Base class for Tado entity."""
 
+import logging
+
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import TadoConnector
 from .const import DEFAULT_NAME, DOMAIN, TADO_HOME, TADO_ZONE
+from .coordinator import TadoDataUpdateCoordinator
+
+_LOGGER = logging.getLogger(__name__)
 
 
-class TadoDeviceEntity(Entity):
-    """Base implementation for Tado device."""
+class TadoCoordinatorEntity(CoordinatorEntity[TadoDataUpdateCoordinator]):
+    """Base class for Tado entity."""
 
-    _attr_should_poll = False
     _attr_has_entity_name = True
 
-    def __init__(self, device_info: dict[str, str]) -> None:
+
+class TadoDeviceEntity(TadoCoordinatorEntity):
+    """Base implementation for Tado device."""
+
+    def __init__(
+        self, device_info: dict[str, str], coordinator: TadoDataUpdateCoordinator
+    ) -> None:
         """Initialize a Tado device."""
-        super().__init__()
+        super().__init__(coordinator)
         self._device_info = device_info
         self.device_name = device_info["serialNo"]
         self.device_id = device_info["shortSerialNo"]
@@ -30,35 +39,35 @@ class TadoDeviceEntity(Entity):
         )
 
 
-class TadoHomeEntity(Entity):
+class TadoHomeEntity(TadoCoordinatorEntity):
     """Base implementation for Tado home."""
 
-    _attr_should_poll = False
-    _attr_has_entity_name = True
-
-    def __init__(self, tado: TadoConnector) -> None:
+    def __init__(self, coordinator: TadoDataUpdateCoordinator) -> None:
         """Initialize a Tado home."""
-        super().__init__()
-        self.home_name = tado.home_name
-        self.home_id = tado.home_id
+        super().__init__(coordinator)
+        self.home_name = coordinator.home_name
+        self.home_id = coordinator.home_id
         self._attr_device_info = DeviceInfo(
             configuration_url="https://app.tado.com",
-            identifiers={(DOMAIN, str(tado.home_id))},
+            identifiers={(DOMAIN, str(coordinator.home_id))},
             manufacturer=DEFAULT_NAME,
             model=TADO_HOME,
-            name=tado.home_name,
+            name=coordinator.home_name,
         )
 
 
-class TadoZoneEntity(Entity):
+class TadoZoneEntity(TadoCoordinatorEntity):
     """Base implementation for Tado zone."""
 
-    _attr_has_entity_name = True
-    _attr_should_poll = False
-
-    def __init__(self, zone_name: str, home_id: int, zone_id: int) -> None:
+    def __init__(
+        self,
+        zone_name: str,
+        home_id: int,
+        zone_id: int,
+        coordinator: TadoDataUpdateCoordinator,
+    ) -> None:
         """Initialize a Tado zone."""
-        super().__init__()
+        super().__init__(coordinator)
         self.zone_name = zone_name
         self.zone_id = zone_id
         self._attr_device_info = DeviceInfo(

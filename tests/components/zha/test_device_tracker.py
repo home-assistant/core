@@ -1,11 +1,13 @@
 """Test ZHA Device Tracker."""
 
+from collections.abc import Callable, Coroutine
 from datetime import timedelta
 import time
 from unittest.mock import patch
 
 import pytest
 from zha.application.registries import SMARTTHINGS_ARRIVAL_SENSOR_DEVICE_TYPE
+from zigpy.device import Device
 from zigpy.profiles import zha
 from zigpy.zcl.clusters import general
 
@@ -18,7 +20,7 @@ from homeassistant.components.zha.helpers import (
 )
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME, Platform
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .common import find_entity_id, send_attributes_report
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
@@ -44,7 +46,9 @@ def device_tracker_platforms_only():
 
 
 async def test_device_tracker(
-    hass: HomeAssistant, setup_zha, zigpy_device_mock
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
 ) -> None:
     """Test ZHA device tracker platform."""
 

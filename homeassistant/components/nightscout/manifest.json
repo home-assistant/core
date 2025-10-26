@@ -6,6 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/nightscout",
   "iot_class": "cloud_polling",
   "loggers": ["py_nightscout"],
-  "quality_scale": "platinum",
   "requirements": ["py-nightscout==1.2.2"]
 }

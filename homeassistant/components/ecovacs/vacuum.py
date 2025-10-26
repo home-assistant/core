@@ -8,26 +8,20 @@ from typing import TYPE_CHECKING, Any
 
 from deebot_client.capabilities import Capabilities, DeviceType
 from deebot_client.device import Device
-from deebot_client.events import BatteryEvent, FanSpeedEvent, RoomsEvent, StateEvent
+from deebot_client.events import FanSpeedEvent, RoomsEvent, StateEvent
 from deebot_client.models import CleanAction, CleanMode, Room, State
 import sucks
 
 from homeassistant.components.vacuum import (
-    STATE_CLEANING,
-    STATE_DOCKED,
-    STATE_ERROR,
-    STATE_IDLE,
-    STATE_PAUSED,
-    STATE_RETURNING,
     StateVacuumEntity,
     StateVacuumEntityDescription,
+    VacuumActivity,
     VacuumEntityFeature,
 )
 from homeassistant.core import HomeAssistant, SupportsResponse
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.icon import icon_for_battery_level
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import slugify
 
 from . import EcovacsConfigEntry
@@ -46,7 +40,7 @@ SERVICE_RAW_GET_POSITIONS = "raw_get_positions"
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: EcovacsConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Ecovacs vacuums."""
 
@@ -76,8 +70,7 @@ class EcovacsLegacyVacuum(EcovacsLegacyEntity, StateVacuumEntity):
 
     _attr_fan_speed_list = [sucks.FAN_SPEED_NORMAL, sucks.FAN_SPEED_HIGH]
     _attr_supported_features = (
-        VacuumEntityFeature.BATTERY
-        | VacuumEntityFeature.RETURN_HOME
+        VacuumEntityFeature.RETURN_HOME
         | VacuumEntityFeature.CLEAN_SPOT
         | VacuumEntityFeature.STOP
         | VacuumEntityFeature.START
@@ -91,11 +84,6 @@ class EcovacsLegacyVacuum(EcovacsLegacyEntity, StateVacuumEntity):
         """Set up the event listeners now that hass is ready."""
         self._event_listeners.append(
             self.device.statusEvents.subscribe(
-                lambda _: self.schedule_update_ha_state()
-            )
-        )
-        self._event_listeners.append(
-            self.device.batteryEvents.subscribe(
                 lambda _: self.schedule_update_ha_state()
             )
         )
@@ -123,39 +111,24 @@ class EcovacsLegacyVacuum(EcovacsLegacyEntity, StateVacuumEntity):
         self.schedule_update_ha_state()
 
     @property
-    def state(self) -> str | None:
+    def activity(self) -> VacuumActivity | None:
         """Return the state of the vacuum cleaner."""
         if self.error is not None:
-            return STATE_ERROR
+            return VacuumActivity.ERROR
 
         if self.device.is_cleaning:
-            return STATE_CLEANING
+            return VacuumActivity.CLEANING
 
         if self.device.is_charging:
-            return STATE_DOCKED
+            return VacuumActivity.DOCKED
 
         if self.device.vacuum_status == sucks.CLEAN_MODE_STOP:
-            return STATE_IDLE
+            return VacuumActivity.IDLE
 
         if self.device.vacuum_status == sucks.CHARGE_MODE_RETURNING:
-            return STATE_RETURNING
+            return VacuumActivity.RETURNING
 
         return None
-
-    @property
-    def battery_level(self) -> int | None:
-        """Return the battery level of the vacuum cleaner."""
-        if self.device.battery_status is not None:
-            return self.device.battery_status * 100  # type: ignore[no-any-return]
-
-        return None
-
-    @property
-    def battery_icon(self) -> str:
-        """Return the battery icon for the vacuum cleaner."""
-        return icon_for_battery_level(
-            battery_level=self.battery_level, charging=self.device.is_charging
-        )
 
     @property
     def fan_speed(self) -> str | None:
@@ -167,11 +140,6 @@ class EcovacsLegacyVacuum(EcovacsLegacyEntity, StateVacuumEntity):
         """Return the device-specific state attributes of this vacuum."""
         data: dict[str, Any] = {}
         data[ATTR_ERROR] = self.error
-
-        # these attributes are deprecated and can be removed in 2025.2
-        for key, val in self.device.components.items():
-            attr_name = ATTR_COMPONENT_PREFIX + key
-            data[attr_name] = int(val * 100)
 
         return data
 
@@ -202,7 +170,7 @@ class EcovacsLegacyVacuum(EcovacsLegacyEntity, StateVacuumEntity):
 
     def set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
-        if self.state == STATE_CLEANING:
+        if self.state == VacuumActivity.CLEANING:
             self.device.run(sucks.Clean(mode=self.device.clean_status, speed=fan_speed))
 
     def send_command(
@@ -225,12 +193,12 @@ class EcovacsLegacyVacuum(EcovacsLegacyEntity, StateVacuumEntity):
 
 
 _STATE_TO_VACUUM_STATE = {
-    State.IDLE: STATE_IDLE,
-    State.CLEANING: STATE_CLEANING,
-    State.RETURNING: STATE_RETURNING,
-    State.DOCKED: STATE_DOCKED,
-    State.ERROR: STATE_ERROR,
-    State.PAUSED: STATE_PAUSED,
+    State.IDLE: VacuumActivity.IDLE,
+    State.CLEANING: VacuumActivity.CLEANING,
+    State.RETURNING: VacuumActivity.RETURNING,
+    State.DOCKED: VacuumActivity.DOCKED,
+    State.ERROR: VacuumActivity.ERROR,
+    State.PAUSED: VacuumActivity.PAUSED,
 }
 
 _ATTR_ROOMS = "rooms"
@@ -248,7 +216,6 @@ class EcovacsVacuum(
         VacuumEntityFeature.PAUSE
         | VacuumEntityFeature.STOP
         | VacuumEntityFeature.RETURN_HOME
-        | VacuumEntityFeature.BATTERY
         | VacuumEntityFeature.SEND_COMMAND
         | VacuumEntityFeature.LOCATE
         | VacuumEntityFeature.STATE
@@ -275,19 +242,14 @@ class EcovacsVacuum(
         """Set up the event listeners now that hass is ready."""
         await super().async_added_to_hass()
 
-        async def on_battery(event: BatteryEvent) -> None:
-            self._attr_battery_level = event.value
-            self.async_write_ha_state()
-
         async def on_rooms(event: RoomsEvent) -> None:
             self._rooms = event.rooms
             self.async_write_ha_state()
 
         async def on_status(event: StateEvent) -> None:
-            self._attr_state = _STATE_TO_VACUUM_STATE[event.state]
+            self._attr_activity = _STATE_TO_VACUUM_STATE[event.state]
             self.async_write_ha_state()
 
-        self._subscribe(self._capability.battery.event, on_battery)
         self._subscribe(self._capability.state.event, on_status)
 
         if self._capability.fan_speed:

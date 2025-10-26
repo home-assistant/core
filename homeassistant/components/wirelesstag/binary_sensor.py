@@ -10,17 +10,14 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import CONF_MONITORED_CONDITIONS, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import (
-    DOMAIN as WIRELESSTAG_DOMAIN,
-    SIGNAL_BINARY_EVENT_UPDATE,
-    WirelessTagBaseSensor,
-    async_migrate_unique_id,
-)
+from .const import DOMAIN, SIGNAL_BINARY_EVENT_UPDATE
+from .entity import WirelessTagBaseSensor
+from .util import async_migrate_unique_id
 
 # On means in range, Off means out of range
 SENSOR_PRESENCE = "presence"
@@ -84,7 +81,7 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the platform for a WirelessTags."""
-    platform = hass.data[WIRELESSTAG_DOMAIN]
+    platform = hass.data[DOMAIN]
 
     sensors = []
     tags = platform.tags

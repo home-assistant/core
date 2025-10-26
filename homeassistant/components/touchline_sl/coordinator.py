@@ -10,6 +10,7 @@ from pytouchlinesl import Module, Zone
 from pytouchlinesl.client import RothAPIError
 from pytouchlinesl.client.models import GlobalScheduleModel
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -26,14 +27,22 @@ class TouchlineSLModuleData:
     schedules: dict[str, GlobalScheduleModel]
 
 
+type TouchlineSLConfigEntry = ConfigEntry[list[TouchlineSLModuleCoordinator]]
+
+
 class TouchlineSLModuleCoordinator(DataUpdateCoordinator[TouchlineSLModuleData]):
     """A coordinator to manage the fetching of Touchline SL data."""
 
-    def __init__(self, hass: HomeAssistant, module: Module) -> None:
+    config_entry: TouchlineSLConfigEntry
+
+    def __init__(
+        self, hass: HomeAssistant, config_entry: TouchlineSLConfigEntry, module: Module
+    ) -> None:
         """Initialize coordinator."""
         super().__init__(
             hass,
             logger=_LOGGER,
+            config_entry=config_entry,
             name=f"Touchline SL ({module.name})",
             update_interval=timedelta(seconds=30),
         )

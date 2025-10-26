@@ -5,29 +5,27 @@ from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .. import tellduslive
-from .entry import TelldusLiveEntity
+from .const import DOMAIN, TELLDUS_DISCOVERY_NEW
+from .entity import TelldusLiveEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up tellduslive sensors dynamically."""
 
     async def async_discover_binary_sensor(device_id):
         """Discover and add a discovered sensor."""
-        client = hass.data[tellduslive.DOMAIN]
+        client = hass.data[DOMAIN]
         async_add_entities([TelldusLiveSensor(client, device_id)])
 
     async_dispatcher_connect(
         hass,
-        tellduslive.TELLDUS_DISCOVERY_NEW.format(
-            binary_sensor.DOMAIN, tellduslive.DOMAIN
-        ),
+        TELLDUS_DISCOVERY_NEW.format(binary_sensor.DOMAIN, DOMAIN),
         async_discover_binary_sensor,
     )
 

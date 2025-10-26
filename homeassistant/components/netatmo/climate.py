@@ -30,7 +30,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -38,6 +38,7 @@ from .const import (
     ATTR_HEATING_POWER_REQUEST,
     ATTR_SCHEDULE_NAME,
     ATTR_SELECTED_SCHEDULE,
+    ATTR_SELECTED_SCHEDULE_ID,
     ATTR_TARGET_TEMPERATURE,
     ATTR_TIME_PERIOD,
     DATA_SCHEDULES,
@@ -58,9 +59,9 @@ from .entity import NetatmoRoomEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-PRESET_FROST_GUARD = "Frost Guard"
-PRESET_SCHEDULE = "Schedule"
-PRESET_MANUAL = "Manual"
+PRESET_FROST_GUARD = "frost_guard"
+PRESET_SCHEDULE = "schedule"
+PRESET_MANUAL = "manual"
 
 SUPPORT_FLAGS = (
     ClimateEntityFeature.TARGET_TEMPERATURE
@@ -118,7 +119,9 @@ NA_VALVE = DeviceType.NRV
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Netatmo energy platform."""
 
@@ -188,10 +191,10 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
     _attr_supported_features = SUPPORT_FLAGS
     _attr_target_temperature_step = PRECISION_HALVES
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_translation_key = "thermostat"
     _attr_name = None
     _away: bool | None = None
     _connected: bool | None = None
-    _enable_turn_on_off_backwards_compatibility = False
 
     _away_temperature: float | None = None
     _hg_temperature: float | None = None
@@ -246,19 +249,28 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
         if self.home.entity_id != data["home_id"]:
             return
 
-        if data["event_type"] == EVENT_TYPE_SCHEDULE and "schedule_id" in data:
-            self._selected_schedule = getattr(
-                self.hass.data[DOMAIN][DATA_SCHEDULES][self.home.entity_id].get(
-                    data["schedule_id"]
-                ),
-                "name",
-                None,
-            )
-            self._attr_extra_state_attributes[ATTR_SELECTED_SCHEDULE] = (
-                self._selected_schedule
-            )
-            self.async_write_ha_state()
-            self.data_handler.async_force_update(self._signal_name)
+        if data["event_type"] == EVENT_TYPE_SCHEDULE:
+            # handle schedule change
+            if "schedule_id" in data:
+                selected_schedule = self.hass.data[DOMAIN][DATA_SCHEDULES][
+                    self.home.entity_id
+                ].get(data["schedule_id"])
+                self._selected_schedule = getattr(
+                    selected_schedule,
+                    "name",
+                    None,
+                )
+                self._attr_extra_state_attributes[ATTR_SELECTED_SCHEDULE] = (
+                    self._selected_schedule
+                )
+
+                self._attr_extra_state_attributes[ATTR_SELECTED_SCHEDULE_ID] = getattr(
+                    selected_schedule, "entity_id", None
+                )
+
+                self.async_write_ha_state()
+                self.data_handler.async_force_update(self._signal_name)
+            # ignore other schedule events
             return
 
         home = data["home"]
@@ -415,11 +427,13 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
         self._attr_hvac_mode = HVAC_MAP_NETATMO[self._attr_preset_mode]
         self._away = self._attr_hvac_mode == HVAC_MAP_NETATMO[STATE_NETATMO_AWAY]
 
-        self._selected_schedule = getattr(
-            self.home.get_selected_schedule(), "name", None
-        )
+        selected_schedule = self.home.get_selected_schedule()
+        self._selected_schedule = getattr(selected_schedule, "name", None)
         self._attr_extra_state_attributes[ATTR_SELECTED_SCHEDULE] = (
             self._selected_schedule
+        )
+        self._attr_extra_state_attributes[ATTR_SELECTED_SCHEDULE_ID] = getattr(
+            selected_schedule, "entity_id", None
         )
 
         if self.device_type == NA_VALVE:

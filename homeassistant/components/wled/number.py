@@ -11,7 +11,7 @@ from wled import Segment
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import WLEDConfigEntry
 from .const import ATTR_INTENSITY, ATTR_SPEED
@@ -25,7 +25,7 @@ PARALLEL_UPDATES = 1
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: WLEDConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up WLED number based on a config entry."""
     coordinator = entry.runtime_data
@@ -130,7 +130,7 @@ class WLEDNumber(WLEDEntity, NumberEntity):
 def async_update_segments(
     coordinator: WLEDDataUpdateCoordinator,
     current_ids: set[int],
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Update segments."""
     segment_ids = {

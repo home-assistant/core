@@ -9,13 +9,11 @@ from typing import Any
 from demetriek import Device, LaMetricDevice
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import LaMetricDataUpdateCoordinator
+from .coordinator import LaMetricConfigEntry, LaMetricDataUpdateCoordinator
 from .entity import LaMetricEntity
 from .helpers import lametric_exception_handler
 
@@ -25,6 +23,7 @@ class LaMetricSwitchEntityDescription(SwitchEntityDescription):
     """Class describing LaMetric switch entities."""
 
     available_fn: Callable[[Device], bool] = lambda device: True
+    has_fn: Callable[[Device], bool] = lambda device: True
     is_on_fn: Callable[[Device], bool]
     set_fn: Callable[[LaMetricDevice, bool], Awaitable[Any]]
 
@@ -34,8 +33,11 @@ SWITCHES = [
         key="bluetooth",
         translation_key="bluetooth",
         entity_category=EntityCategory.CONFIG,
-        available_fn=lambda device: device.bluetooth.available,
-        is_on_fn=lambda device: device.bluetooth.active,
+        available_fn=lambda device: bool(
+            device.bluetooth and device.bluetooth.available
+        ),
+        has_fn=lambda device: bool(device.bluetooth),
+        is_on_fn=lambda device: bool(device.bluetooth and device.bluetooth.active),
         set_fn=lambda api, active: api.bluetooth(active=active),
     ),
 ]
@@ -43,17 +45,18 @@ SWITCHES = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: LaMetricConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up LaMetric switch based on a config entry."""
-    coordinator: LaMetricDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         LaMetricSwitchEntity(
             coordinator=coordinator,
             description=description,
         )
         for description in SWITCHES
+        if description.has_fn(coordinator.data)
     )
 
 

@@ -92,12 +92,11 @@ def storage_setup(hass: HomeAssistant, hass_storage: dict[str, Any]):
     return _storage
 
 
-async def test_config(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize("invalid_config", [None, 1, {"name with space": None}])
+async def test_config(hass: HomeAssistant, invalid_config) -> None:
     """Test config."""
-    invalid_configs = [None, 1, {}, {"name with space": None}]
 
-    for cfg in invalid_configs:
-        assert not await async_setup_component(hass, DOMAIN, {DOMAIN: cfg})
+    assert not await async_setup_component(hass, DOMAIN, {DOMAIN: invalid_config})
 
 
 async def test_config_options(hass: HomeAssistant) -> None:
@@ -197,6 +196,12 @@ async def test_methods_and_events(hass: HomeAssistant) -> None:
             "data": {},
         },
         {
+            "call": SERVICE_CANCEL,
+            "state": STATUS_IDLE,
+            "event": None,
+            "data": {},
+        },
+        {
             "call": SERVICE_START,
             "state": STATUS_ACTIVE,
             "event": EVENT_TIMER_STARTED,
@@ -206,6 +211,12 @@ async def test_methods_and_events(hass: HomeAssistant) -> None:
             "call": SERVICE_FINISH,
             "state": STATUS_IDLE,
             "event": EVENT_TIMER_FINISHED,
+            "data": {},
+        },
+        {
+            "call": SERVICE_FINISH,
+            "state": STATUS_IDLE,
+            "event": None,
             "data": {},
         },
         {
@@ -242,6 +253,18 @@ async def test_methods_and_events(hass: HomeAssistant) -> None:
             "call": SERVICE_START,
             "state": STATUS_ACTIVE,
             "event": EVENT_TIMER_RESTARTED,
+            "data": {},
+        },
+        {
+            "call": SERVICE_PAUSE,
+            "state": STATUS_PAUSED,
+            "event": EVENT_TIMER_PAUSED,
+            "data": {},
+        },
+        {
+            "call": SERVICE_FINISH,
+            "state": STATUS_IDLE,
+            "event": EVENT_TIMER_FINISHED,
             "data": {},
         },
     ]

@@ -3,15 +3,26 @@
 from http import HTTPStatus
 from unittest import mock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant import const
 from homeassistant.components.climate import ClimateEntityFeature
-from homeassistant.components.ecobee.climate import PRESET_AWAY_INDEFINITELY, Thermostat
-from homeassistant.const import ATTR_SUPPORTED_FEATURES, STATE_OFF
+from homeassistant.components.ecobee.climate import (
+    ATTR_PRESET_MODE,
+    ATTR_SENSOR_LIST,
+    PRESET_AWAY_INDEFINITELY,
+    Thermostat,
+)
+from homeassistant.components.ecobee.const import DOMAIN
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, STATE_OFF
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import device_registry as dr
 
 from .common import setup_platform
+
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 ENTITY_ID = "climate.ecobee"
 
@@ -25,9 +36,18 @@ def ecobee_fixture():
         "identifier": "abc",
         "program": {
             "climates": [
-                {"name": "Climate1", "climateRef": "c1"},
-                {"name": "Climate2", "climateRef": "c2"},
-                {"name": "Away", "climateRef": "away"},
+                {
+                    "name": "Climate1",
+                    "climateRef": "c1",
+                    "sensors": [{"name": "Ecobee"}],
+                },
+                {
+                    "name": "Climate2",
+                    "climateRef": "c2",
+                    "sensors": [{"name": "Ecobee"}],
+                },
+                {"name": "Away", "climateRef": "away", "sensors": [{"name": "Ecobee"}]},
+                {"name": "Home", "climateRef": "home", "sensors": [{"name": "Ecobee"}]},
             ],
             "currentClimateRef": "c1",
         },
@@ -60,8 +80,19 @@ def ecobee_fixture():
                 "endTime": "10:00:00",
             }
         ],
+        "remoteSensors": [
+            {
+                "id": "ei:0",
+                "name": "Ecobee",
+            },
+            {
+                "id": "rs2:100",
+                "name": "Remote Sensor 1",
+            },
+        ],
     }
     mock_ecobee = mock.Mock()
+    mock_ecobee.get = mock.Mock(side_effect=vals.get)
     mock_ecobee.__getitem__ = mock.Mock(side_effect=vals.__getitem__)
     mock_ecobee.__setitem__ = mock.Mock(side_effect=vals.__setitem__)
     return mock_ecobee
@@ -76,10 +107,10 @@ def data_fixture(ecobee_fixture):
 
 
 @pytest.fixture(name="thermostat")
-def thermostat_fixture(data):
+def thermostat_fixture(data, hass: HomeAssistant):
     """Set up ecobee thermostat object."""
     thermostat = data.ecobee.get_thermostat(1)
-    return Thermostat(data, 1, thermostat)
+    return Thermostat(data, 1, thermostat, hass)
 
 
 async def test_name(thermostat) -> None:
@@ -186,6 +217,8 @@ async def test_extra_state_attributes(ecobee_fixture, thermostat) -> None:
         "climate_mode": "Climate1",
         "fan_min_on_time": 10,
         "equipment_running": "heatPump2",
+        "available_sensors": [],
+        "active_sensors": [],
     }
 
     ecobee_fixture["equipmentStatus"] = "auxHeat2"
@@ -194,6 +227,8 @@ async def test_extra_state_attributes(ecobee_fixture, thermostat) -> None:
         "climate_mode": "Climate1",
         "fan_min_on_time": 10,
         "equipment_running": "auxHeat2",
+        "available_sensors": [],
+        "active_sensors": [],
     }
 
     ecobee_fixture["equipmentStatus"] = "compCool1"
@@ -202,6 +237,8 @@ async def test_extra_state_attributes(ecobee_fixture, thermostat) -> None:
         "climate_mode": "Climate1",
         "fan_min_on_time": 10,
         "equipment_running": "compCool1",
+        "available_sensors": [],
+        "active_sensors": [],
     }
     ecobee_fixture["equipmentStatus"] = ""
     assert thermostat.extra_state_attributes == {
@@ -209,6 +246,8 @@ async def test_extra_state_attributes(ecobee_fixture, thermostat) -> None:
         "climate_mode": "Climate1",
         "fan_min_on_time": 10,
         "equipment_running": "",
+        "available_sensors": [],
+        "active_sensors": [],
     }
 
     ecobee_fixture["equipmentStatus"] = "Unknown"
@@ -217,6 +256,8 @@ async def test_extra_state_attributes(ecobee_fixture, thermostat) -> None:
         "climate_mode": "Climate1",
         "fan_min_on_time": 10,
         "equipment_running": "Unknown",
+        "available_sensors": [],
+        "active_sensors": [],
     }
 
     ecobee_fixture["program"]["currentClimateRef"] = "c2"
@@ -225,6 +266,8 @@ async def test_extra_state_attributes(ecobee_fixture, thermostat) -> None:
         "climate_mode": "Climate2",
         "fan_min_on_time": 10,
         "equipment_running": "Unknown",
+        "available_sensors": [],
+        "active_sensors": [],
     }
 
 
@@ -375,3 +418,203 @@ async def test_set_preset_mode(ecobee_fixture, thermostat, data) -> None:
     data.ecobee.set_climate_hold.assert_has_calls(
         [mock.call(1, "away", "indefinite", thermostat.hold_hours())]
     )
+
+
+async def test_remote_sensors(hass: HomeAssistant) -> None:
+    """Test remote sensors."""
+    await setup_platform(hass, [const.Platform.CLIMATE, const.Platform.SENSOR])
+    platform = hass.data[const.Platform.CLIMATE].entities
+    for entity in platform:
+        if entity.entity_id == "climate.ecobee":
+            thermostat = entity
+            break
+
+    assert thermostat is not None
+    remote_sensors = thermostat.remote_sensors
+
+    assert sorted(remote_sensors) == sorted(["ecobee", "Remote Sensor 1"])
+
+
+async def test_remote_sensor_devices(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test remote sensor devices."""
+    await setup_platform(hass, [const.Platform.CLIMATE, const.Platform.SENSOR])
+    freezer.tick(100)
+    async_fire_time_changed(hass)
+    state = hass.states.get(ENTITY_ID)
+    device_registry = dr.async_get(hass)
+    for device in device_registry.devices.values():
+        if device.name == "Remote Sensor 1":
+            remote_sensor_1_id = device.id
+        if device.name == "ecobee":
+            ecobee_id = device.id
+    assert sorted(state.attributes.get("available_sensors")) == sorted(
+        [f"Remote Sensor 1 ({remote_sensor_1_id})", f"ecobee ({ecobee_id})"]
+    )
+
+
+async def test_active_sensors_in_preset_mode(hass: HomeAssistant) -> None:
+    """Test active sensors in preset mode property."""
+    await setup_platform(hass, [const.Platform.CLIMATE, const.Platform.SENSOR])
+    platform = hass.data[const.Platform.CLIMATE].entities
+    for entity in platform:
+        if entity.entity_id == "climate.ecobee":
+            thermostat = entity
+            break
+
+    assert thermostat is not None
+    remote_sensors = thermostat.active_sensors_in_preset_mode
+
+    assert sorted(remote_sensors) == sorted(["ecobee"])
+
+
+async def test_active_sensor_devices_in_preset_mode(hass: HomeAssistant) -> None:
+    """Test active sensor devices in preset mode."""
+    await setup_platform(hass, [const.Platform.CLIMATE, const.Platform.SENSOR])
+    state = hass.states.get(ENTITY_ID)
+
+    assert state.attributes.get("active_sensors") == ["ecobee"]
+
+
+async def test_remote_sensor_ids_names(hass: HomeAssistant) -> None:
+    """Test getting ids and names_by_user for thermostat."""
+    await setup_platform(hass, [const.Platform.CLIMATE, const.Platform.SENSOR])
+    platform = hass.data[const.Platform.CLIMATE].entities
+    for entity in platform:
+        if entity.entity_id == "climate.ecobee":
+            thermostat = entity
+            break
+
+    assert thermostat is not None
+
+    remote_sensor_ids_names = thermostat.remote_sensor_ids_names
+    for id_name in remote_sensor_ids_names:
+        assert id_name.get("id") is not None
+
+    name_by_user_list = [item["name_by_user"] for item in remote_sensor_ids_names]
+    assert sorted(name_by_user_list) == sorted(["Remote Sensor 1", "ecobee"])
+
+
+async def test_set_sensors_used_in_climate(hass: HomeAssistant) -> None:
+    """Test set sensors used in climate."""
+    # Get device_id of remote sensor from the device registry.
+    await setup_platform(hass, [const.Platform.CLIMATE, const.Platform.SENSOR])
+    device_registry = dr.async_get(hass)
+    for device in device_registry.devices.values():
+        if device.name == "Remote Sensor 1":
+            remote_sensor_1_id = device.id
+        if device.name == "ecobee":
+            ecobee_id = device.id
+        if device.name == "Remote Sensor 2":
+            remote_sensor_2_id = device.id
+
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+    device_from_other_integration = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id, identifiers={("test", "unique")}
+    )
+
+    # Test that the function call works in its entirety.
+    with mock.patch("pyecobee.Ecobee.update_climate_sensors") as mock_sensors:
+        await hass.services.async_call(
+            DOMAIN,
+            "set_sensors_used_in_climate",
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                ATTR_PRESET_MODE: "Climate1",
+                ATTR_SENSOR_LIST: [remote_sensor_1_id],
+            },
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        mock_sensors.assert_called_once_with(0, "Climate1", sensor_ids=["rs:100"])
+
+    # Update sensors without preset mode.
+    with mock.patch("pyecobee.Ecobee.update_climate_sensors") as mock_sensors:
+        await hass.services.async_call(
+            DOMAIN,
+            "set_sensors_used_in_climate",
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                ATTR_SENSOR_LIST: [remote_sensor_1_id],
+            },
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        # `temp` is the preset running because of a hold.
+        mock_sensors.assert_called_once_with(0, "temp", sensor_ids=["rs:100"])
+
+    # Check that sensors are not updated when the sent sensors are the currently set sensors.
+    with mock.patch("pyecobee.Ecobee.update_climate_sensors") as mock_sensors:
+        await hass.services.async_call(
+            DOMAIN,
+            "set_sensors_used_in_climate",
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                ATTR_PRESET_MODE: "Climate1",
+                ATTR_SENSOR_LIST: [ecobee_id],
+            },
+            blocking=True,
+        )
+        mock_sensors.assert_not_called()
+
+    # Error raised because invalid climate name.
+    with pytest.raises(ServiceValidationError) as execinfo:
+        await hass.services.async_call(
+            DOMAIN,
+            "set_sensors_used_in_climate",
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                ATTR_PRESET_MODE: "InvalidClimate",
+                ATTR_SENSOR_LIST: [remote_sensor_1_id],
+            },
+            blocking=True,
+        )
+    assert execinfo.value.translation_domain == "ecobee"
+    assert execinfo.value.translation_key == "invalid_preset"
+
+    ## Error raised because invalid sensor.
+    with pytest.raises(ServiceValidationError) as execinfo:
+        await hass.services.async_call(
+            DOMAIN,
+            "set_sensors_used_in_climate",
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                ATTR_PRESET_MODE: "Climate1",
+                ATTR_SENSOR_LIST: ["abcd"],
+            },
+            blocking=True,
+        )
+    assert execinfo.value.translation_domain == "ecobee"
+    assert execinfo.value.translation_key == "invalid_sensor"
+
+    ## Error raised because sensor not available on device.
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            "set_sensors_used_in_climate",
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                ATTR_PRESET_MODE: "Climate1",
+                ATTR_SENSOR_LIST: [remote_sensor_2_id],
+            },
+            blocking=True,
+        )
+
+    with pytest.raises(ServiceValidationError) as execinfo:
+        await hass.services.async_call(
+            DOMAIN,
+            "set_sensors_used_in_climate",
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                ATTR_PRESET_MODE: "Climate1",
+                ATTR_SENSOR_LIST: [
+                    remote_sensor_1_id,
+                    device_from_other_integration.id,
+                ],
+            },
+            blocking=True,
+        )
+    assert execinfo.value.translation_domain == "ecobee"
+    assert execinfo.value.translation_key == "sensor_lookup_failed"

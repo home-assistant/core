@@ -9,6 +9,7 @@ from matter_server.client import MatterClient
 from matter_server.client.exceptions import (
     CannotConnect,
     InvalidServerVersion,
+    NotConnected,
     ServerVersionTooNew,
     ServerVersionTooOld,
 )
@@ -19,13 +20,14 @@ from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_URL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.issue_registry import (
     IssueSeverity,
     async_create_issue,
     async_delete_issue,
 )
+from homeassistant.helpers.typing import ConfigType
 
 from .adapter import MatterAdapter
 from .addon import get_addon_manager
@@ -39,9 +41,12 @@ from .helpers import (
     node_from_ha_device_id,
 )
 from .models import MatterDeviceInfo
+from .services import async_setup_services
 
 CONNECT_TIMEOUT = 10
 LISTEN_READY_TIMEOUT = 30
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 @callback
@@ -61,6 +66,12 @@ def get_matter_device_info(
         vendor_id=hex(node.device_info.vendorID),
         product_id=hex(node.device_info.productID),
     )
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Matter integration services."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -132,6 +143,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         listen_task.cancel()
         raise ConfigEntryNotReady("Matter client not ready") from err
 
+    # Set default fabric
+    try:
+        await matter_client.set_default_fabric_label(
+            hass.config.location_name or "Home"
+        )
+    except (NotConnected, MatterError) as err:
+        listen_task.cancel()
+        raise ConfigEntryNotReady("Failed to set default fabric label") from err
+
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
 
@@ -168,7 +188,7 @@ async def _client_listen(
         if entry.state != ConfigEntryState.LOADED:
             raise
         LOGGER.error("Failed to listen: %s", err)
-    except Exception as err:  # noqa: BLE001
+    except Exception as err:
         # We need to guard against unknown exceptions to not crash this task.
         LOGGER.exception("Unexpected exception: %s", err)
         if entry.state != ConfigEntryState.LOADED:

@@ -6,7 +6,10 @@ from here_routing import HERERoutingError, HERERoutingUnauthorizedError
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.here_travel_time.config_flow import DEFAULT_OPTIONS
+from homeassistant.components.here_travel_time.config_flow import (
+    DEFAULT_OPTIONS,
+    HERETravelTimeConfigFlow,
+)
 from homeassistant.components.here_travel_time.const import (
     CONF_ARRIVAL_TIME,
     CONF_DEPARTURE_TIME,
@@ -17,6 +20,7 @@ from homeassistant.components.here_travel_time.const import (
     CONF_ORIGIN_LATITUDE,
     CONF_ORIGIN_LONGITUDE,
     CONF_ROUTE_MODE,
+    CONF_TRAFFIC_MODE,
     DOMAIN,
     ROUTE_MODE_FASTEST,
     TRAVEL_MODE_BICYCLE,
@@ -86,6 +90,8 @@ async def option_init_result_fixture(
             CONF_MODE: TRAVEL_MODE_PUBLIC,
             CONF_NAME: "test",
         },
+        version=HERETravelTimeConfigFlow.VERSION,
+        minor_version=HERETravelTimeConfigFlow.MINOR_VERSION,
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -249,6 +255,7 @@ async def test_step_destination_entity(
         CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
         CONF_ARRIVAL_TIME: None,
         CONF_DEPARTURE_TIME: None,
+        CONF_TRAFFIC_MODE: True,
     }
 
 
@@ -317,19 +324,15 @@ async def do_common_reconfiguration_steps(hass: HomeAssistant) -> None:
         unique_id="0123456789",
         data=DEFAULT_CONFIG,
         options=DEFAULT_OPTIONS,
+        version=HERETravelTimeConfigFlow.VERSION,
+        minor_version=HERETravelTimeConfigFlow.MINOR_VERSION,
     )
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    reconfigure_result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": entry.entry_id,
-        },
-    )
+    reconfigure_result = await entry.start_reconfigure_flow(hass)
     assert reconfigure_result["type"] is FlowResultType.FORM
     assert reconfigure_result["step_id"] == "user"
 
@@ -404,6 +407,8 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         unique_id="0123456789",
         data=DEFAULT_CONFIG,
+        version=HERETravelTimeConfigFlow.VERSION,
+        minor_version=HERETravelTimeConfigFlow.MINOR_VERSION,
     )
     entry.add_to_hass(hass)
 
@@ -420,10 +425,16 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         result["flow_id"],
         user_input={
             CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
+            CONF_TRAFFIC_MODE: False,
         },
     )
 
-    assert result["type"] is FlowResultType.MENU
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert entry.options == {
+        CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
+        CONF_TRAFFIC_MODE: False,
+    }
 
 
 @pytest.mark.usefixtures("valid_response")
@@ -447,6 +458,7 @@ async def test_options_flow_arrival_time_step(
     assert entry.options == {
         CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
         CONF_ARRIVAL_TIME: "08:00:00",
+        CONF_TRAFFIC_MODE: True,
     }
 
 
@@ -471,6 +483,7 @@ async def test_options_flow_departure_time_step(
     assert entry.options == {
         CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
         CONF_DEPARTURE_TIME: "08:00:00",
+        CONF_TRAFFIC_MODE: True,
     }
 
 
@@ -487,4 +500,5 @@ async def test_options_flow_no_time_step(
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert entry.options == {
         CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
+        CONF_TRAFFIC_MODE: True,
     }

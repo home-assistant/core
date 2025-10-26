@@ -8,7 +8,7 @@ from unittest.mock import mock_open, patch
 from aiohttp.hdrs import AUTHORIZATION
 from aiohttp.test_utils import TestClient
 
-import homeassistant.components.html5.notify as html5
+from homeassistant.components.html5 import notify as html5
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
@@ -495,7 +495,7 @@ async def test_callback_view_with_jwt(
     assert push_payload["body"] == "Hello"
     assert push_payload["icon"] == "beer.png"
 
-    bearer_token = "Bearer {}".format(push_payload["data"]["jwt"])
+    bearer_token = f"Bearer {push_payload['data']['jwt']}"
 
     resp = await client.post(
         PUBLISH_URL, json={"type": "push"}, headers={AUTHORIZATION: bearer_token}

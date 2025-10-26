@@ -4,9 +4,6 @@
       "user": {
         "description": "[%key:common::config_flow::description::confirm_setup%]"
       }
-    },
-    "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }
   },
   "services": {
@@ -67,6 +64,10 @@
           "description": "The maximum number of objects to log."
         }
       }
+    },
+    "dump_sockets": {
+      "name": "Dump used sockets",
+      "description": "Logs information about all currently used sockets."
     },
     "stop_log_object_sources": {
       "name": "Stop logging object sources",

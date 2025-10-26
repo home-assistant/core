@@ -11,7 +11,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_COUNTRY
 
 from .const import MOCK_CONNECT_CLIENT_ID, MOCK_COUNTRY, MOCK_PAT, MOCK_UUID
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 def mock_thinq_api_response(
@@ -46,6 +46,15 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Mock setting up a config entry."""
+    with patch(
+        "homeassistant.components.lg_thinq.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
+
+
+@pytest.fixture
 def mock_uuid() -> Generator[AsyncMock]:
     """Mock a uuid."""
     with (
@@ -59,28 +68,85 @@ def mock_uuid() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_thinq_api() -> Generator[AsyncMock]:
+def mock_config_thinq_api() -> Generator[AsyncMock]:
     """Mock a thinq api."""
     with (
-        patch("thinqconnect.ThinQApi", autospec=True) as mock_api,
+        patch("homeassistant.components.lg_thinq.ThinQApi", autospec=True) as mock_api,
         patch(
             "homeassistant.components.lg_thinq.config_flow.ThinQApi",
             new=mock_api,
         ),
     ):
         thinq_api = mock_api.return_value
-        thinq_api.async_get_device_list = AsyncMock(
-            return_value=mock_thinq_api_response(status=200, body={})
-        )
+        thinq_api.async_get_device_list.return_value = ["air_conditioner"]
         yield thinq_api
 
 
 @pytest.fixture
-def mock_invalid_thinq_api(mock_thinq_api: AsyncMock) -> AsyncMock:
+def mock_invalid_thinq_api(mock_config_thinq_api: AsyncMock) -> AsyncMock:
     """Mock an invalid thinq api."""
-    mock_thinq_api.async_get_device_list = AsyncMock(
+    mock_config_thinq_api.async_get_device_list = AsyncMock(
         side_effect=ThinQAPIException(
             code="1309", message="Not allowed api call", headers=None
         )
     )
+    return mock_config_thinq_api
+
+
+@pytest.fixture
+def mock_thinq_api(mock_thinq_mqtt_client: None) -> Generator[AsyncMock]:
+    """Mock a thinq api."""
+    with patch("homeassistant.components.lg_thinq.ThinQApi", autospec=True) as mock_api:
+        thinq_api = mock_api.return_value
+        yield thinq_api
+
+
+@pytest.fixture
+def mock_thinq_mqtt_client() -> Generator[None]:
+    """Mock a thinq mqtt client."""
+    with patch(
+        "homeassistant.components.lg_thinq.mqtt.ThinQMQTTClient",
+        autospec=True,
+        return_value=True,
+    ):
+        yield
+
+
+@pytest.fixture(
+    params=[
+        "air_conditioner",
+        "washer",
+    ]
+)
+def device_fixture(request: pytest.FixtureRequest) -> Generator[str]:
+    """Return every device."""
+    return request.param
+
+
+def energy_fixture(request: pytest.FixtureRequest) -> Generator[str]:
+    """Return energy period."""
+    return request.param
+
+
+def energy_usage(request: pytest.FixtureRequest) -> Generator[str]:
+    """Return energy usage per period."""
+    return request.param
+
+
+@pytest.fixture
+def devices(mock_thinq_api: AsyncMock, device_fixture: str) -> Generator[AsyncMock]:
+    """Return a specific device."""
+    mock_thinq_api.async_get_device_list.return_value = [
+        load_json_object_fixture(f"{device_fixture}/device.json", DOMAIN)
+    ]
+    mock_thinq_api.async_get_device_profile.return_value = load_json_object_fixture(
+        f"{device_fixture}/profile.json", DOMAIN
+    )
+    mock_thinq_api.async_get_device_status.return_value = load_json_object_fixture(
+        f"{device_fixture}/status.json", DOMAIN
+    )
+    mock_thinq_api.async_get_device_energy_profile.return_value = (
+        load_json_object_fixture(f"{device_fixture}/energy_profile.json", DOMAIN)
+    )
+    mock_thinq_api.async_get_route.return_value = MagicMock()
     return mock_thinq_api

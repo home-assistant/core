@@ -32,6 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     coordinator = WeatherKitDataUpdateCoordinator(
         hass=hass,
+        config_entry=entry,
         client=WeatherKitApiClient(
             key_id=entry.data[CONF_KEY_ID],
             service_id=entry.data[CONF_SERVICE_ID],

@@ -23,9 +23,21 @@ async def test_all_entities(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test all entities."""
-    fixtures: list[Fixture] = [Fixture({"type:boiler"}, "vicare/Vitodens300W.json")]
+    fixtures: list[Fixture] = [
+        Fixture({"type:boiler"}, "vicare/Vitodens300W.json"),
+        Fixture({"type:heatpump"}, "vicare/Vitocal250A.json"),
+        Fixture({"type:ventilation"}, "vicare/ViAir300F.json"),
+        Fixture({"type:ess"}, "vicare/VitoChargeVX3.json"),
+        Fixture({None}, "vicare/VitoValor.json"),
+        Fixture({"type:climateSensor"}, "vicare/RoomSensor1.json"),
+        Fixture({"type:climateSensor"}, "vicare/RoomSensor2.json"),
+        Fixture({"type:radiator"}, "vicare/ZigbeeTRV.json"),
+        Fixture({"type:repeater"}, "vicare/ZigbeeRepeater.json"),
+        Fixture({"type:fhtMain"}, "vicare/FHTMain.json"),
+        Fixture({"type:fhtChannel"}, "vicare/FHTChannel.json"),
+    ]
     with (
-        patch(f"{MODULE}.vicare_login", return_value=MockPyViCare(fixtures)),
+        patch(f"{MODULE}.login", return_value=MockPyViCare(fixtures)),
         patch(f"{MODULE}.PLATFORMS", [Platform.SENSOR]),
     ):
         await setup_integration(hass, mock_config_entry)

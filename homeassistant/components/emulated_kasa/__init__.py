@@ -15,8 +15,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.template import Template, is_template_string
 from homeassistant.helpers.typing import ConfigType
 

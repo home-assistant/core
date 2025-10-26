@@ -9,6 +9,11 @@ add_torrent:
       example: http://releases.ubuntu.com/19.04/ubuntu-19.04-desktop-amd64.iso.torrent
       selector:
         text:
+    download_path:
+      required: false
+      example: "/path/to/download/directory"
+      selector:
+        text:
 
 remove_torrent:
   fields:

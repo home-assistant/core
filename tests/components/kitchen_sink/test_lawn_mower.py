@@ -100,7 +100,7 @@ async def test_mower(
     await hass.async_block_till_done()
 
     assert state_changes[0].data["entity_id"] == entity
-    assert state_changes[0].data["new_state"].state == str(next_activity.value)
+    assert state_changes[0].data["new_state"].state == next_activity.value
 
 
 @pytest.mark.parametrize(

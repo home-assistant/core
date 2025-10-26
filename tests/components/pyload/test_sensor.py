@@ -8,15 +8,11 @@ from pyloadapi.exceptions import CannotConnect, InvalidAuth, ParserError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.pyload.const import DOMAIN
 from homeassistant.components.pyload.coordinator import SCAN_INTERVAL
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
-from homeassistant.helpers.typing import ConfigType
-from homeassistant.setup import async_setup_component
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -98,64 +94,6 @@ async def test_sensor_invalid_auth(
     assert (
         "Authentication failed for username, verify your login credentials"
         in caplog.text
-    )
-
-
-async def test_platform_setup_triggers_import_flow(
-    hass: HomeAssistant,
-    pyload_config: ConfigType,
-    mock_setup_entry: AsyncMock,
-    mock_pyloadapi: AsyncMock,
-) -> None:
-    """Test if an issue is created when attempting setup from yaml config."""
-
-    assert await async_setup_component(hass, SENSOR_DOMAIN, pyload_config)
-    await hass.async_block_till_done()
-
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-@pytest.mark.parametrize(
-    ("exception", "reason"),
-    [
-        (InvalidAuth, "invalid_auth"),
-        (CannotConnect, "cannot_connect"),
-        (ParserError, "cannot_connect"),
-        (ValueError, "unknown"),
-    ],
-)
-async def test_deprecated_yaml_import_issue(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-    pyload_config: ConfigType,
-    mock_pyloadapi: AsyncMock,
-    exception: Exception,
-    reason: str,
-) -> None:
-    """Test an issue is created when attempting setup from yaml config and an error happens."""
-
-    mock_pyloadapi.login.side_effect = exception
-    await async_setup_component(hass, SENSOR_DOMAIN, pyload_config)
-    await hass.async_block_till_done()
-
-    assert issue_registry.async_get_issue(
-        domain=DOMAIN, issue_id=f"deprecated_yaml_import_issue_{reason}"
-    )
-
-
-async def test_deprecated_yaml(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-    pyload_config: ConfigType,
-    mock_pyloadapi: AsyncMock,
-) -> None:
-    """Test an issue is created when we import from yaml config."""
-
-    await async_setup_component(hass, SENSOR_DOMAIN, pyload_config)
-    await hass.async_block_till_done()
-
-    assert issue_registry.async_get_issue(
-        domain=HOMEASSISTANT_DOMAIN, issue_id=f"deprecated_yaml_{DOMAIN}"
     )
 
 

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from homeassistant.const import Platform
-
 DEFAULT_HOST = "localhost"
 DEFAULT_PORT = 4304
 
@@ -12,13 +10,16 @@ DOMAIN = "onewire"
 DEVICE_KEYS_0_3 = range(4)
 DEVICE_KEYS_0_7 = range(8)
 DEVICE_KEYS_A_B = ("A", "B")
+DEVICE_KEYS_A_D = ("A", "B", "C", "D")
 
 DEVICE_SUPPORT = {
+    "01": (),
     "05": (),
     "10": (),
     "12": (),
     "1D": (),
     "1F": (),
+    "20": (),
     "22": (),
     "26": (),
     "28": (),
@@ -50,13 +51,3 @@ INPUT_ENTRY_DEVICE_SELECTION = "device_selection"
 MANUFACTURER_MAXIM = "Maxim Integrated"
 MANUFACTURER_HOBBYBOARDS = "Hobby Boards"
 MANUFACTURER_EDS = "Embedded Data Systems"
-
-READ_MODE_BOOL = "bool"
-READ_MODE_FLOAT = "float"
-READ_MODE_INT = "int"
-
-PLATFORMS = [
-    Platform.BINARY_SENSOR,
-    Platform.SENSOR,
-    Platform.SWITCH,
-]

@@ -1,0 +1,81 @@
+{
+  "items": [
+    {
+      "deviceId": "bf53a150-f8a4-45d1-aac4-86252475d551",
+      "name": "vedgeaircon.v1",
+      "label": "AUX A/C on-off",
+      "manufacturerName": "SmartThingsCommunity",
+      "presentationId": "ab252042-5669-3c2c-8b1b-d606bbcc9e04",
+      "deviceManufacturerCode": "SmartThings Community",
+      "locationId": "5db1e3d8-ea26-44b4-8ed0-1ba9c841fd57",
+      "ownerId": "5404aa57-6a68-4fe2-83ff-168ef769d1c7",
+      "roomId": "564cdd9a-fa9f-4187-902f-95656ef22989",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "switch",
+              "version": 1
+            },
+            {
+              "id": "airConditionerMode",
+              "version": 1
+            },
+            {
+              "id": "thermostatCoolingSetpoint",
+              "version": 1
+            },
+            {
+              "id": "airConditionerFanMode",
+              "version": 1
+            },
+            {
+              "id": "fanSpeed",
+              "version": 1
+            },
+            {
+              "id": "temperatureMeasurement",
+              "version": 1
+            },
+            {
+              "id": "partyvoice23922.vtempset",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "AirConditioner",
+              "categoryType": "manufacturer"
+            }
+          ]
+        }
+      ],
+      "createTime": "2024-06-19T20:18:45.407Z",
+      "parentDeviceId": "e699599d-30f8-4cf0-8de7-6dbdba6a665f",
+      "profile": {
+        "id": "87f0ac35-e024-3c0a-8153-78ca27a6fe0c"
+      },
+      "lan": {
+        "networkId": "vEdge_A/C_1718828324.999",
+        "driverId": "0fd9a9a4-8863-4a83-97a7-5a288ff0f5a6",
+        "executingLocally": true,
+        "hubId": "e699599d-30f8-4cf0-8de7-6dbdba6a665f",
+        "provisioningState": "TYPED"
+      },
+      "type": "LAN",
+      "restrictionTier": 0,
+      "allowed": null,
+      "indoorMap": {
+        "coordinates": [130.0, 36.0, 378.0],
+        "rotation": [270.0, 0.0, 0.0],
+        "visible": true,
+        "data": null
+      },
+      "executionContext": "LOCAL",
+      "relationships": []
+    }
+  ],
+  "_links": {}
+}

@@ -2,28 +2,25 @@
 
 from __future__ import annotations
 
-from duotecno.controller import PyDuotecno
 from duotecno.unit import ControlUnit, VirtualUnit
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from . import DuotecnoConfigEntry
 from .entity import DuotecnoEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: DuotecnoConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Duotecno binary sensor on config_entry."""
-    cntrl: PyDuotecno = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         DuotecnoBinarySensor(channel)
-        for channel in cntrl.get_units(["ControlUnit", "VirtualUnit"])
+        for channel in entry.runtime_data.get_units(["ControlUnit", "VirtualUnit"])
     )
 
 

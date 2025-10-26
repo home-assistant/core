@@ -1,17 +1,11 @@
 {
   "entity": {
     "sensor": {
-      "uv_last_replacement": {
-        "name": "UV last replacement"
-      },
       "uv_upcoming_replacement": {
         "name": "UV upcoming replacement"
       },
       "uv_installed": {
         "name": "UV installed"
-      },
-      "filter_last_replacement": {
-        "name": "Filter last replacement"
       },
       "filter_upcoming_replacement": {
         "name": "Filter upcoming replacement"
@@ -35,17 +29,17 @@
   "config": {
     "step": {
       "user": {
-        "title": "SMS Verification",
+        "title": "SMS verification",
         "description": "Enter your phone number (same as what you used to register to the tami4 app)",
         "data": {
-          "phone": "Phone Number"
+          "phone": "Phone number"
         }
       },
       "otp": {
         "title": "[%key:component::tami4::config::step::user::title%]",
         "description": "Enter the code you received via SMS",
         "data": {
-          "otp": "SMS Code"
+          "otp": "SMS code"
         }
       }
     },

@@ -3,7 +3,7 @@
 from unittest.mock import PropertyMock, patch
 
 from homeassistant import __main__ as main
-from homeassistant.const import REQUIRED_PYTHON_VER
+from homeassistant.const import REQUIRED_PYTHON_VER, RESTART_EXIT_CODE
 
 
 @patch("sys.exit")
@@ -36,7 +36,7 @@ def test_validate_python(mock_exit) -> None:
     with patch(
         "sys.version_info",
         new_callable=PropertyMock(
-            return_value=(REQUIRED_PYTHON_VER[0] - 1,) + REQUIRED_PYTHON_VER[1:]
+            return_value=(REQUIRED_PYTHON_VER[0] - 1, *REQUIRED_PYTHON_VER[1:])
         ),
     ):
         main.validate_python()
@@ -55,7 +55,7 @@ def test_validate_python(mock_exit) -> None:
     with patch(
         "sys.version_info",
         new_callable=PropertyMock(
-            return_value=(REQUIRED_PYTHON_VER[:2]) + (REQUIRED_PYTHON_VER[2] + 1,)
+            return_value=(*REQUIRED_PYTHON_VER[:2], REQUIRED_PYTHON_VER[2] + 1)
         ),
     ):
         main.validate_python()
@@ -86,3 +86,13 @@ def test_skip_pip_mutually_exclusive(mock_exit) -> None:
     assert mock_exit.called is False
     args = parse_args("--skip-pip", "--skip-pip-packages", "foo")
     assert mock_exit.called is True
+
+
+def test_restart_after_backup_restore() -> None:
+    """Test restarting if we restored a backup."""
+    with (
+        patch("sys.argv", ["python"]),
+        patch("homeassistant.__main__.restore_backup", return_value=True),
+    ):
+        exit_code = main.main()
+        assert exit_code == RESTART_EXIT_CODE

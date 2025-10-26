@@ -28,6 +28,7 @@
       'step': 1,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -48,6 +49,7 @@
     'original_name': 'Segment 1 intensity',
     'platform': 'wled',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'segment_intensity',
     'unique_id': 'aabbccddeeff_intensity_1',
@@ -58,6 +60,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'http://127.0.0.1',
     'connections': set({
       tuple(
@@ -75,7 +78,6 @@
         'aabbccddeeff',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'WLED',
@@ -85,7 +87,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '0.14.4',
     'via_device_id': None,
   })
@@ -119,6 +120,7 @@
       'step': 1,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -139,6 +141,7 @@
     'original_name': 'Segment 1 speed',
     'platform': 'wled',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'segment_speed',
     'unique_id': 'aabbccddeeff_speed_1',
@@ -149,6 +152,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': 'http://127.0.0.1',
     'connections': set({
       tuple(
@@ -166,7 +170,6 @@
         'aabbccddeeff',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'WLED',
@@ -176,7 +179,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '0.14.4',
     'via_device_id': None,
   })

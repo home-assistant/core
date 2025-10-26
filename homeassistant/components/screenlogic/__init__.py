@@ -4,6 +4,7 @@ import logging
 from typing import Any
 
 from screenlogicpy import ScreenLogicError, ScreenLogicGateway
+from screenlogicpy.const.common import ScreenLogicConnectionError
 from screenlogicpy.const.data import SHARED_VALUES
 
 from homeassistant.config_entries import ConfigEntry
@@ -17,7 +18,7 @@ from homeassistant.util import slugify
 from .const import DOMAIN
 from .coordinator import ScreenlogicDataUpdateCoordinator, async_get_connect_info
 from .data import ENTITY_MIGRATIONS
-from .services import async_load_screenlogic_services
+from .services import async_setup_services
 from .util import generate_unique_id
 
 type ScreenLogicConfigEntry = ConfigEntry[ScreenlogicDataUpdateCoordinator]
@@ -47,7 +48,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Screenlogic."""
 
-    async_load_screenlogic_services(hass)
+    async_setup_services(hass)
 
     return True
 
@@ -64,7 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ScreenLogicConfigEntry) 
     try:
         await gateway.async_connect(**connect_info)
         await gateway.async_update()
-    except ScreenLogicError as ex:
+    except (ScreenLogicConnectionError, ScreenLogicError) as ex:
         raise ConfigEntryNotReady(ex.msg) from ex
 
     coordinator = ScreenlogicDataUpdateCoordinator(

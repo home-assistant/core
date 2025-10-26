@@ -3,7 +3,7 @@
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
 
-from . import DOMAIN, SERVICE_RETURN_TO_BASE, SERVICE_START
+from . import DOMAIN, SERVICE_RETURN_TO_BASE, SERVICE_START, VacuumEntityFeature
 
 INTENT_VACUUM_START = "HassVacuumStart"
 INTENT_VACUUM_RETURN_TO_BASE = "HassVacuumReturnToBase"
@@ -18,7 +18,9 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
             DOMAIN,
             SERVICE_START,
             description="Starts a vacuum",
+            required_domains={DOMAIN},
             platforms={DOMAIN},
+            required_features=VacuumEntityFeature.START,
         ),
     )
     intent.async_register(
@@ -28,6 +30,8 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
             DOMAIN,
             SERVICE_RETURN_TO_BASE,
             description="Returns a vacuum to base",
+            required_domains={DOMAIN},
             platforms={DOMAIN},
+            required_features=VacuumEntityFeature.RETURN_HOME,
         ),
     )

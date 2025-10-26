@@ -12,12 +12,18 @@
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "language": "[%key:common::config_flow::data::language%]",
-          "latitude": "[%key:common::config_flow::data::latitude%]",
-          "longitude": "[%key:common::config_flow::data::longitude%]",
+          "location": "[%key:common::config_flow::data::location%]",
           "mode": "[%key:common::config_flow::data::mode%]",
           "name": "[%key:common::config_flow::data::name%]"
         },
-        "description": "To generate API key go to https://openweathermap.org/appid"
+        "data_description": {
+          "api_key": "API key for the OpenWeatherMap integration",
+          "language": "Language for the OpenWeatherMap content",
+          "location": "Location to get the weather data for",
+          "mode": "Mode for the OpenWeatherMap API",
+          "name": "Name for this OpenWeatherMap location"
+        },
+        "description": "To generate an API key, please refer to the [integration documentation]({doc_url})"
       }
     }
   },
@@ -27,7 +33,51 @@
         "data": {
           "language": "[%key:common::config_flow::data::language%]",
           "mode": "[%key:common::config_flow::data::mode%]"
+        },
+        "data_description": {
+          "language": "[%key:component::openweathermap::config::step::user::data_description::language%]",
+          "mode": "[%key:component::openweathermap::config::step::user::data_description::mode%]"
         }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "dew_point": {
+        "name": "[%key:component::weather::entity_component::_::state_attributes::dew_point::name%]"
+      },
+      "feels_like_temperature": {
+        "name": "[%key:component::weather::entity_component::_::state_attributes::apparent_temperature::name%]"
+      },
+      "wind_gust": {
+        "name": "[%key:component::weather::entity_component::_::state_attributes::wind_gust_speed::name%]"
+      },
+      "clouds": {
+        "name": "[%key:component::weather::entity_component::_::state_attributes::cloud_coverage::name%]"
+      },
+      "rain": {
+        "name": "Rain intensity"
+      },
+      "snow": {
+        "name": "Snow intensity"
+      },
+      "precipitation_kind": {
+        "name": "Precipitation kind"
+      },
+      "uv_index": {
+        "name": "[%key:component::weather::entity_component::_::state_attributes::uv_index::name%]"
+      },
+      "visibility_distance": {
+        "name": "[%key:component::weather::entity_component::_::state_attributes::visibility::name%]"
+      },
+      "condition": {
+        "name": "Condition"
+      },
+      "weather": {
+        "name": "[%key:component::weather::title%]"
+      },
+      "weather_code": {
+        "name": "Weather code"
       }
     }
   },
@@ -46,6 +96,17 @@
           "cannot_connect": "Failed to connect: {error}"
         }
       }
+    }
+  },
+  "services": {
+    "get_minute_forecast": {
+      "name": "Get minute forecast",
+      "description": "Retrieves a minute-by-minute weather forecast for one hour."
+    }
+  },
+  "exceptions": {
+    "service_minute_forecast_mode": {
+      "message": "Minute forecast is available only when {name} mode is set to v3.0"
     }
   }
 }

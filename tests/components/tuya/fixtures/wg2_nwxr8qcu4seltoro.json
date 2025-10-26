@@ -1,0 +1,88 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "X5 Zigbee Gateway",
+  "category": "wg2",
+  "product_id": "nwxr8qcu4seltoro",
+  "product_name": "X5",
+  "online": true,
+  "sub": true,
+  "time_zone": "+02:00",
+  "active_time": "2025-07-14T10:19:21+00:00",
+  "create_time": "2025-07-14T10:19:21+00:00",
+  "update_time": "2025-07-14T10:19:21+00:00",
+  "function": {
+    "master_state": {
+      "type": "Enum",
+      "value": {
+        "range": ["normal", "alarm"]
+      }
+    },
+    "factory_reset": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "master_language": {
+      "type": "Enum",
+      "value": {
+        "range": [
+          "chinese_simplified",
+          "chinese_traditional",
+          "english",
+          "french",
+          "italian",
+          "german",
+          "spanish",
+          "portuguese",
+          "russian",
+          "japanese"
+        ]
+      }
+    }
+  },
+  "status_range": {
+    "master_state": {
+      "type": "Enum",
+      "value": {
+        "range": ["normal", "alarm"]
+      }
+    },
+    "master_information": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "factory_reset": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "master_language": {
+      "type": "Enum",
+      "value": {
+        "range": [
+          "chinese_simplified",
+          "chinese_traditional",
+          "english",
+          "french",
+          "italian",
+          "german",
+          "spanish",
+          "portuguese",
+          "russian",
+          "japanese"
+        ]
+      }
+    }
+  },
+  "status": {
+    "master_state": "normal",
+    "master_information": "",
+    "factory_reset": false,
+    "master_language": "chinese_simplified"
+  },
+  "set_up": false,
+  "support_local": true
+}

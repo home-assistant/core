@@ -2,13 +2,14 @@
 
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
     ServiceResponse,
     SupportsResponse,
+    callback,
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.selector import (
@@ -19,13 +20,13 @@ from homeassistant.helpers.selector import (
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import (
-    ATTR_CONFIG_ENTRY_ID,
     ATTR_LIMIT,
     CONNECTIONS_COUNT,
     CONNECTIONS_MAX,
     DOMAIN,
     SERVICE_FETCH_CONNECTIONS,
 )
+from .coordinator import SwissPublicTransportConfigEntry
 
 SERVICE_FETCH_CONNECTIONS_SCHEMA = vol.Schema(
     {
@@ -39,9 +40,9 @@ SERVICE_FETCH_CONNECTIONS_SCHEMA = vol.Schema(
 )
 
 
-def async_get_entry(
+def _async_get_entry(
     hass: HomeAssistant, config_entry_id: str
-) -> config_entries.ConfigEntry:
+) -> SwissPublicTransportConfigEntry:
     """Get the Swiss public transport config entry."""
     if not (entry := hass.config_entries.async_get_entry(config_entry_id)):
         raise ServiceValidationError(
@@ -58,32 +59,36 @@ def async_get_entry(
     return entry
 
 
-def setup_services(hass: HomeAssistant) -> None:
-    """Set up the services for the Swiss public transport integration."""
+async def _async_fetch_connections(
+    call: ServiceCall,
+) -> ServiceResponse:
+    """Fetch a set of connections."""
+    config_entry = _async_get_entry(call.hass, call.data[ATTR_CONFIG_ENTRY_ID])
 
-    async def async_fetch_connections(
-        call: ServiceCall,
-    ) -> ServiceResponse:
-        """Fetch a set of connections."""
-        config_entry = async_get_entry(hass, call.data[ATTR_CONFIG_ENTRY_ID])
-        limit = call.data.get(ATTR_LIMIT) or CONNECTIONS_COUNT
-        coordinator = hass.data[DOMAIN][config_entry.entry_id]
-        try:
-            connections = await coordinator.fetch_connections(limit=int(limit))
-        except UpdateFailed as e:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="cannot_connect",
-                translation_placeholders={
-                    "error": str(e),
-                },
-            ) from e
-        return {"connections": connections}
+    limit = call.data.get(ATTR_LIMIT) or CONNECTIONS_COUNT
+    try:
+        connections = await config_entry.runtime_data.fetch_connections_as_json(
+            limit=int(limit)
+        )
+    except UpdateFailed as e:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={
+                "error": str(e),
+            },
+        ) from e
+    return {"connections": connections}
+
+
+@callback
+def async_setup_services(hass: HomeAssistant) -> None:
+    """Set up the services for the Swiss public transport integration."""
 
     hass.services.async_register(
         DOMAIN,
         SERVICE_FETCH_CONNECTIONS,
-        async_fetch_connections,
+        _async_fetch_connections,
         schema=SERVICE_FETCH_CONNECTIONS_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )

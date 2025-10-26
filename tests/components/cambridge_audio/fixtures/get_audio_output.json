@@ -1,0 +1,16 @@
+{
+  "outputs": [
+    {
+      "id": "speaker_a",
+      "name": "Speaker A"
+    },
+    {
+      "id": "speaker_b",
+      "name": "Speaker B"
+    },
+    {
+      "id": "headphones",
+      "name": "Headphones"
+    }
+  ]
+}

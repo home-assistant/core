@@ -4,25 +4,22 @@ from unittest.mock import PropertyMock, patch
 
 from canary.const import LOCATION_MODE_AWAY, LOCATION_MODE_HOME, LOCATION_MODE_NIGHT
 
-from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
-from homeassistant.components.canary import DOMAIN
+from homeassistant.components.alarm_control_panel import (
+    DOMAIN as ALARM_DOMAIN,
+    AlarmControlPanelState,
+)
 from homeassistant.const import (
     SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_HOME,
     SERVICE_ALARM_ARM_NIGHT,
     SERVICE_ALARM_DISARM,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_DISARMED,
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
-from homeassistant.setup import async_setup_component
 
-from . import mock_device, mock_location, mock_mode
+from . import init_integration, mock_device, mock_location, mock_mode
 
 
 async def test_alarm_control_panel(
@@ -44,10 +41,8 @@ async def test_alarm_control_panel(
     instance = canary.return_value
     instance.get_locations.return_value = [mocked_location]
 
-    config = {DOMAIN: {"username": "test-username", "password": "test-password"}}
     with patch("homeassistant.components.canary.PLATFORMS", ["alarm_control_panel"]):
-        assert await async_setup_component(hass, DOMAIN, config)
-        await hass.async_block_till_done()
+        await init_integration(hass)
 
     entity_id = "alarm_control_panel.home"
     entity_entry = entity_registry.async_get(entity_id)
@@ -67,7 +62,7 @@ async def test_alarm_control_panel(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_ALARM_DISARMED
+    assert state.state == AlarmControlPanelState.DISARMED
     assert state.attributes["private"]
 
     type(mocked_location).is_private = PropertyMock(return_value=False)
@@ -82,7 +77,7 @@ async def test_alarm_control_panel(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_ALARM_ARMED_HOME
+    assert state.state == AlarmControlPanelState.ARMED_HOME
 
     # test armed away
     type(mocked_location).mode = PropertyMock(
@@ -94,7 +89,7 @@ async def test_alarm_control_panel(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_ALARM_ARMED_AWAY
+    assert state.state == AlarmControlPanelState.ARMED_AWAY
 
     # test armed night
     type(mocked_location).mode = PropertyMock(
@@ -106,7 +101,7 @@ async def test_alarm_control_panel(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_ALARM_ARMED_NIGHT
+    assert state.state == AlarmControlPanelState.ARMED_NIGHT
 
 
 async def test_alarm_control_panel_services(hass: HomeAssistant, canary) -> None:
@@ -125,10 +120,8 @@ async def test_alarm_control_panel_services(hass: HomeAssistant, canary) -> None
     instance = canary.return_value
     instance.get_locations.return_value = [mocked_location]
 
-    config = {DOMAIN: {"username": "test-username", "password": "test-password"}}
     with patch("homeassistant.components.canary.PLATFORMS", ["alarm_control_panel"]):
-        assert await async_setup_component(hass, DOMAIN, config)
-        await hass.async_block_till_done()
+        await init_integration(hass)
 
     entity_id = "alarm_control_panel.home"
 

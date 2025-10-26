@@ -30,7 +30,7 @@ def get_client_device_id(hass: HomeAssistant, self_hosted: bool) -> str:
     )
 
 
-def get_supported_entitites(
+def get_supported_entities(
     controller: EcovacsController,
     entity_class: type[EcovacsDescriptionEntity],
     descriptions: tuple[EcovacsCapabilityEntityDescription, ...],
@@ -48,3 +48,9 @@ def get_supported_entitites(
 def get_name_key(enum: Enum) -> str:
     """Return the lower case name of the enum."""
     return enum.name.lower()
+
+
+@callback
+def get_options(enum: type[Enum]) -> list[str]:
+    """Return the options for the enum."""
+    return [get_name_key(option) for option in enum]

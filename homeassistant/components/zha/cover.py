@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 import functools
 import logging
 from typing import Any
@@ -23,7 +22,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import ZHAEntity
 from .helpers import (
@@ -40,7 +39,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Zigbee Home Automation cover from config entry."""
     zha_data = get_zha_data(hass)
@@ -89,15 +88,6 @@ class ZhaCover(ZHAEntity, CoverEntity):
             features |= CoverEntityFeature.SET_TILT_POSITION
 
         self._attr_supported_features = features
-
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
-        """Return entity specific state attributes."""
-        state = self.entity_data.entity.state
-        return {
-            "target_lift_position": state.get("target_lift_position"),
-            "target_tilt_position": state.get("target_tilt_position"),
-        }
 
     @property
     def is_closed(self) -> bool | None:
@@ -185,8 +175,4 @@ class ZhaCover(ZHAEntity, CoverEntity):
             return
 
         # Same as `light`, some entity state is not derived from ZCL attributes
-        self.entity_data.entity.restore_external_state_attributes(
-            state=state.state,
-            target_lift_position=state.attributes.get("target_lift_position"),
-            target_tilt_position=state.attributes.get("target_tilt_position"),
-        )
+        self.entity_data.entity.restore_external_state_attributes(state=state.state)

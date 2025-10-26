@@ -18,6 +18,8 @@
         'mac_code': 'CCCC',
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'motionblinds_ble',
       'entry_id': 'mock_entry_id',
       'minor_version': 1,
@@ -26,6 +28,8 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
+      'subentries': list([
+      ]),
       'title': '**REDACTED**',
       'unique_id': '**REDACTED**',
       'version': 1,

@@ -51,7 +51,6 @@ def test_matches_device_classes(device_class: SensorDeviceClass) -> None:
         SensorDeviceClass.BATTERY: "CONF_IS_BATTERY_LEVEL",
         SensorDeviceClass.CO: "CONF_IS_CO",
         SensorDeviceClass.CO2: "CONF_IS_CO2",
-        SensorDeviceClass.CONDUCTIVITY: "CONF_IS_CONDUCTIVITY",
         SensorDeviceClass.ENERGY_STORAGE: "CONF_IS_ENERGY",
         SensorDeviceClass.VOLUME_STORAGE: "CONF_IS_VOLUME",
     }.get(device_class, f"CONF_IS_{device_class.value.upper()}")
@@ -60,7 +59,6 @@ def test_matches_device_classes(device_class: SensorDeviceClass) -> None:
     # Ensure it has correct value
     constant_value = {
         SensorDeviceClass.BATTERY: "is_battery_level",
-        SensorDeviceClass.CONDUCTIVITY: "is_conductivity",
         SensorDeviceClass.ENERGY_STORAGE: "is_energy",
         SensorDeviceClass.VOLUME_STORAGE: "is_volume",
     }.get(device_class, f"is_{device_class.value}")
@@ -104,6 +102,11 @@ async def test_get_conditions(
             device_id=device_entry.id,
         )
 
+    DEVICE_CLASSES_WITHOUT_CONDITION = {
+        SensorDeviceClass.DATE,
+        SensorDeviceClass.ENUM,
+        SensorDeviceClass.TIMESTAMP,
+    }
     expected_conditions = [
         {
             "condition": "device",
@@ -115,13 +118,14 @@ async def test_get_conditions(
         }
         for device_class in SensorDeviceClass
         if device_class in UNITS_OF_MEASUREMENT
+        and device_class not in DEVICE_CLASSES_WITHOUT_CONDITION
         for condition in ENTITY_CONDITIONS[device_class]
         if device_class != "none"
     ]
     conditions = await async_get_device_automations(
         hass, DeviceAutomationType.CONDITION, device_entry.id
     )
-    assert len(conditions) == 27
+    assert len(conditions) == 57
     assert conditions == unordered(expected_conditions)
 
 
@@ -199,6 +203,14 @@ async def test_get_conditions_no_state(
 
     await hass.async_block_till_done()
 
+    IGNORED_DEVICE_CLASSES = {
+        SensorDeviceClass.DATE,  # No condition
+        SensorDeviceClass.ENUM,  # No condition
+        SensorDeviceClass.TIMESTAMP,  # No condition
+        SensorDeviceClass.AQI,  # No unit of measurement
+        SensorDeviceClass.PH,  # No unit of measurement
+        SensorDeviceClass.MONETARY,  # No unit of measurement
+    }
     expected_conditions = [
         {
             "condition": "device",
@@ -210,8 +222,8 @@ async def test_get_conditions_no_state(
         }
         for device_class in SensorDeviceClass
         if device_class in UNITS_OF_MEASUREMENT
+        and device_class not in IGNORED_DEVICE_CLASSES
         for condition in ENTITY_CONDITIONS[device_class]
-        if device_class != "none"
     ]
     conditions = await async_get_device_automations(
         hass, DeviceAutomationType.CONDITION, device_entry.id
@@ -317,12 +329,14 @@ async def test_get_condition_capabilities(
                 "description": {"suffix": PERCENTAGE},
                 "name": "above",
                 "optional": True,
+                "required": False,
                 "type": "float",
             },
             {
                 "description": {"suffix": PERCENTAGE},
                 "name": "below",
                 "optional": True,
+                "required": False,
                 "type": "float",
             },
         ]
@@ -386,12 +400,14 @@ async def test_get_condition_capabilities_legacy(
                 "description": {"suffix": PERCENTAGE},
                 "name": "above",
                 "optional": True,
+                "required": False,
                 "type": "float",
             },
             {
                 "description": {"suffix": PERCENTAGE},
                 "name": "below",
                 "optional": True,
+                "required": False,
                 "type": "float",
             },
         ]

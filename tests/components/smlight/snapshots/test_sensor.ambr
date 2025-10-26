@@ -1,4 +1,64 @@
 # serializer version: 1
+# name: test_sensors[sensor.mock_title_connection_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'eth',
+        'wifi',
+        'usb',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_title_connection_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Connection mode',
+    'platform': 'smlight',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'device_mode',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_device_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.mock_title_connection_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Mock Title Connection mode',
+      'options': list([
+        'eth',
+        'wifi',
+        'usb',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_connection_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'eth',
+  })
+# ---
 # name: test_sensors[sensor.mock_title_core_chip_temp-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -8,6 +68,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -31,6 +92,7 @@
     'original_name': 'Core chip temp',
     'platform': 'smlight',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'core_temperature',
     'unique_id': 'aa:bb:cc:dd:ee:ff_core_temperature',
@@ -60,6 +122,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -80,6 +143,7 @@
     'original_name': 'Core uptime',
     'platform': 'smlight',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'core_uptime',
     'unique_id': 'aa:bb:cc:dd:ee:ff_core_uptime',
@@ -107,6 +171,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -121,12 +186,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Filesystem usage',
     'platform': 'smlight',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fs_usage',
     'unique_id': 'aa:bb:cc:dd:ee:ff_fs_usage',
@@ -148,6 +217,64 @@
     'state': '188',
   })
 # ---
+# name: test_sensors[sensor.mock_title_firmware_channel-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'dev',
+        'release',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_title_firmware_channel',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Firmware channel',
+    'platform': 'smlight',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'firmware_channel',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_firmware_channel',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.mock_title_firmware_channel-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Mock Title Firmware channel',
+      'options': list([
+        'dev',
+        'release',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_firmware_channel',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'dev',
+  })
+# ---
 # name: test_sensors[sensor.mock_title_ram_usage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -155,6 +282,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -169,12 +297,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'RAM usage',
     'platform': 'smlight',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ram_usage',
     'unique_id': 'aa:bb:cc:dd:ee:ff_ram_usage',
@@ -196,100 +328,6 @@
     'state': '99',
   })
 # ---
-# name: test_sensors[sensor.mock_title_timestamp-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.mock_title_timestamp',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': None,
-    'original_name': 'Timestamp',
-    'platform': 'smlight',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'core_uptime',
-    'unique_id': 'aa:bb:cc:dd:ee:ff_core_uptime',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[sensor.mock_title_timestamp-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Mock Title Timestamp',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_title_timestamp',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2024-06-25T02:51:15+00:00',
-  })
-# ---
-# name: test_sensors[sensor.mock_title_timestamp_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.mock_title_timestamp_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': None,
-    'original_name': 'Timestamp',
-    'platform': 'smlight',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'socket_uptime',
-    'unique_id': 'aa:bb:cc:dd:ee:ff_socket_uptime',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[sensor.mock_title_timestamp_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Mock Title Timestamp',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_title_timestamp_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2024-06-30T23:57:53+00:00',
-  })
-# ---
 # name: test_sensors[sensor.mock_title_zigbee_chip_temp-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -299,6 +337,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -322,6 +361,7 @@
     'original_name': 'Zigbee chip temp',
     'platform': 'smlight',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'zigbee_temperature',
     'unique_id': 'aa:bb:cc:dd:ee:ff_zigbee_temperature',
@@ -344,6 +384,66 @@
     'state': '32.7',
   })
 # ---
+# name: test_sensors[sensor.mock_title_zigbee_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'coordinator',
+        'router',
+        'thread',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_title_zigbee_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Zigbee type',
+    'platform': 'smlight',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'zigbee_type',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zigbee_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.mock_title_zigbee_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Mock Title Zigbee type',
+      'options': list([
+        'coordinator',
+        'router',
+        'thread',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_zigbee_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'coordinator',
+  })
+# ---
 # name: test_sensors[sensor.mock_title_zigbee_uptime-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -351,6 +451,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -371,6 +472,7 @@
     'original_name': 'Zigbee uptime',
     'platform': 'smlight',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'socket_uptime',
     'unique_id': 'aa:bb:cc:dd:ee:ff_socket_uptime',
@@ -389,541 +491,5 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2024-06-30T23:57:53+00:00',
-  })
-# ---
-# name: test_sensors[sensor.slzb_06_core_chip_temp-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.slzb_06_core_chip_temp',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Core chip temp',
-    'platform': 'smlight',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'core_temperature',
-    'unique_id': 'aa:bb:cc:dd:ee:ff_core_temperature',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_sensors[sensor.slzb_06_core_chip_temp-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'slzb-06 Core chip temp',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.slzb_06_core_chip_temp',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '35.0',
-  })
-# ---
-# name: test_sensors[sensor.slzb_06_core_chip_temp]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'slzb-06 Core chip temp',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.slzb_06_core_chip_temp',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '35.0',
-  })
-# ---
-# name: test_sensors[sensor.slzb_06_core_chip_temp].1
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.slzb_06_core_chip_temp',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Core chip temp',
-    'platform': 'smlight',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'core_temperature',
-    'unique_id': 'aa:bb:cc:dd:ee:ff_core_temperature',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_sensors[sensor.slzb_06_core_chip_temp].2
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': 'http://slzb-06.local',
-    'connections': set({
-      tuple(
-        'mac',
-        'aa:bb:cc:dd:ee:ff',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-    }),
-    'is_new': False,
-    'labels': set({
-    }),
-    'manufacturer': 'SMLIGHT',
-    'model': 'SLZB-06p7',
-    'model_id': None,
-    'name': 'slzb-06',
-    'name_by_user': None,
-    'primary_config_entry': <ANY>,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': 'core: v2.3.1.dev / zigbee: -1',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors[sensor.slzb_06_filesystem_usage-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.slzb_06_filesystem_usage',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
-    'original_icon': None,
-    'original_name': 'Filesystem usage',
-    'platform': 'smlight',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'fs_usage',
-    'unique_id': 'aa:bb:cc:dd:ee:ff_fs_usage',
-    'unit_of_measurement': <UnitOfInformation.KILOBYTES: 'kB'>,
-  })
-# ---
-# name: test_sensors[sensor.slzb_06_filesystem_usage-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'slzb-06 Filesystem usage',
-      'unit_of_measurement': <UnitOfInformation.KILOBYTES: 'kB'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.slzb_06_filesystem_usage',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '188',
-  })
-# ---
-# name: test_sensors[sensor.slzb_06_filesystem_usage]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'slzb-06 Filesystem usage',
-      'unit_of_measurement': <UnitOfInformation.KILOBYTES: 'kB'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.slzb_06_filesystem_usage',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '188',
-  })
-# ---
-# name: test_sensors[sensor.slzb_06_filesystem_usage].1
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.slzb_06_filesystem_usage',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
-    'original_icon': None,
-    'original_name': 'Filesystem usage',
-    'platform': 'smlight',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'fs_usage',
-    'unique_id': 'aa:bb:cc:dd:ee:ff_fs_usage',
-    'unit_of_measurement': <UnitOfInformation.KILOBYTES: 'kB'>,
-  })
-# ---
-# name: test_sensors[sensor.slzb_06_filesystem_usage].2
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': 'http://slzb-06.local',
-    'connections': set({
-      tuple(
-        'mac',
-        'aa:bb:cc:dd:ee:ff',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-    }),
-    'is_new': False,
-    'labels': set({
-    }),
-    'manufacturer': 'SMLIGHT',
-    'model': 'SLZB-06p7',
-    'model_id': None,
-    'name': 'slzb-06',
-    'name_by_user': None,
-    'primary_config_entry': <ANY>,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': 'core: v2.3.1.dev / zigbee: -1',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors[sensor.slzb_06_ram_usage-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.slzb_06_ram_usage',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
-    'original_icon': None,
-    'original_name': 'RAM usage',
-    'platform': 'smlight',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'ram_usage',
-    'unique_id': 'aa:bb:cc:dd:ee:ff_ram_usage',
-    'unit_of_measurement': <UnitOfInformation.KILOBYTES: 'kB'>,
-  })
-# ---
-# name: test_sensors[sensor.slzb_06_ram_usage-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'slzb-06 RAM usage',
-      'unit_of_measurement': <UnitOfInformation.KILOBYTES: 'kB'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.slzb_06_ram_usage',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '99',
-  })
-# ---
-# name: test_sensors[sensor.slzb_06_ram_usage]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'slzb-06 RAM usage',
-      'unit_of_measurement': <UnitOfInformation.KILOBYTES: 'kB'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.slzb_06_ram_usage',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '99',
-  })
-# ---
-# name: test_sensors[sensor.slzb_06_ram_usage].1
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.slzb_06_ram_usage',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
-    'original_icon': None,
-    'original_name': 'RAM usage',
-    'platform': 'smlight',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'ram_usage',
-    'unique_id': 'aa:bb:cc:dd:ee:ff_ram_usage',
-    'unit_of_measurement': <UnitOfInformation.KILOBYTES: 'kB'>,
-  })
-# ---
-# name: test_sensors[sensor.slzb_06_ram_usage].2
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': 'http://slzb-06.local',
-    'connections': set({
-      tuple(
-        'mac',
-        'aa:bb:cc:dd:ee:ff',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-    }),
-    'is_new': False,
-    'labels': set({
-    }),
-    'manufacturer': 'SMLIGHT',
-    'model': 'SLZB-06p7',
-    'model_id': None,
-    'name': 'slzb-06',
-    'name_by_user': None,
-    'primary_config_entry': <ANY>,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': 'core: v2.3.1.dev / zigbee: -1',
-    'via_device_id': None,
-  })
-# ---
-# name: test_sensors[sensor.slzb_06_zigbee_chip_temp-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.slzb_06_zigbee_chip_temp',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Zigbee chip temp',
-    'platform': 'smlight',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'zigbee_temperature',
-    'unique_id': 'aa:bb:cc:dd:ee:ff_zigbee_temperature',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_sensors[sensor.slzb_06_zigbee_chip_temp-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'slzb-06 Zigbee chip temp',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.slzb_06_zigbee_chip_temp',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '32.7',
-  })
-# ---
-# name: test_sensors[sensor.slzb_06_zigbee_chip_temp]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'slzb-06 Zigbee chip temp',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.slzb_06_zigbee_chip_temp',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '32.7',
-  })
-# ---
-# name: test_sensors[sensor.slzb_06_zigbee_chip_temp].1
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.slzb_06_zigbee_chip_temp',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Zigbee chip temp',
-    'platform': 'smlight',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'zigbee_temperature',
-    'unique_id': 'aa:bb:cc:dd:ee:ff_zigbee_temperature',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_sensors[sensor.slzb_06_zigbee_chip_temp].2
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': 'http://slzb-06.local',
-    'connections': set({
-      tuple(
-        'mac',
-        'aa:bb:cc:dd:ee:ff',
-      ),
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-    }),
-    'is_new': False,
-    'labels': set({
-    }),
-    'manufacturer': 'SMLIGHT',
-    'model': 'SLZB-06p7',
-    'model_id': None,
-    'name': 'slzb-06',
-    'name_by_user': None,
-    'primary_config_entry': <ANY>,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': 'core: v2.3.1.dev / zigbee: -1',
-    'via_device_id': None,
   })
 # ---

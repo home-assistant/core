@@ -17,8 +17,8 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import CONF_NAME, CONF_OFFSET, CURRENCY_CENT, UnitOfEnergy
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 

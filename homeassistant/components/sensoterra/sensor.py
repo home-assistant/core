@@ -21,13 +21,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import SensoterraConfigEntry
 from .const import CONFIGURATION_URL, DOMAIN, SENSOR_EXPIRATION_DAYS
-from .coordinator import SensoterraCoordinator
+from .coordinator import SensoterraConfigEntry, SensoterraCoordinator
 
 
 class ProbeSensorType(StrEnum):
@@ -85,7 +84,7 @@ SENSORS: dict[ProbeSensorType, SensorEntityDescription] = {
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SensoterraConfigEntry,
-    async_add_devices: AddEntitiesCallback,
+    async_add_devices: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Sensoterra sensor."""
 

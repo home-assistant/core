@@ -7,7 +7,7 @@ from pynobo import nobo
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .const import CONF_AUTO_DISCOVERED, CONF_SERIAL, DOMAIN
 
@@ -42,8 +42,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    entry.async_on_unload(entry.add_update_listener(options_update_listener))
-
     await hub.start()
 
     return True
@@ -58,10 +56,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
-
-
-async def options_update_listener(
-    hass: HomeAssistant, config_entry: ConfigEntry
-) -> None:
-    """Handle options update."""
-    await hass.config_entries.async_reload(config_entry.entry_id)

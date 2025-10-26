@@ -4,7 +4,7 @@ from typing import Any
 
 import pytest
 
-from homeassistant.components.deconz.const import CONF_GESTURE, DOMAIN as DECONZ_DOMAIN
+from homeassistant.components.deconz.const import CONF_GESTURE, DOMAIN
 from homeassistant.components.deconz.deconz_event import (
     CONF_DECONZ_ALARM_EVENT,
     CONF_DECONZ_EVENT,
@@ -16,7 +16,6 @@ from homeassistant.const import (
     CONF_EVENT,
     CONF_ID,
     CONF_UNIQUE_ID,
-    STATE_ALARM_ARMED_AWAY,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -65,7 +64,7 @@ async def test_humanifying_deconz_alarm_event(
     keypad_event_id = slugify(sensor_payload["name"])
     keypad_serial = serial_from_unique_id(sensor_payload["uniqueid"])
     keypad_entry = device_registry.async_get_device(
-        identifiers={(DECONZ_DOMAIN, keypad_serial)}
+        identifiers={(DOMAIN, keypad_serial)}
     )
 
     removed_device_event_id = "removed_device"
@@ -83,7 +82,7 @@ async def test_humanifying_deconz_alarm_event(
                 {
                     CONF_CODE: 1234,
                     CONF_DEVICE_ID: keypad_entry.id,
-                    CONF_EVENT: STATE_ALARM_ARMED_AWAY,
+                    CONF_EVENT: "armed_away",
                     CONF_ID: keypad_event_id,
                     CONF_UNIQUE_ID: keypad_serial,
                 },
@@ -94,7 +93,7 @@ async def test_humanifying_deconz_alarm_event(
                 {
                     CONF_CODE: 1234,
                     CONF_DEVICE_ID: "ff99ff99ff99ff99ff99ff99ff99ff99",
-                    CONF_EVENT: STATE_ALARM_ARMED_AWAY,
+                    CONF_EVENT: "armed_away",
                     CONF_ID: removed_device_event_id,
                     CONF_UNIQUE_ID: removed_device_serial,
                 },
@@ -158,25 +157,25 @@ async def test_humanifying_deconz_event(
     switch_event_id = slugify(sensor_payload["1"]["name"])
     switch_serial = serial_from_unique_id(sensor_payload["1"]["uniqueid"])
     switch_entry = device_registry.async_get_device(
-        identifiers={(DECONZ_DOMAIN, switch_serial)}
+        identifiers={(DOMAIN, switch_serial)}
     )
 
     hue_remote_event_id = slugify(sensor_payload["2"]["name"])
     hue_remote_serial = serial_from_unique_id(sensor_payload["2"]["uniqueid"])
     hue_remote_entry = device_registry.async_get_device(
-        identifiers={(DECONZ_DOMAIN, hue_remote_serial)}
+        identifiers={(DOMAIN, hue_remote_serial)}
     )
 
     xiaomi_cube_event_id = slugify(sensor_payload["3"]["name"])
     xiaomi_cube_serial = serial_from_unique_id(sensor_payload["3"]["uniqueid"])
     xiaomi_cube_entry = device_registry.async_get_device(
-        identifiers={(DECONZ_DOMAIN, xiaomi_cube_serial)}
+        identifiers={(DOMAIN, xiaomi_cube_serial)}
     )
 
     faulty_event_id = slugify(sensor_payload["4"]["name"])
     faulty_serial = serial_from_unique_id(sensor_payload["4"]["uniqueid"])
     faulty_entry = device_registry.async_get_device(
-        identifiers={(DECONZ_DOMAIN, faulty_serial)}
+        identifiers={(DOMAIN, faulty_serial)}
     )
 
     removed_device_event_id = "removed_device"

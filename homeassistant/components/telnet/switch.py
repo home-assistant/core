@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-import telnetlib  # pylint: disable=deprecated-module
 from typing import Any
 
+import telnetlib  # pylint: disable=deprecated-module
 import voluptuous as vol
 
 from homeassistant.components.switch import (
@@ -26,7 +26,7 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType

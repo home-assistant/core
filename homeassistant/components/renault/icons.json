@@ -35,7 +35,7 @@
     },
     "sensor": {
       "charge_state": {
-        "default": "mdi:mdi:flash-off",
+        "default": "mdi:flash-off",
         "state": {
           "charge_in_progress": "mdi:flash"
         }
@@ -71,6 +71,9 @@
       "service": "mdi:hvac-off"
     },
     "charge_set_schedules": {
+      "service": "mdi:calendar-clock"
+    },
+    "ac_set_schedules": {
       "service": "mdi:calendar-clock"
     }
   }

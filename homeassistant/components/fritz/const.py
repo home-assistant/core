@@ -40,7 +40,8 @@ PLATFORMS = [
 CONF_OLD_DISCOVERY = "old_discovery"
 DEFAULT_CONF_OLD_DISCOVERY = False
 
-DATA_FRITZ = "fritz_data"
+CONF_FEATURE_DEVICE_TRACKING = "feature_device_tracking"
+DEFAULT_CONF_FEATURE_DEVICE_TRACKING = True
 
 DSL_CONNECTION: Literal["dsl"] = "dsl"
 
@@ -55,9 +56,6 @@ ERROR_AUTH_INVALID = "invalid_auth"
 ERROR_CANNOT_CONNECT = "cannot_connect"
 ERROR_UPNP_NOT_CONFIGURED = "upnp_not_configured"
 ERROR_UNKNOWN = "unknown_error"
-
-FRITZ_SERVICES = "fritz_services"
-SERVICE_SET_GUEST_WIFI_PW = "set_guest_wifi_password"
 
 SWITCH_TYPE_DEFLECTION = "CallDeflection"
 SWITCH_TYPE_PORTFORWARD = "PortForward"

@@ -6,16 +6,22 @@ from dataclasses import dataclass
 from datetime import datetime
 import logging
 import os
-from typing import Any, NamedTuple
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 from psutil import Process
 from psutil._common import sdiskusage, shwtemp, snetio, snicaddr, sswap
 import psutil_home_assistant as ha_psutil
 
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import DEFAULT_SCAN_INTERVAL
 from homeassistant.helpers.update_coordinator import TimestampDataUpdateCoordinator
 from homeassistant.util import dt as dt_util
+
+from .const import CONF_PROCESS, PROCESS_ERRORS
+
+if TYPE_CHECKING:
+    from . import SystemMonitorConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,20 +40,34 @@ class SensorData:
     boot_time: datetime
     processes: list[Process]
     temperatures: dict[str, list[shwtemp]]
+    process_fds: dict[str, int]
 
     def as_dict(self) -> dict[str, Any]:
         """Return as dict."""
+        disk_usage = None
+        if self.disk_usage:
+            disk_usage = {k: str(v) for k, v in self.disk_usage.items()}
+        io_counters = None
+        if self.io_counters:
+            io_counters = {k: str(v) for k, v in self.io_counters.items()}
+        addresses = None
+        if self.addresses:
+            addresses = {k: str(v) for k, v in self.addresses.items()}
+        temperatures = None
+        if self.temperatures:
+            temperatures = {k: str(v) for k, v in self.temperatures.items()}
         return {
-            "disk_usage": {k: str(v) for k, v in self.disk_usage.items()},
+            "disk_usage": disk_usage,
             "swap": str(self.swap),
             "memory": str(self.memory),
-            "io_counters": {k: str(v) for k, v in self.io_counters.items()},
-            "addresses": {k: str(v) for k, v in self.addresses.items()},
+            "io_counters": io_counters,
+            "addresses": addresses,
             "load": str(self.load),
             "cpu_percent": str(self.cpu_percent),
             "boot_time": str(self.boot_time),
             "processes": str(self.processes),
-            "temperatures": {k: str(v) for k, v in self.temperatures.items()},
+            "temperatures": temperatures,
+            "process_fds": self.process_fds,
         }
 
 
@@ -68,9 +88,12 @@ class VirtualMemory(NamedTuple):
 class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
     """A System monitor Data Update Coordinator."""
 
+    config_entry: SystemMonitorConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: SystemMonitorConfigEntry,
         psutil_wrapper: ha_psutil.PsutilWrapper,
         arguments: list[str],
     ) -> None:
@@ -78,6 +101,7 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name="System Monitor update coordinator",
             update_interval=DEFAULT_SCAN_INTERVAL,
             always_update=False,
@@ -139,6 +163,7 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
             boot_time=_data["boot_time"],
             processes=_data["processes"],
             temperatures=_data["temperatures"],
+            process_fds=_data["process_fds"],
         )
 
     def update_data(self) -> dict[str, Any]:
@@ -186,11 +211,41 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
             self.boot_time = dt_util.utc_from_timestamp(self._psutil.boot_time())
             _LOGGER.debug("boot time: %s", self.boot_time)
 
-        processes = None
+        selected_processes: list[Process] = []
+        process_fds: dict[str, int] = {}
         if self.update_subscribers[("processes", "")] or self._initial_update:
             processes = self._psutil.process_iter()
             _LOGGER.debug("processes: %s", processes)
-            processes = list(processes)
+            user_options: list[str] = self.config_entry.options.get(
+                BINARY_SENSOR_DOMAIN, {}
+            ).get(CONF_PROCESS, [])
+            for process in processes:
+                try:
+                    if (process_name := process.name()) in user_options:
+                        selected_processes.append(process)
+                        process_fds[process_name] = (
+                            process_fds.get(process_name, 0) + process.num_fds()
+                        )
+
+                except PROCESS_ERRORS as err:
+                    if not hasattr(err, "pid") or not hasattr(err, "name"):
+                        _LOGGER.warning(
+                            "Failed to load process: %s",
+                            str(err),
+                        )
+                    else:
+                        _LOGGER.warning(
+                            "Failed to load process with ID: %s, old name: %s",
+                            err.pid,
+                            err.name,
+                        )
+                    continue
+                except OSError as err:
+                    _LOGGER.warning(
+                        "OS error getting file descriptor count for process %s: %s",
+                        process.pid if hasattr(process, "pid") else "unknown",
+                        err,
+                    )
 
         temps: dict[str, list[shwtemp]] = {}
         if self.update_subscribers[("temperatures", "")] or self._initial_update:
@@ -207,6 +262,7 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
             "io_counters": io_counters,
             "addresses": addresses,
             "boot_time": self.boot_time,
-            "processes": processes,
+            "processes": selected_processes,
             "temperatures": temps,
+            "process_fds": process_fds,
         }

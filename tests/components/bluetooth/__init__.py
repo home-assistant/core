@@ -1,41 +1,44 @@
 """Tests for the Bluetooth integration."""
 
-from collections.abc import Iterable
+from collections.abc import Generator, Iterable
 from contextlib import contextmanager
 import itertools
 import time
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, PropertyMock, patch
 
 from bleak import BleakClient
 from bleak.backends.scanner import AdvertisementData, BLEDevice
 from bluetooth_adapters import DEFAULT_ADDRESS
-from habluetooth import BaseHaScanner, BluetoothManager, get_manager
+from habluetooth import BaseHaScanner, get_manager
 
 from homeassistant.components.bluetooth import (
     DOMAIN,
+    MONOTONIC_TIME,
     SOURCE_LOCAL,
+    BaseHaRemoteScanner,
     BluetoothServiceInfo,
     BluetoothServiceInfoBleak,
     async_get_advertisement_callback,
 )
+from homeassistant.components.bluetooth.manager import HomeAssistantBluetoothManager
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
 __all__ = (
+    "MockBleakClient",
+    "generate_advertisement_data",
+    "generate_ble_device",
     "inject_advertisement",
     "inject_advertisement_with_source",
     "inject_advertisement_with_time_and_source",
     "inject_advertisement_with_time_and_source_connectable",
     "inject_bluetooth_service_info",
     "patch_all_discovered_devices",
-    "patch_discovered_devices",
-    "generate_advertisement_data",
-    "generate_ble_device",
-    "MockBleakClient",
     "patch_bluetooth_time",
+    "patch_discovered_devices",
 )
 
 ADVERTISEMENT_DATA_DEFAULTS = {
@@ -50,9 +53,13 @@ ADVERTISEMENT_DATA_DEFAULTS = {
 
 BLE_DEVICE_DEFAULTS = {
     "name": None,
-    "rssi": -127,
     "details": None,
 }
+
+
+HCI0_SOURCE_ADDRESS = "AA:BB:CC:DD:EE:00"
+HCI1_SOURCE_ADDRESS = "AA:BB:CC:DD:EE:11"
+NON_CONNECTABLE_REMOTE_SOURCE_ADDRESS = "AA:BB:CC:DD:EE:FF"
 
 
 @contextmanager
@@ -81,7 +88,6 @@ def generate_ble_device(
     address: str | None = None,
     name: str | None = None,
     details: Any | None = None,
-    rssi: int | None = None,
     **kwargs: Any,
 ) -> BLEDevice:
     """Generate a BLEDevice with defaults."""
@@ -92,16 +98,15 @@ def generate_ble_device(
         new["name"] = name
     if details is not None:
         new["details"] = details
-    if rssi is not None:
-        new["rssi"] = rssi
     for key, value in BLE_DEVICE_DEFAULTS.items():
         new.setdefault(key, value)
     return BLEDevice(**new)
 
 
-def _get_manager() -> BluetoothManager:
+def _get_manager() -> HomeAssistantBluetoothManager:
     """Return the bluetooth manager."""
-    return get_manager()
+    manager: HomeAssistantBluetoothManager = get_manager()
+    return manager
 
 
 def inject_advertisement(
@@ -140,6 +145,7 @@ def inject_advertisement_with_time_and_source_connectable(
     time: float,
     source: str,
     connectable: bool,
+    raw: bytes | None = None,
 ) -> None:
     """Inject an advertisement into the manager from a specific source at a time and connectable status."""
     async_get_advertisement_callback(hass)(
@@ -156,6 +162,7 @@ def inject_advertisement_with_time_and_source_connectable(
             connectable=connectable,
             time=time,
             tx_power=adv.tx_power,
+            raw=raw,
         )
     )
 
@@ -206,34 +213,35 @@ def inject_bluetooth_service_info(
 
 
 @contextmanager
-def patch_all_discovered_devices(mock_discovered: list[BLEDevice]) -> None:
+def patch_all_discovered_devices(mock_discovered: list[BLEDevice]) -> Generator[None]:
     """Mock all the discovered devices from all the scanners."""
     manager = _get_manager()
-    original_history = {}
     scanners = list(
         itertools.chain(
             manager._connectable_scanners, manager._non_connectable_scanners
         )
     )
-    for scanner in scanners:
-        data = scanner.discovered_devices_and_advertisement_data
-        original_history[scanner] = data.copy()
-        data.clear()
-    if scanners:
-        data = scanners[0].discovered_devices_and_advertisement_data
-        data.clear()
-        data.update(
-            {device.address: (device, MagicMock()) for device in mock_discovered}
-        )
-    yield
-    for scanner in scanners:
-        data = scanner.discovered_devices_and_advertisement_data
-        data.clear()
-        data.update(original_history[scanner])
+    if scanners and getattr(scanners[0], "scanner", None):
+        with patch.object(
+            scanners[0].scanner.__class__,
+            "discovered_devices_and_advertisement_data",
+            new=PropertyMock(
+                side_effect=[
+                    {
+                        device.address: (device, MagicMock())
+                        for device in mock_discovered
+                    },
+                ]
+                + [{}] * (len(scanners))
+            ),
+        ):
+            yield
+    else:
+        yield
 
 
 @contextmanager
-def patch_discovered_devices(mock_discovered: list[BLEDevice]) -> None:
+def patch_discovered_devices(mock_discovered: list[BLEDevice]) -> Generator[None]:
     """Mock the combined best path to discovered devices from all the scanners."""
     manager = _get_manager()
     original_all_history = manager._all_history
@@ -296,6 +304,9 @@ class MockBleakClient(BleakClient):
         """Mock clear_cache."""
         return True
 
+    def set_disconnected_callback(self, callback, **kwargs):
+        """Mock set_disconnected_callback."""
+
 
 class FakeScannerMixin:
     def get_discovered_device_advertisement_data(
@@ -324,3 +335,26 @@ class FakeScanner(FakeScannerMixin, BaseHaScanner):
     ) -> dict[str, tuple[BLEDevice, AdvertisementData]]:
         """Return a list of discovered devices and their advertisement data."""
         return {}
+
+
+class FakeRemoteScanner(BaseHaRemoteScanner):
+    """Fake remote scanner."""
+
+    def inject_advertisement(
+        self,
+        device: BLEDevice,
+        advertisement_data: AdvertisementData,
+        now: float | None = None,
+    ) -> None:
+        """Inject an advertisement."""
+        self._async_on_advertisement(
+            device.address,
+            advertisement_data.rssi,
+            device.name,
+            advertisement_data.service_uuids,
+            advertisement_data.service_data,
+            advertisement_data.manufacturer_data,
+            advertisement_data.tx_power,
+            {"scanner_specific_data": "test"},
+            now or MONOTONIC_TIME(),
+        )

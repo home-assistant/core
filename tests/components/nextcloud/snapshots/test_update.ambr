@@ -6,6 +6,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -26,6 +27,7 @@
     'original_name': None,
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '1234567890abcdef#update',
@@ -36,6 +38,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'auto_update': False,
+      'display_precision': 0,
       'entity_picture': 'https://brands.home-assistant.io/_/nextcloud/icon.png',
       'friendly_name': 'my.nc_url.local None',
       'in_progress': False,
@@ -46,6 +49,7 @@
       'skipped_version': None,
       'supported_features': <UpdateEntityFeature: 0>,
       'title': None,
+      'update_percentage': None,
     }),
     'context': <ANY>,
     'entity_id': 'update.my_nc_url_local_none',

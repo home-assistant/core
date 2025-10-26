@@ -7,5 +7,6 @@
   "documentation": "https://www.home-assistant.io/integrations/ista_ecotrend",
   "iot_class": "cloud_polling",
   "loggers": ["pyecotrend_ista"],
-  "requirements": ["pyecotrend-ista==3.3.1"]
+  "quality_scale": "gold",
+  "requirements": ["pyecotrend-ista==3.4.0"]
 }

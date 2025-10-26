@@ -22,8 +22,8 @@ class EnhancedAudioChunk:
     timestamp_ms: int
     """Timestamp relative to start of audio stream (milliseconds)"""
 
-    is_speech: bool | None
-    """True if audio chunk likely contains speech, False if not, None if unknown"""
+    speech_probability: float | None
+    """Probability that audio chunk contains speech (0-1), None if unknown"""
 
 
 class AudioEnhancer(ABC):
@@ -70,27 +70,27 @@ class MicroVadSpeexEnhancer(AudioEnhancer):
             )
 
         self.vad: MicroVad | None = None
-        self.threshold = 0.5
 
         if self.is_vad_enabled:
             self.vad = MicroVad()
-            _LOGGER.debug("Initialized microVAD with threshold=%s", self.threshold)
+            _LOGGER.debug("Initialized microVAD")
 
     def enhance_chunk(self, audio: bytes, timestamp_ms: int) -> EnhancedAudioChunk:
         """Enhance 10ms chunk of PCM audio @ 16Khz with 16-bit mono samples."""
-        is_speech: bool | None = None
+        speech_probability: float | None = None
 
         assert len(audio) == BYTES_PER_CHUNK
 
         if self.vad is not None:
             # Run VAD
-            speech_prob = self.vad.Process10ms(audio)
-            is_speech = speech_prob > self.threshold
+            speech_probability = self.vad.Process10ms(audio)
 
         if self.audio_processor is not None:
             # Run noise suppression and auto gain
             audio = self.audio_processor.Process10ms(audio).audio
 
         return EnhancedAudioChunk(
-            audio=audio, timestamp_ms=timestamp_ms, is_speech=is_speech
+            audio=audio,
+            timestamp_ms=timestamp_ms,
+            speech_probability=speech_probability,
         )

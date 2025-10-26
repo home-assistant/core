@@ -67,13 +67,7 @@ async def test_reconfigure(hass: HomeAssistant) -> None:
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    reconfigure_result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": entry.entry_id,
-        },
-    )
+    reconfigure_result = await entry.start_reconfigure_flow(hass)
     assert reconfigure_result["type"] is FlowResultType.FORM
     assert reconfigure_result["step_id"] == "user"
 
@@ -122,8 +116,8 @@ async def test_options(hass: HomeAssistant) -> None:
             CONF_AVOID_FERRIES: True,
             CONF_AVOID_SUBSCRIPTION_ROADS: True,
             CONF_AVOID_TOLL_ROADS: True,
-            CONF_EXCL_FILTER: ["exclude"],
-            CONF_INCL_FILTER: ["include"],
+            CONF_EXCL_FILTER: ["ExcludeThis"],
+            CONF_INCL_FILTER: ["IncludeThis"],
             CONF_REALTIME: False,
             CONF_UNITS: IMPERIAL_UNITS,
             CONF_VEHICLE_TYPE: "taxi",
@@ -135,8 +129,8 @@ async def test_options(hass: HomeAssistant) -> None:
         CONF_AVOID_FERRIES: True,
         CONF_AVOID_SUBSCRIPTION_ROADS: True,
         CONF_AVOID_TOLL_ROADS: True,
-        CONF_EXCL_FILTER: ["exclude"],
-        CONF_INCL_FILTER: ["include"],
+        CONF_EXCL_FILTER: ["ExcludeThis"],
+        CONF_INCL_FILTER: ["IncludeThis"],
         CONF_REALTIME: False,
         CONF_UNITS: IMPERIAL_UNITS,
         CONF_VEHICLE_TYPE: "taxi",
@@ -146,8 +140,8 @@ async def test_options(hass: HomeAssistant) -> None:
         CONF_AVOID_FERRIES: True,
         CONF_AVOID_SUBSCRIPTION_ROADS: True,
         CONF_AVOID_TOLL_ROADS: True,
-        CONF_EXCL_FILTER: ["exclude"],
-        CONF_INCL_FILTER: ["include"],
+        CONF_EXCL_FILTER: ["ExcludeThis"],
+        CONF_INCL_FILTER: ["IncludeThis"],
         CONF_REALTIME: False,
         CONF_UNITS: IMPERIAL_UNITS,
         CONF_VEHICLE_TYPE: "taxi",

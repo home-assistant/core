@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components.analytics.const import ANALYTICS_ENDPOINT_URL, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -20,6 +22,7 @@ async def test_setup(hass: HomeAssistant) -> None:
     assert DOMAIN in hass.data
 
 
+@pytest.mark.usefixtures("supervisor_client")
 async def test_websocket(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,

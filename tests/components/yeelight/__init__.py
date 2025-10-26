@@ -9,7 +9,6 @@ from async_upnp_client.utils import CaseInsensitiveDict
 from yeelight import BulbException, BulbType
 from yeelight.main import _MODEL_SPECS
 
-from homeassistant.components import zeroconf
 from homeassistant.components.yeelight import (
     CONF_MODE_MUSIC,
     CONF_NIGHTLIGHT_SWITCH_TYPE,
@@ -21,6 +20,7 @@ from homeassistant.components.yeelight import (
 )
 from homeassistant.const import CONF_DEVICES, CONF_ID, CONF_NAME
 from homeassistant.core import callback
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 FAIL_TO_BIND_IP = "1.2.3.4"
 
@@ -43,7 +43,7 @@ CAPABILITIES = {
 
 ID_DECIMAL = f"{int(ID, 16):08d}"
 
-ZEROCONF_DATA = zeroconf.ZeroconfServiceInfo(
+ZEROCONF_DATA = ZeroconfServiceInfo(
     ip_address=ip_address(IP_ADDRESS),
     ip_addresses=[ip_address(IP_ADDRESS)],
     port=54321,

@@ -5,44 +5,63 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
-from pynecil import Pynecil
+from pynecil import IronOSUpdate, Pynecil
 
-from homeassistant.components import bluetooth
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN
-from .coordinator import IronOSCoordinator
+from .coordinator import (
+    IronOSConfigEntry,
+    IronOSCoordinators,
+    IronOSFirmwareUpdateCoordinator,
+    IronOSLiveDataCoordinator,
+    IronOSSettingsCoordinator,
+)
 
-PLATFORMS: list[Platform] = [Platform.NUMBER, Platform.SENSOR]
+PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.UPDATE,
+]
 
-type IronOSConfigEntry = ConfigEntry[IronOSCoordinator]
+
+IRON_OS_KEY: HassKey[IronOSFirmwareUpdateCoordinator] = HassKey(DOMAIN)
+
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: IronOSConfigEntry) -> bool:
     """Set up IronOS from a config entry."""
+    if IRON_OS_KEY not in hass.data:
+        session = async_get_clientsession(hass)
+        github = IronOSUpdate(session)
+
+        hass.data[IRON_OS_KEY] = IronOSFirmwareUpdateCoordinator(hass, github)
+        await hass.data[IRON_OS_KEY].async_request_refresh()
+
     if TYPE_CHECKING:
         assert entry.unique_id
-    ble_device = bluetooth.async_ble_device_from_address(
-        hass, entry.unique_id, connectable=True
+
+    device = Pynecil(entry.unique_id)
+
+    live_data = IronOSLiveDataCoordinator(hass, entry, device)
+    await live_data.async_config_entry_first_refresh()
+
+    settings = IronOSSettingsCoordinator(hass, entry, device)
+    await settings.async_config_entry_first_refresh()
+
+    entry.runtime_data = IronOSCoordinators(
+        live_data=live_data,
+        settings=settings,
     )
-    if not ble_device:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="setup_device_unavailable_exception",
-            translation_placeholders={CONF_NAME: entry.title},
-        )
-
-    device = Pynecil(ble_device)
-
-    coordinator = IronOSCoordinator(hass, device)
-    await coordinator.async_config_entry_first_refresh()
-
-    entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -50,4 +69,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: IronOSConfigEntry) -> bo
 
 async def async_unload_entry(hass: HomeAssistant, entry: IronOSConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+    if not hass.config_entries.async_loaded_entries(DOMAIN):
+        await hass.data[IRON_OS_KEY].async_shutdown()
+        hass.data.pop(IRON_OS_KEY)
+    return unload_ok

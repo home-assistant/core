@@ -8,6 +8,7 @@ DEFAULT_GATEWAY_NAME = "Motionblinds Gateway"
 
 PLATFORMS = [Platform.BUTTON, Platform.COVER, Platform.SENSOR]
 
+CONF_BLIND_TYPE_LIST = "blind_type_list"
 CONF_WAIT_FOR_PUSH = "wait_for_push"
 CONF_INTERFACE = "interface"
 DEFAULT_WAIT_FOR_PUSH = False

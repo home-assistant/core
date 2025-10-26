@@ -20,9 +20,10 @@ from homeassistant.const import (
     CONF_PLATFORM,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -136,7 +137,9 @@ async def test_name(hass: HomeAssistant) -> None:
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setups(config_entry, [DOMAIN])
+        await hass.config_entries.async_forward_entry_setups(
+            config_entry, [Platform.BUTTON]
+        )
         return True
 
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
@@ -175,7 +178,7 @@ async def test_name(hass: HomeAssistant) -> None:
     async def async_setup_entry_platform(
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Set up test button platform via config entry."""
         async_add_entities([entity1, entity2, entity3, entity4])

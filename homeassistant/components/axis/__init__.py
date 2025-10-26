@@ -30,7 +30,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: AxisConfigEntry) 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     hub.setup()
 
-    config_entry.add_update_listener(hub.async_new_address_callback)
+    config_entry.async_on_unload(
+        config_entry.add_update_listener(hub.async_new_address_callback)
+    )
     config_entry.async_on_unload(hub.teardown)
     config_entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, hub.shutdown)
@@ -52,6 +54,6 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         # Home Assistant 2023.2
         hass.config_entries.async_update_entry(config_entry, version=3)
 
-    _LOGGER.info("Migration to version %s successful", config_entry.version)
+    _LOGGER.debug("Migration to version %s successful", config_entry.version)
 
     return True

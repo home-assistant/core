@@ -15,6 +15,7 @@ from homeassistant.components.climate import (
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
+    FAN_OFF,
     SWING_BOTH,
     SWING_HORIZONTAL,
     SWING_OFF,
@@ -25,15 +26,13 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import FGLairConfigEntry
-from .const import DOMAIN
-from .coordinator import FGLairCoordinator
+from .coordinator import FGLairConfigEntry, FGLairCoordinator
+from .entity import FGLairEntity
 
 HA_TO_FUJI_FAN = {
+    FAN_OFF: FanSpeed.QUIET,
     FAN_LOW: FanSpeed.LOW,
     FAN_MEDIUM: FanSpeed.MEDIUM,
     FAN_HIGH: FanSpeed.HIGH,
@@ -63,7 +62,7 @@ FUJI_TO_HA_SWING = {value: key for key, value in HA_TO_FUJI_SWING.items()}
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: FGLairConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up one Fujitsu HVAC device."""
     async_add_entities(
@@ -72,30 +71,19 @@ async def async_setup_entry(
     )
 
 
-class FGLairDevice(CoordinatorEntity[FGLairCoordinator], ClimateEntity):
+class FGLairDevice(FGLairEntity, ClimateEntity):
     """Represent a Fujitsu HVAC device."""
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_precision = PRECISION_HALVES
     _attr_target_temperature_step = 0.5
-    _attr_has_entity_name = True
     _attr_name = None
-
-    _enable_turn_on_off_backwards_compatibility: bool = False
 
     def __init__(self, coordinator: FGLairCoordinator, device: FujitsuHVAC) -> None:
         """Store the representation of the device and set the static attributes."""
-        super().__init__(coordinator, context=device.device_serial_number)
+        super().__init__(coordinator, device)
 
         self._attr_unique_id = device.device_serial_number
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device.device_serial_number)},
-            name=device.device_name,
-            manufacturer="Fujitsu",
-            model=device.property_values["model_name"],
-            serial_number=device.device_serial_number,
-            sw_version=device.property_values["mcu_firmware_version"],
-        )
 
         self._attr_supported_features = (
             ClimateEntityFeature.TARGET_TEMPERATURE
@@ -110,11 +98,6 @@ class FGLairDevice(CoordinatorEntity[FGLairCoordinator], ClimateEntity):
         ):
             self._attr_supported_features |= ClimateEntityFeature.SWING_MODE
         self._set_attr()
-
-    @property
-    def device(self) -> FujitsuHVAC:
-        """Return the device object from the coordinator data."""
-        return self.coordinator.data[self.coordinator_context]
 
     @property
     def available(self) -> bool:

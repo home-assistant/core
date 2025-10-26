@@ -9,7 +9,7 @@ from homeassistant import config
 from homeassistant.components.template import DOMAIN
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -51,7 +51,8 @@ from tests.common import MockConfigEntry, async_fire_time_changed, get_fixture_p
         },
     ],
 )
-async def test_reloadable(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_reloadable(hass: HomeAssistant) -> None:
     """Test that we can reload."""
     hass.states.async_set("sensor.test_sensor", "mytest")
     await hass.async_block_till_done()
@@ -102,7 +103,8 @@ async def test_reloadable(hass: HomeAssistant, start_ha) -> None:
         },
     ],
 )
-async def test_reloadable_can_remove(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_reloadable_can_remove(hass: HomeAssistant) -> None:
     """Test that we can reload and remove all template sensors."""
     hass.states.async_set("sensor.test_sensor", "mytest")
     await hass.async_block_till_done()
@@ -132,9 +134,8 @@ async def test_reloadable_can_remove(hass: HomeAssistant, start_ha) -> None:
         },
     ],
 )
-async def test_reloadable_stops_on_invalid_config(
-    hass: HomeAssistant, start_ha
-) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_reloadable_stops_on_invalid_config(hass: HomeAssistant) -> None:
     """Test we stop the reload if configuration.yaml is completely broken."""
     hass.states.async_set("sensor.test_sensor", "mytest")
     await hass.async_block_till_done()
@@ -162,9 +163,8 @@ async def test_reloadable_stops_on_invalid_config(
         },
     ],
 )
-async def test_reloadable_handles_partial_valid_config(
-    hass: HomeAssistant, start_ha
-) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_reloadable_handles_partial_valid_config(hass: HomeAssistant) -> None:
     """Test we can still setup valid sensors when configuration.yaml has a broken entry."""
     hass.states.async_set("sensor.test_sensor", "mytest")
     await hass.async_block_till_done()
@@ -195,7 +195,8 @@ async def test_reloadable_handles_partial_valid_config(
         },
     ],
 )
-async def test_reloadable_multiple_platforms(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_reloadable_multiple_platforms(hass: HomeAssistant) -> None:
     """Test that we can reload."""
     hass.states.async_set("sensor.test_sensor", "mytest")
     await async_setup_component(
@@ -239,8 +240,9 @@ async def test_reloadable_multiple_platforms(hass: HomeAssistant, start_ha) -> N
         },
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_reload_sensors_that_reference_other_template_sensors(
-    hass: HomeAssistant, start_ha
+    hass: HomeAssistant,
 ) -> None:
     """Test that we can reload sensor that reference other template sensors."""
     await async_yaml_patch_helper(hass, "ref_configuration.yaml")
@@ -362,11 +364,36 @@ async def async_yaml_patch_helper(hass: HomeAssistant, filename: str) -> None:
                 "value_template": "{{ true }}",
             },
         ),
+        (
+            {
+                "template_type": "event",
+                "name": "My template",
+                "event_type": "{{ 'single' }}",
+                "event_types": "{{ ['single', 'double'] }}",
+            },
+            {
+                "event_type": "{{ 'single' }}",
+                "event_types": "{{ ['single', 'double'] }}",
+            },
+        ),
+        (
+            {
+                "template_type": "update",
+                "name": "My template",
+                "latest_version": "{{ '1.0' }}",
+                "installed_version": "{{ '1.0' }}",
+            },
+            {
+                "latest_version": "{{ '1.0' }}",
+                "installed_version": "{{ '1.0' }}",
+            },
+        ),
     ],
 )
 async def test_change_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     config_entry_options: dict[str, str],
     config_user_input: dict[str, str],
 ) -> None:
@@ -376,6 +403,19 @@ async def test_change_device(
     config entry and the link was removed when the device is
     changed in the integration options.
     """
+
+    def check_template_entities(
+        template_entity_id: str,
+        device_id: str | None = None,
+    ) -> None:
+        """Check that the template entity is linked to the correct device."""
+        template_entity_ids: list[str] = []
+        for template_entity in entity_registry.entities.get_entries_for_config_entry_id(
+            template_config_entry.entry_id
+        ):
+            template_entity_ids.append(template_entity.entity_id)
+            assert template_entity.device_id == device_id
+        assert template_entity_ids == [template_entity_id]
 
     # Configure devices registry
     entry_device1 = MockConfigEntry()
@@ -411,9 +451,14 @@ async def test_change_device(
     assert await hass.config_entries.async_setup(template_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Confirm that the config entry has been added to the device 1 registry (current)
-    current_device = device_registry.async_get(device_id=device_id1)
-    assert template_config_entry.entry_id in current_device.config_entries
+    template_entity_id = f"{config_entry_options['template_type']}.my_template"
+
+    # Confirm that the template config entry has not been added to either device
+    # and that the entities are linked to device 1
+    for device_id in (device_id1, device_id2):
+        device = device_registry.async_get(device_id=device_id)
+        assert template_config_entry.entry_id not in device.config_entries
+    check_template_entities(template_entity_id, device_id1)
 
     # Change config options to use device 2 and reload the integration
     result = await hass.config_entries.options.async_init(
@@ -425,13 +470,12 @@ async def test_change_device(
     )
     await hass.async_block_till_done()
 
-    # Confirm that the config entry has been removed from the device 1 registry
-    previous_device = device_registry.async_get(device_id=device_id1)
-    assert template_config_entry.entry_id not in previous_device.config_entries
-
-    # Confirm that the config entry has been added to the device 2 registry (current)
-    current_device = device_registry.async_get(device_id=device_id2)
-    assert template_config_entry.entry_id in current_device.config_entries
+    # Confirm that the template config entry has not been added to either device
+    # and that the entities are linked to device 2
+    for device_id in (device_id1, device_id2):
+        device = device_registry.async_get(device_id=device_id)
+        assert template_config_entry.entry_id not in device.config_entries
+    check_template_entities(template_entity_id, device_id2)
 
     # Change the config options to remove the device and reload the integration
     result = await hass.config_entries.options.async_init(
@@ -443,9 +487,12 @@ async def test_change_device(
     )
     await hass.async_block_till_done()
 
-    # Confirm that the config entry has been removed from the device 2 registry
-    previous_device = device_registry.async_get(device_id=device_id2)
-    assert template_config_entry.entry_id not in previous_device.config_entries
+    # Confirm that the template config entry has not been added to either device
+    # and that the entities are not linked to any device
+    for device_id in (device_id1, device_id2):
+        device = device_registry.async_get(device_id=device_id)
+        assert template_config_entry.entry_id not in device.config_entries
+    check_template_entities(template_entity_id, None)
 
     # Confirm that there is no device with the helper config entry
     assert (

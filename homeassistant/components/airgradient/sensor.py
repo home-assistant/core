@@ -27,13 +27,15 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import AirGradientConfigEntry
 from .const import PM_STANDARD, PM_STANDARD_REVERSE
 from .coordinator import AirGradientCoordinator
 from .entity import AirGradientEntity
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -137,6 +139,15 @@ MEASUREMENT_SENSOR_TYPES: tuple[AirGradientMeasurementSensorEntityDescription, .
         entity_registry_enabled_default=False,
         value_fn=lambda status: status.raw_total_volatile_organic_component,
     ),
+    AirGradientMeasurementSensorEntityDescription(
+        key="pm02_raw",
+        translation_key="raw_pm02",
+        device_class=SensorDeviceClass.PM25,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+        value_fn=lambda status: status.raw_pm02,
+    ),
 )
 
 CONFIG_SENSOR_TYPES: tuple[AirGradientConfigSensorEntityDescription, ...] = (
@@ -214,7 +225,7 @@ CONFIG_DISPLAY_SENSOR_TYPES: tuple[AirGradientConfigSensorEntityDescription, ...
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AirGradientConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up AirGradient sensor entities based on a config entry."""
 

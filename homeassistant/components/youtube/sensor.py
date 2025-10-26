@@ -6,11 +6,15 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ICON
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import YouTubeDataUpdateCoordinator
@@ -54,6 +58,7 @@ SENSOR_TYPES = [
         key="subscribers",
         translation_key="subscribers",
         native_unit_of_measurement="subscribers",
+        state_class=SensorStateClass.MEASUREMENT,
         available_fn=lambda _: True,
         value_fn=lambda channel: channel[ATTR_SUBSCRIBER_COUNT],
         entity_picture_fn=lambda channel: channel[ATTR_ICON],
@@ -63,6 +68,7 @@ SENSOR_TYPES = [
         key="views",
         translation_key="views",
         native_unit_of_measurement="views",
+        state_class=SensorStateClass.TOTAL_INCREASING,
         available_fn=lambda _: True,
         value_fn=lambda channel: channel[ATTR_TOTAL_VIEWS],
         entity_picture_fn=lambda channel: channel[ATTR_ICON],
@@ -72,7 +78,9 @@ SENSOR_TYPES = [
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the YouTube sensor."""
     coordinator: YouTubeDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][

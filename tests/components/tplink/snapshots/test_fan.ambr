@@ -8,6 +8,7 @@
       'preset_modes': None,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -28,6 +29,7 @@
     'original_name': None,
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <FanEntityFeature: 49>,
     'translation_key': None,
     'unique_id': '123456789ABCDEFGH',
@@ -61,6 +63,7 @@
       'preset_modes': None,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -81,6 +84,7 @@
     'original_name': 'my_fan_0',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <FanEntityFeature: 49>,
     'translation_key': None,
     'unique_id': '123456789ABCDEFGH00',
@@ -114,6 +118,7 @@
       'preset_modes': None,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -134,6 +139,7 @@
     'original_name': 'my_fan_1',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <FanEntityFeature: 49>,
     'translation_key': None,
     'unique_id': '123456789ABCDEFGH01',
@@ -162,6 +168,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -179,7 +186,6 @@
         '123456789ABCDEFGH',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'TP-Link',
@@ -189,7 +195,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '1.0.0',
     'via_device_id': None,
   })

@@ -13,14 +13,13 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import NextDnsConfigEntry
-from .coordinator import NextDnsUpdateCoordinator
+from .entity import NextDnsEntity
 
-PARALLEL_UPDATES = 1
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -51,7 +50,7 @@ SENSORS = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: NextDnsConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add NextDNS entities from a config_entry."""
     coordinator = entry.runtime_data.connection
@@ -61,30 +60,14 @@ async def async_setup_entry(
     )
 
 
-class NextDnsBinarySensor(
-    CoordinatorEntity[NextDnsUpdateCoordinator[ConnectionStatus]], BinarySensorEntity
-):
+class NextDnsBinarySensor(NextDnsEntity, BinarySensorEntity):
     """Define an NextDNS binary sensor."""
 
-    _attr_has_entity_name = True
     entity_description: NextDnsBinarySensorEntityDescription
 
-    def __init__(
-        self,
-        coordinator: NextDnsUpdateCoordinator[ConnectionStatus],
-        description: NextDnsBinarySensorEntityDescription,
-    ) -> None:
-        """Initialize."""
-        super().__init__(coordinator)
-        self._attr_device_info = coordinator.device_info
-        self._attr_unique_id = f"{coordinator.profile_id}_{description.key}"
-        self._attr_is_on = description.state(coordinator.data, coordinator.profile_id)
-        self.entity_description = description
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._attr_is_on = self.entity_description.state(
+    @property
+    def is_on(self) -> bool:
+        """Return True if the binary sensor is on."""
+        return self.entity_description.state(
             self.coordinator.data, self.coordinator.profile_id
         )
-        self.async_write_ha_state()

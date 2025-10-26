@@ -1,13 +1,14 @@
 """Mealie tests configuration."""
 
 from collections.abc import Generator
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from aiomealie import (
     About,
     Mealplan,
     MealplanResponse,
     Recipe,
+    RecipesResponse,
     ShoppingItemsResponse,
     ShoppingListsResponse,
     Statistics,
@@ -20,7 +21,6 @@ from homeassistant.components.mealie.const import DOMAIN
 from homeassistant.const import CONF_API_TOKEN, CONF_HOST
 
 from tests.common import MockConfigEntry, load_fixture
-from tests.components.smhi.common import AsyncMock
 
 SHOPPING_LIST_ID = "list-id-1"
 SHOPPING_ITEM_NOTE = "Shopping Item 1"
@@ -64,6 +64,8 @@ def mock_mealie_client() -> Generator[AsyncMock]:
         )
         recipe = Recipe.from_json(load_fixture("get_recipe.json", DOMAIN))
         client.get_recipe.return_value = recipe
+        recipes = RecipesResponse.from_json(load_fixture("get_recipes.json", DOMAIN))
+        client.get_recipes.return_value = recipes
         client.import_recipe.return_value = recipe
         client.get_shopping_lists.return_value = ShoppingListsResponse.from_json(
             load_fixture("get_shopping_lists.json", DOMAIN)

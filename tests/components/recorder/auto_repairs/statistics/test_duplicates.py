@@ -14,20 +14,21 @@ from homeassistant.components.recorder.auto_repairs.statistics.duplicates import
     delete_statistics_duplicates,
     delete_statistics_meta_duplicates,
 )
+from homeassistant.components.recorder.models import StatisticMeanType
 from homeassistant.components.recorder.statistics import async_add_external_statistics
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
-from ...common import async_wait_recording_done
+from ...common import async_wait_recording_done, get_patched_live_version
 
 from tests.common import async_test_home_assistant
-from tests.typing import RecorderInstanceGenerator
+from tests.typing import RecorderInstanceContextManager
 
 
 @pytest.fixture
 async def mock_recorder_before_hass(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
 ) -> None:
     """Set up recorder."""
 
@@ -59,11 +60,12 @@ async def test_duplicate_statistics_handle_integrity_error(
     period2 = dt_util.as_utc(dt_util.parse_datetime("2021-09-30 23:00:00"))
 
     external_energy_metadata_1 = {
-        "has_mean": False,
         "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
         "name": "Total imported energy",
         "source": "test",
         "statistic_id": "test:total_energy_import_tariff_1",
+        "unit_class": "energy",
         "unit_of_measurement": "kWh",
     }
     external_energy_statistics_1 = [
@@ -134,7 +136,7 @@ def _create_engine_28(*args, **kwargs):
 @pytest.mark.parametrize("persistent_database", [True])
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_delete_metadata_duplicates(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test removal of duplicated statistics."""
@@ -189,6 +191,14 @@ async def test_delete_metadata_duplicates(
         patch.object(
             recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
         ),
+        patch.object(
+            recorder.migration,
+            "LIVE_MIGRATION_MIN_SCHEMA_VERSION",
+            get_patched_live_version(old_db_schema),
+        ),
+        patch.object(
+            recorder.migration, "non_live_data_migration_needed", return_value=False
+        ),
         patch(
             "homeassistant.components.recorder.core.create_engine",
             new=_create_engine_28,
@@ -239,7 +249,7 @@ async def test_delete_metadata_duplicates(
 @pytest.mark.parametrize("persistent_database", [True])
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_delete_metadata_duplicates_many(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test removal of duplicated statistics."""
@@ -305,6 +315,14 @@ async def test_delete_metadata_duplicates_many(
         patch.object(recorder, "db_schema", old_db_schema),
         patch.object(
             recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
+        ),
+        patch.object(
+            recorder.migration,
+            "LIVE_MIGRATION_MIN_SCHEMA_VERSION",
+            get_patched_live_version(old_db_schema),
+        ),
+        patch.object(
+            recorder.migration, "non_live_data_migration_needed", return_value=False
         ),
         patch(
             "homeassistant.components.recorder.core.create_engine",

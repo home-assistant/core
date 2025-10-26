@@ -10,7 +10,9 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import DOMAIN, LOGGER
 
@@ -62,3 +64,19 @@ class KnockiConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
             data_schema=DATA_SCHEMA,
         )
+
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle a DHCP discovery."""
+        device_registry = dr.async_get(self.hass)
+        if device_entry := device_registry.async_get_device(
+            identifiers={(DOMAIN, discovery_info.hostname)}
+        ):
+            device_registry.async_update_device(
+                device_entry.id,
+                new_connections={
+                    (dr.CONNECTION_NETWORK_MAC, discovery_info.macaddress)
+                },
+            )
+        return await super().async_step_dhcp(discovery_info)

@@ -1,95 +1,201 @@
 """Provides a binary sensor for Home Connect."""
 
-import logging
+from dataclasses import dataclass
+from typing import cast
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ENTITIES
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from aiohomeconnect.model import EventKey, StatusKey
 
-from .const import (
-    ATTR_VALUE,
-    BSH_DOOR_STATE,
-    BSH_DOOR_STATE_CLOSED,
-    BSH_DOOR_STATE_LOCKED,
-    BSH_DOOR_STATE_OPEN,
-    BSH_REMOTE_CONTROL_ACTIVATION_STATE,
-    BSH_REMOTE_START_ALLOWANCE_STATE,
-    DOMAIN,
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
+from homeassistant.const import EntityCategory
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from .common import setup_home_connect_entry
+from .const import REFRIGERATION_STATUS_DOOR_CLOSED, REFRIGERATION_STATUS_DOOR_OPEN
+from .coordinator import HomeConnectApplianceData, HomeConnectConfigEntry
 from .entity import HomeConnectEntity
 
-_LOGGER = logging.getLogger(__name__)
+PARALLEL_UPDATES = 0
+
+REFRIGERATION_DOOR_BOOLEAN_MAP = {
+    REFRIGERATION_STATUS_DOOR_CLOSED: False,
+    REFRIGERATION_STATUS_DOOR_OPEN: True,
+}
+
+
+@dataclass(frozen=True, kw_only=True)
+class HomeConnectBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Entity Description class for binary sensors."""
+
+    boolean_map: dict[str, bool] | None = None
+
+
+BINARY_SENSORS = (
+    HomeConnectBinarySensorEntityDescription(
+        key=StatusKey.BSH_COMMON_REMOTE_CONTROL_ACTIVE,
+        translation_key="remote_control",
+    ),
+    HomeConnectBinarySensorEntityDescription(
+        key=StatusKey.BSH_COMMON_REMOTE_CONTROL_START_ALLOWED,
+        translation_key="remote_start",
+    ),
+    HomeConnectBinarySensorEntityDescription(
+        key=StatusKey.BSH_COMMON_LOCAL_CONTROL_ACTIVE,
+        translation_key="local_control",
+    ),
+    HomeConnectBinarySensorEntityDescription(
+        key=StatusKey.BSH_COMMON_BATTERY_CHARGING_STATE,
+        device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
+        boolean_map={
+            "BSH.Common.EnumType.BatteryChargingState.Charging": True,
+            "BSH.Common.EnumType.BatteryChargingState.Discharging": False,
+        },
+        translation_key="battery_charging_state",
+    ),
+    HomeConnectBinarySensorEntityDescription(
+        key=StatusKey.BSH_COMMON_CHARGING_CONNECTION,
+        device_class=BinarySensorDeviceClass.PLUG,
+        boolean_map={
+            "BSH.Common.EnumType.ChargingConnection.Connected": True,
+            "BSH.Common.EnumType.ChargingConnection.Disconnected": False,
+        },
+        translation_key="charging_connection",
+    ),
+    HomeConnectBinarySensorEntityDescription(
+        key=StatusKey.CONSUMER_PRODUCTS_CLEANING_ROBOT_DUST_BOX_INSERTED,
+        translation_key="dust_box_inserted",
+    ),
+    HomeConnectBinarySensorEntityDescription(
+        key=StatusKey.CONSUMER_PRODUCTS_CLEANING_ROBOT_LIFTED,
+        translation_key="lifted",
+    ),
+    HomeConnectBinarySensorEntityDescription(
+        key=StatusKey.CONSUMER_PRODUCTS_CLEANING_ROBOT_LOST,
+        translation_key="lost",
+    ),
+    HomeConnectBinarySensorEntityDescription(
+        key=StatusKey.REFRIGERATION_COMMON_DOOR_BOTTLE_COOLER,
+        boolean_map=REFRIGERATION_DOOR_BOOLEAN_MAP,
+        device_class=BinarySensorDeviceClass.DOOR,
+        translation_key="bottle_cooler_door",
+    ),
+    HomeConnectBinarySensorEntityDescription(
+        key=StatusKey.REFRIGERATION_COMMON_DOOR_CHILLER_COMMON,
+        boolean_map=REFRIGERATION_DOOR_BOOLEAN_MAP,
+        device_class=BinarySensorDeviceClass.DOOR,
+        translation_key="common_chiller_door",
+    ),
+    HomeConnectBinarySensorEntityDescription(
+        key=StatusKey.REFRIGERATION_COMMON_DOOR_CHILLER,
+        boolean_map=REFRIGERATION_DOOR_BOOLEAN_MAP,
+        device_class=BinarySensorDeviceClass.DOOR,
+        translation_key="chiller_door",
+    ),
+    HomeConnectBinarySensorEntityDescription(
+        key=StatusKey.REFRIGERATION_COMMON_DOOR_CHILLER_LEFT,
+        boolean_map=REFRIGERATION_DOOR_BOOLEAN_MAP,
+        device_class=BinarySensorDeviceClass.DOOR,
+        translation_key="left_chiller_door",
+    ),
+    HomeConnectBinarySensorEntityDescription(
+        key=StatusKey.REFRIGERATION_COMMON_DOOR_CHILLER_RIGHT,
+        boolean_map=REFRIGERATION_DOOR_BOOLEAN_MAP,
+        device_class=BinarySensorDeviceClass.DOOR,
+        translation_key="right_chiller_door",
+    ),
+    HomeConnectBinarySensorEntityDescription(
+        key=StatusKey.REFRIGERATION_COMMON_DOOR_FLEX_COMPARTMENT,
+        boolean_map=REFRIGERATION_DOOR_BOOLEAN_MAP,
+        device_class=BinarySensorDeviceClass.DOOR,
+        translation_key="flex_compartment_door",
+    ),
+    HomeConnectBinarySensorEntityDescription(
+        key=StatusKey.REFRIGERATION_COMMON_DOOR_FREEZER,
+        boolean_map=REFRIGERATION_DOOR_BOOLEAN_MAP,
+        device_class=BinarySensorDeviceClass.DOOR,
+        translation_key="freezer_door",
+    ),
+    HomeConnectBinarySensorEntityDescription(
+        key=StatusKey.REFRIGERATION_COMMON_DOOR_REFRIGERATOR,
+        boolean_map=REFRIGERATION_DOOR_BOOLEAN_MAP,
+        device_class=BinarySensorDeviceClass.DOOR,
+        translation_key="refrigerator_door",
+    ),
+    HomeConnectBinarySensorEntityDescription(
+        key=StatusKey.REFRIGERATION_COMMON_DOOR_WINE_COMPARTMENT,
+        boolean_map=REFRIGERATION_DOOR_BOOLEAN_MAP,
+        device_class=BinarySensorDeviceClass.DOOR,
+        translation_key="wine_compartment_door",
+    ),
+)
+
+CONNECTED_BINARY_ENTITY_DESCRIPTION = BinarySensorEntityDescription(
+    key=EventKey.BSH_COMMON_APPLIANCE_CONNECTED,
+    device_class=BinarySensorDeviceClass.CONNECTIVITY,
+)
+
+
+def _get_entities_for_appliance(
+    entry: HomeConnectConfigEntry,
+    appliance: HomeConnectApplianceData,
+) -> list[HomeConnectEntity]:
+    """Get a list of entities."""
+    entities: list[HomeConnectEntity] = [
+        HomeConnectConnectivityBinarySensor(
+            entry.runtime_data, appliance, CONNECTED_BINARY_ENTITY_DESCRIPTION
+        )
+    ]
+    entities.extend(
+        HomeConnectBinarySensor(entry.runtime_data, appliance, description)
+        for description in BINARY_SENSORS
+        if description.key in appliance.status
+    )
+    return entities
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: HomeConnectConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Home Connect binary sensor."""
-
-    def get_entities():
-        entities = []
-        hc_api = hass.data[DOMAIN][config_entry.entry_id]
-        for device_dict in hc_api.devices:
-            entity_dicts = device_dict.get(CONF_ENTITIES, {}).get("binary_sensor", [])
-            entities += [HomeConnectBinarySensor(**d) for d in entity_dicts]
-        return entities
-
-    async_add_entities(await hass.async_add_executor_job(get_entities), True)
+    setup_home_connect_entry(
+        entry,
+        _get_entities_for_appliance,
+        async_add_entities,
+    )
 
 
 class HomeConnectBinarySensor(HomeConnectEntity, BinarySensorEntity):
     """Binary sensor for Home Connect."""
 
-    def __init__(self, device, desc, sensor_type, device_class=None):
-        """Initialize the entity."""
-        super().__init__(device, desc)
-        self._state = None
-        self._device_class = device_class
-        self._type = sensor_type
-        if self._type == "door":
-            self._update_key = BSH_DOOR_STATE
-            self._false_value_list = (BSH_DOOR_STATE_CLOSED, BSH_DOOR_STATE_LOCKED)
-            self._true_value_list = [BSH_DOOR_STATE_OPEN]
-        elif self._type == "remote_control":
-            self._update_key = BSH_REMOTE_CONTROL_ACTIVATION_STATE
-            self._false_value_list = [False]
-            self._true_value_list = [True]
-        elif self._type == "remote_start":
-            self._update_key = BSH_REMOTE_START_ALLOWANCE_STATE
-            self._false_value_list = [False]
-            self._true_value_list = [True]
+    entity_description: HomeConnectBinarySensorEntityDescription
 
-    @property
-    def is_on(self):
-        """Return true if the binary sensor is on."""
-        return bool(self._state)
+    def update_native_value(self) -> None:
+        """Set the native value of the binary sensor."""
+        status = self.appliance.status[cast(StatusKey, self.bsh_key)].value
+        if isinstance(status, bool):
+            self._attr_is_on = status
+        elif self.entity_description.boolean_map:
+            self._attr_is_on = self.entity_description.boolean_map.get(status)
+        else:
+            self._attr_is_on = None
+
+
+class HomeConnectConnectivityBinarySensor(HomeConnectEntity, BinarySensorEntity):
+    """Binary sensor for Home Connect appliance's connection status."""
+
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def update_native_value(self) -> None:
+        """Set the native value of the binary sensor."""
+        self._attr_is_on = self.appliance.info.connected
 
     @property
     def available(self) -> bool:
-        """Return true if the binary sensor is available."""
-        return self._state is not None
-
-    async def async_update(self) -> None:
-        """Update the binary sensor's status."""
-        state = self.device.appliance.status.get(self._update_key, {})
-        if not state:
-            self._state = None
-        elif state.get(ATTR_VALUE) in self._false_value_list:
-            self._state = False
-        elif state.get(ATTR_VALUE) in self._true_value_list:
-            self._state = True
-        else:
-            _LOGGER.warning(
-                "Unexpected value for HomeConnect %s state: %s", self._type, state
-            )
-            self._state = None
-        _LOGGER.debug("Updated, new state: %s", self._state)
-
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return self._device_class
+        """Return the availability."""
+        return self.coordinator.last_update_success

@@ -80,8 +80,8 @@ async def test_number_setup_light(
     assert_entity_counts(hass, Platform.NUMBER, 2, 2)
 
     for description in LIGHT_NUMBERS:
-        unique_id, entity_id = ids_from_device_description(
-            Platform.NUMBER, light, description
+        unique_id, entity_id = await ids_from_device_description(
+            hass, Platform.NUMBER, light, description
         )
 
         entity = entity_registry.async_get(entity_id)
@@ -111,8 +111,8 @@ async def test_number_setup_camera_all(
     assert_entity_counts(hass, Platform.NUMBER, 5, 5)
 
     for description in CAMERA_NUMBERS:
-        unique_id, entity_id = ids_from_device_description(
-            Platform.NUMBER, camera, description
+        unique_id, entity_id = await ids_from_device_description(
+            hass, Platform.NUMBER, camera, description
         )
 
         entity = entity_registry.async_get(entity_id)
@@ -162,10 +162,12 @@ async def test_number_light_sensitivity(
     description = LIGHT_NUMBERS[0]
     assert description.ufp_set_method is not None
 
-    light.__fields__["set_sensitivity"] = Mock(final=False)
+    light.__pydantic_fields__["set_sensitivity"] = Mock(final=False, frozen=False)
     light.set_sensitivity = AsyncMock()
 
-    _, entity_id = ids_from_device_description(Platform.NUMBER, light, description)
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.NUMBER, light, description
+    )
 
     await hass.services.async_call(
         "number", "set_value", {ATTR_ENTITY_ID: entity_id, "value": 15.0}, blocking=True
@@ -184,10 +186,12 @@ async def test_number_light_duration(
 
     description = LIGHT_NUMBERS[1]
 
-    light.__fields__["set_duration"] = Mock(final=False)
+    light.__pydantic_fields__["set_duration"] = Mock(final=False, frozen=False)
     light.set_duration = AsyncMock()
 
-    _, entity_id = ids_from_device_description(Platform.NUMBER, light, description)
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.NUMBER, light, description
+    )
 
     await hass.services.async_call(
         "number", "set_value", {ATTR_ENTITY_ID: entity_id, "value": 15.0}, blocking=True
@@ -210,10 +214,14 @@ async def test_number_camera_simple(
 
     assert description.ufp_set_method is not None
 
-    camera.__fields__[description.ufp_set_method] = Mock(final=False)
+    camera.__pydantic_fields__[description.ufp_set_method] = Mock(
+        final=False, frozen=False
+    )
     setattr(camera, description.ufp_set_method, AsyncMock())
 
-    _, entity_id = ids_from_device_description(Platform.NUMBER, camera, description)
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.NUMBER, camera, description
+    )
 
     await hass.services.async_call(
         "number", "set_value", {ATTR_ENTITY_ID: entity_id, "value": 1.0}, blocking=True
@@ -230,10 +238,14 @@ async def test_number_lock_auto_close(
 
     description = DOORLOCK_NUMBERS[0]
 
-    doorlock.__fields__["set_auto_close_time"] = Mock(final=False)
+    doorlock.__pydantic_fields__["set_auto_close_time"] = Mock(
+        final=False, frozen=False
+    )
     doorlock.set_auto_close_time = AsyncMock()
 
-    _, entity_id = ids_from_device_description(Platform.NUMBER, doorlock, description)
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.NUMBER, doorlock, description
+    )
 
     await hass.services.async_call(
         "number", "set_value", {ATTR_ENTITY_ID: entity_id, "value": 15.0}, blocking=True

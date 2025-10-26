@@ -6,7 +6,6 @@
         'id': 'conversation.home_assistant',
         'name': 'Home Assistant',
         'supported_languages': list([
-          'af',
           'ar',
           'bg',
           'bn',
@@ -23,9 +22,7 @@
           'fa',
           'fi',
           'fr',
-          'fr-CA',
           'gl',
-          'gu',
           'he',
           'hi',
           'hr',
@@ -33,9 +30,10 @@
           'id',
           'is',
           'it',
+          'ja',
           'ka',
-          'kn',
           'ko',
+          'kw',
           'lb',
           'lt',
           'lv',
@@ -43,25 +41,28 @@
           'mn',
           'ms',
           'nb',
+          'ne',
           'nl',
           'pl',
           'pt',
-          'pt-br',
+          'pt-BR',
           'ro',
           'ru',
           'sk',
           'sl',
           'sr',
+          'sr-Latn',
           'sv',
           'sw',
           'te',
+          'th',
           'tr',
           'uk',
           'ur',
           'vi',
-          'zh-cn',
-          'zh-hk',
-          'zh-tw',
+          'zh-CN',
+          'zh-HK',
+          'zh-TW',
         ]),
       }),
       dict({
@@ -203,7 +204,8 @@
 # ---
 # name: test_http_api_handle_failure
   dict({
-    'conversation_id': None,
+    'continue_conversation': False,
+    'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
       }),
@@ -223,7 +225,8 @@
 # ---
 # name: test_http_api_no_match
   dict({
-    'conversation_id': None,
+    'continue_conversation': False,
+    'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
       }),
@@ -243,7 +246,8 @@
 # ---
 # name: test_http_api_unexpected_failure
   dict({
-    'conversation_id': None,
+    'continue_conversation': False,
+    'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
       }),
@@ -263,7 +267,8 @@
 # ---
 # name: test_http_processing_intent[None]
   dict({
-    'conversation_id': None,
+    'continue_conversation': False,
+    'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
       }),
@@ -293,37 +298,8 @@
 # ---
 # name: test_http_processing_intent[conversation.home_assistant]
   dict({
-    'conversation_id': None,
-    'response': dict({
-      'card': dict({
-      }),
-      'data': dict({
-        'failed': list([
-        ]),
-        'success': list([
-          dict({
-            'id': 'light.kitchen',
-            'name': 'kitchen',
-            'type': 'entity',
-          }),
-        ]),
-        'targets': list([
-        ]),
-      }),
-      'language': 'en',
-      'response_type': 'action_done',
-      'speech': dict({
-        'plain': dict({
-          'extra_data': None,
-          'speech': 'Turned on the light',
-        }),
-      }),
-    }),
-  })
-# ---
-# name: test_http_processing_intent[homeassistant]
-  dict({
-    'conversation_id': None,
+    'continue_conversation': False,
+    'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
       }),
@@ -353,7 +329,8 @@
 # ---
 # name: test_ws_api[payload0]
   dict({
-    'conversation_id': None,
+    'continue_conversation': False,
+    'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
       }),
@@ -373,7 +350,8 @@
 # ---
 # name: test_ws_api[payload1]
   dict({
-    'conversation_id': None,
+    'continue_conversation': False,
+    'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
       }),
@@ -393,7 +371,8 @@
 # ---
 # name: test_ws_api[payload2]
   dict({
-    'conversation_id': None,
+    'continue_conversation': False,
+    'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
       }),
@@ -413,7 +392,8 @@
 # ---
 # name: test_ws_api[payload3]
   dict({
-    'conversation_id': None,
+    'continue_conversation': False,
+    'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
       }),
@@ -433,7 +413,8 @@
 # ---
 # name: test_ws_api[payload4]
   dict({
-    'conversation_id': None,
+    'continue_conversation': False,
+    'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
       }),
@@ -453,7 +434,8 @@
 # ---
 # name: test_ws_api[payload5]
   dict({
-    'conversation_id': None,
+    'continue_conversation': False,
+    'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
       }),
@@ -482,6 +464,7 @@
             'value': 'my cool light',
           }),
         }),
+        'fuzzy_match': False,
         'intent': dict({
           'name': 'HassTurnOn',
         }),
@@ -490,7 +473,6 @@
         'slots': dict({
           'name': 'my cool light',
         }),
-        'source': 'builtin',
         'targets': dict({
           'light.kitchen': dict({
             'matched': True,
@@ -507,6 +489,7 @@
             'value': 'my cool light',
           }),
         }),
+        'fuzzy_match': False,
         'intent': dict({
           'name': 'HassTurnOff',
         }),
@@ -515,7 +498,6 @@
         'slots': dict({
           'name': 'my cool light',
         }),
-        'source': 'builtin',
         'targets': dict({
           'light.kitchen': dict({
             'matched': True,
@@ -537,16 +519,16 @@
             'value': 'light',
           }),
         }),
+        'fuzzy_match': False,
         'intent': dict({
           'name': 'HassTurnOn',
         }),
         'match': True,
-        'sentence_template': '<turn> on [all] <light> in <area>',
+        'sentence_template': '<turn> on [(<all>|<the>)] <light> <in> <area>',
         'slots': dict({
           'area': 'kitchen',
           'domain': 'light',
         }),
-        'source': 'builtin',
         'targets': dict({
           'light.kitchen': dict({
             'matched': True,
@@ -573,17 +555,17 @@
             'value': 'on',
           }),
         }),
+        'fuzzy_match': False,
         'intent': dict({
           'name': 'HassGetState',
         }),
         'match': True,
-        'sentence_template': '[tell me] how many {on_off_domains:domain} (is|are) {on_off_states:state} [in <area>]',
+        'sentence_template': '[tell me] how many {on_off_domains:domain} (is|are) {on_off_states:state} [<in_area_floor>]',
         'slots': dict({
           'area': 'kitchen',
           'domain': 'lights',
           'state': 'on',
         }),
-        'source': 'builtin',
         'targets': dict({
           'light.kitchen': dict({
             'matched': False,
@@ -608,11 +590,12 @@
           }),
         }),
         'file': 'en/beer.yaml',
+        'fuzzy_match': False,
         'intent': dict({
           'name': 'OrderBeer',
         }),
         'match': True,
-        'sentence_template': "I'd like to order a {beer_style} [please]",
+        'sentence_template': "[I'd like to ]order a {beer_style} [please]",
         'slots': dict({
           'beer_style': 'lager',
         }),
@@ -639,8 +622,8 @@
         'details': dict({
           'brightness': dict({
             'name': 'brightness',
-            'text': '100%',
-            'value': 100,
+            'text': '100',
+            'value': 100.0,
           }),
           'name': dict({
             'name': 'name',
@@ -648,16 +631,16 @@
             'value': 'test light',
           }),
         }),
+        'fuzzy_match': False,
         'intent': dict({
           'name': 'HassLightSet',
         }),
         'match': True,
         'sentence_template': '[<numeric_value_set>] <name> brightness [to] <brightness>',
         'slots': dict({
-          'brightness': '100%',
+          'brightness': '100',
           'name': 'test light',
         }),
-        'source': 'builtin',
         'targets': dict({
           'light.demo_1234': dict({
             'matched': True,
@@ -680,6 +663,7 @@
             'value': 'test light',
           }),
         }),
+        'fuzzy_match': False,
         'intent': dict({
           'name': 'HassLightSet',
         }),
@@ -688,17 +672,24 @@
         'slots': dict({
           'name': 'test light',
         }),
-        'source': 'builtin',
         'targets': dict({
         }),
         'unmatched_slots': dict({
-          'brightness': 1001,
+          'brightness': 1001.0,
         }),
       }),
     ]),
   })
 # ---
 # name: test_ws_hass_agent_debug_sentence_trigger
+  dict({
+    'trigger_sentences': list([
+      'hello',
+      'hello[ world]',
+    ]),
+  })
+# ---
+# name: test_ws_hass_agent_debug_sentence_trigger.1
   dict({
     'results': list([
       dict({

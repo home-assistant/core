@@ -4,16 +4,16 @@ from __future__ import annotations
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AuroraConfigEntry
+from .coordinator import AuroraConfigEntry
 from .entity import AuroraEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AuroraConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the binary_sensor platform."""
     async_add_entities(

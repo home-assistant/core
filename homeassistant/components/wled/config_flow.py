@@ -7,16 +7,17 @@ from typing import Any
 import voluptuous as vol
 from wled import WLED, Device, WLEDConnectionError
 
-from homeassistant.components import onboarding, zeroconf
+from homeassistant.components import onboarding
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlowWithConfigEntry,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_HOST, CONF_MAC
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import CONF_KEEP_MAIN_LIGHT, DEFAULT_KEEP_MAIN_LIGHT, DOMAIN
 
@@ -30,9 +31,11 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> WLEDOptionsFlowHandler:
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> WLEDOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return WLEDOptionsFlowHandler(config_entry)
+        return WLEDOptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -66,7 +69,7 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         # Abort quick if the mac address is provided by discovery info
@@ -117,7 +120,7 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
         return await wled.update()
 
 
-class WLEDOptionsFlowHandler(OptionsFlowWithConfigEntry):
+class WLEDOptionsFlowHandler(OptionsFlowWithReload):
     """Handle WLED options."""
 
     async def async_step_init(
@@ -133,7 +136,7 @@ class WLEDOptionsFlowHandler(OptionsFlowWithConfigEntry):
                 {
                     vol.Optional(
                         CONF_KEEP_MAIN_LIGHT,
-                        default=self.options.get(
+                        default=self.config_entry.options.get(
                             CONF_KEEP_MAIN_LIGHT, DEFAULT_KEEP_MAIN_LIGHT
                         ),
                     ): bool,

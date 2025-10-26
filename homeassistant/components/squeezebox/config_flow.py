@@ -10,16 +10,35 @@ from typing import TYPE_CHECKING, Any
 from pysqueezebox import Server, async_discover
 import voluptuous as vol
 
-from homeassistant.components import dhcp
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.selector import (
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
+)
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from .const import CONF_HTTPS, DEFAULT_PORT, DOMAIN
+from .const import (
+    CONF_BROWSE_LIMIT,
+    CONF_HTTPS,
+    CONF_VOLUME_STEP,
+    DEFAULT_BROWSE_LIMIT,
+    DEFAULT_PORT,
+    DEFAULT_VOLUME_STEP,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,6 +96,12 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
         self.data_schema = _base_schema()
         self.discovery_info: dict[str, Any] | None = None
 
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowHandler:
+        """Get the options flow for this handler."""
+        return OptionsFlowHandler()
+
     async def _discover(self, uuid: str | None = None) -> None:
         """Discover an unconfigured LMS server."""
         self.discovery_info = None
@@ -126,7 +151,8 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
                 if server.http_status == HTTPStatus.UNAUTHORIZED:
                     return "invalid_auth"
                 return "cannot_connect"
-        except Exception:  # noqa: BLE001
+        except Exception:
+            _LOGGER.exception("Unknown exception while validating connection")
             return "unknown"
 
         if "uuid" in status:
@@ -200,7 +226,7 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self.async_step_edit()
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle dhcp discovery of a Squeezebox player."""
         _LOGGER.debug(
@@ -222,3 +248,48 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # if the player is unknown, then we likely need to configure its server
         return await self.async_step_user()
+
+
+OPTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_BROWSE_LIMIT): vol.All(
+            NumberSelector(
+                NumberSelectorConfig(min=1, max=65534, mode=NumberSelectorMode.BOX)
+            ),
+            vol.Coerce(int),
+        ),
+        vol.Required(CONF_VOLUME_STEP): vol.All(
+            NumberSelector(
+                NumberSelectorConfig(min=1, max=20, mode=NumberSelectorMode.SLIDER)
+            ),
+            vol.Coerce(int),
+        ),
+    }
+)
+
+
+class OptionsFlowHandler(OptionsFlow):
+    """Options Flow Handler."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Options Flow Steps."""
+
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=self.add_suggested_values_to_schema(
+                OPTIONS_SCHEMA,
+                {
+                    CONF_BROWSE_LIMIT: self.config_entry.options.get(
+                        CONF_BROWSE_LIMIT, DEFAULT_BROWSE_LIMIT
+                    ),
+                    CONF_VOLUME_STEP: self.config_entry.options.get(
+                        CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP
+                    ),
+                },
+            ),
+        )

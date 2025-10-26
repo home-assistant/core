@@ -7,11 +7,12 @@ import pytest
 from sensoterra.customerapi import InvalidAuth as StInvalidAuth, Timeout as StTimeout
 
 from homeassistant.components.sensoterra.const import DOMAIN
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .const import API_EMAIL, API_PASSWORD, API_TOKEN, HASS_UUID, SOURCE_USER
+from .const import API_EMAIL, API_PASSWORD, API_TOKEN, HASS_UUID
 
 from tests.common import MockConfigEntry
 

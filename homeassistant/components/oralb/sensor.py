@@ -3,6 +3,13 @@
 from __future__ import annotations
 
 from oralb_ble import OralBSensor, SensorUpdate
+from oralb_ble.parser import (
+    IO_SERIES_MODES,
+    PRESSURE,
+    SECTOR_MAP,
+    SMART_SERIES_MODES,
+    STATES,
+)
 
 from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothDataProcessor,
@@ -22,7 +29,7 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 
 from . import OralBConfigEntry
@@ -39,6 +46,8 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
         key=OralBSensor.SECTOR,
         translation_key="sector",
         entity_category=EntityCategory.DIAGNOSTIC,
+        options=[v.replace(" ", "_") for v in set(SECTOR_MAP.values()) | {"no_sector"}],
+        device_class=SensorDeviceClass.ENUM,
     ),
     OralBSensor.NUMBER_OF_SECTORS: SensorEntityDescription(
         key=OralBSensor.NUMBER_OF_SECTORS,
@@ -53,16 +62,26 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     ),
     OralBSensor.TOOTHBRUSH_STATE: SensorEntityDescription(
         key=OralBSensor.TOOTHBRUSH_STATE,
+        translation_key="toothbrush_state",
+        options=[v.replace(" ", "_") for v in set(STATES.values())],
+        device_class=SensorDeviceClass.ENUM,
         name=None,
     ),
     OralBSensor.PRESSURE: SensorEntityDescription(
         key=OralBSensor.PRESSURE,
         translation_key="pressure",
+        options=[v.replace(" ", "_") for v in set(PRESSURE.values()) | {"low"}],
+        device_class=SensorDeviceClass.ENUM,
     ),
     OralBSensor.MODE: SensorEntityDescription(
         key=OralBSensor.MODE,
         translation_key="mode",
         entity_category=EntityCategory.DIAGNOSTIC,
+        options=[
+            v.replace(" ", "_")
+            for v in set(IO_SERIES_MODES.values()) | set(SMART_SERIES_MODES.values())
+        ],
+        device_class=SensorDeviceClass.ENUM,
     ),
     OralBSensor.SIGNAL_STRENGTH: SensorEntityDescription(
         key=OralBSensor.SIGNAL_STRENGTH,
@@ -108,7 +127,7 @@ def sensor_update_to_bluetooth_data_update(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: OralBConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the OralB BLE sensors."""
     coordinator = entry.runtime_data
@@ -134,7 +153,15 @@ class OralBBluetoothSensorEntity(
     @property
     def native_value(self) -> str | int | None:
         """Return the native value."""
-        return self.processor.entity_data.get(self.entity_key)
+        value = self.processor.entity_data.get(self.entity_key)
+        if isinstance(value, str):
+            value = value.replace(" ", "_")
+            if (
+                self.entity_description.options is not None
+                and value not in self.entity_description.options
+            ):  # append unknown values to enum
+                self.entity_description.options.append(value)
+        return value
 
     @property
     def available(self) -> bool:

@@ -6,19 +6,23 @@ from aiohomekit.model import Accessory
 from aiohomekit.model.characteristics import (
     ActivationStateValues,
     CharacteristicsTypes,
+    CurrentFanStateValues,
     CurrentHeaterCoolerStateValues,
+    HeatingCoolingCurrentValues,
+    HeatingCoolingTargetValues,
     SwingModeValues,
     TargetHeaterCoolerStateValues,
 )
 from aiohomekit.model.services import ServicesTypes
 
 from homeassistant.components.climate import (
-    DOMAIN,
+    DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.core import HomeAssistant
@@ -64,6 +68,9 @@ def create_thermostat_service(accessory: Accessory) -> None:
     char.value = 0
 
     char = service.add_char(CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT)
+    char.value = 0
+
+    char = service.add_char(CharacteristicsTypes.FAN_STATE_CURRENT)
     char.value = 0
 
 
@@ -113,7 +120,7 @@ async def test_climate_change_thermostat_state(
     helper = await setup_test_component(hass, get_next_aid(), create_thermostat_service)
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
         {"entity_id": "climate.testdevice", "hvac_mode": HVACMode.HEAT},
         blocking=True,
@@ -126,7 +133,7 @@ async def test_climate_change_thermostat_state(
     )
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
         {"entity_id": "climate.testdevice", "hvac_mode": HVACMode.COOL},
         blocking=True,
@@ -139,7 +146,7 @@ async def test_climate_change_thermostat_state(
     )
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
         {"entity_id": "climate.testdevice", "hvac_mode": HVACMode.HEAT_COOL},
         blocking=True,
@@ -152,7 +159,7 @@ async def test_climate_change_thermostat_state(
     )
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
         {"entity_id": "climate.testdevice", "hvac_mode": HVACMode.OFF},
         blocking=True,
@@ -165,7 +172,7 @@ async def test_climate_change_thermostat_state(
     )
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_FAN_MODE,
         {"entity_id": "climate.testdevice", "fan_mode": "on"},
         blocking=True,
@@ -178,7 +185,7 @@ async def test_climate_change_thermostat_state(
     )
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_FAN_MODE,
         {"entity_id": "climate.testdevice", "fan_mode": "auto"},
         blocking=True,
@@ -198,7 +205,7 @@ async def test_climate_check_min_max_values_per_mode(
     helper = await setup_test_component(hass, get_next_aid(), create_thermostat_service)
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
         {"entity_id": "climate.testdevice", "hvac_mode": HVACMode.HEAT},
         blocking=True,
@@ -208,7 +215,7 @@ async def test_climate_check_min_max_values_per_mode(
     assert climate_state.attributes["max_temp"] == 35
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
         {"entity_id": "climate.testdevice", "hvac_mode": HVACMode.COOL},
         blocking=True,
@@ -218,7 +225,7 @@ async def test_climate_check_min_max_values_per_mode(
     assert climate_state.attributes["max_temp"] == 35
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
         {"entity_id": "climate.testdevice", "hvac_mode": HVACMode.HEAT_COOL},
         blocking=True,
@@ -235,7 +242,7 @@ async def test_climate_change_thermostat_temperature(
     helper = await setup_test_component(hass, get_next_aid(), create_thermostat_service)
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {"entity_id": "climate.testdevice", "temperature": 21},
         blocking=True,
@@ -248,7 +255,7 @@ async def test_climate_change_thermostat_temperature(
     )
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {"entity_id": "climate.testdevice", "temperature": 25},
         blocking=True,
@@ -268,14 +275,14 @@ async def test_climate_change_thermostat_temperature_range(
     helper = await setup_test_component(hass, get_next_aid(), create_thermostat_service)
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
         {"entity_id": "climate.testdevice", "hvac_mode": HVACMode.HEAT_COOL},
         blocking=True,
     )
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {
             "entity_id": "climate.testdevice",
@@ -303,14 +310,14 @@ async def test_climate_change_thermostat_temperature_range_iphone(
     helper = await setup_test_component(hass, get_next_aid(), create_thermostat_service)
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
         {"entity_id": "climate.testdevice", "hvac_mode": HVACMode.HEAT_COOL},
         blocking=True,
     )
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {
             "entity_id": "climate.testdevice",
@@ -338,14 +345,14 @@ async def test_climate_cannot_set_thermostat_temp_range_in_wrong_mode(
     helper = await setup_test_component(hass, get_next_aid(), create_thermostat_service)
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
         {"entity_id": "climate.testdevice", "hvac_mode": HVACMode.HEAT},
         blocking=True,
     )
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {
             "entity_id": "climate.testdevice",
@@ -399,7 +406,7 @@ async def test_climate_check_min_max_values_per_mode_sspa_device(
     )
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
         {"entity_id": "climate.testdevice", "hvac_mode": HVACMode.HEAT},
         blocking=True,
@@ -409,7 +416,7 @@ async def test_climate_check_min_max_values_per_mode_sspa_device(
     assert climate_state.attributes["max_temp"] == 35
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
         {"entity_id": "climate.testdevice", "hvac_mode": HVACMode.COOL},
         blocking=True,
@@ -419,7 +426,7 @@ async def test_climate_check_min_max_values_per_mode_sspa_device(
     assert climate_state.attributes["max_temp"] == 35
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
         {"entity_id": "climate.testdevice", "hvac_mode": HVACMode.HEAT_COOL},
         blocking=True,
@@ -438,14 +445,14 @@ async def test_climate_set_thermostat_temp_on_sspa_device(
     )
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
         {"entity_id": "climate.testdevice", "hvac_mode": HVACMode.HEAT},
         blocking=True,
     )
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {"entity_id": "climate.testdevice", "temperature": 21},
         blocking=True,
@@ -458,7 +465,7 @@ async def test_climate_set_thermostat_temp_on_sspa_device(
     )
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
         {"entity_id": "climate.testdevice", "hvac_mode": HVACMode.HEAT_COOL},
         blocking=True,
@@ -471,7 +478,7 @@ async def test_climate_set_thermostat_temp_on_sspa_device(
     )
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {
             "entity_id": "climate.testdevice",
@@ -496,7 +503,7 @@ async def test_climate_set_mode_via_temp(
     )
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {
             "entity_id": "climate.testdevice",
@@ -514,7 +521,7 @@ async def test_climate_set_mode_via_temp(
     )
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {
             "entity_id": "climate.testdevice",
@@ -539,7 +546,7 @@ async def test_climate_change_thermostat_humidity(
     helper = await setup_test_component(hass, get_next_aid(), create_thermostat_service)
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_HUMIDITY,
         {"entity_id": "climate.testdevice", "humidity": 50},
         blocking=True,
@@ -552,7 +559,7 @@ async def test_climate_change_thermostat_humidity(
     )
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_HUMIDITY,
         {"entity_id": "climate.testdevice", "humidity": 45},
         blocking=True,
@@ -648,6 +655,18 @@ async def test_hvac_mode_vs_hvac_action(
     assert state.state == "heat"
     assert state.attributes["hvac_action"] == "idle"
 
+    # Simulate the fan running while the heat/cool is idle
+    await helper.async_update(
+        ServicesTypes.THERMOSTAT,
+        {
+            CharacteristicsTypes.FAN_STATE_CURRENT: CurrentFanStateValues.ACTIVE,
+        },
+    )
+
+    state = await helper.poll_and_get_state()
+    assert state.state == "heat"
+    assert state.attributes["hvac_action"] == HVACAction.FAN
+
     # Simulate that current temperature is below target temp
     # Heating might be on and hvac_action currently 'heat'
     await helper.async_update(
@@ -660,7 +679,23 @@ async def test_hvac_mode_vs_hvac_action(
 
     state = await helper.poll_and_get_state()
     assert state.state == "heat"
-    assert state.attributes["hvac_action"] == "heating"
+    assert state.attributes["hvac_action"] == HVACAction.HEATING
+
+    # If the fan is active, and the heating is off, the hvac_action should be 'fan'
+    # and not 'idle' or 'heating'
+    await helper.async_update(
+        ServicesTypes.THERMOSTAT,
+        {
+            CharacteristicsTypes.FAN_STATE_CURRENT: CurrentFanStateValues.ACTIVE,
+            CharacteristicsTypes.HEATING_COOLING_CURRENT: HeatingCoolingCurrentValues.IDLE,
+            CharacteristicsTypes.HEATING_COOLING_TARGET: HeatingCoolingTargetValues.OFF,
+            CharacteristicsTypes.FAN_STATE_CURRENT: CurrentFanStateValues.ACTIVE,
+        },
+    )
+
+    state = await helper.poll_and_get_state()
+    assert state.state == HVACMode.OFF
+    assert state.attributes["hvac_action"] == HVACAction.FAN
 
 
 async def test_hvac_mode_vs_hvac_action_current_mode_wrong(
@@ -768,7 +803,7 @@ async def test_heater_cooler_change_thermostat_state(
     )
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
         {"entity_id": "climate.testdevice", "hvac_mode": HVACMode.HEAT},
         blocking=True,
@@ -781,7 +816,7 @@ async def test_heater_cooler_change_thermostat_state(
     )
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
         {"entity_id": "climate.testdevice", "hvac_mode": HVACMode.COOL},
         blocking=True,
@@ -794,7 +829,7 @@ async def test_heater_cooler_change_thermostat_state(
     )
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
         {"entity_id": "climate.testdevice", "hvac_mode": HVACMode.HEAT_COOL},
         blocking=True,
@@ -807,7 +842,7 @@ async def test_heater_cooler_change_thermostat_state(
     )
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
         {"entity_id": "climate.testdevice", "hvac_mode": HVACMode.OFF},
         blocking=True,
@@ -832,7 +867,7 @@ async def test_can_turn_on_after_off(
     )
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
         {"entity_id": "climate.testdevice", "hvac_mode": HVACMode.OFF},
         blocking=True,
@@ -845,7 +880,7 @@ async def test_can_turn_on_after_off(
     )
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
         {"entity_id": "climate.testdevice", "hvac_mode": HVACMode.HEAT},
         blocking=True,
@@ -868,13 +903,13 @@ async def test_heater_cooler_change_thermostat_temperature(
     )
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
         {"entity_id": "climate.testdevice", "hvac_mode": HVACMode.HEAT},
         blocking=True,
     )
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {"entity_id": "climate.testdevice", "temperature": 20},
         blocking=True,
@@ -887,13 +922,13 @@ async def test_heater_cooler_change_thermostat_temperature(
     )
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
         {"entity_id": "climate.testdevice", "hvac_mode": HVACMode.COOL},
         blocking=True,
     )
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {"entity_id": "climate.testdevice", "temperature": 26},
         blocking=True,
@@ -915,13 +950,13 @@ async def test_heater_cooler_change_fan_speed(
     )
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
         {"entity_id": "climate.testdevice", "hvac_mode": HVACMode.COOL},
         blocking=True,
     )
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_FAN_MODE,
         {"entity_id": "climate.testdevice", "fan_mode": "low"},
         blocking=True,
@@ -933,7 +968,7 @@ async def test_heater_cooler_change_fan_speed(
         },
     )
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_FAN_MODE,
         {"entity_id": "climate.testdevice", "fan_mode": "medium"},
         blocking=True,
@@ -945,7 +980,7 @@ async def test_heater_cooler_change_fan_speed(
         },
     )
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_FAN_MODE,
         {"entity_id": "climate.testdevice", "fan_mode": "high"},
         blocking=True,
@@ -1121,7 +1156,7 @@ async def test_heater_cooler_change_swing_mode(
     )
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_SWING_MODE,
         {"entity_id": "climate.testdevice", "swing_mode": "vertical"},
         blocking=True,
@@ -1134,7 +1169,7 @@ async def test_heater_cooler_change_swing_mode(
     )
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_SWING_MODE,
         {"entity_id": "climate.testdevice", "swing_mode": "off"},
         blocking=True,

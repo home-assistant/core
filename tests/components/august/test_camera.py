@@ -6,7 +6,7 @@ from unittest.mock import patch
 from yalexs.const import Brand
 from yalexs.doorbell import ContentTokenExpired
 
-from homeassistant.const import STATE_IDLE
+from homeassistant.components.camera import CameraState
 from homeassistant.core import HomeAssistant
 
 from .mocks import _create_august_with_devices, _mock_doorbell_from_fixture
@@ -26,7 +26,7 @@ async def test_create_doorbell(
         await _create_august_with_devices(hass, [doorbell_one], brand=Brand.AUGUST)
 
         camera_state = hass.states.get("camera.k98gidt45gul_name_camera")
-        assert camera_state.state == STATE_IDLE
+        assert camera_state.state == CameraState.IDLE
 
         url = camera_state.attributes["entity_picture"]
 

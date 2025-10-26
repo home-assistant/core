@@ -3,7 +3,7 @@
 from aiohttp.test_utils import TestClient
 from freezegun import freeze_time
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
 from homeassistant.auth.models import Credentials
@@ -91,7 +91,17 @@ async def test_diagnostics(
                         ATTR_LAST_RESET: last_reset,
                     },
                 ),
-                {},
+                {
+                    "native_value": {
+                        "__type": "<class 'decimal.Decimal'>",
+                        "decimal_str": "3",
+                    },
+                    "native_unit_of_measurement": "kWh",
+                    "last_reset": last_reset,
+                    "last_period": "0",
+                    "last_valid_state": 3,
+                    "status": "collecting",
+                },
             ),
             (
                 State(
@@ -101,7 +111,17 @@ async def test_diagnostics(
                         ATTR_LAST_RESET: last_reset,
                     },
                 ),
-                {},
+                {
+                    "native_value": {
+                        "__type": "<class 'decimal.Decimal'>",
+                        "decimal_str": "7",
+                    },
+                    "native_unit_of_measurement": "kWh",
+                    "last_reset": last_reset,
+                    "last_period": "0",
+                    "last_valid_state": 7,
+                    "status": "paused",
+                },
             ),
         ],
     )

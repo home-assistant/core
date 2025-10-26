@@ -10,20 +10,19 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
-from . import CONF_DATA, async_init_integration, create_entry, create_mocked_yeti
+from . import CONF_DATA, async_init_integration, create_entry
 
 from tests.common import async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_setup_config_and_unload(hass: HomeAssistant) -> None:
+async def test_setup_config_and_unload(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test Goal Zero setup and unload."""
-    entry = create_entry(hass)
-    mocked_yeti = await create_mocked_yeti()
-    with patch("homeassistant.components.goalzero.Yeti", return_value=mocked_yeti):
-        await hass.config_entries.async_setup(entry.entry_id)
+    entry = await async_init_integration(hass, aioclient_mock)
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
@@ -37,14 +36,12 @@ async def test_setup_config_and_unload(hass: HomeAssistant) -> None:
 
 
 async def test_setup_config_entry_incorrectly_formatted_mac(
-    hass: HomeAssistant,
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test the mac address formatting is corrected."""
-    entry = create_entry(hass)
+    entry = await async_init_integration(hass, aioclient_mock, skip_setup=True)
     hass.config_entries.async_update_entry(entry, unique_id="AABBCCDDEEFF")
-    mocked_yeti = await create_mocked_yeti()
-    with patch("homeassistant.components.goalzero.Yeti", return_value=mocked_yeti):
-        await hass.config_entries.async_setup(entry.entry_id)
+    await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1

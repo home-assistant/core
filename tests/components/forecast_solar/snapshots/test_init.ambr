@@ -6,6 +6,8 @@
       'longitude': 4.42,
     }),
     'disabled_by': None,
+    'discovery_keys': dict({
+    }),
     'domain': 'forecast_solar',
     'entry_id': <ANY>,
     'minor_version': 1,
@@ -21,6 +23,8 @@
     'pref_disable_new_entities': False,
     'pref_disable_polling': False,
     'source': 'user',
+    'subentries': list([
+    ]),
     'title': 'Green House',
     'unique_id': 'unique',
     'version': 2,

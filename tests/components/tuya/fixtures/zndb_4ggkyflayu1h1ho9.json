@@ -1,0 +1,227 @@
+{
+  "endpoint": "https://apigw.tuyacn.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "XOCA-DAC212XC V2-S1",
+  "category": "zndb",
+  "product_id": "4ggkyflayu1h1ho9",
+  "product_name": "XOCA-DAC212XC V2-S1",
+  "online": true,
+  "sub": false,
+  "time_zone": "+08:00",
+  "active_time": "2025-07-07T10:32:35+00:00",
+  "create_time": "2025-07-07T10:32:35+00:00",
+  "update_time": "2025-07-07T10:32:35+00:00",
+  "function": {
+    "frozen_time_set": {
+      "type": "Json",
+      "value": {}
+    },
+    "switch_prepayment": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "clear_energy": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "alarm_set_2": {
+      "type": "Json",
+      "value": {}
+    },
+    "event_clear": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "price_set": {
+      "type": "Raw",
+      "value": {}
+    }
+  },
+  "status_range": {
+    "forward_energy_total": {
+      "type": "Integer",
+      "value": {
+        "unit": "kW\u00b7h",
+        "min": 0,
+        "max": 99999999,
+        "scale": 2,
+        "step": 1
+      }
+    },
+    "reverse_energy_total": {
+      "type": "Integer",
+      "value": {
+        "unit": "kW\u00b7h",
+        "min": 0,
+        "max": 99999999,
+        "scale": 2,
+        "step": 1
+      }
+    },
+    "phase_a": {
+      "type": "Json",
+      "value": {}
+    },
+    "power_total": {
+      "type": "Integer",
+      "value": {
+        "unit": "kW",
+        "min": -99999999,
+        "max": 999999999,
+        "scale": 3,
+        "step": 1
+      }
+    },
+    "fault": {
+      "type": "Bitmap",
+      "value": {
+        "label": [
+          "ov_cr",
+          "unbalance_alarm",
+          "ov_vol",
+          "undervoltage_alarm",
+          "miss_phase_alarm",
+          "outage_alarm",
+          "magnetism_alarm",
+          "terminal_alarm",
+          "cover_alarm",
+          "credit_alarm",
+          "no_balance_alarm",
+          "battery_alarm",
+          "meter_hardware_alarm",
+          "overdraft_unlim",
+          "arrear_outage",
+          "overdraft_use",
+          "pf_abnormal",
+          "ov_pwr"
+        ]
+      }
+    },
+    "frozen_time_set": {
+      "type": "Json",
+      "value": {}
+    },
+    "switch_prepayment": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "clear_energy": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "alarm_set_2": {
+      "type": "Json",
+      "value": {}
+    },
+    "meter_id": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "event_clear": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "forward_energy_t1": {
+      "type": "Integer",
+      "value": {
+        "unit": "kW\u00b7h",
+        "min": 0,
+        "max": 99999999,
+        "scale": 2,
+        "step": 1
+      }
+    },
+    "forward_energy_t2": {
+      "type": "Integer",
+      "value": {
+        "unit": "kW\u00b7h",
+        "min": 0,
+        "max": 99999999,
+        "scale": 2,
+        "step": 1
+      }
+    },
+    "forward_energy_t3": {
+      "type": "Integer",
+      "value": {
+        "unit": "kW\u00b7h",
+        "min": 0,
+        "max": 99999999,
+        "scale": 2,
+        "step": 1
+      }
+    },
+    "forward_energy_t4": {
+      "type": "Integer",
+      "value": {
+        "unit": "kW\u00b7h",
+        "min": 0,
+        "max": 99999999,
+        "scale": 2,
+        "step": 1
+      }
+    },
+    "price_set": {
+      "type": "Raw",
+      "value": {}
+    },
+    "online_state": {
+      "type": "Enum",
+      "value": {
+        "range": ["offline", "online"]
+      }
+    },
+    "supply_frequency": {
+      "type": "Integer",
+      "value": {
+        "unit": "Hz",
+        "min": 0,
+        "max": 9999,
+        "scale": 2,
+        "step": 1
+      }
+    }
+  },
+  "status": {
+    "forward_energy_total": 120,
+    "reverse_energy_total": 80,
+    "phase_a": {
+      "electricCurrent": 599.552,
+      "power": 6.912,
+      "voltage": 52.7
+    },
+    "power_total": 1500,
+    "fault": 0,
+    "frozen_time_set": {
+      "day": 158,
+      "hour": 233
+    },
+    "switch_prepayment": false,
+    "clear_energy": false,
+    "switch": true,
+    "alarm_set_2": [],
+    "meter_id": "",
+    "event_clear": false,
+    "forward_energy_t1": 0,
+    "forward_energy_t2": 0,
+    "forward_energy_t3": 0,
+    "forward_energy_t4": 0,
+    "price_set": "",
+    "online_state": "offline",
+    "supply_frequency": 0
+  },
+  "set_up": true,
+  "support_local": true
+}

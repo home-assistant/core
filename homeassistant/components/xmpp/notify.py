@@ -22,6 +22,8 @@ from slixmpp.xmlstream.xmlstream import NotConnectedError
 import voluptuous as vol
 
 from homeassistant.components.notify import (
+    ATTR_DATA,
+    ATTR_TARGET,
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
     PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
@@ -35,13 +37,11 @@ from homeassistant.const import (
     CONF_SENDER,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
-import homeassistant.helpers.template as template_helper
+from homeassistant.helpers import config_validation as cv, template as template_helper
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_DATA = "data"
 ATTR_PATH = "path"
 ATTR_PATH_TEMPLATE = "path_template"
 ATTR_TIMEOUT = "timeout"
@@ -105,13 +105,14 @@ class XmppNotificationService(BaseNotificationService):
         """Send a message to a user."""
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
         text = f"{title}: {message}" if title else message
+        targets = kwargs.get(ATTR_TARGET, self._recipients)
         data = kwargs.get(ATTR_DATA)
         timeout = data.get(ATTR_TIMEOUT, XEP_0363_TIMEOUT) if data else None
 
         await async_send_message(
             f"{self._sender}/{self._resource}",
             self._password,
-            self._recipients,
+            targets,
             self._tls,
             self._verify,
             self._room,
@@ -145,7 +146,10 @@ async def async_send_message(  # noqa: C901
 
             self.loop = hass.loop
 
-            self.force_starttls = use_tls
+            self.enable_starttls = use_tls
+            self.enable_direct_tls = use_tls
+            self.enable_plaintext = not use_tls
+            self["feature_mechanisms"].unencrypted_scram = not use_tls
             self.use_ipv6 = False
             self.add_event_handler("failed_all_auth", self.disconnect_on_login_fail)
             self.add_event_handler("session_start", self.start)
@@ -164,7 +168,7 @@ async def async_send_message(  # noqa: C901
                 self.register_plugin("xep_0128")  # Service Discovery
                 self.register_plugin("xep_0363")  # HTTP upload
 
-            self.connect(force_starttls=self.force_starttls, use_ssl=False)
+            self.connect()
 
         async def start(self, event):
             """Start the communication and sends the message."""
@@ -190,13 +194,13 @@ async def async_send_message(  # noqa: C901
                 _LOGGER.debug("Timeout set to %ss", timeout)
                 url = await self.upload_file(timeout=timeout)
 
-                _LOGGER.info("Upload success")
+                _LOGGER.debug("Upload success")
                 for recipient in recipients:
                     if room:
-                        _LOGGER.info("Sending file to %s", room)
+                        _LOGGER.debug("Sending file to %s", room)
                         message = self.Message(sto=room, stype="groupchat")
                     else:
-                        _LOGGER.info("Sending file to %s", recipient)
+                        _LOGGER.debug("Sending file to %s", recipient)
                         message = self.Message(sto=recipient, stype="chat")
                     message["body"] = url
                     message["oob"]["url"] = url
@@ -264,7 +268,7 @@ async def async_send_message(  # noqa: C901
 
             uploaded via XEP_0363 and HTTP and returns the resulting URL
             """
-            _LOGGER.info("Getting file from %s", url)
+            _LOGGER.debug("Getting file from %s", url)
 
             def get_url(url):
                 """Return result for GET request to url."""
@@ -295,7 +299,7 @@ async def async_send_message(  # noqa: C901
                 _LOGGER.debug("Got %s extension", extension)
                 filename = self.get_random_filename(None, extension=extension)
 
-            _LOGGER.info("Uploading file from URL, %s", filename)
+            _LOGGER.debug("Uploading file from URL, %s", filename)
 
             return await self["xep_0363"].upload_file(
                 filename,
@@ -313,7 +317,7 @@ async def async_send_message(  # noqa: C901
 
         async def upload_file_from_path(self, path: str, timeout=None):
             """Upload a file from a local file path via XEP_0363."""
-            _LOGGER.info("Uploading file from path, %s", path)
+            _LOGGER.debug("Uploading file from path, %s", path)
 
             if not hass.config.is_allowed_path(path):
                 raise PermissionError("Could not access file. Path not allowed")
@@ -374,6 +378,6 @@ async def async_send_message(  # noqa: C901
         @staticmethod
         def discard_ssl_invalid_cert(event):
             """Do nothing if ssl certificate is invalid."""
-            _LOGGER.info("Ignoring invalid SSL certificate as requested")
+            _LOGGER.debug("Ignoring invalid SSL certificate as requested")
 
     SendNotificationBot()

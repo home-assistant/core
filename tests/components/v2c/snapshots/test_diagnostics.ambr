@@ -6,6 +6,8 @@
         'host': '**REDACTED**',
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'v2c',
       'entry_id': 'da58ee91f38c2406c2a36d0a1a7f8569',
       'minor_version': 1,
@@ -14,6 +16,8 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
+      'subentries': list([
+      ]),
       'title': '**REDACTED**',
       'unique_id': 'ABC123',
       'version': 1,

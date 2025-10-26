@@ -8,7 +8,7 @@ from requests.exceptions import ConnectionError as RequestsConnectionError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .base import FritzBoxPhonebook
 from .const import CONF_PHONEBOOK, CONF_PREFIXES, PLATFORMS
@@ -35,21 +35,19 @@ async def async_setup_entry(
     except FritzSecurityError as ex:
         _LOGGER.error(
             (
-                "User has insufficient permissions to access AVM FRITZ!Box settings and"
+                "User has insufficient permissions to access FRITZ!Box settings and"
                 " its phonebooks: %s"
             ),
             ex,
         )
         return False
     except FritzConnectionException as ex:
-        _LOGGER.error("Invalid authentication: %s", ex)
-        return False
+        raise ConfigEntryAuthFailed from ex
     except RequestsConnectionError as ex:
-        _LOGGER.error("Unable to connect to AVM FRITZ!Box call monitor: %s", ex)
+        _LOGGER.error("Unable to connect to FRITZ!Box call monitor: %s", ex)
         raise ConfigEntryNotReady from ex
 
     config_entry.runtime_data = fritzbox_phonebook
-    config_entry.async_on_unload(config_entry.add_update_listener(update_listener))
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     return True
@@ -60,10 +58,3 @@ async def async_unload_entry(
 ) -> bool:
     """Unloading the fritzbox_callmonitor platforms."""
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
-
-
-async def update_listener(
-    hass: HomeAssistant, config_entry: FritzBoxCallMonitorConfigEntry
-) -> None:
-    """Update listener to reload after option has changed."""
-    await hass.config_entries.async_reload(config_entry.entry_id)

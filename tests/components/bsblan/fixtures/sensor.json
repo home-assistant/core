@@ -1,0 +1,20 @@
+{
+  "outside_temperature": {
+    "name": "Outside temp sensor local",
+    "error": 0,
+    "value": "6.1",
+    "desc": "",
+    "dataType": 0,
+    "readonly": 0,
+    "unit": "&deg;C"
+  },
+  "current_temperature": {
+    "name": "Room temp 1 actual value",
+    "error": 0,
+    "value": "18.6",
+    "desc": "",
+    "dataType": 0,
+    "readonly": 1,
+    "unit": "&deg;C"
+  }
+}

@@ -6,13 +6,14 @@ import asyncio
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from contextlib import suppress
 from copy import deepcopy
-from functools import cached_property
 import inspect
 from json import JSONDecodeError, JSONEncoder
 import logging
 import os
 from pathlib import Path
 from typing import Any
+
+from propcache.api import cached_property
 
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_FINAL_WRITE,
@@ -29,8 +30,7 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import bind_hass
-from homeassistant.util import json as json_util
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util, json as json_util
 from homeassistant.util.file import WriteError
 from homeassistant.util.hass_dict import HassKey
 
@@ -354,7 +354,7 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
                         corrupt_path,
                         err,
                     )
-                    from .issue_registry import (  # pylint: disable=import-outside-toplevel
+                    from .issue_registry import (  # noqa: PLC0415
                         IssueSeverity,
                         async_create_issue,
                     )

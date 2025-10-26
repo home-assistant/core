@@ -48,11 +48,14 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .entity import GroupEntity
-from .util import find_state_attributes, mean_tuple, reduce_attribute
+from .util import find_state_attributes, mean_circle, mean_tuple, reduce_attribute
 
 DEFAULT_NAME = "Light Group"
 CONF_ALL = "all"
@@ -98,7 +101,7 @@ async def async_setup_platform(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize Light Group config entry."""
     registry = er.async_get(hass)
@@ -202,6 +205,8 @@ class LightGroup(GroupEntity, LightEntity):
     @callback
     def async_update_group_state(self) -> None:
         """Query all members and determine the light group state."""
+        self._update_assumed_state_from_members()
+
         states = [
             state
             for entity_id in self._entity_ids
@@ -224,7 +229,7 @@ class LightGroup(GroupEntity, LightEntity):
         self._attr_brightness = reduce_attribute(on_states, ATTR_BRIGHTNESS)
 
         self._attr_hs_color = reduce_attribute(
-            on_states, ATTR_HS_COLOR, reduce=mean_tuple
+            on_states, ATTR_HS_COLOR, reduce=mean_circle
         )
         self._attr_rgb_color = reduce_attribute(
             on_states, ATTR_RGB_COLOR, reduce=mean_tuple

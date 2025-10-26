@@ -38,11 +38,11 @@
           "connected": "Vehicle connected",
           "ready": "Ready to charge",
           "negotiating": "Negotiating connection",
-          "error": "Error",
+          "error": "[%key:common::state::error%]",
           "charging_finished": "Charging finished",
           "waiting_car": "Waiting for car",
           "charging_reduced": "Charging (reduced)",
-          "charging": "Charging"
+          "charging": "[%key:common::state::charging%]"
         }
       },
       "status_code": {

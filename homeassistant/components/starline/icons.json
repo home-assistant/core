@@ -12,11 +12,23 @@
       },
       "moving_ban": {
         "default": "mdi:car-off"
+      },
+      "ignition": {
+        "default": "mdi:key-variant"
+      },
+      "autostart": {
+        "default": "mdi:auto-mode"
       }
     },
     "button": {
       "horn": {
         "default": "mdi:bullhorn-outline"
+      },
+      "flex": {
+        "default": "mdi:star-circle-outline"
+      },
+      "panic": {
+        "default": "mdi:alarm-note"
       }
     },
     "device_tracker": {
@@ -59,9 +71,6 @@
         "state": {
           "on": "mdi:access-point-network"
         }
-      },
-      "horn": {
-        "default": "mdi:bullhorn-outline"
       },
       "service_mode": {
         "default": "mdi:car-wrench",

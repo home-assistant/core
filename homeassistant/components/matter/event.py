@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any
 
 from chip.clusters import Objects as clusters
@@ -16,9 +17,9 @@ from homeassistant.components.event import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .entity import MatterEntity
+from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
@@ -39,11 +40,16 @@ EVENT_TYPES_MAP = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Matter switches from Config Entry."""
     matter = get_matter(hass)
     matter.register_platform_handler(Platform.EVENT, async_add_entities)
+
+
+@dataclass(frozen=True, kw_only=True)
+class MatterEventEntityDescription(EventEntityDescription, MatterEntityDescription):
+    """Describe Matter Event entities."""
 
 
 class MatterEventEntity(MatterEntity, EventEntity):
@@ -69,7 +75,7 @@ class MatterEventEntity(MatterEntity, EventEntity):
             max_presses_supported = self.get_matter_attribute_value(
                 clusters.Switch.Attributes.MultiPressMax
             )
-            max_presses_supported = min(max_presses_supported or 1, 8)
+            max_presses_supported = min(max_presses_supported or 2, 8)
             for i in range(max_presses_supported):
                 event_types.append(f"multi_press_{i + 1}")  # noqa: PERF401
         elif feature_map & SwitchFeature.kMomentarySwitch:
@@ -132,7 +138,7 @@ class MatterEventEntity(MatterEntity, EventEntity):
 DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.EVENT,
-        entity_description=EventEntityDescription(
+        entity_description=MatterEventEntityDescription(
             key="GenericSwitch",
             device_class=EventDeviceClass.BUTTON,
             translation_key="button",

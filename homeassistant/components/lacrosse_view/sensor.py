@@ -14,7 +14,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEGREE,
     PERCENTAGE,
@@ -25,13 +24,14 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 
 from .const import DOMAIN
+from .coordinator import LaCrosseConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,10 +45,10 @@ class LaCrosseSensorEntityDescription(SensorEntityDescription):
 
 def get_value(sensor: Sensor, field: str) -> float | int | str | None:
     """Get the value of a sensor field."""
-    field_data = sensor.data.get(field)
+    field_data = sensor.data.get(field) if sensor.data is not None else None
     if field_data is None:
         return None
-    value = field_data["values"][-1]["s"]
+    value = field_data["spot"]["value"]
     try:
         value = float(value)
     except ValueError:
@@ -64,6 +64,7 @@ SENSOR_DESCRIPTIONS = {
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_value,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=2,
     ),
     "Humidity": LaCrosseSensorEntityDescription(
         key="Humidity",
@@ -71,6 +72,7 @@ SENSOR_DESCRIPTIONS = {
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_value,
         native_unit_of_measurement=PERCENTAGE,
+        suggested_display_precision=2,
     ),
     "HeatIndex": LaCrosseSensorEntityDescription(
         key="HeatIndex",
@@ -79,6 +81,7 @@ SENSOR_DESCRIPTIONS = {
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_value,
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
+        suggested_display_precision=2,
     ),
     "WindSpeed": LaCrosseSensorEntityDescription(
         key="WindSpeed",
@@ -86,6 +89,7 @@ SENSOR_DESCRIPTIONS = {
         value_fn=get_value,
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         device_class=SensorDeviceClass.WIND_SPEED,
+        suggested_display_precision=2,
     ),
     "Rain": LaCrosseSensorEntityDescription(
         key="Rain",
@@ -93,12 +97,16 @@ SENSOR_DESCRIPTIONS = {
         value_fn=get_value,
         native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
         device_class=SensorDeviceClass.PRECIPITATION,
+        suggested_display_precision=2,
     ),
     "WindHeading": LaCrosseSensorEntityDescription(
         key="WindHeading",
         translation_key="wind_heading",
         value_fn=get_value,
         native_unit_of_measurement=DEGREE,
+        suggested_display_precision=2,
+        device_class=SensorDeviceClass.WIND_DIRECTION,
+        state_class=SensorStateClass.MEASUREMENT_ANGLE,
     ),
     "WetDry": LaCrosseSensorEntityDescription(
         key="WetDry",
@@ -117,6 +125,7 @@ SENSOR_DESCRIPTIONS = {
         value_fn=get_value,
         device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
         native_unit_of_measurement=UnitOfPressure.HPA,
+        suggested_display_precision=2,
     ),
     "FeelsLike": LaCrosseSensorEntityDescription(
         key="FeelsLike",
@@ -125,6 +134,7 @@ SENSOR_DESCRIPTIONS = {
         value_fn=get_value,
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
+        suggested_display_precision=2,
     ),
     "WindChill": LaCrosseSensorEntityDescription(
         key="WindChill",
@@ -133,6 +143,7 @@ SENSOR_DESCRIPTIONS = {
         value_fn=get_value,
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
+        suggested_display_precision=2,
     ),
 }
 # map of API returned unit of measurement strings to their corresponding unit of measurement
@@ -148,17 +159,14 @@ UNIT_OF_MEASUREMENT_MAP = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: LaCrosseConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up LaCrosse View from a config entry."""
-    coordinator: DataUpdateCoordinator[list[Sensor]] = hass.data[DOMAIN][
-        entry.entry_id
-    ]["coordinator"]
-    sensors: list[Sensor] = coordinator.data
+    coordinator = entry.runtime_data
 
     sensor_list = []
-    for i, sensor in enumerate(sensors):
+    for i, sensor in enumerate(coordinator.data):
         for field in sensor.sensor_field_names:
             description = SENSOR_DESCRIPTIONS.get(field)
             if description is None:
@@ -178,7 +186,7 @@ async def async_setup_entry(
                 continue
 
             # if the API returns a different unit of measurement from the description, update it
-            if sensor.data.get(field) is not None:
+            if sensor.data is not None and sensor.data.get(field) is not None:
                 native_unit_of_measurement = UNIT_OF_MEASUREMENT_MAP.get(
                     sensor.data[field].get("unit")
                 )
@@ -226,7 +234,6 @@ class LaCrosseViewSensor(
             name=sensor.name,
             manufacturer="LaCrosse Technology",
             model=sensor.model,
-            via_device=(DOMAIN, sensor.location.id),
         )
         self.index = index
 
@@ -240,7 +247,9 @@ class LaCrosseViewSensor(
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
+        data = self.coordinator.data[self.index].data
         return (
             super().available
-            and self.entity_description.key in self.coordinator.data[self.index].data
+            and data is not None
+            and self.entity_description.key in data
         )

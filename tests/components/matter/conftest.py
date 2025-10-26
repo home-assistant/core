@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import AsyncGenerator
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from matter_server.client.models.node import MatterNode
@@ -42,6 +43,7 @@ async def matter_client_fixture() -> AsyncGenerator[MagicMock]:
             pytest.fail("Listen was not cancelled!")
 
         client.connect = AsyncMock(side_effect=connect)
+        client.check_node_update = AsyncMock(return_value=None)
         client.start_listening = AsyncMock(side_effect=listen)
         client.server_info = ServerInfoMessage(
             fabric_id=MOCK_FABRIC_ID,
@@ -70,29 +72,98 @@ async def integration_fixture(
     return entry
 
 
-@pytest.fixture(name="door_lock")
-async def door_lock_fixture(
-    hass: HomeAssistant, matter_client: MagicMock
+@pytest.fixture(
+    params=[
+        "air_purifier",
+        "air_quality_sensor",
+        "aqara_door_window_p2",
+        "aqara_motion_p2",
+        "aqara_u200",
+        "battery_storage",
+        "color_temperature_light",
+        "cooktop",
+        "dimmable_light",
+        "dimmable_plugin_unit",
+        "door_lock",
+        "door_lock_with_unbolt",
+        "eberle_ute3000",
+        "eve_contact_sensor",
+        "eve_energy_20ecn4101",
+        "eve_energy_plug",
+        "eve_energy_plug_patched",
+        "eve_thermo",
+        "eve_weather_sensor",
+        "extended_color_light",
+        "extractor_hood",
+        "fan",
+        "flow_sensor",
+        "generic_switch",
+        "generic_switch_multi",
+        "haijai_switch",
+        "humidity_sensor",
+        "inovelli_vtm30",
+        "laundry_dryer",
+        "leak_sensor",
+        "light_sensor",
+        "microwave_oven",
+        "mounted_dimmable_load_control_fixture",
+        "multi_endpoint_light",
+        "occupancy_sensor",
+        "on_off_plugin_unit",
+        "onoff_light",
+        "onoff_light_alt_name",
+        "onoff_light_no_name",
+        "onoff_light_with_levelcontrol_present",
+        "oven",
+        "pressure_sensor",
+        "pump",
+        "room_airconditioner",
+        "silabs_dishwasher",
+        "silabs_evse_charging",
+        "silabs_laundrywasher",
+        "silabs_light_switch",
+        "silabs_refrigerator",
+        "silabs_water_heater",
+        "smoke_detector",
+        "solar_inverter",
+        "speaker",
+        "switchbot_k11_plus",
+        "switch_unit",
+        "tado_smart_radiator_thermostat_x",
+        "temperature_sensor",
+        "thermostat",
+        "vacuum_cleaner",
+        "valve",
+        "window_covering_full",
+        "window_covering_lift",
+        "window_covering_pa_lift",
+        "window_covering_pa_tilt",
+        "window_covering_tilt",
+        "yandex_smart_socket",
+        "zemismart_mt25b",
+    ]
+)
+async def matter_devices(
+    hass: HomeAssistant, matter_client: MagicMock, request: pytest.FixtureRequest
 ) -> MatterNode:
-    """Fixture for a door lock node."""
-    return await setup_integration_with_node_fixture(hass, "door-lock", matter_client)
+    """Fixture for a Matter device."""
+    return await setup_integration_with_node_fixture(hass, request.param, matter_client)
 
 
-@pytest.fixture(name="door_lock_with_unbolt")
-async def door_lock_with_unbolt_fixture(
-    hass: HomeAssistant, matter_client: MagicMock
+@pytest.fixture
+def attributes() -> dict[str, Any]:
+    """Return common attributes for all nodes."""
+    return {}
+
+
+@pytest.fixture
+async def matter_node(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    node_fixture: str,
+    attributes: dict[str, Any],
 ) -> MatterNode:
-    """Fixture for a door lock node with unbolt feature."""
+    """Fixture for a Matter node."""
     return await setup_integration_with_node_fixture(
-        hass, "door-lock-with-unbolt", matter_client
-    )
-
-
-@pytest.fixture(name="eve_contact_sensor_node")
-async def eve_contact_sensor_node_fixture(
-    hass: HomeAssistant, matter_client: MagicMock
-) -> MatterNode:
-    """Fixture for a contact sensor node."""
-    return await setup_integration_with_node_fixture(
-        hass, "eve-contact-sensor", matter_client
+        hass, node_fixture, matter_client, attributes
     )

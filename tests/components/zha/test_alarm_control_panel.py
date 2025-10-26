@@ -1,29 +1,26 @@
 """Test ZHA alarm control panel."""
 
+from collections.abc import Callable, Coroutine
 from unittest.mock import AsyncMock, call, patch, sentinel
 
 import pytest
+from zigpy.device import Device
 from zigpy.profiles import zha
 from zigpy.zcl import Cluster
 from zigpy.zcl.clusters import security
 import zigpy.zcl.foundation as zcl_f
 
-from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
+from homeassistant.components.alarm_control_panel import (
+    DOMAIN as ALARM_DOMAIN,
+    AlarmControlPanelState,
+)
 from homeassistant.components.zha.helpers import (
     ZHADeviceProxy,
     ZHAGatewayProxy,
     get_zha_gateway,
     get_zha_gateway_proxy,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_TRIGGERED,
-    Platform,
-)
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 
 from .common import find_entity_id
@@ -50,7 +47,9 @@ def alarm_control_panel_platform_only():
     new=AsyncMock(return_value=[sentinel.data, zcl_f.Status.SUCCESS]),
 )
 async def test_alarm_control_panel(
-    hass: HomeAssistant, setup_zha, zigpy_device_mock
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
 ) -> None:
     """Test ZHA alarm control panel platform."""
 
@@ -79,7 +78,7 @@ async def test_alarm_control_panel(
     cluster = zigpy_device.endpoints[1].ias_ace
     assert entity_id is not None
 
-    assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
+    assert hass.states.get(entity_id).state == AlarmControlPanelState.DISARMED
 
     # arm_away from HA
     cluster.client_command.reset_mock()
@@ -90,7 +89,7 @@ async def test_alarm_control_panel(
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_AWAY
+    assert hass.states.get(entity_id).state == AlarmControlPanelState.ARMED_AWAY
     assert cluster.client_command.call_count == 2
     assert cluster.client_command.await_count == 2
     assert cluster.client_command.call_args == call(
@@ -113,7 +112,7 @@ async def test_alarm_control_panel(
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_AWAY
+    assert hass.states.get(entity_id).state == AlarmControlPanelState.ARMED_AWAY
     cluster.client_command.reset_mock()
     await hass.services.async_call(
         ALARM_DOMAIN,
@@ -128,7 +127,7 @@ async def test_alarm_control_panel(
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == STATE_ALARM_TRIGGERED
+    assert hass.states.get(entity_id).state == AlarmControlPanelState.TRIGGERED
     assert cluster.client_command.call_count == 4
     assert cluster.client_command.await_count == 4
     assert cluster.client_command.call_args == call(
@@ -151,7 +150,7 @@ async def test_alarm_control_panel(
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_HOME
+    assert hass.states.get(entity_id).state == AlarmControlPanelState.ARMED_HOME
     assert cluster.client_command.call_count == 2
     assert cluster.client_command.await_count == 2
     assert cluster.client_command.call_args == call(
@@ -171,7 +170,7 @@ async def test_alarm_control_panel(
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_NIGHT
+    assert hass.states.get(entity_id).state == AlarmControlPanelState.ARMED_NIGHT
     assert cluster.client_command.call_count == 2
     assert cluster.client_command.await_count == 2
     assert cluster.client_command.call_args == call(
@@ -190,7 +189,7 @@ async def test_alarm_control_panel(
         "cluster_command", 1, 0, [security.IasAce.ArmMode.Arm_All_Zones, "", 0]
     )
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_AWAY
+    assert hass.states.get(entity_id).state == AlarmControlPanelState.ARMED_AWAY
 
     # reset the panel
     await reset_alarm_panel(hass, cluster, entity_id)
@@ -200,7 +199,7 @@ async def test_alarm_control_panel(
         "cluster_command", 1, 0, [security.IasAce.ArmMode.Arm_Day_Home_Only, "", 0]
     )
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_HOME
+    assert hass.states.get(entity_id).state == AlarmControlPanelState.ARMED_HOME
 
     # reset the panel
     await reset_alarm_panel(hass, cluster, entity_id)
@@ -210,33 +209,33 @@ async def test_alarm_control_panel(
         "cluster_command", 1, 0, [security.IasAce.ArmMode.Arm_Night_Sleep_Only, "", 0]
     )
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_NIGHT
+    assert hass.states.get(entity_id).state == AlarmControlPanelState.ARMED_NIGHT
 
     # disarm from panel with bad code
     cluster.listener_event(
         "cluster_command", 1, 0, [security.IasAce.ArmMode.Disarm, "", 0]
     )
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == STATE_ALARM_ARMED_NIGHT
+    assert hass.states.get(entity_id).state == AlarmControlPanelState.ARMED_NIGHT
 
     # disarm from panel with bad code for 2nd time trips alarm
     cluster.listener_event(
         "cluster_command", 1, 0, [security.IasAce.ArmMode.Disarm, "", 0]
     )
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == STATE_ALARM_TRIGGERED
+    assert hass.states.get(entity_id).state == AlarmControlPanelState.TRIGGERED
 
     # disarm from panel with good code
     cluster.listener_event(
         "cluster_command", 1, 0, [security.IasAce.ArmMode.Disarm, "4321", 0]
     )
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
+    assert hass.states.get(entity_id).state == AlarmControlPanelState.DISARMED
 
     # panic from panel
     cluster.listener_event("cluster_command", 1, 4, [])
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == STATE_ALARM_TRIGGERED
+    assert hass.states.get(entity_id).state == AlarmControlPanelState.TRIGGERED
 
     # reset the panel
     await reset_alarm_panel(hass, cluster, entity_id)
@@ -244,7 +243,7 @@ async def test_alarm_control_panel(
     # fire from panel
     cluster.listener_event("cluster_command", 1, 3, [])
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == STATE_ALARM_TRIGGERED
+    assert hass.states.get(entity_id).state == AlarmControlPanelState.TRIGGERED
 
     # reset the panel
     await reset_alarm_panel(hass, cluster, entity_id)
@@ -252,7 +251,7 @@ async def test_alarm_control_panel(
     # emergency from panel
     cluster.listener_event("cluster_command", 1, 2, [])
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == STATE_ALARM_TRIGGERED
+    assert hass.states.get(entity_id).state == AlarmControlPanelState.TRIGGERED
 
     # reset the panel
     await reset_alarm_panel(hass, cluster, entity_id)
@@ -264,7 +263,7 @@ async def test_alarm_control_panel(
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == STATE_ALARM_TRIGGERED
+    assert hass.states.get(entity_id).state == AlarmControlPanelState.TRIGGERED
     assert cluster.client_command.call_count == 1
     assert cluster.client_command.await_count == 1
     assert cluster.client_command.call_args == call(
@@ -290,7 +289,7 @@ async def reset_alarm_panel(hass: HomeAssistant, cluster: Cluster, entity_id: st
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
+    assert hass.states.get(entity_id).state == AlarmControlPanelState.DISARMED
     assert cluster.client_command.call_count == 2
     assert cluster.client_command.await_count == 2
     assert cluster.client_command.call_args == call(

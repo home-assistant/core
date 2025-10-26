@@ -17,15 +17,10 @@ from homeassistant.const import ATTR_ID, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
 
-from . import (
-    RainMachineConfigEntry,
-    RainMachineData,
-    RainMachineEntity,
-    async_update_programs_and_zones,
-)
+from . import RainMachineConfigEntry, RainMachineData, async_update_programs_and_zones
 from .const import (
     CONF_ALLOW_INACTIVE_ZONES_TO_RUN,
     CONF_DEFAULT_ZONE_RUN_TIME,
@@ -37,7 +32,7 @@ from .const import (
     DATA_ZONES,
     DEFAULT_ZONE_RUN,
 )
-from .model import RainMachineEntityDescription
+from .entity import RainMachineEntity, RainMachineEntityDescription
 from .util import RUN_STATE_MAP, key_exists
 
 ATTR_ACTIVITY_TYPE = "activity_type"
@@ -179,7 +174,7 @@ RESTRICTIONS_SWITCH_DESCRIPTIONS = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: RainMachineConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up RainMachine switches based on a config entry."""
     platform = entity_platform.async_get_current_platform()

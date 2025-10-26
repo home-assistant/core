@@ -1,6 +1,6 @@
 """The test for light device automation."""
 
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import attr
 import pytest
@@ -27,7 +27,7 @@ from tests.common import MockConfigEntry, MockModule, mock_integration, mock_pla
 from tests.typing import WebSocketGenerator
 
 
-@attr.s(frozen=True)
+@attr.s(frozen=True, slots=True)
 class MockDeviceEntry(dr.DeviceEntry):
     """Device Registry Entry with fixed UUID."""
 
@@ -293,7 +293,9 @@ async def test_websocket_get_action_capabilities(
     )
     expected_capabilities = {
         "turn_on": {
-            "extra_fields": [{"type": "string", "name": "code", "optional": True}]
+            "extra_fields": [
+                {"type": "string", "name": "code", "optional": True, "required": False}
+            ]
         },
         "turn_off": {"extra_fields": []},
         "toggle": {"extra_fields": []},
@@ -452,7 +454,12 @@ async def test_websocket_get_condition_capabilities(
     )
     expected_capabilities = {
         "extra_fields": [
-            {"name": "for", "optional": True, "type": "positive_time_period_dict"}
+            {
+                "name": "for",
+                "optional": True,
+                "required": False,
+                "type": "positive_time_period_dict",
+            }
         ]
     }
 
@@ -720,12 +727,17 @@ async def test_async_get_device_automations_all_devices_action_exception_throw(
     assert "KeyError" in caplog.text
 
 
+@pytest.mark.parametrize(
+    "trigger_key",
+    ["trigger", "platform"],
+)
 async def test_websocket_get_trigger_capabilities(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     fake_integration,
+    trigger_key: str,
 ) -> None:
     """Test we get the expected trigger capabilities through websocket."""
     await async_setup_component(hass, "device_automation", {})
@@ -740,7 +752,12 @@ async def test_websocket_get_trigger_capabilities(
     )
     expected_capabilities = {
         "extra_fields": [
-            {"name": "for", "optional": True, "type": "positive_time_period_dict"}
+            {
+                "name": "for",
+                "optional": True,
+                "required": False,
+                "type": "positive_time_period_dict",
+            }
         ]
     }
 
@@ -767,11 +784,12 @@ async def test_websocket_get_trigger_capabilities(
     assert msg["id"] == 1
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
-    triggers = msg["result"]
+    triggers: dict = msg["result"]
 
     msg_id = 2
     assert len(triggers) == 3  # toggled, turned_on, turned_off
     for trigger in triggers:
+        trigger[trigger_key] = trigger.pop("platform")
         await client.send_json(
             {
                 "id": msg_id,
@@ -1070,7 +1088,7 @@ async def test_automation_with_dynamically_validated_condition(
 
     module_cache = hass.data[loader.DATA_COMPONENTS]
     module = module_cache["fake_integration.device_condition"]
-    module.async_validate_condition_config = AsyncMock()
+    module.async_validate_condition_config = AsyncMock(return_value=MagicMock())
 
     config_entry = MockConfigEntry(domain="fake_integration", data={})
     config_entry.mock_state(hass, ConfigEntryState.LOADED)
@@ -1307,7 +1325,7 @@ async def test_automation_with_bad_action(
         },
     )
 
-    assert expected_error.format(path="['action'][0]") in caplog.text
+    assert expected_error.format(path="['actions'][0]") in caplog.text
 
 
 @patch("homeassistant.helpers.device_registry.DeviceEntry", MockDeviceEntry)
@@ -1341,7 +1359,7 @@ async def test_automation_with_bad_condition_action(
         },
     )
 
-    assert expected_error.format(path="['action'][0]") in caplog.text
+    assert expected_error.format(path="['actions'][0]") in caplog.text
 
 
 @patch("homeassistant.helpers.device_registry.DeviceEntry", MockDeviceEntry)
@@ -1375,7 +1393,7 @@ async def test_automation_with_bad_condition(
         },
     )
 
-    assert expected_error.format(path="['condition'][0]") in caplog.text
+    assert expected_error.format(path="['conditions'][0]") in caplog.text
 
 
 async def test_automation_with_sub_condition(
@@ -1541,7 +1559,7 @@ async def test_automation_with_bad_sub_condition(
         },
     )
 
-    path = "['condition'][0]['conditions'][0]"
+    path = "['conditions'][0]['conditions'][0]"
     assert expected_error.format(path=path) in caplog.text
 
 

@@ -70,7 +70,7 @@ class PulseHub:
 
     async def async_notify_update(self, update_type: aiopulse.UpdateType) -> None:
         """Evaluate entities when hub reports that update has occurred."""
-        LOGGER.debug("Hub {update_type.name} updated")
+        LOGGER.debug("Hub %s updated", update_type.name)
 
         if update_type == aiopulse.UpdateType.rollers:
             await update_devices(self.hass, self.config_entry, self.api.rollers)

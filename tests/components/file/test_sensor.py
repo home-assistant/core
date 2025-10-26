@@ -7,31 +7,8 @@ import pytest
 from homeassistant.components.file import DOMAIN
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, get_fixture_path
-
-
-@patch("os.path.isfile", Mock(return_value=True))
-@patch("os.access", Mock(return_value=True))
-async def test_file_value_yaml_setup(
-    hass: HomeAssistant, mock_is_allowed_path: MagicMock
-) -> None:
-    """Test the File sensor from YAML setup."""
-    config = {
-        "sensor": {
-            "platform": "file",
-            "scan_interval": 30,
-            "name": "file1",
-            "file_path": get_fixture_path("file_value.txt", "file"),
-        }
-    }
-
-    assert await async_setup_component(hass, "sensor", config)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.file1")
-    assert state.state == "21"
 
 
 @patch("os.path.isfile", Mock(return_value=True))

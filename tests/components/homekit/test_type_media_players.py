@@ -6,6 +6,7 @@ from homeassistant.components.homekit.accessories import HomeDriver
 from homeassistant.components.homekit.const import (
     ATTR_KEY_NAME,
     ATTR_VALUE,
+    CHAR_CONFIGURED_NAME,
     CHAR_REMOTE_KEY,
     CONF_FEATURE_LIST,
     EVENT_HOMEKIT_TV_REMOTE_KEY_PRESSED,
@@ -14,6 +15,7 @@ from homeassistant.components.homekit.const import (
     FEATURE_PLAY_STOP,
     FEATURE_TOGGLE_MUTE,
     KEY_ARROW_RIGHT,
+    SERV_SWITCH,
 )
 from homeassistant.components.homekit.type_media_players import (
     MediaPlayer,
@@ -25,7 +27,7 @@ from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
-    DOMAIN,
+    DOMAIN as MEDIA_PLAYER_DOMAIN,
     MediaPlayerDeviceClass,
 )
 from homeassistant.const import (
@@ -74,6 +76,10 @@ async def test_media_player_set_state(
     assert acc.aid == 2
     assert acc.category == 8  # Switch
 
+    switch_service = acc.get_service(SERV_SWITCH)
+    configured_name_char = switch_service.get_characteristic(CHAR_CONFIGURED_NAME)
+    assert configured_name_char.value == "Power"
+
     assert acc.chars[FEATURE_ON_OFF].value is False
     assert acc.chars[FEATURE_PLAY_PAUSE].value is False
     assert acc.chars[FEATURE_PLAY_STOP].value is False
@@ -112,12 +118,12 @@ async def test_media_player_set_state(
     assert acc.chars[FEATURE_PLAY_STOP].value is False
 
     # Set from HomeKit
-    call_turn_on = async_mock_service(hass, DOMAIN, "turn_on")
-    call_turn_off = async_mock_service(hass, DOMAIN, "turn_off")
-    call_media_play = async_mock_service(hass, DOMAIN, "media_play")
-    call_media_pause = async_mock_service(hass, DOMAIN, "media_pause")
-    call_media_stop = async_mock_service(hass, DOMAIN, "media_stop")
-    call_toggle_mute = async_mock_service(hass, DOMAIN, "volume_mute")
+    call_turn_on = async_mock_service(hass, MEDIA_PLAYER_DOMAIN, "turn_on")
+    call_turn_off = async_mock_service(hass, MEDIA_PLAYER_DOMAIN, "turn_off")
+    call_media_play = async_mock_service(hass, MEDIA_PLAYER_DOMAIN, "media_play")
+    call_media_pause = async_mock_service(hass, MEDIA_PLAYER_DOMAIN, "media_pause")
+    call_media_stop = async_mock_service(hass, MEDIA_PLAYER_DOMAIN, "media_stop")
+    call_toggle_mute = async_mock_service(hass, MEDIA_PLAYER_DOMAIN, "volume_mute")
 
     acc.chars[FEATURE_ON_OFF].client_update_value(True)
     await hass.async_block_till_done()
@@ -252,16 +258,18 @@ async def test_media_player_television(
     assert caplog.records[-2].levelname == "DEBUG"
 
     # Set from HomeKit
-    call_turn_on = async_mock_service(hass, DOMAIN, "turn_on")
-    call_turn_off = async_mock_service(hass, DOMAIN, "turn_off")
-    call_media_play = async_mock_service(hass, DOMAIN, "media_play")
-    call_media_pause = async_mock_service(hass, DOMAIN, "media_pause")
-    call_media_play_pause = async_mock_service(hass, DOMAIN, "media_play_pause")
-    call_toggle_mute = async_mock_service(hass, DOMAIN, "volume_mute")
-    call_select_source = async_mock_service(hass, DOMAIN, "select_source")
-    call_volume_up = async_mock_service(hass, DOMAIN, "volume_up")
-    call_volume_down = async_mock_service(hass, DOMAIN, "volume_down")
-    call_volume_set = async_mock_service(hass, DOMAIN, "volume_set")
+    call_turn_on = async_mock_service(hass, MEDIA_PLAYER_DOMAIN, "turn_on")
+    call_turn_off = async_mock_service(hass, MEDIA_PLAYER_DOMAIN, "turn_off")
+    call_media_play = async_mock_service(hass, MEDIA_PLAYER_DOMAIN, "media_play")
+    call_media_pause = async_mock_service(hass, MEDIA_PLAYER_DOMAIN, "media_pause")
+    call_media_play_pause = async_mock_service(
+        hass, MEDIA_PLAYER_DOMAIN, "media_play_pause"
+    )
+    call_toggle_mute = async_mock_service(hass, MEDIA_PLAYER_DOMAIN, "volume_mute")
+    call_select_source = async_mock_service(hass, MEDIA_PLAYER_DOMAIN, "select_source")
+    call_volume_up = async_mock_service(hass, MEDIA_PLAYER_DOMAIN, "volume_up")
+    call_volume_down = async_mock_service(hass, MEDIA_PLAYER_DOMAIN, "volume_down")
+    call_volume_set = async_mock_service(hass, MEDIA_PLAYER_DOMAIN, "volume_set")
 
     acc.char_active.client_update_value(1)
     await hass.async_block_till_done()
@@ -634,7 +642,7 @@ async def test_media_player_television_unsafe_chars(
     await hass.async_block_till_done()
     assert acc.char_input_source.value == 1
 
-    call_select_source = async_mock_service(hass, DOMAIN, "select_source")
+    call_select_source = async_mock_service(hass, MEDIA_PLAYER_DOMAIN, "select_source")
 
     acc.char_input_source.client_update_value(3)
     await hass.async_block_till_done()

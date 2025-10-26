@@ -374,6 +374,27 @@ class PassiveBluetoothProcessorCoordinator[_DataT](BasePassiveBluetoothCoordinat
             self.logger.exception("Unexpected error updating %s data", self.name)
             return
 
+        self._process_update(update, was_available)
+
+    @callback
+    def async_set_updated_data(self, update: _DataT) -> None:
+        """Manually update the processor with new data.
+
+        If the data comes in via a different method, like a
+        notification, this method can be used to update the
+        processor with the new data.
+
+        This is useful for devices that retrieve
+        some of their data via notifications.
+        """
+        was_available = self._available
+        self._available = True
+        self._process_update(update, was_available)
+
+    def _process_update(
+        self, update: _DataT, was_available: bool | None = None
+    ) -> None:
+        """Process the update from the bluetooth device."""
         if not self.last_update_success:
             self.last_update_success = True
             self.logger.info("Coordinator %s recovered", self.name)
@@ -597,6 +618,7 @@ class PassiveBluetoothDataProcessor[_T, _DataT]:
         self.async_update_listeners(new_data, was_available, changed_entity_keys)
 
 
+# pylint: disable-next=hass-enforce-class-module
 class PassiveBluetoothProcessorEntity[
     _PassiveBluetoothDataProcessorT: PassiveBluetoothDataProcessor[Any, Any]
 ](Entity):

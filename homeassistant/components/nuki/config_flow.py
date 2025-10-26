@@ -9,10 +9,10 @@ from pynuki.bridge import InvalidCredentialsException
 from requests.exceptions import RequestException
 import voluptuous as vol
 
-from homeassistant.components import dhcp
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import CONF_ENCRYPT_TOKEN, DEFAULT_PORT, DEFAULT_TIMEOUT, DOMAIN
 from .helpers import CannotConnect, InvalidAuth, parse_id
@@ -75,7 +75,7 @@ class NukiConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self.async_step_validate(user_input)
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Prepare configuration for a DHCP discovered Nuki bridge."""
         await self.async_set_unique_id(discovery_info.hostname[12:].upper())
@@ -177,4 +177,5 @@ class NukiConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(data_schema, user_input),
             errors=errors,
+            description_placeholders={"sample_ip": "192.168.1.25"},
         )

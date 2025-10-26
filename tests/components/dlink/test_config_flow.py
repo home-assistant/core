@@ -2,12 +2,12 @@
 
 from unittest.mock import MagicMock, patch
 
-from homeassistant.components import dhcp
 from homeassistant.components.dlink.const import DEFAULT_NAME, DOMAIN
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .conftest import (
     CONF_DATA,
@@ -160,9 +160,9 @@ async def test_dhcp_unique_id_assignment(
     hass: HomeAssistant, mocked_plug: MagicMock
 ) -> None:
     """Test dhcp initialized flow with no unique id for matching entry."""
-    dhcp_data = dhcp.DhcpServiceInfo(
+    dhcp_data = DhcpServiceInfo(
         ip="2.3.4.5",
-        macaddress="11:22:33:44:55:66",
+        macaddress="112233445566",
         hostname="dsp-w215",
     )
     result = await hass.config_entries.flow.async_init(
@@ -177,7 +177,7 @@ async def test_dhcp_unique_id_assignment(
         )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == CONF_DATA | {CONF_HOST: "2.3.4.5"}
-    assert result["result"].unique_id == "11:22:33:44:55:66"
+    assert result["result"].unique_id == "112233445566"
 
 
 async def test_dhcp_changed_ip(

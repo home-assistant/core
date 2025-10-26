@@ -12,7 +12,7 @@
         }
       },
       "confirm_discovery": {
-        "description": "DHCP reservation on your router is recommended. If not set up, the device may become unavailable until Home Assistant detects the new ip address. Refer to your router's user manual."
+        "description": "DHCP reservation on your router is recommended. If not set up, the device may become unavailable until Home Assistant detects the new IP address. Refer to your router's user manual."
       }
     },
     "error": {

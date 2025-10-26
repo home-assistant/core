@@ -26,14 +26,20 @@
     }
   },
   "entity": {
+    "select": {
+      "hot_water_plus_level": {
+        "name": "Hot Water+ level",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "level1": "Level 1",
+          "level2": "Level 2",
+          "level3": "Level 3"
+        }
+      }
+    },
     "sensor": {
       "hot_water_availability": {
-        "name": "Hot water availability",
-        "state": {
-          "low": "Low",
-          "medium": "Medium",
-          "high": "High"
-        }
+        "name": "Hot water availability"
       },
       "energy_usage": {
         "name": "Energy usage"
