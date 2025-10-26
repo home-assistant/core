@@ -136,7 +136,7 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
 
                 container_map: dict[str, PortainerContainerData] = {}
 
-                gather_container_stats = [
+                container_stats_task = [
                     (
                         container,
                         self.portainer.container_stats(
@@ -147,34 +147,32 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                     for container in containers
                 ]
 
-                container_stats_loop = await asyncio.gather(
-                    *[task for _, task in gather_container_stats],
+                container_stats_gather = await asyncio.gather(
+                    *[task for _, task in container_stats_task],
                 )
                 for (container, _), container_stats in zip(
-                    gather_container_stats, container_stats_loop, strict=False
+                    container_stats_task, container_stats_gather, strict=False
                 ):
                     container_name = container.names[0].replace("/", " ").strip()
 
-                    # Store previous stats if available
-                    # This is used to calculate deltas for CPU and network usage
-                    # Added a walrus pattern to check if not None on previous_stats
-                    previous_stats = (
-                        prev_container.stats
-                        if (
-                            prev_container := (
-                                (prev_data := self.data.get(endpoint.id))
-                                and prev_data.containers.get(container_name)
-                                if self.data
-                                else None
-                            )
-                        )
-                        else None
-                    )
-
+                    # Store previous stats if available. This is used to calculate deltas for CPU and network usage
+                    # In the first call it will be None, since it has nothing to compare with
+                    # Added a walrus pattern to check if not None on prev_container, to keep mypy happy. :)
                     container_map[container_name] = PortainerContainerData(
                         container=container,
                         stats=container_stats,
-                        stats_pre=previous_stats,
+                        stats_pre=(
+                            prev_container.stats
+                            if self.data
+                            and (prev_data := self.data.get(endpoint.id)) is not None
+                            and (
+                                prev_container := prev_data.containers.get(
+                                    container_name
+                                )
+                            )
+                            is not None
+                            else None
+                        ),
                     )
             except PortainerConnectionError as err:
                 _LOGGER.exception("Connection error")
