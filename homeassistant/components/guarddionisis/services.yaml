@@ -1,0 +1,91 @@
+set_alarm_status:
+  description: send command to set the status of the alarm
+  fields:
+    entity_id:
+      name: Entity Name
+      description: Name of the target entity
+      required: true
+      example: "sensor.home_alarm"
+      selector:
+        entity:
+          integration: guarddionisis
+    status:
+      name: New status
+      description: new status value
+      required: true
+      example: "Alert"
+      selector:
+        text:
+
+clear_videos:
+  description: send command to clear all videos
+
+set_counter:
+  description: set the counter of an area
+  fields:
+    entity_id:
+      name: Entity Name
+      description: Name of the target counter
+      required: true
+      example: "sensor.front_garden"
+      selector:
+        entity:
+          integration: guarddionisis
+    value:
+      name: New value
+      description: new status value
+      required: true
+      example: "2"
+      selector:
+        number:
+          min: 0
+          max: 250
+          step: 1
+          mode: box
+
+set_alarm_status:
+  description: set the status of the alarm
+  fields:
+    entity_id:
+      name: Entity Name
+      description: Name of the target counter
+      required: true
+      example: "sensor.homealarm"
+      selector:
+        entity:
+          integration: guarddionisis
+    alarm_status:
+      name: New status
+      description: new status value
+      required: true
+      example: "2"
+      selector:
+        number:
+          min: 0
+          max: 4
+          step: 1
+          mode: box
+
+increment_counter:
+  description: increment the counter of an area
+  fields:
+    entity_id:
+      name: Entity Name
+      description: Name of the target counter
+      required: true
+      example: "sensor.front_garden"
+      selector:
+        entity:
+          integration: guarddionisis
+
+deincrement_counter:
+  description: deincrement the counter of an area
+  fields:
+    entity_id:
+      name: Entity Name
+      description: Name of the target counter
+      required: true
+      example: "sensor.front_garden"
+      selector:
+        entity:
+          integration: guaguarddionisisrd

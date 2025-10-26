@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package sensor;
+
+
+message SensorData {
+  string entity_id = 1;
+  int32 value = 2;
+}
+
+message Void {
+}
+
+service SensorService {
+  rpc GetSensorData (Void) returns (SensorData);
+  rpc SetSensorData (SensorData) returns (Void);
+}
