@@ -2,6 +2,7 @@
   "domain": "sony_projector",
   "name": "Sony Projector",
   "codeowners": ["@johnmschoonover"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/sony_projector",
   "iot_class": "local_polling",
   "loggers": ["pysdcp"],

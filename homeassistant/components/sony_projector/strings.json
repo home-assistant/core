@@ -1,0 +1,22 @@
+{
+  "config": {
+    "title": "Sony Projector",
+    "step": {
+      "user": {
+        "title": "Connect to Sony projector",
+        "description": "Enter the host name or IP address of your projector.",
+        "data": {
+          "host": "Host",
+          "name": "Name (optional)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the projector."
+    },
+    "abort": {
+      "already_configured": "Device is already configured.",
+      "cannot_connect": "Failed to connect to the projector."
+    }
+  }
+}
