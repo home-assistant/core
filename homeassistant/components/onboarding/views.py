@@ -196,7 +196,7 @@ class UserOnboardingView(_BaseOnboardingStepView):
             credentials = await provider.async_get_or_create_credentials(
                 {"username": data["username"]}
             )
-            hass.auth.async_link_user(user, credentials)
+            await hass.auth.async_link_user(user, credentials)
             if await async_wait_component(hass, "person"):
                 await person.async_create_person(hass, data["name"], user_id=user.id)
 

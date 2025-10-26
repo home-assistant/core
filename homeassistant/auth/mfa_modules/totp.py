@@ -111,8 +111,7 @@ class TotpAuthModule(MultiFactorAuthModule):
 
         ota_secret: str = secret or pyotp.random_base32()
 
-        assert self._users is not None
-        self._users[user_id] = ota_secret
+        self._users[user_id] = ota_secret  # type: ignore[index]
         return ota_secret
 
     async def async_setup_flow(self, user_id: str) -> TotpSetupFlow:
@@ -120,7 +119,7 @@ class TotpAuthModule(MultiFactorAuthModule):
 
         Mfa module should extend SetupFlow
         """
-        user = self.hass.auth.async_get_user(user_id)
+        user = await self.hass.auth.async_get_user(user_id)
         assert user is not None
         return TotpSetupFlow(self, self.input_schema, user)
 
@@ -129,7 +128,6 @@ class TotpAuthModule(MultiFactorAuthModule):
         if self._users is None:
             await self._async_load()
 
-        assert self._users is not None
         result = await self.hass.async_add_executor_job(
             self._add_ota_secret, user_id, setup_data.get("secret")
         )
@@ -142,8 +140,7 @@ class TotpAuthModule(MultiFactorAuthModule):
         if self._users is None:
             await self._async_load()
 
-        assert self._users is not None
-        if self._users.pop(user_id, None):
+        if self._users.pop(user_id, None):  # type: ignore[union-attr]
             await self._async_save()
 
     async def async_is_user_setup(self, user_id: str) -> bool:
@@ -151,15 +148,13 @@ class TotpAuthModule(MultiFactorAuthModule):
         if self._users is None:
             await self._async_load()
 
-        assert self._users is not None
-        return user_id in self._users
+        return user_id in self._users  # type: ignore[operator]
 
     async def async_validate(self, user_id: str, user_input: dict[str, Any]) -> bool:
         """Return True if validation passed."""
         if self._users is None:
             await self._async_load()
 
-        assert self._users is not None
         # user_input has been validate in caller
         # set INPUT_FIELD_CODE as vol.Required is not user friendly
         return await self.hass.async_add_executor_job(
@@ -170,8 +165,7 @@ class TotpAuthModule(MultiFactorAuthModule):
         """Validate two factor authentication code."""
         import pyotp  # noqa: PLC0415
 
-        assert self._users is not None
-        if (ota_secret := self._users.get(user_id)) is None:
+        if (ota_secret := self._users.get(user_id)) is None:  # type: ignore[union-attr]
             # even we cannot find user, we still do verify
             # to make timing the same as if user was found.
             pyotp.TOTP(DUMMY_SECRET).verify(code, valid_window=1)

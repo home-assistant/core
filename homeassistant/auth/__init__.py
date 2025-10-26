@@ -157,7 +157,7 @@ class AuthManagerFlowManager(
         # multi-factor module cannot enabled for new credential
         # which has not linked to a user yet
         if auth_provider.support_mfa and not credentials.is_new:
-            user = self.auth_manager.async_get_user_by_credentials(credentials)
+            user = await self.auth_manager.async_get_user_by_credentials(credentials)
             if user is not None:
                 modules = await self.auth_manager.async_get_enabled_mfa(user)
 
@@ -231,40 +231,35 @@ class AuthManager:
         """Return a multi-factor auth module, None if not found."""
         return self._mfa_modules.get(module_id)
 
-    @callback
-    def async_get_users(self) -> list[models.User]:
+    async def async_get_users(self) -> list[models.User]:
         """Retrieve all users."""
-        return self._store.async_get_users()
+        return await self._store.async_get_users()
 
-    @callback
-    def async_get_user(self, user_id: str) -> models.User | None:
+    async def async_get_user(self, user_id: str) -> models.User | None:
         """Retrieve a user."""
-        return self._store.async_get_user(user_id)
+        return await self._store.async_get_user(user_id)
 
-    @callback
-    def async_get_owner(self) -> models.User | None:
+    async def async_get_owner(self) -> models.User | None:
         """Retrieve the owner."""
-        users = self.async_get_users()
+        users = await self.async_get_users()
         return next((user for user in users if user.is_owner), None)
 
-    @callback
-    def async_get_group(self, group_id: str) -> models.Group | None:
+    async def async_get_group(self, group_id: str) -> models.Group | None:
         """Retrieve all groups."""
-        return self._store.async_get_group(group_id)
+        return await self._store.async_get_group(group_id)
 
-    @callback
-    def async_get_user_by_credentials(
+    async def async_get_user_by_credentials(
         self, credentials: models.Credentials
     ) -> models.User | None:
         """Get a user by credential, return None if not found."""
-        for user in self.async_get_users():
+        for user in await self.async_get_users():
             for creds in user.credentials:
                 if creds.id == credentials.id:
                     return user
 
         return None
 
-    async def async_create_system_user(  # NOSONAR - kept async for public API compatibility
+    async def async_create_system_user(
         self,
         name: str,
         *,
@@ -272,7 +267,7 @@ class AuthManager:
         local_only: bool | None = None,
     ) -> models.User:
         """Create a system user."""
-        user = self._store.async_create_user(
+        user = await self._store.async_create_user(
             name=name,
             system_generated=True,
             is_active=True,
@@ -284,7 +279,7 @@ class AuthManager:
 
         return user
 
-    async def async_create_user(  # NOSONAR - kept async for public API compatibility
+    async def async_create_user(
         self,
         name: str,
         *,
@@ -299,10 +294,10 @@ class AuthManager:
             "local_only": local_only,
         }
 
-        if self._user_should_be_owner():
+        if await self._user_should_be_owner():
             kwargs["is_owner"] = True
 
-        user = self._store.async_create_user(**kwargs)
+        user = await self._store.async_create_user(**kwargs)
 
         self.hass.bus.async_fire(EVENT_USER_ADDED, {"user_id": user.id})
 
@@ -313,7 +308,7 @@ class AuthManager:
     ) -> models.User:
         """Get or create a user."""
         if not credentials.is_new:
-            user = self.async_get_user_by_credentials(credentials)
+            user = await self.async_get_user_by_credentials(credentials)
             if user is None:
                 raise ValueError("Unable to find the user.")
             return user
@@ -325,7 +320,7 @@ class AuthManager:
 
         info = await auth_provider.async_user_meta_for_credentials(credentials)
 
-        user = self._store.async_create_user(
+        user = await self._store.async_create_user(
             credentials=credentials,
             name=info.name,
             is_active=info.is_active,
@@ -337,18 +332,17 @@ class AuthManager:
 
         return user
 
-    @callback
-    def async_link_user(
+    async def async_link_user(
         self, user: models.User, credentials: models.Credentials
     ) -> None:
         """Link credentials to an existing user."""
-        linked_user = self.async_get_user_by_credentials(credentials)
+        linked_user = await self.async_get_user_by_credentials(credentials)
         if linked_user == user:
             return
         if linked_user is not None:
             raise ValueError("Credential is already linked to a user")
 
-        self._store.async_link_user(user, credentials)
+        await self._store.async_link_user(user, credentials)
 
     async def async_remove_user(self, user: models.User) -> None:
         """Remove a user."""
@@ -360,11 +354,11 @@ class AuthManager:
         if tasks:
             await asyncio.gather(*tasks)
 
-        self._store.async_remove_user(user)
+        await self._store.async_remove_user(user)
 
         self.hass.bus.async_fire(EVENT_USER_REMOVED, {"user_id": user.id})
 
-    async def async_update_user(  # NOSONAR - kept async for public API compatibility
+    async def async_update_user(
         self,
         user: models.User,
         name: str | None = None,
@@ -382,13 +376,13 @@ class AuthManager:
             )
             if value is not None
         }
-        self._store.async_update_user(user, **kwargs)
+        await self._store.async_update_user(user, **kwargs)
 
         if is_active is not None:
             if is_active is True:
-                self.async_activate_user(user)
+                await self.async_activate_user(user)
             else:
-                self.async_deactivate_user(user)
+                await self.async_deactivate_user(user)
 
         self.hass.bus.async_fire(EVENT_USER_UPDATED, {"user_id": user.id})
 
@@ -399,17 +393,15 @@ class AuthManager:
         """Update credentials data."""
         self._store.async_update_user_credentials_data(credentials, data=data)
 
-    @callback
-    def async_activate_user(self, user: models.User) -> None:
+    async def async_activate_user(self, user: models.User) -> None:
         """Activate a user."""
-        self._store.async_activate_user(user)
+        await self._store.async_activate_user(user)
 
-    @callback
-    def async_deactivate_user(self, user: models.User) -> None:
+    async def async_deactivate_user(self, user: models.User) -> None:
         """Deactivate a user."""
         if user.is_owner:
             raise ValueError("Unable to deactivate the owner")
-        self._store.async_deactivate_user(user)
+        await self._store.async_deactivate_user(user)
 
     async def async_remove_credentials(self, credentials: models.Credentials) -> None:
         """Remove credentials."""
@@ -418,7 +410,7 @@ class AuthManager:
         if provider is not None and hasattr(provider, "async_will_remove_credentials"):
             await provider.async_will_remove_credentials(credentials)
 
-        self._store.async_remove_credentials(credentials)
+        await self._store.async_remove_credentials(credentials)
 
     async def async_enable_user_mfa(
         self, user: models.User, mfa_module_id: str, data: Any
@@ -698,11 +690,14 @@ class AuthManager:
         )
         return self._providers.get(auth_provider_key)
 
-    @callback
-    def _user_should_be_owner(self) -> bool:
+    async def _user_should_be_owner(self) -> bool:
         """Determine if user should be owner.
 
         A user should be an owner if it is the first non-system user that is
         being created.
         """
-        return all(user.system_generated for user in self._store.async_get_users())
+        for user in await self._store.async_get_users():
+            if not user.system_generated:
+                return False
+
+        return True
