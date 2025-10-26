@@ -1730,7 +1730,6 @@ class ConfigEntriesFlowManager(
             self.config_entries._async_clean_up(existing_entry)  # noqa: SLF001
 
         result["result"] = entry
-
         return result
 
     async def async_create_flow(
