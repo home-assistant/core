@@ -31,9 +31,7 @@ def _serialize_coordinator(coordinator: PortainerCoordinator) -> dict[str, Any]:
                 "containers": [
                     {
                         "id": container.id,
-                        "names": list(container.names)
-                        if container.names
-                        else [],  # Docker names are built-upon asliases as well. Here I include them all. Maybe I should only allow the first record that represents the "main" name?
+                        "names": list(container.names or [])
                         "image": container.image,
                         "state": container.state,
                         "status": container.status,
