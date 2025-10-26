@@ -149,8 +149,13 @@ async def async_setup_entry(
                 # Clean up any prior issue if references are gone
                 ir.async_delete_issue(hass, DOMAIN, f"legacy_switch_present_{host}")
 
-        # Defer check until startup so automation/script indices are ready
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _check_refs_after_start)
+        # Run now if HA is already running; otherwise defer until startup
+        if hass.is_running:
+            _check_refs_after_start(None)
+        else:
+            hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_STARTED, _check_refs_after_start
+            )
         return
 
     # No YAML present and no compat switch entity found. If a prior issue exists,
@@ -184,9 +189,12 @@ async def async_setup_entry(
                 else:
                     ir.async_delete_issue(hass, DOMAIN, f"legacy_switch_present_{host}")
 
-            hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_STARTED, _check_refs_after_start_issue
-            )
+            if hass.is_running:
+                _check_refs_after_start_issue(None)
+            else:
+                hass.bus.async_listen_once(
+                    EVENT_HOMEASSISTANT_STARTED, _check_refs_after_start_issue
+                )
 
 
 def _has_legacy_references(hass: HomeAssistant, entity_id: str) -> bool:
@@ -256,10 +264,13 @@ class SonyProjectorCompatSwitch(SwitchEntity):
                     self.hass, DOMAIN, f"legacy_switch_present_{self._identifier}"
                 )
 
-        # Defer check until startup so automation/script indices are ready
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STARTED, _check_refs_after_start
-        )
+        # Run now if HA is already running; otherwise defer until startup
+        if self.hass.is_running:
+            _check_refs_after_start(None)
+        else:
+            self.hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_STARTED, _check_refs_after_start
+            )
 
     async def async_update(self) -> None:
         """Fetch the latest state from the projector."""
