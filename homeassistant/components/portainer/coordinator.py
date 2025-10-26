@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -134,32 +135,44 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                 docker_info = await self.portainer.docker_info(endpoint.id)
 
                 container_map: dict[str, PortainerContainerData] = {}
-                for container in containers:
-                    stats = await self.portainer.container_stats(
-                        endpoint_id=endpoint.id,
-                        container_id=container.id,
-                    )
 
+                gather_container_stats = [
+                    (
+                        container,
+                        self.portainer.container_stats(
+                            endpoint_id=endpoint.id,
+                            container_id=container.id,
+                        ),
+                    )
+                    for container in containers
+                ]
+
+                container_stats_loop = await asyncio.gather(
+                    *[task for _, task in gather_container_stats],
+                )
+                for (container, _), container_stats in zip(
+                    gather_container_stats, container_stats_loop, strict=False
+                ):
                     container_name = container.names[0].replace("/", " ").strip()
 
                     # Store previous stats if available
                     # This is used to calculate deltas for CPU and network usage
-                    # NOTE to the reviewer: this is done as a optimization to avoid long waiting times with one_shot=False. This will lead to longer waits each time it needs to update. Docker API will wait another cycle. Which could mean an extra ~2 seconds loading time, per container.
-                    previous_data = self.data.get(endpoint.id) if self.data else None
-                    previous_container = (
-                        previous_data.containers.get(container_name)
-                        if previous_data is not None
-                        else None
-                    )
                     previous_stats = (
-                        previous_container.stats
-                        if previous_container is not None
+                        prev_container.stats
+                        if (
+                            prev_container := (
+                                (prev_data := self.data.get(endpoint.id))
+                                and prev_data.containers.get(container_name)
+                                if self.data
+                                else None
+                            )
+                        )
                         else None
                     )
 
                     container_map[container_name] = PortainerContainerData(
                         container=container,
-                        stats=stats,
+                        stats=container_stats,
                         stats_pre=previous_stats,
                     )
             except PortainerConnectionError as err:
