@@ -21,6 +21,8 @@ from .const import SIGNAL_DEVICE_ADD
 from .coordinator import SwitcherDataUpdateCoordinator
 from .entity import SwitcherEntity
 
+PARALLEL_UPDATES = 1
+
 API_SET_POSITON = "set_position"
 API_STOP = "stop_shutter"
 
