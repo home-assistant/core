@@ -33,7 +33,7 @@
       "message": "Failed to read current HVAC action"
     },
     "failed_to_parse_hvac_action": {
-      "message": "Could not determine HVAC action: {mode_and_active}, {self.current_temperature}, {self.target_temperature_low}"
+      "message": "Could not determine HVAC action: {mode_and_active}, {current_temperature}, {target_temperature_low}"
     },
     "failed_to_set_hvac_mode": {
       "message": "Failed to set HVAC mode"
