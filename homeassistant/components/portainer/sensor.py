@@ -76,7 +76,7 @@ CONTAINER_SENSORS: tuple[PortainerContainerSensorEntityDescription, ...] = (
         translation_key="memory_usage_percentage",
         value_fn=lambda data: (
             (data.stats.memory_stats.usage / data.stats.memory_stats.limit) * 100.0
-            if data.stats.memory_stats.limit > 0 and data.stats.memory_stats.limit > 0
+            if data.stats.memory_stats.limit > 0 and data.stats.memory_stats.usage > 0
             else 0.0
         ),
         native_unit_of_measurement=PERCENTAGE,
