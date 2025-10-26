@@ -1,4 +1,4 @@
-"""Util decalations and functions for Orvibo."""
+"""Util declarations and functions for Orvibo."""
 
 from dataclasses import dataclass
 
