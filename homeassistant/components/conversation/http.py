@@ -287,6 +287,8 @@ def websocket_subscribe_chat_log(
     msg_id = msg["id"]
     subscribed_conversation = msg["conversation_id"]
 
+    # TODO: if chat log doesn't exist, raise NOT_FOUND to prevent creating one
+
     @callback
     def forward_events(conversation_id: str, event_type: str, data: dict) -> None:
         """Forward chat log events to websocket connection."""

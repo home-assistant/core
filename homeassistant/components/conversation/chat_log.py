@@ -7,6 +7,7 @@ from collections.abc import AsyncGenerator, AsyncIterable, Callable, Generator
 from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import asdict, dataclass, field, replace
+from datetime import datetime
 import logging
 from pathlib import Path
 from typing import Any, Literal, TypedDict, cast
@@ -16,6 +17,7 @@ import voluptuous as vol
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import chat_session, frame, intent, llm, template
+from homeassistant.util.dt import utcnow
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import JsonObjectType
 
@@ -201,6 +203,7 @@ class SystemContent:
 
     role: Literal["system"] = field(init=False, default="system")
     content: str
+    created: datetime = field(init=False, default_factory=utcnow)
 
     def as_dict(self) -> dict[str, Any]:
         """Return a dictionary representation of the content."""
@@ -214,10 +217,15 @@ class UserContent:
     role: Literal["user"] = field(init=False, default="user")
     content: str
     attachments: list[Attachment] | None = field(default=None)
+    created: datetime = field(init=False, default_factory=utcnow)
 
     def as_dict(self) -> dict[str, Any]:
         """Return a dictionary representation of the content."""
-        result: dict[str, Any] = {"role": self.role, "content": self.content}
+        result: dict[str, Any] = {
+            "role": self.role,
+            "content": self.content,
+            "created": self.created,
+        }
         if self.attachments:
             result["attachments"] = [
                 attachment.as_dict() for attachment in self.attachments
@@ -257,10 +265,15 @@ class AssistantContent:
     thinking_content: str | None = None
     tool_calls: list[llm.ToolInput] | None = None
     native: Any = None
+    created: datetime = field(init=False, default_factory=utcnow)
 
     def as_dict(self) -> dict[str, Any]:
         """Return a dictionary representation of the content."""
-        result: dict[str, Any] = {"role": self.role, "agent_id": self.agent_id}
+        result: dict[str, Any] = {
+            "role": self.role,
+            "agent_id": self.agent_id,
+            "created": self.created,
+        }
         if self.content:
             result["content"] = self.content
         if self.thinking_content:
@@ -279,6 +292,7 @@ class ToolResultContent:
     tool_call_id: str
     tool_name: str
     tool_result: JsonObjectType
+    created: datetime = field(init=False, default_factory=utcnow)
 
     def as_dict(self) -> dict[str, Any]:
         """Return a dictionary representation of the content."""
@@ -288,6 +302,7 @@ class ToolResultContent:
             "tool_call_id": self.tool_call_id,
             "tool_name": self.tool_name,
             "tool_result": self.tool_result,
+            "created": self.created,
         }
 
 
@@ -324,6 +339,7 @@ class ChatLog:
     llm_api: llm.APIInstance | None = None
     delta_listener: Callable[[ChatLog, dict], None] | None = None
     llm_input_provided_index = 0
+    created: datetime = field(init=False, default_factory=utcnow)
 
     def as_dict(self) -> dict[str, Any]:
         """Return a dictionary representation of the chat log."""
@@ -331,6 +347,7 @@ class ChatLog:
             "conversation_id": self.conversation_id,
             "continue_conversation": self.continue_conversation,
             "content": [c.as_dict() for c in self.content],
+            "created": self.created,
         }
 
     @property
