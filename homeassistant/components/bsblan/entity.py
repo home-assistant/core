@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     DeviceInfo,
@@ -16,15 +14,14 @@ from .const import DOMAIN
 from .coordinator import BSBLanCoordinator, BSBLanFastCoordinator, BSBLanSlowCoordinator
 
 
-class BSBLanEntityBase[T](CoordinatorEntity[Any]):
+class BSBLanEntityBase[_T: BSBLanCoordinator](CoordinatorEntity[_T]):
     """Base BSBLan entity with common device info setup."""
 
     _attr_has_entity_name = True
 
-    def _setup_device_info(
-        self, coordinator: BSBLanCoordinator, data: BSBLanData
-    ) -> None:
-        """Set up device info for the entity."""
+    def __init__(self, coordinator: _T, data: BSBLanData) -> None:
+        """Initialize BSBLan entity with device info."""
+        super().__init__(coordinator)
         host = coordinator.config_entry.data["host"]
         mac = data.device.MAC
         self._attr_device_info = DeviceInfo(
@@ -43,11 +40,10 @@ class BSBLanEntity(BSBLanEntityBase[BSBLanFastCoordinator]):
 
     def __init__(self, coordinator: BSBLanFastCoordinator, data: BSBLanData) -> None:
         """Initialize BSBLan entity."""
-        super().__init__(coordinator)
-        self._setup_device_info(coordinator, data)
+        super().__init__(coordinator, data)
 
 
-class BSBLanDualCoordinatorEntity(BSBLanEntityBase[BSBLanFastCoordinator]):
+class BSBLanDualCoordinatorEntity(BSBLanEntity):
     """Entity that listens to both fast and slow coordinators."""
 
     def __init__(
@@ -57,9 +53,8 @@ class BSBLanDualCoordinatorEntity(BSBLanEntityBase[BSBLanFastCoordinator]):
         data: BSBLanData,
     ) -> None:
         """Initialize BSBLan entity with both coordinators."""
-        super().__init__(fast_coordinator)
+        super().__init__(fast_coordinator, data)
         self.slow_coordinator = slow_coordinator
-        self._setup_device_info(fast_coordinator, data)
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
