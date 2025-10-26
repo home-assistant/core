@@ -5,6 +5,10 @@
         "data": {
           "email": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "email": "The email of your Zinvolt account.",
+          "password": "The password of your Zinvolt account."
         }
       }
     },

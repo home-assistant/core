@@ -38,7 +38,9 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_zinvolt_client() -> Generator[AsyncMock]:
     """Mock Zinvolt client."""
     with (
-        patch("homeassistant.components.zinvolt.ZinvoltClient") as mock_client,
+        patch(
+            "homeassistant.components.zinvolt.ZinvoltClient", autospec=True
+        ) as mock_client,
         patch(
             "homeassistant.components.zinvolt.config_flow.ZinvoltClient",
             new=mock_client,
@@ -48,7 +50,7 @@ def mock_zinvolt_client() -> Generator[AsyncMock]:
         client.login.return_value = TOKEN
         client.get_batteries.return_value = BatteryListResponse.from_json(
             load_fixture("batteries.json", DOMAIN)
-        )
+        ).batteries
         client.get_battery_status.return_value = BatteryState.from_json(
             load_fixture("current_state.json", DOMAIN)
         )
