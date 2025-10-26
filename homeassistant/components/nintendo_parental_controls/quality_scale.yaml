@@ -36,9 +36,9 @@ rules:
   entity-unavailable: todo
   integration-owner: done
   log-when-unavailable: done
-  parallel-updates: todo
-  reauthentication-flow: todo
-  test-coverage: todo
+  parallel-updates: done
+  reauthentication-flow: done
+  test-coverage: done
 
   # Gold
   devices: done
