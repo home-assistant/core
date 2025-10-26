@@ -216,5 +216,5 @@ class FireflyBudgetSensor(FireflyBudgetBaseEntity, SensorEntity):
         spent_items = self._budget.attributes.spent or []
         spent = sum(float(item.sum) for item in spent_items if item.sum is not None)
         if spent == 0:
-            return None
+            return 0
         return spent
