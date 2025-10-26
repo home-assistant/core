@@ -21,22 +21,32 @@
       "options": {
         "description": "Refer to the documentation for further details on how to configure the compensation sensor using these options.",
         "data": {
-          "data_points": "Data points",
           "attribute": "Attribute",
           "upper_limit": "Upper limit",
           "lower_limit": "Lower limit",
           "precision": "Precision",
-          "degree": "Degree",
+
           "unit_of_measurement": "Unit of measurement"
         },
         "data_description": {
-          "data_points": "Add a collection of data point conversions with the uncompensated value and the compensated value. The number of required data point sets is equal to the polynomial degree + 1.",
           "attribute": "Attribute from the source to monitor/compensate.",
           "upper_limit": "Enables a upper limit for the sensor. The upper limit is defined by the data points highest uncompensated value.",
           "lower_limit": "Enables a lower limit for the sensor. The lower limit is defined by the data points lowest uncompensated value.",
           "precision": "Defines the precision of the calculated values, through the argument of round().",
-          "degree": "The degree of the polynomial.",
           "unit_of_measurement": "The unit of measurement of the compensation sensor, if any."
+        },
+        "sections": {
+          "polynomial_config": {
+            "name": "Polynomial configuration",
+            "description": "Configure the polynomial used for compensation.",
+            "data": {
+              "data_points": "Data points",
+              "degree": "Degree"
+            },
+            "data_description": {
+              "degree": "The degree of the polynomial."
+            }
+          }
         }
       }
     }
@@ -52,22 +62,32 @@
       "init": {
         "description": "[%key:component::compensation::config::step::options::description%]",
         "data": {
-          "data_points": "[%key:component::compensation::config::step::options::data::data_points%]",
           "attribute": "[%key:component::compensation::config::step::options::data::attribute%]",
           "upper_limit": "[%key:component::compensation::config::step::options::data::upper_limit%]",
           "lower_limit": "[%key:component::compensation::config::step::options::data::lower_limit%]",
           "precision": "[%key:component::compensation::config::step::options::data::precision%]",
-          "degree": "[%key:component::compensation::config::step::options::data::degree%]",
           "unit_of_measurement": "[%key:component::compensation::config::step::options::data::unit_of_measurement%]"
         },
         "data_description": {
-          "data_points": "[%key:component::compensation::config::step::options::data_description::data_points%]",
           "attribute": "[%key:component::compensation::config::step::options::data_description::attribute%]",
           "upper_limit": "[%key:component::compensation::config::step::options::data_description::upper_limit%]",
           "lower_limit": "[%key:component::compensation::config::step::options::data_description::lower_limit%]",
           "precision": "[%key:component::compensation::config::step::options::data_description::precision%]",
-          "degree": "[%key:component::compensation::config::step::options::data_description::degree%]",
           "unit_of_measurement": "[%key:component::compensation::config::step::options::data_description::unit_of_measurement%]"
+        },
+
+        "sections": {
+          "polynomial_config": {
+            "name": "[%key:component::compensation::config::step::options::sections::polynomial_config::name%]",
+            "description": "[%key:component::compensation::config::step::options::sections::polynomial_config::description%]",
+            "data": {
+              "data_points": "[%key:component::compensation::config::step::options::sections::polynomial_config::data::data_points%]",
+              "degree": "[%key:component::compensation::config::step::options::sections::polynomial_config::data::degree%]"
+            },
+            "data_description": {
+              "degree": "[%key:component::compensation::config::step::options::sections::polynomial_config::data_description::degree%]"
+            }
+          }
         }
       }
     }
