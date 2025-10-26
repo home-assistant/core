@@ -1866,28 +1866,18 @@ async def test_create_entry_next_flow(
     class TestFlow(config_entries.ConfigFlow):
         """Test flow."""
 
-        async def async_on_create_entry(
-            self, result: config_entries.ConfigFlowResult
-        ) -> config_entries.ConfigFlowResult:
-            """Create a next flow."""
-            new_flow = await hass.config_entries.flow.async_init(
-                "comp",
-                context={"source": config_entries.SOURCE_USER},
-            )
-            result["next_flow"] = (
-                config_entries.FlowType.CONFIG_FLOW,
-                new_flow["flow_id"],
-            )
-            return await super().async_on_create_entry(result)
-
         async def async_step_import(
             self, user_input: dict[str, Any] | None = None
         ) -> config_entries.ConfigFlowResult:
             """Test create entry with next_flow parameter."""
-
+            result = await hass.config_entries.flow.async_init(
+                "comp",
+                context={"source": config_entries.SOURCE_USER},
+            )
             return self.async_create_entry(
                 title="import",
                 data={"flow": "import"},
+                next_flow=(config_entries.FlowType.CONFIG_FLOW, result["flow_id"]),
             )
 
         async def async_step_user(
@@ -1940,8 +1930,6 @@ async def test_create_entry_next_flow(
         assert async_setup_entry.call_count == 2
         entries = hass.config_entries.async_entries("comp")
         entry = next(entry for entry in entries if entry.data.get("flow") == "user")
-        flows = hass.config_entries.flow.async_progress()
-        new_flow = flows[0]
         assert result == {
             "context": {"source": "user"},
             "data": {"flow": "user"},
@@ -1950,7 +1938,6 @@ async def test_create_entry_next_flow(
             "flow_id": user_flow["flow_id"],
             "handler": "comp",
             "minor_version": 1,
-            "next_flow": (config_entries.FlowType.CONFIG_FLOW, new_flow["flow_id"]),
             "options": {},
             "result": entry,
             "subentries": (),
@@ -1993,13 +1980,6 @@ async def test_create_entry_next_flow_invalid(
     class TestFlow(config_entries.ConfigFlow):
         """Test flow."""
 
-        async def async_on_create_entry(
-            self, result: config_entries.ConfigFlowResult
-        ) -> config_entries.ConfigFlowResult:
-            """Create a next flow."""
-            result["next_flow"] = invalid_next_flow
-            return await super().async_on_create_entry(result)
-
         async def async_step_import(
             self, user_input: dict[str, Any] | None = None
         ) -> config_entries.ConfigFlowResult:
@@ -2011,6 +1991,7 @@ async def test_create_entry_next_flow_invalid(
             return self.async_create_entry(
                 title="import",
                 data={"flow": "import"},
+                next_flow=invalid_next_flow,  # type: ignore[arg-type]
             )
 
         async def async_step_user(
@@ -9603,7 +9584,7 @@ async def test_async_update_title_placeholders(hass: HomeAssistant) -> None:
         assert len(events) == 2
 
 
-async def test_config_flow_abort_with_next_flow2(hass: HomeAssistant) -> None:
+async def test_config_flow_abort_with_next_flow(hass: HomeAssistant) -> None:
     """Test that ConfigFlow.async_abort() can include next_flow parameter."""
 
     class TargetFlow(config_entries.ConfigFlow):
@@ -9617,25 +9598,20 @@ async def test_config_flow_abort_with_next_flow2(hass: HomeAssistant) -> None:
     class TestFlow(config_entries.ConfigFlow):
         VERSION = 1
 
-        async def async_on_create_entry(
-            self, result: config_entries.ConfigFlowResult
-        ) -> config_entries.ConfigFlowResult:
-            """Create next flow."""
-            target_result = await hass.config_entries.flow.async_init(
-                "test2", context={"source": config_entries.SOURCE_USER}
-            )
-            result["next_flow"] = (
-                config_entries.FlowType.CONFIG_FLOW,
-                target_result["flow_id"],
-            )
-            return result
-
         async def async_step_user(
             self, user_input: dict[str, Any] | None = None
         ) -> config_entries.ConfigFlowResult:
             # Create target flow first
+            target_result = await hass.config_entries.flow.async_init(
+                "test2", context={"source": config_entries.SOURCE_USER}
+            )
+            # Abort with next_flow
             return self.async_abort(
                 reason="provision_successful",
+                next_flow=(
+                    config_entries.FlowType.CONFIG_FLOW,
+                    target_result["flow_id"],
+                ),
             )
 
     mock_integration(hass, MockModule("test"))
