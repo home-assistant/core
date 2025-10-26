@@ -56,9 +56,11 @@ SENSOR_TYPES: tuple[MyStromSwitchSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        value_fn=lambda device: None
-        if device.energy_since_boot is None
-        else device.energy_since_boot / 3600000,
+        value_fn=lambda device: (
+            None
+            if device.energy_since_boot is None
+            else device.energy_since_boot / 3600000
+        ),
     ),
     MyStromSwitchSensorEntityDescription(
         key="temperature",
