@@ -102,7 +102,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> bo
     # Perform first refresh of both coordinators
     await fast_coordinator.async_config_entry_first_refresh()
 
-    await slow_coordinator.async_config_entry_first_refresh()
+    # Try to refresh slow coordinator, but don't fail if DHW is not available
+    # This allows the integration to work even if the device doesn't support DHW
+    await slow_coordinator.async_refresh()
 
     entry.runtime_data = BSBLanData(
         client=bsblan,

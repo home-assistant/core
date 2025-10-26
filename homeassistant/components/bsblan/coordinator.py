@@ -145,11 +145,22 @@ class BSBLanSlowCoordinator(BSBLanCoordinator[BSBLanSlowData]):
             # Client is already initialized in async_setup_entry
             # Fetch slow-changing configuration data
             dhw_config = await self.client.hot_water_config()
-
             dhw_schedule = await self.client.hot_water_schedule()
 
-        except (BSBLANConnectionError, BSBLANAuthError, AttributeError):
-            # If config update fails, keep existing data and log warning
+        except AttributeError:
+            # Device does not support DHW functionality
+            LOGGER.debug(
+                "DHW (Domestic Hot Water) not available on device at %s",
+                self.config_entry.data[CONF_HOST],
+            )
+            return BSBLanSlowData()
+        except (BSBLANConnectionError, BSBLANAuthError) as err:
+            # If config update fails, keep existing data
+            LOGGER.debug(
+                "Failed to fetch DHW config from %s: %s",
+                self.config_entry.data[CONF_HOST],
+                err,
+            )
             if self.data:
                 return self.data
             # First fetch failed, return empty data
