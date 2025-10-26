@@ -188,7 +188,7 @@ async def test_update_errors(
         assert (entity := hass.states.get(UPTIMEROBOT_BINARY_SENSOR_TEST_ENTITY))
         assert entity.state == STATE_UNAVAILABLE
 
-    assert "Error fetching uptimerobot data: test error from API" in caplog.text
+    assert "Error fetching uptimerobot data:" in caplog.text
 
 
 async def test_device_management(

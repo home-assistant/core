@@ -7,7 +7,6 @@ from typing import Any
 from unittest.mock import patch
 
 from pyuptimerobot import (
-    APIStatus,
     UptimeRobotAccount,
     UptimeRobotApiError,
     UptimeRobotApiResponse,
@@ -29,29 +28,31 @@ MOCK_UPTIMEROBOT_UNIQUE_ID = "1234567890"
 
 MOCK_UPTIMEROBOT_ACCOUNT = {
     "email": MOCK_UPTIMEROBOT_EMAIL,
-    "user_id": 1234567890,
-    "up_monitors": 1,
+    "monitorscount": 1,
 }
 MOCK_UPTIMEROBOT_ERROR = {"message": "test error from API."}
 MOCK_UPTIMEROBOT_MONITOR = {
     "id": 1234,
-    "friendly_name": "Test monitor",
-    "status": 2,
-    "type": 1,
+    "friendlyName": "Test monitor",
+    "interval": 300,
+    "status": "UP",
+    "type": "HTTP",
     "url": "http://example.com",
 }
 MOCK_UPTIMEROBOT_MONITOR_PAUSED = {
     "id": 1234,
-    "friendly_name": "Test monitor",
-    "status": 0,
-    "type": 1,
+    "friendlyName": "Test monitor",
+    "interval": 300,
+    "status": "PAUSED",
+    "type": "HTTP",
     "url": "http://example.com",
 }
 MOCK_UPTIMEROBOT_MONITOR_2 = {
     "id": 5678,
-    "friendly_name": "Test monitor 2",
-    "status": 2,
-    "type": 1,
+    "friendlyName": "Test monitor 2",
+    "interval": 300,
+    "status": "UP",
+    "type": "HTTP",
     "url": "http://example2.com",
 }
 
@@ -59,14 +60,14 @@ MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA = {
     "domain": DOMAIN,
     "title": MOCK_UPTIMEROBOT_EMAIL,
     "data": {"platform": DOMAIN, "api_key": MOCK_UPTIMEROBOT_API_KEY},
-    "unique_id": MOCK_UPTIMEROBOT_UNIQUE_ID,
+    "unique_id": MOCK_UPTIMEROBOT_EMAIL,
     "source": config_entries.SOURCE_USER,
 }
 MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA_KEY_READ_ONLY = {
     "domain": DOMAIN,
     "title": MOCK_UPTIMEROBOT_EMAIL,
     "data": {"platform": DOMAIN, "api_key": MOCK_UPTIMEROBOT_API_KEY_READ_ONLY},
-    "unique_id": MOCK_UPTIMEROBOT_UNIQUE_ID,
+    "unique_id": MOCK_UPTIMEROBOT_EMAIL,
     "source": config_entries.SOURCE_USER,
 }
 
@@ -91,17 +92,17 @@ def mock_uptimerobot_api_response(
     | UptimeRobotAccount
     | UptimeRobotApiError
     | None = None,
-    status: APIStatus = APIStatus.OK,
     key: MockApiResponseKey = MockApiResponseKey.MONITORS,
 ) -> UptimeRobotApiResponse:
     """Mock API response for UptimeRobot."""
     return UptimeRobotApiResponse.from_dict(
         {
-            "stat": {"error": APIStatus.FAIL}.get(key, status),
-            key: data
+            "_method": "GET",
+            "_api_path": f"/{key.value}",
+            "data": data
             if data is not None
             else {
-                "account": MOCK_UPTIMEROBOT_ACCOUNT,
+                **MOCK_UPTIMEROBOT_ACCOUNT,
                 "error": MOCK_UPTIMEROBOT_ERROR,
                 "monitors": [MOCK_UPTIMEROBOT_MONITOR],
             }.get(key, {}),
