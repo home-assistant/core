@@ -63,7 +63,7 @@ class HueBLELight(LightEntity):
             name=light.name,
             connections={(CONNECTION_BLUETOOTH, light.address)},
             manufacturer=light.manufacturer,
-            model=light.model,
+            model_id=light.model,
             sw_version=light.firmware,
         )
         self._attr_supported_color_modes: set[ColorMode] = set()
