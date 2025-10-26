@@ -7,6 +7,7 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from pynintendoparental import Authenticator
+from pynintendoparental.api import Api
 from pynintendoparental.exceptions import HttpException, InvalidSessionTokenException
 import voluptuous as vol
 
@@ -37,6 +38,9 @@ class NintendoConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         if user_input is not None:
+            nintendo_api = Api(
+                self.auth, self.hass.config.time_zone, self.hass.config.language
+            )
             try:
                 await self.auth.complete_login(
                     self.auth, user_input[CONF_API_TOKEN], False
@@ -48,12 +52,22 @@ class NintendoConfigFlow(ConfigFlow, domain=DOMAIN):
                     assert self.auth.account_id
                 await self.async_set_unique_id(self.auth.account_id)
                 self._abort_if_unique_id_configured()
-                return self.async_create_entry(
-                    title=self.auth.account_id,
-                    data={
-                        CONF_SESSION_TOKEN: self.auth.get_session_token,
-                    },
-                )
+            try:
+                if "base" not in errors:
+                    await nintendo_api.async_get_account_devices()
+            except HttpException as err:
+                if err.status_code == 404:
+                    errors["base"] = "no_devices_found"
+                else:
+                    errors["base"] = "cannot_connect"
+            else:
+                if "base" not in errors:
+                    return self.async_create_entry(
+                        title=self.auth.account_id,
+                        data={
+                            CONF_SESSION_TOKEN: self.auth.get_session_token,
+                        },
+                    )
         return self.async_show_form(
             step_id="user",
             description_placeholders={"link": self.auth.login_url},

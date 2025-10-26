@@ -23,7 +23,8 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "no_devices_found": "No Nintendo devices found for this account."
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
@@ -64,12 +65,6 @@
     },
     "no_devices_found": {
       "message": "No Nintendo devices found for this account."
-    }
-  },
-  "issues": {
-    "no_devices_found": {
-      "title": "No Nintendo devices found",
-      "description": "No Nintendo devices were found for the linked account ({account_id}). Please ensure that you have at least one Nintendo device registered to this account and paired with the {placeholder} app."
     }
   }
 }
