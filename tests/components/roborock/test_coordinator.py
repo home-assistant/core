@@ -208,6 +208,8 @@ async def test_cloud_api_repair(
         await hass.async_block_till_done()
 
     assert len(issue_registry.issues) == 0
+
+
 async def test_two_maps_in_cleaning(
     hass: HomeAssistant,
     mock_roborock_entry: MockConfigEntry,
