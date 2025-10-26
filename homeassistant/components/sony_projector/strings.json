@@ -1,6 +1,5 @@
 {
   "config": {
-    "title": "Sony Projector",
     "step": {
       "user": {
         "title": "Connect to Sony projector",
@@ -17,6 +16,12 @@
     "abort": {
       "already_configured": "Device is already configured.",
       "cannot_connect": "Failed to connect to the projector."
+    }
+  },
+  "issues": {
+    "yaml_deprecated": {
+      "title": "Sony projector YAML configuration is deprecated",
+      "description": "Sony Projector now uses config entries. Remove the `sony_projector` YAML from configuration.yaml and configure the integration from Settings → Devices & Services."
     }
   }
 }

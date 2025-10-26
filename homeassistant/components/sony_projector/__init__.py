@@ -4,15 +4,23 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
+from typing import Any
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
 from .client import ProjectorClient
-from .const import CONF_TITLE, DEFAULT_NAME, DOMAIN
+from .const import (
+    CONF_TITLE,
+    DATA_YAML_ISSUE_CREATED,
+    DEFAULT_NAME,
+    DOMAIN,
+    ISSUE_YAML_DEPRECATED,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,9 +42,10 @@ type SonyProjectorConfigEntry = ConfigEntry[SonyProjectorRuntimeData]
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Sony Projector integration from YAML."""
 
-    hass.data.setdefault(DOMAIN, {})
+    domain_data = hass.data.setdefault(DOMAIN, {})
 
     if media_configs := config.get(Platform.MEDIA_PLAYER.value):
+        _async_create_yaml_issue(hass, domain_data)
         for entry in media_configs:
             if entry.get("platform") != DOMAIN:
                 continue
@@ -97,3 +106,20 @@ async def async_unload_entry(
         hass.data[DOMAIN].pop(entry.entry_id, None)
 
     return unload_ok
+
+
+def _async_create_yaml_issue(hass: HomeAssistant, domain_data: dict[str, Any]) -> None:
+    """Surface a repairs issue warning users about deprecated YAML."""
+
+    if domain_data.get(DATA_YAML_ISSUE_CREATED):
+        return
+
+    async_create_issue(
+        hass,
+        DOMAIN,
+        ISSUE_YAML_DEPRECATED,
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="yaml_deprecated",
+    )
+    domain_data[DATA_YAML_ISSUE_CREATED] = True
