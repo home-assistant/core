@@ -302,6 +302,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
                     translation_placeholders={
                         "device_name": self.roborock_device_info.device.name
                     },
+                    learn_more_url="https://www.home-assistant.io/integrations/roborock/#the-integration-tells-me-it-cannot-reach-my-vacuum-and-is-using-the-cloud-api-and-that-this-is-not-supported-or-i-am-having-any-networking-issues",
                 )
 
                 # Right now this should never be called if the cloud api is the primary api,
