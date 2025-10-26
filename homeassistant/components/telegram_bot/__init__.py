@@ -69,7 +69,6 @@ from .const import (
     ATTR_SHOW_ALERT,
     ATTR_STICKER_ID,
     ATTR_TARGET,
-    ATTR_TIMEOUT,
     ATTR_TITLE,
     ATTR_URL,
     ATTR_USERNAME,
@@ -158,7 +157,6 @@ BASE_SERVICE_SCHEMA = vol.Schema(
         vol.Optional(ATTR_ONE_TIME_KEYBOARD): cv.boolean,
         vol.Optional(ATTR_KEYBOARD): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(ATTR_KEYBOARD_INLINE): cv.ensure_list,
-        vol.Optional(ATTR_TIMEOUT): cv.positive_int,
         vol.Optional(ATTR_MESSAGE_TAG): cv.string,
         vol.Optional(ATTR_MESSAGE_THREAD_ID): vol.Coerce(int),
     },
@@ -222,9 +220,9 @@ SERVICE_SCHEMA_SEND_POLL = vol.Schema(
         vol.Optional(ATTR_IS_ANONYMOUS, default=True): cv.boolean,
         vol.Optional(ATTR_ALLOWS_MULTIPLE_ANSWERS, default=False): cv.boolean,
         vol.Optional(ATTR_DISABLE_NOTIF): cv.boolean,
-        vol.Optional(ATTR_TIMEOUT): cv.positive_int,
         vol.Optional(ATTR_MESSAGE_THREAD_ID): vol.Coerce(int),
-    }
+    },
+    extra=vol.ALLOW_EXTRA,
 )
 
 SERVICE_SCHEMA_EDIT_MESSAGE = SERVICE_SCHEMA_SEND_MESSAGE.extend(
@@ -243,7 +241,6 @@ SERVICE_SCHEMA_EDIT_MESSAGE_MEDIA = vol.Schema(
             cv.positive_int, vol.All(cv.string, "last")
         ),
         vol.Required(ATTR_CHAT_ID): vol.Coerce(int),
-        vol.Optional(ATTR_TIMEOUT): cv.positive_int,
         vol.Optional(ATTR_CAPTION): cv.string,
         vol.Required(ATTR_MEDIA_TYPE): vol.In(
             (

@@ -197,10 +197,6 @@
           "name": "Disable web page preview",
           "description": "Disables link previews for links in the message."
         },
-        "timeout": {
-          "name": "Read timeout",
-          "description": "Timeout for sending the message in seconds. Will help with timeout errors (poor Internet connection, etc)."
-        },
         "keyboard": {
           "name": "Keyboard",
           "description": "List of rows of commands, comma-separated, to make a custom keyboard. Empty list clears a previously set keyboard."
@@ -293,10 +289,6 @@
           "name": "Verify SSL",
           "description": "Enable or disable SSL certificate verification. Disable if you're downloading the file from a URL and you don't want to validate the SSL certificate of the server."
         },
-        "timeout": {
-          "name": "Read timeout",
-          "description": "Timeout for sending the photo in seconds."
-        },
         "keyboard": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::keyboard::name%]",
           "description": "List of rows of commands, comma-separated, to make a custom keyboard."
@@ -367,10 +359,6 @@
         "verify_ssl": {
           "name": "Verify SSL",
           "description": "[%key:component::telegram_bot::services::send_photo::fields::verify_ssl::description%]"
-        },
-        "timeout": {
-          "name": "Read timeout",
-          "description": "Timeout for sending the sticker in seconds."
         },
         "keyboard": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::keyboard::name%]",
@@ -447,10 +435,6 @@
           "name": "Verify SSL",
           "description": "[%key:component::telegram_bot::services::send_photo::fields::verify_ssl::description%]"
         },
-        "timeout": {
-          "name": "Read timeout",
-          "description": "[%key:component::telegram_bot::services::send_sticker::fields::timeout::description%]"
-        },
         "keyboard": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::keyboard::name%]",
           "description": "[%key:component::telegram_bot::services::send_photo::fields::keyboard::description%]"
@@ -526,10 +510,6 @@
           "name": "Verify SSL",
           "description": "[%key:component::telegram_bot::services::send_photo::fields::verify_ssl::description%]"
         },
-        "timeout": {
-          "name": "Read timeout",
-          "description": "Timeout for sending the video in seconds."
-        },
         "keyboard": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::keyboard::name%]",
           "description": "[%key:component::telegram_bot::services::send_photo::fields::keyboard::description%]"
@@ -600,10 +580,6 @@
         "verify_ssl": {
           "name": "Verify SSL",
           "description": "[%key:component::telegram_bot::services::send_photo::fields::verify_ssl::description%]"
-        },
-        "timeout": {
-          "name": "Read timeout",
-          "description": "Timeout for sending the voice in seconds."
         },
         "keyboard": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::keyboard::name%]",
@@ -680,10 +656,6 @@
           "name": "Verify SSL",
           "description": "[%key:component::telegram_bot::services::send_photo::fields::verify_ssl::description%]"
         },
-        "timeout": {
-          "name": "Read timeout",
-          "description": "Timeout for sending the document in seconds."
-        },
         "keyboard": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::keyboard::name%]",
           "description": "[%key:component::telegram_bot::services::send_photo::fields::keyboard::description%]"
@@ -734,10 +706,6 @@
         "disable_notification": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::disable_notification::name%]",
           "description": "[%key:component::telegram_bot::services::send_message::fields::disable_notification::description%]"
-        },
-        "timeout": {
-          "name": "Read timeout",
-          "description": "[%key:component::telegram_bot::services::send_photo::fields::timeout::description%]"
         },
         "keyboard": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::keyboard::name%]",
@@ -796,10 +764,6 @@
         "disable_notification": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::disable_notification::name%]",
           "description": "[%key:component::telegram_bot::services::send_message::fields::disable_notification::description%]"
-        },
-        "timeout": {
-          "name": "Read timeout",
-          "description": "Timeout for sending the poll in seconds."
         },
         "reply_to_message_id": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::name%]",
@@ -897,10 +861,6 @@
           "name": "[%key:component::telegram_bot::services::send_photo::fields::verify_ssl::name%]",
           "description": "[%key:component::telegram_bot::services::send_photo::fields::verify_ssl::description%]"
         },
-        "timeout": {
-          "name": "[%key:component::telegram_bot::services::send_photo::fields::timeout::name%]",
-          "description": "Timeout for sending the media in seconds."
-        },
         "inline_keyboard": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::inline_keyboard::name%]",
           "description": "[%key:component::telegram_bot::services::send_message::fields::inline_keyboard::description%]"
@@ -979,10 +939,6 @@
         "show_alert": {
           "name": "Show alert",
           "description": "Show a permanent notification."
-        },
-        "timeout": {
-          "name": "Read timeout",
-          "description": "Timeout for sending the answer in seconds."
         }
       }
     },
