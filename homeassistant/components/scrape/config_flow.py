@@ -231,7 +231,7 @@ class ScrapeConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """User flow to create a sensor subentry."""
+        """User flow to create the main config entry."""
         errors: dict[str, str] = {}
         if user_input is not None:
             errors = await validate_rest_setup(self.hass, user_input)
