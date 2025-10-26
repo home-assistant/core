@@ -209,11 +209,9 @@ CONNECTION_FAILED_RECOVERABLE = "connection_failed_recoverable"
 #   - {domain}:
 #       name: ""
 #       ...
-# ```
 #
 # Legacy supported style:
 #
-# mqtt:
 #   {domain}:
 #     - name: ""
 #       ...
