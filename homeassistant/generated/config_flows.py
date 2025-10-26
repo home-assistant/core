@@ -642,6 +642,7 @@ FLOWS = {
         "subaru",
         "suez_water",
         "sun",
+        "sunricher_dali_center",
         "sunweg",
         "surepetcare",
         "swiss_public_transport",
