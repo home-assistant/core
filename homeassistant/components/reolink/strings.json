@@ -13,7 +13,7 @@
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of your Reolink device. For example: '{reolink_ip}'.",
+          "host": "The hostname or IP address of your Reolink device. For example: `{reolink_ip}`.",
           "port": "The HTTP(s) port to connect to the Reolink device API. For HTTP normally: '80', for HTTPS normally '443'.",
           "use_https": "Use an HTTPS (SSL) connection to the Reolink device.",
           "baichuan_port": "The 'Basic Service Port' to connect to the Reolink device over TCP. Normally '9000' unless manually changed in the Reolink desktop client.",
