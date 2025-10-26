@@ -5,8 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from pymodbus.client import AsyncModbusTcpClient
-from pymodbus.exceptions import ModbusException
+from pysaunum import DEFAULT_PORT, SaunumClient, SaunumException
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -15,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import config_validation as cv
 
-from .const import DEFAULT_DEVICE_ID, DEFAULT_PORT, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,20 +36,14 @@ async def validate_input(
     host = data[CONF_HOST]
     port = data[CONF_PORT]
 
-    client = AsyncModbusTcpClient(host=host, port=port, timeout=5)
-    await client.connect()
+    client = SaunumClient(host=host, port=port)
 
-    if not client.connected:
-        raise ModbusException("Cannot connect")
-
-    # Try to read a register to verify communication
-    result = await client.read_holding_registers(
-        address=0, count=1, device_id=DEFAULT_DEVICE_ID
-    )
-    if result.isError():
-        raise ModbusException("Cannot read registers")
-
-    client.close()
+    try:
+        await client.connect()
+        # Try to read data to verify communication
+        await client.async_get_data()
+    finally:
+        client.close()
 
 
 class LeilSaunaConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -74,7 +67,7 @@ class LeilSaunaConfigFlow(ConfigFlow, domain=DOMAIN):
                     f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}"
                 )
                 self._abort_if_unique_id_configured()
-            except ModbusException:
+            except SaunumException:
                 errors["base"] = "cannot_connect"
             except AbortFlow:
                 raise

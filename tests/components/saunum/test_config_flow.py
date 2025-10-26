@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock
 
-from pymodbus.exceptions import ModbusException
+from pysaunum import SaunumConnectionError, SaunumException
 import pytest
 
 from homeassistant import config_entries
@@ -18,7 +18,7 @@ from tests.common import MockConfigEntry
 TEST_USER_INPUT = {CONF_HOST: "192.168.1.100", CONF_PORT: 502}
 
 
-@pytest.mark.usefixtures("mock_modbus_client")
+@pytest.mark.usefixtures("mock_saunum_client")
 async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
@@ -28,7 +28,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert not result["errors"]
 
 
-@pytest.mark.usefixtures("mock_modbus_client")
+@pytest.mark.usefixtures("mock_saunum_client")
 async def test_form_success(hass: HomeAssistant) -> None:
     """Test successful form submission."""
     result = await hass.config_entries.flow.async_init(
@@ -48,10 +48,11 @@ async def test_form_success(hass: HomeAssistant) -> None:
     assert result2["data"] == TEST_USER_INPUT
 
 
-async def test_form_connection_error(hass: HomeAssistant, mock_modbus_client) -> None:
+async def test_form_connection_error(hass: HomeAssistant, mock_saunum_client) -> None:
     """Test connection error handling."""
-    mock_modbus_client.connect = AsyncMock(return_value=False)
-    mock_modbus_client.connected = False
+    mock_saunum_client.connect = AsyncMock(
+        side_effect=SaunumConnectionError("Connection failed")
+    )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -66,11 +67,11 @@ async def test_form_connection_error(hass: HomeAssistant, mock_modbus_client) ->
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_modbus_error(hass: HomeAssistant, mock_modbus_client) -> None:
-    """Test Modbus read error handling."""
-    mock_response = MagicMock()
-    mock_response.isError.return_value = True
-    mock_modbus_client.read_holding_registers = AsyncMock(return_value=mock_response)
+async def test_form_saunum_error(hass: HomeAssistant, mock_saunum_client) -> None:
+    """Test Saunum communication error handling."""
+    mock_saunum_client.async_get_data = AsyncMock(
+        side_effect=SaunumException("Read error")
+    )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -85,9 +86,11 @@ async def test_form_modbus_error(hass: HomeAssistant, mock_modbus_client) -> Non
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_modbus_exception(hass: HomeAssistant, mock_modbus_client) -> None:
-    """Test ModbusException handling."""
-    mock_modbus_client.connect.side_effect = ModbusException("Modbus error")
+async def test_form_saunum_exception(hass: HomeAssistant, mock_saunum_client) -> None:
+    """Test SaunumException handling."""
+    mock_saunum_client.connect = AsyncMock(
+        side_effect=SaunumException("Connection error")
+    )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -102,9 +105,9 @@ async def test_form_modbus_exception(hass: HomeAssistant, mock_modbus_client) ->
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_exception(hass: HomeAssistant, mock_modbus_client) -> None:
+async def test_form_exception(hass: HomeAssistant, mock_saunum_client) -> None:
     """Test exception handling."""
-    mock_modbus_client.connect.side_effect = Exception("Connection failed")
+    mock_saunum_client.connect = AsyncMock(side_effect=Exception("Connection failed"))
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -119,6 +122,7 @@ async def test_form_exception(hass: HomeAssistant, mock_modbus_client) -> None:
     assert result2["errors"] == {"base": "unknown"}
 
 
+@pytest.mark.usefixtures("mock_saunum_client")
 async def test_form_duplicate(hass: HomeAssistant) -> None:
     """Test duplicate entry handling."""
     entry = MockConfigEntry(
@@ -129,28 +133,14 @@ async def test_form_duplicate(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.saunum.config_flow.AsyncModbusTcpClient"
-    ) as mock_client_class:
-        mock_client = mock_client_class.return_value
-        mock_client.connected = True
-        mock_client.connect = AsyncMock(return_value=True)
-        mock_client.close = MagicMock()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
 
-        # Mock successful register read for config flow test
-        mock_response = MagicMock()
-        mock_response.isError.return_value = False
-        mock_response.registers = [0]  # Session not active
-        mock_client.read_holding_registers = AsyncMock(return_value=mock_response)
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        TEST_USER_INPUT,
+    )
 
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            TEST_USER_INPUT,
-        )
-
-        assert result2["type"] is FlowResultType.ABORT
-        assert result2["reason"] == "already_configured"
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "already_configured"

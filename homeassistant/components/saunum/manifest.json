@@ -6,7 +6,7 @@
   "documentation": "https://www.home-assistant.io/integrations/saunum",
   "integration_type": "device",
   "iot_class": "local_polling",
-  "loggers": ["pymodbus"],
+  "loggers": ["pysaunum"],
   "quality_scale": "silver",
-  "requirements": ["pymodbus==3.11.2"]
+  "requirements": ["pysaunum==0.1.0"]
 }

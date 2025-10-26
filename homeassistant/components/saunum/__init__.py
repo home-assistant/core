@@ -4,15 +4,14 @@ from __future__ import annotations
 
 import logging
 
-from pymodbus.client import AsyncModbusTcpClient
-from pymodbus.exceptions import ModbusException
+from pysaunum import SaunumClient, SaunumConnectionError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DEFAULT_DEVICE_ID, PLATFORMS
+from .const import PLATFORMS
 from .coordinator import LeilSaunaCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,19 +23,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: LeilSaunaConfigEntry) ->
     """Set up Saunum Leil Sauna from a config entry."""
     host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
-    device_id = DEFAULT_DEVICE_ID
 
-    client = AsyncModbusTcpClient(host=host, port=port, timeout=5)
+    client = SaunumClient(host=host, port=port)
 
     # Test connection
     try:
         await client.connect()
-        if not client.connected:
-            raise ConfigEntryNotReady(f"Unable to connect to {host}:{port}")
-    except ModbusException as exc:
+    except SaunumConnectionError as exc:
         raise ConfigEntryNotReady(f"Error connecting to {host}:{port}: {exc}") from exc
 
-    coordinator = LeilSaunaCoordinator(hass, client, device_id, entry)
+    coordinator = LeilSaunaCoordinator(hass, client, entry)
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator

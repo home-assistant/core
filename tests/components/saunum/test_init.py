@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
-from pymodbus.exceptions import ModbusException
+from pysaunum import SaunumConnectionError
 import pytest
 
 from homeassistant.components.saunum import async_setup_entry
@@ -71,27 +71,26 @@ async def test_async_setup_entry_connection_failed(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test integration setup fails when connection cannot be established."""
-    with patch(
-        "homeassistant.components.saunum.AsyncModbusTcpClient"
-    ) as mock_client_class:
+    with patch("homeassistant.components.saunum.SaunumClient") as mock_client_class:
         mock_client = mock_client_class.return_value
-        mock_client.connect = AsyncMock(return_value=True)
-        mock_client.connected = False  # Simulate connection failure
+        mock_client.connect = AsyncMock(
+            side_effect=SaunumConnectionError("Connection failed")
+        )
 
         with pytest.raises(ConfigEntryNotReady):
             await async_setup_entry(hass, mock_config_entry)
 
 
-async def test_async_setup_entry_modbus_exception(
+async def test_async_setup_entry_saunum_exception(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test integration setup fails when ModbusException is raised."""
-    with patch(
-        "homeassistant.components.saunum.AsyncModbusTcpClient"
-    ) as mock_client_class:
+    """Test integration setup fails when SaunumConnectionError is raised."""
+    with patch("homeassistant.components.saunum.SaunumClient") as mock_client_class:
         mock_client = mock_client_class.return_value
-        mock_client.connect = AsyncMock(side_effect=ModbusException("Connection error"))
+        mock_client.connect = AsyncMock(
+            side_effect=SaunumConnectionError("Connection error")
+        )
 
         with pytest.raises(ConfigEntryNotReady):
             await async_setup_entry(hass, mock_config_entry)

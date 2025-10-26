@@ -5,6 +5,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from pysaunum import MIN_TEMPERATURE
+
 from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityFeature,
@@ -16,7 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import LeilSaunaConfigEntry, LeilSaunaCoordinator
-from .const import MIN_TEMPERATURE_C, REG_SESSION_ACTIVE, REG_TARGET_TEMPERATURE
 from .entity import LeilSaunaEntity
 from .helpers import (
     convert_temperature,
@@ -53,13 +54,9 @@ class LeilSaunaClimate(LeilSaunaEntity, ClimateEntity):
         # Set temperature unit and range
         temp_unit = get_temperature_unit(coordinator.hass)
         self._attr_temperature_unit = temp_unit
-        min_temp, max_temp, _default_temp = get_temperature_range_for_unit(temp_unit)
+        min_temp, max_temp = get_temperature_range_for_unit(temp_unit)
         self._attr_min_temp = min_temp
         self._attr_max_temp = max_temp
-
-        # Optimistic state for responsive UI
-        self._optimistic_hvac_mode: HVACMode | None = None
-        self._optimistic_target_temp: float | None = None
 
     @property
     def available(self) -> bool:
@@ -69,7 +66,7 @@ class LeilSaunaClimate(LeilSaunaEntity, ClimateEntity):
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        temp_c = self.coordinator.data.get("current_temperature")
+        temp_c = self.coordinator.data.current_temperature
         if temp_c is None:
             return None
         temp_unit = get_temperature_unit(self.hass)
@@ -78,12 +75,8 @@ class LeilSaunaClimate(LeilSaunaEntity, ClimateEntity):
     @property
     def target_temperature(self) -> float | None:
         """Return the target temperature."""
-        # Use optimistic state if available
-        if self._optimistic_target_temp is not None:
-            return self._optimistic_target_temp
-
-        temp_c = self.coordinator.data.get("target_temperature")
-        if temp_c is None or temp_c < MIN_TEMPERATURE_C:
+        temp_c = self.coordinator.data.target_temperature
+        if temp_c is None or temp_c < MIN_TEMPERATURE:
             return None
         temp_unit = get_temperature_unit(self.hass)
         return convert_temperature(temp_c, UnitOfTemperature.CELSIUS, temp_unit)
@@ -91,49 +84,29 @@ class LeilSaunaClimate(LeilSaunaEntity, ClimateEntity):
     @property
     def hvac_mode(self) -> HVACMode:
         """Return current HVAC mode."""
-        # Use optimistic state if available
-        if self._optimistic_hvac_mode is not None:
-            return self._optimistic_hvac_mode
-
-        session_active = self.coordinator.data.get("session_active", 0)
+        session_active = self.coordinator.data.session_active
         return HVACMode.HEAT if session_active else HVACMode.OFF
 
     @property
     def hvac_action(self) -> HVACAction | None:
         """Return current HVAC action."""
-        session_active = self.coordinator.data.get("session_active", 0)
+        session_active = self.coordinator.data.session_active
         if not session_active:
             return HVACAction.OFF
 
-        heater_status = self.coordinator.data.get("heater_status", 0)
-        return HVACAction.HEATING if heater_status else HVACAction.IDLE
+        heater_elements_active = self.coordinator.data.heater_elements_active
+        return (
+            HVACAction.HEATING
+            if heater_elements_active and heater_elements_active > 0
+            else HVACAction.IDLE
+        )
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new HVAC mode."""
         if hvac_mode == HVACMode.HEAT:
-            # Set optimistic state immediately for responsive UI
-            self._optimistic_hvac_mode = HVACMode.HEAT
-            self.async_write_ha_state()
-
-            success = await self.coordinator.async_write_register(REG_SESSION_ACTIVE, 1)
-
-            # Clear optimistic state after coordinator refresh
-            self._optimistic_hvac_mode = None
-            if not success:
-                # If write failed, trigger state update to revert to actual state
-                self.async_write_ha_state()
+            await self.coordinator.async_start_session()
         elif hvac_mode == HVACMode.OFF:
-            # Set optimistic state immediately for responsive UI
-            self._optimistic_hvac_mode = HVACMode.OFF
-            self.async_write_ha_state()
-
-            success = await self.coordinator.async_write_register(REG_SESSION_ACTIVE, 0)
-
-            # Clear optimistic state after coordinator refresh
-            self._optimistic_hvac_mode = None
-            if not success:
-                # If write failed, trigger state update to revert to actual state
-                self.async_write_ha_state()
+            await self.coordinator.async_stop_session()
         else:
             _LOGGER.warning("Unsupported HVAC mode: %s", hvac_mode)
 
@@ -142,10 +115,6 @@ class LeilSaunaClimate(LeilSaunaEntity, ClimateEntity):
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
 
-        # Set optimistic state immediately for responsive UI
-        self._optimistic_target_temp = temperature
-        self.async_write_ha_state()
-
         # Convert temperature to Celsius if needed
         temp_unit = get_temperature_unit(self.hass)
         temp_c = (
@@ -153,12 +122,4 @@ class LeilSaunaClimate(LeilSaunaEntity, ClimateEntity):
             or temperature
         )
 
-        success = await self.coordinator.async_write_register(
-            REG_TARGET_TEMPERATURE, int(temp_c)
-        )
-
-        # Clear optimistic state after coordinator refresh
-        self._optimistic_target_temp = None
-        if not success:
-            # If write failed, trigger state update to revert to actual state
-            self.async_write_ha_state()
+        await self.coordinator.async_set_target_temperature(int(temp_c))

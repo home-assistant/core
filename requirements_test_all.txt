@@ -1843,7 +1843,6 @@ pymiele==0.5.5
 pymochad==0.2.0
 
 # homeassistant.components.modbus
-# homeassistant.components.saunum
 pymodbus==3.11.2
 
 # homeassistant.components.monoprice
@@ -1976,6 +1975,9 @@ pyrympro==0.0.9
 
 # homeassistant.components.sabnzbd
 pysabnzbd==1.1.1
+
+# homeassistant.components.saunum
+pysaunum==0.1.0
 
 # homeassistant.components.schlage
 pyschlage==2025.9.0

@@ -38,3 +38,32 @@ rules:
     status: exempt
     comment: Modbus TCP does not require authentication.
   test-coverage: done
+
+  # Gold tier
+  devices: done
+  diagnostics: todo
+  discovery:
+    status: exempt
+    comment: Modbus TCP devices do not support network discovery protocols and require manual IP configuration.
+  discovery-update-info:
+    status: exempt
+    comment: Not applicable without discovery support.
+  docs-data-update: done
+  docs-examples: todo
+  docs-known-limitations: done
+  docs-supported-devices: todo
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: Integration controls a single device; no dynamic device discovery needed.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: todo
+  entity-translations: todo
+  exception-translations: todo
+  icon-translations: todo
+  reconfiguration-flow: todo
+  repair-issues: todo
+  stale-devices: todo

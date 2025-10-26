@@ -49,22 +49,16 @@ async def test_convert_temperature_fahrenheit_to_celsius(hass: HomeAssistant) ->
 
 async def test_get_temperature_range_celsius(hass: HomeAssistant) -> None:
     """Test get_temperature_range_for_unit for Celsius."""
-    min_temp, max_temp, default = get_temperature_range_for_unit(
-        UnitOfTemperature.CELSIUS
-    )
+    min_temp, max_temp = get_temperature_range_for_unit(UnitOfTemperature.CELSIUS)
     assert min_temp == 40
     assert max_temp == 100
-    assert default == 80
 
 
 async def test_get_temperature_range_fahrenheit(hass: HomeAssistant) -> None:
     """Test get_temperature_range_for_unit for Fahrenheit."""
-    min_temp, max_temp, default = get_temperature_range_for_unit(
-        UnitOfTemperature.FAHRENHEIT
-    )
+    min_temp, max_temp = get_temperature_range_for_unit(UnitOfTemperature.FAHRENHEIT)
     assert min_temp == 104
     assert max_temp == 212
-    assert default == 176
 
 
 async def test_get_temperature_unit(hass: HomeAssistant) -> None:
