@@ -25,7 +25,7 @@
     },
     "legacy_switch_present": {
       "title": "Legacy switch is used in automations",
-      "description": "A temporary compatibility switch {switch_entity_id} is available to keep existing automations working. Update your automations, scripts, and scenes to use the projector media player entity with the `media_player.turn_on` and `media_player.turn_off` actions.\n\nThis notice disappears automatically when no automations, scripts, scenes, or groups reference the legacy switch. Use Settings → Developer tools → Search to find related automations, scripts, scenes, and groups."
+      "description": "A temporary compatibility switch {switch_entity_id} is available to keep existing automations working. Update your automations, scripts, and scenes to use the projector media player entity with the `media_player.turn_on` and `media_player.turn_off` actions.\n\nThis notice disappears automatically after a reload or restart when no automations, scripts, scenes, or groups reference the legacy switch. To re-check immediately, reload the Sony Projector integration from Settings → Devices & Services. Use Settings → Developer tools → Search to find related automations, scripts, scenes, and groups."
     }
   }
 }
