@@ -1552,11 +1552,14 @@ class ConfigEntriesFlowManager(
         if (next_flow := result.get("next_flow")) is None:
             return
         flow_type, flow_id = next_flow
-        if flow_type not in {FlowType.CONFIG_FLOW, FlowType.CONFIG_SUBENTRIES_FLOW}:
+        if flow_type not in FlowType:
             raise HomeAssistantError("Invalid next_flow type")
         if flow_type == FlowType.CONFIG_FLOW:
             # Raises UnknownFlow if the flow does not exist.
             self.hass.config_entries.flow.async_get(flow_id)
+        if flow_type == FlowType.OPTIONS_FLOW:
+            # Raises UnknownFlow if the flow does not exist.
+            self.hass.config_entries.options.async_get(flow_id)
         if flow_type == FlowType.CONFIG_SUBENTRIES_FLOW:
             # Raises UnknownFlow if the flow does not exist.
             self.hass.config_entries.subentries.async_get(flow_id)
