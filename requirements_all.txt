@@ -213,7 +213,7 @@ aioaseko==1.0.0
 aioasuswrt==1.5.1
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2.5.0
+aioautomower==2.6.0
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.2.2
@@ -791,7 +791,7 @@ decora-wifi==1.4
 # decora==0.6
 
 # homeassistant.components.ecovacs
-deebot-client==15.1.0
+deebot-client==16.1.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -1334,7 +1334,7 @@ kiwiki-client==0.1.1
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2025.10.17.202411
+knx-frontend==2025.10.26.81530
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -2565,7 +2565,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==2.50.2
+python-roborock==3.3.3
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.44
