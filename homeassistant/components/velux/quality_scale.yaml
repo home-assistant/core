@@ -18,9 +18,7 @@ rules:
   entity-event-setup:
     status: todo
     comment: not checked yet
-  entity-unique-id:
-    status: todo
-    comment: recheck
+  entity-unique-id: done
   has-entity-name:
     status: todo
     comment: recheck
