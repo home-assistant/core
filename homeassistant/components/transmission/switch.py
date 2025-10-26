@@ -57,7 +57,6 @@ class TransmissionSwitch(TransmissionEntity, SwitchEntity):
     """Representation of a Transmission switch."""
 
     entity_description: TransmissionSwitchEntityDescription
-    _attr_has_entity_name = True
 
     def __init__(
         self,

@@ -142,7 +142,6 @@ class TransmissionSensor(TransmissionEntity, SensorEntity):
     """A base class for all Transmission sensors."""
 
     entity_description: TransmissionSensorEntityDescription
-    _attr_has_entity_name = True
 
     def __init__(
         self,
