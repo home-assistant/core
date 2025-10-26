@@ -89,6 +89,7 @@ def mock_nintendo_api() -> Generator[AsyncMock]:
         yield mock_api_instance
 
 
+@pytest.fixture
 def mock_failed_nintendo_authenticator() -> Generator[MagicMock]:
     """Mock a failed Nintendo Authenticator."""
     with (
