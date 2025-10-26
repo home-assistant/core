@@ -7,6 +7,8 @@ from typing import Any
 
 import voluptuous as vol
 
+from homeassistant.components.automation import automations_with_entity
+from homeassistant.components.script import scripts_with_entity
 from homeassistant.components.switch import (
     PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
     SwitchEntity,
@@ -19,7 +21,11 @@ from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
 )
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import SonyProjectorConfigEntry
@@ -108,19 +114,46 @@ async def async_setup_entry(
     existing_entity_id = registry.async_get_entity_id("switch", DOMAIN, unique_id)
 
     if host in yaml_hosts:
-        # Ensure the compatibility switch entity exists
-        if existing_entity_id is None:
-            async_add_entities(
-                [
-                    SonyProjectorCompatSwitch(
-                        entry,
-                        entry.runtime_data.client,
-                    )
-                ]
-            )
+        # Add (or re-add) the compatibility switch entity each startup
+        async_add_entities(
+            [
+                SonyProjectorCompatSwitch(
+                    entry,
+                    entry.runtime_data.client,
+                )
+            ]
+        )
+        return
+
     # YAML no longer present; remove any lingering compatibility switch
-    elif existing_entity_id is not None:
+    if existing_entity_id is not None:
         registry.async_remove(existing_entity_id)
+
+        # If references to the legacy switch remain, surface a guidance issue
+        if _has_legacy_references(hass, existing_entity_id):
+            async_create_issue(
+                hass,
+                DOMAIN,
+                f"legacy_switch_present_{host}",
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="legacy_switch_present",
+                translation_placeholders={
+                    "switch_entity_id": existing_entity_id,
+                },
+                learn_more_url="https://www.home-assistant.io/integrations/sony_projector",
+            )
+        else:
+            # Clean up any prior issue if references are gone
+            async_delete_issue(hass, DOMAIN, f"legacy_switch_present_{host}")
+
+
+def _has_legacy_references(hass: HomeAssistant, entity_id: str) -> bool:
+    """Return True if the legacy switch entity is referenced in automations/scripts."""
+
+    return bool(
+        automations_with_entity(hass, entity_id) or scripts_with_entity(hass, entity_id)
+    )
 
 
 class SonyProjectorCompatSwitch(SwitchEntity):
@@ -157,18 +190,24 @@ class SonyProjectorCompatSwitch(SwitchEntity):
     async def async_added_to_hass(self) -> None:
         """Called when entity is added to hass; raise migration hint issue."""
 
-        async_create_issue(
-            self.hass,
-            DOMAIN,
-            f"legacy_switch_present_{self._identifier}",
-            is_fixable=True,
-            severity=IssueSeverity.WARNING,
-            translation_key="legacy_switch_present",
-            translation_placeholders={
-                "switch_entity_id": self.entity_id or f"switch.{self._identifier}",
-            },
-            learn_more_url="https://www.home-assistant.io/integrations/sony_projector",
-        )
+        switch_entity_id = self.entity_id or f"switch.{self._identifier}"
+        if _has_legacy_references(self.hass, switch_entity_id):
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"legacy_switch_present_{self._identifier}",
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="legacy_switch_present",
+                translation_placeholders={
+                    "switch_entity_id": switch_entity_id,
+                },
+                learn_more_url="https://www.home-assistant.io/integrations/sony_projector",
+            )
+        else:
+            async_delete_issue(
+                self.hass, DOMAIN, f"legacy_switch_present_{self._identifier}"
+            )
 
     async def async_update(self) -> None:
         """Fetch the latest state from the projector."""

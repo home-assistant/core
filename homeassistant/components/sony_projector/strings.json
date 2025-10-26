@@ -24,15 +24,8 @@
       "description": "Sony Projector now uses config entries. Remove the `sony_projector` YAML from configuration.yaml and configure the integration from Settings → Devices & Services."
     },
     "legacy_switch_present": {
-      "title": "Legacy switch entity is present",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "Update automations to use the projector entity",
-            "description": "Your legacy switch entity {switch_entity_id} is available to keep existing automations working while you migrate. Update automations, scripts, and scenes to target the projector media player entity using the `media_player.turn_on` and `media_player.turn_off` actions.\n\nTo find references, open Settings → Developer tools → Search and look up the switch entity to see related automations and scripts. When finished, select Submit to dismiss this message."
-          }
-        }
-      }
+      "title": "Legacy switch is used in automations",
+      "description": "A temporary compatibility switch {switch_entity_id} is available to keep existing automations working. Update your automations and scripts to use the projector media player entity with the `media_player.turn_on` and `media_player.turn_off` actions.\n\nThis notice disappears automatically when no automations or scripts reference the legacy switch. Use Settings → Developer tools → Search to find related automations and scripts."
     }
   }
 }
