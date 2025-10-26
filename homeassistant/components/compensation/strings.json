@@ -8,18 +8,18 @@
     },
     "step": {
       "user": {
-        "description": "Add a compensation sensor",
+        "description": "Create a compensation sensor that enhances the accuracy of a source sensors value. This is done by calculating a new state using an nth degree polynomial with the source sensors value.",
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
-          "entity_id": "Entity"
+          "entity_id": "Source entity"
         },
         "data_description": {
-          "name": "Name for the created entity.",
+          "name": "Name of the compensation sensor.",
           "entity_id": "Entity to use as source."
         }
       },
       "options": {
-        "description": "Read the documentation for further details on how to configure the statistics sensor using these options.",
+        "description": "Refer to the documentation for further details on how to configure the compensation sensor using these options.",
         "data": {
           "data_points": "Data points",
           "attribute": "Attribute",
@@ -32,11 +32,11 @@
         "data_description": {
           "data_points": "Add a collection of data point conversions with the uncompensated value and the compensated value. The number of required data point sets is equal to the polynomial degree + 1.",
           "attribute": "Attribute from the source to monitor/compensate.",
-          "upper_limit": "Enables an upper limit for the sensor. The upper limit is defined by the data collection's (data_points) greatest uncompensated value.",
-          "lower_limit": "Enables a lower limit for the sensor. The lower limit is defined by the data collection's (data_points) lowest uncompensated value.",
+          "upper_limit": "Enables a upper limit for the sensor. The upper limit is defined by the data points highest uncompensated value.",
+          "lower_limit": "Enables a lower limit for the sensor. The lower limit is defined by the data points lowest uncompensated value.",
           "precision": "Defines the precision of the calculated values, through the argument of round().",
-          "degree": "The degree of a polynomial.",
-          "unit_of_measurement": "Defines the units of measurement of the sensor, if any."
+          "degree": "The degree of the polynomial.",
+          "unit_of_measurement": "The unit of measurement of the compensation sensor, if any."
         }
       }
     }
