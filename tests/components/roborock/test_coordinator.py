@@ -22,6 +22,7 @@ from homeassistant.components.roborock.const import (
 from homeassistant.components.roborock.coordinator import RoborockDataUpdateCoordinator
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.util import dt as dt_util
 
 from .mock_data import PROP
@@ -169,6 +170,44 @@ async def test_no_maps(
     ):
         await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
     assert load_map.call_count == 0
+
+
+async def test_cloud_api_repair(
+    hass: HomeAssistant,
+    mock_roborock_entry: MockConfigEntry,
+    bypass_api_fixture_v1_only,
+) -> None:
+    """Test that a repair is created when we use the cloud api."""
+    # Force the system to use the cloud api.
+    with patch(
+        "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.ping",
+        side_effect=RoborockException(),
+    ):
+        await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+        await hass.async_block_till_done()
+
+    issue_registry = ir.async_get(hass)
+    assert len(issue_registry.issues) == 2
+    # Check that both expected device names are present, regardless of order
+    assert all(
+        issue.translation_key == "cloud_api_used"
+        for issue in issue_registry.issues.values()
+    )
+    names = {
+        issue.translation_placeholders["device_name"]
+        for issue in issue_registry.issues.values()
+    }
+    assert names == {"Roborock S7 MaxV", "Roborock S7 2"}
+    await hass.config_entries.async_unload(mock_roborock_entry.entry_id)
+    # Now change to using the local api
+    with patch(
+        "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.ping"
+    ):
+        # Set it back up
+        await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert len(issue_registry.issues) == 0
 
 
 async def test_two_maps_in_cleaning(

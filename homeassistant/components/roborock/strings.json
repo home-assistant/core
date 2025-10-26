@@ -39,6 +39,13 @@
       "wrong_account": "Wrong account: Please authenticate with the right account."
     }
   },
+  "issues": {
+    "cloud_api_used": {
+      "title": "Cloud API used",
+      "description": "The Roborock integration is unable to connect directly to {device_name} and falling back to the cloud API. This is not recommended as it can lead to rate limiting. Please make your vacuum accessible on the local network by your Home Assistant instance."
+    }
+  },
+
   "options": {
     "step": {
       "drawables": {
