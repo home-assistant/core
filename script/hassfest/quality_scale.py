@@ -1726,7 +1726,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "nightscout",
     "niko_home_control",
     "nilu",
-    "nina",
     "nissan_leaf",
     "nmap_tracker",
     "nmbs",
