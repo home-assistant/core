@@ -26,7 +26,7 @@ rules:
     comment: recheck
   runtime-data:
     status: todo
-    comment: module is currently in hass.data, needs rework
+    comment: addressed in https://github.com/home-assistant/core/pull/155207
   test-before-configure:
     status: todo
     comment: not checked yet
