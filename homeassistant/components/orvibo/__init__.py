@@ -1,7 +1,6 @@
 """The orvibo component."""
 
 from homeassistant import core
-
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 

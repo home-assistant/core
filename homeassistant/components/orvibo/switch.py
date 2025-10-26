@@ -9,7 +9,6 @@ from orvibo.s20 import S20, S20Exception
 
 from homeassistant import config_entries
 from homeassistant.components.switch import SwitchEntity
-
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -23,9 +22,7 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN
-
 from .util import S20ConfigEntry
-
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -46,16 +46,17 @@ class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize an instance of the S20 config flow."""
         self.discovery_task: asyncio.Task | None = None
-        self._discovered_switches: list[dict[str, Any]] = []
+        self._discovered_switches: dict[str, dict[str, Any]] = {}
         self.chosen_switch: dict[str, Any] = {}
 
     async def _async_discover(self):
         async def _filter_discovered_switches(
-            switches: list[dict[str, Any]],
-        ) -> dict[str, Any]:
+            switches: dict[str, dict[str, Any]],
+        ) -> dict[str, dict[str, Any]]:
+            _LOGGER.debug("Discovered switches: %s", self._discovered_switches)
             # Get existing unique_ids from config entries
             existing_ids = {entry.unique_id for entry in self._async_current_entries()}
-
+            _LOGGER.debug("Existing unique IDs: %s", existing_ids)
             # Build a new filtered dict
             filtered = {}
             for ip, info in switches.items():
@@ -66,10 +67,10 @@ class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
                 unique_id = f"S20Switch_{_format_mac(mac_bytes)}"
                 if unique_id not in existing_ids:
                     filtered[ip] = info
+            _LOGGER.debug("New switches: %s", filtered)
             return filtered
 
-        """Discover S20 devices."""
-
+        # Discover S20 devices.
         _LOGGER.debug("Discovering S20 switches")
 
         self._discovered_switches = await _filter_discovered_switches(
@@ -89,7 +90,7 @@ class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
         """Validate user input."""
         if len(user_input[CONF_MAC]) != 17 or user_input[CONF_MAC].count(":") != 5:
             return "invalid_mac"
-        return False
+        return None
 
     async def async_step_edit(
         self, user_input: dict[str, Any] | None = None
