@@ -421,6 +421,12 @@ class RpcShellyLightBase(ShellyRpcAttributeEntity, LightEntity):
             params["rgb"] = list(kwargs[ATTR_RGBW_COLOR][:-1])
             params["white"] = kwargs[ATTR_RGBW_COLOR][-1]
 
+        if self.status.get("mode") is not None:
+            if ATTR_COLOR_TEMP_KELVIN in kwargs:
+                params["mode"] = "cct"
+            elif ATTR_RGB_COLOR in kwargs:
+                params["mode"] = "rgb"
+
         await self.call_rpc(f"{self._component}.Set", params)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -494,11 +500,6 @@ class RpcShellyRgbCctLight(RpcShellyLightBase):
     _attr_supported_features = LightEntityFeature.TRANSITION
     _attr_min_color_temp_kelvin = KELVIN_MIN_VALUE_WHITE
     _attr_max_color_temp_kelvin = KELVIN_MAX_VALUE
-
-    @property
-    def color_temp_kelvin(self) -> int:
-        """Return the CT color value in Kelvin."""
-        return cast(int, self.status["ct"])
 
     @property
     def color_mode(self) -> str:
