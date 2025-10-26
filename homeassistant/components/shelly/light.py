@@ -502,6 +502,11 @@ class RpcShellyRgbCctLight(RpcShellyLightBase):
     _attr_max_color_temp_kelvin = KELVIN_MAX_VALUE
 
     @property
+    def color_temp_kelvin(self) -> int:
+        """Return the CT color value in Kelvin."""
+        return cast(int, self.status["ct"])
+
+    @property
     def color_mode(self) -> str:
         """Return the color mode."""
         if self.status["mode"] == "cct":
