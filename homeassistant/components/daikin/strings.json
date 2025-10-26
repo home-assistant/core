@@ -3,11 +3,11 @@
     "step": {
       "user": {
         "title": "Configure Daikin AC",
-        "description": "Enter the IP address of your Daikin AC.\n\nNote that API key and password are only used by BRP072Cxx and SKYFi devices respectively.",
+        "description": "Enter the IP address of your Daikin AC.\nIf your device is set up with password, use that, if it has a API-key, use that, in all other cases leave the fields blank.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "api_key": "[%key:common::config_flow::data::api_key%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "password": "[%key:common::config_flow::data::password%]",
+          "api_key": "[%key:common::config_flow::data::api_key%]"
         }
       }
     },
