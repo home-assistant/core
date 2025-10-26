@@ -40,27 +40,44 @@ def mock_update_wrcerror_fixture(mock_update):
 @pytest.mark.usefixtures("mock_update", "mock_config")
 async def test_sensor(hass: HomeAssistant) -> None:
     """Test that sensor works."""
-    assert hass.states.get("sensor.waze_travel_time").state == "150"
+    assert hass.states.get("sensor.waze_travel_time_duration").state == "150"
     assert (
-        hass.states.get("sensor.waze_travel_time").attributes["attribution"]
+        hass.states.get("sensor.waze_travel_time_duration").attributes["attribution"]
         == "Powered by Waze"
     )
-    assert hass.states.get("sensor.waze_travel_time").attributes["duration"] == 150
-    assert hass.states.get("sensor.waze_travel_time").attributes["distance"] == 300
+    assert hass.states.get("sensor.waze_travel_time_distance").state == "300"
     assert (
-        hass.states.get("sensor.waze_travel_time").attributes["route"]
-        == "E1337 - Teststreet"
+        hass.states.get("sensor.waze_travel_time_route").state == "E1337 - Teststreet"
+    )
+    assert hass.states.get("sensor.waze_travel_time_origin").state == "location1"
+    assert (
+        hass.states.get("sensor.waze_travel_time_origin").attributes["latitude"]
+        == "48.8588255"
     )
     assert (
-        hass.states.get("sensor.waze_travel_time").attributes["origin"] == "location1"
+        hass.states.get("sensor.waze_travel_time_origin").attributes["longitude"]
+        == "2.2646343"
+    )
+    assert hass.states.get("sensor.waze_travel_time_destination").state == "location2"
+    assert (
+        hass.states.get("sensor.waze_travel_time_destination").attributes["latitude"]
+        == "40.4375354"
     )
     assert (
-        hass.states.get("sensor.waze_travel_time").attributes["destination"]
-        == "location2"
+        hass.states.get("sensor.waze_travel_time_destination").attributes["longitude"]
+        == "-3.9913465"
     )
     assert (
-        hass.states.get("sensor.waze_travel_time").attributes["unit_of_measurement"]
+        hass.states.get("sensor.waze_travel_time_duration").attributes[
+            "unit_of_measurement"
+        ]
         == "min"
+    )
+    assert (
+        hass.states.get("sensor.waze_travel_time_distance").attributes[
+            "unit_of_measurement"
+        ]
+        == "km"
     )
 
 
@@ -85,9 +102,9 @@ async def test_sensor(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("mock_update", "mock_config")
 async def test_imperial(hass: HomeAssistant) -> None:
     """Test that the imperial option works."""
-    assert hass.states.get("sensor.waze_travel_time").attributes[
-        "distance"
-    ] == pytest.approx(186.4113)
+    assert float(
+        hass.states.get("sensor.waze_travel_time_distance").state
+    ) == pytest.approx(186.4113)
 
 
 @pytest.mark.parametrize(
@@ -111,7 +128,7 @@ async def test_imperial(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("mock_update", "mock_config")
 async def test_incl_filter(hass: HomeAssistant) -> None:
     """Test that incl_filter only includes route with the wanted street name."""
-    assert hass.states.get("sensor.waze_travel_time").attributes["distance"] == 300
+    assert hass.states.get("sensor.waze_travel_time_distance").state == "300"
 
 
 @pytest.mark.parametrize(
@@ -135,10 +152,10 @@ async def test_incl_filter(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("mock_update", "mock_config")
 async def test_excl_filter(hass: HomeAssistant) -> None:
     """Test that excl_filter only includes route without the street name."""
-    assert hass.states.get("sensor.waze_travel_time").attributes["distance"] == 300
+    assert hass.states.get("sensor.waze_travel_time_distance").state == "300"
 
 
-@pytest.mark.usefixtures("mock_update_wrcerror")
+@pytest.mark.usefixtures("mock_update_wrcerror", "mock_find_coordinates")
 async def test_sensor_failed_wrcerror(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:

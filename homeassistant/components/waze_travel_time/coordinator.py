@@ -149,7 +149,9 @@ class WazeTravelTimeData:
     """WazeTravelTime data class."""
 
     origin: str
+    origin_coordinates: str | None
     destination: str
+    destination_coordinates: str | None
     duration: float | None
     distance: float | None
     route: str | None
@@ -219,8 +221,10 @@ class WazeTravelTimeCoordinator(DataUpdateCoordinator[WazeTravelTimeData]):
             )
             if len(routes) < 1:
                 travel_data = WazeTravelTimeData(
-                    origin=origin_coordinates,
-                    destination=destination_coordinates,
+                    origin=self._origin,
+                    origin_coordinates=origin_coordinates,
+                    destination=self._destination,
+                    destination_coordinates=destination_coordinates,
                     duration=None,
                     distance=None,
                     route=None,
@@ -230,8 +234,10 @@ class WazeTravelTimeCoordinator(DataUpdateCoordinator[WazeTravelTimeData]):
                 route = routes[0]
 
                 travel_data = WazeTravelTimeData(
-                    origin=origin_coordinates,
-                    destination=destination_coordinates,
+                    origin=self._origin,
+                    origin_coordinates=origin_coordinates,
+                    destination=self._destination,
+                    destination_coordinates=destination_coordinates,
                     duration=route.duration,
                     distance=route.distance,
                     route=route.name,
