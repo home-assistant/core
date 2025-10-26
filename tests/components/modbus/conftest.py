@@ -11,7 +11,7 @@ from freezegun.api import FrozenDateTimeFactory
 from pymodbus.exceptions import ModbusException
 import pytest
 
-from homeassistant.components.modbus.const import MODBUS_DOMAIN as DOMAIN, TCP
+from homeassistant.components.modbus.const import DOMAIN, TCP
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_HOST,

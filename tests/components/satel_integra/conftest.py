@@ -1,12 +1,21 @@
 """Satel Integra tests configuration."""
 
 from collections.abc import Generator
+from copy import deepcopy
 from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant.components.satel_integra.const import DEFAULT_PORT, DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.components.satel_integra.const import DOMAIN
+
+from . import (
+    MOCK_CONFIG_DATA,
+    MOCK_CONFIG_OPTIONS,
+    MOCK_OUTPUT_SUBENTRY,
+    MOCK_PARTITION_SUBENTRY,
+    MOCK_SWITCHABLE_OUTPUT_SUBENTRY,
+    MOCK_ZONE_SUBENTRY,
+)
 
 from tests.common import MockConfigEntry
 
@@ -28,22 +37,44 @@ def mock_satel() -> Generator[AsyncMock]:
         patch(
             "homeassistant.components.satel_integra.AsyncSatel",
             autospec=True,
-        ) as mock_client,
+        ) as client,
         patch(
-            "homeassistant.components.satel_integra.config_flow.AsyncSatel",
-            new=mock_client,
+            "homeassistant.components.satel_integra.config_flow.AsyncSatel", new=client
         ),
     ):
-        client = mock_client.return_value
+        client.return_value.partition_states = {}
+        client.return_value.violated_outputs = []
+        client.return_value.violated_zones = []
+        client.return_value.connect.return_value = True
 
         yield client
 
 
-@pytest.fixture(name="config_entry")
+@pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Mock satel configuration entry."""
     return MockConfigEntry(
         domain=DOMAIN,
         title="192.168.0.2",
-        data={CONF_HOST: "192.168.0.2", CONF_PORT: DEFAULT_PORT},
+        data=MOCK_CONFIG_DATA,
+        options=MOCK_CONFIG_OPTIONS,
+        entry_id="SATEL_INTEGRA_CONFIG_ENTRY_1",
+        version=1,
+        minor_version=2,
     )
+
+
+@pytest.fixture
+def mock_config_entry_with_subentries(
+    mock_config_entry: MockConfigEntry,
+) -> MockConfigEntry:
+    """Mock satel configuration entry."""
+    mock_config_entry.subentries = deepcopy(
+        {
+            MOCK_PARTITION_SUBENTRY.subentry_id: MOCK_PARTITION_SUBENTRY,
+            MOCK_ZONE_SUBENTRY.subentry_id: MOCK_ZONE_SUBENTRY,
+            MOCK_OUTPUT_SUBENTRY.subentry_id: MOCK_OUTPUT_SUBENTRY,
+            MOCK_SWITCHABLE_OUTPUT_SUBENTRY.subentry_id: MOCK_SWITCHABLE_OUTPUT_SUBENTRY,
+        }
+    )
+    return mock_config_entry

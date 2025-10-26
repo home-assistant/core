@@ -39,6 +39,13 @@
       "wrong_account": "Wrong account: Please authenticate with the right account."
     }
   },
+  "issues": {
+    "cloud_api_used": {
+      "title": "Cloud API used",
+      "description": "The Roborock integration is unable to connect directly to {device_name} and falling back to the cloud API. This is not recommended as it can lead to rate limiting. Please make your vacuum accessible on the local network by your Home Assistant instance."
+    }
+  },
+
   "options": {
     "step": {
       "drawables": {
@@ -220,6 +227,12 @@
       "sensor_time_left": {
         "name": "Sensor time left"
       },
+      "cleaning_brush_time_left": {
+        "name": "Maintenance brush time left"
+      },
+      "strainer_time_left": {
+        "name": "Strainer time left"
+      },
       "status": {
         "name": "Status",
         "state": {
@@ -377,8 +390,10 @@
           "max": "Max",
           "high": "[%key:common::state::high%]",
           "intense": "Intense",
+          "extreme": "Extreme",
           "custom": "[%key:component::roborock::entity::select::mop_mode::state::custom%]",
           "custom_water_flow": "Custom water flow",
+          "vac_followed_by_mop": "Vacuum followed by mop",
           "smart_mode": "[%key:component::roborock::entity::select::mop_mode::state::smart_mode%]"
         }
       },

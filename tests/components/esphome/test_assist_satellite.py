@@ -28,7 +28,9 @@ from homeassistant.components import (
     tts,
 )
 from homeassistant.components.assist_pipeline import PipelineEvent, PipelineEventType
-from homeassistant.components.assist_pipeline.pipeline import KEY_ASSIST_PIPELINE
+from homeassistant.components.assist_pipeline.pipeline import (  # pylint: disable=hass-component-root-import
+    KEY_ASSIST_PIPELINE,
+)
 from homeassistant.components.assist_satellite import (
     AssistSatelliteConfiguration,
     AssistSatelliteEntityFeature,
@@ -1887,10 +1889,10 @@ async def test_wake_word_select(
     assert satellite is not None
     assert satellite.async_get_configuration().active_wake_words == ["hey_jarvis"]
 
-    # No wake word should be selected by default
+    # First wake word should be selected by default
     state = hass.states.get("select.test_wake_word")
     assert state is not None
-    assert state.state == NO_WAKE_WORD
+    assert state.state == "Hey Jarvis"
 
     # Changing the select should set the active wake word
     await hass.services.async_call(
@@ -1954,6 +1956,21 @@ async def test_wake_word_select(
 
     # Only primary wake word remains
     assert satellite.async_get_configuration().active_wake_words == ["okay_nabu"]
+
+    # Remove the primary wake word
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: "select.test_wake_word", "option": NO_WAKE_WORD},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    async with asyncio.timeout(1):
+        await configuration_set.wait()
+
+    # No active wake word remain
+    assert not satellite.async_get_configuration().active_wake_words
 
 
 async def test_secondary_pipeline(

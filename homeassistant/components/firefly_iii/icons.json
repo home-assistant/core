@@ -1,0 +1,18 @@
+{
+  "entity": {
+    "sensor": {
+      "account_type": {
+        "default": "mdi:bank"
+      },
+      "account_balance": {
+        "default": "mdi:currency-usd"
+      },
+      "account_role": {
+        "default": "mdi:account-circle"
+      },
+      "category": {
+        "default": "mdi:label"
+      }
+    }
+  }
+}

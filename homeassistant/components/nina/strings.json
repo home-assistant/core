@@ -10,8 +10,21 @@
           "_m_to_q": "City/county (M-Q)",
           "_r_to_u": "City/county (R-U)",
           "_v_to_z": "City/county (V-Z)",
-          "slots": "Maximum warnings per city/county",
-          "headline_filter": "Blacklist regex to filter warning headlines"
+          "slots": "Maximum warnings per city/county"
+        },
+        "sections": {
+          "filters": {
+            "name": "Filters",
+            "description": "Filter warnings based on their attributes",
+            "data": {
+              "headline_filter": "Headline blocklist",
+              "area_filter": "Affected area filter"
+            },
+            "data_description": {
+              "headline_filter": "Blacklist regex to filter warning based on headlines",
+              "area_filter": "Whitelist regex to filter warnings based on affected areas"
+            }
+          }
         }
       }
     },
@@ -32,9 +45,21 @@
           "_m_to_q": "[%key:component::nina::config::step::user::data::_m_to_q%]",
           "_r_to_u": "[%key:component::nina::config::step::user::data::_r_to_u%]",
           "_v_to_z": "[%key:component::nina::config::step::user::data::_v_to_z%]",
-          "slots": "[%key:component::nina::config::step::user::data::slots%]",
-          "headline_filter": "[%key:component::nina::config::step::user::data::headline_filter%]",
-          "area_filter": "Whitelist regex to filter warnings based on affected areas"
+          "slots": "[%key:component::nina::config::step::user::data::slots%]"
+        },
+        "sections": {
+          "filters": {
+            "name": "[%key:component::nina::config::step::user::sections::filters::name%]",
+            "description": "[%key:component::nina::config::step::user::sections::filters::description%]",
+            "data": {
+              "headline_filter": "[%key:component::nina::config::step::user::sections::filters::data::headline_filter%]",
+              "area_filter": "[%key:component::nina::config::step::user::sections::filters::data::area_filter%]"
+            },
+            "data_description": {
+              "headline_filter": "[%key:component::nina::config::step::user::sections::filters::data_description::headline_filter%]",
+              "area_filter": "[%key:component::nina::config::step::user::sections::filters::data_description::area_filter%]"
+            }
+          }
         }
       }
     },

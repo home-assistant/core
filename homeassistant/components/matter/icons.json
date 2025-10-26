@@ -123,6 +123,9 @@
       "evse_fault_state": {
         "default": "mdi:ev-station"
       },
+      "operational_error": {
+        "default": "mdi:alert-circle"
+      },
       "pump_control_mode": {
         "default": "mdi:pipe-wrench"
       },
@@ -146,9 +149,24 @@
           "off": "mdi:lock-off"
         }
       },
+      "speaker_mute": {
+        "default": "mdi:volume-high",
+        "state": {
+          "on": "mdi:volume-mute",
+          "off": "mdi:volume-high"
+        }
+      },
       "evse_charging_switch": {
         "default": "mdi:ev-station"
+      },
+      "privacy_mode_button": {
+        "default": "mdi:shield-lock"
       }
+    }
+  },
+  "services": {
+    "water_heater_boost": {
+      "service": "mdi:water-boiler"
     }
   }
 }
