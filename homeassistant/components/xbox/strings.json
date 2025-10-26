@@ -37,12 +37,6 @@
         "name": "Gamerscore",
         "unit_of_measurement": "points"
       },
-      "account_tier": {
-        "name": "Account tier"
-      },
-      "gold_tenure": {
-        "name": "Gold tenure"
-      },
       "last_online": {
         "name": "Last online"
       },
@@ -56,14 +50,8 @@
       }
     },
     "binary_sensor": {
-      "in_party": {
-        "name": "In party"
-      },
       "in_game": {
         "name": "In game"
-      },
-      "in_multiplayer": {
-        "name": "In multiplayer"
       },
       "has_game_pass": {
         "name": "Subscribed to Xbox Game Pass"
