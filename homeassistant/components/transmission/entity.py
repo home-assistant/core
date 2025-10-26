@@ -17,10 +17,8 @@ class TransmissionEntity(CoordinatorEntity[TransmissionDataUpdateCoordinator]):
     ) -> None:
         """Initialize Transmission entity."""
         super().__init__(coordinator)
-        unique_id = coordinator.config_entry.unique_id
-        assert unique_id is not None
-        self._attr_unique_id = f"{unique_id}_{key}"
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}-{key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, unique_id)},
+            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
             manufacturer="Transmission",
         )
