@@ -448,7 +448,7 @@
               },
               "temperature_step": {
                 "label": "Temperature step",
-                "description": "Smallest step size to change the temperature. For setpoint shift configureations this sets the scale factor of the shift value."
+                "description": "Smallest step size to change the temperature. For setpoint shift configurations this sets the scale factor of the shift value."
               },
               "ga_setpoint_shift": {
                 "label": "Setpoint shift",
