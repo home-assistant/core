@@ -1713,10 +1713,6 @@ class ConfigEntriesFlowManager(
             version=result["version"],
         )
 
-        if not existing_entry:
-            result = await flow.async_on_create_entry(result)
-            self._async_validate_next_flow(result)
-
         if existing_entry is not None:
             # Unload and remove the existing entry, but don't clean up devices and
             # entities until the new entry is added
@@ -1729,6 +1725,10 @@ class ConfigEntriesFlowManager(
             self.config_entries._async_clean_up(existing_entry)  # noqa: SLF001
 
         result["result"] = entry
+        if not existing_entry:
+            result = await flow.async_on_create_entry(result)
+            self._async_validate_next_flow(result)
+
         return result
 
     async def async_create_flow(
