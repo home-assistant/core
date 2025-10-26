@@ -8,6 +8,10 @@ CONF_MODEL = "model"
 CONF_SERIAL = "serial"
 CONF_TITLE = "title"
 
+# Transitional compatibility switch support
+CONF_COMPAT_SWITCH = "compat_switch"
+DATA_YAML_SWITCH_HOSTS = "yaml_switch_hosts"
+
 DEFAULT_NAME = "Sony Projector"
 
 ISSUE_YAML_DEPRECATED = "yaml_deprecated"

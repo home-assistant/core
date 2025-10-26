@@ -22,6 +22,17 @@
     "yaml_deprecated": {
       "title": "Sony projector YAML configuration is deprecated",
       "description": "Sony Projector now uses config entries. Remove the `sony_projector` YAML from configuration.yaml and configure the integration from Settings → Devices & Services."
+    },
+    "legacy_switch_present": {
+      "title": "Legacy switch entity is present",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Update automations to use the projector entity",
+            "description": "Your legacy switch entity {switch_entity_id} is available to keep existing automations working while you migrate. Update automations, scripts, and scenes to target the projector media player entity using the `media_player.turn_on` and `media_player.turn_off` actions.\n\nTo find references, open Settings → Developer tools → Search and look up the switch entity to see related automations and scripts. When finished, select Submit to dismiss this message."
+          }
+        }
+      }
     }
   }
 }

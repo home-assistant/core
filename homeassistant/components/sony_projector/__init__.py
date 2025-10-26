@@ -17,6 +17,7 @@ from .client import ProjectorClient
 from .const import (
     CONF_TITLE,
     DATA_YAML_ISSUE_CREATED,
+    DATA_YAML_SWITCH_HOSTS,
     DEFAULT_NAME,
     DOMAIN,
     ISSUE_YAML_DEPRECATED,
@@ -26,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-PLATFORMS: list[Platform] = [Platform.MEDIA_PLAYER]
+PLATFORMS: list[Platform] = [Platform.MEDIA_PLAYER, Platform.SWITCH]
 
 
 @dataclass(slots=True)
@@ -43,6 +44,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Sony Projector integration from YAML."""
 
     domain_data = hass.data.setdefault(DOMAIN, {})
+
+    # Track any legacy YAML switch entries for compatibility switch support
+    if switch_configs := config.get(Platform.SWITCH.value):
+        yaml_hosts: set[str] = domain_data.setdefault(DATA_YAML_SWITCH_HOSTS, set())
+        for entry in switch_configs:
+            if entry.get("platform") == DOMAIN and (host := entry.get(CONF_HOST)):
+                yaml_hosts.add(host)
 
     if media_configs := config.get(Platform.MEDIA_PLAYER.value):
         _async_create_yaml_issue(hass, domain_data)
