@@ -601,6 +601,8 @@
         "areas": {
           "name": "Areas",
           "description": "A list of area IDs to clean."
+        }
+      }
     },
     "get_areas": {
       "name": "Get areas",
