@@ -119,6 +119,7 @@ def _async_create_yaml_issue(hass: HomeAssistant, domain_data: dict[str, Any]) -
         DOMAIN,
         ISSUE_YAML_DEPRECATED,
         is_fixable=False,
+        learn_more_url="https://www.home-assistant.io/integrations/sony_projector",
         severity=IssueSeverity.WARNING,
         translation_key="yaml_deprecated",
     )
