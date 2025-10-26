@@ -56,7 +56,11 @@ from .alarm_control_panel import (
     TemplateCodeFormat,
     async_create_preview_alarm_control_panel,
 )
-from .binary_sensor import async_create_preview_binary_sensor
+from .binary_sensor import (
+    CONF_DELAY_OFF,
+    CONF_DELAY_ON,
+    async_create_preview_binary_sensor,
+)
 from .const import (
     CONF_ADVANCED_OPTIONS,
     CONF_AVAILABILITY,
@@ -141,6 +145,7 @@ _SCHEMA_STATE: dict[vol.Marker, Any] = {
 def generate_schema(domain: str, flow_type: str) -> vol.Schema:
     """Generate schema."""
     schema: dict[vol.Marker, Any] = {}
+    advanced_options: dict[vol.Marker, Any] = {}
 
     if flow_type == "config":
         schema = {vol.Required(CONF_NAME): selector.TextSelector()}
@@ -171,6 +176,10 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
 
     if domain == Platform.BINARY_SENSOR:
         schema |= _SCHEMA_STATE
+        advanced_options |= {
+            vol.Optional(CONF_DELAY_ON): selector.DurationSelector(),
+            vol.Optional(CONF_DELAY_OFF): selector.DurationSelector(),
+        }
         if flow_type == "config":
             schema |= {
                 vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
@@ -394,14 +403,12 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
             vol.Optional(SERVICE_LOCATE): selector.ActionSelector(),
         }
 
+    advanced_options |= {vol.Optional(CONF_AVAILABILITY): selector.TemplateSelector()}
+    advanced_options_schema = vol.Schema(advanced_options)
     schema |= {
         vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
         vol.Optional(CONF_ADVANCED_OPTIONS): section(
-            vol.Schema(
-                {
-                    vol.Optional(CONF_AVAILABILITY): selector.TemplateSelector(),
-                }
-            ),
+            advanced_options_schema,
             {"collapsed": True},
         ),
     }

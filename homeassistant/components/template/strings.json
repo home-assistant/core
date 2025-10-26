@@ -69,9 +69,13 @@
           "advanced_options": {
             "name": "[%key:component::template::common::advanced_options%]",
             "data": {
+              "delay_on": "Delay On",
+              "delay_off": "Delay Off",
               "availability": "[%key:component::template::common::availability%]"
             },
             "data_description": {
+              "delay_on": "The amount of time the template state must be not met before this sensor will switch to `off`.",
+              "delay_off": "The amount of time the template state must be met before this sensor will switch to `on`.",
               "availability": "[%key:component::template::common::availability_description%]"
             }
           }
