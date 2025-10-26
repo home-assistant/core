@@ -10,13 +10,13 @@ import logging
 
 from propcache.api import cached_property
 from roborock import HomeDataRoom
-from roborock.code_mappings import RoborockCategory
-from roborock.containers import (
+from roborock.data import (
     DeviceData,
     HomeDataDevice,
     HomeDataProduct,
     HomeDataScene,
     NetworkInfo,
+    RoborockCategory,
     UserData,
 )
 from roborock.exceptions import RoborockException

@@ -242,7 +242,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     },
     "ring": {"ring-doorbell": {"async-timeout"}},
     "rmvtransport": {"pyrmvtransport": {"async-timeout"}},
-    "roborock": {"python-roborock": {"async-timeout"}},
     "samsungtv": {"async-upnp-client": {"async-timeout"}},
     "screenlogic": {"screenlogicpy": {"async-timeout"}},
     "sense": {"sense-energy": {"async-timeout"}},
