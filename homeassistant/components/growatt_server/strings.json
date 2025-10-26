@@ -509,6 +509,15 @@
       }
     }
   },
+  "selector": {
+    "batt_mode": {
+      "options": {
+        "battery_first": "Battery first",
+        "grid_first": "Grid first",
+        "load_first": "Load first"
+      }
+    }
+  },
   "services": {
     "read_time_segments": {
       "description": "Read all time-of-use (TOU) segments from a supported inverter.",

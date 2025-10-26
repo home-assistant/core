@@ -12,11 +12,17 @@ import growattServer
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import DEFAULT_URL, DOMAIN
+from .const import (
+    BATT_MODE_BATTERY_FIRST,
+    BATT_MODE_GRID_FIRST,
+    BATT_MODE_LOAD_FIRST,
+    DEFAULT_URL,
+    DOMAIN,
+)
 from .models import GrowattRuntimeData
 
 if TYPE_CHECKING:
@@ -266,22 +272,24 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             enabled: Whether the segment is enabled
         """
         _LOGGER.debug(
-            "Updating time segment %s for device %s",
+            "Updating time segment %d for device %s (mode=%d, %s-%s, enabled=%s)",
             segment_id,
             self.device_id,
+            batt_mode,
+            start_time,
+            end_time,
+            enabled,
         )
 
         if self.api_version != "v1":
-            _LOGGER.warning(
-                "Updating time segments is only supported with V1 API (token authentication)"
-            )
-            raise HomeAssistantError(
+            raise ServiceValidationError(
                 "Updating time segments requires token authentication"
             )
 
         try:
             # Use V1 API for token authentication
-            response = await self.hass.async_add_executor_job(
+            # The library's _process_response will raise GrowattV1ApiError if error_code != 0
+            await self.hass.async_add_executor_job(
                 self.api.min_write_time_segment,
                 self.device_id,
                 segment_id,
@@ -291,32 +299,7 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 enabled,
             )
         except growattServer.GrowattV1ApiError as err:
-            _LOGGER.error(
-                "API error updating time segment %s for device %s: %s",
-                segment_id,
-                self.device_id,
-                err,
-            )
             raise HomeAssistantError(f"API error updating time segment: {err}") from err
-
-        # Check response error code
-        if response.get("error_code", 1) != 0:
-            error_msg = response.get("error_msg", "Unknown error")
-            _LOGGER.error(
-                "Failed to update time segment %s for device %s: %s",
-                segment_id,
-                self.device_id,
-                error_msg,
-            )
-            raise HomeAssistantError(f"Failed to update time segment: {error_msg}")
-
-        _LOGGER.info(
-            "Successfully updated time segment %s for device %s",
-            segment_id,
-            self.device_id,
-        )
-        # Trigger a refresh to update the data
-        await self.async_refresh()
 
     async def read_time_segments(self) -> list[dict]:
         """Read time segments from an inverter.
@@ -324,75 +307,64 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         Returns:
             List of dictionaries containing segment information
         """
-        _LOGGER.debug(
-            "Reading time segments for device %s",
-            self.device_id,
-        )
+        _LOGGER.debug("Reading time segments for device %s", self.device_id)
 
         if self.api_version != "v1":
-            _LOGGER.warning(
-                "Reading time segments is only supported with V1 API (token authentication)"
-            )
-            raise HomeAssistantError(
+            raise ServiceValidationError(
                 "Reading time segments requires token authentication"
             )
 
         # Ensure we have current data
         if not self.data:
-            _LOGGER.debug("Triggering refresh to get time segments")
+            _LOGGER.debug("Coordinator data not available, triggering refresh")
             await self.async_refresh()
 
         time_segments = []
-        mode_names = {0: "Load First", 1: "Battery First", 2: "Grid First"}
 
         # Extract time segments from coordinator data
         for i in range(1, 10):  # Segments 1-9
-            segment = self._parse_time_segment(i, mode_names)
+            segment = self._parse_time_segment(i)
             time_segments.append(segment)
 
-        _LOGGER.debug(
-            "Read %d time segments for device %s", len(time_segments), self.device_id
-        )
         return time_segments
 
-    def _parse_time_segment(self, segment_id: int, mode_names: dict[int, str]) -> dict:
+    def _parse_time_segment(self, segment_id: int) -> dict:
         """Parse a single time segment from coordinator data."""
-        # Get raw time values
-        start_time_raw = self.data.get(f"forcedTimeStart{segment_id}", "0:0")
-        end_time_raw = self.data.get(f"forcedTimeStop{segment_id}", "0:0")
+        # Get raw time values - these should always be present from the API
+        start_time_raw = self.data.get(f"forcedTimeStart{segment_id}")
+        end_time_raw = self.data.get(f"forcedTimeStop{segment_id}")
 
-        # Handle 'null' or empty values
+        # Handle 'null' or empty values from API
         if start_time_raw in ("null", None, ""):
             start_time_raw = "0:0"
         if end_time_raw in ("null", None, ""):
             end_time_raw = "0:0"
 
         # Format times with leading zeros (HH:MM)
-        start_time = self._format_time(start_time_raw)
-        end_time = self._format_time(end_time_raw)
+        start_time = self._format_time(str(start_time_raw))
+        end_time = self._format_time(str(end_time_raw))
 
         # Get battery mode
-        batt_mode_raw = self.data.get(f"forcedChargeBatMode{segment_id}", 0)
-        try:
-            batt_mode = int(batt_mode_raw)
-        except (ValueError, TypeError):
-            batt_mode = 0
+        batt_mode_int = int(
+            self.data.get(f"forcedChargeBatMode{segment_id}", BATT_MODE_LOAD_FIRST)
+        )
 
-        mode_name = mode_names.get(batt_mode, "Unknown")
+        # Map numeric mode to string key (matches update_time_segment input format)
+        mode_map = {
+            BATT_MODE_LOAD_FIRST: "load_first",
+            BATT_MODE_BATTERY_FIRST: "battery_first",
+            BATT_MODE_GRID_FIRST: "grid_first",
+        }
+        batt_mode = mode_map.get(batt_mode_int, "load_first")
 
         # Get enabled status
-        enabled_raw = self.data.get(f"forcedChargeFlag{segment_id}", 0)
-        try:
-            enabled = bool(int(enabled_raw))
-        except (ValueError, TypeError):
-            enabled = False
+        enabled = bool(int(self.data.get(f"forcedChargeFlag{segment_id}", 0)))
 
         return {
             "segment_id": segment_id,
             "start_time": start_time,
             "end_time": end_time,
             "batt_mode": batt_mode,
-            "mode_name": mode_name,
             "enabled": enabled,
         }
 

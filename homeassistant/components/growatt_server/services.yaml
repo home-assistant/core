@@ -1,5 +1,4 @@
 # Service definitions for Growatt Server integration
-# Schemas are defined dynamically in code (__init__.py) using selectors
 
 update_time_segment:
   fields:
@@ -13,13 +12,14 @@ update_time_segment:
           mode: box
     batt_mode:
       required: true
-      example: "load-first"
+      example: "load_first"
       selector:
         select:
           options:
-            - "load-first"
-            - "battery-first"
-            - "grid-first"
+            - "load_first"
+            - "battery_first"
+            - "grid_first"
+          translation_key: batt_mode
     start_time:
       required: true
       example: "08:00"
@@ -37,14 +37,14 @@ update_time_segment:
         boolean:
     device_id:
       required: false
-      example: "MIN12345"
       selector:
-        text:
+        device:
+          integration: growatt_server
 
 read_time_segments:
   fields:
     device_id:
       required: false
-      example: "MIN12345"
       selector:
-        text:
+        device:
+          integration: growatt_server
