@@ -139,6 +139,21 @@
         },
         "uniqueItems": true
       },
+      "locations": {
+        "description": "A list containing region codes to match on.",
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^.*\\.local\\.$",
+              "description": "Region code."
+            }
+          ]
+        },
+        "uniqueItems": true
+      },
       "ssdp": {
         "description": "A list of matchers to find devices discoverable via SSDP/UPnP. In order to be discovered, the device has to match all properties of any of the matchers.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#ssdp",
         "type": "array",
