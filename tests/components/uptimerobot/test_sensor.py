@@ -33,7 +33,7 @@ async def test_presentation(hass: HomeAssistant) -> None:
     assert entity.attributes["options"] == [
         "down",
         "not_checked_yet",
-        "pause",
+        "paused",
         "seems_down",
         "up",
     ]

@@ -31,7 +31,7 @@ class UptimeRobotEntity(CoordinatorEntity[UptimeRobotDataUpdateCoordinator]):
         self._monitor = monitor
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, str(self.monitor.id))},
-            name=self.monitor.friendlyname,
+            name=self.monitor.friendlyName,
             manufacturer="UptimeRobot Team",
             entry_type=DeviceEntryType.SERVICE,
             model=self.monitor.type,

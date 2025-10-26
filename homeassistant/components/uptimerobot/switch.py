@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import API_ATTR_OK, DOMAIN, STATUS_DOWN, STATUS_UP
+from .const import DOMAIN, STATUS_DOWN, STATUS_UP
 from .coordinator import UptimeRobotConfigEntry
 from .entity import UptimeRobotEntity
 from .utils import new_device_listener
@@ -68,7 +68,7 @@ class UptimeRobotSwitch(UptimeRobotEntity, SwitchEntity):
     async def _async_edit_monitor(self, **kwargs: Any) -> None:
         """Edit monitor status."""
         try:
-            response = await self.api.async_edit_monitor(**kwargs)
+            await self.api.async_edit_monitor(**kwargs)
         except UptimeRobotAuthenticationException:
             self.coordinator.config_entry.async_start_reauth(self.hass)
             return
@@ -76,16 +76,8 @@ class UptimeRobotSwitch(UptimeRobotEntity, SwitchEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="api_exception",
-                translation_placeholders={"error": repr(exception)},
+                translation_placeholders={"error": "Generic UptimeRobot exception"},
             ) from exception
-
-        if response.status != API_ATTR_OK:
-            message = response.error.message if response.error else "Unknown error"
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="api_exception",
-                translation_placeholders={"error": message},
-            )
 
         await self.coordinator.async_request_refresh()
 
