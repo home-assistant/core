@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import logging
 from typing import Any
 
@@ -10,7 +9,7 @@ from orvibo.s20 import S20, S20Exception
 
 from homeassistant import config_entries
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
+
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -25,19 +24,11 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN
 
+from .util import S20ConfigEntry
+
+
 _LOGGER = logging.getLogger(__name__)
 
-
-@dataclass
-class S20Data:
-    """S20 data class."""
-
-    name: str
-    host: str
-    mac: str
-
-
-type S20ConfigEntry = ConfigEntry[S20Data]
 
 PARALLEL_UPDATES = 1
 
@@ -148,7 +139,8 @@ class S20Switch(SwitchEntity):
             model="S20",
         )
 
-    def _turn_on(self):
+    def turn_on(self, **kwargs: Any) -> None:
+        """Turn the device on."""
         try:
             self._s20.on = True
         except self._exc as err:
@@ -158,11 +150,7 @@ class S20Switch(SwitchEntity):
                 translation_placeholders={"name": self._name},
             ) from err
 
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the device on."""
-        await self.hass.async_add_executor_job(self._turn_on)
-
-    def _turn_off(self) -> None:
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         try:
             self._s20.on = False
@@ -173,11 +161,7 @@ class S20Switch(SwitchEntity):
                 translation_placeholders={"name": self._name},
             ) from err
 
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the device off."""
-        await self.hass.async_add_executor_job(self._turn_off)
-
-    def _update(self) -> None:
+    def update(self) -> None:
         """Update device state."""
         try:
             self._state = self._s20.on
@@ -187,7 +171,3 @@ class S20Switch(SwitchEntity):
                 translation_key="update_error",
                 translation_placeholders={"name": self._name},
             ) from err
-
-    async def async_update(self) -> None:
-        """Update th device state."""
-        await self.hass.async_add_executor_job(self._update)
