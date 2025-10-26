@@ -675,7 +675,7 @@ class ReolinkHost:
         else:
             self._lost_subscription = False
 
-    async def _renew(self, sub_type: Literal["push", "long_poll"]) -> None:
+    async def _renew(self, sub_type: Literal[SubType.push, SubType.long_poll]) -> None:
         """Execute the renew of the subscription."""
         if not self._api.subscribed(sub_type):
             _LOGGER.debug(
