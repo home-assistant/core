@@ -329,7 +329,6 @@ MOWER_SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
     AutomowerSensorEntityDescription(
         key="remaining_charging_time",
         translation_key="remaining_charging_time",
-        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.DURATION,
         value_fn=_get_remaining_charging_time,
         native_unit_of_measurement=UnitOfTime.SECONDS,

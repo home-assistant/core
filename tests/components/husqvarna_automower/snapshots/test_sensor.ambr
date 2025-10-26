@@ -966,9 +966,7 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -1009,7 +1007,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Test Mower 1 Remaining charging time',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
@@ -2024,9 +2021,7 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -2067,7 +2062,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Test Mower 2 Remaining charging time',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
