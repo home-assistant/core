@@ -137,15 +137,15 @@
               "btn_down": "Button down",
               "btn_up": "Button up",
               "double_push": "Double push",
-              "double": "Double push",
+              "double": "[%key:component::shelly::entity::event::input::state_attributes::event_type::state::double_push%]",
               "long_push": "Long push",
               "long_single": "Long push and then short push",
-              "long": "Long push",
+              "long": "[%key:component::shelly::entity::event::input::state_attributes::event_type::state::long_push%]",
               "single_long": "Short push and then long push",
               "single_push": "Single push",
-              "single": "Single push",
+              "single": "[%key:component::shelly::entity::event::input::state_attributes::event_type::state::single_push%]",
               "triple_push": "Triple push",
-              "triple": "Triple push"
+              "triple": "[%key:component::shelly::entity::event::input::state_attributes::event_type::state::triple_push%]"
             }
           }
         }
@@ -276,7 +276,7 @@
       "fix_flow": {
         "step": {
           "confirm": {
-            "title": "{device_name} is running unsupported firmware",
+            "title": "[%key:component::shelly::issues::ble_scanner_firmware_unsupported::title%]",
             "description": "Your Shelly device {device_name} with IP address {ip_address} is running firmware {firmware} and acts as BLE scanner with active mode. This firmware version is not supported for BLE scanner active mode.\n\nSelect **Submit** button to start the OTA update to the latest stable firmware version."
           }
         },
@@ -303,7 +303,7 @@
       "fix_flow": {
         "step": {
           "confirm": {
-            "title": "Outbound WebSocket is enabled for {device_name}",
+            "title": "[%key:component::shelly::issues::outbound_websocket_incorrectly_enabled::title%]",
             "description": "Your Shelly device {device_name} with IP address {ip_address} is a non-sleeping device and Outbound WebSocket should be disabled in its configuration.\n\nSelect **Submit** button to disable Outbound WebSocket."
           }
         },
@@ -317,7 +317,7 @@
       "fix_flow": {
         "step": {
           "confirm": {
-            "title": "{device_name} is running outdated firmware",
+            "title": "[%key:component::shelly::issues::deprecated_firmware::title%]",
             "description": "Your Shelly device {device_name} with IP address {ip_address} is running firmware {firmware}. This firmware version will not be supported by Shelly integration starting from Home Assistant {ha_version}.\n\nSelect **Submit** button to start the OTA update to the latest stable firmware version."
           }
         },

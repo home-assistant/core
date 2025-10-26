@@ -26,6 +26,12 @@
         "state_attributes": {
           "hebrew_year": { "name": "Hebrew year" },
           "hebrew_month_name": { "name": "Hebrew month name" },
+          "hebrew_month_standard_order": {
+            "name": "Hebrew month in standard order"
+          },
+          "hebrew_month_biblical_order": {
+            "name": "Hebrew month in biblical order"
+          },
           "hebrew_day": { "name": "Hebrew day" }
         }
       },

@@ -412,6 +412,164 @@
             }
           }
         },
+        "climate": {
+          "description": "The KNX climate platform is used as an interface to heating actuators, HVAC gateways, etc.",
+          "knx": {
+            "ga_temperature_current": {
+              "label": "Current temperature"
+            },
+            "ga_humidity_current": {
+              "label": "Current humidity"
+            },
+            "target_temperature": {
+              "title": "Target temperature",
+              "description": "Set the target temperature.",
+              "options": {
+                "group_direct_temp": {
+                  "label": "Absolute setpoint",
+                  "description": "Set the target temperature by an absolute value."
+                },
+                "group_setpoint_shift": {
+                  "label": "Setpoint shift",
+                  "description": "Shift the target temperature from a base setpoint."
+                }
+              },
+              "ga_temperature_target": {
+                "label": "Target temperature",
+                "description": "Current absolute target temperature."
+              },
+              "min_temp": {
+                "label": "Minimum temperature",
+                "description": "Minimum temperature that can be set."
+              },
+              "max_temp": {
+                "label": "Maximum temperature",
+                "description": "Maximum temperature that can be set."
+              },
+              "temperature_step": {
+                "label": "Temperature step",
+                "description": "Smallest step size to change the temperature. For setpoint shift configureations this sets the scale factor of the shift value."
+              },
+              "ga_setpoint_shift": {
+                "label": "Setpoint shift",
+                "description": "Target temperature deviation from a base setpoint."
+              },
+              "setpoint_shift_min": {
+                "label": "Minimum setpoint shift",
+                "description": "Lowest allowed deviation from the base setpoint."
+              },
+              "setpoint_shift_max": {
+                "label": "Maximum setpoint shift",
+                "description": "Highest allowed deviation from the base setpoint."
+              }
+            },
+            "section_activity": {
+              "title": "Activity",
+              "description": "Determine if the device is active or idle."
+            },
+            "ga_active": {
+              "label": "Active",
+              "description": "Binary value indicating if the device is active or idle. If configured, this takes precedence over valve position."
+            },
+            "ga_valve": {
+              "label": "Valve position",
+              "description": "Current control value / valve position in percent. `0` sets the climate entity to idle."
+            },
+            "section_operation_mode": {
+              "title": "Operation mode",
+              "description": "Set the preset mode of the device."
+            },
+            "ga_operation_mode": {
+              "label": "Operation mode",
+              "description": "Current operation mode."
+            },
+            "ignore_auto_mode": {
+              "label": "Ignore auto mode",
+              "description": "Enable when your controller doesn't support `auto` mode. It will be ignored by the integration then."
+            },
+            "section_operation_mode_individual": {
+              "title": "Individual operation modes",
+              "description": "Set the preset mode of the device using individual group addresses."
+            },
+            "ga_operation_mode_comfort": {
+              "label": "Comfort mode"
+            },
+            "ga_operation_mode_economy": {
+              "label": "Economy mode"
+            },
+            "ga_operation_mode_standby": {
+              "label": "Standby mode"
+            },
+            "ga_operation_mode_protection": {
+              "label": "Building protection mode"
+            },
+            "section_heat_cool": {
+              "title": "Heating/Cooling",
+              "description": "Set whether the device is in heating or cooling mode."
+            },
+            "ga_heat_cool": {
+              "label": "Heating/Cooling"
+            },
+            "section_on_off": {
+              "title": "On/Off",
+              "description": "Turn the device on or off."
+            },
+            "ga_on_off": {
+              "label": "On/Off"
+            },
+            "on_off_invert": {
+              "label": "[%key:component::knx::config_panel::entities::create::binary_sensor::knx::invert::label%]",
+              "description": "[%key:component::knx::config_panel::entities::create::binary_sensor::knx::invert::description%]"
+            },
+            "section_controller_mode": {
+              "title": "Controller mode",
+              "description": "Set the mode of the climate device."
+            },
+            "ga_controller_mode": {
+              "label": "Controller mode"
+            },
+            "ga_controller_status": {
+              "label": "Controller status",
+              "description": "HVAC controller mode and preset status. Eberle Status octet (KNX AN 097/07 rev 3) non-standardized DPT."
+            },
+            "default_controller_mode": {
+              "label": "Default mode",
+              "description": "Climate mode to be set on initialization."
+            },
+            "section_fan": {
+              "title": "Fan",
+              "description": "Configuration for fan control (AC units)."
+            },
+            "ga_fan_speed": {
+              "label": "Fan speed",
+              "description": "Set the current fan speed.",
+              "options": {
+                "5_001": "Percent",
+                "5_010": "Steps"
+              }
+            },
+            "fan_max_step": {
+              "label": "Fan steps",
+              "description": "The maximum amount of steps for the fan."
+            },
+            "fan_zero_mode": {
+              "label": "Zero fan speed mode",
+              "description": "Set the mode that represents fan speed `0`.",
+              "options": {
+                "off": "[%key:common::state::off%]",
+                "auto": "[%key:common::state::auto%]"
+              }
+            },
+            "ga_fan_swing": {
+              "label": "Fan swing",
+              "description": "Toggle (vertical) fan swing mode. Use this if only one direction is supported."
+            },
+            "ga_fan_swing_horizontal": {
+              "label": "Fan horizontal swing",
+              "description": "Toggle horizontal fan swing mode."
+            }
+          }
+        },
         "cover": {
           "description": "The KNX cover platform is used as an interface to shutter actuators.",
           "knx": {
