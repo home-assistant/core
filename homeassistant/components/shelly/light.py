@@ -399,6 +399,11 @@ class RpcShellyLightBase(ShellyRpcAttributeEntity, LightEntity):
         """Return the rgbw color value [int, int, int, int]."""
         return (*self.status["rgb"], self.status["white"])
 
+    @property
+    def color_temp_kelvin(self) -> int:
+        """Return the CT color value in Kelvin."""
+        return cast(int, self.status["ct"])
+
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on light."""
         params: dict[str, Any] = {"id": self._id, "on": True}
@@ -485,11 +490,6 @@ class RpcShellyCctLight(RpcShellyLightBase):
             self._attr_min_color_temp_kelvin = KELVIN_MIN_VALUE_WHITE
             self._attr_max_color_temp_kelvin = KELVIN_MAX_VALUE
 
-    @property
-    def color_temp_kelvin(self) -> int:
-        """Return the CT color value in Kelvin."""
-        return cast(int, self.status["ct"])
-
 
 class RpcShellyRgbCctLight(RpcShellyLightBase):
     """Entity that controls a RGBCCT light on RPC based Shelly devices."""
@@ -500,11 +500,6 @@ class RpcShellyRgbCctLight(RpcShellyLightBase):
     _attr_supported_features = LightEntityFeature.TRANSITION
     _attr_min_color_temp_kelvin = KELVIN_MIN_VALUE_WHITE
     _attr_max_color_temp_kelvin = KELVIN_MAX_VALUE
-
-    @property
-    def color_temp_kelvin(self) -> int:
-        """Return the CT color value in Kelvin."""
-        return cast(int, self.status["ct"])
 
     @property
     def color_mode(self) -> str:
