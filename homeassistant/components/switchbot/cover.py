@@ -20,6 +20,12 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
+from .const import (
+    CONF_CURTAIN_SLOW_MODE,
+    CURTAIN_SPEED_FAST,
+    CURTAIN_SPEED_SLOW,
+    DEFAULT_CURTAIN_SLOW_MODE,
+)
 from .coordinator import SwitchbotConfigEntry, SwitchbotDataUpdateCoordinator
 from .entity import SwitchbotEntity, exception_handler
 
@@ -64,6 +70,12 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         super().__init__(coordinator)
         self._attr_is_closed = None
 
+    def _use_slow_mode(self) -> bool:
+        """Return if the curtain should operate in slow mode."""
+        return self.coordinator.config_entry.options.get(
+            CONF_CURTAIN_SLOW_MODE, DEFAULT_CURTAIN_SLOW_MODE
+        )
+
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added."""
         await super().async_added_to_hass()
@@ -83,7 +95,8 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         """Open the curtain."""
 
         _LOGGER.debug("Switchbot to open curtain %s", self._address)
-        self._last_run_success = bool(await self._device.open())
+        speed = CURTAIN_SPEED_SLOW if self._use_slow_mode() else CURTAIN_SPEED_FAST
+        self._last_run_success = bool(await self._device.open(speed))
         self._attr_is_opening = self._device.is_opening()
         self._attr_is_closing = self._device.is_closing()
         self.async_write_ha_state()
@@ -93,7 +106,8 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         """Close the curtain."""
 
         _LOGGER.debug("Switchbot to close the curtain %s", self._address)
-        self._last_run_success = bool(await self._device.close())
+        speed = CURTAIN_SPEED_SLOW if self._use_slow_mode() else CURTAIN_SPEED_FAST
+        self._last_run_success = bool(await self._device.close(speed))
         self._attr_is_opening = self._device.is_opening()
         self._attr_is_closing = self._device.is_closing()
         self.async_write_ha_state()

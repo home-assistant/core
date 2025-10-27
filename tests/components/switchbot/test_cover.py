@@ -15,6 +15,13 @@ from homeassistant.components.cover import (
     DOMAIN as COVER_DOMAIN,
     CoverState,
 )
+from homeassistant.components.switchbot.const import (
+    CONF_CURTAIN_SLOW_MODE,
+    CONF_RETRY_COUNT,
+    CURTAIN_SPEED_FAST,
+    CURTAIN_SPEED_SLOW,
+    DEFAULT_RETRY_COUNT,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_CLOSE_COVER,
@@ -114,7 +121,7 @@ async def test_curtain3_controlling(
         )
         await hass.async_block_till_done()
 
-        mock_open.assert_awaited_once()
+        mock_open.assert_awaited_once_with(CURTAIN_SPEED_FAST)
         state = hass.states.get(entity_id)
         assert state.state == CoverState.OPEN
         assert state.attributes[ATTR_CURRENT_POSITION] == 95
@@ -132,7 +139,7 @@ async def test_curtain3_controlling(
         )
         await hass.async_block_till_done()
 
-        mock_close.assert_awaited_once()
+        mock_close.assert_awaited_once_with(CURTAIN_SPEED_FAST)
         state = hass.states.get(entity_id)
         assert state.state == CoverState.CLOSED
         assert state.attributes[ATTR_CURRENT_POSITION] == 12
@@ -169,6 +176,55 @@ async def test_curtain3_controlling(
         state = hass.states.get(entity_id)
         assert state.state == CoverState.OPEN
         assert state.attributes[ATTR_CURRENT_POSITION] == 60
+
+
+async def test_curtain3_slow_mode_controlling(
+    hass: HomeAssistant, mock_entry_factory: Callable[[str], MockConfigEntry]
+) -> None:
+    """Test Curtain3 controlling when slow mode is enabled."""
+    inject_bluetooth_service_info(hass, WOCURTAIN3_SERVICE_INFO)
+
+    entry = mock_entry_factory(sensor_type="curtain")
+    entry.add_to_hass(hass)
+
+    # Update entry options using async_update_entry
+    hass.config_entries.async_update_entry(
+        entry,
+        options={
+            CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT,
+            CONF_CURTAIN_SLOW_MODE: True,
+        },
+    )
+
+    with (
+        patch(
+            "homeassistant.components.switchbot.cover.switchbot.SwitchbotCurtain.open",
+            new=AsyncMock(return_value=True),
+        ) as mock_open,
+        patch(
+            "homeassistant.components.switchbot.cover.switchbot.SwitchbotCurtain.close",
+            new=AsyncMock(return_value=True),
+        ) as mock_close,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        entity_id = "cover.test_name"
+
+        await hass.services.async_call(
+            COVER_DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+        await hass.async_block_till_done()
+        mock_open.assert_awaited_once_with(CURTAIN_SPEED_SLOW)
+
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_CLOSE_COVER,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        mock_close.assert_awaited_once_with(CURTAIN_SPEED_SLOW)
 
 
 async def test_blindtilt_setup(

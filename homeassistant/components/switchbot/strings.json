@@ -87,10 +87,12 @@
       "init": {
         "data": {
           "retry_count": "Retry count",
+          "curtain_slow_mode": "Use slow curtain movement",
           "lock_force_nightlatch": "Force Nightlatch operation mode"
         },
         "data_description": {
           "retry_count": "How many times to retry sending commands to your SwitchBot devices",
+          "curtain_slow_mode": "Run curtains with slow open and close speeds",
           "lock_force_nightlatch": "Force Nightlatch operation mode even if Nightlatch is not detected"
         }
       }

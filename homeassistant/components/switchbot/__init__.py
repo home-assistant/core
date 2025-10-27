@@ -19,10 +19,12 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
 from .const import (
+    CONF_CURTAIN_SLOW_MODE,
     CONF_ENCRYPTION_KEY,
     CONF_KEY_ID,
     CONF_RETRY_COUNT,
     CONNECTABLE_SUPPORTED_MODEL_TYPES,
+    DEFAULT_CURTAIN_SLOW_MODE,
     DEFAULT_RETRY_COUNT,
     DOMAIN,
     ENCRYPTED_MODELS,
@@ -156,17 +158,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) ->
             data={**entry.data, CONF_ADDRESS: mac},
         )
 
-    if not entry.options:
-        hass.config_entries.async_update_entry(
-            entry,
-            options={CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT},
-        )
-
     sensor_type: str = entry.data[CONF_SENSOR_TYPE]
     switchbot_model = HASS_SENSOR_TYPE_TO_SWITCHBOT_MODEL[sensor_type]
     # connectable means we can make connections to the device
     connectable = switchbot_model in CONNECTABLE_SUPPORTED_MODEL_TYPES
     address: str = entry.data[CONF_ADDRESS]
+
+    updated_options = dict(entry.options)
+    if CONF_RETRY_COUNT not in updated_options:
+        updated_options[CONF_RETRY_COUNT] = DEFAULT_RETRY_COUNT
+    if (
+        sensor_type == SupportedModels.CURTAIN
+        and CONF_CURTAIN_SLOW_MODE not in updated_options
+    ):
+        updated_options[CONF_CURTAIN_SLOW_MODE] = DEFAULT_CURTAIN_SLOW_MODE
+    if updated_options != entry.options:
+        hass.config_entries.async_update_entry(entry, options=updated_options)
 
     await switchbot.close_stale_connections_by_address(address)
 
@@ -187,7 +194,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) ->
                 device=ble_device,
                 key_id=entry.data.get(CONF_KEY_ID),
                 encryption_key=entry.data.get(CONF_ENCRYPTION_KEY),
-                retry_count=entry.options[CONF_RETRY_COUNT],
+                retry_count=entry.options.get(CONF_RETRY_COUNT, DEFAULT_RETRY_COUNT),
                 model=switchbot_model,
             )
         except ValueError as error:
@@ -200,7 +207,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) ->
         device = cls(
             device=ble_device,
             password=entry.data.get(CONF_PASSWORD),
-            retry_count=entry.options[CONF_RETRY_COUNT],
+            retry_count=entry.options.get(CONF_RETRY_COUNT, DEFAULT_RETRY_COUNT),
         )
 
     coordinator = entry.runtime_data = SwitchbotDataUpdateCoordinator(
@@ -212,6 +219,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) ->
         entry.data.get(CONF_NAME, entry.title),
         connectable,
         switchbot_model,
+        entry,
     )
     entry.async_on_unload(coordinator.async_start())
     if not await coordinator.async_wait_ready():
