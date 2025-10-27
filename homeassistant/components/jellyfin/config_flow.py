@@ -8,7 +8,12 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.util.uuid import random_uuid_hex
@@ -133,6 +138,47 @@ class JellyfinConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm", data_schema=REAUTH_DATA_SCHEMA, errors=errors
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Allow users to update their Jellyfin configuration."""
+        errors: dict[str, str] = {}
+        entry: ConfigEntry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            if self.client_device_id is None:
+                self.client_device_id = _generate_client_device_id()
+
+            new_input = {
+                **entry.data,
+                **user_input,
+                CONF_CLIENT_DEVICE_ID: self.client_device_id,
+            }
+
+            client = create_client(device_id=self.client_device_id)
+            try:
+                user_id, _connect_result = await validate_input(
+                    self.hass, new_input, client
+                )
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except Exception:
+                errors["base"] = "unknown"
+                _LOGGER.exception("Unexpected exception")
+            else:
+                await self.async_set_unique_id(user_id)
+                return self.async_update_reload_and_abort(entry, data=new_input)
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, entry.data | (user_input or {})
+            ),
+            errors=errors,
         )
 
     @staticmethod
