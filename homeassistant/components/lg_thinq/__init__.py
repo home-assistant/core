@@ -26,7 +26,7 @@ from homeassistant.helpers.typing import ConfigType
 from .const import CONF_CONNECT_CLIENT_ID, DOMAIN, MQTT_SUBSCRIPTION_INTERVAL
 from .coordinator import DeviceDataUpdateCoordinator, async_setup_device_coordinator
 from .mqtt import ThinQMQTT
-from .services import async_setup_services, async_unload_services
+from .services import async_setup_services
 
 
 @dataclass(kw_only=True)
@@ -182,7 +182,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: ThinqConfigEntry) -> bo
     """Unload the entry."""
     if entry.runtime_data.mqtt_client:
         await entry.runtime_data.mqtt_client.async_disconnect()
-
-    await async_unload_services(hass, entry)
 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

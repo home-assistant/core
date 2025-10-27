@@ -68,7 +68,20 @@ def __get_coordinator(call: ServiceCall) -> DeviceDataUpdateCoordinator | None:
             translation_key="invalid_config_entry",
         )
 
-    unique_id = next(iter(device_entry.identifiers))[1]
+    unique_id = next(
+        (
+            identifier[1]
+            for identifier in device_entry.identifiers
+            if identifier[0] == DOMAIN
+        ),
+        None,
+    )
+    if unique_id is None:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_device_id",
+        )
+
     for config_entry in config_entries:
         if (
             coordinator := config_entry.runtime_data.coordinators.get(unique_id)
