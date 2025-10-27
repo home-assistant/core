@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime, timedelta
 import logging
 import subprocess as sp
 from typing import Any
@@ -25,20 +26,48 @@ from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util.dt import utcnow
 
-from .const import CONF_OFF_ACTION, DEFAULT_NAME, DEFAULT_PING_TIMEOUT, DOMAIN
+from .const import (
+    CONF_OFF_ACTION,
+    CONF_OFF_GRACE_PERIOD,
+    CONF_ON_GRACE_PERIOD,
+    DEFAULT_NAME,
+    DEFAULT_PING_TIMEOUT,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_MAC): cv.string,
-        vol.Optional(CONF_BROADCAST_ADDRESS): cv.string,
-        vol.Optional(CONF_BROADCAST_PORT): cv.port,
-        vol.Optional(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
-    }
+
+def _check_grace_period(data: dict[str, Any]) -> dict[str, Any]:
+    """Validate that grace period paramaeters have their dependencies."""
+    if CONF_ON_GRACE_PERIOD in data and CONF_HOST not in data:
+        raise vol.Invalid("'on_grace_period' requires 'host' to be set.")
+
+    if CONF_OFF_GRACE_PERIOD in data and CONF_HOST not in data:
+        raise vol.Invalid("'off_grace_period' requires 'host' to be set.")
+
+    if CONF_OFF_GRACE_PERIOD in data and CONF_OFF_ACTION not in data:
+        raise vol.Invalid("'off_grace_period' requires 'turn_off' to be set.")
+
+    return data
+
+
+PLATFORM_SCHEMA = vol.All(
+    SWITCH_PLATFORM_SCHEMA.extend(
+        {
+            vol.Required(CONF_MAC): cv.string,
+            vol.Optional(CONF_BROADCAST_ADDRESS): cv.string,
+            vol.Optional(CONF_BROADCAST_PORT): cv.port,
+            vol.Optional(CONF_HOST): cv.string,
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_ON_GRACE_PERIOD): cv.positive_float,
+            vol.Optional(CONF_OFF_GRACE_PERIOD): cv.positive_float,
+        }
+    ),
+    _check_grace_period,
 )
 
 
@@ -55,6 +84,8 @@ async def async_setup_platform(
     mac_address: str = config[CONF_MAC]
     name: str = config[CONF_NAME]
     off_action: list[Any] | None = config.get(CONF_OFF_ACTION)
+    on_grace_period: float = config.get(CONF_ON_GRACE_PERIOD, 0)
+    off_grace_period: float = config.get(CONF_OFF_GRACE_PERIOD, 0)
 
     async_add_entities(
         [
@@ -66,6 +97,8 @@ async def async_setup_platform(
                 off_action,
                 broadcast_address,
                 broadcast_port,
+                on_grace_period,
+                off_grace_period,
             )
         ],
         host is not None,
@@ -84,6 +117,8 @@ class WolSwitch(SwitchEntity):
         off_action: list[Any] | None,
         broadcast_address: str | None,
         broadcast_port: int | None,
+        on_grace_period: float,
+        off_grace_period: float,
     ) -> None:
         """Initialize the WOL switch."""
         self._attr_name = name
@@ -94,6 +129,9 @@ class WolSwitch(SwitchEntity):
         self._off_script = (
             Script(hass, off_action, name, DOMAIN) if off_action else None
         )
+        self._on_grace_period = on_grace_period
+        self._off_grace_period = off_grace_period
+        self._grace_period: datetime = utcnow()
         self._state = False
         self._attr_assumed_state = host is None
         self._attr_should_poll = bool(not self._attr_assumed_state)
@@ -121,21 +159,30 @@ class WolSwitch(SwitchEntity):
 
         wakeonlan.send_magic_packet(self._mac_address, **service_kwargs)
 
-        if self._attr_assumed_state:
+        if self._attr_assumed_state or self._on_grace_period:
             self._state = True
             self.schedule_update_ha_state()
+
+        if self._on_grace_period:
+            self._grace_period = utcnow() + timedelta(seconds=self._on_grace_period)
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off if an off action is present."""
         if self._off_script is not None:
             self._off_script.run(context=self._context)
 
-        if self._attr_assumed_state:
+        if self._attr_assumed_state or self._off_grace_period:
             self._state = False
             self.schedule_update_ha_state()
 
+        if self._off_grace_period:
+            self._grace_period = utcnow() + timedelta(seconds=self._off_grace_period)
+
     def update(self) -> None:
         """Check if device is on and update the state. Only called if assumed state is false."""
+        if utcnow() < self._grace_period:
+            return
+
         ping_cmd = [
             "ping",
             "-c",

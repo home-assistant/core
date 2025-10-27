@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, patch
+from datetime import timedelta
+from unittest.mock import AsyncMock, MagicMock, patch
+
+from freezegun.api import FrozenDateTimeFactory
+import pytest
 
 from homeassistant.components import switch
 from homeassistant.const import (
@@ -16,7 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from tests.common import async_mock_service
+from tests.common import async_fire_time_changed, async_mock_service
 
 
 async def test_valid_hostname(
@@ -250,3 +254,163 @@ async def test_no_hostname_state(
 
     state = hass.states.get("switch.wake_on_lan")
     assert state.state == STATE_OFF
+
+
+async def test_on_grace_no_host(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test that on grace period is not allowed when host is not set."""
+    assert await async_setup_component(
+        hass,
+        switch.DOMAIN,
+        {
+            "switch": {
+                "platform": "wake_on_lan",
+                "mac": "00-01-02-03-04-05",
+                "on_grace_period": 1,
+            }
+        },
+    )
+    assert hass.states.get("switch.wake_on_lan") is None
+    assert "'on_grace_period' requires 'host' to be set." in caplog.text
+
+
+async def test_off_grace_no_host(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test that off grace period is not allowed when host is not set."""
+    assert await async_setup_component(
+        hass,
+        switch.DOMAIN,
+        {
+            "switch": {
+                "platform": "wake_on_lan",
+                "mac": "00-01-02-03-04-05",
+                "off_grace_period": 1,
+            }
+        },
+    )
+    assert hass.states.get("switch.wake_on_lan") is None
+    assert "'off_grace_period' requires 'host' to be set." in caplog.text
+
+
+async def test_off_grace_no_turn_off(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test that off grace period is not allowed when turn_off is not set."""
+    assert await async_setup_component(
+        hass,
+        switch.DOMAIN,
+        {
+            "switch": {
+                "platform": "wake_on_lan",
+                "mac": "00-01-02-03-04-05",
+                "host": "validhostname",
+                "off_grace_period": 1,
+            }
+        },
+    )
+    assert hass.states.get("switch.wake_on_lan") is None
+    assert "'off_grace_period' requires 'turn_off' to be set." in caplog.text
+
+
+async def test_on_grace_period(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_send_magic_packet: AsyncMock,
+) -> None:
+    """Test on grace period functionality."""
+    assert await async_setup_component(
+        hass,
+        switch.DOMAIN,
+        {
+            "switch": {
+                "scan_interval": timedelta(seconds=0.5),
+                "platform": "wake_on_lan",
+                "mac": "00-01-02-03-04-05",
+                "host": "validhostname",
+                "on_grace_period": 2,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.wake_on_lan")
+    assert state.state == STATE_OFF
+
+    await hass.services.async_call(
+        switch.DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.wake_on_lan"},
+        blocking=True,
+    )
+
+    state = hass.states.get("switch.wake_on_lan")
+    assert state.state == STATE_ON
+
+    freezer.tick()
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("switch.wake_on_lan")
+    assert state.state == STATE_ON
+
+    freezer.tick()
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("switch.wake_on_lan")
+    assert state.state == STATE_OFF
+
+
+@pytest.mark.parametrize("subprocess_call_return_value", [0], indirect=True)
+async def test_off_grace_period(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_send_magic_packet: AsyncMock,
+    mock_subprocess_call: MagicMock,
+) -> None:
+    """Test off grace period functionality."""
+    assert await async_setup_component(
+        hass,
+        switch.DOMAIN,
+        {
+            "switch": {
+                "scan_interval": timedelta(seconds=0.5),
+                "platform": "wake_on_lan",
+                "mac": "00-01-02-03-04-05",
+                "host": "validhostname",
+                "turn_off": {"service": "shell_command.turn_off_target"},
+                "off_grace_period": 2,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    async_mock_service(hass, "shell_command", "turn_off_target")
+
+    state = hass.states.get("switch.wake_on_lan")
+    assert state.state == STATE_ON
+
+    await hass.services.async_call(
+        switch.DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.wake_on_lan"},
+        blocking=True,
+    )
+
+    state = hass.states.get("switch.wake_on_lan")
+    assert state.state == STATE_OFF
+
+    freezer.tick()
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("switch.wake_on_lan")
+    assert state.state == STATE_OFF
+
+    freezer.tick()
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("switch.wake_on_lan")
+    assert state.state == STATE_ON

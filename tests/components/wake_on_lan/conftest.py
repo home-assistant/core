@@ -26,9 +26,9 @@ def mock_send_magic_packet() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def subprocess_call_return_value() -> int | None:
+def subprocess_call_return_value(request: pytest.FixtureRequest) -> int | None:
     """Return value for subprocess."""
-    return 1
+    return getattr(request, "param", 1)
 
 
 @pytest.fixture(autouse=True)
