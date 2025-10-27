@@ -239,7 +239,7 @@ async def test_import_flow(
         DOMAIN, context={"source": SOURCE_IMPORT}, data=MOCK_IMPORT_CONFIG[DOMAIN]
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "setup"
 
     result = await hass.config_entries.flow.async_configure(
