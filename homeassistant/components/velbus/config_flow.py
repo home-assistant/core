@@ -169,7 +169,7 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
         vlpfile = VlpFile(file_path)
         await vlpfile.read()
         if len(vlpfile.get()) == 0:
-            raise InvalidVlpFile("Empty VLP file, no modules found")
+            raise InvalidVlpFile("no_modules")
 
     async def async_step_vlp(
         self, user_input: dict[str, Any] | None = None
@@ -222,7 +222,7 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self.async_step_vlp(user_input)
 
 
-def save_uploaded_vlp_file(hass: HomeAssistant, uploaded_file_id: str):
+def save_uploaded_vlp_file(hass: HomeAssistant, uploaded_file_id: str) -> str:
     """Validate the uploaded file and move it to the storage directory."""
     with process_uploaded_file(hass, uploaded_file_id) as file:
         dest_path = Path(hass.config.path(STORAGE_PATH.format(key=uploaded_file_id)))

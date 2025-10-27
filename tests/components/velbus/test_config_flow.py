@@ -1,19 +1,23 @@
 """Tests for the Velbus config flow."""
 
-from collections.abc import Generator
+from collections.abc import Generator, Iterator
+from contextlib import contextmanager
+from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
+from uuid import uuid4
 
 import pytest
 import serial.tools.list_ports
 from velbusaio.exceptions import VelbusConnectionFailed
 
-from homeassistant.components.velbus.const import CONF_TLS, DOMAIN
+from homeassistant.components.velbus.const import CONF_TLS, CONF_VLP_FILE, DOMAIN
 from homeassistant.config_entries import SOURCE_USB, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_SOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
+from . import init_integration
 from .const import PORT_SERIAL
 
 from tests.common import MockConfigEntry
@@ -38,6 +42,36 @@ def com_port():
     port.device = PORT_SERIAL
     port.description = "Some serial port"
     return port
+
+
+@pytest.fixture
+def mock_process_uploaded_file(
+    tmp_path: Path, mock_vlp_file: str
+) -> Generator[MagicMock]:
+    """Mock upload vlp file."""
+    file_id_vlp = str(uuid4())
+
+    @contextmanager
+    def _mock_process_uploaded_file(
+        hass: HomeAssistant, uploaded_file_id: str
+    ) -> Iterator[Path | None]:
+        with open(tmp_path / uploaded_file_id, "wb") as vlpfile:
+            vlpfile.write(mock_vlp_file)
+        yield tmp_path / uploaded_file_id
+
+    with (
+        patch(
+            "homeassistant.components.velbus.config_flow.process_uploaded_file",
+            side_effect=_mock_process_uploaded_file,
+        ) as mock_upload,
+        patch(
+            "shutil.move",
+        ),
+    ):
+        mock_upload.file_id = {
+            CONF_VLP_FILE: file_id_vlp,
+        }
+        yield mock_upload
 
 
 @pytest.fixture(autouse=True)
@@ -109,11 +143,8 @@ async def test_user_network_succes(
         },
     )
     assert result
-    assert result.get("type") is FlowResultType.CREATE_ENTRY
-    assert result.get("title") == "Velbus Network"
-    data = result.get("data")
-    assert data
-    assert data[CONF_PORT] == expected
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "vlp"
 
 
 @pytest.mark.usefixtures("controller")
@@ -135,11 +166,106 @@ async def test_user_usb_succes(hass: HomeAssistant) -> None:
         },
     )
     assert result
-    assert result.get("type") is FlowResultType.CREATE_ENTRY
-    assert result.get("title") == "Velbus USB"
-    data = result.get("data")
-    assert data
-    assert data[CONF_PORT] == PORT_SERIAL
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "vlp"
+
+
+@pytest.mark.usefixtures("controller")
+@pytest.mark.parametrize(
+    ("getParams", "expected"),
+    [
+        ([], "no_modules"),
+        ([1, 2, 3, 4], ""),
+    ],
+)
+async def test_vlp_step(
+    hass: HomeAssistant,
+    mock_process_uploaded_file: MagicMock,
+    getParams: list,
+    expected: str,
+) -> None:
+    """Test VLP step."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result.get("flow_id"),
+        {"next_step_id": "network"},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result.get("flow_id"),
+        {
+            CONF_TLS: False,
+            CONF_HOST: "192.168.88.9",
+            CONF_PORT: 27015,
+            CONF_PASSWORD: "",
+        },
+    )
+    assert result
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "vlp"
+
+    with (
+        patch(
+            "homeassistant.components.velbus.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+        patch(
+            "velbusaio.vlp_reader.VlpFile.read",
+            AsyncMock(return_value=True),
+        ),
+        patch(
+            "velbusaio.vlp_reader.VlpFile.get",
+            return_value=getParams,
+        ),
+    ):
+        file_id = mock_process_uploaded_file.file_id
+        result = await hass.config_entries.flow.async_configure(
+            result.get("flow_id"),
+            {CONF_VLP_FILE: file_id[CONF_VLP_FILE]},
+        )
+        await hass.async_block_till_done()
+
+    if expected == "":
+        assert result.get("type") is FlowResultType.CREATE_ENTRY
+        assert len(mock_setup_entry.mock_calls) == 1
+    else:
+        assert result.get("type") is FlowResultType.FORM
+        assert result.get("errors") == {CONF_VLP_FILE: expected}
+
+
+@pytest.mark.usefixtures("controller")
+async def test_reconfigure_step(
+    hass: HomeAssistant,
+    mock_process_uploaded_file: MagicMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Testcase for the reconfigure step."""
+    await init_integration(hass, config_entry)
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "vlp"
+
+    with (
+        patch(
+            "velbusaio.vlp_reader.VlpFile.read",
+            AsyncMock(return_value=True),
+        ),
+        patch(
+            "velbusaio.vlp_reader.VlpFile.get",
+            return_value=[1, 2, 3, 4],
+        ),
+    ):
+        file_id = mock_process_uploaded_file.file_id
+        result = await hass.config_entries.flow.async_configure(
+            result.get("flow_id"),
+            {CONF_VLP_FILE: file_id[CONF_VLP_FILE]},
+        )
+        await hass.async_block_till_done()
+
+    assert result.get("type") is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
 
 
 @pytest.mark.usefixtures("controller")
@@ -158,7 +284,7 @@ async def test_network_abort_if_already_setup(hass: HomeAssistant) -> None:
         {"next_step_id": "network"},
     )
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
+        result.get("flow_id"),
         {
             CONF_TLS: False,
             CONF_HOST: "127.0.0.1",
