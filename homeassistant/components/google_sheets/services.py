@@ -97,9 +97,8 @@ def _fetch_from_sheet(
         raise HomeAssistantError("Failed to write data") from ex
 
     worksheet = sheet.worksheet(call.data.get(WORKSHEET, sheet.sheet1.title))
-    rows = -1 * call.data[ROWS]
     all_values = worksheet.get_values()
-    return {"range": all_values[rows:]}
+    return {"range": all_values[-call.data[ROWS]:]}
 
 
 async def _async_append_to_sheet(call: ServiceCall) -> None:
