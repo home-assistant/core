@@ -96,7 +96,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[binary_sensor.erics273_in_multiplayer-entry]
+# name: test_binary_sensors[binary_sensor.erics273_subscribed_to_xbox_game_pass-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -109,7 +109,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.erics273_in_multiplayer',
+    'entity_id': 'binary_sensor.erics273_subscribed_to_xbox_game_pass',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -121,71 +121,23 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'In multiplayer',
+    'original_name': 'Subscribed to Xbox Game Pass',
     'platform': 'xbox',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': <XboxBinarySensor.IN_MULTIPLAYER: 'in_multiplayer'>,
-    'unique_id': '2533274913657542_in_multiplayer',
+    'translation_key': <XboxBinarySensor.HAS_GAME_PASS: 'has_game_pass'>,
+    'unique_id': '2533274913657542_has_game_pass',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[binary_sensor.erics273_in_multiplayer-state]
+# name: test_binary_sensors[binary_sensor.erics273_subscribed_to_xbox_game_pass-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'erics273 In multiplayer',
+      'friendly_name': 'erics273 Subscribed to Xbox Game Pass',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.erics273_in_multiplayer',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_binary_sensors[binary_sensor.erics273_in_party-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.erics273_in_party',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'In party',
-    'platform': 'xbox',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': <XboxBinarySensor.IN_PARTY: 'in_party'>,
-    'unique_id': '2533274913657542_in_party',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_binary_sensors[binary_sensor.erics273_in_party-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'erics273 In party',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.erics273_in_party',
+    'entity_id': 'binary_sensor.erics273_subscribed_to_xbox_game_pass',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -289,7 +241,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[binary_sensor.gsr_ae_in_multiplayer-entry]
+# name: test_binary_sensors[binary_sensor.gsr_ae_subscribed_to_xbox_game_pass-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -302,7 +254,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.gsr_ae_in_multiplayer',
+    'entity_id': 'binary_sensor.gsr_ae_subscribed_to_xbox_game_pass',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -314,75 +266,27 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'In multiplayer',
+    'original_name': 'Subscribed to Xbox Game Pass',
     'platform': 'xbox',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': <XboxBinarySensor.IN_MULTIPLAYER: 'in_multiplayer'>,
-    'unique_id': '271958441785640_in_multiplayer',
+    'translation_key': <XboxBinarySensor.HAS_GAME_PASS: 'has_game_pass'>,
+    'unique_id': '271958441785640_has_game_pass',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[binary_sensor.gsr_ae_in_multiplayer-state]
+# name: test_binary_sensors[binary_sensor.gsr_ae_subscribed_to_xbox_game_pass-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'GSR Ae In multiplayer',
+      'friendly_name': 'GSR Ae Subscribed to Xbox Game Pass',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.gsr_ae_in_multiplayer',
+    'entity_id': 'binary_sensor.gsr_ae_subscribed_to_xbox_game_pass',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_binary_sensors[binary_sensor.gsr_ae_in_party-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.gsr_ae_in_party',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'In party',
-    'platform': 'xbox',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': <XboxBinarySensor.IN_PARTY: 'in_party'>,
-    'unique_id': '271958441785640_in_party',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_binary_sensors[binary_sensor.gsr_ae_in_party-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'GSR Ae In party',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.gsr_ae_in_party',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'on',
   })
 # ---
 # name: test_binary_sensors[binary_sensor.ikken_hissatsuu-entry]
@@ -482,7 +386,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[binary_sensor.ikken_hissatsuu_in_multiplayer-entry]
+# name: test_binary_sensors[binary_sensor.ikken_hissatsuu_subscribed_to_xbox_game_pass-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -495,7 +399,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.ikken_hissatsuu_in_multiplayer',
+    'entity_id': 'binary_sensor.ikken_hissatsuu_subscribed_to_xbox_game_pass',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -507,71 +411,23 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'In multiplayer',
+    'original_name': 'Subscribed to Xbox Game Pass',
     'platform': 'xbox',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': <XboxBinarySensor.IN_MULTIPLAYER: 'in_multiplayer'>,
-    'unique_id': '2533274838782903_in_multiplayer',
+    'translation_key': <XboxBinarySensor.HAS_GAME_PASS: 'has_game_pass'>,
+    'unique_id': '2533274838782903_has_game_pass',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[binary_sensor.ikken_hissatsuu_in_multiplayer-state]
+# name: test_binary_sensors[binary_sensor.ikken_hissatsuu_subscribed_to_xbox_game_pass-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ikken Hissatsuu In multiplayer',
+      'friendly_name': 'Ikken Hissatsuu Subscribed to Xbox Game Pass',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.ikken_hissatsuu_in_multiplayer',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_binary_sensors[binary_sensor.ikken_hissatsuu_in_party-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.ikken_hissatsuu_in_party',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'In party',
-    'platform': 'xbox',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': <XboxBinarySensor.IN_PARTY: 'in_party'>,
-    'unique_id': '2533274838782903_in_party',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_binary_sensors[binary_sensor.ikken_hissatsuu_in_party-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Ikken Hissatsuu In party',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.ikken_hissatsuu_in_party',
+    'entity_id': 'binary_sensor.ikken_hissatsuu_subscribed_to_xbox_game_pass',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
