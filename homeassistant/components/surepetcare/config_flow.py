@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
 import logging
+from types import MappingProxyType
 from typing import Any, cast
 
 import surepy
@@ -12,9 +13,14 @@ from surepy.enums import EntityType
 from surepy.exceptions import SurePetcareAuthenticationError, SurePetcareError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import section
 from homeassistant.helpers import area_registry as ar
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -41,7 +47,6 @@ USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
-        vol.Required(CONF_CREATE_PET_SELECT): bool,
     }
 )
 
@@ -50,11 +55,6 @@ class SurePetCareConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Sure Petcare."""
 
     VERSION = 1
-    MINOR_VERSION = 1
-
-    _init_data: dict[str, Any] = {}
-    _flaps: list[Flap] = []
-    _areas: Iterable[ar.AreaEntry] = []
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -82,13 +82,9 @@ class SurePetCareConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(user_input[CONF_USERNAME].lower())
                 self._abort_if_unique_id_configured()
 
-                self._init_data = {**user_input, CONF_TOKEN: token}
-                if user_input[CONF_CREATE_PET_SELECT]:
-                    return await self.async_step_pet_select_config()
-
                 return self.async_create_entry(
                     title="Sure Petcare",
-                    data=self._init_data,
+                    data={**user_input, CONF_TOKEN: token},
                 )
 
         return self.async_show_form(
@@ -140,6 +136,45 @@ class SurePetCareConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> OptionsFlowHandler:
+        """Create the options flow."""
+        return OptionsFlowHandler()
+
+
+OPTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_CREATE_PET_SELECT): bool,
+    }
+)
+
+
+class OptionsFlowHandler(OptionsFlowWithReload):
+    """Handle a option flow for Sure Petcare."""
+
+    _flaps: list[Flap] = []
+    _areas: Iterable[ar.AreaEntry] = []
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle options flow."""
+
+        if user_input is not None:
+            if user_input[CONF_CREATE_PET_SELECT]:
+                return await self.async_step_pet_select_config()
+            return self.async_create_entry(data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=self.add_suggested_values_to_schema(
+                OPTIONS_SCHEMA, self.config_entry.options
+            ),
+        )
+
     async def async_step_pet_select_config(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -152,15 +187,14 @@ class SurePetCareConfigFlow(ConfigFlow, domain=DOMAIN):
             if not errors:
                 config_entry_data = self._build_pet_select_config_entry(user_input)
                 return self.async_create_entry(
-                    title="Sure Petcare",
                     data=config_entry_data,
                 )
         else:
             self._flaps = []
             client = surepy.Surepy(
-                self._init_data[CONF_USERNAME],
-                self._init_data[CONF_PASSWORD],
-                auth_token=self._init_data[CONF_TOKEN],
+                self.config_entry.data[CONF_USERNAME],
+                self.config_entry.data[CONF_PASSWORD],
+                auth_token=self.config_entry.data[CONF_TOKEN],
                 api_timeout=SURE_API_TIMEOUT,
                 session=async_get_clientsession(self.hass),
             )
@@ -180,10 +214,12 @@ class SurePetCareConfigFlow(ConfigFlow, domain=DOMAIN):
                     if device.type in [EntityType.CAT_FLAP, EntityType.PET_FLAP]
                 ]
 
-            self._areas = await _get_areas(self.hass)
+            area_reg = ar.async_get(self.hass)
+            self._areas = area_reg.async_list_areas()
 
         data_schema, description_placeholders = self._get_pet_select_config_schema(
             user_input
+            or self._extract_default_input_from_options(self.config_entry.options)
         )
 
         return self.async_show_form(
@@ -193,13 +229,27 @@ class SurePetCareConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    def _extract_default_input_from_options(
+        self, options: MappingProxyType[str, Any]
+    ) -> dict[str, Any]:
+        """Extract pet select related input from user input."""
+        default_input: dict[str, Any] = {}
+        default_input[CONF_CREATE_PET_SELECT] = options.get(
+            CONF_CREATE_PET_SELECT, False
+        )
+        default_input[CONF_MANUALLY_SET_LOCATION] = options.get(
+            CONF_MANUALLY_SET_LOCATION, {}
+        )
+        default_input.update(options.get(CONF_FLAPS_MAPPINGS, {}))
+        return default_input
+
     def _build_pet_select_config_entry(
         self, user_input: dict[str, Any]
     ) -> Mapping[str, Any]:
         """Build the pet location select entity config entry."""
         config_entry_data: dict[str, Any] = {}
-        config_entry_data.update(self._init_data)
 
+        config_entry_data[CONF_CREATE_PET_SELECT] = True
         config_entry_data[CONF_MANUALLY_SET_LOCATION] = user_input[
             CONF_MANUALLY_SET_LOCATION
         ]
@@ -317,9 +367,3 @@ class SurePetCareConfigFlow(ConfigFlow, domain=DOMAIN):
                 return errors
 
         return errors
-
-
-async def _get_areas(hass: HomeAssistant) -> Iterable[ar.AreaEntry]:
-    """Retrieve all user-defined areas."""
-    area_reg = ar.async_get(hass)
-    return area_reg.async_list_areas()

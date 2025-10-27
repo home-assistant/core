@@ -21,7 +21,6 @@ from tests.common import MockConfigEntry
 INPUT_DATA = {
     "username": "test-username",
     "password": "test-password",
-    "create_pet_select": False,
 }
 
 
@@ -43,7 +42,6 @@ async def test_form(hass: HomeAssistant, surepetcare: NonCallableMagicMock) -> N
             {
                 "username": "test-username",
                 "password": "test-password",
-                "create_pet_select": False,
             },
         )
         await hass.async_block_till_done()
@@ -53,7 +51,6 @@ async def test_form(hass: HomeAssistant, surepetcare: NonCallableMagicMock) -> N
     assert result2["data"] == {
         "username": "test-username",
         "password": "test-password",
-        "create_pet_select": False,
         "token": "token",
     }
     assert len(mock_setup_entry.mock_calls) == 1
@@ -74,7 +71,6 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
             {
                 "username": "test-username",
                 "password": "test-password",
-                "create_pet_select": False,
             },
         )
 
@@ -97,7 +93,6 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
             {
                 "username": "test-username",
                 "password": "test-password",
-                "create_pet_select": False,
             },
         )
 
@@ -120,7 +115,6 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
             {
                 "username": "test-username",
                 "password": "test-password",
-                "create_pet_select": False,
             },
         )
 
@@ -137,7 +131,6 @@ async def test_flow_entry_already_exists(
         data={
             "username": "test-username",
             "password": "test-password",
-            "create_pet_select": False,
         },
         unique_id="test-username",
     )
@@ -153,70 +146,11 @@ async def test_flow_entry_already_exists(
             data={
                 "username": "test-username",
                 "password": "test-password",
-                "create_pet_select": False,
             },
         )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-
-
-async def test_form_step_pet_select_config(
-    hass: HomeAssistant,
-    surepetcare: NonCallableMagicMock,
-    mock_get_areas,
-) -> None:
-    """Test we get the pet select config form."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    user_input = {
-        CONF_USERNAME: "test-username",
-        CONF_PASSWORD: "test-password",
-        CONF_CREATE_PET_SELECT: True,
-    }
-
-    with patch(
-        "homeassistant.components.surepetcare.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input
-        )
-
-        assert result2["type"] == FlowResultType.FORM
-        assert result2["step_id"] == "pet_select_config"
-
-        pet_select_input = {
-            "flap_1": {"entry": "Garage", "exit": "Outside"},
-            "flap_2": {"entry": "Home", "exit": "Garage"},
-            CONF_MANUALLY_SET_LOCATION: {"entry": "Home", "exit": "Outside"},
-        }
-
-        result3 = await hass.config_entries.flow.async_configure(
-            result2["flow_id"], pet_select_input
-        )
-
-        assert result3["type"] == FlowResultType.CREATE_ENTRY
-        assert result3["title"] == "Sure Petcare"
-        assert result3["data"] == {
-            CONF_USERNAME: "test-username",
-            CONF_PASSWORD: "test-password",
-            CONF_CREATE_PET_SELECT: True,
-            CONF_TOKEN: "token",
-            CONF_MANUALLY_SET_LOCATION: {"entry": "Home", "exit": "Outside"},
-            CONF_FLAPS_MAPPINGS: {
-                "13579": {"entry": "Garage", "exit": "Outside"},
-                "13576": {"entry": "Home", "exit": "Garage"},
-            },
-            CONF_PET_SELECT_OPTIONS: [
-                "Garage",
-                "Home",
-                "Outside",
-            ],
-        }
-        assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_reauthentication(
@@ -346,3 +280,69 @@ async def test_reauthentication_unknown_failure(hass: HomeAssistant) -> None:
     assert result2["step_id"] == "reauth_confirm"
     assert result["type"] is FlowResultType.FORM
     assert result2["errors"]["base"] == "unknown"
+
+
+async def test_options_step_pet_select_config(
+    hass: HomeAssistant, surepetcare: NonCallableMagicMock
+) -> None:
+    """Test we get the pet select config form."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+            CONF_TOKEN: "token",
+        },
+        unique_id="test-username",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    user_input = {
+        CONF_CREATE_PET_SELECT: True,
+    }
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert entry.options == {}
+
+    with patch(
+        "homeassistant.components.airnow.async_setup_entry",
+        return_value=True,
+    ):
+        result2 = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input
+        )
+
+        assert result2["type"] == FlowResultType.FORM
+        assert result2["step_id"] == "pet_select_config"
+
+        pet_select_input = {
+            "flap_1": {"entry": "Garage", "exit": "Outside"},
+            "flap_2": {"entry": "Home", "exit": "Garage"},
+            CONF_MANUALLY_SET_LOCATION: {"entry": "Home", "exit": "Outside"},
+        }
+
+        result3 = await hass.config_entries.options.async_configure(
+            result2["flow_id"], pet_select_input
+        )
+
+        assert result3["type"] == FlowResultType.CREATE_ENTRY
+        assert entry.options == {
+            CONF_CREATE_PET_SELECT: True,
+            CONF_MANUALLY_SET_LOCATION: {"entry": "Home", "exit": "Outside"},
+            CONF_FLAPS_MAPPINGS: {
+                "13579": {"entry": "Garage", "exit": "Outside"},
+                "13576": {"entry": "Home", "exit": "Garage"},
+            },
+            CONF_PET_SELECT_OPTIONS: [
+                "Garage",
+                "Home",
+                "Outside",
+            ],
+        }

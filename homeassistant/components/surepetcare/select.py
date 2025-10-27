@@ -14,6 +14,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
+    CONF_CREATE_PET_SELECT,
     CONF_FLAPS_MAPPINGS,
     CONF_MANUALLY_SET_LOCATION,
     CONF_PET_SELECT_OPTIONS,
@@ -31,15 +32,18 @@ async def async_setup_entry(
 ) -> None:
     """Set up Sure PetCare Pets select entities based on a config entry."""
 
+    if entry.options.get(CONF_CREATE_PET_SELECT) is False:
+        return
+
     coordinator: SurePetcareDataCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     entities: list[PetSelect] = [
         PetSelect(
             surepy_entity.id,
             coordinator,
-            entry.data[CONF_PET_SELECT_OPTIONS],
-            entry.data[CONF_FLAPS_MAPPINGS],
-            entry.data[CONF_MANUALLY_SET_LOCATION],
+            entry.options[CONF_PET_SELECT_OPTIONS],
+            entry.options[CONF_FLAPS_MAPPINGS],
+            entry.options[CONF_MANUALLY_SET_LOCATION],
         )
         for surepy_entity in coordinator.data.values()
         if surepy_entity.type == EntityType.PET
@@ -49,7 +53,7 @@ async def async_setup_entry(
 
 
 class PetSelect(SurePetcareEntity, SelectEntity):
-    """Sure Petcare Pet select entity."""
+    """Sure Petcare Pet select entity representing a pet's location."""
 
     _flaps_mappings: dict[str, FlapMappings] = {}
     _manually_set_location_mappings: FlapMappings | None = None

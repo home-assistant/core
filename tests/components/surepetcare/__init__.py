@@ -85,5 +85,3 @@ MOCK_API_DATA = {
     "devices": [MOCK_HUB, MOCK_CAT_FLAP, MOCK_PET_FLAP, MOCK_FEEDER, MOCK_FELAQUA],
     "pets": [MOCK_PET],
 }
-
-MOCK_HASS_AREAS = ["Garage", "Hall"]

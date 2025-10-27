@@ -8,11 +8,7 @@
       "user": {
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]",
-          "create_pet_select": "Create a select entity for each pet's location"
-        },
-        "data_description": {
-          "create_pet_select": "This is especially useful if you have multiple flaps that do not directly lead outside"
+          "password": "[%key:common::config_flow::data::password%]"
         }
       },
       "reauth_confirm": {
@@ -21,76 +17,34 @@
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
         }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "create_pet_select": "Create a pet location select entity for each pet"
+        },
+        "data_description": {
+          "create_pet_select": "This will create a select entity for each pet representing its current location. This is especially useful if you have multiple flaps that do not directly lead outside and the existing binary sensors can't accurately reflect your pets' locations."
+        }
       },
       "pet_select_config": {
-        "title": "Pet flaps' entry/exit to zones mapping",
-        "description": "Link your pet flaps' entry and exit points to the desired zones. You can either select one of your areas or enter a custom zone name.",
+        "title": "Map flap entry/exit to zones",
+        "description": "Choose in which zone your pet should be reported after it enters or exits a flap. You can either select one of your areas or enter a custom zone name. This controls how the integration determines and reports a pet's location when the flap records an entry or an exit.",
         "sections": {
           "flap_1": {
             "name": "Flap \"{flap_name_1}\"",
-            "data": {
-              "entry": "[%key:component::surepetcare::common::flap_entry%]",
-              "exit": "[%key:component::surepetcare::common::flap_exit%]"
-            }
-          },
-          "flap_2": {
-            "name": "Flap \"{flap_name_2}\"",
-            "data": {
-              "entry": "[%key:component::surepetcare::common::flap_entry%]",
-              "exit": "[%key:component::surepetcare::common::flap_exit%]"
-            }
-          },
-          "flap_3": {
-            "name": "Flap \"{flap_name_3}\"",
-            "data": {
-              "entry": "[%key:component::surepetcare::common::flap_entry%]",
-              "exit": "[%key:component::surepetcare::common::flap_exit%]"
-            }
-          },
-          "flap_4": {
-            "name": "Flap \"{flap_name_4}\"",
-            "data": {
-              "entry": "[%key:component::surepetcare::common::flap_entry%]",
-              "exit": "[%key:component::surepetcare::common::flap_exit%]"
-            }
-          },
-          "flap_5": {
-            "name": "Flap \"{flap_name_5}\"",
-            "data": {
-              "entry": "[%key:component::surepetcare::common::flap_entry%]",
-              "exit": "[%key:component::surepetcare::common::flap_exit%]"
-            }
-          },
-          "flap_6": {
-            "name": "Flap \"{flap_name_6}\"",
-            "data": {
-              "entry": "[%key:component::surepetcare::common::flap_entry%]",
-              "exit": "[%key:component::surepetcare::common::flap_exit%]"
-            }
-          },
-          "flap_7": {
-            "name": "Flap \"{flap_name_7}\"",
-            "data": {
-              "entry": "[%key:component::surepetcare::common::flap_entry%]",
-              "exit": "[%key:component::surepetcare::common::flap_exit%]"
-            }
-          },
-          "flap_8": {
-            "name": "Flap \"{flap_name_8}\"",
-            "data": {
-              "entry": "[%key:component::surepetcare::common::flap_entry%]",
-              "exit": "[%key:component::surepetcare::common::flap_exit%]"
-            }
-          },
-          "flap_9": {
-            "name": "Flap \"{flap_name_9}\"",
-            "data": {
-              "entry": "[%key:component::surepetcare::common::flap_entry%]",
-              "exit": "[%key:component::surepetcare::common::flap_exit%]"
-            }
-          },
-          "flap_10": {
-            "name": "Flap \"{flap_name_10}\"",
             "data": {
               "entry": "[%key:component::surepetcare::common::flap_entry%]",
               "exit": "[%key:component::surepetcare::common::flap_exit%]"
@@ -112,10 +66,6 @@
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "no_zones_selected": "Please select or enter a zone for each entry and exit."
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
   "services": {
