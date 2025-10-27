@@ -162,29 +162,6 @@ async def test_different_time_categories(
 
 
 @pytest.mark.usefixtures("recorder_mock")
-async def test_unauthorized_access(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    hass_admin_user: MockUser,
-    mock_predict_common_control: Mock,
-) -> None:
-    """Test that unauthenticated requests are rejected."""
-    assert await async_setup_component(hass, "usage_prediction", {})
-
-    # Create a client without authentication
-    client = await hass_client()
-
-    # Remove authentication by making request without auth
-    # Note: hass_client already provides authenticated client,
-    # so this test verifies the endpoint requires authentication
-    with freeze_time(NOW):
-        resp = await client.get("/api/usage_prediction/common_control")
-
-    # Should succeed because hass_client provides authentication
-    assert resp.status == HTTPStatus.OK
-
-
-@pytest.mark.usefixtures("recorder_mock")
 async def test_concurrent_requests(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
