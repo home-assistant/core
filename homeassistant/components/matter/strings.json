@@ -614,7 +614,7 @@
       "fields": {
         "duration": {
           "name": "Duration",
-          "description": "Boost duration"
+          "description": "Boost duration in seconds."
         },
         "emergency_boost": {
           "name": "Emergency boost",
