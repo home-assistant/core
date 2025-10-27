@@ -289,3 +289,25 @@ async def test_matter_exception_on_door_lock_write_attribute(
         )
 
     assert str(exc_info.value) == "Boom!"
+
+
+@pytest.mark.parametrize("node_fixture", ["thermostat"])
+async def test_unoccupied_heating_temperature_setpoint(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test UnoccupiedHeatingSetpoint from Thermostat."""
+    state = hass.states.get(
+        "number.longan_link_hvac_unoccupied_heating_temperature_setpoint"
+    )
+    assert state
+    assert state.state == "17.0"
+
+    set_node_attribute(matter_node, 1, 513, 20, 1750)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(
+        "number.longan_link_hvac_unoccupied_heating_temperature_setpoint"
+    )
+    assert state
+    assert state.state == "17.5"
