@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "description": "Setup your IOmeter device for local data",
+        "description": "Set up your IOmeter device for local data",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
         },
@@ -20,8 +20,10 @@
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]"
     },
     "error": {
+      "no_status": "No status received from the IOmeter. Check your device status in the IOmeter app",
+      "no_readings": "No readings received from the IOmeter. Please attach the IOmeter Core to the electricity meter and wait for the first reading.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "unknown": "Unexpected error"
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
   "entity": {
@@ -59,6 +61,14 @@
       },
       "wifi_rssi": {
         "name": "Signal strength Wi-Fi"
+      }
+    },
+    "binary_sensor": {
+      "connection_status": {
+        "name": "Core/Bridge connection status"
+      },
+      "attachment_status": {
+        "name": "Core attachment status"
       }
     }
   }

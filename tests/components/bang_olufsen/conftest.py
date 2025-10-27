@@ -76,16 +76,52 @@ def mock_config_entry_core() -> MockConfigEntry:
     )
 
 
-@pytest.fixture
-async def mock_media_player(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_mozart_client: AsyncMock,
+async def mock_websocket_connection(
+    hass: HomeAssistant, mock_mozart_client: AsyncMock
 ) -> None:
-    """Mock media_player entity."""
+    """Register and receive initial WebSocket notifications."""
+
+    # Currently only add notifications that are used.
+
+    # Register callbacks.
+    volume_callback = mock_mozart_client.get_volume_notifications.call_args[0][0]
+    source_change_callback = (
+        mock_mozart_client.get_source_change_notifications.call_args[0][0]
+    )
+    playback_state_callback = (
+        mock_mozart_client.get_playback_state_notifications.call_args[0][0]
+    )
+    playback_metadata_callback = (
+        mock_mozart_client.get_playback_metadata_notifications.call_args[0][0]
+    )
+
+    # Trigger callbacks. Try to use existing data
+    volume_callback(mock_mozart_client.get_product_state.return_value.volume)
+    source_change_callback(
+        mock_mozart_client.get_product_state.return_value.playback.source
+    )
+    playback_state_callback(
+        mock_mozart_client.get_product_state.return_value.playback.state
+    )
+    playback_metadata_callback(
+        mock_mozart_client.get_product_state.return_value.playback.metadata
+    )
+    await hass.async_block_till_done()
+
+
+@pytest.fixture(name="integration")
+async def integration_fixture(
+    hass: HomeAssistant,
+    mock_mozart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Set up the Bang & Olufsen integration."""
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await mock_websocket_connection(hass, mock_mozart_client)
 
 
 @pytest.fixture

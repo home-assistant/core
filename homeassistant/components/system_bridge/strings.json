@@ -78,6 +78,9 @@
       "processes": {
         "name": "Processes"
       },
+      "power_usage": {
+        "name": "Power usage"
+      },
       "load": {
         "name": "Load"
       },
@@ -109,7 +112,7 @@
       "message": "No data received from {host}"
     },
     "process_not_found": {
-      "message": "Could not find process with id {id}."
+      "message": "Could not find process with ID {id}."
     },
     "timeout": {
       "message": "A timeout occurred for {title} ({host})"
@@ -120,7 +123,7 @@
   },
   "issues": {
     "unsupported_version": {
-      "title": "System Bridge Upgrade Required",
+      "title": "System Bridge upgrade required",
       "description": "Your version of System Bridge for host {host} is not supported.\n\nPlease upgrade to the latest version."
     }
   },
@@ -191,7 +194,7 @@
         },
         "key": {
           "name": "Key",
-          "description": "Key to press. List available here: http://robotjs.io/docs/syntax#keys."
+          "description": "Key to press. List available here: {syntax_keys_documentation_url}."
         }
       }
     },

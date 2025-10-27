@@ -57,7 +57,7 @@
   },
   "exceptions": {
     "invalid_controller_id": {
-      "message": "Invalid controller_id \"{controller_id}\", expected one of \"{controller_ids}\""
+      "message": "Invalid controller ID \"{controller_id}\", expected one of \"{controller_ids}\""
     }
   },
   "options": {

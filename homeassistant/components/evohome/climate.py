@@ -29,7 +29,12 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import ATTR_MODE, PRECISION_TENTHS, UnitOfTemperature
+from homeassistant.const import (
+    ATTR_MODE,
+    ATTR_TEMPERATURE,
+    PRECISION_TENTHS,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -152,7 +157,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
         super().__init__(coordinator, evo_device)
         self._evo_id = evo_device.id
 
-        if evo_device.model.startswith("VisionProWifi"):
+        if evo_device.id == evo_device.tcs.id:
             # this system does not have a distinct ID for the zone
             self._attr_unique_id = f"{evo_device.id}z"
         else:
@@ -243,7 +248,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set a new target temperature."""
 
-        temperature = kwargs["temperature"]
+        temperature = kwargs[ATTR_TEMPERATURE]
 
         if (until := kwargs.get("until")) is None:
             if self._evo_device.mode == EvoZoneMode.TEMPORARY_OVERRIDE:

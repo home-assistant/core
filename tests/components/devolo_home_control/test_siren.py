@@ -2,7 +2,6 @@
 
 from unittest.mock import patch
 
-import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.siren import DOMAIN as SIREN_DOMAIN
@@ -14,7 +13,6 @@ from . import configure_integration
 from .mocks import HomeControlMock, HomeControlMockSiren
 
 
-@pytest.mark.usefixtures("mock_zeroconf")
 async def test_siren(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, snapshot: SnapshotAssertion
 ) -> None:
@@ -45,7 +43,6 @@ async def test_siren(
     assert hass.states.get(f"{SIREN_DOMAIN}.test").state == STATE_UNAVAILABLE
 
 
-@pytest.mark.usefixtures("mock_zeroconf")
 async def test_siren_switching(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, snapshot: SnapshotAssertion
 ) -> None:
@@ -98,7 +95,6 @@ async def test_siren_switching(
         property_set.assert_called_once_with(0)
 
 
-@pytest.mark.usefixtures("mock_zeroconf")
 async def test_siren_change_default_tone(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, snapshot: SnapshotAssertion
 ) -> None:
@@ -130,7 +126,6 @@ async def test_siren_change_default_tone(
         property_set.assert_called_once_with(2)
 
 
-@pytest.mark.usefixtures("mock_zeroconf")
 async def test_remove_from_hass(hass: HomeAssistant) -> None:
     """Test removing entity."""
     entry = configure_integration(hass)

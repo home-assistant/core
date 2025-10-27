@@ -6,33 +6,31 @@ import logging
 from typing import Any
 
 from homeassistant.components.camera import CameraEntityFeature
-from homeassistant.components.ffmpeg.camera import (
-    CONF_EXTRA_ARGUMENTS,
-    CONF_INPUT,
+from homeassistant.components.ffmpeg import CONF_EXTRA_ARGUMENTS, CONF_INPUT
+from homeassistant.components.ffmpeg.camera import (  # pylint: disable=hass-component-root-import
     DEFAULT_ARGUMENTS,
     FFmpegCamera,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import ATTR_DETECTION, DOMAIN, FreeboxHomeCategory
+from .const import ATTR_DETECTION, FreeboxHomeCategory
 from .entity import FreeboxHomeEntity
-from .router import FreeboxRouter
+from .router import FreeboxConfigEntry, FreeboxRouter
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: FreeboxConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up cameras."""
-    router: FreeboxRouter = hass.data[DOMAIN][entry.unique_id]
+    router = entry.runtime_data
     tracked: set[str] = set()
 
     @callback
@@ -75,7 +73,7 @@ class FreeboxCamera(FreeboxHomeEntity, FFmpegCamera):
     ) -> None:
         """Initialize a camera."""
 
-        super().__init__(hass, router, node)
+        super().__init__(router, node)
         device_info = {
             CONF_NAME: node["label"].strip(),
             CONF_INPUT: node["props"]["Stream"],

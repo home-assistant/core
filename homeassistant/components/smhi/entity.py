@@ -2,31 +2,31 @@
 
 from __future__ import annotations
 
-import aiohttp
-from pysmhi import SMHIPointForecast
+from abc import abstractmethod
 
+from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
+from .coordinator import SMHIDataUpdateCoordinator
 
 
-class SmhiWeatherBaseEntity(Entity):
+class SmhiWeatherBaseEntity(CoordinatorEntity[SMHIDataUpdateCoordinator]):
     """Representation of a base weather entity."""
 
     _attr_attribution = "Swedish weather institute (SMHI)"
     _attr_has_entity_name = True
-    _attr_name = None
 
     def __init__(
         self,
         latitude: str,
         longitude: str,
-        session: aiohttp.ClientSession,
+        coordinator: SMHIDataUpdateCoordinator,
     ) -> None:
         """Initialize the SMHI base weather entity."""
+        super().__init__(coordinator)
         self._attr_unique_id = f"{latitude}, {longitude}"
-        self._smhi_api = SMHIPointForecast(longitude, latitude, session=session)
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, f"{latitude}, {longitude}")},
@@ -34,3 +34,14 @@ class SmhiWeatherBaseEntity(Entity):
             model="v2",
             configuration_url="http://opendata.smhi.se/apidocs/metfcst/parameters.html",
         )
+        self.update_entity_data()
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self.update_entity_data()
+        super()._handle_coordinator_update()
+
+    @abstractmethod
+    def update_entity_data(self) -> None:
+        """Refresh the entity data."""

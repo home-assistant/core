@@ -6,6 +6,7 @@
       'config': dict({
         'agents': dict({
         }),
+        'automatic_backups_configured': False,
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -43,6 +44,7 @@
       'config': dict({
         'agents': dict({
         }),
+        'automatic_backups_configured': True,
         'create_backup': dict({
           'agent_ids': list([
             'test-agent1',
@@ -89,6 +91,7 @@
       'config': dict({
         'agents': dict({
         }),
+        'automatic_backups_configured': True,
         'create_backup': dict({
           'agent_ids': list([
             'test-agent1',

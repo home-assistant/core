@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
-from contextlib import suppress
+import contextlib
 import logging
 from typing import Any
 
@@ -12,7 +12,11 @@ from awesomeversion import AwesomeVersion
 import voluptuous as vol
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import CommandClass, RemoveNodeReason
-from zwave_js_server.exceptions import BaseZwaveJSServerError, InvalidServerVersion
+from zwave_js_server.exceptions import (
+    BaseZwaveJSServerError,
+    InvalidServerVersion,
+    NotConnected,
+)
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.notification import (
@@ -25,7 +29,7 @@ from zwave_js_server.model.value import Value, ValueNotification
 
 from homeassistant.components.hassio import AddonError, AddonManager, AddonState
 from homeassistant.components.persistent_notification import async_create
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_DEVICE_ID,
     ATTR_DOMAIN,
@@ -36,7 +40,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -87,9 +91,11 @@ from .const import (
     CONF_ADDON_S2_ACCESS_CONTROL_KEY,
     CONF_ADDON_S2_AUTHENTICATED_KEY,
     CONF_ADDON_S2_UNAUTHENTICATED_KEY,
+    CONF_ADDON_SOCKET,
     CONF_DATA_COLLECTION_OPTED_IN,
     CONF_INSTALLER_MODE,
     CONF_INTEGRATION_CREATED_ADDON,
+    CONF_KEEP_OLD_DEVICES,
     CONF_LR_S2_ACCESS_CONTROL_KEY,
     CONF_LR_S2_AUTHENTICATED_KEY,
     CONF_NETWORK_KEY,
@@ -97,10 +103,11 @@ from .const import (
     CONF_S2_ACCESS_CONTROL_KEY,
     CONF_S2_AUTHENTICATED_KEY,
     CONF_S2_UNAUTHENTICATED_KEY,
+    CONF_SOCKET_PATH,
     CONF_USB_PATH,
     CONF_USE_ADDON,
-    DATA_CLIENT,
     DOMAIN,
+    ESPHOME_ADDON_VERSION,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
     EVENT_VALUE_UPDATED,
     LIB_LOGGER,
@@ -111,11 +118,7 @@ from .const import (
     ZWAVE_JS_VALUE_NOTIFICATION_EVENT,
     ZWAVE_JS_VALUE_UPDATED_EVENT,
 )
-from .discovery import (
-    ZwaveDiscoveryInfo,
-    async_discover_node_values,
-    async_discover_single_value,
-)
+from .discovery import async_discover_node_values, async_discover_single_value
 from .helpers import (
     async_disable_server_logging_if_needed,
     async_enable_server_logging_if_needed,
@@ -127,12 +130,11 @@ from .helpers import (
     get_valueless_base_unique_id,
 )
 from .migrate import async_migrate_discovered_value
-from .services import ZWaveServices
+from .models import PlatformZwaveDiscoveryInfo, ZwaveJSConfigEntry, ZwaveJSData
+from .services import async_setup_services
 
 CONNECT_TIMEOUT = 10
-DATA_CLIENT_LISTEN_TASK = "client_listen_task"
-DATA_DRIVER_EVENTS = "driver_events"
-DATA_START_CLIENT_TASK = "start_client_task"
+DRIVER_READY_TIMEOUT = 60
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -144,6 +146,25 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
+MIN_CONTROLLER_FIRMWARE_SDK_VERSION = AwesomeVersion("6.50.0")
+
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.CLIMATE,
+    Platform.COVER,
+    Platform.EVENT,
+    Platform.FAN,
+    Platform.HUMIDIFIER,
+    Platform.LIGHT,
+    Platform.LOCK,
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SIREN,
+    Platform.SWITCH,
+    Platform.UPDATE,
+]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -155,15 +176,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 entry, unique_id=str(entry.unique_id)
             )
 
-    dev_reg = dr.async_get(hass)
-    ent_reg = er.async_get(hass)
-    services = ZWaveServices(hass, ent_reg, dev_reg)
-    services.async_register()
+    async_setup_services(hass)
 
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ZwaveJSConfigEntry) -> bool:
     """Set up Z-Wave JS from a config entry."""
     if use_addon := entry.data.get(CONF_USE_ADDON):
         await async_ensure_addon_running(hass, entry)
@@ -196,53 +214,101 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(f"Failed to connect: {err}") from err
 
     async_delete_issue(hass, DOMAIN, "invalid_server_version")
-    LOGGER.info("Connected to Zwave JS Server")
+    LOGGER.debug("Connected to Zwave JS Server")
 
     # Set up websocket API
     async_register_api(hass)
-    entry.runtime_data = {}
 
-    # Create a task to allow the config entry to be unloaded before the driver is ready.
-    # Unloading the config entry is needed if the client listen task errors.
-    start_client_task = hass.async_create_task(start_client(hass, entry, client))
-    entry.runtime_data[DATA_START_CLIENT_TASK] = start_client_task
+    driver_ready = asyncio.Event()
+    listen_task = entry.async_create_background_task(
+        hass,
+        client_listen(hass, entry, client, driver_ready),
+        f"{DOMAIN}_{entry.title}_client_listen",
+    )
 
-    return True
-
-
-async def start_client(
-    hass: HomeAssistant, entry: ConfigEntry, client: ZwaveClient
-) -> None:
-    """Start listening with the client."""
-    entry.runtime_data[DATA_CLIENT] = client
-    driver_events = entry.runtime_data[DATA_DRIVER_EVENTS] = DriverEvents(hass, entry)
+    entry.async_on_unload(client.disconnect)
 
     async def handle_ha_shutdown(event: Event) -> None:
         """Handle HA shutdown."""
-        await disconnect_client(hass, entry)
+        await client.disconnect()
 
-    listen_task = asyncio.create_task(
-        client_listen(hass, entry, client, driver_events.ready)
-    )
-    entry.runtime_data[DATA_CLIENT_LISTEN_TASK] = listen_task
     entry.async_on_unload(
         hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, handle_ha_shutdown)
     )
 
-    try:
-        await driver_events.ready.wait()
-    except asyncio.CancelledError:
-        LOGGER.debug("Cancelling start client")
-        return
-
-    LOGGER.info("Connection to Zwave JS Server initialized")
-
-    assert client.driver
-    async_dispatcher_send(
-        hass, f"{DOMAIN}_{client.driver.controller.home_id}_connected_to_server"
+    driver_ready_task = entry.async_create_task(
+        hass,
+        driver_ready.wait(),
+        f"{DOMAIN}_{entry.title}_driver_ready",
+    )
+    done, pending = await asyncio.wait(
+        (driver_ready_task, listen_task),
+        return_when=asyncio.FIRST_COMPLETED,
+        timeout=DRIVER_READY_TIMEOUT,
     )
 
-    await driver_events.setup(client.driver)
+    if driver_ready_task in pending or listen_task in done:
+        error_message = "Driver ready timed out"
+        listen_error: BaseException | None = None
+        if listen_task.done():
+            listen_error, error_message = _get_listen_task_error(listen_task)
+        else:
+            listen_task.cancel()
+        driver_ready_task.cancel()
+        raise ConfigEntryNotReady(error_message) from listen_error
+
+    LOGGER.debug("Connection to Zwave JS Server initialized")
+
+    driver_events = DriverEvents(hass, entry)
+    entry_runtime_data = ZwaveJSData(
+        client=client,
+        driver_events=driver_events,
+    )
+    entry.runtime_data = entry_runtime_data
+
+    driver = client.driver
+    # When the driver is ready we know it's set on the client.
+    assert driver is not None
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    with contextlib.suppress(NotConnected):
+        # If the client isn't connected the listen task may have an exception
+        # and we'll handle the clean up below.
+        await driver_events.setup(driver)
+
+    # If the listen task is already failed, we need to raise ConfigEntryNotReady
+    if listen_task.done():
+        listen_error, error_message = _get_listen_task_error(listen_task)
+        await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+        raise ConfigEntryNotReady(error_message) from listen_error
+
+    # Re-attach trigger listeners.
+    # Schedule this call to make sure the config entry is loaded first.
+
+    @callback
+    def on_config_entry_loaded() -> None:
+        """Signal that server connection and driver are ready."""
+        if entry.state is ConfigEntryState.LOADED:
+            async_dispatcher_send(
+                hass,
+                f"{DOMAIN}_{driver.controller.home_id}_connected_to_server",
+            )
+
+    entry.async_on_unload(entry.async_on_state_change(on_config_entry_loaded))
+
+    return True
+
+
+def _get_listen_task_error(
+    listen_task: asyncio.Task,
+) -> tuple[BaseException | None, str]:
+    """Check the listen task for errors."""
+    if listen_error := listen_task.exception():
+        error_message = f"Client listen failed: {listen_error}"
+    else:
+        error_message = "Client connection was closed"
+    return listen_error, error_message
 
 
 class DriverEvents:
@@ -250,13 +316,11 @@ class DriverEvents:
 
     driver: Driver
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: ZwaveJSConfigEntry) -> None:
         """Set up the driver events instance."""
         self.config_entry = entry
         self.dev_reg = dr.async_get(hass)
         self.hass = hass
-        self.platform_setup_tasks: dict[str, asyncio.Task] = {}
-        self.ready = asyncio.Event()
         # Make sure to not pass self to ControllerEvents until all attributes are set.
         self.controller_events = ControllerEvents(hass, self)
 
@@ -290,21 +354,6 @@ class DriverEvents:
             self.hass.bus.async_listen(EVENT_LOGGING_CHANGED, handle_logging_changed)
         )
 
-        # Check for nodes that no longer exist and remove them
-        stored_devices = dr.async_entries_for_config_entry(
-            self.dev_reg, self.config_entry.entry_id
-        )
-        known_devices = [
-            self.dev_reg.async_get_device(identifiers={get_device_id(driver, node)})
-            for node in controller.nodes.values()
-        ]
-
-        # Devices that are in the device registry that are not known by the controller
-        # can be removed
-        for device in stored_devices:
-            if device not in known_devices:
-                self.dev_reg.async_remove_device(device.id)
-
         # run discovery on controller node
         if controller.own_node:
             await self.controller_events.async_on_node_added(controller.own_node)
@@ -315,6 +364,16 @@ class DriverEvents:
                 self.controller_events.async_on_node_added(node)
                 for node in controller.nodes.values()
                 if node != controller.own_node
+            )
+        )
+
+        # listen for driver ready event to reload the config entry
+        self.config_entry.async_on_unload(
+            driver.on(
+                "driver ready",
+                lambda _: self.hass.config_entries.async_schedule_reload(
+                    self.config_entry.entry_id
+                ),
             )
         )
 
@@ -339,15 +398,71 @@ class DriverEvents:
             controller.on("identify", self.controller_events.async_on_identify)
         )
 
-    async def async_setup_platform(self, platform: Platform) -> None:
-        """Set up platform if needed."""
-        if platform not in self.platform_setup_tasks:
-            self.platform_setup_tasks[platform] = self.hass.async_create_task(
-                self.hass.config_entries.async_forward_entry_setups(
-                    self.config_entry, [platform]
+        if (
+            old_unique_id := self.config_entry.unique_id
+        ) is not None and old_unique_id != (
+            new_unique_id := str(driver.controller.home_id)
+        ):
+            device_registry = dr.async_get(self.hass)
+            controller_model = "Unknown model"
+            if (
+                (own_node := driver.controller.own_node)
+                and (
+                    controller_device_entry := device_registry.async_get_device(
+                        identifiers={get_device_id(driver, own_node)}
+                    )
                 )
+                and (model := controller_device_entry.model)
+            ):
+                controller_model = model
+
+            # Do not clean up old stale devices if an unknown controller is connected.
+            data = {**self.config_entry.data, CONF_KEEP_OLD_DEVICES: True}
+            self.hass.config_entries.async_update_entry(self.config_entry, data=data)
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"migrate_unique_id.{self.config_entry.entry_id}",
+                data={
+                    "config_entry_id": self.config_entry.entry_id,
+                    "config_entry_title": self.config_entry.title,
+                    "controller_model": controller_model,
+                    "new_unique_id": new_unique_id,
+                    "old_unique_id": old_unique_id,
+                },
+                is_fixable=True,
+                severity=IssueSeverity.ERROR,
+                translation_key="migrate_unique_id",
             )
-        await self.platform_setup_tasks[platform]
+        else:
+            data = self.config_entry.data.copy()
+            data.pop(CONF_KEEP_OLD_DEVICES, None)
+            self.hass.config_entries.async_update_entry(self.config_entry, data=data)
+            async_delete_issue(
+                self.hass, DOMAIN, f"migrate_unique_id.{self.config_entry.entry_id}"
+            )
+
+        # Check for nodes that no longer exist and remove them
+        stored_devices = dr.async_entries_for_config_entry(
+            self.dev_reg, self.config_entry.entry_id
+        )
+        known_devices = [
+            self.dev_reg.async_get_device(identifiers={get_device_id(driver, node)})
+            for node in controller.nodes.values()
+        ]
+        provisioned_devices = [
+            self.dev_reg.async_get(entry.additional_properties["device_id"])
+            for entry in await controller.async_get_provisioning_entries()
+            if entry.additional_properties
+            and "device_id" in entry.additional_properties
+        ]
+
+        # Devices that are in the device registry that are not known by the controller
+        # can be removed
+        if not self.config_entry.data.get(CONF_KEEP_OLD_DEVICES):
+            for device in stored_devices:
+                if device not in known_devices and device not in provisioned_devices:
+                    self.dev_reg.async_remove_device(device.id)
 
 
 class ControllerEvents:
@@ -380,9 +495,6 @@ class ControllerEvents:
 
     async def async_on_node_added(self, node: ZwaveNode) -> None:
         """Handle node added event."""
-        # Every node including the controller will have at least one sensor
-        await self.driver_events.async_setup_platform(Platform.SENSOR)
-
         # Remove stale entities that may exist from a previous interview when an
         # interview is started.
         base_unique_id = get_valueless_base_unique_id(self.driver_events.driver, node)
@@ -395,6 +507,8 @@ class ControllerEvents:
                 ),
             )
         )
+
+        await self.async_check_pre_provisioned_device(node)
 
         if node.is_controller_node:
             # Create a controller status sensor for each device
@@ -411,7 +525,6 @@ class ControllerEvents:
             )
 
             # Create a ping button for each device
-            await self.driver_events.async_setup_platform(Platform.BUTTON)
             async_dispatcher_send(
                 self.hass,
                 f"{DOMAIN}_{self.config_entry.entry_id}_add_ping_button_entity",
@@ -446,7 +559,7 @@ class ControllerEvents:
 
         # we do submit the node to device registry so user has
         # some visual feedback that something is (in the process of) being added
-        self.register_node_in_dev_reg(node)
+        await self.async_register_node_in_dev_reg(node)
 
     @callback
     def async_on_node_removed(self, event: dict) -> None:
@@ -523,18 +636,60 @@ class ControllerEvents:
             f"{DOMAIN}.identify_controller.{dev_id[1]}",
         )
 
-    @callback
-    def register_node_in_dev_reg(self, node: ZwaveNode) -> dr.DeviceEntry:
+    async def async_check_pre_provisioned_device(self, node: ZwaveNode) -> None:
+        """Check if the node was pre-provisioned and update the device registry."""
+        provisioning_entry = (
+            await self.driver_events.driver.controller.async_get_provisioning_entry(
+                node.node_id
+            )
+        )
+        if (
+            provisioning_entry
+            and provisioning_entry.additional_properties
+            and "device_id" in provisioning_entry.additional_properties
+            and (
+                pre_provisioned_device := self.dev_reg.async_get(
+                    provisioning_entry.additional_properties["device_id"]
+                )
+            )
+            and (dsk_identifier := (DOMAIN, f"provision_{provisioning_entry.dsk}"))
+            in pre_provisioned_device.identifiers
+        ):
+            driver = self.driver_events.driver
+            device_id = get_device_id(driver, node)
+            device_id_ext = get_device_id_ext(driver, node)
+            new_identifiers = pre_provisioned_device.identifiers.copy()
+            new_identifiers.remove(dsk_identifier)
+            new_identifiers.add(device_id)
+            if device_id_ext:
+                new_identifiers.add(device_id_ext)
+
+            if self.dev_reg.async_get_device(identifiers=new_identifiers):
+                # If a device entry is registered with the node ID based identifiers,
+                # just remove the device entry with the DSK identifier.
+                self.dev_reg.async_update_device(
+                    pre_provisioned_device.id,
+                    remove_config_entry_id=self.config_entry.entry_id,
+                )
+            else:
+                # Add the node ID based identifiers to the device entry
+                # with the DSK identifier and remove the DSK identifier.
+                self.dev_reg.async_update_device(
+                    pre_provisioned_device.id,
+                    new_identifiers=new_identifiers,
+                )
+
+    async def async_register_node_in_dev_reg(self, node: ZwaveNode) -> dr.DeviceEntry:
         """Register node in dev reg."""
         driver = self.driver_events.driver
         device_id = get_device_id(driver, node)
         device_id_ext = get_device_id_ext(driver, node)
         node_id_device = self.dev_reg.async_get_device(identifiers={device_id})
-        via_device_id = None
+        via_identifier = None
         controller = driver.controller
         # Get the controller node device ID if this node is not the controller
         if controller.own_node and controller.own_node != node:
-            via_device_id = get_device_id(driver, controller.own_node)
+            via_identifier = get_device_id(driver, controller.own_node)
 
         if device_id_ext:
             # If there is a device with this node ID but with a different hardware
@@ -581,7 +736,7 @@ class ControllerEvents:
             model=node.device_config.label,
             manufacturer=node.device_config.manufacturer,
             suggested_area=node.location if node.location else UNDEFINED,
-            via_device=via_device_id,
+            via_device=via_identifier,
         )
 
         async_dispatcher_send(self.hass, EVENT_DEVICE_ADDED_TO_REGISTRY, device)
@@ -615,12 +770,12 @@ class NodeEvents:
         """Handle node ready event."""
         LOGGER.debug("Processing node %s", node)
         # register (or update) node in device registry
-        device = self.controller_events.register_node_in_dev_reg(node)
+        device = await self.controller_events.async_register_node_in_dev_reg(node)
 
         # Remove any old value ids if this is a reinterview.
         self.controller_events.discovered_value_ids.pop(device.id, None)
 
-        value_updates_disc_info: dict[str, ZwaveDiscoveryInfo] = {}
+        value_updates_disc_info: dict[str, PlatformZwaveDiscoveryInfo] = {}
 
         # run discovery on all node values and create/update entities
         await asyncio.gather(
@@ -662,15 +817,20 @@ class NodeEvents:
             node.on("notification", self.async_on_notification)
         )
 
-        # Create a firmware update entity for each non-controller device that
+        # Create a firmware update entity for each device that
         # supports firmware updates
-        if not node.is_controller_node and any(
-            cc.id == CommandClass.FIRMWARE_UPDATE_MD.value
-            for cc in node.command_classes
-        ):
-            await self.controller_events.driver_events.async_setup_platform(
-                Platform.UPDATE
+        controller = self.controller_events.driver_events.driver.controller
+        if (
+            not (is_controller_node := node.is_controller_node)
+            and any(
+                cc.id == CommandClass.FIRMWARE_UPDATE_MD.value
+                for cc in node.command_classes
             )
+        ) or (
+            is_controller_node
+            and (sdk_version := controller.sdk_version) is not None
+            and sdk_version >= MIN_CONTROLLER_FIRMWARE_SDK_VERSION
+        ):
             async_dispatcher_send(
                 self.hass,
                 f"{DOMAIN}_{self.config_entry.entry_id}_add_firmware_update_entity",
@@ -697,24 +857,22 @@ class NodeEvents:
     async def async_handle_discovery_info(
         self,
         device: dr.DeviceEntry,
-        disc_info: ZwaveDiscoveryInfo,
-        value_updates_disc_info: dict[str, ZwaveDiscoveryInfo],
+        disc_info: PlatformZwaveDiscoveryInfo,
+        value_updates_disc_info: dict[str, PlatformZwaveDiscoveryInfo],
     ) -> None:
         """Handle discovery info and all dependent tasks."""
+        platform = disc_info.platform
         # This migration logic was added in 2021.3 to handle a breaking change to
         # the value_id format. Some time in the future, this call (as well as the
         # helper functions) can be removed.
         async_migrate_discovered_value(
             self.hass,
             self.ent_reg,
-            self.controller_events.registered_unique_ids[device.id][disc_info.platform],
+            self.controller_events.registered_unique_ids[device.id][platform],
             device,
             self.controller_events.driver_events.driver,
             disc_info,
         )
-
-        platform = disc_info.platform
-        await self.controller_events.driver_events.async_setup_platform(platform)
 
         LOGGER.debug("Discovered entity: %s", disc_info)
         async_dispatcher_send(
@@ -742,7 +900,9 @@ class NodeEvents:
         )
 
     async def async_on_value_added(
-        self, value_updates_disc_info: dict[str, ZwaveDiscoveryInfo], value: Value
+        self,
+        value_updates_disc_info: dict[str, PlatformZwaveDiscoveryInfo],
+        value: Value,
     ) -> None:
         """Fire value updated event."""
         # If node isn't ready or a device for this node doesn't already exist, we can
@@ -877,7 +1037,9 @@ class NodeEvents:
 
     @callback
     def async_on_value_updated_fire_event(
-        self, value_updates_disc_info: dict[str, ZwaveDiscoveryInfo], value: Value
+        self,
+        value_updates_disc_info: dict[str, PlatformZwaveDiscoveryInfo],
+        value: Value,
     ) -> None:
         """Fire value updated event."""
         # Get the discovery info for the value that was updated. If there is
@@ -925,68 +1087,51 @@ class NodeEvents:
 
 async def client_listen(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: ZwaveJSConfigEntry,
     client: ZwaveClient,
     driver_ready: asyncio.Event,
 ) -> None:
     """Listen with the client."""
-    should_reload = True
     try:
         await client.listen(driver_ready)
-    except asyncio.CancelledError:
-        should_reload = False
     except BaseZwaveJSServerError as err:
-        LOGGER.error("Failed to listen: %s", err)
-    except Exception as err:  # noqa: BLE001
+        if entry.state is ConfigEntryState.SETUP_IN_PROGRESS:
+            raise
+        LOGGER.error("Client listen failed: %s", err)
+    except Exception as err:
         # We need to guard against unknown exceptions to not crash this task.
         LOGGER.exception("Unexpected exception: %s", err)
+        if entry.state is ConfigEntryState.SETUP_IN_PROGRESS:
+            raise
+
+    if hass.is_stopping or entry.state is ConfigEntryState.UNLOAD_IN_PROGRESS:
+        return
+
+    if entry.state is ConfigEntryState.SETUP_IN_PROGRESS:
+        raise HomeAssistantError("Listen task ended unexpectedly")
 
     # The entry needs to be reloaded since a new driver state
     # will be acquired on reconnect.
     # All model instances will be replaced when the new state is acquired.
-    if should_reload:
-        LOGGER.info("Disconnected from server. Reloading integration")
-        hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
+    if entry.state.recoverable:
+        LOGGER.debug("Disconnected from server. Reloading integration")
+        hass.config_entries.async_schedule_reload(entry.entry_id)
+    else:
+        LOGGER.error(
+            "Disconnected from server. Cannot recover entry %s",
+            entry.title,
+        )
 
 
-async def disconnect_client(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Disconnect client."""
-    client: ZwaveClient = entry.runtime_data[DATA_CLIENT]
-    listen_task: asyncio.Task = entry.runtime_data[DATA_CLIENT_LISTEN_TASK]
-    start_client_task: asyncio.Task = entry.runtime_data[DATA_START_CLIENT_TASK]
-    driver_events: DriverEvents = entry.runtime_data[DATA_DRIVER_EVENTS]
-    listen_task.cancel()
-    start_client_task.cancel()
-    platform_setup_tasks = driver_events.platform_setup_tasks.values()
-    for task in platform_setup_tasks:
-        task.cancel()
-
-    tasks = (listen_task, start_client_task, *platform_setup_tasks)
-    await asyncio.gather(*tasks, return_exceptions=True)
-    for task in tasks:
-        with suppress(asyncio.CancelledError):
-            await task
-
-    if client.connected:
-        await client.disconnect()
-        LOGGER.info("Disconnected from Zwave JS Server")
-
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ZwaveJSConfigEntry) -> bool:
     """Unload a config entry."""
-    client: ZwaveClient = entry.runtime_data[DATA_CLIENT]
-    driver_events: DriverEvents = entry.runtime_data[DATA_DRIVER_EVENTS]
-    platforms = [
-        platform
-        for platform, task in driver_events.platform_setup_tasks.items()
-        if not task.cancel()
-    ]
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, platforms)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    if client.connected and client.driver:
-        await async_disable_server_logging_if_needed(hass, entry, client.driver)
-    if DATA_CLIENT_LISTEN_TASK in entry.runtime_data:
-        await disconnect_client(hass, entry)
+    entry_runtime_data = entry.runtime_data
+    client = entry_runtime_data.client
+
+    if client.connected and (driver := client.driver):
+        await async_disable_server_logging_if_needed(hass, entry, driver)
 
     if entry.data.get(CONF_USE_ADDON) and entry.disabled_by:
         addon_manager: AddonManager = get_addon_manager(hass)
@@ -1000,7 +1145,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_remove_entry(hass: HomeAssistant, entry: ZwaveJSConfigEntry) -> None:
     """Remove a config entry."""
     if not entry.data.get(CONF_INTEGRATION_CREATED_ADDON):
         return
@@ -1022,39 +1167,9 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         LOGGER.error(err)
 
 
-async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
-) -> bool:
-    """Remove a config entry from a device."""
-    client: ZwaveClient = config_entry.runtime_data[DATA_CLIENT]
-
-    # Driver may not be ready yet so we can't allow users to remove a device since
-    # we need to check if the device is still known to the controller
-    if (driver := client.driver) is None:
-        LOGGER.error("Driver for %s is not ready", config_entry.title)
-        return False
-
-    # If a node is found on the controller that matches the hardware based identifier
-    # on the device, prevent the device from being removed.
-    if next(
-        (
-            node
-            for node in driver.controller.nodes.values()
-            if get_device_id_ext(driver, node) in device_entry.identifiers
-        ),
-        None,
-    ):
-        return False
-
-    controller_events: ControllerEvents = config_entry.runtime_data[
-        DATA_DRIVER_EVENTS
-    ].controller_events
-    controller_events.registered_unique_ids.pop(device_entry.id, None)
-    controller_events.discovered_value_ids.pop(device_entry.id, None)
-    return True
-
-
-async def async_ensure_addon_running(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_ensure_addon_running(
+    hass: HomeAssistant, entry: ZwaveJSConfigEntry
+) -> None:
     """Ensure that Z-Wave JS add-on is installed and running."""
     addon_manager = _get_addon_manager(hass)
     try:
@@ -1062,7 +1177,16 @@ async def async_ensure_addon_running(hass: HomeAssistant, entry: ConfigEntry) ->
     except AddonError as err:
         raise ConfigEntryNotReady(err) from err
 
-    usb_path: str = entry.data[CONF_USB_PATH]
+    addon_has_lr = (
+        addon_info.version and AwesomeVersion(addon_info.version) >= LR_ADDON_VERSION
+    )
+    addon_has_esphome = (
+        addon_info.version
+        and AwesomeVersion(addon_info.version) >= ESPHOME_ADDON_VERSION
+    )
+
+    usb_path: str | None = entry.data[CONF_USB_PATH]
+    socket_path: str | None = entry.data.get(CONF_SOCKET_PATH)
     # s0_legacy_key was saved as network_key before s2 was added.
     s0_legacy_key: str = entry.data.get(CONF_S0_LEGACY_KEY, "")
     if not s0_legacy_key:
@@ -1074,15 +1198,18 @@ async def async_ensure_addon_running(hass: HomeAssistant, entry: ConfigEntry) ->
     lr_s2_authenticated_key: str = entry.data.get(CONF_LR_S2_AUTHENTICATED_KEY, "")
     addon_state = addon_info.state
     addon_config = {
-        CONF_ADDON_DEVICE: usb_path,
         CONF_ADDON_S0_LEGACY_KEY: s0_legacy_key,
         CONF_ADDON_S2_ACCESS_CONTROL_KEY: s2_access_control_key,
         CONF_ADDON_S2_AUTHENTICATED_KEY: s2_authenticated_key,
         CONF_ADDON_S2_UNAUTHENTICATED_KEY: s2_unauthenticated_key,
     }
-    if addon_info.version and AwesomeVersion(addon_info.version) >= LR_ADDON_VERSION:
+    if usb_path is not None:
+        addon_config[CONF_ADDON_DEVICE] = usb_path
+    if addon_has_lr:
         addon_config[CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY] = lr_s2_access_control_key
         addon_config[CONF_ADDON_LR_S2_AUTHENTICATED_KEY] = lr_s2_authenticated_key
+    if addon_has_esphome and socket_path is not None:
+        addon_config[CONF_ADDON_SOCKET] = socket_path
 
     if addon_state == AddonState.NOT_INSTALLED:
         addon_manager.async_schedule_install_setup_addon(
@@ -1099,7 +1226,7 @@ async def async_ensure_addon_running(hass: HomeAssistant, entry: ConfigEntry) ->
         raise ConfigEntryNotReady
 
     addon_options = addon_info.options
-    addon_device = addon_options[CONF_ADDON_DEVICE]
+    addon_device = addon_options.get(CONF_ADDON_DEVICE)
     # s0_legacy_key was saved as network_key before s2 was added.
     addon_s0_legacy_key = addon_options.get(CONF_ADDON_S0_LEGACY_KEY, "")
     if not addon_s0_legacy_key:
@@ -1123,9 +1250,7 @@ async def async_ensure_addon_running(hass: HomeAssistant, entry: ConfigEntry) ->
     if s2_unauthenticated_key != addon_s2_unauthenticated_key:
         updates[CONF_S2_UNAUTHENTICATED_KEY] = addon_s2_unauthenticated_key
 
-    if addon_info.version and AwesomeVersion(addon_info.version) >= AwesomeVersion(
-        LR_ADDON_VERSION
-    ):
+    if addon_has_lr:
         addon_lr_s2_access_control_key = addon_options.get(
             CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY, ""
         )
@@ -1136,6 +1261,11 @@ async def async_ensure_addon_running(hass: HomeAssistant, entry: ConfigEntry) ->
             updates[CONF_LR_S2_ACCESS_CONTROL_KEY] = addon_lr_s2_access_control_key
         if lr_s2_authenticated_key != addon_lr_s2_authenticated_key:
             updates[CONF_LR_S2_AUTHENTICATED_KEY] = addon_lr_s2_authenticated_key
+
+    if addon_has_esphome:
+        addon_socket = addon_options.get(CONF_ADDON_SOCKET)
+        if socket_path != addon_socket:
+            updates[CONF_SOCKET_PATH] = addon_socket
 
     if updates:
         hass.config_entries.async_update_entry(entry, data={**entry.data, **updates})

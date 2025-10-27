@@ -1,0 +1,171 @@
+{
+  "components": {
+    "main": {
+      "refresh": {},
+      "custom.thermostatSetpointControl": {
+        "minimumSetpoint": {
+          "value": 16,
+          "timestamp": "2024-11-25T22:17:38.251Z"
+        },
+        "maximumSetpoint": {
+          "value": 30,
+          "timestamp": "2024-11-25T22:17:38.251Z"
+        }
+      },
+      "airConditionerMode": {
+        "availableAcModes": {
+          "value": null
+        },
+        "supportedAcModes": {
+          "value": ["cool", "dry", "wind", "auto"],
+          "timestamp": "2025-03-02T10:16:19.519Z"
+        },
+        "airConditionerMode": {
+          "value": "cool",
+          "timestamp": "2025-03-02T10:16:19.519Z"
+        }
+      },
+      "execute": {
+        "data": {
+          "value": null
+        }
+      },
+      "airQualitySensor": {
+        "airQuality": {
+          "value": null
+        }
+      },
+      "switch": {
+        "switch": {
+          "value": "off",
+          "timestamp": "2025-03-02T06:54:52.852Z"
+        }
+      },
+      "ocf": {
+        "st": {
+          "value": null
+        },
+        "mndt": {
+          "value": null
+        },
+        "mnfv": {
+          "value": null
+        },
+        "mnhw": {
+          "value": null
+        },
+        "di": {
+          "value": "F8042E25-0E53-0000-0000-000000000000",
+          "timestamp": "2025-02-28T21:15:28.920Z"
+        },
+        "mnsl": {
+          "value": null
+        },
+        "dmv": {
+          "value": "res.1.1.0,sh.1.1.0",
+          "timestamp": "2025-02-28T21:15:28.920Z"
+        },
+        "n": {
+          "value": "Room A/C",
+          "timestamp": "2025-02-28T21:15:28.920Z"
+        },
+        "mnmo": {
+          "value": "TP6X_RAC_15K",
+          "timestamp": "2025-02-28T21:15:28.920Z"
+        },
+        "vid": {
+          "value": "DA-AC-RAC-100001",
+          "timestamp": "2025-02-28T21:15:28.920Z"
+        },
+        "mnmn": {
+          "value": "Samsung Electronics",
+          "timestamp": "2025-02-28T21:15:28.920Z"
+        },
+        "mnml": {
+          "value": null
+        },
+        "mnpv": {
+          "value": null
+        },
+        "mnos": {
+          "value": null
+        },
+        "pi": {
+          "value": "shp",
+          "timestamp": "2025-02-28T21:15:28.920Z"
+        },
+        "icv": {
+          "value": "core.1.1.0",
+          "timestamp": "2025-02-28T21:15:28.920Z"
+        }
+      },
+      "odorSensor": {
+        "odorLevel": {
+          "value": null
+        }
+      },
+      "airConditionerFanMode": {
+        "fanMode": {
+          "value": "auto",
+          "timestamp": "2025-02-28T21:15:28.941Z"
+        },
+        "supportedAcFanModes": {
+          "value": ["auto", "low", "medium", "high", "turbo"],
+          "timestamp": "2025-02-28T21:15:28.941Z"
+        },
+        "availableAcFanModes": {
+          "value": null
+        }
+      },
+      "samsungce.driverState": {
+        "driverState": {
+          "value": null
+        }
+      },
+      "custom.disabledCapabilities": {
+        "disabledCapabilities": {
+          "value": ["odorSensor"],
+          "timestamp": "2024-11-25T22:17:38.251Z"
+        }
+      },
+      "samsungce.driverVersion": {
+        "versionNumber": {
+          "value": 22090101,
+          "timestamp": "2024-11-25T22:17:38.251Z"
+        }
+      },
+      "temperatureMeasurement": {
+        "temperatureRange": {
+          "value": null
+        },
+        "temperature": {
+          "value": 27,
+          "unit": "C",
+          "timestamp": "2025-03-02T08:28:39.409Z"
+        }
+      },
+      "dustSensor": {
+        "dustLevel": {
+          "value": 46,
+          "unit": "\u03bcg/m^3",
+          "timestamp": "2025-03-06T16:01:49.656000+00:00"
+        },
+        "fineDustLevel": {
+          "value": 10,
+          "unit": "\u03bcg/m^3",
+          "timestamp": "2025-03-06T16:01:49.656000+00:00"
+        }
+      },
+      "thermostatCoolingSetpoint": {
+        "coolingSetpointRange": {
+          "value": null
+        },
+        "coolingSetpoint": {
+          "value": 18,
+          "unit": "C",
+          "timestamp": "2025-03-02T06:54:23.887Z"
+        }
+      }
+    }
+  }
+}

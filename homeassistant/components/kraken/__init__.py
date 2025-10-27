@@ -135,6 +135,7 @@ class KrakenData:
             self._hass,
             _LOGGER,
             name=DOMAIN,
+            config_entry=self._config_entry,
             update_method=self.async_update,
             update_interval=timedelta(
                 seconds=self._config_entry.options[CONF_SCAN_INTERVAL]
@@ -145,7 +146,11 @@ class KrakenData:
         await asyncio.sleep(CALL_RATE_LIMIT_SLEEP)
 
     def _get_websocket_name_asset_pairs(self) -> str:
-        return ",".join(wsname for wsname in self.tradable_asset_pairs.values())
+        return ",".join(
+            pair
+            for tracked_pair in self._config_entry.options[CONF_TRACKED_ASSET_PAIRS]
+            if (pair := self.tradable_asset_pairs.get(tracked_pair)) is not None
+        )
 
     def set_update_interval(self, update_interval: int) -> None:
         """Set the coordinator update_interval to the supplied update_interval."""

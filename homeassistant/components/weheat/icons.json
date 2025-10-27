@@ -42,6 +42,12 @@
       "heat_pump_state": {
         "default": "mdi:state-machine"
       },
+      "dhw_flow_volume": {
+        "default": "mdi:pump"
+      },
+      "central_heating_flow_volume": {
+        "default": "mdi:pump"
+      },
       "electricity_used": {
         "default": "mdi:flash"
       },

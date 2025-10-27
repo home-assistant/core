@@ -655,5 +655,5 @@ async def test_discovery_requirements_dhcp(hass: HomeAssistant) -> None:
     ) as mock_process:
         await async_get_integration_with_requirements(hass, "comp")
 
-    assert len(mock_process.mock_calls) == 1  # dhcp does not depend on http
+    assert len(mock_process.mock_calls) == 2  # dhcp does not depend on http
     assert mock_process.mock_calls[0][1][1] == dhcp.requirements

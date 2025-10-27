@@ -6,6 +6,7 @@ from typing import Any, Concatenate
 from airgradient import AirGradientConnectionError, AirGradientError, get_model_name
 
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -29,6 +30,7 @@ class AirGradientEntity(CoordinatorEntity[AirGradientCoordinator]):
             model_id=measures.model,
             serial_number=coordinator.serial_number,
             sw_version=measures.firmware_version,
+            connections={(dr.CONNECTION_NETWORK_MAC, coordinator.serial_number)},
         )
 
 

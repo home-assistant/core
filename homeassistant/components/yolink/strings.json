@@ -2,7 +2,13 @@
   "config": {
     "step": {
       "pick_implementation": {
-        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]",
+        "data": {
+          "implementation": "[%key:common::config_flow::data::implementation%]"
+        },
+        "data_description": {
+          "implementation": "[%key:common::config_flow::description::implementation%]"
+        }
       },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
@@ -41,9 +47,15 @@
   "exceptions": {
     "invalid_config_entry": {
       "message": "Config entry not found or not loaded!"
+    },
+    "valve_inoperable_currently": {
+      "message": "The Valve cannot be operated currently."
     }
   },
   "entity": {
+    "binary_sensor": {
+      "water_running": { "name": "Water is flowing" }
+    },
     "switch": {
       "usb_ports": { "name": "USB ports" },
       "plug_1": { "name": "Plug 1" },
@@ -61,8 +73,8 @@
       "power_failure_alarm": {
         "name": "Power failure alarm",
         "state": {
-          "normal": "Normal",
           "alert": "Alert",
+          "normal": "[%key:common::state::normal%]",
           "off": "[%key:common::state::off%]"
         }
       },
@@ -72,7 +84,11 @@
       },
       "power_failure_alarm_volume": {
         "name": "Power failure alarm volume",
-        "state": { "low": "Low", "medium": "Medium", "high": "High" }
+        "state": {
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]"
+        }
       },
       "power_failure_alarm_beep": {
         "name": "Power failure alarm beep",
@@ -83,6 +99,12 @@
       },
       "water_meter_reading": {
         "name": "Water meter reading"
+      },
+      "water_meter_1_reading": {
+        "name": "Water meter 1 reading"
+      },
+      "water_meter_2_reading": {
+        "name": "Water meter 2 reading"
       }
     },
     "number": {
@@ -93,6 +115,25 @@
     "valve": {
       "meter_valve_state": {
         "name": "Valve state"
+      },
+      "meter_valve_1_state": {
+        "name": "Valve 1"
+      },
+      "meter_valve_2_state": {
+        "name": "Valve 2"
+      },
+      "sprinkler_valve": {
+        "name": "[%key:component::valve::title%]"
+      }
+    },
+    "select": {
+      "sprinkler_mode": {
+        "name": "Mode",
+        "state": {
+          "auto": "[%key:common::state::auto%]",
+          "manual": "[%key:common::state::manual%]",
+          "off": "[%key:common::state::off%]"
+        }
       }
     }
   },

@@ -25,10 +25,17 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "already_in_progress": "Configuration flow is already in progress",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "reconfiguration_successful": "Successfully reconfigured the Music Assistant integration.",
-      "cannot_connect": "Failed to connect",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    }
+  },
+  "entity": {
+    "button": {
+      "favorite_now_playing": {
+        "name": "Favorite current song"
+      }
     }
   },
   "issues": {
@@ -95,7 +102,7 @@
           "description": "The source media player which has the queue you want to transfer. When omitted, the first playing player will be used."
         },
         "auto_play": {
-          "name": "Auto play",
+          "name": "Autoplay",
           "description": "Start playing the queue on the target player. Omit to use the default behavior."
         }
       }
@@ -139,8 +146,8 @@
       }
     },
     "get_library": {
-      "name": "Get Library items",
-      "description": "Get items from a Music Assistant library.",
+      "name": "Get library items",
+      "description": "Retrieves items from a Music Assistant library.",
       "fields": {
         "config_entry_id": {
           "name": "[%key:component::music_assistant::services::search::fields::config_entry_id::name%]",
@@ -167,7 +174,7 @@
           "description": "Offset to start the list from."
         },
         "order_by": {
-          "name": "Order By",
+          "name": "Order by",
           "description": "Sort the list by this field."
         },
         "album_type": {
@@ -176,7 +183,7 @@
         },
         "album_artists_only": {
           "name": "Enable album artists filter (only for artist library)",
-          "description": "Only return Album Artists when listing the Artists library items."
+          "description": "Only return album artists when listing the artists library items."
         }
       }
     }
@@ -195,8 +202,11 @@
       "options": {
         "artist": "Artist",
         "album": "Album",
+        "audiobook": "Audiobook",
+        "folder": "Folder",
         "track": "Track",
         "playlist": "Playlist",
+        "podcast": "Podcast",
         "radio": "Radio"
       }
     },

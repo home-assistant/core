@@ -11,6 +11,13 @@
       },
       "audio_output": {
         "default": "mdi:audio-input-stereo-minijack"
+      },
+      "control_bus_mode": {
+        "default": "mdi:audio-video-off",
+        "state": {
+          "amplifier": "mdi:speaker",
+          "receiver": "mdi:audio-video"
+        }
       }
     },
     "switch": {

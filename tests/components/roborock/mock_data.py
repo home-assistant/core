@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from PIL import Image
-from roborock.containers import (
+from roborock.data import (
     CleanRecord,
     CleanSummary,
     Consumable,
@@ -28,6 +28,7 @@ USER_EMAIL = "user@domain.com"
 
 BASE_URL = "https://usiot.roborock.com"
 
+ROBOROCK_RRUID = "roboborock-userid-abc-123"
 USER_DATA = UserData.from_dict(
     {
         "tuyaname": "abc123",
@@ -35,7 +36,7 @@ USER_DATA = UserData.from_dict(
         "uid": 123456,
         "tokentype": "",
         "token": "abc123",
-        "rruid": "abc123",
+        "rruid": ROBOROCK_RRUID,
         "region": "us",
         "countrycode": "1",
         "country": "US",
@@ -60,7 +61,7 @@ USER_DATA = UserData.from_dict(
 MOCK_CONFIG = {
     CONF_USERNAME: USER_EMAIL,
     CONF_USER_DATA: USER_DATA.as_dict(),
-    CONF_BASE_URL: None,
+    CONF_BASE_URL: BASE_URL,
 }
 
 HOME_DATA_RAW = {
@@ -1120,7 +1121,10 @@ PROP = DeviceProp(
 )
 
 NETWORK_INFO = NetworkInfo(
-    ip="123.232.12.1", ssid="wifi", mac="ac:cc:cc:cc:cc", bssid="bssid", rssi=90
+    ip="123.232.12.1", ssid="wifi", mac="ac:cc:cc:cc:cc:cc", bssid="bssid", rssi=90
+)
+NETWORK_INFO_2 = NetworkInfo(
+    ip="123.232.12.2", ssid="wifi", mac="ac:cc:cc:cc:cd:cc", bssid="bssid", rssi=90
 )
 
 MULTI_MAP_LIST = MultiMapsList.from_dict(
@@ -1151,6 +1155,7 @@ MAP_DATA = MapData(0, 0)
 MAP_DATA.image = ImageData(
     100, 10, 10, 10, 10, ImageConfig(), Image.new("RGB", (1, 1)), lambda p: p
 )
+MAP_DATA.vacuum_room = 17
 
 
 SCENES = [

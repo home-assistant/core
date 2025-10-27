@@ -1,0 +1,172 @@
+{
+  "items": [
+    {
+      "deviceId": "b93211bf-9d96-bd21-3b2f-964fcc87f5cc",
+      "name": "[airdresser] Samsung",
+      "label": "AirDresser",
+      "manufacturerName": "Samsung Electronics",
+      "presentationId": "DA-WM-SC-000001",
+      "deviceManufacturerCode": "Samsung Electronics",
+      "locationId": "df59873c-4e2c-43ba-bcd4-ade4efb0504a",
+      "ownerId": "71254e90-c144-45b6-aabe-709f78f48376",
+      "roomId": "4c9052ba-4430-4cb1-a788-f1e4449c43c9",
+      "deviceTypeName": "Samsung OCF Steam Closet",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "ocf",
+              "version": 1
+            },
+            {
+              "id": "execute",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            },
+            {
+              "id": "switch",
+              "version": 1
+            },
+            {
+              "id": "remoteControlStatus",
+              "version": 1
+            },
+            {
+              "id": "dryerOperatingState",
+              "version": 1
+            },
+            {
+              "id": "demandResponseLoadControl",
+              "version": 1
+            },
+            {
+              "id": "powerConsumptionReport",
+              "version": 1
+            },
+            {
+              "id": "custom.steamClosetOperatingState",
+              "version": 1
+            },
+            {
+              "id": "custom.disabledCapabilities",
+              "version": 1
+            },
+            {
+              "id": "custom.energyType",
+              "version": 1
+            },
+            {
+              "id": "custom.steamClosetWrinklePrevent",
+              "version": 1
+            },
+            {
+              "id": "custom.jobBeginningStatus",
+              "version": 1
+            },
+            {
+              "id": "custom.supportedOptions",
+              "version": 1
+            },
+            {
+              "id": "custom.veryFineDustFilter",
+              "version": 1
+            },
+            {
+              "id": "samsungce.deviceIdentification",
+              "version": 1
+            },
+            {
+              "id": "samsungce.driverVersion",
+              "version": 1
+            },
+            {
+              "id": "samsungce.softwareUpdate",
+              "version": 1
+            },
+            {
+              "id": "samsungce.steamClosetDelayEnd",
+              "version": 1
+            },
+            {
+              "id": "samsungce.steamClosetKeepFreshMode",
+              "version": 1
+            },
+            {
+              "id": "samsungce.steamClosetSanitizeMode",
+              "version": 1
+            },
+            {
+              "id": "samsungce.steamClosetAutoCycleLink",
+              "version": 1
+            },
+            {
+              "id": "samsungce.steamClosetCycle",
+              "version": 1
+            },
+            {
+              "id": "samsungce.steamClosetCyclePreset",
+              "version": 1
+            },
+            {
+              "id": "samsungce.kidsLock",
+              "version": 1
+            },
+            {
+              "id": "samsungce.welcomeMessage",
+              "version": 1
+            },
+            {
+              "id": "samsungce.quickControl",
+              "version": 1
+            },
+            {
+              "id": "sec.diagnosticsInformation",
+              "version": 1
+            },
+            {
+              "id": "sec.wifiConfiguration",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "ClothingCareMachine",
+              "categoryType": "manufacturer"
+            }
+          ]
+        }
+      ],
+      "createTime": "2023-06-23T16:00:40.545Z",
+      "profile": {
+        "id": "a3623498-4747-3761-bac1-ba13f437d8ea"
+      },
+      "ocf": {
+        "ocfDeviceType": "x.com.st.d.steamcloset",
+        "name": "[airdresser] Samsung",
+        "specVersion": "core.1.1.0",
+        "verticalDomainSpecVersion": "res.1.1.0,sh.1.1.0",
+        "manufacturerName": "Samsung Electronics",
+        "modelNumber": "DA_DF_TP2_20_COMMON|20299141|3801010200151107020100FF00000000",
+        "platformVersion": "DAWIT 2.0",
+        "platformOS": "TizenRT 2.0 + IPv6",
+        "hwVersion": "MediaTek",
+        "firmwareVersion": "DA_DF_TP2_20_COMMON_30230807",
+        "vendorId": "DA-WM-SC-000001",
+        "vendorResourceClientServerVersion": "MediaTek Release 2.211214.1",
+        "lastSignupTime": "2023-06-23T16:00:36.793123Z",
+        "transferCandidate": false,
+        "additionalAuthCodeRequired": false
+      },
+      "type": "OCF",
+      "restrictionTier": 0,
+      "allowed": [],
+      "executionContext": "CLOUD"
+    }
+  ],
+  "_links": {}
+}

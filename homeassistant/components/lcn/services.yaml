@@ -2,9 +2,10 @@
 
 output_abs:
   fields:
-    device_id:
+    device_id: &device_id
+      required: true
       example: "91aa039a2fb6e0b9f9ec7eb219a6b7d2"
-      selector: &device_selector
+      selector:
         device:
           filter:
             - integration: lcn
@@ -71,10 +72,6 @@ output_abs:
               model: LCN-UMF
             - integration: lcn
               model: LCN-WBH
-    address:
-      example: "myhome.s0.m7"
-      selector:
-        text:
     output:
       required: true
       selector:
@@ -102,13 +99,7 @@ output_abs:
 
 output_rel:
   fields:
-    device_id:
-      example: "91aa039a2fb6e0b9f9ec7eb219a6b7d2"
-      selector: *device_selector
-    address:
-      example: "myhome.s0.m7"
-      selector:
-        text:
+    device_id: *device_id
     output:
       required: true
       selector:
@@ -128,13 +119,7 @@ output_rel:
 
 output_toggle:
   fields:
-    device_id:
-      example: "91aa039a2fb6e0b9f9ec7eb219a6b7d2"
-      selector: *device_selector
-    address:
-      example: "myhome.s0.m7"
-      selector:
-        text:
+    device_id: *device_id
     output:
       required: true
       selector:
@@ -155,13 +140,7 @@ output_toggle:
 
 relays:
   fields:
-    device_id:
-      example: "91aa039a2fb6e0b9f9ec7eb219a6b7d2"
-      selector: *device_selector
-    address:
-      example: "myhome.s0.m7"
-      selector:
-        text:
+    device_id: *device_id
     state:
       required: true
       example: "t---001-"
@@ -170,13 +149,7 @@ relays:
 
 led:
   fields:
-    device_id:
-      example: "91aa039a2fb6e0b9f9ec7eb219a6b7d2"
-      selector: *device_selector
-    address:
-      example: "myhome.s0.m7"
-      selector:
-        text:
+    device_id: *device_id
     led:
       required: true
       selector:
@@ -206,13 +179,7 @@ led:
 
 var_abs:
   fields:
-    device_id:
-      example: "91aa039a2fb6e0b9f9ec7eb219a6b7d2"
-      selector: *device_selector
-    address:
-      example: "myhome.s0.m7"
-      selector:
-        text:
+    device_id: *device_id
     variable:
       required: true
       default: native
@@ -275,13 +242,7 @@ var_abs:
 
 var_reset:
   fields:
-    device_id:
-      example: "91aa039a2fb6e0b9f9ec7eb219a6b7d2"
-      selector: *device_selector
-    address:
-      example: "myhome.s0.m7"
-      selector:
-        text:
+    device_id: *device_id
     variable:
       required: true
       selector:
@@ -310,13 +271,7 @@ var_reset:
 
 var_rel:
   fields:
-    device_id:
-      example: "91aa039a2fb6e0b9f9ec7eb219a6b7d2"
-      selector: *device_selector
-    address:
-      example: "myhome.s0.m7"
-      selector:
-        text:
+    device_id: *device_id
     variable:
       required: true
       selector:
@@ -403,13 +358,7 @@ var_rel:
 
 lock_regulator:
   fields:
-    device_id:
-      example: "91aa039a2fb6e0b9f9ec7eb219a6b7d2"
-      selector: *device_selector
-    address:
-      example: "myhome.s0.m7"
-      selector:
-        text:
+    device_id: *device_id
     setpoint:
       required: true
       selector:
@@ -439,13 +388,7 @@ lock_regulator:
 
 send_keys:
   fields:
-    device_id:
-      example: "91aa039a2fb6e0b9f9ec7eb219a6b7d2"
-      selector: *device_selector
-    address:
-      example: "myhome.s0.m7"
-      selector:
-        text:
+    device_id: *device_id
     keys:
       required: true
       example: "a1a5d8"
@@ -488,13 +431,7 @@ send_keys:
 
 lock_keys:
   fields:
-    device_id:
-      example: "91aa039a2fb6e0b9f9ec7eb219a6b7d2"
-      selector: *device_selector
-    address:
-      example: "myhome.s0.m7"
-      selector:
-        text:
+    device_id: *device_id
     table:
       example: "a"
       default: a
@@ -533,13 +470,7 @@ lock_keys:
 
 dyn_text:
   fields:
-    device_id:
-      example: "91aa039a2fb6e0b9f9ec7eb219a6b7d2"
-      selector: *device_selector
-    address:
-      example: "myhome.s0.m7"
-      selector:
-        text:
+    device_id: *device_id
     row:
       required: true
       selector:
@@ -554,13 +485,7 @@ dyn_text:
 
 pck:
   fields:
-    device_id:
-      example: "91aa039a2fb6e0b9f9ec7eb219a6b7d2"
-      selector: *device_selector
-    address:
-      example: "myhome.s0.m7"
-      selector:
-        text:
+    device_id: *device_id
     pck:
       required: true
       example: "PIN4"

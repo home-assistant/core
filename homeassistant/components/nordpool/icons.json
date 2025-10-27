@@ -42,6 +42,9 @@
   "services": {
     "get_prices_for_date": {
       "service": "mdi:cash-multiple"
+    },
+    "get_price_indices_for_date": {
+      "service": "mdi:cash-multiple"
     }
   }
 }

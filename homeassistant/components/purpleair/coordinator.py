@@ -43,15 +43,18 @@ SENSOR_FIELDS_TO_RETRIEVE = [
     "voc",
 ]
 
-UPDATE_INTERVAL = timedelta(minutes=2)
+UPDATE_INTERVAL = timedelta(minutes=5)
+
+
+type PurpleAirConfigEntry = ConfigEntry[PurpleAirDataUpdateCoordinator]
 
 
 class PurpleAirDataUpdateCoordinator(DataUpdateCoordinator[GetSensorsResponse]):
     """Define a PurpleAir-specific coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: PurpleAirConfigEntry
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: PurpleAirConfigEntry) -> None:
         """Initialize."""
         self._api = API(
             entry.data[CONF_API_KEY],

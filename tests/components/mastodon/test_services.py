@@ -2,12 +2,12 @@
 
 from unittest.mock import AsyncMock, Mock, patch
 
-from mastodon.Mastodon import MastodonAPIError
+from mastodon.Mastodon import MastodonAPIError, MediaAttachment
 import pytest
 
 from homeassistant.components.mastodon.const import (
-    ATTR_CONFIG_ENTRY_ID,
     ATTR_CONTENT_WARNING,
+    ATTR_LANGUAGE,
     ATTR_MEDIA,
     ATTR_MEDIA_DESCRIPTION,
     ATTR_STATUS,
@@ -15,6 +15,7 @@ from homeassistant.components.mastodon.const import (
     DOMAIN,
 )
 from homeassistant.components.mastodon.services import SERVICE_POST
+from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
@@ -34,6 +35,7 @@ from tests.common import MockConfigEntry
                 "status": "test toot",
                 "spoiler_text": None,
                 "visibility": None,
+                "language": None,
                 "media_ids": None,
                 "sensitive": None,
             },
@@ -44,6 +46,7 @@ from tests.common import MockConfigEntry
                 "status": "test toot",
                 "spoiler_text": None,
                 "visibility": "private",
+                "language": None,
                 "media_ids": None,
                 "sensitive": None,
             },
@@ -58,6 +61,7 @@ from tests.common import MockConfigEntry
                 "status": "test toot",
                 "spoiler_text": "Spoiler",
                 "visibility": "private",
+                "language": None,
                 "media_ids": None,
                 "sensitive": None,
             },
@@ -66,12 +70,14 @@ from tests.common import MockConfigEntry
             {
                 ATTR_STATUS: "test toot",
                 ATTR_CONTENT_WARNING: "Spoiler",
+                ATTR_LANGUAGE: "nl",
                 ATTR_MEDIA: "/image.jpg",
             },
             {
                 "status": "test toot",
                 "spoiler_text": "Spoiler",
                 "visibility": None,
+                "language": "nl",
                 "media_ids": "1",
                 "sensitive": None,
             },
@@ -80,6 +86,7 @@ from tests.common import MockConfigEntry
             {
                 ATTR_STATUS: "test toot",
                 ATTR_CONTENT_WARNING: "Spoiler",
+                ATTR_LANGUAGE: "en",
                 ATTR_MEDIA: "/image.jpg",
                 ATTR_MEDIA_DESCRIPTION: "A test image",
             },
@@ -87,7 +94,19 @@ from tests.common import MockConfigEntry
                 "status": "test toot",
                 "spoiler_text": "Spoiler",
                 "visibility": None,
+                "language": "en",
                 "media_ids": "1",
+                "sensitive": None,
+            },
+        ),
+        (
+            {ATTR_STATUS: "test toot", ATTR_LANGUAGE: "invalid-lang"},
+            {
+                "status": "test toot",
+                "language": "invalid-lang",
+                "spoiler_text": None,
+                "visibility": None,
+                "media_ids": None,
                 "sensitive": None,
             },
         ),
@@ -106,7 +125,9 @@ async def test_service_post(
 
     with (
         patch.object(hass.config, "is_allowed_path", return_value=True),
-        patch.object(mock_mastodon_client, "media_post", return_value={"id": "1"}),
+        patch.object(
+            mock_mastodon_client, "media_post", return_value=MediaAttachment(id="1")
+        ),
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -163,7 +184,7 @@ async def test_post_service_failed(
     await hass.async_block_till_done()
 
     hass.config.is_allowed_path = Mock(return_value=True)
-    mock_mastodon_client.media_post.return_value = {"id": "1"}
+    mock_mastodon_client.media_post.return_value = MediaAttachment(id="1")
 
     mock_mastodon_client.status_post.side_effect = MastodonAPIError
 

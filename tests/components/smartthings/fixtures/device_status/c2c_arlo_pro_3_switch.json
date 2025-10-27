@@ -1,0 +1,91 @@
+{
+  "components": {
+    "main": {
+      "videoCapture": {
+        "stream": {
+          "value": null
+        },
+        "clip": {
+          "value": null
+        }
+      },
+      "videoStream": {
+        "supportedFeatures": {
+          "value": null
+        },
+        "stream": {
+          "value": null
+        }
+      },
+      "healthCheck": {
+        "checkInterval": {
+          "value": 60,
+          "unit": "s",
+          "data": {
+            "deviceScheme": "UNTRACKED",
+            "protocol": "cloud"
+          },
+          "timestamp": "2025-02-03T21:55:57.991Z"
+        },
+        "healthStatus": {
+          "value": null
+        },
+        "DeviceWatch-Enroll": {
+          "value": null
+        },
+        "DeviceWatch-DeviceStatus": {
+          "value": "online",
+          "data": {},
+          "timestamp": "2025-02-08T21:56:09.761Z"
+        }
+      },
+      "alarm": {
+        "alarm": {
+          "value": "off",
+          "timestamp": "2025-02-08T21:56:09.761Z"
+        }
+      },
+      "refresh": {},
+      "soundSensor": {
+        "sound": {
+          "value": "not detected",
+          "timestamp": "2025-02-08T21:56:09.761Z"
+        }
+      },
+      "motionSensor": {
+        "motion": {
+          "value": "inactive",
+          "timestamp": "2025-02-08T21:56:09.761Z"
+        }
+      },
+      "powerConsumptionReport": {
+        "powerConsumption": {
+          "value": {
+            "start": "2025-02-09T15:45:29Z",
+            "end": "2025-02-09T16:15:33Z"
+          },
+          "timestamp": "2025-02-09T16:15:33.639Z"
+        }
+      },
+      "battery": {
+        "quantity": {
+          "value": null
+        },
+        "battery": {
+          "value": 100,
+          "unit": "%",
+          "timestamp": "2025-02-08T21:56:10.041Z"
+        },
+        "type": {
+          "value": null
+        }
+      },
+      "switch": {
+        "switch": {
+          "value": "on",
+          "timestamp": "2025-02-08T21:56:10.041Z"
+        }
+      }
+    }
+  }
+}

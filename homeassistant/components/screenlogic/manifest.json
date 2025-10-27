@@ -15,5 +15,5 @@
   "documentation": "https://www.home-assistant.io/integrations/screenlogic",
   "iot_class": "local_push",
   "loggers": ["screenlogicpy"],
-  "requirements": ["screenlogicpy==0.10.0"]
+  "requirements": ["screenlogicpy==0.10.2"]
 }

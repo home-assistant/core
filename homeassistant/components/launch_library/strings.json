@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "description": "Do you want to configure the Launch Library?"
+        "description": "Do you want to configure Launch Library?"
       }
     }
   },

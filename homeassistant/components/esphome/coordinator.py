@@ -5,43 +5,38 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-import aiohttp
 from awesomeversion import AwesomeVersion
 from esphome_dashboard_api import ConfiguredDevice, ESPHomeDashboardAPI
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 MIN_VERSION_SUPPORTS_UPDATE = AwesomeVersion("2023.1.0")
+REFRESH_INTERVAL = timedelta(minutes=5)
 
 
 class ESPHomeDashboardCoordinator(DataUpdateCoordinator[dict[str, ConfiguredDevice]]):
     """Class to interact with the ESPHome dashboard."""
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        addon_slug: str,
-        url: str,
-        session: aiohttp.ClientSession,
-    ) -> None:
-        """Initialize."""
+    def __init__(self, hass: HomeAssistant, addon_slug: str, url: str) -> None:
+        """Initialize the dashboard coordinator."""
         super().__init__(
             hass,
             _LOGGER,
             config_entry=None,
             name="ESPHome Dashboard",
-            update_interval=timedelta(minutes=5),
+            update_interval=REFRESH_INTERVAL,
             always_update=False,
         )
         self.addon_slug = addon_slug
         self.url = url
-        self.api = ESPHomeDashboardAPI(url, session)
+        self.api = ESPHomeDashboardAPI(url, async_get_clientsession(hass))
         self.supports_update: bool | None = None
 
-    async def _async_update_data(self) -> dict:
+    async def _async_update_data(self) -> dict[str, ConfiguredDevice]:
         """Fetch device data."""
         devices = await self.api.get_devices()
         configured_devices = devices["configured"]

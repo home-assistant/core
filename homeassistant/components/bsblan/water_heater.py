@@ -41,6 +41,18 @@ async def async_setup_entry(
 ) -> None:
     """Set up BSBLAN water heater based on a config entry."""
     data = entry.runtime_data
+
+    # Only create water heater entity if DHW (Domestic Hot Water) is available
+    # Check if we have any DHW-related data indicating water heater support
+    dhw_data = data.coordinator.data.dhw
+    if (
+        dhw_data.operating_mode is None
+        and dhw_data.nominal_setpoint is None
+        and dhw_data.dhw_actual_value_top_temperature is None
+    ):
+        # No DHW functionality available, skip water heater setup
+        return
+
     async_add_entities([BSBLANWaterHeater(data)])
 
 
@@ -61,23 +73,31 @@ class BSBLANWaterHeater(BSBLanEntity, WaterHeaterEntity):
 
         # Set temperature limits based on device capabilities
         self._attr_temperature_unit = data.coordinator.client.get_temperature_unit
-        self._attr_min_temp = data.coordinator.data.dhw.reduced_setpoint.value
-        self._attr_max_temp = data.coordinator.data.dhw.nominal_setpoint_max.value
+        if data.coordinator.data.dhw.reduced_setpoint is not None:
+            self._attr_min_temp = data.coordinator.data.dhw.reduced_setpoint.value
+        if data.coordinator.data.dhw.nominal_setpoint_max is not None:
+            self._attr_max_temp = data.coordinator.data.dhw.nominal_setpoint_max.value
 
     @property
     def current_operation(self) -> str | None:
         """Return current operation."""
+        if self.coordinator.data.dhw.operating_mode is None:
+            return None
         current_mode = self.coordinator.data.dhw.operating_mode.desc
         return OPERATION_MODES.get(current_mode)
 
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
+        if self.coordinator.data.dhw.dhw_actual_value_top_temperature is None:
+            return None
         return self.coordinator.data.dhw.dhw_actual_value_top_temperature.value
 
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
+        if self.coordinator.data.dhw.nominal_setpoint is None:
+            return None
         return self.coordinator.data.dhw.nominal_setpoint.value
 
     async def async_set_temperature(self, **kwargs: Any) -> None:

@@ -1,13 +1,12 @@
 """The tests for the PG LAB Electronics  discovery device."""
 
-import json
-
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from tests.common import async_fire_mqtt_message
+from .test_common import get_device_discovery_payload, send_discovery_message
+
 from tests.typing import MqttMockHAClient
 
 
@@ -19,25 +18,13 @@ async def test_device_discover(
     setup_pglab,
 ) -> None:
     """Test setting up a device."""
-    topic = "pglab/discovery/E-Board-DD53AC85/config"
-    payload = {
-        "ip": "192.168.1.16",
-        "mac": "80:34:28:1B:18:5A",
-        "name": "test",
-        "hw": "1.0.7",
-        "fw": "1.0.0",
-        "type": "E-Board",
-        "id": "E-Board-DD53AC85",
-        "manufacturer": "PG LAB Electronics",
-        "params": {"shutters": 0, "boards": "11000000"},
-    }
 
-    async_fire_mqtt_message(
-        hass,
-        topic,
-        json.dumps(payload),
+    payload = get_device_discovery_payload(
+        number_of_shutters=0,
+        number_of_boards=2,
     )
-    await hass.async_block_till_done()
+
+    await send_discovery_message(hass, payload)
 
     # Verify device and registry entries are created
     device_entry = device_reg.async_get_device(
@@ -60,25 +47,12 @@ async def test_device_update(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test update a device."""
-    topic = "pglab/discovery/E-Board-DD53AC85/config"
-    payload = {
-        "ip": "192.168.1.16",
-        "mac": "80:34:28:1B:18:5A",
-        "name": "test",
-        "hw": "1.0.7",
-        "fw": "1.0.0",
-        "type": "E-Board",
-        "id": "E-Board-DD53AC85",
-        "manufacturer": "PG LAB Electronics",
-        "params": {"shutters": 0, "boards": "11000000"},
-    }
-
-    async_fire_mqtt_message(
-        hass,
-        topic,
-        json.dumps(payload),
+    payload = get_device_discovery_payload(
+        number_of_shutters=0,
+        number_of_boards=2,
     )
-    await hass.async_block_till_done()
+
+    await send_discovery_message(hass, payload)
 
     # Verify device is created
     device_entry = device_reg.async_get_device(
@@ -90,12 +64,7 @@ async def test_device_update(
     payload["fw"] = "1.0.1"
     payload["hw"] = "1.0.8"
 
-    async_fire_mqtt_message(
-        hass,
-        topic,
-        json.dumps(payload),
-    )
-    await hass.async_block_till_done()
+    await send_discovery_message(hass, payload)
 
     # Verify device is created
     device_entry = device_reg.async_get_device(
@@ -114,25 +83,12 @@ async def test_device_remove(
     setup_pglab,
 ) -> None:
     """Test remove a device."""
-    topic = "pglab/discovery/E-Board-DD53AC85/config"
-    payload = {
-        "ip": "192.168.1.16",
-        "mac": "80:34:28:1B:18:5A",
-        "name": "test",
-        "hw": "1.0.7",
-        "fw": "1.0.0",
-        "type": "E-Board",
-        "id": "E-Board-DD53AC85",
-        "manufacturer": "PG LAB Electronics",
-        "params": {"shutters": 0, "boards": "11000000"},
-    }
-
-    async_fire_mqtt_message(
-        hass,
-        topic,
-        json.dumps(payload),
+    payload = get_device_discovery_payload(
+        number_of_shutters=0,
+        number_of_boards=2,
     )
-    await hass.async_block_till_done()
+
+    await send_discovery_message(hass, payload)
 
     # Verify device is created
     device_entry = device_reg.async_get_device(
@@ -140,12 +96,7 @@ async def test_device_remove(
     )
     assert device_entry is not None
 
-    async_fire_mqtt_message(
-        hass,
-        topic,
-        "",
-    )
-    await hass.async_block_till_done()
+    await send_discovery_message(hass, None)
 
     # Verify device entry is removed
     device_entry = device_reg.async_get_device(

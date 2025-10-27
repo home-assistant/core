@@ -10,7 +10,7 @@
         }
       },
       "validation": {
-        "title": "Sense Multi-factor authentication",
+        "title": "Sense multi-factor authentication",
         "data": {
           "code": "Verification code"
         }

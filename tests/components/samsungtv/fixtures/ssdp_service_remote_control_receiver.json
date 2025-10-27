@@ -1,0 +1,62 @@
+{
+  "ssdp_usn": "uuid:068e7781-006e-1000-bbbf-84a4668d8423::urn:samsung.com:device:RemoteControlReceiver:1",
+  "ssdp_st": "urn:samsung.com:device:RemoteControlReceiver:1",
+  "upnp": {
+    "deviceType": "urn:samsung.com:device:RemoteControlReceiver:1",
+    "friendlyName": "[TV]Samsung LED55",
+    "manufacturer": "Samsung Electronics",
+    "manufacturerURL": "http://www.samsung.com/sec",
+    "modelDescription": "Samsung TV RCR",
+    "modelName": "UE55H6400",
+    "modelNumber": "1.0",
+    "modelURL": "http://www.samsung.com/sec",
+    "serialNumber": "20090804RCR",
+    "UDN": "uuid:068e7781-006e-1000-bbbf-84a4668d8423",
+    "deviceID": "ZPCNHA5IWYRV6",
+    "ProductCap": "Resolution:1920X1080,ImageZoom,ImageRotate,Y2014,ENC",
+    "serviceList": {
+      "service": {
+        "serviceType": "urn:samsung.com:service:MultiScreenService:1",
+        "serviceId": "urn:samsung.com:serviceId:MultiScreenService",
+        "controlURL": "/smp_9_",
+        "eventSubURL": "/smp_10_",
+        "SCPDURL": "/smp_8_"
+      }
+    },
+    "Capabilities": {
+      "Capability": {
+        "@name": "samsung:multiscreen:1",
+        "@port": "8001",
+        "@location": "/ms/1.0/"
+      }
+    }
+  },
+  "ssdp_location": "http://10.10.12.34:7676/smp_7_",
+  "ssdp_nt": "urn:samsung.com:device:RemoteControlReceiver:1",
+  "ssdp_udn": "uuid:068e7781-006e-1000-bbbf-84a4668d8423",
+  "ssdp_ext": "",
+  "ssdp_server": "SHP, UPnP/1.0, Samsung UPnP SDK/1.0",
+  "ssdp_headers": {
+    "CACHE-CONTROL": "max-age:1800",
+    "Date": "Thu, 01 Jan 1970 00:06:48 GMT",
+    "EXT": "",
+    "LOCATION": "http://10.10.12.34:7676/smp_7_",
+    "SERVER": "SHP, UPnP/1.0, Samsung UPnP SDK/1.0",
+    "ST": "urn:samsung.com:device:RemoteControlReceiver:1",
+    "USN": "uuid:068e7781-006e-1000-bbbf-84a4668d8423::urn:samsung.com:device:RemoteControlReceiver:1",
+    "Content-Length": "0",
+    "_host": "10.10.12.34",
+    "_udn": "uuid:068e7781-006e-1000-bbbf-84a4668d8423",
+    "_location_original": "http://10.10.12.34:7676/smp_7_",
+    "location": "http://10.10.12.34:7676/smp_7_",
+    "_timestamp": "2025-04-30T07:30:24.384758",
+    "_remote_addr": ["10.10.12.34", 24234],
+    "_port": 24234,
+    "_local_addr": ["0.0.0.0", 1900],
+    "HOST": "239.255.255.250:1900",
+    "NT": "urn:samsung.com:device:RemoteControlReceiver:1",
+    "NTS": "ssdp:alive"
+  },
+  "ssdp_all_locations": ["http://10.10.12.34:7676/smp_7_"],
+  "x_homeassistant_matching_domains": ["samsungtv"]
+}

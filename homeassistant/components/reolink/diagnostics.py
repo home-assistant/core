@@ -24,6 +24,16 @@ async def async_get_config_entry_diagnostics(
         IPC_cam[ch]["hardware version"] = api.camera_hardware_version(ch)
         IPC_cam[ch]["firmware version"] = api.camera_sw_version(ch)
         IPC_cam[ch]["encoding main"] = await api.get_encoding(ch)
+        if (signal := api.wifi_signal(ch)) is not None and api.wifi_connection(ch):
+            IPC_cam[ch]["WiFi signal"] = signal
+
+    chimes: dict[int, dict[str, Any]] = {}
+    for chime in api.chime_list:
+        chimes[chime.dev_id] = {}
+        chimes[chime.dev_id]["channel"] = chime.channel
+        chimes[chime.dev_id]["name"] = chime.name
+        chimes[chime.dev_id]["online"] = chime.online
+        chimes[chime.dev_id]["event_types"] = chime.chime_event_types
 
     return {
         "model": api.model,
@@ -31,8 +41,10 @@ async def async_get_config_entry_diagnostics(
         "firmware version": api.sw_version,
         "HTTPS": api.use_https,
         "HTTP(S) port": api.port,
-        "WiFi connection": api.wifi_connection,
-        "WiFi signal": api.wifi_signal,
+        "Baichuan port": api.baichuan.port,
+        "Baichuan only": api.baichuan_only,
+        "WiFi connection": api.wifi_connection(),
+        "WiFi signal": api.wifi_signal(),
         "RTMP enabled": api.rtmp_enabled,
         "RTSP enabled": api.rtsp_enabled,
         "ONVIF enabled": api.onvif_enabled,
@@ -41,9 +53,11 @@ async def async_get_config_entry_diagnostics(
         "channels": api.channels,
         "stream channels": api.stream_channels,
         "IPC cams": IPC_cam,
+        "Chimes": chimes,
         "capabilities": api.capabilities,
         "cmd list": host.update_cmd,
         "firmware ch list": host.firmware_ch_list,
         "api versions": api.checked_api_versions,
         "abilities": api.abilities,
+        "BC_abilities": api.baichuan.abilities,
     }

@@ -27,9 +27,6 @@ CONF_MANUAL = "manual"
 # Options flow
 CONF_CLOUD_SUBDEVICES = "cloud_subdevices"
 
-# Keys
-KEY_COORDINATOR = "coordinator"
-KEY_DEVICE = "device"
 
 # Attributes
 ATTR_AVAILABLE = "available"

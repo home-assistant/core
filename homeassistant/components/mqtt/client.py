@@ -15,6 +15,7 @@ import socket
 import ssl
 import time
 from typing import TYPE_CHECKING, Any
+from uuid import uuid4
 
 import certifi
 
@@ -292,10 +293,9 @@ class MqttClientSetup:
         """
         # We don't import on the top because some integrations
         # should be able to optionally rely on MQTT.
-        import paho.mqtt.client as mqtt  # pylint: disable=import-outside-toplevel
+        from paho.mqtt import client as mqtt  # noqa: PLC0415
 
-        # pylint: disable-next=import-outside-toplevel
-        from .async_client import AsyncMQTTClient
+        from .async_client import AsyncMQTTClient  # noqa: PLC0415
 
         config = self._config
         clean_session: bool | None = None
@@ -309,9 +309,10 @@ class MqttClientSetup:
             clean_session = True
 
         if (client_id := config.get(CONF_CLIENT_ID)) is None:
-            # PAHO MQTT relies on the MQTT server to generate random client IDs.
-            # However, that feature is not mandatory so we generate our own.
-            client_id = None
+            # PAHO MQTT relies on the MQTT server to generate random client ID
+            # for protocol version 3.1, however, that feature is not mandatory
+            # so we generate our own.
+            client_id = mqtt._base62(uuid4().int, padding=22)  # noqa: SLF001
         transport: str = config.get(CONF_TRANSPORT, DEFAULT_TRANSPORT)
         self._client = AsyncMQTTClient(
             callback_api_version=mqtt.CallbackAPIVersion.VERSION2,
@@ -522,8 +523,7 @@ class MQTT:
         """Start the misc periodic."""
         assert self._misc_timer is None, "Misc periodic already started"
         _LOGGER.debug("%s: Starting client misc loop", self.config_entry.title)
-        # pylint: disable=import-outside-toplevel
-        import paho.mqtt.client as mqtt
+        import paho.mqtt.client as mqtt  # noqa: PLC0415
 
         # Inner function to avoid having to check late import
         # each time the function is called.
@@ -663,8 +663,7 @@ class MQTT:
 
     async def async_connect(self, client_available: asyncio.Future[bool]) -> None:
         """Connect to the host. Does not process messages yet."""
-        # pylint: disable-next=import-outside-toplevel
-        import paho.mqtt.client as mqtt
+        import paho.mqtt.client as mqtt  # noqa: PLC0415
 
         result: int | None = None
         self._available_future = client_available
@@ -722,8 +721,7 @@ class MQTT:
 
     async def _reconnect_loop(self) -> None:
         """Reconnect to the MQTT server."""
-        # pylint: disable-next=import-outside-toplevel
-        import paho.mqtt.client as mqtt
+        import paho.mqtt.client as mqtt  # noqa: PLC0415
 
         while True:
             if not self.connected:
@@ -837,9 +835,9 @@ class MQTT:
         """Return a string with the exception message."""
         # if msg_callback is a partial we return the name of the first argument
         if isinstance(msg_callback, partial):
-            call_back_name = getattr(msg_callback.args[0], "__name__")
+            call_back_name = msg_callback.args[0].__name__
         else:
-            call_back_name = getattr(msg_callback, "__name__")
+            call_back_name = msg_callback.__name__
         return (
             f"Exception in {call_back_name} when handling msg on "
             f"'{msg.topic}': '{msg.payload}'"  # type: ignore[str-bytes-safe]
@@ -1020,8 +1018,6 @@ class MQTT:
         Resubscribe to all topics we were subscribed to and publish birth
         message.
         """
-        # pylint: disable-next=import-outside-toplevel
-
         if reason_code.is_failure:
             # 24: Continue authentication
             # 25: Re-authenticate
@@ -1109,7 +1105,7 @@ class MQTT:
             # decoding the same topic multiple times.
             topic = msg.topic
         except UnicodeDecodeError:
-            bare_topic: bytes = getattr(msg, "_topic")
+            bare_topic: bytes = msg._topic  # noqa: SLF001
             _LOGGER.warning(
                 "Skipping received%s message on invalid topic %s (qos=%s): %s",
                 " retained" if msg.retain else "",
@@ -1228,7 +1224,7 @@ class MQTT:
         """Handle a callback exception."""
         # We don't import on the top because some integrations
         # should be able to optionally rely on MQTT.
-        import paho.mqtt.client as mqtt  # pylint: disable=import-outside-toplevel
+        import paho.mqtt.client as mqtt  # noqa: PLC0415
 
         _LOGGER.warning(
             "Error returned from MQTT server: %s",
@@ -1273,8 +1269,7 @@ class MQTT:
     ) -> None:
         """Wait for ACK from broker or raise on error."""
         if result_code != 0:
-            # pylint: disable-next=import-outside-toplevel
-            import paho.mqtt.client as mqtt
+            import paho.mqtt.client as mqtt  # noqa: PLC0415
 
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -1322,8 +1317,7 @@ class MQTT:
 
 
 def _matcher_for_topic(subscription: str) -> Callable[[str], bool]:
-    # pylint: disable-next=import-outside-toplevel
-    from paho.mqtt.matcher import MQTTMatcher
+    from paho.mqtt.matcher import MQTTMatcher  # noqa: PLC0415
 
     matcher = MQTTMatcher()  # type: ignore[no-untyped-call]
     matcher[subscription] = True

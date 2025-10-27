@@ -1,4 +1,28 @@
 {
+  "selector": {
+    "send_message_data": {
+      "fields": {
+        "images": {
+          "name": "Images",
+          "description": "One or more image paths to attach to the message."
+        },
+        "format": {
+          "name": "Message format",
+          "description": "Format of the message, either 'text' or 'html'."
+        },
+        "thread_id": {
+          "name": "Thread ID",
+          "description": "An optional parent message ID to thread this message under."
+        }
+      }
+    },
+    "send_message_data_format": {
+      "options": {
+        "text": "Plain text",
+        "html": "HTML"
+      }
+    }
+  },
   "services": {
     "send_message": {
       "name": "Send message",
@@ -14,7 +38,25 @@
         },
         "data": {
           "name": "Data",
-          "description": "Extended information of notification. Supports list of images. Supports message format. Optional."
+          "description": "Extended information of notification."
+        }
+      }
+    },
+    "react": {
+      "name": "React",
+      "description": "Sends a reaction to a message.",
+      "fields": {
+        "message_id": {
+          "name": "Message ID",
+          "description": "The ID of the message to react to."
+        },
+        "reaction": {
+          "name": "Reaction",
+          "description": "The reaction to send."
+        },
+        "room": {
+          "name": "Room",
+          "description": "The room to send the reaction to."
         }
       }
     }

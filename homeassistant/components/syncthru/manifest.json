@@ -6,7 +6,7 @@
   "documentation": "https://www.home-assistant.io/integrations/syncthru",
   "iot_class": "local_polling",
   "loggers": ["pysyncthru"],
-  "requirements": ["PySyncThru==0.8.0", "url-normalize==1.4.3"],
+  "requirements": ["PySyncThru==0.8.0", "url-normalize==2.2.1"],
   "ssdp": [
     {
       "deviceType": "urn:schemas-upnp-org:device:Printer:1",

@@ -1,7 +1,7 @@
 """Test sensor platform of Ping."""
 
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
 from homeassistant.core import HomeAssistant
@@ -16,6 +16,7 @@ from homeassistant.helpers import entity_registry as er
         "round_trip_time_maximum",
         "round_trip_time_mean_deviation",  # should be None in the snapshot
         "round_trip_time_minimum",
+        "jitter",
     ],
 )
 async def test_setup_and_update(

@@ -78,7 +78,7 @@
       "message": "Error connecting to the Overseerr instance: {error}"
     },
     "auth_error": {
-      "message": "Invalid API key."
+      "message": "[%key:common::config_flow::error::invalid_api_key%]"
     },
     "not_loaded": {
       "message": "{target} is not loaded."
@@ -90,7 +90,7 @@
   "services": {
     "get_requests": {
       "name": "Get requests",
-      "description": "Get media requests from Overseerr.",
+      "description": "Retrieves a list of media requests from Overseerr.",
       "fields": {
         "config_entry_id": {
           "name": "Overseerr instance",
@@ -106,7 +106,7 @@
         },
         "requested_by": {
           "name": "Requested by",
-          "description": "Filter the requests by the user id that requested them."
+          "description": "Filter the requests by the user ID that requested them."
         }
       }
     }

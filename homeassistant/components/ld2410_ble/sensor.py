@@ -1,12 +1,13 @@
 """LD2410 BLE integration sensor platform."""
 
+from ld2410_ble import LD2410BLE
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, UnitOfLength
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
@@ -14,9 +15,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import LD2410BLE, LD2410BLECoordinator
-from .const import DOMAIN
-from .models import LD2410BLEData
+from .coordinator import LD2410BLECoordinator
+from .models import LD2410BLEConfigEntry
 
 MOVING_TARGET_DISTANCE_DESCRIPTION = SensorEntityDescription(
     key="moving_target_distance",
@@ -121,11 +121,11 @@ SENSOR_DESCRIPTIONS = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: LD2410BLEConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the platform for LD2410BLE."""
-    data: LD2410BLEData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
     async_add_entities(
         LD2410BLESensor(
             data.coordinator,

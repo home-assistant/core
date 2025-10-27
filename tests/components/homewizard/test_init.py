@@ -1,17 +1,18 @@
 """Tests for the homewizard component."""
 
 from datetime import timedelta
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 import weakref
 
 from freezegun.api import FrozenDateTimeFactory
 from homewizard_energy.errors import DisabledError, UnauthorizedError
 import pytest
 
+from homeassistant.components.homewizard import get_main_device
 from homeassistant.components.homewizard.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import CONF_IP_ADDRESS, CONF_TOKEN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -39,6 +40,7 @@ async def test_load_unload_v1(
     assert weak_ref() is None
 
 
+@pytest.mark.parametrize(("device_fixture"), ["HWE-P1", "HWE-KWH1"])
 async def test_load_unload_v2(
     hass: HomeAssistant,
     mock_config_entry_v2: MockConfigEntry,
@@ -56,36 +58,6 @@ async def test_load_unload_v2(
     await hass.async_block_till_done()
 
     assert mock_config_entry_v2.state is ConfigEntryState.NOT_LOADED
-
-
-async def test_load_unload_v2_as_v1(
-    hass: HomeAssistant,
-    mock_homewizardenergy: MagicMock,
-) -> None:
-    """Test loading and unloading of integration with v2 config, but without using it."""
-
-    # Simulate v2 config but as a P1 Meter
-    mock_config_entry = MockConfigEntry(
-        title="Device",
-        domain=DOMAIN,
-        data={
-            CONF_IP_ADDRESS: "127.0.0.1",
-            CONF_TOKEN: "00112233445566778899ABCDEFABCDEF",
-        },
-        unique_id="HWE-P1_5c2fafabcdef",
-    )
-
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert len(mock_homewizardenergy.combined.mock_calls) == 1
-
-    await hass.config_entries.async_unload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_load_failed_host_unavailable(
@@ -150,6 +122,78 @@ async def test_load_detect_invalid_token(
     assert "context" in flow
     assert flow["context"].get("source") == SOURCE_REAUTH
     assert flow["context"].get("entry_id") == mock_config_entry_v2.entry_id
+
+
+@pytest.mark.usefixtures("mock_homewizardenergy")
+async def test_load_creates_repair_issue(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_homewizardenergy: MagicMock,
+) -> None:
+    """Test setup creates repair issue for v2 API upgrade."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.async_block_till_done()
+
+    with patch("homeassistant.components.homewizard.has_v2_api", return_value=True):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    await hass.async_block_till_done()
+
+    issue_registry = ir.async_get(hass)
+
+    issue = issue_registry.async_get_issue(
+        domain=DOMAIN, issue_id=f"migrate_to_v2_api_{mock_config_entry.entry_id}"
+    )
+    assert issue is not None
+
+    # Make sure title placeholder is set correctly
+    assert issue.translation_placeholders["title"] == "Device"
+
+
+@pytest.mark.usefixtures("mock_homewizardenergy")
+async def test_load_creates_repair_issue_when_name_is_updated(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_homewizardenergy: MagicMock,
+) -> None:
+    """Test setup creates repair issue for v2 API upgrade and updates title when device name changes."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.async_block_till_done()
+
+    with patch("homeassistant.components.homewizard.has_v2_api", return_value=True):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    await hass.async_block_till_done()
+
+    issue_registry = ir.async_get(hass)
+    issue_id = f"migrate_to_v2_api_{mock_config_entry.entry_id}"
+
+    issue = issue_registry.async_get_issue(domain=DOMAIN, issue_id=issue_id)
+    assert issue is not None
+
+    # Initial title should be "Device"
+    assert issue.translation_placeholders["title"] == "Device"
+
+    # Update the device name
+    device_registry = dr.async_get(hass)
+    device = get_main_device(hass, mock_config_entry)
+
+    # Update device name
+    device_registry.async_update_device(
+        device_id=device.id,
+        name_by_user="My HomeWizard Device",
+    )
+
+    # Reload integration to trigger issue update
+    with patch("homeassistant.components.homewizard.has_v2_api", return_value=True):
+        await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(domain=DOMAIN, issue_id=issue_id)
+    assert issue is not None
+
+    # Title should now reflect updated device name
+    assert issue.translation_placeholders["title"] == "Device (My HomeWizard Device)"
 
 
 @pytest.mark.usefixtures("mock_homewizardenergy")

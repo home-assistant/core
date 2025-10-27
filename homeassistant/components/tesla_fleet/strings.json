@@ -4,6 +4,7 @@
       "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "already_configured": "Configuration updated for profile.",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
       "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
@@ -13,11 +14,37 @@
       "reauth_account_mismatch": "The reauthentication account does not match the original account"
     },
     "error": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+      "invalid_domain": "Invalid domain format. Please enter a valid domain name.",
+      "public_key_not_found": "Public key not found.",
+      "public_key_mismatch": "The public key hosted at your domain does not match the expected key. Please ensure the correct public key is hosted at the specified location.",
+      "precondition_failed": "The domain does not match the application's allowed origins.",
+      "invalid_response": "The registration was rejected by Tesla",
+      "unknown_error": "An unknown error occurred: {error}"
     },
     "step": {
       "pick_implementation": {
-        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]",
+        "data": {
+          "implementation": "[%key:common::config_flow::data::implementation%]"
+        },
+        "data_description": {
+          "implementation": "[%key:common::config_flow::description::implementation%]"
+        }
+      },
+      "domain_input": {
+        "title": "Tesla Fleet domain registration",
+        "description": "Enter the domain that will host your public key. This is typically the domain of the origin you specified during registration at {dashboard}.",
+        "data": {
+          "domain": "Domain"
+        }
+      },
+      "domain_registration": {
+        "title": "Registering public key",
+        "description": "You must host the public key at:\n\n{public_key_url}\n\n```\n{pem}\n```"
+      },
+      "registration_complete": {
+        "title": "Command signing",
+        "description": "To enable command signing, you must open the Tesla app, select your vehicle, and then visit the following URL to set up a virtual key. You must repeat this process for each vehicle.\n\n{virtual_key_url}"
       },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
@@ -141,7 +168,7 @@
         "state_attributes": {
           "preset_mode": {
             "state": {
-              "off": "Normal",
+              "off": "[%key:common::state::normal%]",
               "keep": "Keep mode",
               "dog": "Dog mode",
               "camp": "Camp mode"
@@ -199,79 +226,79 @@
         "name": "Charge limit"
       },
       "off_grid_vehicle_charging_reserve_percent": {
-        "name": "Off grid reserve"
+        "name": "Off-grid reserve"
       }
     },
     "select": {
       "climate_state_seat_heater_left": {
         "name": "Seat heater front left",
         "state": {
-          "high": "High",
-          "low": "Low",
-          "medium": "Medium",
-          "off": "Off"
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "off": "[%key:common::state::off%]"
         }
       },
       "climate_state_seat_heater_rear_center": {
         "name": "Seat heater rear center",
         "state": {
-          "high": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::high%]",
-          "low": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::low%]",
-          "medium": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::medium%]",
-          "off": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::off%]"
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "off": "[%key:common::state::off%]"
         }
       },
       "climate_state_seat_heater_rear_left": {
         "name": "Seat heater rear left",
         "state": {
-          "high": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::high%]",
-          "low": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::low%]",
-          "medium": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::medium%]",
-          "off": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::off%]"
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "off": "[%key:common::state::off%]"
         }
       },
       "climate_state_seat_heater_rear_right": {
         "name": "Seat heater rear right",
         "state": {
-          "high": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::high%]",
-          "low": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::low%]",
-          "medium": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::medium%]",
-          "off": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::off%]"
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "off": "[%key:common::state::off%]"
         }
       },
       "climate_state_seat_heater_right": {
         "name": "Seat heater front right",
         "state": {
-          "high": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::high%]",
-          "low": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::low%]",
-          "medium": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::medium%]",
-          "off": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::off%]"
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "off": "[%key:common::state::off%]"
         }
       },
       "climate_state_seat_heater_third_row_left": {
         "name": "Seat heater third row left",
         "state": {
-          "high": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::high%]",
-          "low": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::low%]",
-          "medium": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::medium%]",
-          "off": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::off%]"
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "off": "[%key:common::state::off%]"
         }
       },
       "climate_state_seat_heater_third_row_right": {
         "name": "Seat heater third row right",
         "state": {
-          "high": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::high%]",
-          "low": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::low%]",
-          "medium": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::medium%]",
-          "off": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::off%]"
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "off": "[%key:common::state::off%]"
         }
       },
       "climate_state_steering_wheel_heat_level": {
         "name": "Steering wheel heater",
         "state": {
-          "high": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::high%]",
-          "low": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::low%]",
-          "off": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::off%]"
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "off": "[%key:common::state::off%]"
         }
       },
       "components_customer_preferred_export_rule": {
@@ -287,7 +314,7 @@
         "state": {
           "autonomous": "Autonomous",
           "backup": "Backup",
-          "self_consumption": "Self consumption"
+          "self_consumption": "Self-consumption"
         }
       }
     },
@@ -329,9 +356,9 @@
         "name": "Charging",
         "state": {
           "starting": "Starting",
-          "charging": "Charging",
-          "disconnected": "Disconnected",
-          "stopped": "Stopped",
+          "charging": "[%key:common::state::charging%]",
+          "disconnected": "[%key:common::state::disconnected%]",
+          "stopped": "[%key:common::state::stopped%]",
           "complete": "Complete",
           "no_power": "No power"
         }
@@ -415,17 +442,17 @@
         "name": "Odometer"
       },
       "island_status": {
-        "name": "Grid Status",
+        "name": "Grid status",
         "state": {
           "island_status_unknown": "Unknown",
-          "on_grid": "Connected",
-          "off_grid": "Disconnected",
+          "on_grid": "[%key:common::state::connected%]",
+          "off_grid": "[%key:common::state::disconnected%]",
           "off_grid_unintentional": "Disconnected unintentionally",
           "off_grid_intentional": "Disconnected intentionally"
         }
       },
       "storm_mode_active": {
-        "name": "Storm Watch active"
+        "name": "Storm watch active"
       },
       "vehicle_state_tpms_pressure_fl": {
         "name": "Tire pressure front left"
@@ -440,7 +467,7 @@
         "name": "Tire pressure rear right"
       },
       "version": {
-        "name": "version"
+        "name": "Version"
       },
       "vin": {
         "name": "Vehicle"
@@ -572,9 +599,6 @@
     },
     "invalid_cop_temp": {
       "message": "Cabin overheat protection does not support that temperature."
-    },
-    "invalid_hvac_mode": {
-      "message": "Climate mode {hvac_mode} is not supported."
     },
     "missing_temperature": {
       "message": "Temperature is required for this action."

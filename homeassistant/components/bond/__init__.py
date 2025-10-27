@@ -5,7 +5,7 @@ import logging
 from typing import Any
 
 from aiohttp import ClientError, ClientResponseError, ClientTimeout
-from bond_async import Bond, BPUPSubscriptions, start_bpup
+from bond_async import Bond, BPUPSubscriptions, RequestorUUID, start_bpup
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -49,6 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BondConfigEntry) -> bool
         token=token,
         timeout=ClientTimeout(total=_API_TIMEOUT),
         session=async_get_clientsession(hass),
+        requestor_uuid=RequestorUUID.HOME_ASSISTANT,
     )
     hub = BondHub(bond, host)
     try:

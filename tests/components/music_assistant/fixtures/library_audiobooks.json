@@ -1,0 +1,489 @@
+{
+  "library_audiobooks": [
+    {
+      "item_id": "1",
+      "provider": "library",
+      "name": "Test Audiobook",
+      "version": "",
+      "sort_name": "test audiobook",
+      "uri": "library://audiobook/1",
+      "external_ids": [],
+      "is_playable": true,
+      "media_type": "audiobook",
+      "provider_mappings": [
+        {
+          "item_id": "test-audiobook.mp3",
+          "provider_domain": "filesystem_smb",
+          "provider_instance": "filesystem_smb--7Kf8QySu",
+          "available": true,
+          "audio_format": {
+            "content_type": "mp3",
+            "codec_type": "?",
+            "sample_rate": 48000,
+            "bit_depth": 16,
+            "channels": 1,
+            "output_format_str": "mp3",
+            "bit_rate": 90304
+          },
+          "url": null,
+          "details": "1738502411"
+        }
+      ],
+      "metadata": {
+        "description": "Cover (front)",
+        "review": null,
+        "explicit": null,
+        "images": [
+          {
+            "type": "thumb",
+            "path": "test-audiobook.mp3",
+            "provider": "filesystem_smb--7Kf8QySu",
+            "remotely_accessible": false
+          }
+        ],
+        "genres": [],
+        "mood": null,
+        "style": null,
+        "copyright": null,
+        "lyrics": "",
+        "label": null,
+        "links": null,
+        "performers": null,
+        "preview": null,
+        "popularity": null,
+        "release_date": null,
+        "languages": null,
+        "chapters": [],
+        "last_refresh": null
+      },
+      "favorite": false,
+      "position": null,
+      "publisher": null,
+      "authors": ["TestWriter"],
+      "narrators": [],
+      "duration": 9,
+      "fully_played": true,
+      "resume_position_ms": 9000
+    },
+    {
+      "item_id": "11",
+      "provider": "library",
+      "name": "Test Audiobook 0",
+      "version": "",
+      "sort_name": "test audiobook 0",
+      "uri": "library://audiobook/11",
+      "external_ids": [],
+      "is_playable": true,
+      "media_type": "audiobook",
+      "provider_mappings": [
+        {
+          "item_id": "0",
+          "provider_domain": "test",
+          "provider_instance": "test",
+          "available": true,
+          "audio_format": {
+            "content_type": "?",
+            "codec_type": "?",
+            "sample_rate": 44100,
+            "bit_depth": 16,
+            "channels": 2,
+            "output_format_str": "?",
+            "bit_rate": 0
+          },
+          "url": null,
+          "details": null
+        }
+      ],
+      "metadata": {
+        "description": "This is a description for Test Audiobook",
+        "review": null,
+        "explicit": null,
+        "images": [
+          {
+            "type": "thumb",
+            "path": "logo.png",
+            "provider": "builtin",
+            "remotely_accessible": false
+          }
+        ],
+        "genres": null,
+        "mood": null,
+        "style": null,
+        "copyright": null,
+        "lyrics": null,
+        "label": null,
+        "links": null,
+        "performers": null,
+        "preview": null,
+        "popularity": null,
+        "release_date": null,
+        "languages": null,
+        "chapters": [
+          {
+            "position": 1,
+            "name": "Chapter 1",
+            "start": 10.0,
+            "end": 20.0
+          },
+          {
+            "position": 2,
+            "name": "Chapter 2",
+            "start": 20.0,
+            "end": 40.0
+          },
+          {
+            "position": 2,
+            "name": "Chapter 3",
+            "start": 40.0,
+            "end": null
+          }
+        ],
+        "last_refresh": null
+      },
+      "favorite": false,
+      "position": null,
+      "publisher": "Test Publisher",
+      "authors": ["AudioBook Author"],
+      "narrators": ["AudioBook Narrator"],
+      "duration": 60,
+      "fully_played": null,
+      "resume_position_ms": null
+    },
+    {
+      "item_id": "12",
+      "provider": "library",
+      "name": "Test Audiobook 1",
+      "version": "",
+      "sort_name": "test audiobook 1",
+      "uri": "library://audiobook/12",
+      "external_ids": [],
+      "is_playable": true,
+      "media_type": "audiobook",
+      "provider_mappings": [
+        {
+          "item_id": "1",
+          "provider_domain": "test",
+          "provider_instance": "test",
+          "available": true,
+          "audio_format": {
+            "content_type": "?",
+            "codec_type": "?",
+            "sample_rate": 44100,
+            "bit_depth": 16,
+            "channels": 2,
+            "output_format_str": "?",
+            "bit_rate": 0
+          },
+          "url": null,
+          "details": null
+        }
+      ],
+      "metadata": {
+        "description": "This is a description for Test Audiobook",
+        "review": null,
+        "explicit": null,
+        "images": [
+          {
+            "type": "thumb",
+            "path": "logo.png",
+            "provider": "builtin",
+            "remotely_accessible": false
+          }
+        ],
+        "genres": null,
+        "mood": null,
+        "style": null,
+        "copyright": null,
+        "lyrics": null,
+        "label": null,
+        "links": null,
+        "performers": null,
+        "preview": null,
+        "popularity": null,
+        "release_date": null,
+        "languages": null,
+        "chapters": [
+          {
+            "position": 1,
+            "name": "Chapter 1",
+            "start": 10.0,
+            "end": 20.0
+          },
+          {
+            "position": 2,
+            "name": "Chapter 2",
+            "start": 20.0,
+            "end": 40.0
+          },
+          {
+            "position": 2,
+            "name": "Chapter 3",
+            "start": 40.0,
+            "end": null
+          }
+        ],
+        "last_refresh": null
+      },
+      "favorite": false,
+      "position": null,
+      "publisher": "Test Publisher",
+      "authors": ["AudioBook Author"],
+      "narrators": ["AudioBook Narrator"],
+      "duration": 60,
+      "fully_played": null,
+      "resume_position_ms": null
+    },
+    {
+      "item_id": "13",
+      "provider": "library",
+      "name": "Test Audiobook 2",
+      "version": "",
+      "sort_name": "test audiobook 2",
+      "uri": "library://audiobook/13",
+      "external_ids": [],
+      "is_playable": true,
+      "media_type": "audiobook",
+      "provider_mappings": [
+        {
+          "item_id": "2",
+          "provider_domain": "test",
+          "provider_instance": "test",
+          "available": true,
+          "audio_format": {
+            "content_type": "?",
+            "codec_type": "?",
+            "sample_rate": 44100,
+            "bit_depth": 16,
+            "channels": 2,
+            "output_format_str": "?",
+            "bit_rate": 0
+          },
+          "url": null,
+          "details": null
+        }
+      ],
+      "metadata": {
+        "description": "This is a description for Test Audiobook",
+        "review": null,
+        "explicit": null,
+        "images": [
+          {
+            "type": "thumb",
+            "path": "logo.png",
+            "provider": "builtin",
+            "remotely_accessible": false
+          }
+        ],
+        "genres": null,
+        "mood": null,
+        "style": null,
+        "copyright": null,
+        "lyrics": null,
+        "label": null,
+        "links": null,
+        "performers": null,
+        "preview": null,
+        "popularity": null,
+        "release_date": null,
+        "languages": null,
+        "chapters": [
+          {
+            "position": 1,
+            "name": "Chapter 1",
+            "start": 10.0,
+            "end": 20.0
+          },
+          {
+            "position": 2,
+            "name": "Chapter 2",
+            "start": 20.0,
+            "end": 40.0
+          },
+          {
+            "position": 2,
+            "name": "Chapter 3",
+            "start": 40.0,
+            "end": null
+          }
+        ],
+        "last_refresh": null
+      },
+      "favorite": false,
+      "position": null,
+      "publisher": "Test Publisher",
+      "authors": ["AudioBook Author"],
+      "narrators": ["AudioBook Narrator"],
+      "duration": 60,
+      "fully_played": null,
+      "resume_position_ms": null
+    },
+    {
+      "item_id": "14",
+      "provider": "library",
+      "name": "Test Audiobook 3",
+      "version": "",
+      "sort_name": "test audiobook 3",
+      "uri": "library://audiobook/14",
+      "external_ids": [],
+      "is_playable": true,
+      "media_type": "audiobook",
+      "provider_mappings": [
+        {
+          "item_id": "3",
+          "provider_domain": "test",
+          "provider_instance": "test",
+          "available": true,
+          "audio_format": {
+            "content_type": "?",
+            "codec_type": "?",
+            "sample_rate": 44100,
+            "bit_depth": 16,
+            "channels": 2,
+            "output_format_str": "?",
+            "bit_rate": 0
+          },
+          "url": null,
+          "details": null
+        }
+      ],
+      "metadata": {
+        "description": "This is a description for Test Audiobook",
+        "review": null,
+        "explicit": null,
+        "images": [
+          {
+            "type": "thumb",
+            "path": "logo.png",
+            "provider": "builtin",
+            "remotely_accessible": false
+          }
+        ],
+        "genres": null,
+        "mood": null,
+        "style": null,
+        "copyright": null,
+        "lyrics": null,
+        "label": null,
+        "links": null,
+        "performers": null,
+        "preview": null,
+        "popularity": null,
+        "release_date": null,
+        "languages": null,
+        "chapters": [
+          {
+            "position": 1,
+            "name": "Chapter 1",
+            "start": 10.0,
+            "end": 20.0
+          },
+          {
+            "position": 2,
+            "name": "Chapter 2",
+            "start": 20.0,
+            "end": 40.0
+          },
+          {
+            "position": 2,
+            "name": "Chapter 3",
+            "start": 40.0,
+            "end": null
+          }
+        ],
+        "last_refresh": null
+      },
+      "favorite": false,
+      "position": null,
+      "publisher": "Test Publisher",
+      "authors": ["AudioBook Author"],
+      "narrators": ["AudioBook Narrator"],
+      "duration": 60,
+      "fully_played": null,
+      "resume_position_ms": null
+    },
+    {
+      "item_id": "15",
+      "provider": "library",
+      "name": "Test Audiobook 4",
+      "version": "",
+      "sort_name": "test audiobook 4",
+      "uri": "library://audiobook/15",
+      "external_ids": [],
+      "is_playable": true,
+      "media_type": "audiobook",
+      "provider_mappings": [
+        {
+          "item_id": "4",
+          "provider_domain": "test",
+          "provider_instance": "test",
+          "available": true,
+          "audio_format": {
+            "content_type": "?",
+            "codec_type": "?",
+            "sample_rate": 44100,
+            "bit_depth": 16,
+            "channels": 2,
+            "output_format_str": "?",
+            "bit_rate": 0
+          },
+          "url": null,
+          "details": null
+        }
+      ],
+      "metadata": {
+        "description": "This is a description for Test Audiobook",
+        "review": null,
+        "explicit": null,
+        "images": [
+          {
+            "type": "thumb",
+            "path": "logo.png",
+            "provider": "builtin",
+            "remotely_accessible": false
+          }
+        ],
+        "genres": null,
+        "mood": null,
+        "style": null,
+        "copyright": null,
+        "lyrics": null,
+        "label": null,
+        "links": null,
+        "performers": null,
+        "preview": null,
+        "popularity": null,
+        "release_date": null,
+        "languages": null,
+        "chapters": [
+          {
+            "position": 1,
+            "name": "Chapter 1",
+            "start": 10.0,
+            "end": 20.0
+          },
+          {
+            "position": 2,
+            "name": "Chapter 2",
+            "start": 20.0,
+            "end": 40.0
+          },
+          {
+            "position": 2,
+            "name": "Chapter 3",
+            "start": 40.0,
+            "end": null
+          }
+        ],
+        "last_refresh": null
+      },
+      "favorite": false,
+      "position": null,
+      "publisher": "Test Publisher",
+      "authors": ["AudioBook Author"],
+      "narrators": ["AudioBook Narrator"],
+      "duration": 60,
+      "fully_played": null,
+      "resume_position_ms": null
+    }
+  ]
+}

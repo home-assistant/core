@@ -6,7 +6,7 @@
         "description": "Enter your credentials",
         "data": {
           "username": "[%key:common::config_flow::data::email%]",
-          "password": "App-specific password",
+          "password": "Main password (MFA)",
           "with_family": "With family"
         }
       },
@@ -14,7 +14,8 @@
         "title": "[%key:common::config_flow::title::reauth%]",
         "description": "Your previously entered password for {username} is no longer working. Update your password to keep using this integration.",
         "data": {
-          "password": "App-specific password"
+          "username": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:component::icloud::config::step::user::data::password%]"
         }
       },
       "trusted_device": {
@@ -25,8 +26,8 @@
         }
       },
       "verification_code": {
-        "title": "iCloud verification code",
-        "description": "Please enter the verification code you just received from iCloud",
+        "title": "Apple Account code",
+        "description": "Please enter the verification code you just received from Apple",
         "data": {
           "verification_code": "Verification code"
         }
@@ -39,18 +40,18 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "no_device": "None of your devices have \"Find my iPhone\" activated",
+      "no_device": "None of your devices have \"Find My\" activated",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
   "services": {
     "update": {
       "name": "Update",
-      "description": "Updates iCloud devices.",
+      "description": "Asks for a state update of all devices linked to an Apple Account.",
       "fields": {
         "account": {
           "name": "Account",
-          "description": "Your iCloud account username (email) or account name."
+          "description": "Your Apple Account username (email)."
         }
       }
     },

@@ -4,10 +4,13 @@ from typing import cast
 
 from aiohomeconnect.model import EventKey, OptionKey, ProgramKey, SettingKey, StatusKey
 
+from homeassistant.const import UnitOfTemperature, UnitOfTime, UnitOfVolume
+
 from .utils import bsh_key_to_translation_key
 
 DOMAIN = "home_connect"
 
+API_DEFAULT_RETRY_AFTER = 60
 
 APPLIANCES_WITH_PROGRAMS = (
     "CleaningRobot",
@@ -20,6 +23,13 @@ APPLIANCES_WITH_PROGRAMS = (
     "Washer",
     "WasherDryer",
 )
+
+UNIT_MAP = {
+    "seconds": UnitOfTime.SECONDS,
+    "ml": UnitOfVolume.MILLILITERS,
+    "°C": UnitOfTemperature.CELSIUS,
+    "°F": UnitOfTemperature.FAHRENHEIT,
+}
 
 
 BSH_POWER_ON = "BSH.Common.EnumType.PowerState.On"
@@ -51,30 +61,16 @@ BSH_DOOR_STATE_LOCKED = "BSH.Common.EnumType.DoorState.Locked"
 BSH_DOOR_STATE_OPEN = "BSH.Common.EnumType.DoorState.Open"
 
 
-SERVICE_OPTION_ACTIVE = "set_option_active"
-SERVICE_OPTION_SELECTED = "set_option_selected"
-SERVICE_PAUSE_PROGRAM = "pause_program"
-SERVICE_RESUME_PROGRAM = "resume_program"
-SERVICE_SELECT_PROGRAM = "select_program"
 SERVICE_SET_PROGRAM_AND_OPTIONS = "set_program_and_options"
 SERVICE_SETTING = "change_setting"
-SERVICE_START_PROGRAM = "start_program"
 
 ATTR_AFFECTS_TO = "affects_to"
 ATTR_KEY = "key"
 ATTR_PROGRAM = "program"
-ATTR_UNIT = "unit"
 ATTR_VALUE = "value"
 
 AFFECTS_TO_ACTIVE_PROGRAM = "active_program"
 AFFECTS_TO_SELECTED_PROGRAM = "selected_program"
-
-SVE_TRANSLATION_KEY_SET_SETTING = "set_setting_entity"
-SVE_TRANSLATION_PLACEHOLDER_APPLIANCE_NAME = "appliance_name"
-SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID = "entity_id"
-SVE_TRANSLATION_PLACEHOLDER_PROGRAM = "program"
-SVE_TRANSLATION_PLACEHOLDER_KEY = "key"
-SVE_TRANSLATION_PLACEHOLDER_VALUE = "value"
 
 
 TRANSLATION_KEYS_PROGRAMS_MAP = {
@@ -103,6 +99,20 @@ CLEANING_MODE_OPTIONS = {
         "ConsumerProducts.CleaningRobot.EnumType.CleaningModes.Silent",
         "ConsumerProducts.CleaningRobot.EnumType.CleaningModes.Standard",
         "ConsumerProducts.CleaningRobot.EnumType.CleaningModes.Power",
+        "ConsumerProducts.CleaningRobot.EnumType.CleaningMode.IntelligentMode",
+        "ConsumerProducts.CleaningRobot.EnumType.CleaningMode.VacuumOnly",
+        "ConsumerProducts.CleaningRobot.EnumType.CleaningMode.MopOnly",
+        "ConsumerProducts.CleaningRobot.EnumType.CleaningMode.VacuumAndMop",
+        "ConsumerProducts.CleaningRobot.EnumType.CleaningMode.MopAfterVacuum",
+    )
+}
+
+SUCTION_POWER_OPTIONS = {
+    bsh_key_to_translation_key(option): option
+    for option in (
+        "ConsumerProducts.CleaningRobot.EnumType.SuctionPower.Silent",
+        "ConsumerProducts.CleaningRobot.EnumType.SuctionPower.Standard",
+        "ConsumerProducts.CleaningRobot.EnumType.SuctionPower.Max",
     )
 }
 
@@ -275,7 +285,9 @@ SPIN_SPEED_OPTIONS = {
         "LaundryCare.Washer.EnumType.SpinSpeed.Off",
         "LaundryCare.Washer.EnumType.SpinSpeed.RPM400",
         "LaundryCare.Washer.EnumType.SpinSpeed.RPM600",
+        "LaundryCare.Washer.EnumType.SpinSpeed.RPM700",
         "LaundryCare.Washer.EnumType.SpinSpeed.RPM800",
+        "LaundryCare.Washer.EnumType.SpinSpeed.RPM900",
         "LaundryCare.Washer.EnumType.SpinSpeed.RPM1000",
         "LaundryCare.Washer.EnumType.SpinSpeed.RPM1200",
         "LaundryCare.Washer.EnumType.SpinSpeed.RPM1400",
@@ -310,6 +322,10 @@ PROGRAM_ENUM_OPTIONS = {
         (
             OptionKey.CONSUMER_PRODUCTS_CLEANING_ROBOT_CLEANING_MODE,
             CLEANING_MODE_OPTIONS,
+        ),
+        (
+            OptionKey.CONSUMER_PRODUCTS_CLEANING_ROBOT_SUCTION_POWER,
+            SUCTION_POWER_OPTIONS,
         ),
         (OptionKey.CONSUMER_PRODUCTS_COFFEE_MAKER_BEAN_AMOUNT, BEAN_AMOUNT_OPTIONS),
         (

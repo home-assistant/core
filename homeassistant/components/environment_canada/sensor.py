@@ -145,7 +145,7 @@ SENSOR_TYPES: tuple[ECSensorEntityDescription, ...] = (
         key="timestamp",
         translation_key="timestamp",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda data: data.metadata.get("timestamp"),
+        value_fn=lambda data: data.metadata.timestamp,
     ),
     ECSensorEntityDescription(
         key="uv_index",
@@ -168,6 +168,7 @@ SENSOR_TYPES: tuple[ECSensorEntityDescription, ...] = (
         native_unit_of_measurement=DEGREE,
         value_fn=lambda data: data.conditions.get("wind_bearing", {}).get("value"),
         device_class=SensorDeviceClass.WIND_DIRECTION,
+        state_class=SensorStateClass.MEASUREMENT_ANGLE,
     ),
     ECSensorEntityDescription(
         key="wind_chill",
@@ -288,7 +289,7 @@ class ECBaseSensorEntity[DataT: ECDataType](
         super().__init__(coordinator)
         self.entity_description = description
         self._ec_data = coordinator.ec_data
-        self._attr_attribution = self._ec_data.metadata["attribution"]
+        self._attr_attribution = self._ec_data.metadata.attribution
         self._attr_unique_id = f"{coordinator.config_entry.title}-{description.key}"
         self._attr_device_info = coordinator.device_info
 
@@ -312,8 +313,8 @@ class ECSensorEntity[DataT: ECDataType](ECBaseSensorEntity[DataT]):
         """Initialize the sensor."""
         super().__init__(coordinator, description)
         self._attr_extra_state_attributes = {
-            ATTR_LOCATION: self._ec_data.metadata.get("location"),
-            ATTR_STATION: self._ec_data.metadata.get("station"),
+            ATTR_LOCATION: self._ec_data.metadata.location,
+            ATTR_STATION: self._ec_data.metadata.station,
         }
 
 
@@ -328,8 +329,8 @@ class ECAlertSensorEntity(ECBaseSensorEntity[ECWeather]):
             return None
 
         extra_state_attrs = {
-            ATTR_LOCATION: self._ec_data.metadata.get("location"),
-            ATTR_STATION: self._ec_data.metadata.get("station"),
+            ATTR_LOCATION: self._ec_data.metadata.location,
+            ATTR_STATION: self._ec_data.metadata.station,
         }
         for index, alert in enumerate(value, start=1):
             extra_state_attrs[f"alert_{index}"] = alert.get("title")

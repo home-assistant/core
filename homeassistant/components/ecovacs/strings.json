@@ -14,7 +14,7 @@
     "step": {
       "auth": {
         "data": {
-          "country": "Country",
+          "country": "[%key:common::config_flow::data::country%]",
           "override_rest_url": "REST URL",
           "override_mqtt_url": "MQTT URL",
           "password": "[%key:common::config_flow::data::password%]",
@@ -70,6 +70,12 @@
       "reset_lifespan_side_brush": {
         "name": "Reset side brush lifespan"
       },
+      "station_action_clean_base": {
+        "name": "Clean base"
+      },
+      "station_action_dry_mop": {
+        "name": "Dry mop"
+      },
       "station_action_empty_dustbin": {
         "name": "Empty dustbin"
       }
@@ -102,6 +108,9 @@
       },
       "volume": {
         "name": "Volume"
+      },
+      "water_amount": {
+        "name": "Water flow level"
       }
     },
     "sensor": {
@@ -152,8 +161,10 @@
       "station_state": {
         "name": "Station state",
         "state": {
+          "drying_mop": "Drying mop",
           "idle": "[%key:common::state::idle%]",
-          "emptying_dustbin": "Emptying dustbin"
+          "emptying_dustbin": "Emptying dustbin",
+          "washing_mop": "Washing mop"
         }
       },
       "stats_area": {
@@ -173,12 +184,15 @@
       }
     },
     "select": {
+      "active_map": {
+        "name": "Active map"
+      },
       "water_amount": {
-        "name": "Water flow level",
+        "name": "[%key:component::ecovacs::entity::number::water_amount::name%]",
         "state": {
-          "high": "High",
-          "low": "Low",
-          "medium": "Medium",
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
           "ultrahigh": "Ultrahigh"
         }
       },
@@ -229,9 +243,9 @@
         "state_attributes": {
           "fan_speed": {
             "state": {
+              "normal": "[%key:common::state::normal%]",
               "max": "Max",
               "max_plus": "Max+",
-              "normal": "Normal",
               "quiet": "Quiet"
             }
           },

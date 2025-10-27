@@ -54,13 +54,13 @@
         "name": "Estimated power production - now"
       },
       "power_production_next_hour": {
-        "name": "Estimated power production - next hour"
+        "name": "Estimated power production - in 1 hour"
       },
       "power_production_next_12hours": {
-        "name": "Estimated power production - next 12 hours"
+        "name": "Estimated power production - in 12 hours"
       },
       "power_production_next_24hours": {
-        "name": "Estimated power production - next 24 hours"
+        "name": "Estimated power production - in 24 hours"
       },
       "energy_current_hour": {
         "name": "Estimated energy production - this hour"

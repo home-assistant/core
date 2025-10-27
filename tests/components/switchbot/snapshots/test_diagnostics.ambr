@@ -1,0 +1,82 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'entry': dict({
+      'data': dict({
+        'address': 'aa:bb:cc:dd:ee:ff',
+        'encryption_key': '**REDACTED**',
+        'key_id': '**REDACTED**',
+        'name': 'test-name',
+        'sensor_type': 'relay_switch_1pm',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'switchbot',
+      'minor_version': 1,
+      'options': dict({
+        'retry_count': 3,
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': 'Mock Title',
+      'unique_id': 'aabbccddeeaa',
+      'version': 1,
+    }),
+    'service_info': dict({
+      'address': 'AA:BB:CC:DD:EE:FF',
+      'advertisement': list([
+        'W1080000',
+        dict({
+          '2409': dict({
+            '__type': "<class 'bytes'>",
+            'repr': "b'$X|\\x0866G\\x81\\x00\\x00\\x001\\x00\\x00\\x00\\x00'",
+          }),
+        }),
+        dict({
+          '0000fd3d-0000-1000-8000-00805f9b34fb': dict({
+            '__type': "<class 'bytes'>",
+            'repr': "b'<\\x00\\x00\\x00'",
+          }),
+        }),
+        list([
+          'cba20d00-224d-11e6-9fb8-0002a5d5c51b',
+        ]),
+        -127,
+        -60,
+        list([
+          list([
+          ]),
+        ]),
+      ]),
+      'connectable': True,
+      'device': dict({
+        '__type': "<class 'bleak.backends.device.BLEDevice'>",
+        'repr': 'BLEDevice(AA:BB:CC:DD:EE:FF, W1080000)',
+      }),
+      'manufacturer_data': dict({
+        '2409': dict({
+          '__type': "<class 'bytes'>",
+          'repr': "b'$X|\\x0866G\\x81\\x00\\x00\\x001\\x00\\x00\\x00\\x00'",
+        }),
+      }),
+      'name': 'W1080000',
+      'raw': None,
+      'rssi': -60,
+      'service_data': dict({
+        '0000fd3d-0000-1000-8000-00805f9b34fb': dict({
+          '__type': "<class 'bytes'>",
+          'repr': "b'<\\x00\\x00\\x00'",
+        }),
+      }),
+      'service_uuids': list([
+        'cba20d00-224d-11e6-9fb8-0002a5d5c51b',
+      ]),
+      'source': 'local',
+      'tx_power': -127,
+    }),
+  })
+# ---

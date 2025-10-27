@@ -9,7 +9,7 @@ import logging
 from typing import cast
 import urllib.parse
 
-from soco.data_structures import DidlObject
+from soco.data_structures import DidlContainer, DidlObject
 from soco.ms_data_structures import MusicServiceItem
 from soco.music_library import MusicLibrary
 
@@ -32,6 +32,7 @@ from .const import (
     SONOS_ALBUM,
     SONOS_ALBUM_ARTIST,
     SONOS_GENRE,
+    SONOS_SHARE,
     SONOS_TO_MEDIA_CLASSES,
     SONOS_TO_MEDIA_TYPES,
     SONOS_TRACKS,
@@ -105,6 +106,24 @@ def media_source_filter(item: BrowseMedia) -> bool:
     return item.media_content_type.startswith("audio/")
 
 
+def _get_title(id_string: str) -> str:
+    """Extract a suitable title from the content id string."""
+    if id_string.startswith("S:"):
+        # Format is S://server/share/folder
+        # If just S: this will be in the mappings; otherwise use the last folder in path.
+        title = LIBRARY_TITLES_MAPPING.get(
+            id_string, urllib.parse.unquote(id_string.split("/")[-1])
+        )
+    else:
+        parts = id_string.split("/")
+        title = (
+            urllib.parse.unquote(parts[1])
+            if len(parts) > 1
+            else LIBRARY_TITLES_MAPPING.get(id_string, id_string)
+        )
+    return title
+
+
 async def async_browse_media(
     hass: HomeAssistant,
     speaker: SonosSpeaker,
@@ -165,6 +184,8 @@ async def async_browse_media(
             favorites_folder_payload,
             speaker.favorites,
             media_content_id,
+            media,
+            get_browse_image_url,
         )
 
     payload = {
@@ -238,10 +259,7 @@ def build_item_response(
         thumbnail = get_thumbnail_url(search_type, payload["idstring"])
 
     if not title:
-        try:
-            title = urllib.parse.unquote(payload["idstring"].split("/")[1])
-        except IndexError:
-            title = LIBRARY_TITLES_MAPPING[payload["idstring"]]
+        title = _get_title(id_string=payload["idstring"])
 
     try:
         media_class = SONOS_TO_MEDIA_CLASSES[
@@ -286,12 +304,12 @@ def item_payload(item: DidlObject, get_thumbnail_url=None) -> BrowseMedia:
         thumbnail = get_thumbnail_url(media_class, content_id, item=item)
 
     return BrowseMedia(
-        title=item.title,
+        title=_get_title(item.item_id) if item.title is None else item.title,
         thumbnail=thumbnail,
         media_class=media_class,
         media_content_id=content_id,
         media_content_type=SONOS_TO_MEDIA_TYPES[media_type],
-        can_play=can_play(item.item_class),
+        can_play=can_play(item.item_class, item_id=content_id),
         can_expand=can_expand(item),
     )
 
@@ -360,7 +378,7 @@ async def root_payload(
             children.extend(item.children)
         else:
             children.append(item)
-    except media_source.BrowseError:
+    except BrowseError:
         pass
 
     if len(children) == 1:
@@ -393,6 +411,10 @@ def library_payload(media_library: MusicLibrary, get_thumbnail_url=None) -> Brow
     for item in media_library.browse():
         with suppress(UnknownMediaType):
             children.append(item_payload(item, get_thumbnail_url))
+
+    # Add entry for Folders at the top level of the music library.
+    didl_item = DidlContainer(title="Folders", parent_id="", item_id="S:")
+    children.append(item_payload(didl_item, get_thumbnail_url))
 
     return BrowseMedia(
         title="Music Library",
@@ -443,7 +465,10 @@ def favorites_payload(favorites: SonosFavorites) -> BrowseMedia:
 
 
 def favorites_folder_payload(
-    favorites: SonosFavorites, media_content_id: str
+    favorites: SonosFavorites,
+    media_content_id: str,
+    media: SonosMedia,
+    get_browse_image_url: GetBrowseImageUrlType,
 ) -> BrowseMedia:
     """Create response payload to describe all items of a type of favorite.
 
@@ -463,7 +488,14 @@ def favorites_folder_payload(
                 media_content_type="favorite_item_id",
                 can_play=True,
                 can_expand=False,
-                thumbnail=getattr(favorite, "album_art_uri", None),
+                thumbnail=get_thumbnail_url_full(
+                    media=media,
+                    is_internal=True,
+                    media_content_type="favorite_item_id",
+                    media_content_id=favorite.item_id,
+                    get_browse_image_url=get_browse_image_url,
+                    item=favorite,
+                ),
             )
         )
 
@@ -496,12 +528,16 @@ def get_media_type(item: DidlObject) -> str:
     return SONOS_TYPES_MAPPING.get(item.item_id.split("/")[0], item.item_class)
 
 
-def can_play(item: DidlObject) -> bool:
+def can_play(item_class: str, item_id: str | None = None) -> bool:
     """Test if playable.
 
     Used by async_browse_media.
     """
-    return SONOS_TO_MEDIA_TYPES.get(item) in PLAYABLE_MEDIA_TYPES
+    # Folders are playable once we reach the folder level.
+    # Format is S://server_address/share/folder
+    if item_id and item_id.startswith("S:") and item_class == "object.container":
+        return item_id.count("/") >= 4
+    return SONOS_TO_MEDIA_TYPES.get(item_class) in PLAYABLE_MEDIA_TYPES
 
 
 def can_expand(item: DidlObject) -> bool:
@@ -553,6 +589,19 @@ def get_media(
         matches = media_library.get_music_library_information(
             search_type, search_term=search_term, full_album_art_uri=True
         )
+    elif search_type == SONOS_SHARE:
+        # In order to get the MusicServiceItem, we browse the parent folder
+        # and find one that matches on item_id.
+        parts = item_id.rstrip("/").split("/")
+        parent_folder = "/".join(parts[:-1])
+        matches = media_library.browse_by_idstring(
+            search_type, parent_folder, full_album_art_uri=True
+        )
+        result = next(
+            (item for item in matches if (item_id == item.item_id)),
+            None,
+        )
+        matches = [result]
     else:
         # When requesting media by album_artist, composer, genre use the browse interface
         # to navigate the hierarchy. This occurs when invoked from media browser or service

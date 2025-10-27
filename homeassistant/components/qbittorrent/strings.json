@@ -53,9 +53,9 @@
       "connection_status": {
         "name": "Connection status",
         "state": {
-          "connected": "Connected",
+          "connected": "[%key:common::state::connected%]",
           "firewalled": "Firewalled",
-          "disconnected": "Disconnected"
+          "disconnected": "[%key:common::state::disconnected%]"
         }
       },
       "active_torrents": {
@@ -68,6 +68,10 @@
       },
       "paused_torrents": {
         "name": "Paused torrents",
+        "unit_of_measurement": "[%key:component::qbittorrent::entity::sensor::active_torrents::unit_of_measurement%]"
+      },
+      "errored_torrents": {
+        "name": "Errored torrents",
         "unit_of_measurement": "[%key:component::qbittorrent::entity::sensor::active_torrents::unit_of_measurement%]"
       },
       "all_torrents": {

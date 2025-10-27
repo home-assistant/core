@@ -16,7 +16,7 @@ async def test_steam_active(hass: HomeAssistant) -> None:
     """Test that the sensors are setup with the expected values when steam is active."""
     await _async_setup_entry_with_status(hass, MOCK_ASYNC_GET_STATUS_ACTIVE)
     state = hass.states.get("sensor.steam_temperature")
-    assert state.state == "39"
+    assert round(float(state.state)) == 39
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
     state = hass.states.get("sensor.steam_minutes_remain")
     assert state.state == "14"
@@ -27,7 +27,7 @@ async def test_steam_inactive(hass: HomeAssistant) -> None:
     """Test that the sensors are setup with the expected values when steam is not active."""
     await _async_setup_entry_with_status(hass, MOCK_ASYNC_GET_STATUS_INACTIVE)
     state = hass.states.get("sensor.steam_temperature")
-    assert state.state == "21"
+    assert round(float(state.state)) == 21
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
     state = hass.states.get("sensor.steam_minutes_remain")
     assert state.state == "0"

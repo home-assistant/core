@@ -6,9 +6,9 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from pyezviz import EzvizClient
-from pyezviz.constants import SupportExt
-from pyezviz.exceptions import HTTPError, PyEzvizError
+from pyezvizapi import EzvizClient
+from pyezvizapi.constants import SupportExt
+from pyezvizapi.exceptions import HTTPError, PyEzvizError
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant

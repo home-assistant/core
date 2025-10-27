@@ -163,18 +163,22 @@ async def async_forward_entry_setup_and_setup_discovery(
     tasks: list[asyncio.Task] = []
     if "device_automation" in new_platforms:
         # Local import to avoid circular dependencies
-        # pylint: disable-next=import-outside-toplevel
-        from . import device_automation
+        from . import device_automation  # noqa: PLC0415
 
         tasks.append(
-            create_eager_task(device_automation.async_setup_entry(hass, config_entry))
+            create_eager_task(
+                device_automation.async_setup_mqtt_device_automation_entry(
+                    hass, config_entry
+                )
+            )
         )
     if "tag" in new_platforms:
         # Local import to avoid circular dependencies
-        # pylint: disable-next=import-outside-toplevel
-        from . import tag
+        from . import tag  # noqa: PLC0415
 
-        tasks.append(create_eager_task(tag.async_setup_entry(hass, config_entry)))
+        tasks.append(
+            create_eager_task(tag.async_setup_mqtt_tag_entry(hass, config_entry))
+        )
     if new_entity_platforms := (new_platforms - {"tag", "device_automation"}):
         tasks.append(
             create_eager_task(
@@ -411,3 +415,9 @@ def migrate_certificate_file_to_content(file_name_or_auto: str) -> str | None:
             return certificate_file.read()
     except OSError:
         return None
+
+
+@callback
+def learn_more_url(platform: str) -> str:
+    """Return the URL for the platform specific MQTT documentation."""
+    return f"https://www.home-assistant.io/integrations/{platform}.mqtt/"

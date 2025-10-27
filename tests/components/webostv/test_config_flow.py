@@ -4,7 +4,12 @@ from aiowebostv import WebOsTvPairError
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.webostv.const import CONF_SOURCES, DOMAIN, LIVE_TV_APP_ID
+from homeassistant.components.webostv.const import (
+    CONF_SOURCES,
+    DEFAULT_NAME,
+    DOMAIN,
+    LIVE_TV_APP_ID,
+)
 from homeassistant.config_entries import SOURCE_SSDP
 from homeassistant.const import CONF_CLIENT_SECRET, CONF_HOST, CONF_SOURCE
 from homeassistant.core import HomeAssistant
@@ -63,6 +68,29 @@ async def test_form(hass: HomeAssistant, client) -> None:
     assert config_entry.unique_id == FAKE_UUID
 
 
+async def test_form_no_model_name(hass: HomeAssistant, client) -> None:
+    """Test successful user flow without model name."""
+    client.tv_info.system = {}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={CONF_SOURCE: config_entries.SOURCE_USER},
+        data=MOCK_USER_CONFIG,
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pairing"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == DEFAULT_NAME
+    config_entry = result["result"]
+    assert config_entry.unique_id == FAKE_UUID
+
+
 @pytest.mark.parametrize(
     ("apps", "inputs"),
     [
@@ -84,8 +112,8 @@ async def test_options_flow_live_tv_in_apps(
     hass: HomeAssistant, client, apps, inputs
 ) -> None:
     """Test options config flow Live TV found in apps."""
-    client.apps = apps
-    client.inputs = inputs
+    client.tv_state.apps = apps
+    client.tv_state.inputs = inputs
     entry = await setup_webostv(hass)
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
@@ -411,7 +439,7 @@ async def test_reconfigure_wrong_device(hass: HomeAssistant, client) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
-    client.hello_info = {"deviceUUID": "wrong_uuid"}
+    client.tv_info.hello = {"deviceUUID": "wrong_uuid"}
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={CONF_HOST: "new_host"},

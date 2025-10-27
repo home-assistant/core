@@ -41,6 +41,7 @@
     'original_name': 'Christmas tree pickup',
     'platform': 'twentemilieu',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'christmas_tree_pickup',
     'unique_id': 'twentemilieu_12345_tree',
@@ -65,7 +66,6 @@
         '12345',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Twente Milieu',
@@ -75,7 +75,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
@@ -122,6 +121,7 @@
     'original_name': 'Non-recyclable waste pickup',
     'platform': 'twentemilieu',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'non_recyclable_waste_pickup',
     'unique_id': 'twentemilieu_12345_Non-recyclable',
@@ -146,7 +146,6 @@
         '12345',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Twente Milieu',
@@ -156,7 +155,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
@@ -203,6 +201,7 @@
     'original_name': 'Organic waste pickup',
     'platform': 'twentemilieu',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'organic_waste_pickup',
     'unique_id': 'twentemilieu_12345_Organic',
@@ -227,7 +226,6 @@
         '12345',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Twente Milieu',
@@ -237,7 +235,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
@@ -284,6 +281,7 @@
     'original_name': 'Packages waste pickup',
     'platform': 'twentemilieu',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'packages_waste_pickup',
     'unique_id': 'twentemilieu_12345_Plastic',
@@ -308,7 +306,6 @@
         '12345',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Twente Milieu',
@@ -318,7 +315,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
@@ -365,6 +361,7 @@
     'original_name': 'Paper waste pickup',
     'platform': 'twentemilieu',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'paper_waste_pickup',
     'unique_id': 'twentemilieu_12345_Paper',
@@ -389,7 +386,6 @@
         '12345',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Twente Milieu',
@@ -399,7 +395,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })

@@ -1,11 +1,16 @@
 {
   "config": {
+    "flow_title": "{name}",
     "step": {
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "api_version": "API Version"
         }
+      },
+      "zeroconf_confirm": {
+        "title": "Discovered Philips TV",
+        "description": "Do you want to add the TV ({name}) to Home Assistant? It will turn on and a pairing code will be displayed on it that you will need to enter in the next screen."
       },
       "pair": {
         "title": "Pair",

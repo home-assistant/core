@@ -166,6 +166,13 @@ SSDP = {
             "st": "urn:hyperion-project.org:device:basic:1",
         },
     ],
+    "imeon_inverter": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:Basic:1",
+            "manufacturer": "IMEON",
+            "st": "upnp:rootdevice",
+        },
+    ],
     "isy994": [
         {
             "deviceType": "urn:udi-com:device:X_Insteon_Lighting_Device:1",
@@ -391,6 +398,16 @@ SSDP = {
     "wilight": [
         {
             "manufacturer": "All Automacao Ltda",
+        },
+    ],
+    "xbox": [
+        {
+            "manufacturer": "Microsoft Corporation",
+            "modelName": "Xbox 360",
+        },
+        {
+            "manufacturer": "Microsoft Corporation",
+            "modelName": "Xbox One",
         },
     ],
     "yamaha_musiccast": [

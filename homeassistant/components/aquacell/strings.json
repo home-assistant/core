@@ -21,6 +21,9 @@
   },
   "entity": {
     "sensor": {
+      "last_update": {
+        "name": "Last update"
+      },
       "salt_left_side_percentage": {
         "name": "Salt left side percentage"
       },
@@ -36,9 +39,9 @@
       "wi_fi_strength": {
         "name": "Wi-Fi strength",
         "state": {
-          "low": "Low",
-          "medium": "Medium",
-          "high": "High"
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]"
         }
       }
     }

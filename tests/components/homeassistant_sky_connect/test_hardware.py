@@ -28,6 +28,10 @@ CONFIG_ENTRY_DATA_2 = {
     "firmware": "ezsp",
 }
 
+CONFIG_ENTRY_DATA_BAD = {
+    "device": "/dev/serial/by-id/usb-Nabu_Casa_Home_Assistant_Connect_ZBT-1_a87b7d75b18beb119fe564a0f320645d-if00-port0",
+}
+
 
 async def test_hardware_info(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, addon_store_info
@@ -59,8 +63,19 @@ async def test_hardware_info(
         minor_version=2,
     )
     config_entry_2.add_to_hass(hass)
-
     assert await hass.config_entries.async_setup(config_entry_2.entry_id)
+
+    config_entry_bad = MockConfigEntry(
+        data=CONFIG_ENTRY_DATA_BAD,
+        domain=DOMAIN,
+        options={},
+        title="Home Assistant Connect ZBT-1",
+        unique_id="unique_3",
+        version=1,
+        minor_version=2,
+    )
+    config_entry_bad.add_to_hass(hass)
+    assert not await hass.config_entries.async_setup(config_entry_bad.entry_id)
 
     client = await hass_ws_client(hass)
 
@@ -82,7 +97,7 @@ async def test_hardware_info(
                     "description": "SkyConnect v1.0",
                 },
                 "name": "Home Assistant SkyConnect",
-                "url": "https://skyconnect.home-assistant.io/documentation/",
+                "url": "https://support.nabucasa.com/hc/en-us/categories/24734620813469-Home-Assistant-Connect-ZBT-1",
             },
             {
                 "board": None,
@@ -95,7 +110,8 @@ async def test_hardware_info(
                     "description": "Home Assistant Connect ZBT-1",
                 },
                 "name": "Home Assistant Connect ZBT-1",
-                "url": "https://skyconnect.home-assistant.io/documentation/",
+                "url": "https://support.nabucasa.com/hc/en-us/categories/24734620813469-Home-Assistant-Connect-ZBT-1",
             },
+            # Bad entry is skipped
         ]
     }

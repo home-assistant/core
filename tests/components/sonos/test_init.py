@@ -1,17 +1,16 @@
 """Tests for the Sonos config flow."""
 
 import asyncio
-from datetime import timedelta
 import logging
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, PropertyMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import sonos
-from homeassistant.components.sonos import SonosDiscoveryManager
 from homeassistant.components.sonos.const import (
-    DATA_SONOS_DISCOVERY_MANAGER,
+    DISCOVERY_INTERVAL,
     SONOS_SPEAKER_ACTIVITY,
 )
 from homeassistant.components.sonos.exception import SonosUpdateError
@@ -87,76 +86,73 @@ async def test_not_configuring_sonos_not_creates_entry(hass: HomeAssistant) -> N
 
 
 async def test_async_poll_manual_hosts_warnings(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    soco_factory: SoCoMockFactory,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that host warnings are not logged repeatedly."""
-    await async_setup_component(
-        hass,
-        sonos.DOMAIN,
-        {"sonos": {"media_player": {"interface_addr": "127.0.0.1"}}},
-    )
-    await hass.async_block_till_done()
-    manager: SonosDiscoveryManager = hass.data[DATA_SONOS_DISCOVERY_MANAGER]
-    manager.hosts.add("10.10.10.10")
+
+    soco = soco_factory.cache_mock(MockSoCo(), "10.10.10.1", "Bedroom")
     with (
         caplog.at_level(logging.DEBUG),
-        patch.object(manager, "_async_handle_discovery_message"),
-        patch(
-            "homeassistant.components.sonos.async_call_later"
-        ) as mock_async_call_later,
-        patch("homeassistant.components.sonos.async_dispatcher_send"),
-        patch(
-            "homeassistant.components.sonos.sync_get_visible_zones",
-            side_effect=[
-                OSError(),
-                OSError(),
-                [],
-                [],
-                OSError(),
-            ],
-        ),
+        patch.object(
+            type(soco), "visible_zones", new_callable=PropertyMock
+        ) as mock_visible_zones,
     ):
         # First call fails, it should be logged as a WARNING message
+        mock_visible_zones.side_effect = OSError()
         caplog.clear()
-        await manager.async_poll_manual_hosts()
-        assert len(caplog.messages) == 1
-        record = caplog.records[0]
-        assert record.levelname == "WARNING"
-        assert "Could not get visible Sonos devices from" in record.message
-        assert mock_async_call_later.call_count == 1
+        await _setup_hass(hass)
+        assert [
+            rec.levelname
+            for rec in caplog.records
+            if "Could not get visible Sonos devices from" in rec.message
+        ] == ["WARNING"]
 
         # Second call fails again, it should be logged as a DEBUG message
+        mock_visible_zones.side_effect = OSError()
         caplog.clear()
-        await manager.async_poll_manual_hosts()
-        assert len(caplog.messages) == 1
-        record = caplog.records[0]
-        assert record.levelname == "DEBUG"
-        assert "Could not get visible Sonos devices from" in record.message
-        assert mock_async_call_later.call_count == 2
+        freezer.tick(DISCOVERY_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert [
+            rec.levelname
+            for rec in caplog.records
+            if "Could not get visible Sonos devices from" in rec.message
+        ] == ["DEBUG"]
 
-        # Third call succeeds, it should log an info message
+        # Third call succeeds, logs message indicating reconnect
+        mock_visible_zones.return_value = {soco}
+        mock_visible_zones.side_effect = None
         caplog.clear()
-        await manager.async_poll_manual_hosts()
-        assert len(caplog.messages) == 1
-        record = caplog.records[0]
-        assert record.levelname == "WARNING"
-        assert "Connection reestablished to Sonos device" in record.message
-        assert mock_async_call_later.call_count == 3
+        freezer.tick(DISCOVERY_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert [
+            rec.levelname
+            for rec in caplog.records
+            if "Connection reestablished to Sonos device" in rec.message
+        ] == ["WARNING"]
 
-        # Fourth call succeeds again, no need to log
+        # Fourth call succeeds, it should log nothing
         caplog.clear()
-        await manager.async_poll_manual_hosts()
-        assert len(caplog.messages) == 0
-        assert mock_async_call_later.call_count == 4
+        freezer.tick(DISCOVERY_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert "Connection reestablished to Sonos device" not in caplog.text
 
-        # Fifth call fail again again, should be logged as a WARNING message
+        # Fifth call fails again again, should be logged as a WARNING message
+        mock_visible_zones.side_effect = OSError()
         caplog.clear()
-        await manager.async_poll_manual_hosts()
-        assert len(caplog.messages) == 1
-        record = caplog.records[0]
-        assert record.levelname == "WARNING"
-        assert "Could not get visible Sonos devices from" in record.message
-        assert mock_async_call_later.call_count == 5
+        freezer.tick(DISCOVERY_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert [
+            rec.levelname
+            for rec in caplog.records
+            if "Could not get visible Sonos devices from" in rec.message
+        ] == ["WARNING"]
 
 
 class _MockSoCoOsError(MockSoCo):
@@ -333,29 +329,24 @@ async def test_async_poll_manual_hosts_5(
     soco_2.renderingControl = Mock()
     soco_2.renderingControl.GetVolume = Mock()
     speaker_2_activity = SpeakerActivity(hass, soco_2)
-    with patch(
-        "homeassistant.components.sonos.DISCOVERY_INTERVAL"
-    ) as mock_discovery_interval:
-        # Speed up manual discovery interval so second iteration runs sooner
-        mock_discovery_interval.total_seconds = Mock(side_effect=[0.5, 60])
 
-        with caplog.at_level(logging.DEBUG):
-            caplog.clear()
+    with caplog.at_level(logging.DEBUG):
+        caplog.clear()
 
-            await _setup_hass(hass)
+        await _setup_hass(hass)
 
-            assert "media_player.bedroom" in entity_registry.entities
-            assert "media_player.living_room" in entity_registry.entities
+        assert "media_player.bedroom" in entity_registry.entities
+        assert "media_player.living_room" in entity_registry.entities
 
-            async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=0.5))
-            await hass.async_block_till_done()
-            await asyncio.gather(
-                *[speaker_1_activity.event.wait(), speaker_2_activity.event.wait()]
-            )
-            assert speaker_1_activity.call_count == 1
-            assert speaker_2_activity.call_count == 1
-            assert "Activity on Living Room" in caplog.text
-            assert "Activity on Bedroom" in caplog.text
+        async_fire_time_changed(hass, dt_util.utcnow() + DISCOVERY_INTERVAL)
+        await hass.async_block_till_done()
+        await asyncio.gather(
+            *[speaker_1_activity.event.wait(), speaker_2_activity.event.wait()]
+        )
+        assert speaker_1_activity.call_count == 1
+        assert speaker_2_activity.call_count == 1
+        assert "Activity on Living Room" in caplog.text
+        assert "Activity on Bedroom" in caplog.text
 
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -455,3 +446,32 @@ async def test_async_poll_manual_hosts_8(
     assert "media_player.garage" in entity_registry.entities
     assert "media_player.studio" in entity_registry.entities
     await hass.async_block_till_done(wait_background_tasks=True)
+
+
+async def _setup_hass_ipv6_address_not_supported(hass: HomeAssistant):
+    await async_setup_component(
+        hass,
+        sonos.DOMAIN,
+        {
+            "sonos": {
+                "media_player": {
+                    "interface_addr": "127.0.0.1",
+                    "hosts": ["2001:db8:3333:4444:5555:6666:7777:8888"],
+                }
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+
+async def test_ipv6_not_supported(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Tests that invalid ipv4 addresses do not generate stack dump."""
+    with caplog.at_level(logging.DEBUG):
+        caplog.clear()
+        await _setup_hass_ipv6_address_not_supported(hass)
+        await hass.async_block_till_done()
+    assert "invalid ip_address received" in caplog.text
+    assert "2001:db8:3333:4444:5555:6666:7777:8888" in caplog.text

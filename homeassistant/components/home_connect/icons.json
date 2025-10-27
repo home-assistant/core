@@ -49,6 +49,31 @@
         "default": "mdi:map-marker-remove-variant"
       }
     },
+    "button": {
+      "open_door": {
+        "default": "mdi:door-open"
+      },
+      "partly_open_door": {
+        "default": "mdi:door-open"
+      },
+      "pause_program": {
+        "default": "mdi:pause"
+      },
+      "resume_program": {
+        "default": "mdi:play"
+      },
+      "stop_program": {
+        "default": "mdi:stop"
+      }
+    },
+    "number": {
+      "start_in_relative": {
+        "default": "mdi:progress-clock"
+      },
+      "finish_in_relative": {
+        "default": "mdi:progress-clock"
+      }
+    },
     "sensor": {
       "operation_state": {
         "default": "mdi:state-machine",
@@ -96,7 +121,7 @@
       "milk_counter": {
         "default": "mdi:cup"
       },
-      "coffee_and_milk": {
+      "coffee_and_milk_counter": {
         "default": "mdi:coffee"
       },
       "ristretto_espresso_counter": {
@@ -233,14 +258,6 @@
       },
       "i_dos_2_active": {
         "default": "mdi:numeric-2-circle"
-      }
-    },
-    "time": {
-      "start_in_relative": {
-        "default": "mdi:progress-clock"
-      },
-      "finish_in_relative": {
-        "default": "mdi:progress-clock"
       }
     }
   }

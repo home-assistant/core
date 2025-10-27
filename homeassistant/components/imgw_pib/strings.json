@@ -4,6 +4,9 @@
       "user": {
         "data": {
           "station_id": "Hydrological station"
+        },
+        "data_description": {
+          "station_id": "Select a hydrological station from the list."
         }
       }
     },
@@ -13,17 +16,65 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "cannot_connect": "Failed to connect"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
   },
   "entity": {
     "sensor": {
+      "hydrological_alert": {
+        "name": "Hydrological alert",
+        "state": {
+          "no_alert": "No alert",
+          "exceeding_the_warning_level": "Exceeding the warning level",
+          "hydrological_drought": "Hydrological drought",
+          "rapid_water_level_rise": "Rapid water level rise"
+        },
+        "state_attributes": {
+          "level": {
+            "name": "Level",
+            "state": {
+              "none": "None",
+              "orange": "Orange",
+              "red": "Red",
+              "yellow": "Yellow"
+            }
+          },
+          "options": {
+            "state": {
+              "no_alert": "[%key:component::imgw_pib::entity::sensor::hydrological_alert::state::no_alert%]",
+              "exceeding_the_warning_level": "[%key:component::imgw_pib::entity::sensor::hydrological_alert::state::exceeding_the_warning_level%]",
+              "hydrological_drought": "[%key:component::imgw_pib::entity::sensor::hydrological_alert::state::hydrological_drought%]",
+              "rapid_water_level_rise": "[%key:component::imgw_pib::entity::sensor::hydrological_alert::state::rapid_water_level_rise%]"
+            }
+          },
+          "probability": {
+            "name": "Probability"
+          },
+          "valid_from": {
+            "name": "Valid from"
+          },
+          "valid_to": {
+            "name": "Valid to"
+          }
+        }
+      },
+      "water_flow": {
+        "name": "Water flow"
+      },
       "water_level": {
         "name": "Water level"
       },
       "water_temperature": {
         "name": "Water temperature"
       }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "An error occurred while connecting to the IMGW-PIB API for {entry}: {error}"
+    },
+    "update_error": {
+      "message": "An error occurred while retrieving data from the IMGW-PIB API for {entry}: {error}"
     }
   }
 }

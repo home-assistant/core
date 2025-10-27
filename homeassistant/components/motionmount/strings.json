@@ -68,7 +68,7 @@
     },
     "sensor": {
       "motionmount_error_status": {
-        "name": "Error Status",
+        "name": "Error status",
         "state": {
           "none": "None",
           "motor": "Motor",
@@ -83,7 +83,7 @@
       "motionmount_preset": {
         "name": "Preset",
         "state": {
-          "0_wall": "0: Wall"
+          "0_wall": "Wall"
         }
       }
     }

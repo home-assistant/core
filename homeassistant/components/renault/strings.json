@@ -3,7 +3,9 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "kamereon_no_account": "Unable to find Kamereon account",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "The selected Kamereon account ID does not match the previous account ID"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -118,7 +120,7 @@
           "charge_ended": "Charge ended",
           "waiting_for_current_charge": "Waiting for current charge",
           "energy_flap_opened": "Energy flap opened",
-          "charge_in_progress": "Charging",
+          "charge_in_progress": "[%key:common::state::charging%]",
           "charge_error": "Not charging or plugged in",
           "unavailable": "Unavailable"
         }
@@ -155,7 +157,6 @@
         "state": {
           "unplugged": "Unplugged",
           "plugged": "Plugged in",
-          "plugged_waiting_for_charge": "Plugged in, waiting for charge",
           "plug_error": "Plug error",
           "plug_unknown": "Plug unknown"
         }
@@ -165,6 +166,18 @@
       },
       "res_state_code": {
         "name": "Remote engine start code"
+      },
+      "front_left_pressure": {
+        "name": "Front left tyre pressure"
+      },
+      "front_right_pressure": {
+        "name": "Front right tyre pressure"
+      },
+      "rear_left_pressure": {
+        "name": "Rear left tyre pressure"
+      },
+      "rear_right_pressure": {
+        "name": "Rear right tyre pressure"
       }
     }
   },
@@ -232,6 +245,9 @@
     },
     "no_config_entry_for_device": {
       "message": "No loaded config entry was found for device with ID {device_id}"
+    },
+    "unknown_error": {
+      "message": "An unknown error occurred while communicating with the Renault servers: {error}"
     }
   }
 }

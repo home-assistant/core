@@ -1,0 +1,12 @@
+{
+  "DeviceID": 7654321,
+  "DeviceName": "test",
+  "DeviceClassID": 1,
+  "DeviceSerialNumber": "1234567890AB",
+  "DeviceFlags": "PromptForUserCode=0,PromptForInstallerCode=0,PromptForImportSecuritySettings=0,AllowUserSlotEditing=0,CalCapable=1,CanBeSentToPanel=1,CanArmNightStay=0,CanSupportMultiPartition=0,PartitionCount=0,MaxPartitionCount=4,OnBoardingSupport=0,PartitionAdded=0,DuplicateUserSyncStatus=0,PanelType=12,PanelVariant=1,BLEDisarmCapable=0,ArmHomeSupported=1,DuplicateUserCodeCheck=1,CanSupportRapid=0,IsKeypadSupported=0,WifiEnrollmentSupported=1,IsConnectedPanel=1,ArmNightInSceneSupported=1,BuiltInCameraSettingsSupported=0,ZWaveThermostatScheduleDisabled=0,MultipleAuthorityLevelSupported=1,VideoOnPanelSupported=1,EnableBLEMode=0,IsPanelWiFiResetSupported=0,IsCompetitorClearBypass=0,IsNotReadyStateSupported=0,isArmStatusWithoutExitDelayNotSupported=0,UserCodeLength=4,UserCodeLengthChanged=0,DoubleDisarmRequired=0,TMSCloudSupported=0,IsAVCEnabled=0",
+  "SecurityPanelTypeID": 12,
+  "DeviceSerialText": null,
+  "DeviceType": null,
+  "DeviceVariants": null,
+  "RestrictedPanel": 0
+}

@@ -21,6 +21,7 @@ from homeassistant.components.shelly.const import (
     GEN1_RELEASE_URL,
     GEN2_BETA_RELEASE_URL,
     GEN2_RELEASE_URL,
+    UPTIME_DEVIATION,
 )
 from homeassistant.components.shelly.utils import (
     get_block_channel_name,
@@ -33,6 +34,7 @@ from homeassistant.components.shelly.utils import (
     get_rpc_channel_name,
     get_rpc_input_triggers,
     is_block_momentary_input,
+    mac_address_from_name,
 )
 from homeassistant.util import dt as dt_util
 
@@ -78,37 +80,38 @@ async def test_block_get_block_channel_name(
     mock_block_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test block get block channel name."""
-    monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "type", "relay")
-
-    assert (
-        get_block_channel_name(
-            mock_block_device,
-            mock_block_device.blocks[DEVICE_BLOCK_ID],
-        )
-        == "Test name channel 1"
+    result = get_block_channel_name(
+        mock_block_device,
+        mock_block_device.blocks[DEVICE_BLOCK_ID],
     )
+    # when has_entity_name is True the result should be None
+    assert result is None
+
+    monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "type", "relay")
+    result = get_block_channel_name(
+        mock_block_device,
+        mock_block_device.blocks[DEVICE_BLOCK_ID],
+    )
+    # when has_entity_name is True the result should be None
+    assert result is None
 
     monkeypatch.setitem(mock_block_device.settings["device"], "type", MODEL_EM3)
-
-    assert (
-        get_block_channel_name(
-            mock_block_device,
-            mock_block_device.blocks[DEVICE_BLOCK_ID],
-        )
-        == "Test name channel A"
+    result = get_block_channel_name(
+        mock_block_device,
+        mock_block_device.blocks[DEVICE_BLOCK_ID],
     )
+    # when has_entity_name is True the result should be None
+    assert result is None
 
     monkeypatch.setitem(
         mock_block_device.settings, "relays", [{"name": "test-channel"}]
     )
-
-    assert (
-        get_block_channel_name(
-            mock_block_device,
-            mock_block_device.blocks[DEVICE_BLOCK_ID],
-        )
-        == "test-channel"
+    result = get_block_channel_name(
+        mock_block_device,
+        mock_block_device.blocks[DEVICE_BLOCK_ID],
     )
+    # when has_entity_name is True the result should be None
+    assert result is None
 
 
 async def test_is_block_momentary_input(
@@ -188,8 +191,9 @@ async def test_get_device_uptime() -> None:
     ) == dt_util.as_utc(dt_util.parse_datetime("2019-01-10 18:42:00+00:00"))
 
     assert get_device_uptime(
-        50, dt_util.as_utc(dt_util.parse_datetime("2019-01-10 18:42:00+00:00"))
-    ) == dt_util.as_utc(dt_util.parse_datetime("2019-01-10 18:42:10+00:00"))
+        55 - UPTIME_DEVIATION,
+        dt_util.as_utc(dt_util.parse_datetime("2019-01-10 18:42:00+00:00")),
+    ) == dt_util.as_utc(dt_util.parse_datetime("2019-01-10 18:43:05+00:00"))
 
 
 async def test_get_block_input_triggers(
@@ -239,20 +243,19 @@ async def test_get_block_input_triggers(
 
 async def test_get_rpc_channel_name(mock_rpc_device: Mock) -> None:
     """Test get RPC channel name."""
-    assert get_rpc_channel_name(mock_rpc_device, "input:0") == "Test name input 0"
-    assert get_rpc_channel_name(mock_rpc_device, "input:3") == "Test name Input 3"
+    assert get_rpc_channel_name(mock_rpc_device, "input:0") == "Test input 0"
+    assert get_rpc_channel_name(mock_rpc_device, "input:3") == "Input 3"
 
 
 @pytest.mark.parametrize(
     ("component", "expected"),
     [
-        ("cover", "Cover"),
-        ("input", "Input"),
-        ("light", "Light"),
-        ("rgb", "RGB light"),
-        ("rgbw", "RGBW light"),
-        ("switch", "Switch"),
-        ("thermostat", "Thermostat"),
+        ("cover", None),
+        ("light", None),
+        ("rgb", None),
+        ("rgbw", None),
+        ("switch", None),
+        ("thermostat", None),
     ],
 )
 async def test_get_rpc_channel_name_multiple_components(
@@ -268,14 +271,9 @@ async def test_get_rpc_channel_name_multiple_components(
     }
     monkeypatch.setattr(mock_rpc_device, "config", config)
 
-    assert (
-        get_rpc_channel_name(mock_rpc_device, f"{component}:0")
-        == f"Test name {expected} 0"
-    )
-    assert (
-        get_rpc_channel_name(mock_rpc_device, f"{component}:1")
-        == f"Test name {expected} 1"
-    )
+    # we use sub-devices, so the entity name is not set
+    assert get_rpc_channel_name(mock_rpc_device, f"{component}:0") == expected
+    assert get_rpc_channel_name(mock_rpc_device, f"{component}:1") == expected
 
 
 async def test_get_rpc_input_triggers(
@@ -330,3 +328,17 @@ def test_get_release_url(
 def test_get_host(host: str, expected: str) -> None:
     """Test get_host function."""
     assert get_host(host) == expected
+
+
+@pytest.mark.parametrize(
+    ("name", "result"),
+    [
+        ("shelly1pm-AABBCCDDEEFF", "AABBCCDDEEFF"),
+        ("Shelly Plus 1 [DDEEFF]", None),
+        ("S11-Schlafzimmer", None),
+        ("22-Kueche-links", None),
+    ],
+)
+def test_mac_address_from_name(name: str, result: str | None) -> None:
+    """Test mac_address_from_name() function."""
+    assert mac_address_from_name(name) == result

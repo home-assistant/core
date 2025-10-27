@@ -14,6 +14,9 @@
       "changed_states": "[%key:common::device_automation::trigger_type::changed_states%]",
       "turned_on": "[%key:common::device_automation::trigger_type::turned_on%]",
       "turned_off": "[%key:common::device_automation::trigger_type::turned_off%]"
+    },
+    "extra_fields": {
+      "for": "[%key:common::device_automation::extra_fields::for%]"
     }
   },
   "entity_component": {
@@ -25,10 +28,18 @@
       }
     },
     "switch": {
-      "name": "[%key:component::switch::title%]"
+      "name": "[%key:component::switch::title%]",
+      "state": {
+        "off": "[%key:common::state::off%]",
+        "on": "[%key:common::state::on%]"
+      }
     },
     "outlet": {
-      "name": "Outlet"
+      "name": "Outlet",
+      "state": {
+        "off": "[%key:common::state::off%]",
+        "on": "[%key:common::state::on%]"
+      }
     }
   },
   "services": {

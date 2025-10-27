@@ -10,9 +10,16 @@ from homeassistant.components.homeassistant_hardware import (
     firmware_config_flow,
     silabs_multiprotocol_addon,
 )
+from homeassistant.components.homeassistant_hardware.helpers import (
+    HardwareFirmwareDiscoveryInfo,
+)
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
+)
+from homeassistant.components.usb import (
+    usb_service_info_from_device,
+    usb_unique_id_from_service_info,
 )
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -24,7 +31,21 @@ from homeassistant.config_entries import (
 from homeassistant.core import callback
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
-from .const import DOCS_WEB_FLASHER_URL, DOMAIN, HardwareVariant
+from .const import (
+    DESCRIPTION,
+    DEVICE,
+    DOCS_WEB_FLASHER_URL,
+    DOMAIN,
+    FIRMWARE,
+    FIRMWARE_VERSION,
+    MANUFACTURER,
+    NABU_CASA_FIRMWARE_RELEASES_URL,
+    PID,
+    PRODUCT,
+    SERIAL_NUMBER,
+    VID,
+    HardwareVariant,
+)
 from .util import get_hardware_variant, get_usb_service_info
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,18 +53,29 @@ _LOGGER = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
 
-    class TranslationPlaceholderProtocol(Protocol):
-        """Protocol describing `BaseFirmwareInstallFlow`'s translation placeholders."""
+    class FirmwareInstallFlowProtocol(Protocol):
+        """Protocol describing `BaseFirmwareInstallFlow` for a mixin."""
 
         def _get_translation_placeholders(self) -> dict[str, str]:
             return {}
+
+        async def _install_firmware_step(
+            self,
+            fw_update_url: str,
+            fw_type: str,
+            firmware_name: str,
+            expected_installed_firmware_type: ApplicationType,
+            step_id: str,
+            next_step_id: str,
+        ) -> ConfigFlowResult: ...
+
 else:
     # Multiple inheritance with `Protocol` seems to break
-    TranslationPlaceholderProtocol = object
+    FirmwareInstallFlowProtocol = object
 
 
-class SkyConnectTranslationMixin(ConfigEntryBaseFlow, TranslationPlaceholderProtocol):
-    """Translation placeholder mixin for Home Assistant SkyConnect."""
+class SkyConnectFirmwareMixin(ConfigEntryBaseFlow, FirmwareInstallFlowProtocol):
+    """Mixin for Home Assistant SkyConnect firmware methods."""
 
     context: ConfigFlowContext
 
@@ -58,16 +90,42 @@ class SkyConnectTranslationMixin(ConfigEntryBaseFlow, TranslationPlaceholderProt
 
         return placeholders
 
+    async def async_step_install_zigbee_firmware(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Install Zigbee firmware."""
+        return await self._install_firmware_step(
+            fw_update_url=NABU_CASA_FIRMWARE_RELEASES_URL,
+            fw_type="skyconnect_zigbee_ncp",
+            firmware_name="Zigbee",
+            expected_installed_firmware_type=ApplicationType.EZSP,
+            step_id="install_zigbee_firmware",
+            next_step_id="pre_confirm_zigbee",
+        )
+
+    async def async_step_install_thread_firmware(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Install Thread firmware."""
+        return await self._install_firmware_step(
+            fw_update_url=NABU_CASA_FIRMWARE_RELEASES_URL,
+            fw_type="skyconnect_openthread_rcp",
+            firmware_name="OpenThread",
+            expected_installed_firmware_type=ApplicationType.SPINEL,
+            step_id="install_thread_firmware",
+            next_step_id="finish_thread_installation",
+        )
+
 
 class HomeAssistantSkyConnectConfigFlow(
-    SkyConnectTranslationMixin,
+    SkyConnectFirmwareMixin,
     firmware_config_flow.BaseFirmwareConfigFlow,
     domain=DOMAIN,
 ):
     """Handle a config flow for Home Assistant SkyConnect."""
 
     VERSION = 1
-    MINOR_VERSION = 2
+    MINOR_VERSION = 4
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the config flow."""
@@ -82,7 +140,7 @@ class HomeAssistantSkyConnectConfigFlow(
         config_entry: ConfigEntry,
     ) -> OptionsFlow:
         """Return the options flow."""
-        firmware_type = ApplicationType(config_entry.data["firmware"])
+        firmware_type = ApplicationType(config_entry.data[FIRMWARE])
 
         if firmware_type is ApplicationType.CPC:
             return HomeAssistantSkyConnectMultiPanOptionsFlowHandler(config_entry)
@@ -91,16 +149,10 @@ class HomeAssistantSkyConnectConfigFlow(
 
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle usb discovery."""
-        device = discovery_info.device
-        vid = discovery_info.vid
-        pid = discovery_info.pid
-        serial_number = discovery_info.serial_number
-        manufacturer = discovery_info.manufacturer
-        description = discovery_info.description
-        unique_id = f"{vid}:{pid}_{serial_number}_{manufacturer}_{description}"
+        unique_id = usb_unique_id_from_service_info(discovery_info)
 
         if await self.async_set_unique_id(unique_id):
-            self._abort_if_unique_id_configured(updates={"device": device})
+            self._abort_if_unique_id_configured(updates={DEVICE: discovery_info.device})
 
         discovery_info.device = await self.hass.async_add_executor_job(
             usb.get_serial_by_id, discovery_info.device
@@ -108,14 +160,36 @@ class HomeAssistantSkyConnectConfigFlow(
 
         self._usb_info = discovery_info
 
-        assert description is not None
-        self._hw_variant = HardwareVariant.from_usb_product_name(description)
+        assert discovery_info.description is not None
+        self._hw_variant = HardwareVariant.from_usb_product_name(
+            discovery_info.description
+        )
 
         # Set parent class attributes
         self._device = self._usb_info.device
         self._hardware_name = self._hw_variant.full_name
 
         return await self.async_step_confirm()
+
+    async def async_step_import(
+        self, fw_discovery_info: HardwareFirmwareDiscoveryInfo
+    ) -> ConfigFlowResult:
+        """Handle import from ZHA/OTBR firmware notification."""
+        assert fw_discovery_info["usb_device"] is not None
+        usb_info = usb_service_info_from_device(fw_discovery_info["usb_device"])
+        unique_id = usb_unique_id_from_service_info(usb_info)
+
+        if await self.async_set_unique_id(unique_id, raise_on_progress=False):
+            self._abort_if_unique_id_configured(updates={DEVICE: usb_info.device})
+
+        self._usb_info = usb_info
+        assert usb_info.description is not None
+        self._hw_variant = HardwareVariant.from_usb_product_name(usb_info.description)
+        self._device = usb_info.device
+        self._hardware_name = self._hw_variant.full_name
+        self._probed_firmware_info = fw_discovery_info["firmware_info"]
+
+        return self._async_flow_finished()
 
     def _async_flow_finished(self) -> ConfigFlowResult:
         """Create the config entry."""
@@ -126,14 +200,15 @@ class HomeAssistantSkyConnectConfigFlow(
         return self.async_create_entry(
             title=self._hw_variant.full_name,
             data={
-                "vid": self._usb_info.vid,
-                "pid": self._usb_info.pid,
-                "serial_number": self._usb_info.serial_number,
-                "manufacturer": self._usb_info.manufacturer,
-                "description": self._usb_info.description,  # For backwards compatibility
-                "product": self._usb_info.description,
-                "device": self._usb_info.device,
-                "firmware": self._probed_firmware_info.firmware_type.value,
+                VID: self._usb_info.vid,
+                PID: self._usb_info.pid,
+                SERIAL_NUMBER: self._usb_info.serial_number,
+                MANUFACTURER: self._usb_info.manufacturer,
+                DESCRIPTION: self._usb_info.description,  # For backwards compatibility
+                PRODUCT: self._usb_info.description,
+                DEVICE: self._usb_info.device,
+                FIRMWARE: self._probed_firmware_info.firmware_type.value,
+                FIRMWARE_VERSION: self._probed_firmware_info.firmware_version,
             },
         )
 
@@ -148,7 +223,7 @@ class HomeAssistantSkyConnectMultiPanOptionsFlowHandler(
     ) -> silabs_multiprotocol_addon.SerialPortSettings:
         """Return the radio serial port settings."""
         return silabs_multiprotocol_addon.SerialPortSettings(
-            device=self.config_entry.data["device"],
+            device=self.config_entry.data[DEVICE],
             baudrate="115200",
             flow_control=True,
         )
@@ -182,7 +257,8 @@ class HomeAssistantSkyConnectMultiPanOptionsFlowHandler(
             entry=self.config_entry,
             data={
                 **self.config_entry.data,
-                "firmware": ApplicationType.EZSP.value,
+                FIRMWARE: ApplicationType.EZSP.value,
+                FIRMWARE_VERSION: None,
             },
             options=self.config_entry.options,
         )
@@ -191,7 +267,7 @@ class HomeAssistantSkyConnectMultiPanOptionsFlowHandler(
 
 
 class HomeAssistantSkyConnectOptionsFlowHandler(
-    SkyConnectTranslationMixin, firmware_config_flow.BaseFirmwareOptionsFlow
+    SkyConnectFirmwareMixin, firmware_config_flow.BaseFirmwareOptionsFlow
 ):
     """Zigbee and Thread options flow handlers."""
 
@@ -201,15 +277,15 @@ class HomeAssistantSkyConnectOptionsFlowHandler(
 
         self._usb_info = get_usb_service_info(self.config_entry)
         self._hw_variant = HardwareVariant.from_usb_product_name(
-            self.config_entry.data["product"]
+            self.config_entry.data[PRODUCT]
         )
         self._hardware_name = self._hw_variant.full_name
         self._device = self._usb_info.device
 
         self._probed_firmware_info = FirmwareInfo(
             device=self._device,
-            firmware_type=ApplicationType(self.config_entry.data["firmware"]),
-            firmware_version=None,
+            firmware_type=ApplicationType(self.config_entry.data[FIRMWARE]),
+            firmware_version=self.config_entry.data[FIRMWARE_VERSION],
             source="guess",
             owners=[],
         )
@@ -225,7 +301,8 @@ class HomeAssistantSkyConnectOptionsFlowHandler(
             entry=self.config_entry,
             data={
                 **self.config_entry.data,
-                "firmware": self._probed_firmware_info.firmware_type.value,
+                FIRMWARE: self._probed_firmware_info.firmware_type.value,
+                FIRMWARE_VERSION: self._probed_firmware_info.firmware_version,
             },
             options=self.config_entry.options,
         )

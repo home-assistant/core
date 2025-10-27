@@ -4,7 +4,6 @@ import asyncio
 from collections.abc import Iterable
 import dataclasses
 from datetime import timedelta
-from enum import IntFlag
 import logging
 import threading
 from typing import Any
@@ -13,6 +12,7 @@ from unittest.mock import MagicMock, PropertyMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from propcache.api import cached_property
 import pytest
+from pytest_unordered import unordered
 from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
@@ -32,7 +32,7 @@ from homeassistant.core import (
     ReleaseChannel,
     callback,
 )
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, NoEntitySpecifiedError
 from homeassistant.helpers import device_registry as dr, entity, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -44,6 +44,7 @@ from tests.common import (
     MockEntityPlatform,
     MockModule,
     MockPlatform,
+    RegistryEntryWithDefaults,
     mock_integration,
     mock_registry,
 )
@@ -392,7 +393,7 @@ async def test_async_parallel_updates_with_zero_on_sync_update(
             await asyncio.sleep(0)
 
         assert len(updates) == 2
-        assert updates == [1, 2]
+        assert updates == unordered([1, 2])
     finally:
         test_lock.set()
         await asyncio.sleep(0)
@@ -583,10 +584,13 @@ async def test_async_remove_no_platform(hass: HomeAssistant) -> None:
     ent = entity.Entity()
     ent.hass = hass
     ent.entity_id = "test.test"
+    assert ent._platform_state == entity.EntityPlatformState.NOT_ADDED
     ent.async_write_ha_state()
+    assert ent._platform_state == entity.EntityPlatformState.NOT_ADDED
     assert len(hass.states.async_entity_ids()) == 1
     await ent.async_remove()
     assert len(hass.states.async_entity_ids()) == 0
+    assert ent._platform_state == entity.EntityPlatformState.REMOVED
 
 
 async def test_async_remove_runs_callbacks(hass: HomeAssistant) -> None:
@@ -596,10 +600,13 @@ async def test_async_remove_runs_callbacks(hass: HomeAssistant) -> None:
     platform = MockEntityPlatform(hass, domain="test")
     ent = entity.Entity()
     ent.entity_id = "test.test"
+    assert ent._platform_state == entity.EntityPlatformState.NOT_ADDED
     await platform.async_add_entities([ent])
+    assert ent._platform_state == entity.EntityPlatformState.ADDED
     ent.async_on_remove(lambda: result.append(1))
     await ent.async_remove()
     assert len(result) == 1
+    assert ent._platform_state == entity.EntityPlatformState.REMOVED
 
 
 async def test_async_remove_ignores_in_flight_polling(hass: HomeAssistant) -> None:
@@ -646,10 +653,12 @@ async def test_async_remove_twice(hass: HomeAssistant) -> None:
     await ent.async_remove()
     assert len(result) == 1
     assert len(ent.remove_calls) == 1
+    assert ent._platform_state == entity.EntityPlatformState.REMOVED
 
     await ent.async_remove()
     assert len(result) == 1
     assert len(ent.remove_calls) == 1
+    assert ent._platform_state == entity.EntityPlatformState.REMOVED
 
 
 async def test_set_context(hass: HomeAssistant) -> None:
@@ -683,7 +692,7 @@ async def test_warn_disabled(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test we warn once if we write to a disabled entity."""
-    entry = er.RegistryEntry(
+    entry = RegistryEntryWithDefaults(
         entity_id="hello.world",
         unique_id="test-unique-id",
         platform="test-platform",
@@ -710,7 +719,7 @@ async def test_warn_disabled(
 
 async def test_disabled_in_entity_registry(hass: HomeAssistant) -> None:
     """Test entity is removed if we disable entity registry entry."""
-    entry = er.RegistryEntry(
+    entry = RegistryEntryWithDefaults(
         entity_id="hello.world",
         unique_id="test-unique-id",
         platform="test-platform",
@@ -772,7 +781,8 @@ async def test_warn_slow_write_state(
     mock_entity = entity.Entity()
     mock_entity.hass = hass
     mock_entity.entity_id = "comp_test.test_entity"
-    mock_entity.platform = MagicMock(platform_name="hue")
+    mock_entity.platform_data = MagicMock(platform_name="hue")
+    mock_entity._platform_state = entity.EntityPlatformState.ADDED
 
     with patch("homeassistant.helpers.entity.timer", side_effect=[0, 10]):
         mock_entity.async_write_ha_state()
@@ -799,7 +809,8 @@ async def test_warn_slow_write_state_custom_component(
     mock_entity = CustomComponentEntity()
     mock_entity.hass = hass
     mock_entity.entity_id = "comp_test.test_entity"
-    mock_entity.platform = MagicMock(platform_name="hue")
+    mock_entity.platform_data = MagicMock(platform_name="hue")
+    mock_entity._platform_state = entity.EntityPlatformState.ADDED
 
     with patch("homeassistant.helpers.entity.timer", side_effect=[0, 10]):
         mock_entity.async_write_ha_state()
@@ -825,12 +836,10 @@ async def test_setup_source(hass: HomeAssistant) -> None:
 
     assert entity.entity_sources(hass) == {
         "test_domain.platform_config_source": {
-            "custom_component": False,
             "domain": "test_platform",
         },
         "test_domain.config_entry_source": {
             "config_entry": platform.config_entry.entry_id,
-            "custom_component": False,
             "domain": "test_platform",
         },
     }
@@ -1705,13 +1714,15 @@ async def test_invalid_state(
     assert hass.states.get("test.test").state == "x" * 255
 
     caplog.clear()
-    ent._attr_state = "x" * 256
+    long_state = "x" * 256
+    ent._attr_state = long_state
     ent.async_write_ha_state()
     assert hass.states.get("test.test").state == STATE_UNKNOWN
     assert (
-        "homeassistant.helpers.entity",
+        "homeassistant.core",
         logging.ERROR,
-        f"Failed to set state for test.test, fall back to {STATE_UNKNOWN}",
+        f"State {long_state} for test.test is longer than 255, "
+        f"falling back to {STATE_UNKNOWN}",
     ) in caplog.record_tuples
 
     ent._attr_state = "x" * 255
@@ -1780,9 +1791,12 @@ async def test_reuse_entity_object_after_abort(
     platform = MockEntityPlatform(hass, domain="test")
     ent = entity.Entity()
     ent.entity_id = "invalid"
+    assert ent._platform_state == entity.EntityPlatformState.NOT_ADDED
     await platform.async_add_entities([ent])
+    assert ent._platform_state == entity.EntityPlatformState.REMOVED
     assert "Invalid entity ID: invalid" in caplog.text
     await platform.async_add_entities([ent])
+    assert ent._platform_state == entity.EntityPlatformState.REMOVED
     assert (
         "Entity 'invalid' cannot be added a second time to an entity platform"
         in caplog.text
@@ -1799,17 +1813,21 @@ async def test_reuse_entity_object_after_entity_registry_remove(
     platform = MockEntityPlatform(hass, domain="test", platform_name="test")
     ent = entity.Entity()
     ent._attr_unique_id = "5678"
+    assert ent._platform_state == entity.EntityPlatformState.NOT_ADDED
     await platform.async_add_entities([ent])
     assert ent.registry_entry is entry
     assert len(hass.states.async_entity_ids()) == 1
+    assert ent._platform_state == entity.EntityPlatformState.ADDED
 
     entity_registry.async_remove(entry.entity_id)
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids()) == 0
+    assert ent._platform_state == entity.EntityPlatformState.REMOVED
 
     await platform.async_add_entities([ent])
     assert "Entity 'test.test_5678' cannot be added a second time" in caplog.text
     assert len(hass.states.async_entity_ids()) == 0
+    assert ent._platform_state == entity.EntityPlatformState.REMOVED
 
 
 async def test_reuse_entity_object_after_entity_registry_disabled(
@@ -1822,19 +1840,23 @@ async def test_reuse_entity_object_after_entity_registry_disabled(
     platform = MockEntityPlatform(hass, domain="test", platform_name="test")
     ent = entity.Entity()
     ent._attr_unique_id = "5678"
+    assert ent._platform_state == entity.EntityPlatformState.NOT_ADDED
     await platform.async_add_entities([ent])
     assert ent.registry_entry is entry
     assert len(hass.states.async_entity_ids()) == 1
+    assert ent._platform_state == entity.EntityPlatformState.ADDED
 
     entity_registry.async_update_entity(
         entry.entity_id, disabled_by=er.RegistryEntryDisabler.USER
     )
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids()) == 0
+    assert ent._platform_state == entity.EntityPlatformState.REMOVED
 
     await platform.async_add_entities([ent])
     assert len(hass.states.async_entity_ids()) == 0
     assert "Entity 'test.test_5678' cannot be added a second time" in caplog.text
+    assert ent._platform_state == entity.EntityPlatformState.REMOVED
 
 
 async def test_change_entity_id(
@@ -1864,9 +1886,11 @@ async def test_change_entity_id(
 
     platform = MockEntityPlatform(hass, domain="test")
     ent = MockEntity()
+    assert ent._platform_state == entity.EntityPlatformState.NOT_ADDED
     await platform.async_add_entities([ent])
     assert hass.states.get("test.test").state == STATE_UNKNOWN
     assert len(ent.added_calls) == 1
+    assert ent._platform_state == entity.EntityPlatformState.ADDED
 
     entry = entity_registry.async_update_entity(
         entry.entity_id, new_entity_id="test.test2"
@@ -1876,6 +1900,7 @@ async def test_change_entity_id(
     assert len(result) == 1
     assert len(ent.added_calls) == 2
     assert len(ent.remove_calls) == 1
+    assert ent._platform_state == entity.EntityPlatformState.ADDED
 
     entity_registry.async_update_entity(entry.entity_id, new_entity_id="test.test3")
     await hass.async_block_till_done()
@@ -1883,6 +1908,7 @@ async def test_change_entity_id(
     assert len(result) == 2
     assert len(ent.added_calls) == 3
     assert len(ent.remove_calls) == 2
+    assert ent._platform_state == entity.EntityPlatformState.ADDED
 
 
 def test_entity_description_as_dataclass(snapshot: SnapshotAssertion) -> None:
@@ -2486,31 +2512,6 @@ async def test_cached_entity_property_override(hass: HomeAssistant) -> None:
                 return "🤡"
 
 
-async def test_entity_report_deprecated_supported_features_values(
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test reporting deprecated supported feature values only happens once."""
-    ent = entity.Entity()
-
-    class MockEntityFeatures(IntFlag):
-        VALUE1 = 1
-        VALUE2 = 2
-
-    ent._report_deprecated_supported_features_values(MockEntityFeatures(2))
-    assert (
-        "is using deprecated supported features values which will be removed"
-        in caplog.text
-    )
-    assert "MockEntityFeatures.VALUE2" in caplog.text
-
-    caplog.clear()
-    ent._report_deprecated_supported_features_values(MockEntityFeatures(2))
-    assert (
-        "is using deprecated supported features values which will be removed"
-        not in caplog.text
-    )
-
-
 async def test_remove_entity_registry(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
@@ -2548,6 +2549,7 @@ async def test_remove_entity_registry(
     assert len(result) == 1
     assert len(ent.added_calls) == 1
     assert len(ent.remove_calls) == 1
+    assert ent._platform_state == entity.EntityPlatformState.REMOVED
 
     assert hass.states.get("test.test") is None
 
@@ -2652,6 +2654,7 @@ async def test_async_write_ha_state_thread_safety_always(
     ent.entity_id = "test.any"
     ent.hass = hass
     ent.platform = MockEntityPlatform(hass, domain="test")
+    ent._platform_state = entity.EntityPlatformState.ADDED
     ent.async_write_ha_state()
     assert hass.states.get(ent.entity_id)
 
@@ -2665,3 +2668,231 @@ async def test_async_write_ha_state_thread_safety_always(
     ):
         await hass.async_add_executor_job(ent2.async_write_ha_state)
     assert not hass.states.get(ent2.entity_id)
+
+
+async def test_platform_state(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test platform state."""
+
+    entry = entity_registry.async_get_or_create(
+        "test", "test_platform", "5678", suggested_object_id="test"
+    )
+    assert entry.entity_id == "test.test"
+
+    class MockEntity(entity.Entity):
+        _attr_unique_id = "5678"
+
+        async def async_added_to_hass(self):
+            # The attempt to write when in state ADDING should be ignored
+            assert self._platform_state == entity.EntityPlatformState.ADDING
+            self._attr_state = "added_to_hass"
+            self.async_write_ha_state()
+            assert hass.states.get("test.test") is None
+
+        async def async_will_remove_from_hass(self):
+            # The attempt to write when in state REMOVED should be ignored
+            assert self._platform_state == entity.EntityPlatformState.REMOVED
+            assert hass.states.get("test.test").state == "added_to_hass"
+            self._attr_state = "will_remove_from_hass"
+            self.async_write_ha_state()
+            assert hass.states.get("test.test").state == "added_to_hass"
+
+    platform = MockEntityPlatform(hass, domain="test")
+    ent = MockEntity()
+    assert ent._platform_state == entity.EntityPlatformState.NOT_ADDED
+    await platform.async_add_entities([ent])
+    assert hass.states.get("test.test").state == "added_to_hass"
+    assert ent._platform_state == entity.EntityPlatformState.ADDED
+
+    entry = entity_registry.async_remove(entry.entity_id)
+    await hass.async_block_till_done()
+
+    assert ent._platform_state == entity.EntityPlatformState.REMOVED
+
+    assert hass.states.get("test.test") is None
+
+
+async def test_platform_state_no_platform(hass: HomeAssistant) -> None:
+    """Test platform state for entities which are not added by an entity platform."""
+
+    class MockEntity(entity.Entity):
+        entity_id = "test.test"
+
+        def async_set_state(self, state: str) -> None:
+            self._attr_state = state
+            self.async_write_ha_state()
+
+    ent = MockEntity()
+    ent.hass = hass
+    assert hass.states.get("test.test") is None
+
+    # The attempt to write when in state NOT_ADDED should be allowed
+    assert ent._platform_state == entity.EntityPlatformState.NOT_ADDED
+    ent.async_set_state("not_added")
+    assert hass.states.get("test.test").state == "not_added"
+
+    # The attempt to write when in state ADDING should be allowed
+    ent._platform_state = entity.EntityPlatformState.ADDING
+    ent.async_set_state("adding")
+    assert hass.states.get("test.test").state == "adding"
+
+    # The attempt to write when in state ADDED should be allowed
+    ent._platform_state = entity.EntityPlatformState.ADDED
+    ent.async_set_state("added")
+    assert hass.states.get("test.test").state == "added"
+
+    # The attempt to write when in state REMOVED should be ignored
+    ent._platform_state = entity.EntityPlatformState.REMOVED
+    ent.async_set_state("removed")
+    assert hass.states.get("test.test").state == "added"
+
+
+async def test_platform_state_fail_to_add(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test platform state when raising from async_added_to_hass."""
+
+    entry = entity_registry.async_get_or_create(
+        "test", "test_platform", "5678", suggested_object_id="test"
+    )
+    assert entry.entity_id == "test.test"
+
+    class MockEntity(entity.Entity):
+        _attr_unique_id = "5678"
+
+        async def async_added_to_hass(self):
+            raise ValueError("Failed to add entity")
+
+    platform = MockEntityPlatform(hass, domain="test")
+    ent = MockEntity()
+    assert ent._platform_state == entity.EntityPlatformState.NOT_ADDED
+    await platform.async_add_entities([ent])
+    assert hass.states.get("test.test") is None
+    assert ent._platform_state == entity.EntityPlatformState.ADDING
+
+    entry = entity_registry.async_remove(entry.entity_id)
+    await hass.async_block_till_done()
+
+    assert ent._platform_state == entity.EntityPlatformState.REMOVED
+
+    assert hass.states.get("test.test") is None
+
+
+async def test_platform_state_write_from_init(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test platform state when an entity attempts to write from init."""
+
+    class MockEntity(entity.Entity):
+        def __init__(self, hass: HomeAssistant) -> None:
+            self.hass = hass
+            # The attempt to write when in state NOT_ADDED is prevented because
+            # the entity has no entity_id set
+            self._attr_state = "init"
+            with pytest.raises(NoEntitySpecifiedError):
+                self.async_write_ha_state()
+            assert len(hass.states.async_all()) == 0
+
+    platform = MockEntityPlatform(hass, domain="test")
+    ent = MockEntity(hass)
+    assert ent._platform_state == entity.EntityPlatformState.NOT_ADDED
+    await platform.async_add_entities([ent])
+    assert hass.states.get("test.unnamed_device").state == "init"
+    assert ent._platform_state == entity.EntityPlatformState.ADDED
+
+    assert len(hass.states.async_all()) == 1
+
+    assert "Platform test_platform does not generate unique IDs." not in caplog.text
+    assert "Entity id already exists" not in caplog.text
+
+
+async def test_platform_state_write_from_init_entity_id(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test platform state when an entity attempts to write from init.
+
+    The outcome of this test is a bit illogical, when we no longer allow
+    entities without platforms, attempts to write when state is NOT_ADDED
+    will be blocked.
+    """
+
+    class MockEntity(entity.Entity):
+        def __init__(self, hass: HomeAssistant) -> None:
+            self.entity_id = "test.test"
+            self.hass = hass
+            # The attempt to write when in state NOT_ADDED is not prevented because
+            # the platform is not yet set
+            assert self._platform_state == entity.EntityPlatformState.NOT_ADDED
+            self._attr_state = "init"
+            self.async_write_ha_state()
+            assert hass.states.get("test.test").state == "init"
+
+        async def async_added_to_hass(self):
+            raise NotImplementedError("Should not be called")
+
+        async def async_will_remove_from_hass(self):
+            raise NotImplementedError("Should not be called")
+
+    platform = MockEntityPlatform(hass, domain="test")
+    ent = MockEntity(hass)
+    assert ent._platform_state == entity.EntityPlatformState.NOT_ADDED
+    await platform.async_add_entities([ent])
+    assert hass.states.get("test.test").state == "init"
+    assert ent._platform_state == entity.EntityPlatformState.REMOVED
+
+    assert len(hass.states.async_all()) == 1
+
+    # The early attempt to write is interpreted as a state collision
+    assert "Platform test_platform does not generate unique IDs." not in caplog.text
+    assert "Entity id already exists - ignoring: test.test" in caplog.text
+
+
+async def test_platform_state_write_from_init_unique_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test platform state when an entity attempts to write from init.
+
+    The outcome of this test is a bit illogical, when we no longer allow
+    entities without platforms, attempts to write when state is NOT_ADDED
+    will be blocked.
+    """
+
+    entry = entity_registry.async_get_or_create(
+        "test", "test_platform", "5678", suggested_object_id="test"
+    )
+    assert entry.entity_id == "test.test"
+
+    class MockEntity(entity.Entity):
+        _attr_unique_id = "5678"
+
+        def __init__(self, hass: HomeAssistant) -> None:
+            self.entity_id = "test.test"
+            self.hass = hass
+            # The attempt to write when in state NOT_ADDED is not prevented because
+            # the platform is not yet set
+            assert self._platform_state == entity.EntityPlatformState.NOT_ADDED
+            self._attr_state = "init"
+            self.async_write_ha_state()
+            assert hass.states.get("test.test").state == "init"
+
+        async def async_added_to_hass(self):
+            raise NotImplementedError("Should not be called")
+
+        async def async_will_remove_from_hass(self):
+            raise NotImplementedError("Should not be called")
+
+    platform = MockEntityPlatform(hass, domain="test")
+    ent = MockEntity(hass)
+    assert ent._platform_state == entity.EntityPlatformState.NOT_ADDED
+    await platform.async_add_entities([ent])
+    assert hass.states.get("test.test").state == "init"
+    assert ent._platform_state == entity.EntityPlatformState.REMOVED
+
+    assert len(hass.states.async_all()) == 1
+
+    # The early attempt to write is interpreted as a unique ID collision
+    assert "Platform test_platform does not generate unique IDs." in caplog.text
+    assert "Entity id already exists - ignoring: test.test" not in caplog.text

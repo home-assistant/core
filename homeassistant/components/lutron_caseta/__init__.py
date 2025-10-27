@@ -3,13 +3,12 @@
 from __future__ import annotations
 
 import asyncio
-import contextlib
 from itertools import chain
 import logging
 import ssl
 from typing import Any, cast
 
-from pylutron_caseta import BUTTON_STATUS_PRESSED
+from pylutron_caseta import BUTTON_STATUS_MULTITAP, BUTTON_STATUS_PRESSED
 from pylutron_caseta.smartbridge import Smartbridge
 import voluptuous as vol
 
@@ -26,6 +25,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    ACTION_MULTITAP,
     ACTION_PRESS,
     ACTION_RELEASE,
     ATTR_ACTION,
@@ -37,11 +37,12 @@ from .const import (
     ATTR_SERIAL,
     ATTR_TYPE,
     BRIDGE_DEVICE_ID,
-    BRIDGE_TIMEOUT,
     CONF_CA_CERTS,
     CONF_CERTFILE,
     CONF_KEYFILE,
     CONF_SUBTYPE,
+    CONFIGURE_TIMEOUT,
+    CONNECT_TIMEOUT,
     DOMAIN,
     LUTRON_CASETA_BUTTON_EVENT,
     MANUFACTURER,
@@ -161,28 +162,40 @@ async def async_setup_entry(
     keyfile = hass.config.path(entry.data[CONF_KEYFILE])
     certfile = hass.config.path(entry.data[CONF_CERTFILE])
     ca_certs = hass.config.path(entry.data[CONF_CA_CERTS])
-    bridge = None
+    connected_future: asyncio.Future[None] = hass.loop.create_future()
+
+    def _on_connect() -> None:
+        nonlocal connected_future
+        if not connected_future.done():
+            connected_future.set_result(None)
 
     try:
         bridge = Smartbridge.create_tls(
-            hostname=host, keyfile=keyfile, certfile=certfile, ca_certs=ca_certs
+            hostname=host,
+            keyfile=keyfile,
+            certfile=certfile,
+            ca_certs=ca_certs,
+            on_connect_callback=_on_connect,
         )
     except ssl.SSLError:
         _LOGGER.error("Invalid certificate used to connect to bridge at %s", host)
         return False
 
-    timed_out = True
-    with contextlib.suppress(TimeoutError):
-        async with asyncio.timeout(BRIDGE_TIMEOUT):
-            await bridge.connect()
-            timed_out = False
+    connect_task = hass.async_create_task(bridge.connect())
+    for future, name, timeout in (
+        (connected_future, "connect", CONNECT_TIMEOUT),
+        (connect_task, "configure", CONFIGURE_TIMEOUT),
+    ):
+        try:
+            async with asyncio.timeout(timeout):
+                await future
+        except TimeoutError as ex:
+            connect_task.cancel()
+            await bridge.close()
+            raise ConfigEntryNotReady(f"Timed out on {name} for {host}") from ex
 
-    if timed_out or not bridge.is_connected():
-        await bridge.close()
-        if timed_out:
-            raise ConfigEntryNotReady(f"Timed out while trying to connect to {host}")
-        if not bridge.is_connected():
-            raise ConfigEntryNotReady(f"Cannot connect to {host}")
+    if not bridge.is_connected():
+        raise ConfigEntryNotReady(f"Connection failed to {host}")
 
     _LOGGER.debug("Connected to Lutron Caseta bridge via LEAP at %s", host)
     await _async_migrate_unique_ids(hass, entry)
@@ -436,6 +449,8 @@ def _async_subscribe_keypad_events(
 
         if event_type == BUTTON_STATUS_PRESSED:
             action = ACTION_PRESS
+        elif event_type == BUTTON_STATUS_MULTITAP:
+            action = ACTION_MULTITAP
         else:
             action = ACTION_RELEASE
 

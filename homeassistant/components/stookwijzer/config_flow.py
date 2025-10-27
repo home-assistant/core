@@ -25,14 +25,14 @@ class StookwijzerFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is not None:
-            latitude, longitude = await Stookwijzer.async_transform_coordinates(
+            xy = await Stookwijzer.async_transform_coordinates(
                 user_input[CONF_LOCATION][CONF_LATITUDE],
                 user_input[CONF_LOCATION][CONF_LONGITUDE],
             )
-            if latitude and longitude:
+            if xy:
                 return self.async_create_entry(
                     title="Stookwijzer",
-                    data={CONF_LATITUDE: latitude, CONF_LONGITUDE: longitude},
+                    data={CONF_LATITUDE: xy["x"], CONF_LONGITUDE: xy["y"]},
                 )
             errors["base"] = "unknown"
 

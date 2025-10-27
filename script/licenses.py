@@ -88,6 +88,7 @@ OSI_APPROVED_LICENSES_SPDX = {
     "MPL-1.1",
     "MPL-2.0",
     "PSF-2.0",
+    "Python-2.0",
     "Unlicense",
     "Zlib",
     "ZPL-2.1",
@@ -177,10 +178,8 @@ OSI_APPROVED_LICENSES = {
 }
 
 EXCEPTIONS = {
-    "PyMicroBot",  # https://github.com/spycle/pyMicroBot/pull/3
     "PySwitchmate",  # https://github.com/Danielhiversen/pySwitchmate/pull/16
     "PyXiaomiGateway",  # https://github.com/Danielhiversen/PyXiaomiGateway/pull/201
-    "aioecowitt",  # https://github.com/home-assistant-libs/aioecowitt/pull/180
     "chacha20poly1305",  # LGPL
     "commentjson",  # https://github.com/vaidik/commentjson/pull/55
     "crownstone-cloud",  # https://github.com/crownstone/crownstone-lib-python-cloud/pull/5
@@ -196,21 +195,26 @@ EXCEPTIONS = {
     "maxcube-api",  # https://github.com/uebelack/python-maxcube-api/pull/48
     "neurio",  # https://github.com/jordanh/neurio-python/pull/13
     "nsw-fuel-api-client",  # https://github.com/nickw444/nsw-fuel-api-client/pull/14
+    "ollama",  # https://github.com/ollama/ollama-python/pull/526
     "pigpio",  # https://github.com/joan2937/pigpio/pull/608
     "pymitv",  # MIT
     "pybbox",  # https://github.com/HydrelioxGitHub/pybbox/pull/5
     "pysabnzbd",  # https://github.com/jeradM/pysabnzbd/pull/6
-    "pyvera",  # https://github.com/maximvelichko/pyvera/pull/164
-    "repoze.lru",
     "sharp_aquos_rc",  # https://github.com/jmoore987/sharp_aquos_rc/pull/14
     "tapsaff",  # https://github.com/bazwilliams/python-taps-aff/pull/5
+    "ujson",  # https://github.com/ultrajson/ultrajson/blob/main/LICENSE.txt
 }
 
+# fmt: off
 TODO = {
+    "TravisPy": AwesomeVersion("0.3.5"),  # None -- GPL -- ['GNU General Public License v3 (GPLv3)']
     "aiocache": AwesomeVersion(
         "0.12.3"
     ),  # https://github.com/aio-libs/aiocache/blob/master/LICENSE all rights reserved?
+    "caldav": AwesomeVersion("1.6.0"),  # None -- GPL -- ['GNU General Public License (GPL)', 'Apache Software License']  # https://github.com/python-caldav/caldav
+    "xbox-webapi": AwesomeVersion("2.1.0"),  # None -- GPL -- ['MIT License']
 }
+# fmt: on
 
 EXCEPTIONS_AND_TODOS = EXCEPTIONS.union(TODO)
 

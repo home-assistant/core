@@ -88,7 +88,23 @@ async def create_wall_connector_entry(
 
 def get_vitals_mock() -> Vitals:
     """Get mocked vitals object."""
-    return MagicMock(auto_spec=Vitals)
+    mock = MagicMock(auto_spec=Vitals)
+    mock.evse_state = 1
+    mock.handle_temp_c = 25.51
+    mock.pcba_temp_c = 30.5
+    mock.mcu_temp_c = 42.0
+    mock.grid_v = 230.15
+    mock.grid_hz = 50.021
+    mock.voltageA_v = 230.1
+    mock.voltageB_v = 231
+    mock.voltageC_v = 232.1
+    mock.currentA_a = 10
+    mock.currentB_a = 11.1
+    mock.currentC_a = 12
+    mock.session_energy_wh = 1234.56
+    mock.contactor_closed = False
+    mock.vehicle_connected = True
+    return mock
 
 
 def get_lifetime_mock() -> Lifetime:

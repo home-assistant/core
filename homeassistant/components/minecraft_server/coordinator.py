@@ -6,7 +6,7 @@ from datetime import timedelta
 import logging
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_TYPE
+from homeassistant.const import CONF_ADDRESS, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -42,7 +42,7 @@ class MinecraftServerCoordinator(DataUpdateCoordinator[MinecraftServerData]):
 
         super().__init__(
             hass=hass,
-            name=config_entry.data[CONF_NAME],
+            name=config_entry.title,
             config_entry=config_entry,
             logger=_LOGGER,
             update_interval=SCAN_INTERVAL,

@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "description": "To identify the desired region, either the warncell ID / name or device tracker is required. The provided device tracker has to contain the attributes 'latitude' and 'longitude'.",
+        "description": "To identify the desired region, either the warncell ID / name or device tracker is required. The provided device tracker has to contain the attributes 'Latitude' and 'Longitude'.",
         "data": {
           "region_identifier": "Warncell ID or name",
           "region_device_tracker": "Device tracker entity"
@@ -14,7 +14,7 @@
       "ambiguous_identifier": "The region identifier and device tracker can not be specified together.",
       "invalid_identifier": "The specified region identifier / device tracker is invalid.",
       "entity_not_found": "The specified device tracker entity was not found.",
-      "attribute_not_found": "The required `latitude` or `longitude` attribute was not found in the specified device tracker."
+      "attribute_not_found": "The required attributes 'Latitude' and 'Longitude' were not found in the specified device tracker."
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",

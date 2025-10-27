@@ -11,7 +11,9 @@ from __future__ import annotations
 from abc import ABC, ABCMeta, abstractmethod
 import asyncio
 from asyncio import Lock
+import base64
 from collections.abc import Awaitable, Callable
+import hashlib
 from http import HTTPStatus
 from json import JSONDecodeError
 import logging
@@ -20,18 +22,22 @@ import time
 from typing import Any, cast
 
 from aiohttp import ClientError, ClientResponseError, client, web
+from habluetooth import BluetoothServiceInfoBleak
 import jwt
 import voluptuous as vol
 from yarl import URL
 
 from homeassistant import config_entries
-from homeassistant.components import http
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.loader import async_get_application_credentials
 from homeassistant.util.hass_dict import HassKey
 
+from . import http
 from .aiohttp_client import async_get_clientsession
 from .network import NoURLAvailableError
+from .service_info.dhcp import DhcpServiceInfo
+from .service_info.ssdp import SsdpServiceInfo
+from .service_info.zeroconf import ZeroconfServiceInfo
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -149,7 +155,7 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
     @property
     def name(self) -> str:
         """Name of the implementation."""
-        return "Configuration.yaml"
+        return "Local application credentials"
 
     @property
     def domain(self) -> str:
@@ -164,6 +170,11 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
     @property
     def extra_authorize_data(self) -> dict:
         """Extra data that needs to be appended to the authorize url."""
+        return {}
+
+    @property
+    def extra_token_resolve_data(self) -> dict:
+        """Extra data for the token resolve request."""
         return {}
 
     async def async_generate_authorize_url(self, flow_id: str) -> str:
@@ -186,13 +197,13 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
 
     async def async_resolve_external_data(self, external_data: Any) -> dict:
         """Resolve the authorization code to tokens."""
-        return await self._token_request(
-            {
-                "grant_type": "authorization_code",
-                "code": external_data["code"],
-                "redirect_uri": external_data["state"]["redirect_uri"],
-            }
-        )
+        request_data: dict = {
+            "grant_type": "authorization_code",
+            "code": external_data["code"],
+            "redirect_uri": external_data["state"]["redirect_uri"],
+        }
+        request_data.update(self.extra_token_resolve_data)
+        return await self._token_request(request_data)
 
     async def _async_refresh_token(self, token: dict) -> dict:
         """Refresh tokens."""
@@ -211,7 +222,7 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
 
         data["client_id"] = self.client_id
 
-        if self.client_secret is not None:
+        if self.client_secret:
             data["client_secret"] = self.client_secret
 
         _LOGGER.debug("Sending token request to %s", self.token_url)
@@ -231,6 +242,100 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
             )
         resp.raise_for_status()
         return cast(dict, await resp.json())
+
+
+class LocalOAuth2ImplementationWithPkce(LocalOAuth2Implementation):
+    """Local OAuth2 implementation with PKCE."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        domain: str,
+        client_id: str,
+        authorize_url: str,
+        token_url: str,
+        client_secret: str = "",
+        code_verifier_length: int = 128,
+    ) -> None:
+        """Initialize local auth implementation."""
+        super().__init__(
+            hass,
+            domain,
+            client_id,
+            client_secret,
+            authorize_url,
+            token_url,
+        )
+
+        # Generate code verifier
+        self.code_verifier = LocalOAuth2ImplementationWithPkce.generate_code_verifier(
+            code_verifier_length
+        )
+
+    @property
+    def extra_authorize_data(self) -> dict:
+        """Extra data that needs to be appended to the authorize url.
+
+        If you want to override this method,
+        calling super is mandatory (for adding scopes):
+        ```
+        @def extra_authorize_data(self) -> dict:
+            data: dict = {
+                "scope": "openid profile email",
+            }
+            data.update(super().extra_authorize_data)
+            return data
+        ```
+        """
+        return {
+            "code_challenge": LocalOAuth2ImplementationWithPkce.compute_code_challenge(
+                self.code_verifier
+            ),
+            "code_challenge_method": "S256",
+        }
+
+    @property
+    def extra_token_resolve_data(self) -> dict:
+        """Extra data that needs to be included in the token resolve request.
+
+        If you want to override this method,
+        calling super is mandatory (for adding `someKey`):
+        ```
+        @def extra_token_resolve_data(self) -> dict:
+            data: dict = {
+                "someKey": "someValue",
+            }
+            data.update(super().extra_token_resolve_data)
+            return data
+        ```
+        """
+
+        return {"code_verifier": self.code_verifier}
+
+    @staticmethod
+    def generate_code_verifier(code_verifier_length: int = 128) -> str:
+        """Generate a code verifier."""
+        if not 43 <= code_verifier_length <= 128:
+            msg = (
+                "Parameter `code_verifier_length` must validate"
+                "`43 <= code_verifier_length <= 128`."
+            )
+            raise ValueError(msg)
+        return secrets.token_urlsafe(96)[:code_verifier_length]
+
+    @staticmethod
+    def compute_code_challenge(code_verifier: str) -> str:
+        """Compute the code challenge."""
+        if not 43 <= len(code_verifier) <= 128:
+            msg = (
+                "Parameter `code_verifier` must validate "
+                "`43 <= len(code_verifier) <= 128`."
+            )
+            raise ValueError(msg)
+
+        hashed = hashlib.sha256(code_verifier.encode("ascii")).digest()
+        encoded = base64.urlsafe_b64encode(hashed)
+        return encoded.decode("ascii").replace("=", "")
 
 
 class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
@@ -391,6 +496,45 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
     ) -> config_entries.ConfigFlowResult:
         """Handle a flow start."""
         return await self.async_step_pick_implementation(user_input)
+
+    async def async_step_bluetooth(
+        self, discovery_info: BluetoothServiceInfoBleak
+    ) -> config_entries.ConfigFlowResult:
+        """Handle a flow initialized by Bluetooth discovery."""
+        return await self.async_step_oauth_discovery()
+
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> config_entries.ConfigFlowResult:
+        """Handle a flow initialized by DHCP discovery."""
+        return await self.async_step_oauth_discovery()
+
+    async def async_step_homekit(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> config_entries.ConfigFlowResult:
+        """Handle a flow initialized by Homekit discovery."""
+        return await self.async_step_oauth_discovery()
+
+    async def async_step_ssdp(
+        self, discovery_info: SsdpServiceInfo
+    ) -> config_entries.ConfigFlowResult:
+        """Handle a flow initialized by SSDP discovery."""
+        return await self.async_step_oauth_discovery()
+
+    async def async_step_zeroconf(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> config_entries.ConfigFlowResult:
+        """Handle a flow initialized by Zeroconf discovery."""
+        return await self.async_step_oauth_discovery()
+
+    async def async_step_oauth_discovery(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.ConfigFlowResult:
+        """Handle a flow initialized by a discovery method."""
+        if user_input is not None:
+            return await self.async_step_user()
+        await self._async_handle_discovery_without_unique_id()
+        return self.async_show_form(step_id="oauth_discovery")
 
     @classmethod
     def async_register_implementation(
