@@ -2120,7 +2120,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "weatherflow",
     "weatherflow_cloud",
     "weatherkit",
-    "webostv",
     "webmin",
     "weheat",
     "wemo",
