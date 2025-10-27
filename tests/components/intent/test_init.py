@@ -5,7 +5,11 @@ import pytest
 from homeassistant.components.button import SERVICE_PRESS
 from homeassistant.components.cover import SERVICE_CLOSE_COVER, SERVICE_OPEN_COVER
 from homeassistant.components.lock import SERVICE_LOCK, SERVICE_UNLOCK
-from homeassistant.components.valve import SERVICE_CLOSE_VALVE, SERVICE_OPEN_VALVE
+from homeassistant.components.valve import (
+    SERVICE_CLOSE_VALVE,
+    SERVICE_OPEN_VALVE,
+    SERVICE_STOP_VALVE,
+)
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
@@ -594,3 +598,39 @@ async def test_intents_respond_intent(hass: HomeAssistant) -> None:
         hass, "test", intent.INTENT_RESPOND, {"response": {"value": "Hello World"}}
     )
     assert response.speech["plain"]["speech"] == "Hello World"
+
+
+async def test_stop_intent_valve(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test HassStop intent for valves."""
+    assert await async_setup_component(hass, "intent", {})
+
+    valve = entity_registry.async_get_or_create("valve", "test", "valve_uid")
+    hass.states.async_set(valve.entity_id, "open")
+    stop_calls = async_mock_service(hass, "valve", SERVICE_STOP_VALVE)
+
+    response = await intent.async_handle(
+        hass, "test", intent.INTENT_STOP, {"name": {"value": valve.entity_id}}
+    )
+
+    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert len(stop_calls) == 1
+    call = stop_calls[0]
+    assert call.domain == "valve"
+    assert call.service == SERVICE_STOP_VALVE
+    assert call.data == {"entity_id": valve.entity_id}
+
+
+async def test_stop_intent_unsupported_domain(hass: HomeAssistant) -> None:
+    """Test that HassStop intent fails with unsupported domain."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "intent", {})
+
+    # Can't stop lights
+    hass.states.async_set("light.test_light", "on")
+
+    with pytest.raises(intent.IntentHandleError):
+        await intent.async_handle(
+            hass, "test", intent.INTENT_STOP, {"name": {"value": "test light"}}
+        )

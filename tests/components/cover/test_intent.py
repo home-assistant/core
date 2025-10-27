@@ -92,28 +92,29 @@ async def test_close_cover_intent(hass: HomeAssistant, slots: dict[str, Any]) ->
     ],
 )
 async def test_stop_cover_intent(hass: HomeAssistant, slots: dict[str, Any]) -> None:
-    """Test HassStopCover intent."""
-    await cover_intent.async_setup_intents(hass)
+    """Test HassStop intent for covers."""
+    assert await async_setup_component(hass, "intent", {})
 
+    entity_id = f"{DOMAIN}.test_cover"
     hass.states.async_set(
-        f"{DOMAIN}.test_cover", CoverState.OPEN, attributes={"device_class": "shade"}
+        entity_id, CoverState.OPEN, attributes={"device_class": "shade"}
     )
     calls = async_mock_service(hass, DOMAIN, SERVICE_STOP_COVER)
 
     response = await intent.async_handle(
         hass,
         "test",
-        cover_intent.INTENT_STOP_COVER,
+        intent.INTENT_STOP,
         slots,
     )
     await hass.async_block_till_done()
 
-    assert response.speech["plain"]["speech"] == "Stopping test cover"
+    assert response.response_type == intent.IntentResponseType.ACTION_DONE
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == DOMAIN
     assert call.service == SERVICE_STOP_COVER
-    assert call.data == {"entity_id": f"{DOMAIN}.test_cover"}
+    assert call.data == {"entity_id": entity_id}
 
 
 @pytest.mark.parametrize(
