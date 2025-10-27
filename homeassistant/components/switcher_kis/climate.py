@@ -27,7 +27,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -159,21 +159,16 @@ class SwitcherClimateEntity(SwitcherEntity, ClimateEntity):
         """Set new target temperature."""
         data = cast(SwitcherThermostat, self.coordinator.data)
         if not self._remote.modes_features[data.mode]["temperature_control"]:
-            raise HomeAssistantError(
+            raise ServiceValidationError(
                 "Current mode doesn't support setting Target Temperature"
             )
 
-        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
-            raise ValueError("No target temperature provided")
-
-        await self._async_control_breeze_device(target_temp=int(temperature))
+        await self._async_control_breeze_device(
+            target_temp=int(kwargs[ATTR_TEMPERATURE])
+        )
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
-        data = cast(SwitcherThermostat, self.coordinator.data)
-        if not self._remote.modes_features[data.mode]["fan_levels"]:
-            raise HomeAssistantError("Current mode doesn't support setting Fan Mode")
-
         await self._async_control_breeze_device(fan_level=HA_TO_DEVICE_FAN[fan_mode])
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
@@ -187,10 +182,6 @@ class SwitcherClimateEntity(SwitcherEntity, ClimateEntity):
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new target swing operation."""
-        data = cast(SwitcherThermostat, self.coordinator.data)
-        if not self._remote.modes_features[data.mode]["swing"]:
-            raise HomeAssistantError("Current mode doesn't support setting Swing Mode")
-
         if swing_mode == SWING_VERTICAL:
             await self._async_control_breeze_device(swing=ThermostatSwing.ON)
         else:
