@@ -33,7 +33,12 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.hass_dict import HassKey
 
-from .const import DOMAIN, INTENT_CLOSE_COVER, INTENT_OPEN_COVER  # noqa: F401
+from .const import (  # noqa: F401
+    DOMAIN,
+    INTENT_CLOSE_COVER,
+    INTENT_OPEN_COVER,
+    INTENT_STOP_COVER,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
