@@ -5,3 +5,5 @@ CONF_SECURITY_LEVEL = "security_level"
 CONF_STREAM_PATH = "stream_path"
 
 DOMAIN = "vivotek"
+
+MANUFACTURER = "Vivotek"

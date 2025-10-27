@@ -22,12 +22,8 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import config_validation as cv
 
-from .camera import (
-    DEFAULT_NAME,
-    DEFAULT_SECURITY_LEVEL,
-    DEFAULT_STREAM_SOURCE,
-    async_test_config,
-)
+from . import async_build_and_test_cam_client
+from .camera import DEFAULT_NAME, DEFAULT_SECURITY_LEVEL, DEFAULT_STREAM_SOURCE
 from .const import CONF_FRAMERATE, CONF_SECURITY_LEVEL, CONF_STREAM_PATH, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -50,8 +46,6 @@ DESCRIPTION_PLACEHOLDERS = {
 
 class VivotekConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Vivotek IP cameras."""
-
-    VERSION = 1
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -169,8 +163,41 @@ class VivotekConfigFlow(ConfigFlow, domain=DOMAIN):
             }
         )
 
+    async def async_step_import(
+        self, import_data: (dict[str, Any])
+    ) -> ConfigFlowResult:
+        """Import a Yaml config."""
+        self._async_abort_entries_match({CONF_IP_ADDRESS: import_data[CONF_IP_ADDRESS]})
+
+        _LOGGER.debug("Importing Vivotek camera with data: %s", import_data)
+        self._user_input = {}
+        if "ip_address" in import_data:
+            self._user_input[CONF_IP_ADDRESS] = import_data["ip_address"]
+        if "name" in import_data:
+            self._user_input[CONF_NAME] = import_data["name"]
+        if "username" in import_data:
+            self._user_input[CONF_USERNAME] = import_data["username"]
+        if "password" in import_data:
+            self._user_input[CONF_PASSWORD] = import_data["password"]
+        if "authentication" in import_data:
+            self._user_input[CONF_AUTHENTICATION] = import_data["authentication"]
+        if "ssl" in import_data:
+            self._user_input[CONF_SSL] = import_data["ssl"]
+        if "verify_ssl" in import_data:
+            self._user_input[CONF_VERIFY_SSL] = import_data["verify_ssl"]
+        if "framerate" in import_data:
+            self._user_input[CONF_FRAMERATE] = import_data["framerate"]
+        if "security_level" in import_data:
+            self._user_input[CONF_SECURITY_LEVEL] = import_data["security_level"]
+        if "stream_path" in import_data:
+            self._user_input[CONF_STREAM_PATH] = import_data["stream_path"]
+
+        self._user_input[CONF_PORT] = (self._user_input[CONF_SSL] and 443) or 80
+        title = self._user_input.get(CONF_NAME, DOMAIN)
+        return self.async_create_entry(title=title, data=self._user_input)
+
     async def _async_test_config(self) -> None:
         """Test if the provided configuration is valid."""
         user_input = self._user_input
         assert user_input is not None
-        await async_test_config(self.hass, user_input)
+        await async_build_and_test_cam_client(self.hass, user_input)
