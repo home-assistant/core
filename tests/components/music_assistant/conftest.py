@@ -24,12 +24,12 @@ MOCK_SERVER_ID = "1234"
 def mock_get_server_info() -> Generator[AsyncMock]:
     """Mock the function to get server info."""
     with patch(
-        "music_assistant_client.client.WebsocketsConnection.connect"
-    ) as mock_connect:
-        mock_connect.return_value = json.loads(
+        "homeassistant.components.music_assistant.config_flow.get_server_info"
+    ) as mock_get_server_info:
+        mock_get_server_info.return_value = ServerInfoMessage.from_json(
             load_fixture("server_info_message.json", DOMAIN)
         )
-        yield mock_connect
+        yield mock_get_server_info
 
 
 @pytest.fixture(name="music_assistant_client")
