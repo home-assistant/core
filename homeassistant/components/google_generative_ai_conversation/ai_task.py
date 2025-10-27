@@ -19,7 +19,7 @@ from .const import (
     CONF_CHAT_MODEL,
     CONF_RECOMMENDED,
     LOGGER,
-    RECOMMENDED_A_TASK_MAX_TOKENS,
+    RECOMMENDED_AI_TASK_MAX_TOKENS,
     RECOMMENDED_IMAGE_MODEL,
 )
 from .entity import (
@@ -80,7 +80,7 @@ class GoogleGenerativeAITaskEntity(
     ) -> ai_task.GenDataTaskResult:
         """Handle a generate data task."""
         await self._async_handle_chat_log(
-            chat_log, task.structure, default_max_tokens=RECOMMENDED_A_TASK_MAX_TOKENS
+            chat_log, task.structure, default_max_tokens=RECOMMENDED_AI_TASK_MAX_TOKENS
         )
 
         if not isinstance(chat_log.content[-1], conversation.AssistantContent):
