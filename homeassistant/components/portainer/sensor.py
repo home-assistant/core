@@ -171,7 +171,7 @@ async def async_setup_entry(
         current_endpoints = set(coordinator.data)
         new_endpoints = current_endpoints - known_endpoints
 
-        # Only add endpoints who are new
+        # Only add endpoints that are new
         if new_endpoints:
             known_endpoints.update(new_endpoints)
             entities.extend(
