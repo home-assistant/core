@@ -49,6 +49,11 @@ _LOGGER = logging.getLogger(__name__)
 # Cache TTL for backup list (in seconds)
 CACHE_TTL = 300
 
+# Maximum concurrent metadata downloads
+# This is set to half of the requests library's default HTTPAdapter pool_maxsize (10)
+# to avoid exhausting the connection pool when listing many backups
+MAX_CONCURRENT_DOWNLOADS = 5
+
 
 def suggested_filenames(backup: AgentBackup) -> tuple[str, str]:
     """Return the suggested filenames for the backup and metadata files."""
@@ -167,7 +172,7 @@ class BackblazeBackupAgent(BackupAgent):
         self._all_files_cache_lock = asyncio.Lock()
         self._backup_list_cache_lock = asyncio.Lock()
         # Limit concurrent metadata downloads to avoid exhausting connection pool
-        self._download_semaphore = asyncio.Semaphore(5)
+        self._download_semaphore = asyncio.Semaphore(MAX_CONCURRENT_DOWNLOADS)
 
     def _is_cache_valid(self, expiration_time: float) -> bool:
         """Check if cache is still valid based on expiration time."""
@@ -196,15 +201,19 @@ class BackblazeBackupAgent(BackupAgent):
                 "Successfully deleted partially uploaded main backup file %s", filename
             )
 
+    async def _get_file_for_download(self, backup_id: str) -> FileVersion:
+        """Get backup file for download, raising if not found."""
+        file, _ = await self._find_file_and_metadata_version_by_id(backup_id)
+        if not file:
+            raise BackupNotFound(f"Backup {backup_id} not found")
+        return file
+
     @handle_b2_errors
     async def async_download_backup(
         self, backup_id: str, **kwargs: Any
     ) -> AsyncIterator[bytes]:
         """Download a backup from Backblaze B2."""
-        file, _ = await self._find_file_and_metadata_version_by_id(backup_id)
-        if not file:
-            raise BackupNotFound(f"Backup {backup_id} not found")
-
+        file = await self._get_file_for_download(backup_id)
         _LOGGER.debug("Downloading %s", file.file_name)
 
         downloaded_file = await self._hass.async_add_executor_job(file.download)
@@ -280,17 +289,48 @@ class BackblazeBackupAgent(BackupAgent):
             else:
                 await self._cleanup_failed_upload(prefixed_tar_filename)
 
+    def _upload_metadata_file_sync(
+        self, metadata_content: bytes, filename: str
+    ) -> None:
+        """Synchronously upload metadata file to B2."""
+        self._bucket.upload_bytes(
+            metadata_content,
+            filename,
+            content_type="application/json",
+            file_info={"metadata_only": "true"},
+        )
+
     async def _upload_metadata_file(
         self, metadata_content: bytes, filename: str
     ) -> None:
         """Upload metadata file to B2."""
         await self._hass.async_add_executor_job(
-            lambda: self._bucket.upload_bytes(
-                metadata_content,
-                filename,
-                content_type="application/json",
-                file_info={"metadata_only": "true"},
-            )
+            self._upload_metadata_file_sync,
+            metadata_content,
+            filename,
+        )
+
+    def _upload_unbound_stream_sync(
+        self,
+        reader: AsyncIteratorReader,
+        filename: str,
+        content_type: str,
+        file_info: dict[str, Any],
+    ) -> FileVersion:
+        """Synchronously upload unbound stream to B2."""
+        return self._bucket.upload_unbound_stream(
+            reader,
+            filename,
+            content_type=content_type,
+            file_info=file_info,
+        )
+
+    def _download_and_parse_metadata_sync(
+        self, metadata_file_version: FileVersion
+    ) -> dict[str, Any]:
+        """Synchronously download and parse metadata file."""
+        return _parse_metadata(
+            metadata_file_version.download().response.content.decode("utf-8")
         )
 
     async def _upload_backup_file(
@@ -313,12 +353,11 @@ class BackblazeBackupAgent(BackupAgent):
         try:
             content_type, _ = mimetypes.guess_type(filename)
             file_version = await self._hass.async_add_executor_job(
-                lambda: self._bucket.upload_unbound_stream(
-                    reader,
-                    filename,
-                    content_type=content_type or "application/x-tar",
-                    file_info=file_info,
-                )
+                self._upload_unbound_stream_sync,
+                reader,
+                filename,
+                content_type or "application/x-tar",
+                file_info,
             )
         except B2Error:
             _LOGGER.exception("B2 connection error during upload for %s", filename)
@@ -432,9 +471,8 @@ class BackblazeBackupAgent(BackupAgent):
             raise BackupNotFound(f"Backup {backup_id} not found")
 
         metadata_content = await self._hass.async_add_executor_job(
-            lambda: _parse_metadata(
-                metadata_file_version.download().response.content.decode("utf-8")
-            )
+            self._download_and_parse_metadata_sync,
+            metadata_file_version,
         )
 
         _LOGGER.debug(
