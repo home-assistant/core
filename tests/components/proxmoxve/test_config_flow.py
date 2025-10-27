@@ -248,7 +248,7 @@ async def test_import_flow(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "127.0.0.1"
     assert result["data"][CONF_HOST] == "127.0.0.1"
     assert len(mock_setup_entry.mock_calls) == 1
