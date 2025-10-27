@@ -1,13 +1,29 @@
 {
   "config": {
+    "progress": {
+      "title": "Lyrion Music Server",
+      "start_discovery": "Attempting to discover new LMS servers\n\nThis will take about 5 seconds"
+    },
     "flow_title": "{host}",
     "step": {
       "user": {
+        "title": "Lyrion Music Server Configuration",
+        "menu_options": {
+          "start_discovery": "Discover new Lyrion Music Servers",
+          "edit": "Enter configuration manually"
+        }
+      },
+      "discovery_failed": {
+        "title": "Discovery failed",
+        "description": "No LMS were discovered on the network.",
+        "menu_options": {
+          "edit": "Enter configuration manually"
+        }
+      },
+      "choose_server": {
+        "title": "Discovered Servers",
         "data": {
-          "host": "[%key:common::config_flow::data::host%]"
-        },
-        "data_description": {
-          "host": "The hostname or IP address of your Lyrion Music Server."
+          "server_list": "Choose discovered server to configure"
         }
       },
       "edit": {
@@ -20,8 +36,36 @@
           "https": "Connect over HTTPS (requires reverse proxy)"
         },
         "data_description": {
-          "host": "[%key:component::squeezebox::config::step::user::data_description::host%]",
+          "host": "The IP address or hostname of the LMS.",
           "port": "The web interface port on the LMS. The default is 9000.",
+          "username": "The username from LMS Advanced Security (if defined).",
+          "password": "The password from LMS Advanced Security (if defined).",
+          "https": "Connect to the LMS over HTTPS (requires reverse proxy)."
+        }
+      },
+      "edit_discovered": {
+        "title": "Edit additional connection information",
+        "description": "LMS Host: {host}, Port {port}",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "https": "Connect over HTTPS (requires reverse proxy)"
+        },
+        "data_description": {
+          "username": "The username from LMS Advanced Security (if defined).",
+          "password": "The password from LMS Advanced Security (if defined).",
+          "https": "Connect to the LMS over HTTPS (requires reverse proxy)."
+        }
+      },
+      "edit_integration_discovered": {
+        "title": "Edit additional connection information",
+        "description": "{desc}",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "https": "Connect over HTTPS (requires reverse proxy)"
+        },
+        "data_description": {
           "username": "The username from LMS Advanced Security (if defined).",
           "password": "The password from LMS Advanced Security (if defined).",
           "https": "Connect to the LMS over HTTPS (requires reverse proxy)."
@@ -36,7 +80,8 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "no_server_found": "No LMS found."
+      "no_server_found": "No LMS found.",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]"
     }
   },
   "services": {
