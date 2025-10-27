@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
+import logging
 from typing import Any
 
 from pyportainer import Portainer
@@ -27,6 +28,8 @@ from . import PortainerConfigEntry
 from .const import DOMAIN
 from .coordinator import PortainerCoordinator
 from .entity import PortainerContainerEntity, PortainerCoordinatorData
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -85,20 +88,35 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Portainer switch sensors."""
-
     coordinator = entry.runtime_data
+    known_containers: set[tuple[int, str]] = set()
 
-    async_add_entities(
-        PortainerContainerSwitch(
-            coordinator=coordinator,
-            entity_description=entity_description,
-            device_info=container,
-            via_device=endpoint,
-        )
-        for endpoint in coordinator.data.values()
-        for container in endpoint.containers.values()
-        for entity_description in SWITCHES
-    )
+    def _check_devices() -> None:
+        """Check for new devices and add them."""
+        current_containers = {
+            (endpoint.id, container.id)
+            for endpoint in coordinator.data.values()
+            for container in endpoint.containers.values()
+        }
+        new_containers = current_containers - known_containers
+
+        if new_containers:
+            known_containers.update(new_containers)
+            async_add_entities(
+                PortainerContainerSwitch(
+                    coordinator,
+                    entity_description,
+                    container,
+                    endpoint,
+                )
+                for endpoint in coordinator.data.values()
+                for container in endpoint.containers.values()
+                if (endpoint.id, container.id) in new_containers
+                for entity_description in SWITCHES
+            )
+
+    _check_devices()
+    entry.async_on_unload(coordinator.async_add_listener(_check_devices))
 
 
 class PortainerContainerSwitch(PortainerContainerEntity, SwitchEntity):
