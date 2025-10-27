@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import timedelta
-import logging
 from typing import Any, cast
 
 from aioswitcher.api import Command
@@ -34,7 +33,7 @@ from .const import (
 from .coordinator import SwitcherDataUpdateCoordinator
 from .entity import SwitcherEntity
 
-_LOGGER = logging.getLogger(__name__)
+PARALLEL_UPDATES = 1
 
 API_CONTROL_DEVICE = "control_device"
 API_SET_AUTO_SHUTDOWN = "set_auto_shutdown"
