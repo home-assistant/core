@@ -116,7 +116,7 @@ async def async_setup_entry(
     if entry_data.device_info.voice_assistant_feature_flags_compat(
         entry_data.api_version
     ):
-        async_add_entities([EsphomeAssistSatellite(hass, entry)])
+        async_add_entities([EsphomeAssistSatellite(entry)])
 
 
 class EsphomeAssistSatellite(
@@ -128,11 +128,10 @@ class EsphomeAssistSatellite(
         key="assist_satellite", translation_key="assist_satellite"
     )
 
-    def __init__(self, hass: HomeAssistant, entry: ESPHomeConfigEntry) -> None:
+    def __init__(self, entry: ESPHomeConfigEntry) -> None:
         """Initialize satellite."""
         super().__init__(entry.runtime_data)
 
-        self.hass = hass
         self.config_entry = entry
         self.cli = self._entry_data.client
 
@@ -148,9 +147,6 @@ class EsphomeAssistSatellite(
         )
 
         self._active_pipeline_index = 0
-
-        # id -> wake word info
-        self._wake_words_dir = Path(self.hass.config.path(WAKE_WORDS_DIR_NAME))
 
     def _get_entity_id(self, suffix: str) -> str | None:
         """Return the entity id for pipeline select, etc."""
