@@ -12,6 +12,9 @@
       },
       "category": {
         "default": "mdi:label"
+      },
+      "budget": {
+        "default": "mdi:chart-pie"
       }
     }
   }

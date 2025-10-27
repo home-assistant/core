@@ -72,6 +72,9 @@
       },
       "category": {
         "name": "Earned/Spent"
+      },
+      "budget": {
+        "name": "Budget"
       }
     }
   }
