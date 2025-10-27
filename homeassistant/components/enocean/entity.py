@@ -4,6 +4,7 @@ from enocean.protocol.constants import PACKET
 from enocean.protocol.packet import Packet
 from home_assistant_enocean.enocean_device_type import EnOceanDeviceType
 from home_assistant_enocean.enocean_id import EnOceanID
+from home_assistant_enocean.entity import EnOceanEntity as EnOEntity
 from home_assistant_enocean.gateway import EnOceanHomeAssistantGateway
 
 from homeassistant.config_entries import _LOGGER
@@ -38,6 +39,11 @@ class EnOceanEntity(Entity):
         self.__device_name: str = device_name
         self.__device_type: EnOceanDeviceType = device_type
         self.__gateway: EnOceanHomeAssistantGateway = gateway
+
+        gateway.register_entity_callback(
+            EnOEntity(enocean_id=enocean_id, name=name, device_class=None),
+            self.__update,
+        )
 
     async def async_added_to_hass(self) -> None:
         """Get gateway ID and register callback."""
@@ -119,3 +125,10 @@ class EnOceanEntity(Entity):
         info.update({"via_device": (DOMAIN, self.gateway_id.to_string())})
         info.update({"model_id": "EEP " + self.__device_type.eep})
         return info
+
+    def __update(self) -> None:
+        """Notify entity of changes."""
+        _LOGGER.warning(
+            "Entity %s received update notification", self._friendly_name_internal()
+        )
+        self.schedule_update_ha_state()

@@ -14,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .config_entry import EnOceanConfigEntry
-from .config_flow import CONF_ENOCEAN_DEVICE_TYPE_ID, CONF_ENOCEAN_DEVICES
-from .const import ENOCEAN_BINARY_SENSOR_EEPS
 from .entity import EnOceanEntity
 
 DEFAULT_NAME = ""
@@ -29,38 +27,21 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entry."""
-    devices = config_entry.options.get(CONF_ENOCEAN_DEVICES, [])
+    # devices = config_entry.options.get(CONF_ENOCEAN_DEVICES, [])
+    gateway = config_entry.runtime_data.gateway
 
-    for device in devices:
-        device_type_id = device[CONF_ENOCEAN_DEVICE_TYPE_ID]
-        device_type = EnOceanDeviceType.get_supported_device_types()[device_type_id]
-        eep = device_type.eep
-
-        if eep in ENOCEAN_BINARY_SENSOR_EEPS:
-            device_id = EnOceanID(device["id"])
-
-            async_add_entities(
-                [
-                    EnOceanBinarySensor(
-                        enocean_id=device_id,
-                        gateway=config_entry.runtime_data.gateway,
-                        device_name=device["name"],
-                        channel=channel,
-                        dev_type=device_type,
-                        name=channel,
-                    )
-                    for channel in (
-                        "A0",
-                        "A1",
-                        "B0",
-                        "B1",
-                        "AB0",
-                        "AB1",
-                        "A0B1",
-                        "A1B0",
-                    )
-                ]
-            )
+    for enocean_id, entity_name in gateway.binary_sensor_entities:
+        async_add_entities(
+            [
+                EnOceanBinarySensor(
+                    enocean_id=enocean_id,
+                    gateway=config_entry.runtime_data.gateway,
+                    device_name="EnOcean Binary Sensor",
+                    channel=entity_name,
+                    name=entity_name,
+                )
+            ]
+        )
 
 
 class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
