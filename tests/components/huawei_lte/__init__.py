@@ -5,26 +5,8 @@ from unittest.mock import MagicMock
 from huawei_lte_api.enums.cradle import ConnectionStatusEnum
 
 
-def magic_client(multi_basic_settings_value: dict) -> MagicMock:
-    """Mock huawei_lte.Client."""
-    information = MagicMock(return_value={"SerialNumber": "test-serial-number"})
-    check_notifications = MagicMock(return_value={"SmsStorageFull": 0})
-    status = MagicMock(
-        return_value={"ConnectionStatus": ConnectionStatusEnum.CONNECTED.value}
-    )
-    multi_basic_settings = MagicMock(return_value=multi_basic_settings_value)
-    wifi_feature_switch = MagicMock(return_value={"wifi24g_switch_enable": 1})
-    device = MagicMock(information=information)
-    monitoring = MagicMock(check_notifications=check_notifications, status=status)
-    wlan = MagicMock(
-        multi_basic_settings=multi_basic_settings,
-        wifi_feature_switch=wifi_feature_switch,
-    )
-    return MagicMock(device=device, monitoring=monitoring, wlan=wlan)
-
-
-def magic_client_full() -> MagicMock:
-    """Extended mock for huawei_lte.Client with all API methods."""
+def magic_client() -> MagicMock:
+    """Mock huawei_lte.Client with all API methods."""
     information = MagicMock(
         return_value={
             "DeviceName": "Test Router",
@@ -121,7 +103,7 @@ def magic_client_full() -> MagicMock:
     )
     status = MagicMock(
         return_value={
-            "ConnectionStatus": "901",
+            "ConnectionStatus": str(ConnectionStatusEnum.CONNECTED.value),
             "WifiConnectionStatus": None,
             "SignalStrength": None,
             "SignalIcon": "5",
