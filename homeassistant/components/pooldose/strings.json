@@ -37,6 +37,12 @@
       "orp": {
         "name": "ORP"
       },
+      "cl": {
+        "name": "Chlorine"
+      },
+      "flow_rate": {
+        "name": "Flow rate"
+      },
       "ph_type_dosing": {
         "name": "pH dosing type",
         "state": {
@@ -53,7 +59,7 @@
           "timed": "Timed"
         }
       },
-      "ofa_ph_value": {
+      "ofa_ph_time": {
         "name": "pH overfeed alert time"
       },
       "orp_type_dosing": {
@@ -72,7 +78,23 @@
           "timed": "[%key:component::pooldose::entity::sensor::peristaltic_ph_dosing::state::timed%]"
         }
       },
-      "ofa_orp_value": {
+      "cl_type_dosing": {
+        "name": "Chlorine dosing type",
+        "state": {
+          "low": "[%key:common::state::low%]",
+          "high": "[%key:common::state::high%]"
+        }
+      },
+      "peristaltic_cl_dosing": {
+        "name": "Chlorine peristaltic dosing",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "proportional": "[%key:component::pooldose::entity::sensor::peristaltic_ph_dosing::state::proportional%]",
+          "on_off": "[%key:component::pooldose::entity::sensor::peristaltic_ph_dosing::state::on_off%]",
+          "timed": "[%key:component::pooldose::entity::sensor::peristaltic_ph_dosing::state::timed%]"
+        }
+      },
+      "ofa_orp_time": {
         "name": "ORP overfeed alert time"
       },
       "ph_calibration_type": {

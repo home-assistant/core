@@ -10,7 +10,12 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import EntityCategory, UnitOfElectricPotential, UnitOfTime
+from homeassistant.const import (
+    CONCENTRATION_PARTS_PER_MILLION,
+    EntityCategory,
+    UnitOfElectricPotential,
+    UnitOfTime,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -33,6 +38,17 @@ SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
     ),
     SensorEntityDescription(
+        key="cl",
+        translation_key="cl",
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+    ),
+    SensorEntityDescription(
+        key="flow_rate",
+        translation_key="flow_rate",
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
+        # Unit dynamically determined via API
+    ),
+    SensorEntityDescription(
         key="ph_type_dosing",
         translation_key="ph_type_dosing",
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -48,8 +64,8 @@ SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         options=["proportional", "on_off", "timed"],
     ),
     SensorEntityDescription(
-        key="ofa_ph_value",
-        translation_key="ofa_ph_value",
+        key="ofa_ph_time",
+        translation_key="ofa_ph_time",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.DURATION,
         entity_registry_enabled_default=False,
@@ -72,8 +88,24 @@ SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         options=["off", "proportional", "on_off", "timed"],
     ),
     SensorEntityDescription(
-        key="ofa_orp_value",
-        translation_key="ofa_orp_value",
+        key="cl_type_dosing",
+        translation_key="cl_type_dosing",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.ENUM,
+        options=["low", "high"],
+    ),
+    SensorEntityDescription(
+        key="peristaltic_cl_dosing",
+        translation_key="peristaltic_cl_dosing",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.ENUM,
+        options=["off", "proportional", "on_off", "timed"],
+    ),
+    SensorEntityDescription(
+        key="ofa_orp_time",
+        translation_key="ofa_orp_time",
         device_class=SensorDeviceClass.DURATION,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -179,5 +211,11 @@ class PooldoseSensor(PooldoseEntity, SensorEntity):
             and (data := self.get_data()) is not None
         ):
             return data["unit"]  # °C or °F
+
+        if (
+            self.entity_description.key == "flow_rate"
+            and (data := self.get_data()) is not None
+        ):
+            return data.get("unit")  # m³/s or L/s
 
         return super().native_unit_of_measurement

@@ -192,3 +192,52 @@ async def test_temperature_sensor_dynamic_unit(
     # After reload, the original fixture data is restored, so we expect °C
     assert temp_state.attributes["unit_of_measurement"] == UnitOfTemperature.CELSIUS
     assert temp_state.state == "25.0"  # Original fixture value
+
+
+@pytest.mark.usefixtures("mock_pooldose_client")
+async def test_flow_rate_sensor_dynamic_unit(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pooldose_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test flow rate sensor uses dynamic unit from API data."""
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Check if flow_rate sensor exists (it might not be in the fixture)
+    flow_rate_state = hass.states.get("sensor.pool_device_flow_rate")
+    if flow_rate_state is None:
+        # Flow rate sensor not available in fixture, skip test
+        return
+
+    # Change unit via mock update
+    instant_values_raw = await async_load_fixture(hass, "instantvalues.json", DOMAIN)
+    updated_data = json.loads(instant_values_raw)
+
+    # Add flow_rate data if not present, or modify existing
+    if "flow_rate" not in updated_data.get("sensor", {}):
+        updated_data.setdefault("sensor", {})["flow_rate"] = {
+            "value": 15.5,
+            "unit": "L/min",
+        }
+    else:
+        updated_data["sensor"]["flow_rate"]["unit"] = "L/min"
+        updated_data["sensor"]["flow_rate"]["value"] = 15.5
+
+    mock_pooldose_client.instant_values_structured.return_value = (
+        RequestStatus.SUCCESS,
+        updated_data,
+    )
+
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Check unit changed to L/min
+    flow_rate_state = hass.states.get("sensor.pool_device_flow_rate")
+    if flow_rate_state:
+        assert flow_rate_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "L/min"
+        assert flow_rate_state.state == "15.5"

@@ -4,13 +4,19 @@
       "orp": {
         "default": "mdi:water-check"
       },
+      "cl": {
+        "default": "mdi:pool"
+      },
+      "flow_rate": {
+        "default": "mdi:pipe-valve"
+      },
       "ph_type_dosing": {
         "default": "mdi:flask"
       },
       "peristaltic_ph_dosing": {
         "default": "mdi:pump"
       },
-      "ofa_ph_value": {
+      "ofa_ph_time": {
         "default": "mdi:clock"
       },
       "orp_type_dosing": {
@@ -19,7 +25,13 @@
       "peristaltic_orp_dosing": {
         "default": "mdi:pump"
       },
-      "ofa_orp_value": {
+      "cl_type_dosing": {
+        "default": "mdi:flask"
+      },
+      "peristaltic_cl_dosing": {
+        "default": "mdi:pump"
+      },
+      "ofa_orp_time": {
         "default": "mdi:clock"
       },
       "ph_calibration_type": {
