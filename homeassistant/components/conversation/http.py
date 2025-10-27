@@ -287,7 +287,15 @@ def websocket_subscribe_chat_log(
     msg_id = msg["id"]
     subscribed_conversation = msg["conversation_id"]
 
-    # TODO: if chat log doesn't exist, raise NOT_FOUND to prevent creating one
+    chat_logs = hass.data.get(DATA_CHAT_LOGS)
+
+    if not chat_logs or subscribed_conversation not in chat_logs:
+        connection.send_error(
+            msg_id,
+            websocket_api.ERR_NOT_FOUND,
+            "Conversation chat log not found",
+        )
+        return
 
     @callback
     def forward_events(conversation_id: str, event_type: str, data: dict) -> None:

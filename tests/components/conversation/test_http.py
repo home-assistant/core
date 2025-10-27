@@ -5,6 +5,7 @@ from http import HTTPStatus
 from typing import Any
 from unittest.mock import patch
 
+from freezegun import freeze_time
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -25,6 +26,7 @@ from homeassistant.helpers import (
     intent,
 )
 from homeassistant.setup import async_setup_component
+from homeassistant.util.dt import utcnow
 
 from . import MockAgent
 
@@ -603,6 +605,7 @@ async def test_ws_hass_language_scores_with_filter(
     assert result["preferred_language"] == "en-GB"
 
 
+@freeze_time()
 async def test_ws_chat_log_index_subscription(
     hass: HomeAssistant,
     init_components,
@@ -610,6 +613,8 @@ async def test_ws_chat_log_index_subscription(
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test that we can subscribe to chat logs."""
+    now = utcnow().isoformat()
+
     client = await hass_ws_client(hass)
 
     with (
@@ -637,13 +642,15 @@ async def test_ws_chat_log_index_subscription(
                 {
                     "conversation_id": before_sub_conversation_id,
                     "continue_conversation": False,
+                    "created": now,
                     "content": [
                         {"role": "system", "content": ""},
-                        {"role": "user", "content": "Hello"},
+                        {"role": "user", "content": "Hello", "created": now},
                         {
                             "role": "assistant",
                             "agent_id": "test-agent-id",
                             "content": "I hear you",
+                            "created": now,
                         },
                     ],
                 }
@@ -670,6 +677,7 @@ async def test_ws_chat_log_index_subscription(
                 "chat_log": {
                     "conversation_id": conversation_id,
                     "continue_conversation": False,
+                    "created": now,
                     "content": [{"role": "system", "content": ""}],
                 }
             },
@@ -730,6 +738,7 @@ async def test_ws_chat_log_index_subscription_requires_admin(
     assert msg["error"]["code"] == "unauthorized"
 
 
+@freeze_time()
 async def test_ws_chat_log_subscription(
     hass: HomeAssistant,
     init_components,
@@ -737,6 +746,7 @@ async def test_ws_chat_log_subscription(
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test that we can subscribe to chat logs."""
+    now = utcnow().isoformat()
     client = await hass_ws_client(hass)
 
     with (
@@ -768,13 +778,15 @@ async def test_ws_chat_log_subscription(
             "data": {
                 "conversation_id": conversation_id,
                 "continue_conversation": False,
+                "created": now,
                 "content": [
                     {"role": "system", "content": ""},
-                    {"role": "user", "content": "Hello"},
+                    {"role": "user", "content": "Hello", "created": now},
                     {
                         "role": "assistant",
                         "agent_id": "test-agent-id",
                         "content": "I hear you",
+                        "created": now,
                     },
                 ],
             },
@@ -801,6 +813,7 @@ async def test_ws_chat_log_subscription(
                 "content": {
                     "content": "Hello",
                     "role": "user",
+                    "created": now,
                 },
             },
         },
@@ -819,6 +832,7 @@ async def test_ws_chat_log_subscription(
                     "agent_id": "test-agent-id",
                     "content": "I still hear you",
                     "role": "assistant",
+                    "created": now,
                 },
             },
         },
@@ -836,6 +850,9 @@ async def test_ws_chat_log_subscription(
             "event_type": "updated",
             "data": {
                 "chat_log": {
+                    "continue_conversation": False,
+                    "conversation_id": conversation_id,
+                    "created": now,
                     "content": [
                         {
                             "content": "",
@@ -844,24 +861,26 @@ async def test_ws_chat_log_subscription(
                         {
                             "content": "Hello",
                             "role": "user",
+                            "created": now,
                         },
                         {
                             "agent_id": "test-agent-id",
                             "content": "I hear you",
                             "role": "assistant",
+                            "created": now,
                         },
                         {
                             "content": "Hello",
                             "role": "user",
+                            "created": now,
                         },
                         {
                             "agent_id": "test-agent-id",
                             "content": "I still hear you",
                             "role": "assistant",
+                            "created": now,
                         },
                     ],
-                    "continue_conversation": False,
-                    "conversation_id": conversation_id,
                 },
             },
         },
@@ -885,3 +904,14 @@ async def test_ws_chat_log_subscription(
             "data": {},
         },
     }
+
+    # Subscribing now will fail
+    await client.send_json_auto_id(
+        {
+            "type": "conversation/chat_log/subscribe",
+            "conversation_id": conversation_id,
+        }
+    )
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == "not_found"
