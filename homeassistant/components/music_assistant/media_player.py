@@ -289,7 +289,9 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         self._attr_group_members = group_members_entity_ids
         if self.player.type == PlayerType.GROUP:
             self._attr_volume_level = (
-                self.player.group_volume / 100 if self.player.group_volume is not None else None
+                self.player.group_volume / 100
+                if self.player.group_volume is not None
+                else None
             )
         else:
             self._attr_volume_level = (
