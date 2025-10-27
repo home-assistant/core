@@ -2,7 +2,7 @@
   "entity": {
     "sensor": {
       "thunder": {
-        "default": "mdi:lightning-bolt"
+        "default": "mdi:weather-lightning"
       },
       "total_cloud": {
         "default": "mdi:cloud"
