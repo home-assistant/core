@@ -2,8 +2,8 @@
   "config": {
     "step": {
       "user": {
-        "title": "Connect to EnergyID",
-        "description": "Enter your EnergyID webhook provisioning key and secret. Find these in your EnergyID integration setup under provisioning credentials.\n\nMore info: {docs_url}",
+        "title": "Connect to {integration_name}",
+        "description": "Enter your {integration_name} webhook provisioning key and secret. Find these in your {integration_name} integration setup under provisioning credentials.\n\nMore info: {docs_url}",
         "data": {
           "provisioning_key": "Provisioning key",
           "provisioning_secret": "Provisioning secret"
@@ -14,12 +14,12 @@
         }
       },
       "auth_and_claim": {
-        "title": "Claim device in EnergyID",
-        "description": "This Home Assistant connection needs to be claimed in your EnergyID portal before it can send data.\n\n1. Go to: {claim_url}\n2. Enter code: **{claim_code}**\n3. (Code expires: {valid_until})\n\nAfter successfully claiming the device in EnergyID, select **Submit** below to continue."
+        "title": "Claim device in {integration_name}",
+        "description": "This Home Assistant connection needs to be claimed in your {integration_name} portal before it can send data.\n\n1. Go to: {claim_url}\n2. Enter code: **{claim_code}**\n3. (Code expires: {valid_until})\n\nAfter successfully claiming the device in {integration_name}, select **Submit** below to continue."
       },
       "reauth_confirm": {
-        "title": "Reauthenticate EnergyID",
-        "description": "Please re-enter your EnergyID provisioning key and secret to restore the connection.\n\nMore info: {docs_url}",
+        "title": "Reauthenticate {integration_name}",
+        "description": "Please re-enter your {integration_name} provisioning key and secret to restore the connection.\n\nMore info: {docs_url}",
         "data": {
           "provisioning_key": "[%key:component::energyid::config::step::user::data::provisioning_key%]",
           "provisioning_secret": "[%key:component::energyid::config::step::user::data::provisioning_secret%]"
@@ -31,17 +31,17 @@
       }
     },
     "error": {
-      "cannot_connect": "Failed to connect to EnergyID API.",
+      "cannot_connect": "Failed to connect to {integration_name} API.",
       "unknown_auth_error": "Unexpected error occurred during authentication.",
       "claim_failed_or_timed_out": "Claiming the device failed or the code expired.",
       "invalid_auth": "Invalid provisioning key or secret."
     },
     "abort": {
-      "already_configured": "This EnergyID site is already configured.",
-      "reauth_successful": "Reauthentication was successful! Your EnergyID integration is now reconnected."
+      "already_configured": "This {integration_name} site is already configured.",
+      "reauth_successful": "Reauthentication was successful! Your {integration_name} integration is now reconnected."
     },
     "create_entry": {
-      "add_sensor_mapping_hint": "You can now add mappings from any sensor in Home Assistant to EnergyID using the '+ add sensor mapping' button."
+      "add_sensor_mapping_hint": "You can now add mappings from any sensor in Home Assistant to {integration_name} using the '+ add sensor mapping' button."
     }
   },
   "config_subentries": {
@@ -52,12 +52,12 @@
       "step": {
         "user": {
           "title": "Add sensor mapping",
-          "description": "Select a Home Assistant sensor to send to EnergyID. The sensor name will be used as the EnergyID metric key.",
+          "description": "Select a Home Assistant sensor to send to {integration_name}. The sensor name will be used as the {integration_name} metric key.",
           "data": {
             "ha_entity_id": "Home Assistant sensor"
           },
           "data_description": {
-            "ha_entity_id": "Select the sensor from Home Assistant to send to EnergyID."
+            "ha_entity_id": "Select the sensor from Home Assistant to send to {integration_name}."
           }
         }
       },

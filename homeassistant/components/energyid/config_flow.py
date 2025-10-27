@@ -26,6 +26,7 @@ from .const import (
     CONF_PROVISIONING_KEY,
     CONF_PROVISIONING_SECRET,
     DOMAIN,
+    NAME,
 )
 from .energyid_sensor_mapping_flow import EnergyIDSensorMappingFlowHandler
 
@@ -88,6 +89,7 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
             return None
 
         self._flow_data["claim_info"] = client.get_claim_info()
+        self._flow_data["claim_info"]["integration_name"] = NAME
         _LOGGER.debug(
             "Device needs claim, claim info: %s", self._flow_data["claim_info"]
         )
@@ -167,7 +169,8 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
             description_placeholders={
-                "docs_url": "https://app.energyid.eu/integrations/home-assistant"
+                "docs_url": "https://app.energyid.eu/integrations/home-assistant",
+                "integration_name": NAME,
             },
         )
 
@@ -270,7 +273,8 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
             description_placeholders={
-                "docs_url": "https://app.energyid.eu/integrations/home-assistant"
+                "docs_url": "https://app.energyid.eu/integrations/home-assistant",
+                "integration_name": NAME,
             },
         )
 

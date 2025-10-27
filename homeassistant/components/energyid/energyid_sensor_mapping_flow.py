@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.selector import EntitySelector, EntitySelectorConfig
 
-from .const import CONF_ENERGYID_KEY, CONF_HA_ENTITY_UUID, DOMAIN
+from .const import CONF_ENERGYID_KEY, CONF_HA_ENTITY_UUID, DOMAIN, NAME
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -124,7 +124,7 @@ class EnergyIDSensorMappingFlowHandler(ConfigSubentryFlow):
                         CONF_ENERGYID_KEY: energyid_key,
                     }
 
-                    title = f"{ha_entity_id.split('.', 1)[-1]} connection to EnergyID"
+                    title = f"{ha_entity_id.split('.', 1)[-1]} connection to {NAME}"
                     _LOGGER.debug(
                         "Creating subentry with title='%s', data=%s",
                         title,
@@ -151,4 +151,5 @@ class EnergyIDSensorMappingFlowHandler(ConfigSubentryFlow):
             step_id="user",
             data_schema=data_schema,
             errors=errors,
+            description_placeholders={"integration_name": NAME},
         )

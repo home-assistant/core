@@ -3,6 +3,7 @@
 from typing import Final
 
 DOMAIN: Final = "energyid"
+NAME: Final = "EnergyID"
 
 # --- Config Flow and Entry Data ---
 CONF_PROVISIONING_KEY: Final = "provisioning_key"
