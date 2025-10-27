@@ -99,6 +99,7 @@ def title_logo(_: Person, title: Title | None) -> str | None:
 
     return (
         next((i.url for i in title.images if i.type == "Tile"), None)
+        or next((i.url for i in title.images if i.type == "Logo"), None)
         if title and title.images
         else None
     )
