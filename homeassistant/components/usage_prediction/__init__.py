@@ -105,7 +105,16 @@ class UsagePredictionCommonControlView(HomeAssistantView):
         hass: HomeAssistant = request.app[KEY_HASS]
         user = request[KEY_HASS_USER]
 
-        result = await get_cached_common_control(hass, user.id)
+        try:
+            result = await get_cached_common_control(hass, user.id)
+        except Exception as err:
+            return self.json(
+                {
+                    "error": "Could not fetch usage prediction common control.",
+                    "details": str(err),
+                },
+                status_code=500,
+            )
         time_category = common_control.time_category(dt_util.now().hour)
 
         return self.json(
