@@ -119,10 +119,7 @@ class SmartShadeCover(CoverEntity):
             return 50
         return int(self._current_position)
 
-    @property
-    def supported_features(self) -> CoverEntityFeature:
-        """Return supported features for the cover entity."""
-        return (
+    _attr_supported_features = (
             CoverEntityFeature.OPEN
             | CoverEntityFeature.CLOSE
             | CoverEntityFeature.SET_POSITION
