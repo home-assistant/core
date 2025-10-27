@@ -29,7 +29,7 @@ from .const import (
     CONF_SLAVE_COUNT,
     CONF_VIRTUAL_COUNT,
 )
-from .entity import BasePlatform
+from .entity import ModbusBaseEntity
 from .modbus import ModbusHub
 
 PARALLEL_UPDATES = 1
@@ -59,7 +59,7 @@ async def async_setup_platform(
     async_add_entities(sensors)
 
 
-class ModbusBinarySensor(BasePlatform, RestoreEntity, BinarySensorEntity):
+class ModbusBinarySensor(ModbusBaseEntity, RestoreEntity, BinarySensorEntity):
     """Modbus binary sensor."""
 
     def __init__(
@@ -106,7 +106,7 @@ class ModbusBinarySensor(BasePlatform, RestoreEntity, BinarySensorEntity):
 
         # do not allow multiple active calls to the same platform
         result = await self._hub.async_pb_call(
-            self._slave, self._address, self._count, self._input_type
+            self._device_address, self._address, self._count, self._input_type
         )
         if result is None:
             self._attr_available = False

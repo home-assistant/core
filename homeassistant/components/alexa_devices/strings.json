@@ -58,26 +58,6 @@
     }
   },
   "entity": {
-    "binary_sensor": {
-      "bluetooth": {
-        "name": "Bluetooth"
-      },
-      "baby_cry_detection": {
-        "name": "Baby crying"
-      },
-      "beeping_appliance_detection": {
-        "name": "Beeping appliance"
-      },
-      "cough_detection": {
-        "name": "Coughing"
-      },
-      "dog_bark_detection": {
-        "name": "Dog barking"
-      },
-      "water_sounds_detection": {
-        "name": "Water sounds"
-      }
-    },
     "notify": {
       "speak": {
         "name": "Speak"
@@ -104,10 +84,6 @@
         "sound": {
           "name": "Alexa Skill sound file",
           "description": "The sound file to play."
-        },
-        "sound_variant": {
-          "name": "Sound variant",
-          "description": "The variant of the sound to play."
         }
       }
     },

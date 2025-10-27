@@ -2,22 +2,82 @@
   "config": {
     "step": {
       "user": {
-        "title": "Define the API parameters for this installation",
+        "title": "Set up your SolarEdge integration",
+        "description": "Provide your site ID and at least one method of authentication",
         "data": {
           "name": "The name of this installation",
           "site_id": "The SolarEdge site ID",
-          "api_key": "[%key:common::config_flow::data::api_key%]"
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "api_key": "Optional, used for general site sensors",
+          "username": "Optional, used for detailed module-level production statistics",
+          "password": "Required if username is provided"
+        },
+        "sections": {
+          "api_auth": {
+            "name": "API key authentication",
+            "description": "Optionally provide your SolarEdge API key. Used for real-time detailed site sensors",
+            "data": {
+              "api_key": "[%key:common::config_flow::data::api_key%]"
+            }
+          },
+          "web_auth": {
+            "name": "Web account authentication",
+            "description": "Optionally provide your SolarEdge web portal credentials. Used for non real-time module-level production statistics",
+            "data": {
+              "username": "[%key:common::config_flow::data::username%]",
+              "password": "[%key:common::config_flow::data::password%]"
+            }
+          }
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure SolarEdge",
+        "description": "Update your API key or web account credentials for site {site_id}.",
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::solaredge::config::step::user::data_description::api_key%]",
+          "username": "[%key:component::solaredge::config::step::user::data_description::username%]",
+          "password": "[%key:component::solaredge::config::step::user::data_description::password%]"
+        },
+        "sections": {
+          "api_auth": {
+            "name": "[%key:component::solaredge::config::step::user::sections::api_auth::name%]",
+            "description": "[%key:component::solaredge::config::step::user::sections::api_auth::description%]",
+            "data": {
+              "api_key": "[%key:common::config_flow::data::api_key%]"
+            }
+          },
+          "web_auth": {
+            "name": "[%key:component::solaredge::config::step::user::sections::web_auth::name%]",
+            "description": "[%key:component::solaredge::config::step::user::sections::web_auth::description%]",
+            "data": {
+              "username": "[%key:common::config_flow::data::username%]",
+              "password": "[%key:common::config_flow::data::password%]"
+            }
+          }
         }
       }
     },
     "error": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
-      "site_not_active": "The site is not active",
-      "could_not_connect": "Could not connect to the SolarEdge API"
+      "site_not_active": "The site is not active for the provided API key",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "auth_missing": "You must provide either an API key or a username and password."
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
   "entity": {

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import timedelta
-import logging
 from typing import Any, cast
 
 from aioswitcher.api import Command
@@ -34,7 +33,7 @@ from .const import (
 from .coordinator import SwitcherDataUpdateCoordinator
 from .entity import SwitcherEntity
 
-_LOGGER = logging.getLogger(__name__)
+PARALLEL_UPDATES = 1
 
 API_CONTROL_DEVICE = "control_device"
 API_SET_AUTO_SHUTDOWN = "set_auto_shutdown"
@@ -63,12 +62,14 @@ async def async_setup_entry(
         SERVICE_SET_AUTO_OFF_NAME,
         SERVICE_SET_AUTO_OFF_SCHEMA,
         "async_set_auto_off_service",
+        entity_device_classes=(SwitchDeviceClass.SWITCH,),
     )
 
     platform.async_register_entity_service(
         SERVICE_TURN_ON_WITH_TIMER_NAME,
         SERVICE_TURN_ON_WITH_TIMER_SCHEMA,
         "async_turn_on_with_timer_service",
+        entity_device_classes=(SwitchDeviceClass.SWITCH,),
     )
 
     @callback
@@ -134,22 +135,6 @@ class SwitcherBaseSwitchEntity(SwitcherEntity, SwitchEntity):
         await self._async_call_api(API_CONTROL_DEVICE, Command.OFF)
         self._attr_is_on = self.control_result = False
         self.async_write_ha_state()
-
-    async def async_set_auto_off_service(self, auto_off: timedelta) -> None:
-        """Use for handling setting device auto-off service calls."""
-        _LOGGER.warning(
-            "Service '%s' is not supported by %s",
-            SERVICE_SET_AUTO_OFF_NAME,
-            self.coordinator.name,
-        )
-
-    async def async_turn_on_with_timer_service(self, timer_minutes: int) -> None:
-        """Use for turning device on with a timer service calls."""
-        _LOGGER.warning(
-            "Service '%s' is not supported by %s",
-            SERVICE_TURN_ON_WITH_TIMER_NAME,
-            self.coordinator.name,
-        )
 
 
 class SwitcherPowerPlugSwitchEntity(SwitcherBaseSwitchEntity):

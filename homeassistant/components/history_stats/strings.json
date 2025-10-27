@@ -23,6 +23,16 @@
           "type": "The type of sensor, one of 'time', 'ratio' or 'count'"
         }
       },
+      "state": {
+        "data": {
+          "entity_id": "[%key:component::history_stats::config::step::user::data::entity_id%]",
+          "state": "[%key:component::history_stats::config::step::user::data::state%]"
+        },
+        "data_description": {
+          "entity_id": "[%key:component::history_stats::config::step::user::data_description::entity_id%]",
+          "state": "[%key:component::history_stats::config::step::user::data_description::state%]"
+        }
+      },
       "options": {
         "description": "Read the documentation for further details on how to configure the history stats sensor using these options.",
         "data": {

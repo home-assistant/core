@@ -1,0 +1,24 @@
+{
+  "domain": "homeassistant_connect_zbt2",
+  "name": "Home Assistant Connect ZBT-2",
+  "codeowners": ["@home-assistant/core"],
+  "config_flow": true,
+  "dependencies": ["hardware", "usb", "homeassistant_hardware"],
+  "documentation": "https://www.home-assistant.io/integrations/homeassistant_connect_zbt2",
+  "integration_type": "hardware",
+  "quality_scale": "bronze",
+  "usb": [
+    {
+      "vid": "303A",
+      "pid": "4001",
+      "description": "*zbt-2*",
+      "known_devices": ["ZBT-2"]
+    },
+    {
+      "vid": "303A",
+      "pid": "831A",
+      "description": "*zbt-2*",
+      "known_devices": ["ZBT-2"]
+    }
+  ]
+}

@@ -35,6 +35,12 @@
       },
       "last_mission": {
         "default": "mdi:calendar-clock"
+      },
+      "tank_level": {
+        "default": "mdi:water"
+      },
+      "dock_tank_level": {
+        "default": "mdi:water"
       }
     }
   }

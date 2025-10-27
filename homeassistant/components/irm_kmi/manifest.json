@@ -1,0 +1,13 @@
+{
+  "domain": "irm_kmi",
+  "name": "IRM KMI Weather Belgium",
+  "codeowners": ["@jdejaegh"],
+  "config_flow": true,
+  "dependencies": ["zone"],
+  "documentation": "https://www.home-assistant.io/integrations/irm_kmi",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "loggers": ["irm_kmi_api"],
+  "quality_scale": "bronze",
+  "requirements": ["irm-kmi-api==1.1.0"]
+}

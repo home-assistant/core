@@ -100,6 +100,7 @@ class MockBridge:
         self.scenes = self.get_scenes()
         self.devices = self.load_devices()
         self.buttons = self.load_buttons()
+        self._subscribers: dict[str, list] = {}
 
     async def connect(self):
         """Connect the mock bridge."""
@@ -110,9 +111,22 @@ class MockBridge:
 
     def add_subscriber(self, device_id: str, callback_):
         """Mock a listener to be notified of state changes."""
+        if device_id not in self._subscribers:
+            self._subscribers[device_id] = []
+        self._subscribers[device_id].append(callback_)
 
     def add_button_subscriber(self, button_id: str, callback_):
         """Mock a listener for button presses."""
+
+    def call_subscribers(self, device_id: str):
+        """Notify subscribers of a device state change."""
+        if device_id in self._subscribers:
+            for callback in self._subscribers[device_id]:
+                callback()
+
+    def get_device_by_id(self, device_id: str):
+        """Get a device by its ID."""
+        return self.devices.get(device_id)
 
     def is_connected(self):
         """Return whether the mock bridge is connected."""
@@ -308,6 +322,20 @@ class MockBridge:
 
     def tap_button(self, button_id: str):
         """Mock a button press and release message for the given button ID."""
+
+    async def set_value(self, device_id: str, value: int) -> None:
+        """Mock setting a device value."""
+        if device_id in self.devices:
+            self.devices[device_id]["current_state"] = value
+
+    async def raise_cover(self, device_id: str) -> None:
+        """Mock raising a cover."""
+
+    async def lower_cover(self, device_id: str) -> None:
+        """Mock lowering a cover."""
+
+    async def stop_cover(self, device_id: str) -> None:
+        """Mock stopping a cover."""
 
     async def close(self):
         """Close the mock bridge connection."""

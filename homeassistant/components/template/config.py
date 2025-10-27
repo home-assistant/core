@@ -44,11 +44,13 @@ from homeassistant.const import (
     CONF_VARIABLES,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.condition import async_validate_conditions_config
+from homeassistant.helpers.issue_registry import IssueSeverity
 from homeassistant.helpers.trigger import async_validate_trigger_config
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_notify_setup_error
+from homeassistant.util import yaml as yaml_util
 
 from . import (
     alarm_control_panel as alarm_control_panel_platform,
@@ -71,6 +73,8 @@ from . import (
 from .const import DOMAIN, PLATFORMS, TemplateConfig
 from .helpers import async_get_blueprints, rewrite_legacy_to_modern_configs
 
+_LOGGER = logging.getLogger(__name__)
+
 PACKAGE_MERGE_HINT = "list"
 
 
@@ -90,6 +94,44 @@ def ensure_domains_do_not_have_trigger_or_action(*keys: str) -> Callable[[dict],
         return obj
 
     return validate
+
+
+def create_trigger_format_issue(
+    hass: HomeAssistant, config: ConfigType, option: str
+) -> None:
+    """Create a warning when a rogue trigger or action is found."""
+    issue_id = hex(hash(frozenset(config)))
+    yaml_config = yaml_util.dump(config)
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key=f"config_format_{option}",
+        translation_placeholders={"config": yaml_config},
+    )
+
+
+def validate_trigger_format(
+    hass: HomeAssistant, config_section: ConfigType, raw_config: ConfigType
+) -> None:
+    """Validate the config section."""
+    options = set(config_section.keys())
+
+    if CONF_TRIGGERS in options and not options.intersection(
+        [CONF_SENSORS, CONF_BINARY_SENSORS, *PLATFORMS]
+    ):
+        _LOGGER.warning(
+            "Invalid template configuration found, trigger option is missing matching domain"
+        )
+        create_trigger_format_issue(hass, raw_config, CONF_TRIGGERS)
+
+    elif CONF_ACTIONS in options and CONF_TRIGGERS not in options:
+        _LOGGER.warning(
+            "Invalid template configuration found, action option requires a trigger"
+        )
+        create_trigger_format_issue(hass, raw_config, CONF_ACTIONS)
 
 
 def _backward_compat_schema(value: Any | None) -> Any:
@@ -176,7 +218,15 @@ TEMPLATE_BLUEPRINT_SCHEMA = vol.All(
 )
 
 
-async def _async_resolve_blueprints(
+def _merge_section_variables(config: ConfigType, section_variables: ConfigType) -> None:
+    """Merges a template entity configuration's variables with the section variables."""
+    if (variables := config.pop(CONF_VARIABLES, None)) and isinstance(variables, dict):
+        config[CONF_VARIABLES] = {**section_variables, **variables}
+    else:
+        config[CONF_VARIABLES] = section_variables
+
+
+async def _async_resolve_template_config(
     hass: HomeAssistant,
     config: ConfigType,
 ) -> TemplateConfig:
@@ -187,12 +237,12 @@ async def _async_resolve_blueprints(
     with suppress(ValueError):  # Invalid config
         raw_config = dict(config)
 
+    original_config = config
+    config = _backward_compat_schema(config)
     if is_blueprint_instance_config(config):
         blueprints = async_get_blueprints(hass)
 
-        blueprint_inputs = await blueprints.async_inputs_from_config(
-            _backward_compat_schema(config)
-        )
+        blueprint_inputs = await blueprints.async_inputs_from_config(config)
         raw_blueprint_inputs = blueprint_inputs.config_with_inputs
 
         config = blueprint_inputs.async_substitute()
@@ -205,14 +255,33 @@ async def _async_resolve_blueprints(
             for prop in (CONF_NAME, CONF_UNIQUE_ID):
                 if prop in config:
                     config[platform][prop] = config.pop(prop)
-            # For regular template entities, CONF_VARIABLES should be removed because they just
-            # house input results for template entities.  For Trigger based template entities
-            # CONF_VARIABLES should not be removed because the variables are always
-            # executed between the trigger and action.
+            # State based template entities remove CONF_VARIABLES because they pass
+            # blueprint inputs to the template entities. Trigger based template entities
+            # retain CONF_VARIABLES because the variables are always executed between
+            # the trigger and action.
             if CONF_TRIGGERS not in config and CONF_VARIABLES in config:
-                config[platform][CONF_VARIABLES] = config.pop(CONF_VARIABLES)
+                _merge_section_variables(config[platform], config.pop(CONF_VARIABLES))
+
         raw_config = dict(config)
 
+    # Trigger based template entities retain CONF_VARIABLES because the variables are
+    # always executed between the trigger and action.
+    elif CONF_TRIGGERS not in config and CONF_VARIABLES in config:
+        # State based template entities have 2 layers of variables.  Variables at the section level
+        # and variables at the entity level should be merged together at the entity level.
+        section_variables = config.pop(CONF_VARIABLES)
+        platform_config: list[ConfigType] | ConfigType
+        platforms = [platform for platform in PLATFORMS if platform in config]
+        for platform in platforms:
+            platform_config = config[platform]
+            if platform in PLATFORMS:
+                if isinstance(platform_config, dict):
+                    platform_config = [platform_config]
+
+                for entity_config in platform_config:
+                    _merge_section_variables(entity_config, section_variables)
+
+    validate_trigger_format(hass, config, original_config)
     template_config = TemplateConfig(CONFIG_SECTION_SCHEMA(config))
     template_config.raw_blueprint_inputs = raw_blueprint_inputs
     template_config.raw_config = raw_config
@@ -225,7 +294,7 @@ async def async_validate_config_section(
 ) -> TemplateConfig:
     """Validate an entire config section for the template integration."""
 
-    validated_config = await _async_resolve_blueprints(hass, config)
+    validated_config = await _async_resolve_template_config(hass, config)
 
     if CONF_TRIGGERS in validated_config:
         validated_config[CONF_TRIGGERS] = await async_validate_trigger_config(
@@ -276,7 +345,7 @@ async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> Conf
 
             if not legacy_warn_printed:
                 legacy_warn_printed = True
-                logging.getLogger(__name__).warning(
+                _LOGGER.warning(
                     "The entity definition format under template: differs from the"
                     " platform "
                     "configuration format. See "

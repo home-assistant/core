@@ -95,7 +95,7 @@
           "unsynchronized": "Unsynchronized",
           "grid_consumption": "Grid consumption",
           "grid_injection": "Grid injection",
-          "grid_synchronised_but_not_used": "Grid unsynchronized but used"
+          "grid_synchronized_but_not_used": "Grid unsynchronized but used"
         }
       },
       "meter_power": {
@@ -213,6 +213,23 @@
       },
       "energy_battery_consumed": {
         "name": "Today battery-consumed energy"
+      },
+      "forecast_cons_remaining_today": {
+        "name": "Forecast remaining energy consumption for today"
+      },
+      "forecast_prod_remaining_today": {
+        "name": "Forecast remaining energy production for today"
+      }
+    },
+    "select": {
+      "manager_inverter_mode": {
+        "name": "Inverter mode",
+        "state": {
+          "smart_grid": "Smart grid",
+          "backup": "Backup",
+          "on_grid": "On-grid",
+          "off_grid": "Off-grid"
+        }
       }
     }
   }

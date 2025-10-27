@@ -1,0 +1,74 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Set up your Nederlandse Spoorwegen integration.",
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "Your NS API key."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Could not connect to NS API. Check your API key.",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_api_key%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    }
+  },
+  "config_subentries": {
+    "route": {
+      "step": {
+        "user": {
+          "description": "Select your departure and destination stations from the dropdown lists.",
+          "data": {
+            "name": "Route name",
+            "from": "Departure station",
+            "to": "Destination station",
+            "via": "Via station",
+            "time": "Departure time"
+          },
+          "data_description": {
+            "name": "A name for this route",
+            "from": "The station to depart from",
+            "to": "The station to arrive at",
+            "via": "An optional intermediate station",
+            "time": "Optional planned departure time"
+          }
+        }
+      },
+      "error": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      },
+      "abort": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      },
+      "initiate_flow": {
+        "user": "Add route"
+      },
+      "entry_type": "Route"
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_invalid_auth": {
+      "title": "Nederlandse Spoorwegen YAML configuration deprecated",
+      "description": "Configuring Nederlandse Spoorwegen using YAML sensor platform is deprecated.\n\nWhile importing your configuration, an invalid API key was found. Please update your YAML configuration, or remove the existing YAML configuration and set the integration up via the UI."
+    },
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "title": "[%key:component::nederlandse_spoorwegen::issues::deprecated_yaml_import_issue_invalid_auth::title%]",
+      "description": "Configuring Nederlandse Spoorwegen using YAML sensor platform is deprecated.\n\nWhile importing your configuration, Home Assistant could not connect to the NS API. Please check your internet connection and the status of the NS API, then restart Home Assistant to try again, or remove the existing YAML configuration and set the integration up via the UI."
+    },
+    "deprecated_yaml_import_issue_unknown": {
+      "title": "[%key:component::nederlandse_spoorwegen::issues::deprecated_yaml_import_issue_invalid_auth::title%]",
+      "description": "Configuring Nederlandse Spoorwegen using YAML sensor platform is deprecated.\n\nWhile importing your configuration, an unknown error occurred. Please restart Home Assistant to try again, or remove the existing YAML configuration and set the integration up via the UI."
+    },
+    "deprecated_yaml_import_issue_invalid_station": {
+      "title": "[%key:component::nederlandse_spoorwegen::issues::deprecated_yaml_import_issue_invalid_auth::title%]",
+      "description": "Configuring Nederlandse Spoorwegen using YAML sensor platform is deprecated.\n\nWhile importing your configuration an invalid station was found. Please update your YAML configuration, or remove the existing YAML configuration and set the integration up via the UI."
+    }
+  }
+}
