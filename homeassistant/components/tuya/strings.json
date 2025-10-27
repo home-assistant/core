@@ -68,6 +68,12 @@
       },
       "wet": {
         "name": "Wet"
+      },
+      "bag_full": {
+        "name": "Bag full"
+      },
+      "cover_off": {
+        "name": "Cover off"
       }
     },
     "button": {
