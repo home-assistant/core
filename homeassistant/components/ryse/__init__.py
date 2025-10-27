@@ -10,8 +10,11 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "ryse"
 
 
+PLATFORMS = [Platform.COVER]
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up RYSE."""
-    await hass.config_entries.async_forward_entry_setups(entry, ["cover"])
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
 
     return True
