@@ -18,7 +18,7 @@ atomicwrites-homeassistant==1.4.1
 attrs==25.4.0
 audioop-lts==0.2.1
 av==13.1.0
-awesomeversion==25.5.0
+awesomeversion==25.8.0
 bcrypt==5.0.0
 bleak-retry-connector==4.4.3
 bleak==1.0.1
