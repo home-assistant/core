@@ -14,11 +14,7 @@ import aiohttp
 from yarl import URL
 
 from homeassistant.auth.models import RefreshToken
-from homeassistant.components.http import (
-    CONF_SERVER_HOST,
-    CONF_SERVER_PORT,
-    CONF_SSL_CERTIFICATE,
-)
+from homeassistant.components.http import CONF_SERVER_PORT, CONF_SSL_CERTIFICATE
 from homeassistant.const import SERVER_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.singleton import singleton
@@ -237,13 +233,6 @@ class HassIO:
             "port": port,
             "refresh_token": refresh_token.token,
         }
-
-        if http_config.get(CONF_SERVER_HOST) is not None:
-            options["watchdog"] = False
-            _LOGGER.warning(
-                "Found incompatible HTTP option 'server_host'. Watchdog feature"
-                " disabled"
-            )
 
         return await self.send_command("/homeassistant/options", payload=options)
 
