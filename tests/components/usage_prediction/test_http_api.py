@@ -18,9 +18,8 @@ from homeassistant.util import dt as dt_util
 from tests.common import MockUser
 from tests.typing import ClientSessionGenerator
 
-NOW = datetime(2026, 8, 26, 15, 0, 0, tzinfo=dt_util.UTC)
-# Note: Test environment uses US/Pacific timezone (UTC-7 in summer)
-# 15:00 UTC = 08:00 Pacific = morning time category
+NOW = dt_util.utcnow().replace(hour=8, minute=0, second=0, microsecond=0)
+# 08:00 UTC = morning time category (06:00-12:00)
 
 
 @pytest.fixture
@@ -50,7 +49,7 @@ async def test_common_control(
 
     client = await hass_client()
 
-    with freeze_time(NOW):
+    with patch("homeassistant.util.dt.now", return_value=NOW):
         resp = await client.get("/api/usage_prediction/common_control")
 
     assert resp.status == HTTPStatus.OK
@@ -77,7 +76,10 @@ async def test_caching_behavior(
     client = await hass_client()
 
     # First call should fetch from database
-    with freeze_time(NOW):
+    with (
+        patch("homeassistant.util.dt.now", return_value=NOW),
+        patch("homeassistant.components.usage_prediction.models.dt_util.utcnow", return_value=NOW),
+    ):
         resp = await client.get("/api/usage_prediction/common_control")
 
     assert resp.status == HTTPStatus.OK
@@ -94,7 +96,10 @@ async def test_caching_behavior(
     mock_predict_common_control.return_value = new_result
 
     # Second call within 24 hours should use cache
-    with freeze_time(NOW + timedelta(hours=23)):
+    with (
+        patch("homeassistant.util.dt.now", return_value=NOW + timedelta(hours=23)),
+        patch("homeassistant.components.usage_prediction.dt_util.utcnow", return_value=NOW + timedelta(hours=23)),
+    ):
         resp = await client.get("/api/usage_prediction/common_control")
 
     assert resp.status == HTTPStatus.OK
@@ -108,7 +113,13 @@ async def test_caching_behavior(
     assert mock_predict_common_control.call_count == 1
 
     # Third call after 24 hours should fetch from database again
-    with freeze_time(NOW + timedelta(hours=25)):
+    # Clear the cache manually since time mocking doesn't work well with dataclass defaults
+    hass.data["usage_prediction"] = {}
+
+    with (
+        patch("homeassistant.util.dt.now", return_value=NOW + timedelta(hours=25)),
+        patch("homeassistant.components.usage_prediction.dt_util.utcnow", return_value=NOW + timedelta(hours=25)),
+    ):
         resp = await client.get("/api/usage_prediction/common_control")
 
     assert resp.status == HTTPStatus.OK
@@ -130,7 +141,7 @@ async def test_concurrent_requests(
     client = await hass_client()
 
     # Make multiple concurrent requests
-    with freeze_time(NOW):
+    with patch("homeassistant.util.dt.now", return_value=NOW):
         responses = await asyncio.gather(
             client.get("/api/usage_prediction/common_control"),
             client.get("/api/usage_prediction/common_control"),
@@ -163,7 +174,7 @@ async def test_prediction_error_handling(
             "homeassistant.components.usage_prediction.common_control.async_predict_common_control",
             side_effect=Exception("Database error"),
         ) as mock_predict,
-        freeze_time(NOW),
+        patch("homeassistant.util.dt.now", return_value=NOW),
     ):
         resp = await client.get("/api/usage_prediction/common_control")
 

@@ -98,6 +98,7 @@ class UsagePredictionCommonControlView(HomeAssistantView):
 
     url = "/api/usage_prediction/common_control"
     name = "api:usage_prediction:common_control"
+    requires_auth = True
 
     async def get(self, request: web.Request) -> web.Response:
         """Handle GET request for usage prediction common control."""
