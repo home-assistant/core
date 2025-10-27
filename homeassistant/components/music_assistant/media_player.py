@@ -115,13 +115,6 @@ QUEUE_OPTION_MAP = {
     MediaPlayerEnqueue.REPLACE: QueueOption.REPLACE,
 }
 
-REPEAT_MODE_MAPPING_TO_HA = {
-    MassRepeatMode.OFF: RepeatMode.OFF,
-    MassRepeatMode.ONE: RepeatMode.ONE,
-    MassRepeatMode.ALL: RepeatMode.ALL,
-    # UNKNOWN is intentionally not mapped - will return None
-}
-
 SERVICE_PLAY_MEDIA_ADVANCED = "play_media"
 SERVICE_PLAY_ANNOUNCEMENT = "play_announcement"
 SERVICE_TRANSFER_QUEUE = "transfer_queue"
@@ -296,9 +289,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         self._attr_group_members = group_members_entity_ids
         if self.player.type == PlayerType.GROUP:
             self._attr_volume_level = (
-                self.player.group_volume / 100
-                if self.player.group_volume is not None
-                else None
+                self.player.group_volume / 100 if self.player.group_volume is not None else None
             )
         else:
             self._attr_volume_level = (
@@ -669,7 +660,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         # player has an MA queue active (either its own queue or some group queue)
         self._attr_app_id = DOMAIN
         self._attr_shuffle = queue.shuffle_enabled
-        self._attr_repeat = REPEAT_MODE_MAPPING_TO_HA.get(queue.repeat_mode)
+        self._attr_repeat = queue.repeat_mode.value
         if not (cur_item := queue.current_item):
             # queue is empty
             return
