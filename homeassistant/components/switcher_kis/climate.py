@@ -160,7 +160,7 @@ class SwitcherClimateEntity(SwitcherEntity, ClimateEntity):
         data = cast(SwitcherThermostat, self.coordinator.data)
         if not self._remote.modes_features[data.mode]["temperature_control"]:
             raise ServiceValidationError(
-                "Current mode doesn't support setting Target Temperature"
+                "Current mode does not support setting 'Target temperature'."
             )
 
         await self._async_control_breeze_device(
