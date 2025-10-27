@@ -2599,6 +2599,7 @@ class ServiceRegistry:
         schema: VolSchemaType | None = None,
         supports_response: SupportsResponse = SupportsResponse.NONE,
         job_type: HassJobType | None = None,
+        *,
         description_placeholders: Mapping[str, str] | None = None,
     ) -> None:
         """Register a service.
