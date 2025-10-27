@@ -3,7 +3,11 @@
 from datetime import timedelta
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
-from homeassistant.components.energyid import DOMAIN
+from homeassistant.components.energyid import (
+    DOMAIN,
+    _async_handle_state_change,
+    async_unload_entry,
+)
 from homeassistant.components.energyid.const import (
     CONF_DEVICE_ID,
     CONF_DEVICE_NAME,
@@ -14,7 +18,7 @@ from homeassistant.components.energyid.const import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
@@ -731,9 +735,9 @@ async def test_late_appearing_entity_missing_data(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        # Entity appears late - should hit line 324 (continue)
-        hass.states.async_set(entity_entry.entity_id, "100")
-        await hass.async_block_till_done()
+    # Entity appears late - should skip processing due to missing energyid_key
+    hass.states.async_set(entity_entry.entity_id, "100")
+    await hass.async_block_till_done()
 
 
 # ============================================================================
@@ -1174,3 +1178,151 @@ async def test_unload_subentries_explicit(hass: HomeAssistant) -> None:
             await hass.async_block_till_done()
 
             assert result is True
+
+
+async def test_initial_state_conversion_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_webhook_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test ValueError/TypeError during initial state float conversion (lines 212-213)."""
+    # Create entity with non-numeric state that will cause conversion error
+    entity_entry = entity_registry.async_get_or_create(
+        "sensor",
+        "test_platform",
+        "invalid_sensor",
+        suggested_object_id="invalid_sensor",
+    )
+    hass.states.async_set(
+        entity_entry.entity_id, "not_a_number"
+    )  # This will cause ValueError
+
+    sub_entry = {
+        "data": {CONF_HA_ENTITY_UUID: entity_entry.id, CONF_ENERGYID_KEY: "grid_power"}
+    }
+    mock_config_entry.subentries = {"sub_entry_1": MagicMock(**sub_entry)}
+
+    # ACT: Set up the integration - this should trigger the initial state processing
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # ASSERT: Integration should still load successfully despite conversion error
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    # The ValueError/TypeError should be caught and logged, but not crash the setup
+    sensor_mock = mock_webhook_client.get_or_create_sensor.return_value
+    # No update should be called due to conversion error
+    sensor_mock.update.assert_not_called()
+
+
+async def test_state_change_after_entry_unloaded(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_webhook_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test state change when entry is being unloaded (line 305)."""
+    # ARRANGE: Set up entry with a mapped entity
+    entity_entry = entity_registry.async_get_or_create(
+        "sensor", "test_platform", "power_sensor", suggested_object_id="power_sensor"
+    )
+    hass.states.async_set(entity_entry.entity_id, "100")
+    sub_entry = {
+        "data": {CONF_HA_ENTITY_UUID: entity_entry.id, CONF_ENERGYID_KEY: "grid_power"}
+    }
+    mock_config_entry.subentries = {"sub_entry_1": MagicMock(**sub_entry)}
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # ACT: Remove runtime_data to simulate entry being unloaded
+    del mock_config_entry.runtime_data
+
+    # Trigger state change - should hit line 305 and return early
+    hass.states.async_set(entity_entry.entity_id, "200")
+    await hass.async_block_till_done()
+
+    # ASSERT: No error should occur, state change should be ignored
+    # The test passes if no exception is raised and we reach this point
+
+
+async def test_direct_state_change_handler(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Directly test the state change handler for line 324."""
+
+    # Setup
+    entity_entry = entity_registry.async_get_or_create("sensor", "test", "sensor1")
+    hass.states.async_set(entity_entry.entity_id, "100")
+
+    # Create runtime data with a mapping that will trigger the "late entity" path
+    runtime_data = MagicMock()
+    runtime_data.mappings = {}  # Entity not in mappings initially
+    runtime_data.client = MagicMock()
+    runtime_data.client.get_or_create_sensor = MagicMock(return_value=MagicMock())
+
+    # Create subentries that will trigger line 324
+    subentry_mock = MagicMock()
+    subentry_mock.data = {CONF_HA_ENTITY_UUID: entity_entry.id}  # No energyid_key!
+    mock_config_entry.subentries = {"sub1": subentry_mock}
+    mock_config_entry.runtime_data = runtime_data
+
+    # Create a state change event
+    event_data: EventStateChangedData = {
+        "entity_id": entity_entry.entity_id,
+        "new_state": hass.states.get(entity_entry.entity_id),
+        "old_state": None,
+    }
+    event = Event[EventStateChangedData]("state_changed", event_data)
+
+    # Directly call the handler (it's a @callback, not async)
+    _async_handle_state_change(hass, mock_config_entry.entry_id, event)
+
+
+async def test_subentry_unload_during_entry_unload(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that subentries are unloaded when the main entry unloads."""
+
+    # Setup the entry
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Create a subentry with the correct attribute
+    sub_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HA_ENTITY_UUID: "test", CONF_ENERGYID_KEY: "test"},
+    )
+    sub_entry.parent_entry = mock_config_entry.entry_id
+    sub_entry.add_to_hass(hass)
+
+    # Mock the client close to avoid issues
+    mock_config_entry.runtime_data.client.close = AsyncMock()
+
+    # Track if async_unload was called for the subentry
+    original_async_unload = hass.config_entries.async_unload
+    subentry_unload_called = False
+
+    async def mock_async_unload(entry_id):
+        nonlocal subentry_unload_called
+        if entry_id == sub_entry.entry_id:
+            subentry_unload_called = True
+            return True
+        return await original_async_unload(entry_id)
+
+    # Replace the async_unload method
+    hass.config_entries.async_unload = mock_async_unload
+
+    # ACT: Directly call the unload function
+    result = await async_unload_entry(hass, mock_config_entry)
+    await hass.async_block_till_done()
+
+    # ASSERT: Line 363 should have been executed
+    assert subentry_unload_called, (
+        "async_unload should have been called for the subentry (line 363)"
+    )
+    assert result is True
