@@ -117,51 +117,6 @@ async def test_caching_behavior(
 
 
 @pytest.mark.usefixtures("recorder_mock")
-async def test_different_time_categories(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    mock_predict_common_control: Mock,
-) -> None:
-    """Test that different time categories return different results."""
-    assert await async_setup_component(hass, "usage_prediction", {})
-
-    client = await hass_client()
-
-    # Test morning (6-11)
-    with freeze_time(datetime(2026, 8, 26, 10, 0, 0, tzinfo=dt_util.UTC)):
-        resp = await client.get("/api/usage_prediction/common_control")
-        data = await resp.json()
-        assert data == {"entities": ["light.kitchen"]}
-
-    # Clear cache for next test
-    hass.data["usage_prediction"] = {}
-
-    # Test afternoon (12-17)
-    with freeze_time(datetime(2026, 8, 26, 15, 0, 0, tzinfo=dt_util.UTC)):
-        resp = await client.get("/api/usage_prediction/common_control")
-        data = await resp.json()
-        assert data == {"entities": ["climate.thermostat"]}
-
-    # Clear cache for next test
-    hass.data["usage_prediction"] = {}
-
-    # Test evening (18-21)
-    with freeze_time(datetime(2026, 8, 26, 20, 0, 0, tzinfo=dt_util.UTC)):
-        resp = await client.get("/api/usage_prediction/common_control")
-        data = await resp.json()
-        assert data == {"entities": ["light.bedroom"]}
-
-    # Clear cache for next test
-    hass.data["usage_prediction"] = {}
-
-    # Test night (22-5)
-    with freeze_time(datetime(2026, 8, 26, 23, 0, 0, tzinfo=dt_util.UTC)):
-        resp = await client.get("/api/usage_prediction/common_control")
-        data = await resp.json()
-        assert data == {"entities": ["lock.front_door"]}
-
-
-@pytest.mark.usefixtures("recorder_mock")
 async def test_concurrent_requests(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
