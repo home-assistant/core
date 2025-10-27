@@ -10,7 +10,6 @@ from chip.clusters import Objects as clusters
 from chip.clusters.Objects import NullValue
 from matter_server.client.models import device_types
 from matter_server.common.errors import MatterError
-import voluptuous as vol
 
 from homeassistant.components.vacuum import (
     StateVacuumEntity,
@@ -20,24 +19,14 @@ from homeassistant.components.vacuum import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import (
-    HomeAssistant,
-    ServiceResponse,
-    SupportsResponse,
-    callback,
-)
+from homeassistant.core import HomeAssistant, ServiceResponse, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import SERVICE_CLEAN_AREAS, SERVICE_GET_AREAS
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
-
-ATTR_CURRENT_AREA = "current_area"
-ATTR_CURRENT_AREA_NAME = "current_area_name"
-ATTR_SELECTED_AREAS = "selected_areas"
+from .services import ATTR_CURRENT_AREA, ATTR_CURRENT_AREA_NAME, ATTR_SELECTED_AREAS
 
 
 class OperationalState(IntEnum):
@@ -71,23 +60,6 @@ async def async_setup_entry(
     """Set up Matter vacuum platform from Config Entry."""
     matter = get_matter(hass)
     matter.register_platform_handler(Platform.VACUUM, async_add_entities)
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SERVICE_GET_AREAS,
-        schema=None,
-        func="async_handle_get_areas",
-        supports_response=SupportsResponse.ONLY,
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_CLEAN_AREAS,
-        schema={
-            vol.Required("areas"): vol.All(cv.ensure_list, [cv.positive_int]),
-        },
-        func="async_handle_clean_areas",
-        supports_response=SupportsResponse.NONE,
-    )
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -245,6 +217,22 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
                 f"Failed to start cleaning areas {areas}: {err}"
             ) from err
         return None
+
+    async def async_get_areas(self, **kwargs: Any) -> ServiceResponse:
+        """Entity service wrapper for getting areas.
+
+        This wrapper exists because the entity service machinery expects an
+        `async_<service_name>` method on the entity. Delegate to the
+        existing handler implementation.
+        """
+        return await self.async_handle_get_areas(**kwargs)
+
+    async def async_clean_areas(self, areas: list[int], **kwargs: Any) -> None:
+        """Entity service wrapper for cleaning areas.
+
+        Delegate to the existing handler implementation.
+        """
+        await self.async_handle_clean_areas(areas=areas, **kwargs)
 
     def _get_area_name_by_id(self, area_id: int) -> str | None:
         """Get the area name by area ID."""
