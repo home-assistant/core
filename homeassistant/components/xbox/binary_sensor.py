@@ -17,7 +17,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import XboxConfigEntry, XboxUpdateCoordinator
+from .coordinator import XboxConfigEntry
 from .entity import XboxBaseEntity, check_deprecated_entity
 
 
@@ -119,13 +119,16 @@ async def async_setup_entry(
 
         current_xuids = set(coordinator.data.presence)
         if new_xuids := current_xuids - xuids_added:
-            async_add_entities(
-                [
-                    XboxBinarySensorEntity(coordinator, xuid, description)
-                    for xuid in new_xuids
-                    for description in SENSOR_DESCRIPTIONS
-                ]
-            )
+            for xuid in new_xuids:
+                async_add_entities(
+                    [
+                        XboxBinarySensorEntity(coordinator, xuid, description)
+                        for description in SENSOR_DESCRIPTIONS
+                        if check_deprecated_entity(
+                            hass, xuid, description, BINARY_SENSOR_DOMAIN
+                        )
+                    ]
+                )
             xuids_added |= new_xuids
         xuids_added &= current_xuids
 

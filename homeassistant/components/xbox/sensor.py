@@ -102,13 +102,16 @@ async def async_setup_entry(
 
         current_xuids = set(coordinator.data.presence)
         if new_xuids := current_xuids - xuids_added:
-            async_add_entities(
-                [
-                    XboxSensorEntity(coordinator, xuid, description)
-                    for xuid in new_xuids
-                    for description in SENSOR_DESCRIPTIONS
-                ]
-            )
+            for xuid in new_xuids:
+                async_add_entities(
+                    [
+                        XboxSensorEntity(coordinator, xuid, description)
+                        for description in SENSOR_DESCRIPTIONS
+                        if check_deprecated_entity(
+                            hass, xuid, description, SENSOR_DOMAIN
+                        )
+                    ]
+                )
             xuids_added |= new_xuids
         xuids_added &= current_xuids
 
