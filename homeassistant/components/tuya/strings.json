@@ -620,6 +620,12 @@
       "duster_cloth_life": {
         "name": "Duster cloth lifetime"
       },
+      "excretion_time_day": {
+        "name": "Excretion time (day)"
+      },
+      "excretion_times_day": {
+        "name": "Excretion times (day)"
+      },
       "feels_like_temperature": {
         "name": "Feels like"
       },
