@@ -763,11 +763,11 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         TuyaSensorEntityDescription(
             key=DPCode.EXCRETION_TIME_DAY,
             translation_key="excretion_time_day",
+            device_class=SensorDeviceClass.DURATION,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.EXCRETION_TIMES_DAY,
             translation_key="excretion_times_day",
-            device_class=SensorDeviceClass.DURATION,
         ),
     ),
     DeviceCategory.MZJ: (
