@@ -27,7 +27,9 @@ from .entity import ZeversolarEntity
 class ZeversolarEntityDescription(SensorEntityDescription):
     """Describes Zeversolar sensor entity."""
 
-    value_fn: Callable[[zeversolar.ZeverSolarData], zeversolar.kWh | zeversolar.Watt]
+    value_fn: Callable[
+        [zeversolar.ZeverSolarData | None], zeversolar.kWh | zeversolar.Watt | str | None
+    ]
 
 
 SENSOR_TYPES = (

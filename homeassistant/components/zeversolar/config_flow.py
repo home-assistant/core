@@ -6,7 +6,6 @@ import logging
 from typing import Any
 
 import voluptuous as vol
-import zeversolar
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
