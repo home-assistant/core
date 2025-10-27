@@ -1,7 +1,9 @@
 """Test the binary sensor platform of ping."""
 
+import asyncio
+import contextlib
 from datetime import timedelta
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from icmplib import Host
@@ -65,3 +67,44 @@ async def test_disabled_after_import(
     assert entry
     assert entry.disabled
     assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_never_delayed_long_enough_to_trigger_warning(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test handling of the early-return for slow pings."""
+    entry = entity_registry.async_get("binary_sensor.10_10_10_10")
+
+    never_return_task = asyncio.create_task(asyncio.Event().wait())
+    mock_logger = Mock()
+
+    # pretend the ping never resolves, to hit the limit
+    # and then assert we didn't get any warnings about the limit being hit
+    # (because the code handles it)
+    with (
+        patch(
+            "homeassistant.components.ping.helpers.async_ping",
+            new=lambda *args, **kwargs: never_return_task,
+        ),
+        patch(
+            "homeassistant.helpers.entity._LOGGER",
+            new=mock_logger,
+        ),
+    ):
+        assert entry
+        freezer.tick(timedelta(minutes=5))
+
+        # pump the _async_update_data() task through its steps
+        for _ in range(5):
+            await hass.async_block_till_done()
+
+    # no warnings emitted
+    assert mock_logger.warning.call_count == 0
+
+    # cleanup
+    never_return_task.cancel()
+    with contextlib.suppress(asyncio.CancelledError):
+        await never_return_task
