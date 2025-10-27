@@ -37,25 +37,12 @@ class ZeverSolarConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA
             )
 
-        errors = {}
-
-        client = zeversolar.ZeverSolarClient(host=user_input[CONF_HOST])
-        try:
-            data = await self.hass.async_add_executor_job(client.get_data)
-        except zeversolar.ZeverSolarHTTPNotFound:
-            errors["base"] = "invalid_host"
-        except zeversolar.ZeverSolarHTTPError:
-            errors["base"] = "cannot_connect"
-        except zeversolar.ZeverSolarTimeout:
-            errors["base"] = "timeout_connect"
-        except Exception:
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
-        else:
-            await self.async_set_unique_id(data.serial_number)
-            self._abort_if_unique_id_configured()
-            return self.async_create_entry(title="Zeversolar", data=user_input)
-
-        return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
-        )
+        # Skip validation - allow configuration even when inverter is offline
+        # This enables setup during night time when inverter is naturally offline
+        _LOGGER.info("Configuring Zeversolar integration for host: %s (no validation)", user_input[CONF_HOST])
+        
+        # Use host as unique ID since we can't get serial number when offline
+        await self.async_set_unique_id(f"zeversolar_{user_input[CONF_HOST]}")
+        self._abort_if_unique_id_configured()
+        
+        return self.async_create_entry(title="Zeversolar", data=user_input)

@@ -24,6 +24,16 @@
     "sensor": {
       "energy_today": {
         "name": "Energy today"
+      },
+      "pac": {
+        "name": "Power"
+      },
+      "status": {
+        "name": "Status",
+        "state": {
+          "online": "Online",
+          "offline": "Offline"
+        }
       }
     }
   }

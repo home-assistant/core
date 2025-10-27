@@ -23,9 +23,23 @@ class ZeversolarEntity(
     ) -> None:
         """Initialize the Zeversolar entity."""
         super().__init__(coordinator=coordinator)
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.data.serial_number)},
-            name="Zeversolar Sensor",
-            manufacturer="Zeversolar",
-            serial_number=coordinator.data.serial_number,
-        )
+        # Use current data or last known data for device info
+        device_data = coordinator.data or coordinator.last_known_data
+        host = coordinator.config_entry.data.get("host", "unknown")
+
+        if device_data:
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, device_data.serial_number)},
+                name="Zeversolar Inverter",
+                manufacturer="Zeversolar",
+                serial_number=device_data.serial_number,
+                suggested_area="Solar System",
+            )
+        else:
+            # Use host-based device info when no data is available (offline setup)
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, f"zeversolar_{host}")},
+                name="Zeversolar Inverter",
+                manufacturer="Zeversolar",
+                suggested_area="Solar System",
+            )

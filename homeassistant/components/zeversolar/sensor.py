@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory, UnitOfEnergy, UnitOfPower
+from homeassistant.const import CONF_HOST, EntityCategory, UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -38,7 +38,7 @@ SENSOR_TYPES = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.POWER,
-        value_fn=lambda data: data.pac,
+        value_fn=lambda data: data.pac if data else 0,
     ),
     ZeversolarEntityDescription(
         key="energy_today",
@@ -46,7 +46,13 @@ SENSOR_TYPES = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
-        value_fn=lambda data: data.energy_today,
+        value_fn=lambda data: data.energy_today if data else None,
+    ),
+    ZeversolarEntityDescription(
+        key="status",
+        translation_key="status",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: "online" if data else "offline",
     ),
 )
 
@@ -71,6 +77,7 @@ class ZeversolarSensor(ZeversolarEntity, SensorEntity):
     """Implementation of the Zeversolar sensor."""
 
     entity_description: ZeversolarEntityDescription
+    _last_known_value: int | float | str | None = None
 
     def __init__(
         self,
@@ -81,9 +88,35 @@ class ZeversolarSensor(ZeversolarEntity, SensorEntity):
         """Initialize the sensor."""
         self.entity_description = description
         super().__init__(coordinator=coordinator)
-        self._attr_unique_id = f"{coordinator.data.serial_number}_{description.key}"
+        # Use last known data for unique ID if current data is not available
+        device_data = coordinator.data or coordinator.last_known_data
+        host = coordinator.config_entry.data.get(CONF_HOST, "unknown")
+
+        if device_data:
+            self._attr_unique_id = f"{device_data.serial_number}_{description.key}"
+        else:
+            # Use host-based unique ID when no serial number is available (offline setup)
+            self._attr_unique_id = f"zeversolar_{host}_{description.key}"
 
     @property
-    def native_value(self) -> int | float:
+    def native_value(self) -> int | float | str | None:
         """Return sensor state."""
-        return self.entity_description.value_fn(self.coordinator.data)
+        current_value = self.entity_description.value_fn(self.coordinator.data)
+
+        # For energy_today sensor, preserve last known value when offline
+        if self.entity_description.key == "energy_today":
+            if current_value is not None:
+                self._last_known_value = current_value
+                return current_value
+            elif self._last_known_value is not None:
+                # Return last known value when offline
+                return self._last_known_value
+
+        return current_value
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        # Always show all sensors as available to prevent "unavailable" status
+        # The status sensor will show online/offline state instead
+        return True
