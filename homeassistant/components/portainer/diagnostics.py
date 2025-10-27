@@ -31,7 +31,7 @@ def _serialize_coordinator(coordinator: PortainerCoordinator) -> dict[str, Any]:
                 "containers": [
                     {
                         "id": container.id,
-                        "names": list(container.names or [])
+                        "names": list(container.names or []),
                         "image": container.image,
                         "state": container.state,
                         "status": container.status,
