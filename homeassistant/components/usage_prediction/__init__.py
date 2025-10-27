@@ -107,7 +107,7 @@ class UsagePredictionCommonControlView(HomeAssistantView):
 
         try:
             result = await get_cached_common_control(hass, user.id)
-        except Exception as err:
+        except Exception as err:  # noqa: BLE001
             return self.json(
                 {
                     "error": "Could not fetch usage prediction common control.",

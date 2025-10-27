@@ -3,11 +3,10 @@
 import asyncio
 from collections.abc import Generator
 from copy import deepcopy
-from datetime import datetime, timedelta
+from datetime import timedelta
 from http import HTTPStatus
 from unittest.mock import Mock, patch
 
-from freezegun import freeze_time
 import pytest
 
 from homeassistant.components.usage_prediction.models import EntityUsagePredictions
