@@ -98,6 +98,9 @@ class ReolinkOptionsFlowHandler(OptionsFlowWithReload):
                     ),
                 }
             ),
+            description_placeholders={
+                "reolink_ip": "192.168.1.25",
+            },
         )
 
 

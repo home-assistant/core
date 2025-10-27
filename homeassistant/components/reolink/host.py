@@ -61,6 +61,11 @@ POLL_INTERVAL_NO_PUSH = 5
 LONG_POLL_COOLDOWN = 0.75
 LONG_POLL_ERROR_COOLDOWN = 30
 
+# Translation placeholders
+HOMEASSISTANT_IP = "192.168.1.10"
+HOMEASSISTANT_URL = f"https://{HOMEASSISTANT_IP}:8123"
+NETWORK_LINK = "https://my.home-assistant.io/redirect/network/"
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -425,7 +430,9 @@ class ReolinkHost:
                 translation_placeholders={
                     "name": self._api.nvr_name,
                     "base_url": self._base_url,
-                    "network_link": "https://my.home-assistant.io/redirect/network/",
+                    "network_link": NETWORK_LINK,
+                    "homeassistant_url": HOMEASSISTANT_URL,
+                    "homeassistant_ip": HOMEASSISTANT_IP,
                 },
             )
 
@@ -439,7 +446,9 @@ class ReolinkHost:
                     translation_key="https_webhook",
                     translation_placeholders={
                         "base_url": self._base_url,
-                        "network_link": "https://my.home-assistant.io/redirect/network/",
+                        "network_link": NETWORK_LINK,
+                        "homeassistant_url": HOMEASSISTANT_URL,
+                        "homeassistant_ip": HOMEASSISTANT_IP,
                     },
                 )
             else:
@@ -456,7 +465,7 @@ class ReolinkHost:
                     translation_placeholders={
                         "ssl_link": "https://www.home-assistant.io/integrations/http/#ssl_certificate",
                         "base_url": self._base_url,
-                        "network_link": "https://my.home-assistant.io/redirect/network/",
+                        "network_link": NETWORK_LINK,
                         "nginx_link": "https://github.com/home-assistant/addons/tree/master/nginx_proxy",
                     },
                 )
