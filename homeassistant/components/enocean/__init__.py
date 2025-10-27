@@ -14,6 +14,7 @@ from .config_entry import EnOceanConfigEntry, EnOceanConfigRuntimeData
 from .config_flow import CONF_ENOCEAN_DEVICES
 from .const import (
     CONF_ENOCEAN_DEVICE_ID,
+    CONF_ENOCEAN_DEVICE_NAME,
     CONF_ENOCEAN_DEVICE_TYPE_ID,
     DATA_ENOCEAN,
     DOMAIN,
@@ -53,14 +54,19 @@ async def async_setup_entry(
         try:
             enocean_id = EnOceanID.from_string(device[CONF_ENOCEAN_DEVICE_ID])
             device_type_id = device[CONF_ENOCEAN_DEVICE_TYPE_ID]
-            device_type = EnOceanDeviceType.get_supported_device_types()[device_type_id]
+            device_type: EnOceanDeviceType = (
+                EnOceanDeviceType.get_supported_device_types()[device_type_id]
+            )
+            device_name = device.get(CONF_ENOCEAN_DEVICE_NAME, "EnOcean Device")
             LOGGER.warning(
-                "Adding EnOcean device %s of type %s", enocean_id, device_type.unique_id
+                "Adding EnOcean device %s of type %s with name %s",
+                enocean_id,
+                device_type.unique_id,
+                device_name,
             )
 
             gateway.add_device(
-                enocean_id=enocean_id,
-                device_type=device_type,
+                enocean_id=enocean_id, device_type=device_type, device_name=device_name
             )
 
         except ValueError as ex:

@@ -5,6 +5,7 @@ from __future__ import annotations
 from enocean.protocol.packet import Packet
 from home_assistant_enocean.enocean_device_type import EnOceanDeviceType
 from home_assistant_enocean.enocean_id import EnOceanID
+from home_assistant_enocean.entity_id import EnOceanEntityID
 from home_assistant_enocean.gateway import EnOceanHomeAssistantGateway
 import voluptuous as vol
 
@@ -30,12 +31,6 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .config_entry import EnOceanConfigEntry
-from .config_flow import (
-    CONF_ENOCEAN_DEVICE_ID,
-    CONF_ENOCEAN_DEVICE_NAME,
-    CONF_ENOCEAN_DEVICE_TYPE_ID,
-    CONF_ENOCEAN_DEVICES,
-)
 from .const import LOGGER
 from .entity import EnOceanEntity
 
@@ -100,190 +95,190 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entry."""
-    devices = config_entry.options.get(CONF_ENOCEAN_DEVICES, [])
+    # devices = config_entry.options.get(CONF_ENOCEAN_DEVICES, [])
 
-    for device in devices:
-        # get config data
-        device_id = EnOceanID(device[CONF_ENOCEAN_DEVICE_ID])
-        device_name = device[CONF_ENOCEAN_DEVICE_NAME]
-        device_type_id = device[CONF_ENOCEAN_DEVICE_TYPE_ID]
-        device_type = EnOceanDeviceType.get_supported_device_types()[device_type_id]
-        eep = device_type.eep
-        eep_type = int(eep[6:8], 16)
+    # for device in []:
+    #     # get config data
+    #     device_id = EnOceanID(device[CONF_ENOCEAN_DEVICE_ID])
+    #     device_name = device[CONF_ENOCEAN_DEVICE_NAME]
+    #     device_type_id = device[CONF_ENOCEAN_DEVICE_TYPE_ID]
+    #     device_type = EnOceanDeviceType.get_supported_device_types()[device_type_id]
+    #     eep = device_type.eep
+    #     eep_type = int(eep[6:8], 16)
 
-        # temperature sensors (EEP A5-02)
-        if eep[0:5] == "A5-02":
-            min_temp, max_temp = _get_a5_02_min_max_temp(device_id.to_string(), eep)
-            async_add_entities(
-                [
-                    EnOceanTemperatureSensor(
-                        enocean_id=device_id,
-                        dev_name=device_name,
-                        gateway=config_entry.runtime_data.gateway,
-                        description=SENSOR_DESC_TEMPERATURE,
-                        scale_min=min_temp,
-                        scale_max=max_temp,
-                        range_from=255,
-                        range_to=0,
-                        dev_type=device_type,
-                        name=None,
-                    )
-                ]
-            )
-            continue
+    #     # temperature sensors (EEP A5-02)
+    #     if eep[0:5] == "A5-02":
+    #         min_temp, max_temp = _get_a5_02_min_max_temp(device_id.to_string(), eep)
+    #         async_add_entities(
+    #             [
+    #                 EnOceanTemperatureSensor(
+    #                     enocean_id=device_id,
+    #                     dev_name=device_name,
+    #                     gateway=config_entry.runtime_data.gateway,
+    #                     description=SENSOR_DESC_TEMPERATURE,
+    #                     scale_min=min_temp,
+    #                     scale_max=max_temp,
+    #                     range_from=255,
+    #                     range_to=0,
+    #                     dev_type=device_type,
+    #                     name=None,
+    #                 )
+    #             ]
+    #         )
+    #         continue
 
-        # temperature and humidity sensors (A5-04-01 / A5-04-02)
-        if eep[0:5] == "A5-04":
-            if eep_type < 0x01 or eep_type > 0x02:
-                LOGGER.warning(
-                    "Unsupported sensor EEP %s - ignoring EnOcean device %s",
-                    eep,
-                    device_id.to_string(),
-                )
-                continue
+    #     # temperature and humidity sensors (A5-04-01 / A5-04-02)
+    #     if eep[0:5] == "A5-04":
+    #         if eep_type < 0x01 or eep_type > 0x02:
+    #             LOGGER.warning(
+    #                 "Unsupported sensor EEP %s - ignoring EnOcean device %s",
+    #                 eep,
+    #                 device_id.to_string(),
+    #             )
+    #             continue
 
-            min_temp = 0
-            max_temp = 40
+    #         min_temp = 0
+    #         max_temp = 40
 
-            if eep_type == 0x02:
-                min_temp = -20
-                max_temp = 60
+    #         if eep_type == 0x02:
+    #             min_temp = -20
+    #             max_temp = 60
 
-            async_add_entities(
-                [
-                    EnOceanTemperatureSensor(
-                        enocean_id=device_id,
-                        dev_name=device_name,
-                        gateway=config_entry.runtime_data.gateway,
-                        description=SENSOR_DESC_TEMPERATURE,
-                        scale_min=min_temp,
-                        scale_max=max_temp,
-                        range_from=0,
-                        range_to=250,
-                        dev_type=device_type,
-                        name="Temperature",
-                    ),
-                    EnOceanHumiditySensor(
-                        enocean_id=device_id,
-                        dev_name=device_name,
-                        gateway=config_entry.runtime_data.gateway,
-                        description=SENSOR_DESC_HUMIDITY,
-                        dev_type=device_type,
-                        name="Humidity",
-                    ),
-                ]
-            )
-            continue
+    #         async_add_entities(
+    #             [
+    #                 EnOceanTemperatureSensor(
+    #                     enocean_id=device_id,
+    #                     dev_name=device_name,
+    #                     gateway=config_entry.runtime_data.gateway,
+    #                     description=SENSOR_DESC_TEMPERATURE,
+    #                     scale_min=min_temp,
+    #                     scale_max=max_temp,
+    #                     range_from=0,
+    #                     range_to=250,
+    #                     dev_type=device_type,
+    #                     name="Temperature",
+    #                 ),
+    #                 EnOceanHumiditySensor(
+    #                     enocean_id=device_id,
+    #                     dev_name=device_name,
+    #                     gateway=config_entry.runtime_data.gateway,
+    #                     description=SENSOR_DESC_HUMIDITY,
+    #                     dev_type=device_type,
+    #                     name="Humidity",
+    #                 ),
+    #             ]
+    #         )
+    #         continue
 
-        # room operating panels (EEP A5-10-01 to A5-10-14)
-        if eep[0:5] == "A5-10":
-            if eep_type < 0x01 or eep_type > 0x14:
-                LOGGER.warning(
-                    "Unsupported sensor EEP %s - ignoring EnOcean device %s",
-                    eep,
-                    device_id.to_string(),
-                )
-                continue
+    #     # room operating panels (EEP A5-10-01 to A5-10-14)
+    #     if eep[0:5] == "A5-10":
+    #         if eep_type < 0x01 or eep_type > 0x14:
+    #             LOGGER.warning(
+    #                 "Unsupported sensor EEP %s - ignoring EnOcean device %s",
+    #                 eep,
+    #                 device_id.to_string(),
+    #             )
+    #             continue
 
-            if eep_type < 0x10:
-                async_add_entities(
-                    [
-                        EnOceanTemperatureSensor(
-                            enocean_id=device_id,
-                            dev_name=device_name,
-                            gateway=config_entry.runtime_data.gateway,
-                            description=SENSOR_DESC_TEMPERATURE,
-                            scale_min=0,
-                            scale_max=40,
-                            range_from=255,
-                            range_to=0,
-                            dev_type=device_type,
-                            name="Temperature",
-                        )
-                    ]
-                )
-            else:
-                async_add_entities(
-                    [
-                        EnOceanTemperatureSensor(
-                            enocean_id=device_id,
-                            dev_name=device_name,
-                            gateway=config_entry.runtime_data.gateway,
-                            description=SENSOR_DESC_TEMPERATURE,
-                            scale_min=0,
-                            scale_max=40,
-                            range_from=0,
-                            range_to=250,
-                            dev_type=device_type,
-                            name="Temperature",
-                        ),
-                        EnOceanHumiditySensor(
-                            enocean_id=device_id,
-                            dev_name=device_name,
-                            gateway=config_entry.runtime_data.gateway,
-                            description=SENSOR_DESC_HUMIDITY,
-                            dev_type=device_type,
-                            name="Humidity",
-                        ),
-                    ]
-                )
+    #         if eep_type < 0x10:
+    #             async_add_entities(
+    #                 [
+    #                     EnOceanTemperatureSensor(
+    #                         enocean_id=device_id,
+    #                         dev_name=device_name,
+    #                         gateway=config_entry.runtime_data.gateway,
+    #                         description=SENSOR_DESC_TEMPERATURE,
+    #                         scale_min=0,
+    #                         scale_max=40,
+    #                         range_from=255,
+    #                         range_to=0,
+    #                         dev_type=device_type,
+    #                         name="Temperature",
+    #                     )
+    #                 ]
+    #             )
+    #         else:
+    #             async_add_entities(
+    #                 [
+    #                     EnOceanTemperatureSensor(
+    #                         enocean_id=device_id,
+    #                         dev_name=device_name,
+    #                         gateway=config_entry.runtime_data.gateway,
+    #                         description=SENSOR_DESC_TEMPERATURE,
+    #                         scale_min=0,
+    #                         scale_max=40,
+    #                         range_from=0,
+    #                         range_to=250,
+    #                         dev_type=device_type,
+    #                         name="Temperature",
+    #                     ),
+    #                     EnOceanHumiditySensor(
+    #                         enocean_id=device_id,
+    #                         dev_name=device_name,
+    #                         gateway=config_entry.runtime_data.gateway,
+    #                         description=SENSOR_DESC_HUMIDITY,
+    #                         dev_type=device_type,
+    #                         name="Humidity",
+    #                     ),
+    #                 ]
+    #             )
 
-            continue
+    #         continue
 
-        # power sensors A5-12-01 Automated Meter Reading (AMR) - Electricity;
-        # the Permundo PSC234 also sends A5-12-01 messages (but uses natively
-        # D2-01-09); as there is not (yet) a way to define multiple EEPs per
-        # EnOcean device, but this device was previously supported in this
-        # combination, we manually accept this here
-        if eep == "A5-12-01" or device_type_id == "Permundo_PSC234":
-            async_add_entities(
-                [
-                    EnOceanPowerSensor(
-                        enocean_id=device_id,
-                        dev_name=device_name,
-                        gateway=config_entry.runtime_data.gateway,
-                        description=SENSOR_DESC_POWER,
-                        dev_type=device_type,
-                        name="Power usage",
-                    )
-                ]
-            )
-            continue
+    #     # power sensors A5-12-01 Automated Meter Reading (AMR) - Electricity;
+    #     # the Permundo PSC234 also sends A5-12-01 messages (but uses natively
+    #     # D2-01-09); as there is not (yet) a way to define multiple EEPs per
+    #     # EnOcean device, but this device was previously supported in this
+    #     # combination, we manually accept this here
+    #     if eep == "A5-12-01" or device_type_id == "Permundo_PSC234":
+    #         async_add_entities(
+    #             [
+    #                 EnOceanPowerSensor(
+    #                     enocean_id=device_id,
+    #                     dev_name=device_name,
+    #                     gateway=config_entry.runtime_data.gateway,
+    #                     description=SENSOR_DESC_POWER,
+    #                     dev_type=device_type,
+    #                     name="Power usage",
+    #                 )
+    #             ]
+    #         )
+    #         continue
 
-        # battery powered actuator
-        if eep == "A5-20-01":
-            async_add_entities(
-                [
-                    EnOceanTemperatureSensor(
-                        enocean_id=device_id,
-                        dev_name=device_name,
-                        gateway=config_entry.runtime_data.gateway,
-                        description=SENSOR_DESC_TEMPERATURE,
-                        scale_min=0,
-                        scale_max=40,
-                        range_from=0,
-                        range_to=255,
-                        dev_type=device_type,
-                        name="Temperature",
-                    )
-                ]
-            )
-            continue
+    #     # battery powered actuator
+    #     if eep == "A5-20-01":
+    #         async_add_entities(
+    #             [
+    #                 EnOceanTemperatureSensor(
+    #                     enocean_id=device_id,
+    #                     dev_name=device_name,
+    #                     gateway=config_entry.runtime_data.gateway,
+    #                     description=SENSOR_DESC_TEMPERATURE,
+    #                     scale_min=0,
+    #                     scale_max=40,
+    #                     range_from=0,
+    #                     range_to=255,
+    #                     dev_type=device_type,
+    #                     name="Temperature",
+    #                 )
+    #             ]
+    #         )
+    #         continue
 
-        # window handle (EEP F6-10-00)
-        if eep == "F6-10-00":
-            async_add_entities(
-                [
-                    EnOceanWindowHandle(
-                        enocean_id=device_id,
-                        dev_name=device_name,
-                        gateway=config_entry.runtime_data.gateway,
-                        description=SENSOR_DESC_WINDOWHANDLE,
-                        dev_type=device_type,
-                    )
-                ]
-            )
-            continue
+    #     # window handle (EEP F6-10-00)
+    #     if eep == "F6-10-00":
+    #         async_add_entities(
+    #             [
+    #                 EnOceanWindowHandle(
+    #                     enocean_id=device_id,
+    #                     dev_name=device_name,
+    #                     gateway=config_entry.runtime_data.gateway,
+    #                     description=SENSOR_DESC_WINDOWHANDLE,
+    #                     dev_type=device_type,
+    #                 )
+    #             ]
+    #         )
+    #         continue
 
 
 class EnOceanSensor(EnOceanEntity, RestoreSensor):
@@ -291,19 +286,13 @@ class EnOceanSensor(EnOceanEntity, RestoreSensor):
 
     def __init__(
         self,
-        enocean_id: EnOceanID,
-        dev_name: str,
+        enocean_entity_id: EnOceanEntityID,
         description: SensorEntityDescription,
         gateway: EnOceanHomeAssistantGateway,
-        dev_type: EnOceanDeviceType = EnOceanDeviceType(),
-        name: str | None = None,
     ) -> None:
         """Initialize the EnOcean sensor device."""
         super().__init__(
-            enocean_id=enocean_id,
-            device_name=dev_name,
-            name=name,
-            device_type=dev_type,
+            enocean_entity_id=enocean_entity_id,
             gateway=gateway,
         )
         self.entity_description = description
@@ -362,7 +351,7 @@ class EnOceanTemperatureSensor(EnOceanSensor):
 
     def __init__(
         self,
-        enocean_id: EnOceanID,
+        enocean_entity_id: EnOceanEntityID,
         gateway: EnOceanID,
         dev_name: str,
         description: SensorEntityDescription,
@@ -376,12 +365,9 @@ class EnOceanTemperatureSensor(EnOceanSensor):
     ) -> None:
         """Initialize the EnOcean temperature sensor device."""
         super().__init__(
-            enocean_id=enocean_id,
-            dev_name=dev_name,
-            name=name,
-            description=description,
-            dev_type=dev_type,
+            enocean_entity_id=enocean_entity_id,
             gateway=gateway,
+            description=description,
         )
         self._scale_min = scale_min
         self._scale_max = scale_max

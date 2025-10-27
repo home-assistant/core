@@ -28,6 +28,34 @@
             }
         }
     },
+    "entity": {
+        "binary_sensor": {
+            "a0": {
+                "name": "A0"
+            },
+            "a0b1": {
+                "name": "A0B1"
+            },
+            "a1": {
+                "name": "A1"
+            },
+            "a1b0": {
+                "name": "A1B0"
+            },
+            "ab0": {
+                "name": "AB0"
+            },
+            "ab1": {
+                "name": "AB1"
+            },
+            "b0": {
+                "name": "B0"
+            },
+            "b1": {
+                "name": "B1"
+            }
+        }
+    },
     "options": {
         "error": {
             "device_already_configured": "An EnOcean device with this device ID is already configured. Duplicate entries are not possible.",

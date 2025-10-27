@@ -6,8 +6,8 @@ import math
 from typing import Any
 
 from enocean.protocol.packet import Packet
-from home_assistant_enocean.enocean_device_type import EnOceanDeviceType
 from home_assistant_enocean.enocean_id import EnOceanID
+from home_assistant_enocean.entity_id import EnOceanEntityID
 from home_assistant_enocean.gateway import EnOceanHomeAssistantGateway
 import voluptuous as vol
 
@@ -23,7 +23,6 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .config_entry import EnOceanConfigEntry
-from .config_flow import CONF_ENOCEAN_DEVICE_TYPE_ID, CONF_ENOCEAN_DEVICES
 from .entity import EnOceanEntity
 
 CONF_SENDER_ID = "sender_id"
@@ -45,29 +44,29 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entry."""
-    devices = entry.options.get(CONF_ENOCEAN_DEVICES, [])
+    # devices = entry.options.get(CONF_ENOCEAN_DEVICES, [])
 
-    for device in devices:
-        device_type_id = device[CONF_ENOCEAN_DEVICE_TYPE_ID]
-        device_type = EnOceanDeviceType.get_supported_device_types()[device_type_id]
+    # for device in []:
+    #     device_type_id = device[CONF_ENOCEAN_DEVICE_TYPE_ID]
+    #     device_type = EnOceanDeviceType.get_supported_device_types()[device_type_id]
 
-        if device_type.unique_id == "Eltako_FUD61NPN":
-            device_id = EnOceanID(device["id"])
-            sender_id = EnOceanID(0)
-            if device["sender_id"] != "":
-                sender_id = EnOceanID(device["sender_id"])
+    #     if device_type.unique_id == "Eltako_FUD61NPN":
+    #         device_id = EnOceanID(device["id"])
+    #         sender_id = EnOceanID(0)
+    #         if device["sender_id"] != "":
+    #             sender_id = EnOceanID(device["sender_id"])
 
-            async_add_entities(
-                [
-                    EnOceanLight(
-                        sender_id=sender_id,
-                        dev_name=device["name"],
-                        dev_id=device_id,
-                        dev_type=device_type,
-                        gateway=entry.runtime_data.gateway,
-                    )
-                ]
-            )
+    #         async_add_entities(
+    #             [
+    #                 EnOceanLight(
+    #                     sender_id=sender_id,
+    #                     dev_name=device["name"],
+    #                     dev_id=device_id,
+    #                     dev_type=device_type,
+    #                     gateway=entry.runtime_data.gateway,
+    #                 )
+    #             ]
+    #         )
 
 
 class EnOceanLight(EnOceanEntity, LightEntity):
@@ -81,19 +80,13 @@ class EnOceanLight(EnOceanEntity, LightEntity):
     def __init__(
         self,
         sender_id: EnOceanID,
-        dev_id: EnOceanID,
+        enocean_entity_id: EnOceanEntityID,
         gateway: EnOceanHomeAssistantGateway,
-        dev_name: str,
-        dev_type: EnOceanDeviceType = EnOceanDeviceType(),
-        name: str | None = None,
     ) -> None:
         """Initialize the EnOcean light source."""
         super().__init__(
-            enocean_id=dev_id,
+            enocean_entity_id=enocean_entity_id,
             gateway=gateway,
-            device_name=dev_name,
-            name=name,
-            device_type=dev_type,
         )
         self._attr_is_on = False
         self._attr_brightness = None
@@ -127,7 +120,7 @@ class EnOceanLight(EnOceanEntity, LightEntity):
         command = [0xA5, 0x02, bval, 0x01, 0x09]
         command.extend(self._sender_id.to_bytelist())
         command.extend([0x00])
-        self.send_command(command, [], 0x01)
+        # self.send_command(command, [], 0x01)
         self._attr_is_on = True
 
     def turn_off(self, **kwargs: Any) -> None:
@@ -135,7 +128,7 @@ class EnOceanLight(EnOceanEntity, LightEntity):
         command = [0xA5, 0x02, 0x00, 0x01, 0x09]
         command.extend(self._sender_id.to_bytelist())
         command.extend([0x00])
-        self.send_command(command, [], 0x01)
+        #        self.send_command(command, [], 0x01)
         self._attr_is_on = False
 
     def value_changed(self, packet: Packet) -> None:

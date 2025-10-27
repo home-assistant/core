@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from home_assistant_enocean.enocean_device_type import EnOceanDeviceType
-from home_assistant_enocean.enocean_id import EnOceanID
+from home_assistant_enocean.entity_id import EnOceanEntityID
 from home_assistant_enocean.gateway import EnOceanHomeAssistantGateway
 
 from homeassistant.components.binary_sensor import (
@@ -27,21 +26,10 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entry."""
-    # devices = config_entry.options.get(CONF_ENOCEAN_DEVICES, [])
     gateway = config_entry.runtime_data.gateway
 
-    for enocean_id, entity_name in gateway.binary_sensor_entities:
-        async_add_entities(
-            [
-                EnOceanBinarySensor(
-                    enocean_id=enocean_id,
-                    gateway=config_entry.runtime_data.gateway,
-                    device_name="EnOcean Binary Sensor",
-                    channel=entity_name,
-                    name=entity_name,
-                )
-            ]
-        )
+    for entity_id in gateway.binary_sensor_entities:
+        async_add_entities([EnOceanBinarySensor(entity_id, gateway=gateway)])
 
 
 class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
@@ -49,24 +37,13 @@ class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
 
     def __init__(
         self,
-        enocean_id: EnOceanID,
+        entity_id: EnOceanEntityID,
         gateway: EnOceanHomeAssistantGateway,
-        device_name: str,
         device_class: BinarySensorDeviceClass | None = None,
-        channel: str | None = None,
-        dev_type: EnOceanDeviceType = EnOceanDeviceType(),
-        name: str | None = None,
     ) -> None:
         """Initialize the EnOcean binary sensor."""
-        super().__init__(
-            enocean_id=enocean_id,
-            gateway=gateway,
-            device_name=device_name,
-            device_type=dev_type,
-            name=name,
-        )
+        super().__init__(enocean_entity_id=entity_id, gateway=gateway)
         self._attr_device_class = device_class
-        self._channel = channel
 
     @property
     def device_class(self) -> BinarySensorDeviceClass | None:
@@ -76,7 +53,5 @@ class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
-        is_on: bool | None = self.gateway.binary_sensor_is_on(
-            enocean_id=self.enocean_id, name=self._channel
-        )
+        is_on: bool | None = self.gateway.binary_sensor_is_on(self.enocean_entity_id)
         return is_on

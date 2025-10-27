@@ -9,8 +9,8 @@ from typing import Any
 
 from enocean.protocol.constants import RORG
 from enocean.protocol.packet import Packet, RadioPacket
-from home_assistant_enocean.enocean_device_type import EnOceanDeviceType
 from home_assistant_enocean.enocean_id import EnOceanID
+from home_assistant_enocean.entity_id import EnOceanEntityID
 from home_assistant_enocean.gateway import EnOceanHomeAssistantGateway
 import voluptuous as vol
 
@@ -29,13 +29,6 @@ from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .config_entry import EnOceanConfigEntry
-from .config_flow import (
-    CONF_ENOCEAN_DEVICE_ID,
-    CONF_ENOCEAN_DEVICE_NAME,
-    CONF_ENOCEAN_DEVICE_TYPE_ID,
-    CONF_ENOCEAN_DEVICES,
-    CONF_ENOCEAN_SENDER_ID,
-)
 from .const import SIGNAL_SEND_MESSAGE
 from .entity import EnOceanEntity
 
@@ -65,32 +58,32 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entry."""
-    devices = config_entry.options.get(CONF_ENOCEAN_DEVICES, [])
+    # devices = config_entry.options.get(CONF_ENOCEAN_DEVICES, [])
 
-    for device in devices:
-        device_type_id = device[CONF_ENOCEAN_DEVICE_TYPE_ID]
-        device_type = EnOceanDeviceType.get_supported_device_types()[device_type_id]
-        eep = device_type.eep
-        if eep != "D2-05-00":
-            continue
+    # for device in []:
+    #     device_type_id = device[CONF_ENOCEAN_DEVICE_TYPE_ID]
+    #     device_type = EnOceanDeviceType.get_supported_device_types()[device_type_id]
+    #     eep = device_type.eep
+    #     if eep != "D2-05-00":
+    #         continue
 
-        device_id = EnOceanID(device[CONF_ENOCEAN_DEVICE_ID])
-        sender_id = config_entry.runtime_data.gateway.base_id
-        if device[CONF_ENOCEAN_SENDER_ID] != "":
-            sender_id = EnOceanID(device[CONF_ENOCEAN_SENDER_ID])
+    #     device_id = EnOceanID(device[CONF_ENOCEAN_DEVICE_ID])
+    #     sender_id = config_entry.runtime_data.gateway.base_id
+    #     if device[CONF_ENOCEAN_SENDER_ID] != "":
+    #         sender_id = EnOceanID(device[CONF_ENOCEAN_SENDER_ID])
 
-        async_add_entities(
-            [
-                EnOceanCover(
-                    sender_id=sender_id,
-                    enocean_id=device_id,
-                    gateway=config_entry.runtime_data.gateway,
-                    device_name=device[CONF_ENOCEAN_DEVICE_NAME],
-                    device_type=device_type,
-                    name=None,
-                )
-            ]
-        )
+    #     async_add_entities(
+    #         [
+    #             EnOceanCover(
+    #                 sender_id=sender_id,
+    #                 enocean_id=device_id,
+    #                 gateway=config_entry.runtime_data.gateway,
+    #                 device_name=device[CONF_ENOCEAN_DEVICE_NAME],
+    #                 device_type=device_type,
+    #                 name=None,
+    #             )
+    #         ]
+    #     )
 
 
 class EnOceanCoverCommand(Enum):
@@ -107,19 +100,13 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
     def __init__(
         self,
         sender_id: EnOceanID,
-        enocean_id: EnOceanID,
+        enocean_entity_id: EnOceanEntityID,
         gateway: EnOceanHomeAssistantGateway,
-        device_name: str,
-        device_type: EnOceanDeviceType,
-        name: str | None,
     ) -> None:
         """Initialize the EnOcean Cover."""
         super().__init__(
-            enocean_id=enocean_id,
+            enocean_entity_id=enocean_entity_id,
             gateway=gateway,
-            device_name=device_name,
-            device_type=device_type,
-            name=name,
         )
 
         # set base class attributes

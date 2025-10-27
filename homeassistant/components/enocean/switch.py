@@ -6,7 +6,7 @@ from typing import Any
 
 from enocean.protocol.packet import Packet
 from home_assistant_enocean.enocean_device_type import EnOceanDeviceType
-from home_assistant_enocean.enocean_id import EnOceanID
+from home_assistant_enocean.entity_id import EnOceanEntityID
 from home_assistant_enocean.gateway import EnOceanHomeAssistantGateway
 import voluptuous as vol
 
@@ -20,7 +20,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .config_entry import EnOceanConfigEntry
-from .config_flow import CONF_ENOCEAN_DEVICE_TYPE_ID, CONF_ENOCEAN_DEVICES
 from .entity import EnOceanEntity
 
 CONF_CHANNEL = "channel"
@@ -41,55 +40,55 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entry."""
-    devices = entry.options.get(CONF_ENOCEAN_DEVICES, [])
+    # devices = entry.options.get(CONF_ENOCEAN_DEVICES, [])
 
-    for device in devices:
-        device_type_id = device[CONF_ENOCEAN_DEVICE_TYPE_ID]
-        device_type = EnOceanDeviceType.get_supported_device_types()[device_type_id]
-        eep = device_type.eep
+    # for device in []:
+    #     device_type_id = device[CONF_ENOCEAN_DEVICE_TYPE_ID]
+    #     device_type = EnOceanDeviceType.get_supported_device_types()[device_type_id]
+    #     eep = device_type.eep
 
-        if eep[0:5] == "D2-01":
-            device_id = EnOceanID(device["id"])
+    #     if eep[0:5] == "D2-01":
+    #         device_id = EnOceanID(device["id"])
 
-            # number of switches depends on EEP's TYPE value:
-            num_switches = 0
-            eep_type = int(eep[6:8], 16)
+    #         # number of switches depends on EEP's TYPE value:
+    #         num_switches = 0
+    #         eep_type = int(eep[6:8], 16)
 
-            if eep_type in range(0x10):
-                num_switches = 1
-            elif eep_type in range(0x10, 0x13):
-                num_switches = 2
-            elif eep_type == 0x13:
-                num_switches = 4
-            elif eep_type == 0x14:
-                num_switches = 8
+    #         if eep_type in range(0x10):
+    #             num_switches = 1
+    #         elif eep_type in range(0x10, 0x13):
+    #             num_switches = 2
+    #         elif eep_type == 0x13:
+    #             num_switches = 4
+    #         elif eep_type == 0x14:
+    #             num_switches = 8
 
-            switches = []
+    # switches = []
 
-            if num_switches == 1:
-                switches.append(
-                    EnOceanSwitch(
-                        dev_id=device_id,
-                        dev_name=device["name"],
-                        gateway=entry.runtime_data.gateway,
-                        channel=0,
-                        dev_type=device_type,
-                        name="Switch",
-                    ),
-                )
-            else:
-                switches = [
-                    EnOceanSwitch(
-                        dev_id=device_id,
-                        dev_name=device["name"],
-                        gateway=entry.runtime_data.gateway,
-                        channel=channel,
-                        dev_type=device_type,
-                        name="Switch " + str(channel + 1),
-                    )
-                    for channel in range(num_switches)
-                ]
-            async_add_entities(switches)
+    # if num_switches == 1:
+    #     switches.append(
+    #         EnOceanSwitch(
+    #             dev_id=device_id,
+    #             dev_name=device["name"],
+    #             gateway=entry.runtime_data.gateway,
+    #             channel=0,
+    #             dev_type=device_type,
+    #             name="Switch",
+    #         ),
+    #     )
+    # else:
+    #     switches = [
+    #         EnOceanSwitch(
+    #             dev_id=device_id,
+    #             dev_name=device["name"],
+    #             gateway=entry.runtime_data.gateway,
+    #             channel=channel,
+    #             dev_type=device_type,
+    #             name="Switch " + str(channel + 1),
+    #         )
+    #         for channel in range(num_switches)
+    #     ]
+    # async_add_entities(switches)
 
 
 class EnOceanSwitch(EnOceanEntity, SwitchEntity):
@@ -97,20 +96,16 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
 
     def __init__(
         self,
-        dev_id: EnOceanID,
+        enocean_entity_id: EnOceanEntityID,
         gateway: EnOceanHomeAssistantGateway,
-        dev_name: str,
         channel: int,
         dev_type: EnOceanDeviceType = EnOceanDeviceType(),
         name: str | None = None,
     ) -> None:
         """Initialize the EnOcean switch device."""
         super().__init__(
-            enocean_id=dev_id,
+            enocean_entity_id=enocean_entity_id,
             gateway=gateway,
-            device_name=dev_name,
-            name=name,
-            device_type=dev_type,
         )
         self._light = None
         self.channel = channel
@@ -123,25 +118,25 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         optional = [0x03]
-        optional.extend(self.__enocean_id.to_bytelist())
+        optional.extend(self.__enocean_entity_id.to_bytelist())
         optional.extend([0xFF, 0x00])
-        self.send_command(
-            data=[0xD2, 0x01, self.channel & 0xFF, 0x64, 0x00, 0x00, 0x00, 0x00, 0x00],
-            optional=optional,
-            packet_type=0x01,
-        )
+        # self.send_command(
+        #     data=[0xD2, 0x01, self.channel & 0xFF, 0x64, 0x00, 0x00, 0x00, 0x00, 0x00],
+        #     optional=optional,
+        #     packet_type=0x01,
+        # )
         self._attr_is_on = True
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         optional = [0x03]
-        optional.extend(self.__enocean_id.to_bytelist())
+        optional.extend(self.__enocean_entity_id.to_bytelist())
         optional.extend([0xFF, 0x00])
-        self.send_command(
-            data=[0xD2, 0x01, self.channel & 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
-            optional=optional,
-            packet_type=0x01,
-        )
+        # self.send_command(
+        #     data=[0xD2, 0x01, self.channel & 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+        #     optional=optional,
+        #     packet_type=0x01,
+        # )
         self._attr_is_on = False
 
     def value_changed(self, packet: Packet) -> None:
