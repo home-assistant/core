@@ -13,8 +13,8 @@ from roborock import (
     RoborockInvalidCredentials,
     RoborockInvalidUserAgreement,
     RoborockNoUserAgreement,
-)<<<<<<< HEAD
-from roborock.data import DeviceData, HomeDataDevice, HomeDataProduct, UserData
+)
+from roborock.data import UserData
 from roborock.devices.cache import InMemoryCache
 from roborock.devices.device import RoborockDevice
 from roborock.devices.device_manager import (
@@ -22,7 +22,7 @@ from roborock.devices.device_manager import (
     create_device_manager,
     create_home_data_from_api_client,
 )
->rom roborock.web_api import RoborockApiClient
+from roborock.web_api import RoborockApiClient
 
 from homeassistant.const import CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
