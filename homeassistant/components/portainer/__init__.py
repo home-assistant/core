@@ -18,7 +18,12 @@ from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .coordinator import PortainerCoordinator
 
-_PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
+_PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.BUTTON,
+]
 
 
 type PortainerConfigEntry = ConfigEntry[PortainerCoordinator]
