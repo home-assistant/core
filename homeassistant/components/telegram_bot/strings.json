@@ -179,13 +179,13 @@
             }
           },
           "args": {
-            "name": "Receieved command arguments"
+            "name": "Received command arguments"
           },
           "chat_id": {
             "name": "Chat ID"
           },
           "command": {
-            "name": "Receieved command"
+            "name": "Received command"
           },
           "data": {
             "name": "Received callback query"
