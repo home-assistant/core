@@ -61,7 +61,7 @@
       }
     },
     "get_sheet": {
-      "name": "Gets data from sheet",
+      "name": "Get data from sheet",
       "description": "Gets data from a worksheet in Google Sheets.",
       "fields": {
         "config_entry": {
