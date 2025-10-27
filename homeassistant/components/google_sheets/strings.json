@@ -74,7 +74,7 @@
         },
         "rows": {
           "name": "Rows",
-          "description": "Maximum number of rows to be retreived from the worksheet."
+          "description": "Maximum number of rows to be retrieved from the worksheet."
         }
       }
     }
