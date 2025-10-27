@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import AsyncGenerator, Generator
+import json
 from unittest.mock import MagicMock, patch
 
 from music_assistant_client.music import Music
