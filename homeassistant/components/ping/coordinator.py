@@ -57,11 +57,7 @@ class PingUpdateCoordinator(DataUpdateCoordinator[PingResult]):
     async def _async_update_data(self) -> PingResult:
         """Update ping data within a timeout duration."""
 
-        if self._update_task is not None:
-            if not self._update_task.done():
-                # don't queue another task
-                return self._latest_ping_result()
-        else:
+        if self._update_task is None:
             # queue a task for pinging.
             # this is done so that pings can have a duration longer than SLOW_UPDATE_WARNING,
             # but this method never executes for longer than SLOW_UPDATE_WARNING (we just
@@ -76,6 +72,9 @@ class PingUpdateCoordinator(DataUpdateCoordinator[PingResult]):
             )
             self._update_task = None
 
+        # regardless of whether we exited the above block via a timeout or not,
+        # we return the latest results - either those we just got, or a
+        # previous set (in the case that we timed out above)
         return self._latest_ping_result()
 
     def _latest_ping_result(self) -> PingResult:
