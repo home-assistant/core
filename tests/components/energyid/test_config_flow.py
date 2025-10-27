@@ -485,7 +485,7 @@ async def test_async_get_supported_subentry_types(hass: HomeAssistant) -> None:
 
 
 async def test_polling_stops_on_invalid_auth_error(hass: HomeAssistant) -> None:
-    """Test polling stops when invalid_auth error occurs during polling (lines 114-115)."""
+    """Test that polling stops when invalid_auth error occurs during auth_and_claim polling."""
     mock_unclaimed_client = MagicMock()
     mock_unclaimed_client.authenticate = AsyncMock(return_value=False)
     mock_unclaimed_client.get_claim_info.return_value = {"claim_url": "http://claim.me"}
@@ -533,7 +533,7 @@ async def test_polling_stops_on_invalid_auth_error(hass: HomeAssistant) -> None:
 
 
 async def test_polling_stops_on_cannot_connect_error(hass: HomeAssistant) -> None:
-    """Test polling stops when cannot_connect error occurs during polling (lines 114-115)."""
+    """Test that polling stops when cannot_connect error occurs during auth_and_claim polling."""
     mock_unclaimed_client = MagicMock()
     mock_unclaimed_client.authenticate = AsyncMock(return_value=False)
     mock_unclaimed_client.get_claim_info.return_value = {"claim_url": "http://claim.me"}
@@ -577,7 +577,7 @@ async def test_polling_stops_on_cannot_connect_error(hass: HomeAssistant) -> Non
 
 
 async def test_auth_and_claim_subsequent_auth_error(hass: HomeAssistant) -> None:
-    """Test auth_and_claim with error on subsequent attempt (lines 201-202, 207-208)."""
+    """Test that auth_and_claim step handles authentication errors during polling attempts."""
     mock_unclaimed_client = MagicMock()
     mock_unclaimed_client.authenticate = AsyncMock(return_value=False)
     mock_unclaimed_client.get_claim_info.return_value = {"claim_url": "http://claim.me"}
@@ -630,7 +630,7 @@ async def test_auth_and_claim_subsequent_auth_error(hass: HomeAssistant) -> None
 
 
 async def test_reauth_with_error(hass: HomeAssistant) -> None:
-    """Test reauth flow with authentication error (line 261)."""
+    """Test that reauth flow shows error when authentication fails with 401."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -678,7 +678,7 @@ async def test_reauth_with_error(hass: HomeAssistant) -> None:
 
 
 async def test_polling_cancellation_on_auth_failure(hass: HomeAssistant) -> None:
-    """Test polling cancellation when authentication fails during subsequent check in auth_and_claim (lines 201-202, 207-208)."""
+    """Test that polling is cancelled when authentication fails during auth_and_claim."""
     call_count = 0
 
     def mock_webhook_client(*args, **kwargs):
@@ -724,7 +724,7 @@ async def test_polling_cancellation_on_auth_failure(hass: HomeAssistant) -> None
 
 
 async def test_polling_cancellation_on_success(hass: HomeAssistant) -> None:
-    """Test polling cancellation when device becomes claimed successfully during polling (lines 201-202)."""
+    """Test that polling is cancelled when device becomes claimed successfully during auth_and_claim."""
     call_count = 0
 
     def mock_webhook_client(*args, **kwargs):

@@ -269,7 +269,7 @@ async def test_duplicate_entity_key(
 def test_validate_mapping_input_none_entity(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
-    """Test _validate_mapping_input with None entity (lines 76-77)."""
+    """Test that _validate_mapping_input returns 'entity_required' error for None entity."""
     errors = _validate_mapping_input(None, set(), entity_registry)
     assert errors == {"base": "entity_required"}
 
@@ -277,7 +277,7 @@ def test_validate_mapping_input_none_entity(
 def test_validate_mapping_input_empty_string(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
-    """Test _validate_mapping_input with empty string entity (lines 76-77)."""
+    """Test that _validate_mapping_input returns 'entity_required' error for empty string entity."""
     errors = _validate_mapping_input("", set(), entity_registry)
     assert errors == {"base": "entity_required"}
 
@@ -285,7 +285,7 @@ def test_validate_mapping_input_empty_string(
 def test_validate_mapping_input_already_mapped(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
-    """Test _validate_mapping_input with already mapped entity (line 88)."""
+    """Test that _validate_mapping_input returns 'entity_already_mapped' error when entity is already mapped."""
     entity_entry = entity_registry.async_get_or_create(
         "sensor", "test", "mapped_entity", suggested_object_id="mapped"
     )
@@ -299,7 +299,7 @@ def test_validate_mapping_input_already_mapped(
 def test_get_suggested_entities_with_state_class(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
-    """Test _get_suggested_entities with measurement state class (line 62)."""
+    """Test that _get_suggested_entities includes sensor entities with measurement state class."""
     entity_entry = entity_registry.async_get_or_create(
         "sensor",
         "test",
@@ -316,7 +316,7 @@ def test_get_suggested_entities_with_state_class(
 def test_get_suggested_entities_with_device_class(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
-    """Test _get_suggested_entities with energy device class (line 62)."""
+    """Test that _get_suggested_entities includes sensor entities with energy device class."""
     entity_entry = entity_registry.async_get_or_create(
         "sensor",
         "test",
@@ -333,7 +333,7 @@ def test_get_suggested_entities_with_device_class(
 def test_get_suggested_entities_with_original_device_class(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
-    """Test _get_suggested_entities with original power device class (line 62)."""
+    """Test that _get_suggested_entities includes sensor entities with power device class."""
     entity_entry = entity_registry.async_get_or_create(
         "sensor",
         "test",
@@ -351,7 +351,7 @@ async def test_subentry_entity_not_found_after_validation(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test subentry flow when entity disappears after validation (line 138)."""
+    """Test that subentry flow returns error when entity is validated but disappears before registry lookup."""
     mock_parent_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
