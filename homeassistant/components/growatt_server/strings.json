@@ -515,6 +515,20 @@
         "name": "Maximum power"
       }
     },
+    "number": {
+      "battery_charge_power_limit": {
+        "name": "Battery charge power limit"
+      },
+      "battery_charge_soc_limit": {
+        "name": "Battery charge SOC limit"
+      },
+      "battery_discharge_power_limit": {
+        "name": "Battery discharge power limit"
+      },
+      "battery_discharge_soc_limit": {
+        "name": "Battery discharge SOC limit"
+      }
+    },
     "switch": {
       "ac_charge": {
         "name": "Charge from grid"
