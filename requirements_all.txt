@@ -2598,8 +2598,6 @@ pytouchline_extended==0.4.5
 pytouchlinesl==0.5.0
 
 # homeassistant.components.traccar
-pytraccar==2.1.1
-
 # homeassistant.components.traccar_server
 pytraccar==3.0.0
 
