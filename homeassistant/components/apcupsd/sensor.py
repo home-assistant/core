@@ -395,6 +395,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
     "upsmode": SensorEntityDescription(
         key="upsmode",
         translation_key="ups_mode",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "upsname": SensorEntityDescription(
         key="upsname",
@@ -466,7 +467,10 @@ async def async_setup_entry(
     # periodical (or manual) self test since last daemon restart. It might not be available
     # when we set up the integration, and we do not know if it would ever be available. Here we
     # add it anyway and mark it as unknown initially.
-    for resource in available_resources | {LAST_S_TEST}:
+    #
+    # We also sort the resources to ensure the order of entities created is deterministic since
+    # "APCMODEL" and "MODEL" resources map to the same "Model" name.
+    for resource in sorted(available_resources | {LAST_S_TEST}):
         if resource not in SENSORS:
             _LOGGER.warning("Invalid resource from APCUPSd: %s", resource.upper())
             continue

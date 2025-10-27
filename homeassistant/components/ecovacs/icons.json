@@ -36,6 +36,12 @@
       "reset_lifespan_round_mop": {
         "default": "mdi:broom"
       },
+      "station_action_clean_base": {
+        "default": "mdi:home"
+      },
+      "station_action_dry_mop": {
+        "default": "mdi:broom"
+      },
       "station_action_empty_dustbin": {
         "default": "mdi:delete-restore"
       }
@@ -116,6 +122,9 @@
       }
     },
     "select": {
+      "active_map": {
+        "default": "mdi:floor-plan"
+      },
       "water_amount": {
         "default": "mdi:water"
       },

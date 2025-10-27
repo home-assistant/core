@@ -59,6 +59,10 @@
       }
     },
     "sensor": {
+      "food_dispensed_today": {
+        "name": "Food dispensed today",
+        "unit_of_measurement": "cups"
+      },
       "food_level": {
         "name": "Food level"
       },
@@ -81,6 +85,9 @@
       },
       "litter_level": {
         "name": "Litter level"
+      },
+      "next_feeding": {
+        "name": "Next feeding"
       },
       "pet_weight": {
         "name": "Pet weight"
@@ -137,6 +144,22 @@
       "cycle_delay": {
         "name": "Clean cycle wait time minutes"
       },
+      "globe_brightness": {
+        "name": "Globe brightness",
+        "state": {
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]"
+        }
+      },
+      "globe_light": {
+        "name": "Globe light",
+        "state": {
+          "auto": "[%key:common::state::auto%]",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      },
       "meal_insert_size": {
         "name": "Meal insert size"
       },
@@ -150,6 +173,9 @@
       }
     },
     "switch": {
+      "gravity_mode": {
+        "name": "Gravity mode"
+      },
       "night_light_mode": {
         "name": "Night light mode"
       },
@@ -182,6 +208,12 @@
           "description": "The start time at which the Litter-Robot will enter sleep mode and prevent an automatic clean cycle for 8 hours."
         }
       }
+    }
+  },
+  "issues": {
+    "deprecated_entity": {
+      "title": "{name} is deprecated",
+      "description": "The Litter-Robot entity `{entity}` is deprecated and will be removed in a future release.\nPlease update your dashboards, automations and scripts, disable `{entity}` and reload the integration/restart Home Assistant to fix this issue."
     }
   }
 }

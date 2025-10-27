@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
 from typing import Any
 
 from chip.clusters import Objects as clusters
@@ -19,7 +20,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import LOGGER
-from .entity import MatterEntity
+from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
@@ -50,6 +51,11 @@ async def async_setup_entry(
     """Set up Matter lock from Config Entry."""
     matter = get_matter(hass)
     matter.register_platform_handler(Platform.LOCK, async_add_entities)
+
+
+@dataclass(frozen=True, kw_only=True)
+class MatterLockEntityDescription(LockEntityDescription, MatterEntityDescription):
+    """Describe Matter Lock entities."""
 
 
 class MatterLock(MatterEntity, LockEntity):
@@ -254,7 +260,7 @@ class MatterLock(MatterEntity, LockEntity):
 DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.LOCK,
-        entity_description=LockEntityDescription(
+        entity_description=MatterLockEntityDescription(
             key="MatterLock",
             name=None,
         ),

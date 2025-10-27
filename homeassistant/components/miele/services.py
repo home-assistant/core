@@ -58,11 +58,12 @@ _LOGGER = logging.getLogger(__name__)
 
 async def _extract_config_entry(service_call: ServiceCall) -> MieleConfigEntry:
     """Extract config entry from the service call."""
-    hass = service_call.hass
-    target_entry_ids = await async_extract_config_entry_ids(hass, service_call)
+    target_entry_ids = await async_extract_config_entry_ids(service_call)
     target_entries: list[MieleConfigEntry] = [
         loaded_entry
-        for loaded_entry in hass.config_entries.async_loaded_entries(DOMAIN)
+        for loaded_entry in service_call.hass.config_entries.async_loaded_entries(
+            DOMAIN
+        )
         if loaded_entry.entry_id in target_entry_ids
     ]
     if not target_entries:

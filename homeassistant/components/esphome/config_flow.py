@@ -16,25 +16,31 @@ from aioesphomeapi import (
     InvalidEncryptionKeyAPIError,
     RequiresEncryptionAPIError,
     ResolveAPIError,
+    wifi_mac_to_bluetooth_mac,
 )
 import aiohttp
 import voluptuous as vol
 
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import (
+    SOURCE_ESPHOME,
     SOURCE_IGNORE,
     SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
+    FlowType,
     OptionsFlow,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.data_entry_flow import AbortFlow, FlowResultType
+from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.importlib import async_import_module
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.service_info.esphome import ESPHomeServiceInfo
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -57,6 +63,7 @@ from .manager import async_replace_device
 
 ERROR_REQUIRES_ENCRYPTION_KEY = "requires_encryption_key"
 ERROR_INVALID_ENCRYPTION_KEY = "invalid_psk"
+ERROR_INVALID_PASSWORD_AUTH = "invalid_auth"
 _LOGGER = logging.getLogger(__name__)
 
 ZERO_NOISE_PSK = "MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA="
@@ -74,6 +81,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize flow."""
         self._host: str | None = None
+        self._connected_address: str | None = None
         self.__name: str | None = None
         self._port: int | None = None
         self._password: str | None = None
@@ -137,7 +145,22 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             self._password = ""
             return await self._async_authenticate_or_add()
 
+        if error == ERROR_INVALID_PASSWORD_AUTH or (
+            error is None and self._device_info and self._device_info.uses_password
+        ):
+            return await self.async_step_authenticate()
+
         if error is None and entry_data.get(CONF_NOISE_PSK):
+            # Device was configured with encryption but now connects without it.
+            # Check if it's the same device before offering to remove encryption.
+            if self._reauth_entry.unique_id and self._device_mac:
+                expected_mac = format_mac(self._reauth_entry.unique_id)
+                actual_mac = format_mac(self._device_mac)
+                if expected_mac != actual_mac:
+                    # Different device at the same IP - do not offer to remove encryption
+                    return self._async_abort_wrong_device(
+                        self._reauth_entry, expected_mac, actual_mac
+                    )
             return await self.async_step_reauth_encryption_removed_confirm()
         return await self.async_step_reauth_confirm()
 
@@ -296,6 +319,24 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
         # Check if already configured
         await self.async_set_unique_id(mac_address)
+
+        # Convert WiFi MAC to Bluetooth MAC and notify Improv BLE if waiting
+        # ESPHome devices use WiFi MAC + 1 for Bluetooth MAC
+        # Late import to avoid circular dependency
+        # NOTE: Do not change to hass.config.components check - improv_ble is
+        # config_flow only and may not be in the components registry
+        if improv_ble := await async_import_module(
+            self.hass, "homeassistant.components.improv_ble"
+        ):
+            ble_mac = wifi_mac_to_bluetooth_mac(mac_address)
+            improv_ble.async_register_next_flow(self.hass, ble_mac, self.flow_id)
+            _LOGGER.debug(
+                "Notified Improv BLE of flow %s for BLE MAC %s (derived from WiFi MAC %s)",
+                self.flow_id,
+                ble_mac,
+                mac_address,
+            )
+
         await self._async_validate_mac_abort_configured(
             mac_address, self._host, self._port
         )
@@ -479,21 +520,77 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle creating a new entry by removing the old one and creating new."""
         assert self._entry_with_name_conflict is not None
+        if self.source in (SOURCE_REAUTH, SOURCE_RECONFIGURE):
+            return self.async_update_reload_and_abort(
+                self._entry_with_name_conflict,
+                title=self._name,
+                unique_id=self.unique_id,
+                data=self._async_make_config_data(),
+                options={
+                    CONF_ALLOW_SERVICE_CALLS: DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
+                },
+            )
         await self.hass.config_entries.async_remove(
             self._entry_with_name_conflict.entry_id
         )
-        return self._async_create_entry()
+        return await self._async_create_entry()
 
-    @callback
-    def _async_create_entry(self) -> ConfigFlowResult:
+    async def _async_create_entry(self) -> ConfigFlowResult:
         """Create the config entry."""
         assert self._name is not None
+        assert self._device_info is not None
+
+        # Check if Z-Wave capabilities are present and start discovery flow
+        next_flow_id: str | None = None
+        # If the zwave_home_id is not set, we don't know if it's a fresh
+        # adapter, or the cable is just unplugged. So only start
+        # the zwave_js config flow automatically if there is a
+        # zwave_home_id present. If it's a fresh adapter, the manager
+        # will handle starting the flow once it gets the home id changed
+        # request from the ESPHome device.
+        if (
+            self._device_info.zwave_proxy_feature_flags
+            and self._device_info.zwave_home_id
+        ):
+            assert self._connected_address is not None
+            assert self._port is not None
+
+            # Start Z-Wave discovery flow and get the flow ID
+            zwave_result = await self.hass.config_entries.flow.async_init(
+                "zwave_js",
+                context={
+                    "source": SOURCE_ESPHOME,
+                    "discovery_key": discovery_flow.DiscoveryKey(
+                        domain=DOMAIN,
+                        key=self._device_info.mac_address,
+                        version=1,
+                    ),
+                },
+                data=ESPHomeServiceInfo(
+                    name=self._device_info.name,
+                    zwave_home_id=self._device_info.zwave_home_id,
+                    ip_address=self._connected_address,
+                    port=self._port,
+                    noise_psk=self._noise_psk,
+                ),
+            )
+            if zwave_result["type"] in (
+                FlowResultType.ABORT,
+                FlowResultType.CREATE_ENTRY,
+            ):
+                _LOGGER.debug(
+                    "Unable to continue created Z-Wave JS config flow: %s", zwave_result
+                )
+            else:
+                next_flow_id = zwave_result["flow_id"]
+
         return self.async_create_entry(
             title=self._name,
             data=self._async_make_config_data(),
             options={
                 CONF_ALLOW_SERVICE_CALLS: DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
             },
+            next_flow=(FlowType.CONFIG_FLOW, next_flow_id) if next_flow_id else None,
         )
 
     @callback
@@ -508,6 +605,28 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             CONF_DEVICE_NAME: self._device_name,
         }
 
+    @callback
+    def _async_abort_wrong_device(
+        self, entry: ConfigEntry, expected_mac: str, actual_mac: str
+    ) -> ConfigFlowResult:
+        """Abort flow because a different device was found at the IP address."""
+        assert self._host is not None
+        assert self._device_name is not None
+        if self.source == SOURCE_RECONFIGURE:
+            reason = "reconfigure_unique_id_changed"
+        else:
+            reason = "reauth_unique_id_changed"
+        return self.async_abort(
+            reason=reason,
+            description_placeholders={
+                "name": entry.data.get(CONF_DEVICE_NAME, entry.title),
+                "host": self._host,
+                "expected_mac": expected_mac,
+                "unexpected_mac": actual_mac,
+                "unexpected_device_name": self._device_name,
+            },
+        )
+
     async def _async_validated_connection(self) -> ConfigFlowResult:
         """Handle validated connection."""
         if self.source == SOURCE_RECONFIGURE:
@@ -518,7 +637,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             if entry.data.get(CONF_DEVICE_NAME) == self._device_name:
                 self._entry_with_name_conflict = entry
                 return await self.async_step_name_conflict()
-        return self._async_create_entry()
+        return await self._async_create_entry()
 
     async def _async_reauth_validated_connection(self) -> ConfigFlowResult:
         """Handle reauth validated connection."""
@@ -539,17 +658,10 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         # Reauth was triggered a while ago, and since than
         # a new device resides at the same IP address.
         assert self._device_name is not None
-        return self.async_abort(
-            reason="reauth_unique_id_changed",
-            description_placeholders={
-                "name": self._reauth_entry.data.get(
-                    CONF_DEVICE_NAME, self._reauth_entry.title
-                ),
-                "host": self._host,
-                "expected_mac": format_mac(self._reauth_entry.unique_id),
-                "unexpected_mac": format_mac(self.unique_id),
-                "unexpected_device_name": self._device_name,
-            },
+        return self._async_abort_wrong_device(
+            self._reauth_entry,
+            format_mac(self._reauth_entry.unique_id),
+            format_mac(self.unique_id),
         )
 
     async def _async_reconfig_validated_connection(self) -> ConfigFlowResult:
@@ -589,17 +701,10 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         if self._reconfig_entry.data.get(CONF_DEVICE_NAME) == self._device_name:
             self._entry_with_name_conflict = self._reconfig_entry
             return await self.async_step_name_conflict()
-        return self.async_abort(
-            reason="reconfigure_unique_id_changed",
-            description_placeholders={
-                "name": self._reconfig_entry.data.get(
-                    CONF_DEVICE_NAME, self._reconfig_entry.title
-                ),
-                "host": self._host,
-                "expected_mac": format_mac(self._reconfig_entry.unique_id),
-                "unexpected_mac": format_mac(self.unique_id),
-                "unexpected_device_name": self._device_name,
-            },
+        return self._async_abort_wrong_device(
+            self._reconfig_entry,
+            format_mac(self._reconfig_entry.unique_id),
+            format_mac(self.unique_id),
         )
 
     async def async_step_encryption_key(
@@ -672,13 +777,16 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         cli = APIClient(
             host,
             port or DEFAULT_PORT,
-            "",
+            self._password or "",
             zeroconf_instance=zeroconf_instance,
             noise_psk=noise_psk,
         )
         try:
             await cli.connect()
             self._device_info = await cli.device_info()
+            self._connected_address = cli.connected_address
+        except InvalidAuthAPIError:
+            return ERROR_INVALID_PASSWORD_AUTH
         except RequiresEncryptionAPIError:
             return ERROR_REQUIRES_ENCRYPTION_KEY
         except InvalidEncryptionKeyAPIError as ex:

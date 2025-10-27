@@ -1,88 +1,130 @@
-"""Xbox friends binary sensors."""
+"""Sensor platform for the Xbox integration."""
 
 from __future__ import annotations
 
-from functools import partial
+from collections.abc import Callable
+from dataclasses import dataclass
+from datetime import UTC, datetime
+from enum import StrEnum
 
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.config_entries import ConfigEntry
+from xbox.webapi.api.provider.people.models import Person
+
+from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN
-from .coordinator import XboxUpdateCoordinator
-from .entity import XboxBaseEntity
+from .coordinator import XboxConfigEntry
+from .entity import XboxBaseEntity, check_deprecated_entity
 
-SENSOR_ATTRIBUTES = ["status", "gamer_score", "account_tier", "gold_tenure"]
+
+class XboxSensor(StrEnum):
+    """Xbox sensor."""
+
+    STATUS = "status"
+    GAMER_SCORE = "gamer_score"
+    ACCOUNT_TIER = "account_tier"
+    GOLD_TENURE = "gold_tenure"
+    LAST_ONLINE = "last_online"
+    FOLLOWING = "following"
+    FOLLOWER = "follower"
+
+
+@dataclass(kw_only=True, frozen=True)
+class XboxSensorEntityDescription(SensorEntityDescription):
+    """Xbox sensor description."""
+
+    value_fn: Callable[[Person], StateType | datetime]
+    deprecated: bool | None = None
+
+
+SENSOR_DESCRIPTIONS: tuple[XboxSensorEntityDescription, ...] = (
+    XboxSensorEntityDescription(
+        key=XboxSensor.STATUS,
+        translation_key=XboxSensor.STATUS,
+        value_fn=lambda x: x.presence_text,
+    ),
+    XboxSensorEntityDescription(
+        key=XboxSensor.GAMER_SCORE,
+        translation_key=XboxSensor.GAMER_SCORE,
+        value_fn=lambda x: x.gamer_score,
+    ),
+    XboxSensorEntityDescription(
+        key=XboxSensor.ACCOUNT_TIER,
+        value_fn=lambda _: None,
+        deprecated=True,
+    ),
+    XboxSensorEntityDescription(
+        key=XboxSensor.GOLD_TENURE,
+        value_fn=lambda _: None,
+        deprecated=True,
+    ),
+    XboxSensorEntityDescription(
+        key=XboxSensor.LAST_ONLINE,
+        translation_key=XboxSensor.LAST_ONLINE,
+        value_fn=(
+            lambda x: x.last_seen_date_time_utc.replace(tzinfo=UTC)
+            if x.last_seen_date_time_utc
+            else None
+        ),
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
+    XboxSensorEntityDescription(
+        key=XboxSensor.FOLLOWING,
+        translation_key=XboxSensor.FOLLOWING,
+        value_fn=lambda x: x.detail.following_count if x.detail else None,
+    ),
+    XboxSensorEntityDescription(
+        key=XboxSensor.FOLLOWER,
+        translation_key=XboxSensor.FOLLOWER,
+        value_fn=lambda x: x.detail.follower_count if x.detail else None,
+    ),
+)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: XboxConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Xbox Live friends."""
-    coordinator: XboxUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id][
-        "coordinator"
-    ]
+    xuids_added: set[str] = set()
+    coordinator = config_entry.runtime_data
 
-    update_friends = partial(async_update_friends, coordinator, {}, async_add_entities)
+    @callback
+    def add_entities() -> None:
+        nonlocal xuids_added
 
-    unsub = coordinator.async_add_listener(update_friends)
-    hass.data[DOMAIN][config_entry.entry_id]["sensor_unsub"] = unsub
-    update_friends()
+        current_xuids = set(coordinator.data.presence)
+        if new_xuids := current_xuids - xuids_added:
+            for xuid in new_xuids:
+                async_add_entities(
+                    [
+                        XboxSensorEntity(coordinator, xuid, description)
+                        for description in SENSOR_DESCRIPTIONS
+                        if check_deprecated_entity(
+                            hass, xuid, description, SENSOR_DOMAIN
+                        )
+                    ]
+                )
+            xuids_added |= new_xuids
+        xuids_added &= current_xuids
+
+    coordinator.async_add_listener(add_entities)
+    add_entities()
 
 
 class XboxSensorEntity(XboxBaseEntity, SensorEntity):
     """Representation of a Xbox presence state."""
 
+    entity_description: XboxSensorEntityDescription
+
     @property
-    def native_value(self):
+    def native_value(self) -> StateType | datetime:
         """Return the state of the requested attribute."""
-        if not self.coordinator.last_update_success:
-            return None
-
-        return getattr(self.data, self.attribute, None)
-
-
-@callback
-def async_update_friends(
-    coordinator: XboxUpdateCoordinator,
-    current: dict[str, list[XboxSensorEntity]],
-    async_add_entities,
-) -> None:
-    """Update friends."""
-    new_ids = set(coordinator.data.presence)
-    current_ids = set(current)
-
-    # Process new favorites, add them to Home Assistant
-    new_entities: list[XboxSensorEntity] = []
-    for xuid in new_ids - current_ids:
-        current[xuid] = [
-            XboxSensorEntity(coordinator, xuid, attribute)
-            for attribute in SENSOR_ATTRIBUTES
-        ]
-        new_entities = new_entities + current[xuid]
-
-    async_add_entities(new_entities)
-
-    # Process deleted favorites, remove them from Home Assistant
-    for xuid in current_ids - new_ids:
-        coordinator.hass.async_create_task(
-            async_remove_entities(xuid, coordinator, current)
-        )
-
-
-async def async_remove_entities(
-    xuid: str,
-    coordinator: XboxUpdateCoordinator,
-    current: dict[str, list[XboxSensorEntity]],
-) -> None:
-    """Remove friend sensors from Home Assistant."""
-    registry = er.async_get(coordinator.hass)
-    entities = current[xuid]
-    for entity in entities:
-        if entity.entity_id in registry.entities:
-            registry.async_remove(entity.entity_id)
-    del current[xuid]
+        return self.entity_description.value_fn(self.data)

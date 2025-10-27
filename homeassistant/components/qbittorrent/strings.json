@@ -70,6 +70,10 @@
         "name": "Paused torrents",
         "unit_of_measurement": "[%key:component::qbittorrent::entity::sensor::active_torrents::unit_of_measurement%]"
       },
+      "errored_torrents": {
+        "name": "Errored torrents",
+        "unit_of_measurement": "[%key:component::qbittorrent::entity::sensor::active_torrents::unit_of_measurement%]"
+      },
       "all_torrents": {
         "name": "All torrents",
         "unit_of_measurement": "[%key:component::qbittorrent::entity::sensor::active_torrents::unit_of_measurement%]"
