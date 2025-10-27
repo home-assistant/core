@@ -116,6 +116,6 @@ class SqueezeboxBinarySensorEntity(SqueezeboxEntity, BinarySensorEntity):
         self._attr_unique_id = f"{format_mac(self._player.player_id)}_{description.key}"
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return the state of the binary sensor."""
-        return bool(getattr(self.coordinator.player, self.description.key, None))
+        return getattr(self.coordinator.player, self.description.key, None)
