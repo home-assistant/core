@@ -37,7 +37,7 @@ ROWS = "rows"
 WORKSHEET = "worksheet"
 
 SERVICE_APPEND_SHEET = "append_sheet"
-SERVICE_FETCH_SHEET = "fetch_sheet"
+SERVICE_GET_SHEET = "get_sheet"
 
 SHEET_SERVICE_SCHEMA = vol.All(
     {
@@ -47,7 +47,7 @@ SHEET_SERVICE_SCHEMA = vol.All(
     },
 )
 
-FETCH_SHEET_SERVICE_SCHEMA = vol.All(
+get_SHEET_SERVICE_SCHEMA = vol.All(
     {
         vol.Required(DATA_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
         vol.Optional(WORKSHEET): cv.string,
@@ -83,10 +83,10 @@ def _append_to_sheet(call: ServiceCall, entry: GoogleSheetsConfigEntry) -> None:
     worksheet.append_rows(rows, value_input_option=ValueInputOption.user_entered)
 
 
-def _fetch_from_sheet(
+def _get_from_sheet(
     call: ServiceCall, entry: GoogleSheetsConfigEntry
 ) -> JsonObjectType:
-    """Run fetch in the executor."""
+    """Run get in the executor."""
     service = Client(Credentials(entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN]))  # type: ignore[no-untyped-call]
     try:
         sheet = service.open_by_key(entry.unique_id)
@@ -94,11 +94,11 @@ def _fetch_from_sheet(
         entry.async_start_reauth(call.hass)
         raise
     except APIError as ex:
-        raise HomeAssistantError("Failed to write data") from ex
+        raise HomeAssistantError("Failed to retrieve data") from ex
 
     worksheet = sheet.worksheet(call.data.get(WORKSHEET, sheet.sheet1.title))
     all_values = worksheet.get_values()
-    return {"range": all_values[-call.data[ROWS]:]}
+    return {"range": all_values[-call.data[ROWS] :]}
 
 
 async def _async_append_to_sheet(call: ServiceCall) -> None:
@@ -112,8 +112,8 @@ async def _async_append_to_sheet(call: ServiceCall) -> None:
     await call.hass.async_add_executor_job(_append_to_sheet, call, entry)
 
 
-async def _async_fetch_from_sheet(call: ServiceCall) -> ServiceResponse:
-    """Fetch lines of data from a Google Sheets document."""
+async def _async_get_from_sheet(call: ServiceCall) -> ServiceResponse:
+    """Get lines of data from a Google Sheets document."""
     entry: GoogleSheetsConfigEntry | None = call.hass.config_entries.async_get_entry(
         call.data[DATA_CONFIG_ENTRY]
     )
@@ -125,7 +125,7 @@ async def _async_fetch_from_sheet(call: ServiceCall) -> ServiceResponse:
         raise HomeAssistantError(f"Config entry {entry.entry_id} is not loaded")
 
     await entry.runtime_data.async_ensure_token_valid()
-    return await call.hass.async_add_executor_job(_fetch_from_sheet, call, entry)
+    return await call.hass.async_add_executor_job(_get_from_sheet, call, entry)
 
 
 @callback
@@ -141,8 +141,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_FETCH_SHEET,
-        _async_fetch_from_sheet,
-        schema=FETCH_SHEET_SERVICE_SCHEMA,
+        SERVICE_GET_SHEET,
+        _async_get_from_sheet,
+        schema=get_SHEET_SERVICE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )

@@ -19,7 +19,7 @@ from homeassistant.components.google_sheets.const import DOMAIN
 from homeassistant.components.google_sheets.services import (
     DATA_CONFIG_ENTRY,
     ROWS,
-    SERVICE_FETCH_SHEET,
+    SERVICE_GET_SHEET,
     WORKSHEET,
 )
 from homeassistant.config_entries import ConfigEntryState
@@ -220,13 +220,13 @@ async def test_append_sheet(
     assert len(mock_client.mock_calls) == 8
 
 
-async def test_fetch_sheet(
+async def test_get_sheet(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
     config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test service call fetching from a sheet."""
+    """Test service call getting data from a sheet."""
     await setup_integration()
 
     entries = hass.config_entries.async_entries(DOMAIN)
@@ -241,7 +241,7 @@ async def test_fetch_sheet(
         ]
         response = await hass.services.async_call(
             DOMAIN,
-            SERVICE_FETCH_SHEET,
+            SERVICE_GET_SHEET,
             {
                 DATA_CONFIG_ENTRY: config_entry.entry_id,
                 WORKSHEET: "Sheet1",

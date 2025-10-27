@@ -60,13 +60,13 @@
         }
       }
     },
-    "fetch_sheet": {
-      "name": "Fetch from sheet",
-      "description": "Fetches data from a worksheet in Google Sheets.",
+    "get_sheet": {
+      "name": "Gets data from sheet",
+      "description": "Gets data from a worksheet in Google Sheets.",
       "fields": {
         "config_entry": {
           "name": "[%key:component::google_sheets::services::append_sheet::fields::config_entry::name%]",
-          "description": "The sheet to fetch data from."
+          "description": "The sheet to get data from."
         },
         "worksheet": {
           "name": "[%key:component::google_sheets::services::append_sheet::fields::worksheet::name%]",
@@ -74,7 +74,7 @@
         },
         "rows": {
           "name": "Rows",
-          "description": "Maximum number of rows to be fetched from the worksheet."
+          "description": "Maximum number of rows to be retreived from the worksheet."
         }
       }
     }

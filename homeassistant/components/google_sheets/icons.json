@@ -3,7 +3,7 @@
     "append_sheet": {
       "service": "mdi:google-spreadsheet"
     },
-    "fetch_sheet": {
+    "get_sheet": {
       "service": "mdi:google-spreadsheet"
     }
   }

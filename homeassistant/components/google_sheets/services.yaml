@@ -14,7 +14,7 @@ append_sheet:
       example: '{"hello": world, "cool": True, "count": 5}'
       selector:
         object:
-fetch_sheet:
+get_sheet:
   fields:
     config_entry:
       required: true
