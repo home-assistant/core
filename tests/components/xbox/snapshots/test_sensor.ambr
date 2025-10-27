@@ -233,7 +233,16 @@
 # name: test_sensors[sensor.erics273_now_playing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'achievements': None,
+      'developer': None,
       'friendly_name': 'erics273 Now playing',
+      'gamerscore': None,
+      'genres': None,
+      'min_age': None,
+      'progress': None,
+      'publisher': None,
+      'release_date': None,
+      'short_description': None,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.erics273_now_playing',
@@ -527,7 +536,6 @@
     'attributes': ReadOnlyDict({
       'achievements': '2 / 43',
       'developer': 'Mistwalker / Artoon',
-      'entity_picture': 'http://store-images.s-microsoft.com/image/apps.35072.13670972585585116.70570f0d-17aa-4f97-b692-5412fa183673.25a97451-9369-4f6b-b66b-3427913235eb',
       'friendly_name': 'GSR Ae Now playing',
       'gamerscore': '10 / 1000',
       'genres': 'Role Playing',
@@ -827,7 +835,16 @@
 # name: test_sensors[sensor.ikken_hissatsuu_now_playing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'achievements': None,
+      'developer': None,
       'friendly_name': 'Ikken Hissatsuu Now playing',
+      'gamerscore': None,
+      'genres': None,
+      'min_age': None,
+      'progress': None,
+      'publisher': None,
+      'release_date': None,
+      'short_description': None,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ikken_hissatsuu_now_playing',
