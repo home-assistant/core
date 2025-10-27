@@ -18,11 +18,13 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
     ATTR_DATA,
+    ATTR_STARTUP,
     ATTR_UPDATE_KEY,
     ATTR_WS_EVENT,
     EVENT_JOB,
     EVENT_SUPERVISOR_EVENT,
     EVENT_SUPERVISOR_UPDATE,
+    STARTUP_COMPLETE,
     UPDATE_KEY_SUPERVISOR,
 )
 from .handler import get_supervisor_client
@@ -142,6 +144,7 @@ class SupervisorJobs:
         if (
             event[ATTR_WS_EVENT] == EVENT_SUPERVISOR_UPDATE
             and event.get(ATTR_UPDATE_KEY) == UPDATE_KEY_SUPERVISOR
+            and event.get(ATTR_DATA, {}).get(ATTR_STARTUP) == STARTUP_COMPLETE
         ):
             self._hass.async_create_task(self.refresh_data())
 

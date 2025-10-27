@@ -36,6 +36,7 @@ ATTR_METHOD = "method"
 ATTR_PANELS = "panels"
 ATTR_PASSWORD = "password"
 ATTR_RESULT = "result"
+ATTR_STARTUP = "startup"
 ATTR_SUGGESTIONS = "suggestions"
 ATTR_SUPPORTED = "supported"
 ATTR_TIMEOUT = "timeout"
@@ -71,6 +72,7 @@ EVENT_ISSUE_REMOVED = "issue_removed"
 EVENT_JOB = "job"
 
 UPDATE_KEY_SUPERVISOR = "supervisor"
+STARTUP_COMPLETE = "complete"
 
 ADDONS_COORDINATOR = "hassio_addons_coordinator"
 
