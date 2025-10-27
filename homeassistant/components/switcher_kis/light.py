@@ -16,6 +16,8 @@ from .const import SIGNAL_DEVICE_ADD
 from .coordinator import SwitcherDataUpdateCoordinator
 from .entity import SwitcherEntity
 
+PARALLEL_UPDATES = 1
+
 API_SET_LIGHT = "set_light"
 
 
