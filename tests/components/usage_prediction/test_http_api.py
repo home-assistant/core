@@ -19,6 +19,8 @@ from tests.common import MockUser
 from tests.typing import ClientSessionGenerator
 
 NOW = datetime(2026, 8, 26, 15, 0, 0, tzinfo=dt_util.UTC)
+# Note: Test environment uses US/Pacific timezone (UTC-7 in summer)
+# 15:00 UTC = 08:00 Pacific = morning time category
 
 
 @pytest.fixture
@@ -143,3 +145,31 @@ async def test_concurrent_requests(
 
     # Should only call the prediction function once due to task caching
     assert mock_predict_common_control.call_count == 1
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_prediction_error_handling(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test that prediction errors are handled gracefully."""
+    assert await async_setup_component(hass, "usage_prediction", {})
+
+    client = await hass_client()
+
+    # Mock the prediction function to raise an exception
+    with (
+        patch(
+            "homeassistant.components.usage_prediction.common_control.async_predict_common_control",
+            side_effect=Exception("Database error"),
+        ) as mock_predict,
+        freeze_time(NOW),
+    ):
+        resp = await client.get("/api/usage_prediction/common_control")
+
+    # The error should bubble up as a 500 error
+    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert mock_predict.call_count == 1
+
+    # Verify cache was cleared so next request can retry
+    assert hass.data["usage_prediction"] == {}
