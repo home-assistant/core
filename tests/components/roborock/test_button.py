@@ -1,6 +1,6 @@
 """Test Roborock Button platform."""
 
-from unittest.mock import ANY, Mock, patch
+from unittest.mock import Mock
 
 import pytest
 from roborock import RoborockException
@@ -17,15 +17,9 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def get_scenes_failure_fixture() -> None:
+def get_scenes_failure_fixture(fake_vacuum: FakeDevice) -> None:
     """Fixture to raise when getting scenes."""
-    with (
-        patch(
-            "homeassistant.components.roborock.RoborockApiClient.get_scenes",
-            side_effect=RoborockException(),
-        ),
-    ):
-        yield
+    fake_vacuum.v1_properties.routines.get_routines.side_effect = RoborockException
 
 
 @pytest.fixture
@@ -118,6 +112,7 @@ async def test_get_button_routines_failure(
     get_scenes_failure_fixture: None,
     setup_entry: MockConfigEntry,
     entity_id: str,
+    fake_vacuum: FakeDevice,
 ) -> None:
     """Test that if routine retrieval fails, no entity is being created."""
     # Ensure that the entity does not exist
@@ -139,18 +134,19 @@ async def test_press_routine_button_success(
     setup_entry: MockConfigEntry,
     entity_id: str,
     routine_id: int,
+    fake_vacuum: FakeDevice,
 ) -> None:
     """Test pressing the button entities."""
-    with patch(
-        "homeassistant.components.roborock.RoborockApiClient.execute_scene"
-    ) as mock_execute_scene:
-        await hass.services.async_call(
-            "button",
-            SERVICE_PRESS,
-            blocking=True,
-            target={"entity_id": entity_id},
-        )
-    mock_execute_scene.assert_called_once_with(ANY, routine_id)
+    await hass.services.async_call(
+        "button",
+        SERVICE_PRESS,
+        blocking=True,
+        target={"entity_id": entity_id},
+    )
+
+    fake_vacuum.v1_properties.routines.execute_routine.assert_called_once_with(
+        routine_id
+    )
     assert hass.states.get(entity_id).state == "2023-10-30T08:50:00+00:00"
 
 
@@ -168,20 +164,18 @@ async def test_press_routine_button_failure(
     setup_entry: MockConfigEntry,
     entity_id: str,
     routine_id: int,
+    fake_vacuum: FakeDevice,
 ) -> None:
     """Test failure while pressing the button entity."""
-    with (
-        patch(
-            "homeassistant.components.roborock.RoborockApiClient.execute_scene",
-            side_effect=RoborockException,
-        ) as mock_execute_scene,
-        pytest.raises(HomeAssistantError, match="Error while calling execute_scene"),
-    ):
+    fake_vacuum.v1_properties.routines.execute_routine.side_effect = RoborockException
+    with pytest.raises(HomeAssistantError, match="Error while calling execute_scene"):
         await hass.services.async_call(
             "button",
             SERVICE_PRESS,
             blocking=True,
             target={"entity_id": entity_id},
         )
-    mock_execute_scene.assert_called_once_with(ANY, routine_id)
+    fake_vacuum.v1_properties.routines.execute_routine.assert_called_once_with(
+        routine_id
+    )
     assert hass.states.get(entity_id).state == "2023-10-30T08:50:00+00:00"

@@ -210,7 +210,7 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
                         for room in vacuum_map.rooms
                     },
                 }
-                for vacuum_map in (home_trait.home_cache or {}).values()
+                for vacuum_map in (home_trait.home_map_info or {}).values()
             ]
         }
 

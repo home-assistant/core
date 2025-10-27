@@ -9,13 +9,12 @@ import logging
 from typing import Any, TypeVar
 
 from propcache.api import cached_property
-from roborock.data import HomeDataScene, RoborockCategory, UserData
+from roborock.data import RoborockCategory
 from roborock.devices.device import RoborockDevice
 from roborock.devices.traits.a01 import DyadApi, ZeoApi
 from roborock.devices.traits.v1 import PropertiesApi
 from roborock.exceptions import RoborockDeviceBusy, RoborockException
 from roborock.roborock_message import RoborockDyadDataProtocol, RoborockZeoProtocol
-from roborock.web_api import RoborockApiClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_CONNECTIONS
@@ -23,11 +22,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.issue_registry import (
-    IssueSeverity,
-    async_create_issue,
-    async_delete_issue,
-)
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util, slugify
@@ -53,7 +47,6 @@ _LOGGER = logging.getLogger(__name__)
 class RoborockCoordinators:
     """Roborock coordinators type."""
 
-    api_client: UserApiClient
     v1: list[RoborockDataUpdateCoordinator]
     a01: list[RoborockDataUpdateCoordinatorA01]
 
@@ -141,7 +134,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState]):
         except RoborockDeviceBusy:
             _LOGGER.info("Home discovery skipped while device is busy/cleaning")
 
-        roborock_maps = list((self.properties_api.home.home_cache or {}).values())
+        roborock_maps = list((self.properties_api.home.home_map_info or {}).values())
         # Handle loading any stored images for the current or formerly active
         # maps here. A single active map for each device is refreshed regularly,
         # and the others maps are served from the cache.
@@ -320,47 +313,6 @@ async def _refresh_traits(traits: list[Any]) -> None:
                 translation_domain=DOMAIN,
                 translation_key="update_data_fail",
             ) from ex
-
-
-class UserApiClient:
-    """Wrapper around the Roborock API client."""
-
-    def __init__(
-        self,
-        api_client: RoborockApiClient,
-        user_data: UserData,
-    ) -> None:
-        """Initialize."""
-        self._api_client = api_client
-        self._user_data = user_data
-
-    async def get_routines(self, duid: str) -> list[HomeDataScene]:
-        """Get routines."""
-        try:
-            return await self._api_client.get_scenes(self._user_data, duid)
-        except RoborockException as err:
-            _LOGGER.error("Failed to get routines %s", err)
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="command_failed",
-                translation_placeholders={
-                    "command": "get_scenes",
-                },
-            ) from err
-
-    async def execute_routines(self, routine_id: int) -> None:
-        """Execute routines."""
-        try:
-            await self._api_client.execute_scene(self._user_data, routine_id)
-        except RoborockException as err:
-            _LOGGER.error("Failed to execute routines %s %s", routine_id, err)
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="command_failed",
-                translation_placeholders={
-                    "command": "execute_scene",
-                },
-            ) from err
 
 
 _V = TypeVar("_V", bound=RoborockDyadDataProtocol | RoborockZeoProtocol)

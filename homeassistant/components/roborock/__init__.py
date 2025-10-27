@@ -17,12 +17,7 @@ from roborock import (
 from roborock.data import UserData
 from roborock.devices.cache import InMemoryCache
 from roborock.devices.device import RoborockDevice
-from roborock.devices.device_manager import (
-    HomeDataApi,
-    create_device_manager,
-    create_home_data_from_api_client,
-)
-from roborock.web_api import RoborockApiClient
+from roborock.devices.device_manager import UserParams, create_device_manager
 
 from homeassistant.const import CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
@@ -38,7 +33,6 @@ from .coordinator import (
     RoborockDataUpdateCoordinatorA01,
     RoborockDyadUpdateCoordinator,
     RoborockZeoUpdateCoordinator,
-    UserApiClient,
 )
 from .roborock_storage import async_remove_map_storage
 
@@ -51,19 +45,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
     """Set up roborock from a config entry."""
 
     user_data = UserData.from_dict(entry.data[CONF_USER_DATA])
-    api_client = RoborockApiClient(
-        entry.data[CONF_USERNAME],
-        entry.data[CONF_BASE_URL],
-        session=async_get_clientsession(hass),
+    user_params = UserParams(
+        username=entry.data[CONF_USERNAME],
+        user_data=user_data,
+        base_url=entry.data[CONF_BASE_URL],
     )
-    home_data_api: HomeDataApi = create_home_data_from_api_client(api_client, user_data)
     try:
         device_manager = await create_device_manager(
-            user_data,
-            home_data_api,
+            user_params,
             # This can be improved with a local cache of network information and home
             # information to allow local-only startup in the future.
-            InMemoryCache(),
+            cache=InMemoryCache(),
+            session=async_get_clientsession(hass),
         )
         devices = await device_manager.get_devices()
     except RoborockInvalidCredentials as err:
@@ -95,7 +88,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
         entry.async_on_unload(device.close)
 
     coordinators = await asyncio.gather(
-        *build_setup_functions(hass, entry, devices, user_data, api_client),
+        *build_setup_functions(hass, entry, devices, user_data),
         return_exceptions=True,
     )
     v1_coords = [
@@ -115,7 +108,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
             translation_key="no_coordinators",
         )
     valid_coordinators = RoborockCoordinators(
-        api_client=UserApiClient(api_client, user_data),
         v1=v1_coords,
         a01=a01_coords,
     )
@@ -207,7 +199,6 @@ def build_setup_functions(
     entry: RoborockConfigEntry,
     devices: list[RoborockDevice],
     user_data: UserData,
-    api_client: RoborockApiClient,
 ) -> list[
     Coroutine[
         Any,

@@ -95,10 +95,6 @@ def bypass_api_client_fixture() -> None:
             return_value=HOME_DATA,
         ),
         patch(
-            "homeassistant.components.roborock.RoborockApiClient.get_scenes",
-            return_value=SCENES,
-        ),
-        patch(
             "homeassistant.components.roborock.config_flow.RoborockApiClient.base_url",
             new_callable=PropertyMock,
             return_value=base_url_future,
@@ -191,7 +187,7 @@ def create_v1_properties(network_info: NetworkInfo) -> Mock:
     v1_properties.smart_wash_params = AsyncMock()
     v1_properties.smart_wash_params.refresh = AsyncMock()
     v1_properties.home = AsyncMock()
-    home_cache = {
+    home_map_info = {
         map_data.map_flag: CombinedMapInfo(
             name=map_data.name,
             map_flag=map_data.map_flag,
@@ -206,11 +202,14 @@ def create_v1_properties(network_info: NetworkInfo) -> Mock:
         )
         for map_data in MULTI_MAP_LIST.map_info
     }
-    v1_properties.home.home_cache = home_cache
-    v1_properties.home.current_map_data = home_cache[STATUS.current_map]
+    v1_properties.home.home_map_info = home_map_info
+    v1_properties.home.current_map_data = home_map_info[STATUS.current_map]
     v1_properties.home.refresh = AsyncMock()
     v1_properties.network_info = deepcopy(network_info)
     v1_properties.network_info.refresh = AsyncMock()
+    v1_properties.routines = AsyncMock()
+    v1_properties.routines.get_routines = AsyncMock(return_value=SCENES)
+    v1_properties.routines.execute_routine = AsyncMock()
     # Mock diagnostics for a subset of properties
     v1_properties.as_dict.return_value = {
         "status": STATUS.as_dict(),
@@ -300,7 +299,7 @@ def bypass_api_fixture_v1_only() -> None:
     home_data_copy = deepcopy(HOME_DATA)
     home_data_copy.received_devices = []
     with patch(
-        "homeassistant.components.roborock.RoborockApiClient.get_home_data_v3",
+        "roborock.devices.device_manager.RoborockApiClient.get_home_data_v3",
         return_value=home_data_copy,
     ):
         yield

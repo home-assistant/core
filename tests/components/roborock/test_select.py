@@ -146,8 +146,8 @@ async def test_selected_map_without_name(
 ) -> None:
     """Test that maps without a name are given a placeholder name."""
     assert fake_vacuum.v1_properties
-    assert fake_vacuum.v1_properties.home.home_cache
-    fake_vacuum.v1_properties.home.home_cache[0].name = ""
+    assert fake_vacuum.v1_properties.home.home_map_info
+    fake_vacuum.v1_properties.home.home_map_info[0].name = ""
     fake_vacuum.v1_properties.home.refresh = AsyncMock()
 
     await async_setup_component(hass, DOMAIN, {})

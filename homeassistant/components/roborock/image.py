@@ -34,8 +34,8 @@ async def async_setup_entry(
                 map_info.name,
             )
             for coord in config_entry.runtime_data.v1
-            if coord.properties_api.home.home_cache is not None
-            for map_info in coord.properties_api.home.home_cache.values()
+            if coord.properties_api.home.home_map_info is not None
+            for map_info in coord.properties_api.home.home_map_info.values()
         ),
     )
 
