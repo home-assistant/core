@@ -41,10 +41,7 @@ rules:
   test-coverage: done
   # Gold
   devices: done
-  diagnostics:
-    status: exempt
-    comment: |
-      Diagnostics are implemented, the PR is still open. Waiting...
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: |
