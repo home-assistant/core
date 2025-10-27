@@ -14,13 +14,14 @@ from pyportainer import (
 )
 import voluptuous as vol
 
+from homeassistant import data_entry_flow
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_TOKEN, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
+from .const import DOMAIN, SECTION_DANGER_ZONE
 
 _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema(
@@ -28,6 +29,21 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_URL): str,
         vol.Required(CONF_API_TOKEN): str,
         vol.Optional(CONF_VERIFY_SSL, default=True): bool,
+    }
+)
+
+STEP_RECONF_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_API_TOKEN): str,
+        vol.Required(SECTION_DANGER_ZONE): data_entry_flow.section(
+            vol.Schema(
+                {
+                    vol.Required(CONF_URL): str,
+                    vol.Required(CONF_VERIFY_SSL): bool,
+                }
+            ),
+            {"collapsed": True},
+        ),
     }
 )
 
@@ -127,6 +143,57 @@ class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=vol.Schema({vol.Required(CONF_API_TOKEN): str}),
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        errors: dict[str, str] = {}
+        reconf_entry = self._get_reconfigure_entry()
+        suggested_values = {
+            CONF_API_TOKEN: reconf_entry.data[CONF_API_TOKEN],
+            SECTION_DANGER_ZONE: {
+                CONF_URL: reconf_entry.data[CONF_URL],
+                CONF_VERIFY_SSL: reconf_entry.data.get(CONF_VERIFY_SSL, True),
+            },
+        }
+
+        if user_input:
+            try:
+                await _validate_input(
+                    self.hass,
+                    data={
+                        **reconf_entry.data,
+                        **user_input,
+                        **user_input[SECTION_DANGER_ZONE],
+                    },
+                )
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except PortainerTimeout:
+                errors["base"] = "timeout_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                return self.async_update_reload_and_abort(
+                    reconf_entry,
+                    data_updates={
+                        CONF_API_TOKEN: user_input[CONF_API_TOKEN],
+                        **user_input[SECTION_DANGER_ZONE],
+                    },
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=STEP_RECONF_DATA_SCHEMA,
+                suggested_values=user_input or suggested_values,
+            ),
             errors=errors,
         )
 

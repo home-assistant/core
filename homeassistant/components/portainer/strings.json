@@ -22,6 +22,30 @@
           "api_token": "The new API access token for authenticating with Portainer"
         },
         "description": "The access token for your Portainer instance needs to be re-authenticated. You can create a new access token in the Portainer UI. Go to **My account > Access tokens** and select **Add access token**"
+      },
+      "reconfigure": {
+        "title": "Reconfigure Portainer Integration",
+        "description": "Would you like to reconfigure the Portainer integration?",
+        "data": {
+          "api_token": "[%key:common::config_flow::data::api_token%]"
+        },
+        "data_description": {
+          "api_token": "[%key:component::portainer::config::step::reauth_confirm::data_description::api_token%]"
+        },
+        "sections": {
+          "danger_zone": {
+            "name": "Critical Settings",
+            "description": "These settings are critical for connecting to your Portainer instance. Change them only if necessary.",
+            "data": {
+              "url": "[%key:common::config_flow::data::url%]",
+              "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+            },
+            "data_description": {
+              "url": "The new URL, including the port, of your Portainer instance",
+              "verify_ssl": "[%key:component::portainer::config::step::user::data_description::verify_ssl%]"
+            }
+          }
+        }
       }
     },
     "error": {
@@ -32,7 +56,8 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
   "device": {
