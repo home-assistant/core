@@ -132,6 +132,7 @@ def translation_value_validator(value: Any) -> str:
 
     - prevents string with HTML
     - prevents strings with single quoted placeholders
+    - prevents strings with placeholders using invalid identifiers
     - prevents combined translations
     """
     string_value = cv.string_with_no_html(value)
@@ -161,7 +162,7 @@ def validate_placeholders(value: str) -> str:
         if field_name:  # skip literal text segments
             if not field_name.isidentifier():
                 raise vol.Invalid(
-                    "placeholders must be valid identifiers ([a-zA-Z_][a-zA-Z0-9_]+)"
+                    "placeholders must be valid identifiers ([a-zA-Z_][a-zA-Z0-9_]*)"
                 )
     return value
 
