@@ -482,3 +482,294 @@ async def test_async_get_supported_subentry_types(hass: HomeAssistant) -> None:
 
     assert "sensor_mapping" in result
     assert result["sensor_mapping"] == EnergyIDSensorMappingFlowHandler
+
+
+async def test_polling_stops_on_invalid_auth_error(hass: HomeAssistant) -> None:
+    """Test polling stops when invalid_auth error occurs during polling (lines 114-115)."""
+    mock_unclaimed_client = MagicMock()
+    mock_unclaimed_client.authenticate = AsyncMock(return_value=False)
+    mock_unclaimed_client.get_claim_info.return_value = {"claim_url": "http://claim.me"}
+
+    mock_error_client = MagicMock()
+    mock_error_client.authenticate = AsyncMock(
+        side_effect=ClientResponseError(
+            request_info=MagicMock(),
+            history=(),
+            status=401,
+        )
+    )
+
+    call_count = 0
+
+    def mock_webhook_client(*args, **kwargs):
+        nonlocal call_count
+        call_count += 1
+        return mock_unclaimed_client if call_count == 1 else mock_error_client
+
+    with (
+        patch(
+            "homeassistant.components.energyid.config_flow.WebhookClient",
+            side_effect=mock_webhook_client,
+        ),
+        patch("homeassistant.components.energyid.config_flow.asyncio.sleep"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result_external = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_PROVISIONING_KEY: TEST_PROVISIONING_KEY,
+                CONF_PROVISIONING_SECRET: TEST_PROVISIONING_SECRET,
+            },
+        )
+        assert result_external["type"] is FlowResultType.EXTERNAL_STEP
+
+        result_done = await hass.config_entries.flow.async_configure(
+            result_external["flow_id"]
+        )
+        assert result_done["type"] is FlowResultType.EXTERNAL_STEP
+        await hass.async_block_till_done()
+
+
+async def test_polling_stops_on_cannot_connect_error(hass: HomeAssistant) -> None:
+    """Test polling stops when cannot_connect error occurs during polling (lines 114-115)."""
+    mock_unclaimed_client = MagicMock()
+    mock_unclaimed_client.authenticate = AsyncMock(return_value=False)
+    mock_unclaimed_client.get_claim_info.return_value = {"claim_url": "http://claim.me"}
+
+    mock_error_client = MagicMock()
+    mock_error_client.authenticate = AsyncMock(
+        side_effect=ClientError("Connection failed")
+    )
+
+    call_count = 0
+
+    def mock_webhook_client(*args, **kwargs):
+        nonlocal call_count
+        call_count += 1
+        return mock_unclaimed_client if call_count == 1 else mock_error_client
+
+    with (
+        patch(
+            "homeassistant.components.energyid.config_flow.WebhookClient",
+            side_effect=mock_webhook_client,
+        ),
+        patch("homeassistant.components.energyid.config_flow.asyncio.sleep"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result_external = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_PROVISIONING_KEY: TEST_PROVISIONING_KEY,
+                CONF_PROVISIONING_SECRET: TEST_PROVISIONING_SECRET,
+            },
+        )
+        assert result_external["type"] is FlowResultType.EXTERNAL_STEP
+
+        result_done = await hass.config_entries.flow.async_configure(
+            result_external["flow_id"]
+        )
+        assert result_done["type"] is FlowResultType.EXTERNAL_STEP
+        await hass.async_block_till_done()
+
+
+async def test_auth_and_claim_subsequent_auth_error(hass: HomeAssistant) -> None:
+    """Test auth_and_claim with error on subsequent attempt (lines 201-202, 207-208)."""
+    mock_unclaimed_client = MagicMock()
+    mock_unclaimed_client.authenticate = AsyncMock(return_value=False)
+    mock_unclaimed_client.get_claim_info.return_value = {"claim_url": "http://claim.me"}
+
+    mock_error_client = MagicMock()
+    mock_error_client.authenticate = AsyncMock(
+        side_effect=ClientResponseError(
+            request_info=MagicMock(),
+            history=(),
+            status=401,
+        )
+    )
+
+    call_count = 0
+
+    def mock_webhook_client(*args, **kwargs):
+        nonlocal call_count
+        call_count += 1
+        return mock_unclaimed_client if call_count <= 2 else mock_error_client
+
+    with (
+        patch(
+            "homeassistant.components.energyid.config_flow.WebhookClient",
+            side_effect=mock_webhook_client,
+        ),
+        patch("homeassistant.components.energyid.config_flow.asyncio.sleep"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result_external = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_PROVISIONING_KEY: TEST_PROVISIONING_KEY,
+                CONF_PROVISIONING_SECRET: TEST_PROVISIONING_SECRET,
+            },
+        )
+        assert result_external["type"] is FlowResultType.EXTERNAL_STEP
+
+        result_done = await hass.config_entries.flow.async_configure(
+            result_external["flow_id"]
+        )
+        assert result_done["type"] is FlowResultType.EXTERNAL_STEP
+
+        final_result = await hass.config_entries.flow.async_configure(
+            result_external["flow_id"]
+        )
+        assert final_result["type"] is FlowResultType.EXTERNAL_STEP
+        assert final_result["step_id"] == "auth_and_claim"
+
+
+async def test_reauth_with_error(hass: HomeAssistant) -> None:
+    """Test reauth flow with authentication error (line 261)."""
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_PROVISIONING_KEY: "old_key",
+            CONF_PROVISIONING_SECRET: "old_secret",
+            CONF_DEVICE_ID: "test_device_id",
+            CONF_DEVICE_NAME: "test_device_name",
+        },
+    )
+    mock_entry.add_to_hass(hass)
+
+    mock_client = MagicMock()
+    mock_client.authenticate = AsyncMock(
+        side_effect=ClientResponseError(
+            request_info=MagicMock(),
+            history=(),
+            status=401,
+        )
+    )
+
+    with patch(
+        "homeassistant.components.energyid.config_flow.WebhookClient",
+        return_value=mock_client,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "source": config_entries.SOURCE_REAUTH,
+                "entry_id": mock_entry.entry_id,
+            },
+            data=mock_entry.data,
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "reauth_confirm"
+
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_PROVISIONING_KEY: "new_key",
+                CONF_PROVISIONING_SECRET: "new_secret",
+            },
+        )
+        assert result2["type"] is FlowResultType.FORM
+        assert result2["errors"]["base"] == "invalid_auth"
+
+
+async def test_polling_cancellation_on_auth_failure(hass: HomeAssistant) -> None:
+    """Test polling cancellation when authentication fails during subsequent check in auth_and_claim (lines 201-202, 207-208)."""
+    call_count = 0
+
+    def mock_webhook_client(*args, **kwargs):
+        nonlocal call_count
+        call_count += 1
+        if call_count == 1:
+            # First client for initial claimless auth
+            mock_client = MagicMock()
+            mock_client.authenticate = AsyncMock(return_value=False)
+            mock_client.get_claim_info.return_value = {"claim_url": "http://claim.me"}
+            return mock_client
+        # Subsequent client for polling check - fails authentication
+        mock_client = MagicMock()
+        mock_client.authenticate = AsyncMock(
+            side_effect=ClientError("Connection failed")
+        )
+        return mock_client
+
+    with patch(
+        "homeassistant.components.energyid.config_flow.WebhookClient",
+        side_effect=mock_webhook_client,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        # Start auth_and_claim flow - sets up polling
+        result_external = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_PROVISIONING_KEY: TEST_PROVISIONING_KEY,
+                CONF_PROVISIONING_SECRET: TEST_PROVISIONING_SECRET,
+            },
+        )
+        assert result_external["type"] is FlowResultType.EXTERNAL_STEP
+
+        # Trigger polling check - should cancel polling when auth fails
+        result_failed = await hass.config_entries.flow.async_configure(
+            result_external["flow_id"]
+        )
+        assert result_failed["type"] is FlowResultType.EXTERNAL_STEP
+        assert result_failed["step_id"] == "auth_and_claim"
+
+
+async def test_polling_cancellation_on_success(hass: HomeAssistant) -> None:
+    """Test polling cancellation when device becomes claimed successfully during polling (lines 201-202)."""
+    call_count = 0
+
+    def mock_webhook_client(*args, **kwargs):
+        nonlocal call_count
+        call_count += 1
+        if call_count == 1:
+            # First client for initial claimless auth
+            mock_client = MagicMock()
+            mock_client.authenticate = AsyncMock(return_value=False)
+            mock_client.get_claim_info.return_value = {"claim_url": "http://claim.me"}
+            return mock_client
+        # Subsequent client for polling check - device now claimed
+        mock_client = MagicMock()
+        mock_client.authenticate = AsyncMock(return_value=True)
+        mock_client.recordNumber = TEST_RECORD_NUMBER
+        mock_client.recordName = TEST_RECORD_NAME
+        return mock_client
+
+    with patch(
+        "homeassistant.components.energyid.config_flow.WebhookClient",
+        side_effect=mock_webhook_client,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        # Start auth_and_claim flow - sets up polling task
+        result_external = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_PROVISIONING_KEY: TEST_PROVISIONING_KEY,
+                CONF_PROVISIONING_SECRET: TEST_PROVISIONING_SECRET,
+            },
+        )
+        assert result_external["type"] is FlowResultType.EXTERNAL_STEP
+
+        # Cancel any sleeping to speed up and trigger successful polling check
+        # The subsequent call will authenticate successfully and cancel polling
+        result_done = await hass.config_entries.flow.async_configure(
+            result_external["flow_id"]
+        )
+        assert result_done["type"] is FlowResultType.EXTERNAL_STEP_DONE
+
+        # Final call to create entry
+        final_result = await hass.config_entries.flow.async_configure(
+            result_external["flow_id"]
+        )
+        assert final_result["type"] is FlowResultType.CREATE_ENTRY

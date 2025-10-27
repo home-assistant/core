@@ -1,21 +1,33 @@
 """Test EnergyID sensor mapping subentry flow (direct handler tests)."""
 
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components.energyid.const import (
+    CONF_DEVICE_ID,
     CONF_ENERGYID_KEY,
     CONF_HA_ENTITY_UUID,
+    CONF_PROVISIONING_KEY,
+    CONF_PROVISIONING_SECRET,
     DOMAIN,
 )
 from homeassistant.components.energyid.energyid_sensor_mapping_flow import (
     EnergyIDSensorMappingFlowHandler,
     _get_suggested_entities,
+    _validate_mapping_input,
 )
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import InvalidData
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
+
+TEST_PROVISIONING_KEY = "test_prov_key"
+TEST_PROVISIONING_SECRET = "test_prov_secret"
+TEST_RECORD_NUMBER = "site_12345"
+TEST_RECORD_NAME = "My Test Site"
 
 
 @pytest.fixture
@@ -252,3 +264,134 @@ async def test_duplicate_entity_key(
         result["flow_id"], {"ha_entity_id": entity2.entity_id}
     )
     assert result["type"] == "create_entry"
+
+
+def test_validate_mapping_input_none_entity(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test _validate_mapping_input with None entity (lines 76-77)."""
+    errors = _validate_mapping_input(None, set(), entity_registry)
+    assert errors == {"base": "entity_required"}
+
+
+def test_validate_mapping_input_empty_string(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test _validate_mapping_input with empty string entity (lines 76-77)."""
+    errors = _validate_mapping_input("", set(), entity_registry)
+    assert errors == {"base": "entity_required"}
+
+
+def test_validate_mapping_input_already_mapped(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test _validate_mapping_input with already mapped entity (line 88)."""
+    entity_entry = entity_registry.async_get_or_create(
+        "sensor", "test", "mapped_entity", suggested_object_id="mapped"
+    )
+    current_mappings = {entity_entry.id}
+    errors = _validate_mapping_input(
+        entity_entry.entity_id, current_mappings, entity_registry
+    )
+    assert errors == {"base": "entity_already_mapped"}
+
+
+def test_get_suggested_entities_with_state_class(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test _get_suggested_entities with measurement state class (line 62)."""
+    entity_entry = entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "measurement_sensor",
+        suggested_object_id="measurement",
+        capabilities={"state_class": SensorStateClass.MEASUREMENT},
+    )
+    hass.states.async_set(entity_entry.entity_id, "100")
+
+    result = _get_suggested_entities(hass)
+    assert entity_entry.entity_id in result
+
+
+def test_get_suggested_entities_with_device_class(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test _get_suggested_entities with energy device class (line 62)."""
+    entity_entry = entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "energy_sensor",
+        suggested_object_id="energy",
+        original_device_class=SensorDeviceClass.ENERGY,
+    )
+    hass.states.async_set(entity_entry.entity_id, "250")
+
+    result = _get_suggested_entities(hass)
+    assert entity_entry.entity_id in result
+
+
+def test_get_suggested_entities_with_original_device_class(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test _get_suggested_entities with original power device class (line 62)."""
+    entity_entry = entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "power_sensor",
+        suggested_object_id="power",
+        original_device_class=SensorDeviceClass.POWER,
+    )
+    hass.states.async_set(entity_entry.entity_id, "1500")
+
+    result = _get_suggested_entities(hass)
+    assert entity_entry.entity_id in result
+
+
+async def test_subentry_entity_not_found_after_validation(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test subentry flow when entity disappears after validation (line 138)."""
+    mock_parent_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_PROVISIONING_KEY: TEST_PROVISIONING_KEY,
+            CONF_PROVISIONING_SECRET: TEST_PROVISIONING_SECRET,
+            CONF_DEVICE_ID: "test_device",
+        },
+    )
+    mock_parent_entry.add_to_hass(hass)
+
+    entity_entry = entity_registry.async_get_or_create(
+        "sensor", "test", "disappearing", suggested_object_id="disappear"
+    )
+    hass.states.async_set(entity_entry.entity_id, "42")
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_parent_entry.entry_id, "sensor_mapping"),
+        context={"source": "user"},
+    )
+    assert result["type"] == "form"
+
+    original_async_get = entity_registry.async_get
+
+    def mock_async_get_disappearing(entity_id):
+        if not hasattr(mock_async_get_disappearing, "call_count"):
+            mock_async_get_disappearing.call_count = 0
+        mock_async_get_disappearing.call_count += 1
+        # First call (validation) succeeds, second call (lookup) fails
+        return (
+            None
+            if mock_async_get_disappearing.call_count > 1
+            else original_async_get(entity_id)
+        )
+
+    with patch.object(
+        entity_registry, "async_get", side_effect=mock_async_get_disappearing
+    ):
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {"ha_entity_id": entity_entry.entity_id}
+        )
+
+    assert result["type"] == "form"
+    assert result["errors"]["base"] == "entity_not_found"
