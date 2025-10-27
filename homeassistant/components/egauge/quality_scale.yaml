@@ -12,15 +12,9 @@ rules:
   docs-actions:
     status: exempt
     comment: Integration does not register custom actions
-  docs-high-level-description:
-    status: exempt
-    comment: Documentation to be added before public release
-  docs-installation-instructions:
-    status: exempt
-    comment: Documentation to be added before public release
-  docs-removal-instructions:
-    status: exempt
-    comment: Documentation to be added before public release
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
