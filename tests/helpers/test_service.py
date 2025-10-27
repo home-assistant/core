@@ -1926,6 +1926,37 @@ async def test_register_admin_service(
     assert calls[0].context.user_id == hass_admin_user.id
 
 
+async def test_register_admin_service_with_placeholders(
+    hass: HomeAssistant, hass_admin_user: MockUser
+) -> None:
+    """Test the register admin service with description placeholders."""
+    calls = []
+
+    async def mock_service(call):
+        calls.append(call)
+
+    service.async_register_admin_service(
+        hass,
+        "test",
+        "test",
+        mock_service,
+        description_placeholders={"test_placeholder": "beer"},
+    )
+    await hass.services.async_call(
+        "test",
+        "test",
+        {},
+        blocking=True,
+        context=Context(user_id=hass_admin_user.id),
+    )
+    assert len(calls) == 1
+
+    descriptions = await service.async_get_all_descriptions(hass)
+    assert descriptions["test"]["test"]["description_placeholders"] == {
+        "test_placeholder": "beer"
+    }
+
+
 @pytest.mark.parametrize(
     "supports_response",
     [SupportsResponse.ONLY, SupportsResponse.OPTIONAL],
@@ -2735,6 +2766,13 @@ async def test_register_platform_entity_service(
         entity_domain="mock_integration",
         schema={},
         func=handle_service,
+        description_placeholders={"test_placeholder": "beer"},
+    )
+    descriptions = await service.async_get_all_descriptions(hass)
+    assert (
+        descriptions["mock_platform"]["hello"]["description_placeholders"]
+        == {"test_placeholder": "beer"}
+        == {"test_placeholder": "beer"}
     )
 
     await hass.services.async_call(
