@@ -65,7 +65,6 @@ async def async_setup_entry(
 ) -> None:
     """Platform setup using common elements."""
 
-    # Add player sensor entities when player discovered
     async def _player_discovered(
         player_coordinator: SqueezeBoxPlayerUpdateCoordinator,
     ) -> None:
