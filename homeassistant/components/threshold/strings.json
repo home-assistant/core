@@ -34,5 +34,27 @@
     "error": {
       "need_lower_upper": "[%key:component::threshold::config::error::need_lower_upper%]"
     }
+  },
+  "services": {
+    "set_lower_threshold": {
+      "name": "Set lower threshold",
+      "description": "Sets the lower threshold value and updates the helper state immediately.",
+      "fields": {
+        "value": {
+          "name": "Value",
+          "description": "The new lower threshold value."
+        }
+      }
+    },
+    "set_upper_threshold": {
+      "name": "Set upper threshold",
+      "description": "Sets the upper threshold value and updates the helper state immediately.",
+      "fields": {
+        "value": {
+          "name": "Value",
+          "description": "The new upper threshold value."
+        }
+      }
+    }
   }
 }

@@ -1,0 +1,10 @@
+{
+  "services": {
+    "set_lower_threshold": {
+      "service": "mdi:arrow-down-bold"
+    },
+    "set_upper_threshold": {
+      "service": "mdi:arrow-up-bold"
+    }
+  }
+}

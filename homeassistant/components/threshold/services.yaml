@@ -1,0 +1,27 @@
+set_lower_threshold:
+  target:
+    entity:
+      integration: threshold
+      domain: binary_sensor
+  fields:
+    value:
+      required: true
+      example: 20.5
+      selector:
+        number:
+          mode: box
+          step: any
+
+set_upper_threshold:
+  target:
+    entity:
+      integration: threshold
+      domain: binary_sensor
+  fields:
+    value:
+      required: true
+      example: 80.5
+      selector:
+        number:
+          mode: box
+          step: any
