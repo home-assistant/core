@@ -44,12 +44,14 @@ from homeassistant.const import (
     CONF_VARIABLES,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.condition import async_validate_conditions_config
+from homeassistant.helpers.issue_registry import IssueSeverity
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.trigger import async_validate_trigger_config
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_notify_setup_error
+from homeassistant.util import yaml as yaml_util
 
 from . import (
     alarm_control_panel as alarm_control_panel_platform,
@@ -71,6 +73,8 @@ from . import (
 )
 from .const import CONF_DEFAULT_ENTITY_ID, DOMAIN, PLATFORMS, TemplateConfig
 from .helpers import async_get_blueprints, rewrite_legacy_to_modern_configs
+
+_LOGGER = logging.getLogger(__name__)
 
 PACKAGE_MERGE_HINT = "list"
 
@@ -116,6 +120,44 @@ def ensure_domains_do_not_have_trigger_or_action(*keys: str) -> Callable[[dict],
         return obj
 
     return validate
+
+
+def create_trigger_format_issue(
+    hass: HomeAssistant, config: ConfigType, option: str
+) -> None:
+    """Create a warning when a rogue trigger or action is found."""
+    issue_id = hex(hash(frozenset(config)))
+    yaml_config = yaml_util.dump(config)
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key=f"config_format_{option}",
+        translation_placeholders={"config": yaml_config},
+    )
+
+
+def validate_trigger_format(
+    hass: HomeAssistant, config_section: ConfigType, raw_config: ConfigType
+) -> None:
+    """Validate the config section."""
+    options = set(config_section.keys())
+
+    if CONF_TRIGGERS in options and not options.intersection(
+        [CONF_SENSORS, CONF_BINARY_SENSORS, *PLATFORMS]
+    ):
+        _LOGGER.warning(
+            "Invalid template configuration found, trigger option is missing matching domain"
+        )
+        create_trigger_format_issue(hass, raw_config, CONF_TRIGGERS)
+
+    elif CONF_ACTIONS in options and CONF_TRIGGERS not in options:
+        _LOGGER.warning(
+            "Invalid template configuration found, action option requires a trigger"
+        )
+        create_trigger_format_issue(hass, raw_config, CONF_ACTIONS)
 
 
 def _backward_compat_schema(value: Any | None) -> Any:
@@ -222,6 +264,7 @@ async def _async_resolve_template_config(
     with suppress(ValueError):  # Invalid config
         raw_config = dict(config)
 
+    original_config = config
     config = _backward_compat_schema(config)
     if is_blueprint_instance_config(config):
         blueprints = async_get_blueprints(hass)
@@ -265,6 +308,7 @@ async def _async_resolve_template_config(
                 for entity_config in platform_config:
                     _merge_section_variables(entity_config, section_variables)
 
+    validate_trigger_format(hass, config, original_config)
     template_config = TemplateConfig(CONFIG_SECTION_SCHEMA(config))
     template_config.raw_blueprint_inputs = raw_blueprint_inputs
     template_config.raw_config = raw_config
@@ -328,7 +372,7 @@ async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> Conf
 
             if not legacy_warn_printed:
                 legacy_warn_printed = True
-                logging.getLogger(__name__).warning(
+                _LOGGER.warning(
                     "The entity definition format under template: differs from the"
                     " platform "
                     "configuration format. See "

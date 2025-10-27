@@ -11,6 +11,7 @@ from xbox.webapi.api.provider.people.models import Person
 from yarl import URL
 
 from homeassistant.components.binary_sensor import (
+    DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -18,7 +19,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import XboxConfigEntry, XboxUpdateCoordinator
-from .entity import XboxBaseEntity
+from .entity import XboxBaseEntity, check_deprecated_entity
 
 
 class XboxBinarySensor(StrEnum):
@@ -37,6 +38,7 @@ class XboxBinarySensorEntityDescription(BinarySensorEntityDescription):
 
     is_on_fn: Callable[[Person], bool | None]
     entity_picture_fn: Callable[[Person], str | None] | None = None
+    deprecated: bool | None = None
 
 
 def profile_pic(person: Person) -> str | None:
@@ -82,13 +84,8 @@ SENSOR_DESCRIPTIONS: tuple[XboxBinarySensorEntityDescription, ...] = (
     ),
     XboxBinarySensorEntityDescription(
         key=XboxBinarySensor.IN_PARTY,
-        translation_key=XboxBinarySensor.IN_PARTY,
-        is_on_fn=(
-            lambda x: bool(x.multiplayer_summary.in_party)
-            if x.multiplayer_summary
-            else None
-        ),
-        entity_registry_enabled_default=False,
+        is_on_fn=lambda _: None,
+        deprecated=True,
     ),
     XboxBinarySensorEntityDescription(
         key=XboxBinarySensor.IN_GAME,
@@ -97,13 +94,8 @@ SENSOR_DESCRIPTIONS: tuple[XboxBinarySensorEntityDescription, ...] = (
     ),
     XboxBinarySensorEntityDescription(
         key=XboxBinarySensor.IN_MULTIPLAYER,
-        translation_key=XboxBinarySensor.IN_MULTIPLAYER,
-        is_on_fn=(
-            lambda x: bool(x.multiplayer_summary.in_multiplayer_session)
-            if x.multiplayer_summary
-            else None
-        ),
-        entity_registry_enabled_default=False,
+        is_on_fn=lambda _: None,
+        deprecated=True,
     ),
     XboxBinarySensorEntityDescription(
         key=XboxBinarySensor.HAS_GAME_PASS,
@@ -121,7 +113,9 @@ async def async_setup_entry(
     """Set up Xbox Live friends."""
     coordinator = entry.runtime_data
 
-    update_friends = partial(async_update_friends, coordinator, {}, async_add_entities)
+    update_friends = partial(
+        async_update_friends, hass, coordinator, {}, async_add_entities
+    )
 
     entry.async_on_unload(coordinator.async_add_listener(update_friends))
 
@@ -152,6 +146,7 @@ class XboxBinarySensorEntity(XboxBaseEntity, BinarySensorEntity):
 
 @callback
 def async_update_friends(
+    hass: HomeAssistant,
     coordinator: XboxUpdateCoordinator,
     current: dict[str, list[XboxBinarySensorEntity]],
     async_add_entities,
@@ -163,10 +158,11 @@ def async_update_friends(
     # Process new favorites, add them to Home Assistant
     new_entities: list[XboxBinarySensorEntity] = []
     for xuid in new_ids - current_ids:
-        current[xuid] = [
-            XboxBinarySensorEntity(coordinator, xuid, description)
-            for description in SENSOR_DESCRIPTIONS
-        ]
+        current[xuid] = []
+        for description in SENSOR_DESCRIPTIONS:
+            entity = XboxBinarySensorEntity(coordinator, xuid, description)
+            if check_deprecated_entity(hass, entity, BINARY_SENSOR_DOMAIN):
+                current[xuid].append(entity)
         new_entities = new_entities + current[xuid]
     if new_entities:
         async_add_entities(new_entities)
