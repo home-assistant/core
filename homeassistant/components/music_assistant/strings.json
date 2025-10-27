@@ -13,10 +13,10 @@
         "title": "[%key:component::music_assistant::config::step::manual::title%]",
         "description": "[%key:component::music_assistant::config::step::manual::description%]",
         "data": {
-          "url": "[%key:component::music_assistant::config::step::manual::data::url%]"
+          "url": "[%key:component::music_assistant::config::step::init::data::url%]"
         },
         "data_description": {
-          "url": "[%key:component::music_assistant::config::step::manual::data_description::url%]"
+          "url": "[%key:component::music_assistant::config::step::init::data_description::url%]"
         }
       },
       "manual": {
