@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
-from http import HTTPStatus
 from typing import Any
 
 from aiohttp import web
@@ -111,6 +110,5 @@ class UsagePredictionCommonControlView(HomeAssistantView):
         return self.json(
             {
                 "entities": getattr(result, time_category),
-            },
-            status=HTTPStatus.OK,
+            }
         )
