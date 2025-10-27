@@ -18,14 +18,7 @@ from homeassistant.components.nederlandse_spoorwegen.const import (
 from homeassistant.config_entries import ConfigSubentryDataWithId
 from homeassistant.const import CONF_API_KEY, CONF_NAME, Platform
 
-from .const import (
-    API_KEY,
-    SUBENTRY_ID_1,
-    SUBENTRY_ID_2,
-    SUBENTRY_ID_3,
-    SUBENTRY_ID_4,
-    SUBENTRY_ID_5,
-)
+from .const import API_KEY, SUBENTRY_ID_1, SUBENTRY_ID_2
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
@@ -154,83 +147,6 @@ def mock_config_entry() -> MockConfigEntry:
                 title="Test Route",
                 unique_id=None,
                 subentry_id=SUBENTRY_ID_2,
-            ),
-        ],
-    )
-
-
-@pytest.fixture
-def mock_config_entry_coordinator_time_tests() -> MockConfigEntry:
-    """Mock config entry with different time configurations for coordinator testing."""
-    return MockConfigEntry(
-        title=INTEGRATION_TITLE,
-        data={CONF_API_KEY: API_KEY},
-        domain=DOMAIN,
-        subentries_data=[
-            ConfigSubentryDataWithId(
-                data={
-                    CONF_NAME: "To work",
-                    CONF_FROM: "Ams",
-                    CONF_TO: "Rot",
-                    CONF_VIA: "Ht",
-                    CONF_TIME: None,  # No time - always fetch
-                },
-                subentry_type=SUBENTRY_TYPE_ROUTE,
-                title="Test Route",
-                unique_id=None,
-                subentry_id=SUBENTRY_ID_1,
-            ),
-            ConfigSubentryDataWithId(
-                data={
-                    CONF_NAME: "To event",
-                    CONF_FROM: "Hag",
-                    CONF_TO: "Utr",
-                    CONF_VIA: None,
-                    CONF_TIME: "08:00",  # Outside ±30min window (frozen time is 16:30)
-                },
-                subentry_type=SUBENTRY_TYPE_ROUTE,
-                title="Test Route",
-                unique_id=None,
-                subentry_id=SUBENTRY_ID_2,
-            ),
-            ConfigSubentryDataWithId(
-                data={
-                    CONF_NAME: "Malformed time",
-                    CONF_FROM: "Hag",
-                    CONF_TO: "Utr",
-                    CONF_VIA: None,
-                    CONF_TIME: "28:00",  # Invalid time - should fallback to fetch now
-                },
-                subentry_type=SUBENTRY_TYPE_ROUTE,
-                title="Test Route",
-                unique_id=None,
-                subentry_id=SUBENTRY_ID_3,
-            ),
-            ConfigSubentryDataWithId(
-                data={
-                    CONF_NAME: "Within window",
-                    CONF_FROM: "Ams",
-                    CONF_TO: "Utr",
-                    CONF_VIA: None,
-                    CONF_TIME: "16:45",  # Within ±30min window (frozen time is 16:30)
-                },
-                subentry_type=SUBENTRY_TYPE_ROUTE,
-                title="Test Route",
-                unique_id=None,
-                subentry_id=SUBENTRY_ID_4,
-            ),
-            ConfigSubentryDataWithId(
-                data={
-                    CONF_NAME: "Just outside window",
-                    CONF_FROM: "Ams",
-                    CONF_TO: "Rot",
-                    CONF_VIA: None,
-                    CONF_TIME: "17:15",  # Just outside ±30min window (45min away)
-                },
-                subentry_type=SUBENTRY_TYPE_ROUTE,
-                title="Test Route",
-                unique_id=None,
-                subentry_id=SUBENTRY_ID_5,
             ),
         ],
     )

@@ -1333,7 +1333,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '12',
   })
 # ---
 # name: test_sensor[sensor.to_home_arrival_platform_planned-entry]
@@ -1382,7 +1382,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '12',
   })
 # ---
 # name: test_sensor[sensor.to_home_arrival_time_actual-entry]
@@ -1432,7 +1432,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2025-09-15T16:37:00+00:00',
   })
 # ---
 # name: test_sensor[sensor.to_home_arrival_time_planned-entry]
@@ -1482,7 +1482,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2025-09-15T16:37:00+00:00',
   })
 # ---
 # name: test_sensor[sensor.to_home_departure-entry]
@@ -1523,16 +1523,37 @@
 # name: test_sensor[sensor.to_home_departure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'arrival_delay': False,
+      'arrival_platform_actual': '12',
+      'arrival_platform_planned': '12',
+      'arrival_time_actual': '18:37',
+      'arrival_time_planned': '18:37',
       'attribution': 'Data provided by NS',
+      'departure_delay': True,
+      'departure_platform_actual': '4',
+      'departure_platform_planned': '4',
+      'departure_time_actual': '16:35',
+      'departure_time_planned': '16:34',
       'device_class': 'timestamp',
       'friendly_name': 'To home Departure',
+      'going': True,
+      'next': '16:46',
+      'remarks': None,
+      'route': list([
+        'Amsterdam Centraal',
+        "'s-Hertogenbosch",
+        'Breda',
+        'Rotterdam Centraal',
+      ]),
+      'status': 'normal',
+      'transfers': 2,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.to_home_departure',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2025-09-15T14:35:00+00:00',
   })
 # ---
 # name: test_sensor[sensor.to_home_departure_platform_actual-entry]
@@ -1581,7 +1602,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '4',
   })
 # ---
 # name: test_sensor[sensor.to_home_departure_platform_planned-entry]
@@ -1630,7 +1651,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '4',
   })
 # ---
 # name: test_sensor[sensor.to_home_departure_time_actual-entry]
@@ -1680,7 +1701,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2025-09-15T14:35:00+00:00',
   })
 # ---
 # name: test_sensor[sensor.to_home_departure_time_planned-entry]
@@ -1730,7 +1751,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2025-09-15T14:34:00+00:00',
   })
 # ---
 # name: test_sensor[sensor.to_home_next_departure-entry]
@@ -1780,7 +1801,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2025-09-15T14:46:00+00:00',
   })
 # ---
 # name: test_sensor[sensor.to_home_route-entry]
@@ -1829,7 +1850,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': "Amsterdam Centraal, 's-Hertogenbosch, Breda, Rotterdam Centraal",
   })
 # ---
 # name: test_sensor[sensor.to_home_status-entry]
@@ -1879,7 +1900,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'Normal',
   })
 # ---
 # name: test_sensor[sensor.to_home_transfers-entry]
@@ -1928,7 +1949,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2',
   })
 # ---
 # name: test_sensor[sensor.to_work_arrival_platform_actual-entry]
@@ -2642,7 +2663,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '13',
   })
 # ---
 # name: test_single_trip_sensor[sensor.to_home_arrival_platform_planned-entry]
@@ -2691,7 +2712,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '13',
   })
 # ---
 # name: test_single_trip_sensor[sensor.to_home_arrival_time_actual-entry]
@@ -2741,7 +2762,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2025-09-15T16:45:00+00:00',
   })
 # ---
 # name: test_single_trip_sensor[sensor.to_home_arrival_time_planned-entry]
@@ -2791,7 +2812,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2025-09-15T16:45:00+00:00',
   })
 # ---
 # name: test_single_trip_sensor[sensor.to_home_departure-entry]
@@ -2832,16 +2853,37 @@
 # name: test_single_trip_sensor[sensor.to_home_departure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'arrival_delay': False,
+      'arrival_platform_actual': '13',
+      'arrival_platform_planned': '13',
+      'arrival_time_actual': '18:45',
+      'arrival_time_planned': '18:45',
       'attribution': 'Data provided by NS',
+      'departure_delay': True,
+      'departure_platform_actual': '4',
+      'departure_platform_planned': '4',
+      'departure_time_actual': '16:35',
+      'departure_time_planned': '16:34',
       'device_class': 'timestamp',
       'friendly_name': 'To home Departure',
+      'going': True,
+      'next': None,
+      'remarks': None,
+      'route': list([
+        'Amsterdam Centraal',
+        "'s-Hertogenbosch",
+        'Breda',
+        'Rotterdam Centraal',
+      ]),
+      'status': 'normal',
+      'transfers': 2,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.to_home_departure',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2025-09-15T14:35:00+00:00',
   })
 # ---
 # name: test_single_trip_sensor[sensor.to_home_departure_platform_actual-entry]
@@ -2890,7 +2932,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '4',
   })
 # ---
 # name: test_single_trip_sensor[sensor.to_home_departure_platform_planned-entry]
@@ -2939,7 +2981,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '4',
   })
 # ---
 # name: test_single_trip_sensor[sensor.to_home_departure_time_actual-entry]
@@ -2989,7 +3031,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2025-09-15T14:35:00+00:00',
   })
 # ---
 # name: test_single_trip_sensor[sensor.to_home_departure_time_planned-entry]
@@ -3039,7 +3081,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2025-09-15T14:34:00+00:00',
   })
 # ---
 # name: test_single_trip_sensor[sensor.to_home_next_departure-entry]
@@ -3138,7 +3180,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': "Amsterdam Centraal, 's-Hertogenbosch, Breda, Rotterdam Centraal",
   })
 # ---
 # name: test_single_trip_sensor[sensor.to_home_status-entry]
@@ -3188,7 +3230,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'Normal',
   })
 # ---
 # name: test_single_trip_sensor[sensor.to_home_transfers-entry]
@@ -3237,7 +3279,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2',
   })
 # ---
 # name: test_single_trip_sensor[sensor.to_work_arrival_platform_actual-entry]
