@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import EcovacsConfigEntry
-from .const import SUPPORTED_LIFESPANS
+from .const import SUPPORTED_LIFESPANS, SUPPORTED_STATION_ACTIONS
 from .entity import (
     EcovacsCapabilityEntityDescription,
     EcovacsDescriptionEntity,
@@ -62,7 +62,7 @@ STATION_ENTITY_DESCRIPTIONS = tuple(
         key=f"station_action_{action.name.lower()}",
         translation_key=f"station_action_{action.name.lower()}",
     )
-    for action in StationAction
+    for action in SUPPORTED_STATION_ACTIONS
 )
 
 
