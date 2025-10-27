@@ -53,8 +53,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> str:
         raise InvalidAuth from err
 
     body: dict[str, Any] = response.get("body", {})
-    if not body:
-        raise MalformedResponse("response is missing body.")
 
     device_title: str = body.get("title", "")
     if device_title == "":
