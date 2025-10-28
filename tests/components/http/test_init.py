@@ -7,7 +7,7 @@ from http import HTTPStatus
 from ipaddress import ip_network
 import logging
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import ANY, Mock, patch
 
 import pytest
 
@@ -667,3 +667,54 @@ async def test_ssl_issue_urls_configured(
         "http",
         "ssl_configured_without_configured_urls",
     ) not in issue_registry.issues
+
+
+@pytest.mark.parametrize(
+    ("hassio", "http_config", "expected_serverhost", "expected_warning_count"),
+    [
+        (False, {}, ["0.0.0.0", "::"], 0),
+        (False, {"server_host": "0.0.0.0"}, ["0.0.0.0"], 0),
+        (True, {}, ["0.0.0.0", "::"], 0),
+        (True, {"server_host": "0.0.0.0"}, ["0.0.0.0", "::"], 1),
+    ],
+)
+async def test_server_host(
+    hass: HomeAssistant,
+    hassio: bool,
+    http_config: dict,
+    expected_serverhost: list,
+    expected_warning_count: int,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test server_host default and override behavior."""
+    mock_server = Mock()
+    with (
+        patch("homeassistant.components.http.is_hassio", return_value=hassio),
+        patch(
+            "asyncio.BaseEventLoop.create_server", return_value=mock_server
+        ) as mock_create_server,
+    ):
+        assert await async_setup_component(
+            hass,
+            "http",
+            {"http": http_config},
+        )
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    mock_create_server.assert_called_once_with(
+        ANY,
+        expected_serverhost,
+        8123,
+        ssl=None,
+        backlog=128,
+        reuse_address=None,
+        reuse_port=None,
+    )
+
+    assert (
+        caplog.text.count(
+            "The 'http.server_host' option is ignored when running in Home Assistant OS or Supervised"
+        )
+        == expected_warning_count
+    )

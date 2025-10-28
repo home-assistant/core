@@ -110,7 +110,7 @@ HTTP_SCHEMA: Final = vol.All(
     cv.deprecated(CONF_BASE_URL),
     vol.Schema(
         {
-            vol.Optional(CONF_SERVER_HOST): vol.All(
+            vol.Optional(CONF_SERVER_HOST, default=_DEFAULT_BIND): vol.All(
                 cv.ensure_list, vol.Length(min=1), [cv.string]
             ),
             vol.Optional(CONF_SERVER_PORT, default=SERVER_PORT): cv.port,
@@ -210,7 +210,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     if is_hassio(hass):
         server_host = _DEFAULT_BIND
-        if CONF_SERVER_HOST in conf:
+        if conf[CONF_SERVER_HOST] != _DEFAULT_BIND:
             _LOGGER.warning(
                 "The 'http.server_host' option is ignored when running in "
                 "Home Assistant OS or Supervised"
