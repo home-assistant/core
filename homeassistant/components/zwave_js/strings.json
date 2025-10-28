@@ -396,7 +396,7 @@
           "name": "Method name"
         },
         "parameters": {
-          "description": "A list of parameters to pass to the API method. Refer to the Z-Wave Command Class API documentation {api_paramaters} for parameters.",
+          "description": "A list of parameters to pass to the API method. Refer to the Z-Wave Command Class API documentation {api_parameters} for parameters.",
           "name": "Parameters"
         }
       },
