@@ -8,6 +8,8 @@ from homeassistant.core import HomeAssistant, ServiceCall
 
 from .const import DOMAIN, LOGGER, PLATFORMS
 
+type VeluxConfigEntry = ConfigEntry[PyVLX]
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the velux component."""
@@ -15,8 +17,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     password = entry.data[CONF_PASSWORD]
     pyvlx = PyVLX(host=host, password=password)
 
+    LOGGER.debug("Velux interface started")
     try:
-        LOGGER.debug("Velux interface started")
         await pyvlx.load_scenes()
         await pyvlx.load_nodes()
     except PyVLXException as ex:
@@ -47,6 +49,3 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-
-type VeluxConfigEntry = ConfigEntry[PyVLX]
