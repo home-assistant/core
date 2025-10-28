@@ -133,7 +133,10 @@ class XiaomiAqaraFlowHandler(ConfigFlow, domain=DOMAIN):
         errors["base"] = "discovery_error"
         return self.async_show_form_step_user(
             errors=errors,
-            "invalid_host_url": "https://www.home-assistant.io/integrations/xiaomi_aqara/#connection-problem")
+            description_placeholders={
+               "invalid_host_url": "https://www.home-assistant.io/integrations/xiaomi_aqara/#connection-problem"
+           },
+        )
 
     async def async_step_select(
         self, user_input: dict[str, str] | None = None
