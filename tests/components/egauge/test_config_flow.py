@@ -53,7 +53,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "eGauge"
+    assert result["title"] == "egauge-home"
     assert result["data"] == {
         CONF_HOST: "192.168.1.100",
         CONF_USERNAME: "admin",

@@ -42,6 +42,7 @@ class EgaugeFlowHandler(ConfigFlow, domain=DOMAIN):
             )
             try:
                 serial_number = await client.get_device_serial_number()
+                hostname = await client.get_hostname()
             except EgaugeAuthenticationError:
                 errors["base"] = "invalid_auth"
             except ConnectError:
@@ -52,7 +53,7 @@ class EgaugeFlowHandler(ConfigFlow, domain=DOMAIN):
             else:
                 await self.async_set_unique_id(serial_number)
                 self._abort_if_unique_id_configured()
-                return self.async_create_entry(title="eGauge", data=user_input)
+                return self.async_create_entry(title=hostname, data=user_input)
         else:
             user_input = {}
 
