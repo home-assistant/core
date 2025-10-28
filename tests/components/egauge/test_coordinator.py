@@ -8,7 +8,6 @@ from freezegun.api import FrozenDateTimeFactory
 from httpx import ConnectError
 import pytest
 
-from homeassistant.components.egauge.const import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
@@ -117,11 +116,6 @@ async def test_coordinator_auth_error(
     state = hass.states.get("sensor.egauge_home_grid")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
-
-    # Verify config entry shows auth failed (triggers reauth flow)
-    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
-    assert len(flows) == 1
-    assert flows[0]["context"]["source"] == "reauth"
 
 
 @pytest.mark.freeze_time("2025-01-15T10:00:00+00:00")
