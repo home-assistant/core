@@ -14,6 +14,7 @@ from music_assistant_models.enums import (
     MediaType,
     PlayerFeature,
     PlayerState as MassPlayerState,
+    PlayerType,
     QueueOption,
     RepeatMode as MassRepeatMode,
 )
@@ -80,7 +81,7 @@ from .media_browser import async_browse_media, async_search_media
 from .schemas import QUEUE_DETAILS_SCHEMA, queue_item_dict_from_mass_item
 
 if TYPE_CHECKING:
-    from music_assistant_client import MusicAssistantClient
+    from music_assistant_client.client import MusicAssistantClient
     from music_assistant_models.player import Player
 
 SUPPORTED_FEATURES_BASE = (
@@ -286,9 +287,11 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         ]
 
         self._attr_group_members = group_members_entity_ids
-        self._attr_volume_level = (
-            player.volume_level / 100 if player.volume_level is not None else None
-        )
+        if player.type == PlayerType.GROUP:
+            volume: int | None = player.group_volume
+        else:
+            volume = player.volume_level
+        self._attr_volume_level = volume / 100 if volume is not None else None
         self._attr_is_volume_muted = player.volume_muted
         self._update_media_attributes(player, active_queue)
         self._update_media_image_url(player, active_queue)
