@@ -7985,15 +7985,15 @@ async def test_non_awaited_async_forward_entry_setups(
     await hass.async_block_till_done()
     forward_event.set()
     await hass.async_block_till_done()
-    await task
 
-    assert (
+    message = (
         "Detected code that calls async_forward_entry_setups for integration "
         "test with title: Mock Title and entry_id: test2, during setup without "
         "awaiting async_forward_entry_setups, which can cause the setup lock "
-        "to be released before the setup is done. This will stop working in "
-        "Home Assistant 2025.1, please report this issue"
-    ) in caplog.text
+        "to be released before the setup is done"
+    )
+    with pytest.raises(HomeAssistantError, match=message):
+        await task
 
 
 async def test_config_entry_unloaded_during_platform_setup(
