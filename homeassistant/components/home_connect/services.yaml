@@ -81,6 +81,7 @@ set_program_and_options:
             - dishcare_dishwasher_program_steam_fresh
             - dishcare_dishwasher_program_maximum_cleaning
             - dishcare_dishwasher_program_mixed_load
+            - dishcare_dishwasher_program_learning_dishwasher
             - laundry_care_dryer_program_cotton
             - laundry_care_dryer_program_synthetic
             - laundry_care_dryer_program_mix
