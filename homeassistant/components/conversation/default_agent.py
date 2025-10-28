@@ -768,7 +768,16 @@ class DefaultAgent(ConversationEntity):
         if lang_intents.fuzzy_matcher is None:
             return None
 
-        fuzzy_result = lang_intents.fuzzy_matcher.match(user_input.text)
+        context_area: str | None = None
+        satellite_area, _ = self._get_satellite_area_and_device(
+            user_input.satellite_id, user_input.device_id
+        )
+        if satellite_area:
+            context_area = satellite_area.name
+
+        fuzzy_result = lang_intents.fuzzy_matcher.match(
+            user_input.text, context_area=context_area
+        )
         if fuzzy_result is None:
             return None
 
