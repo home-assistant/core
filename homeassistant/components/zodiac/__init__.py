@@ -1,3 +1,5 @@
+# Reformatted using Black to meet PEP8 (line length ≤ 79)
+
 """The zodiac component."""
 
 from homeassistant.config_entries import ConfigEntry
