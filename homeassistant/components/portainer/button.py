@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-import logging
 from typing import Any
 
 from pyportainer import Portainer
@@ -29,8 +28,6 @@ from . import PortainerConfigEntry
 from .const import DOMAIN
 from .coordinator import PortainerCoordinator, PortainerCoordinatorData
 from .entity import PortainerContainerEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -65,35 +62,30 @@ async def async_setup_entry(
 ) -> None:
     """Set up Portainer buttons."""
     coordinator = entry.runtime_data
-    known_containers: set[tuple[int, str]] = set()
 
-    def _check_devices() -> None:
-        """Check for new devices and add them."""
-        current_containers = {
-            (endpoint.id, container.id)
+    def _async_add_new_containers(
+        containers: list[tuple[PortainerCoordinatorData, DockerContainer]],
+    ) -> None:
+        """Add new container button sensors."""
+        async_add_entities(
+            PortainerButton(
+                coordinator,
+                entity_description,
+                container,
+                endpoint,
+            )
+            for (endpoint, container) in containers
+            for entity_description in BUTTONS
+        )
+
+    coordinator.new_containers_callbacks.append(_async_add_new_containers)
+    _async_add_new_containers(
+        [
+            (endpoint, container)
             for endpoint in coordinator.data.values()
             for container in endpoint.containers.values()
-        }
-        new_containers = current_containers - known_containers
-
-        if new_containers:
-            _LOGGER.debug("Adding buttons: %s", new_containers)
-            known_containers.update(new_containers)
-            async_add_entities(
-                PortainerButton(
-                    coordinator=coordinator,
-                    entity_description=entity_description,
-                    device_info=container,
-                    via_device=endpoint,
-                )
-                for endpoint in coordinator.data.values()
-                for container in endpoint.containers.values()
-                if (endpoint.id, container.id) in new_containers
-                for entity_description in BUTTONS
-            )
-
-    _check_devices()
-    entry.async_on_unload(coordinator.async_add_listener(_check_devices))
+        ]
+    )
 
 
 class PortainerButton(PortainerContainerEntity, ButtonEntity):

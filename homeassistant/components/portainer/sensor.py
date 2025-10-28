@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import logging
 
 from pyportainer.models.docker import DockerContainer
 
@@ -26,8 +25,6 @@ from .entity import (
     PortainerCoordinatorData,
     PortainerEndpointEntity,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -162,57 +159,53 @@ async def async_setup_entry(
 ) -> None:
     """Set up Portainer sensors based on a config entry."""
     coordinator = entry.runtime_data
-    known_endpoints: set[int] = set()
-    known_containers: set[tuple[int, str]] = set()
 
-    def _check_devices() -> None:
-        """Check for new devices and add them."""
-        entities: list[SensorEntity] = []
-        current_endpoints = set(coordinator.data)
-        new_endpoints = current_endpoints - known_endpoints
-
-        # Only add endpoints that are new
-        if new_endpoints:
-            known_endpoints.update(new_endpoints)
-            entities.extend(
-                PortainerEndpointSensor(
-                    coordinator,
-                    entity_description,
-                    endpoint,
-                )
-                for endpoint in coordinator.data.values()
-                if endpoint.id in new_endpoints
-                for entity_description in ENDPOINT_SENSORS
+    def _async_add_new_endpoints(endpoints: list[PortainerCoordinatorData]) -> None:
+        """Add new endpoint sensor."""
+        async_add_entities(
+            PortainerEndpointSensor(
+                coordinator,
+                entity_description,
+                endpoint,
             )
+            for entity_description in ENDPOINT_SENSORS
+            for endpoint in endpoints
+            if entity_description.value_fn(endpoint)
+        )
 
-        current_containers = {
-            (endpoint.id, container.id)
+    def _async_add_new_containers(
+        containers: list[tuple[PortainerCoordinatorData, DockerContainer]],
+    ) -> None:
+        """Add new container sensors."""
+        async_add_entities(
+            PortainerContainerSensor(
+                coordinator,
+                entity_description,
+                container,
+                endpoint,
+            )
+            for (endpoint, container) in containers
+            for entity_description in CONTAINER_SENSORS
+            if entity_description.value_fn(container)
+        )
+
+    coordinator.new_endpoints_callbacks.append(_async_add_new_endpoints)
+    coordinator.new_containers_callbacks.append(_async_add_new_containers)
+
+    _async_add_new_endpoints(
+        [
+            endpoint
+            for endpoint in coordinator.data.values()
+            if endpoint.id in coordinator.known_endpoints
+        ]
+    )
+    _async_add_new_containers(
+        [
+            (endpoint, container)
             for endpoint in coordinator.data.values()
             for container in endpoint.containers.values()
-        }
-        new_containers = current_containers - known_containers
-
-        # Same for containers: only add new ones
-        if new_containers:
-            known_containers.update(new_containers)
-            entities.extend(
-                PortainerContainerSensor(
-                    coordinator,
-                    entity_description,
-                    container,
-                    endpoint,
-                )
-                for endpoint in coordinator.data.values()
-                for container in endpoint.containers.values()
-                if (endpoint.id, container.id) in new_containers
-                for entity_description in CONTAINER_SENSORS
-            )
-
-        if entities:
-            async_add_entities(entities)
-
-    _check_devices()
-    entry.async_on_unload(coordinator.async_add_listener(_check_devices))
+        ]
+    )
 
 
 class PortainerContainerSensor(PortainerContainerEntity, SensorEntity):
