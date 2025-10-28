@@ -139,7 +139,7 @@ class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):
         suggested_values = {
             CONF_URL: reconf_entry.data[CONF_URL],
             CONF_API_TOKEN: reconf_entry.data[CONF_API_TOKEN],
-            CONF_VERIFY_SSL: reconf_entry.data.get(CONF_VERIFY_SSL, True),
+            CONF_VERIFY_SSL: reconf_entry.data[CONF_VERIFY_SSL],
         }
 
         if user_input:
