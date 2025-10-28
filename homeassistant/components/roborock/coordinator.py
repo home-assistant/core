@@ -95,7 +95,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState]):
             }
         self.last_update_state: str | None = None
         # Keep track of last attempt to refresh maps/rooms to know when to try again.
-        self._last_home_update_attempt: datetime | None = None
+        self._last_home_update_attempt: datetime
         self.last_home_update: datetime | None = None
 
     @cached_property
@@ -179,11 +179,8 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState]):
             new_status = self.properties_api.status
             if (
                 new_status.in_cleaning
-                and (
-                    self._last_home_update_attempt is None
-                    or (dt_util.utcnow() - self._last_home_update_attempt)
-                    > IMAGE_CACHE_INTERVAL
-                )
+                and (dt_util.utcnow() - self._last_home_update_attempt)
+                > IMAGE_CACHE_INTERVAL
             ) or self.last_update_state != new_status.state_name:
                 self._last_home_update_attempt = dt_util.utcnow()
                 try:
