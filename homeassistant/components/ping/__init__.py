@@ -7,8 +7,8 @@ import logging
 from icmplib import SocketPermissionError, async_ping
 
 from homeassistant.const import CONF_HOST, Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
@@ -32,6 +32,24 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: PingConfigEntry) -> bool:
     """Set up Ping (ICMP) from a config entry."""
+
+    # Migrate device registry identifiers from homeassistant domain to ping domain
+    registry = dr.async_get(hass)
+    if (
+        (
+            device := registry.async_get_device(
+                identifiers={(HOMEASSISTANT_DOMAIN, entry.entry_id)}
+            )
+        )
+        is not None
+        and device
+        and entry.entry_id in device.config_entries
+    ):
+        registry.async_update_device(
+            device_id=device.id,
+            new_identifiers={(DOMAIN, entry.entry_id)},
+        )
+
     privileged = hass.data[DATA_PRIVILEGED_KEY]
 
     host: str = entry.options[CONF_HOST]
