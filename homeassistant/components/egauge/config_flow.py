@@ -25,13 +25,11 @@ from .util import _build_client_url
 class EgaugeFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle an eGauge config flow."""
 
-    VERSION = 1
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             client = EgaugeJsonClient(
