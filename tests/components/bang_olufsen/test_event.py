@@ -16,6 +16,7 @@ from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
 
+from .conftest import mock_websocket_connection
 from .const import TEST_BUTTON_EVENT_ENTITY_ID
 
 from tests.common import MockConfigEntry
@@ -61,6 +62,7 @@ async def test_button_event_creation_beoconnect_core(
     # Load entry
     mock_config_entry_core.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry_core.entry_id)
+    await mock_websocket_connection(hass, mock_mozart_client)
 
     # Check number of entities
     # The media_player entity should be the only available

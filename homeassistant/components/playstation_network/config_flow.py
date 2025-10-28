@@ -10,13 +10,13 @@ from psnawp_api.core.psnawp_exceptions import (
     PSNAWPInvalidTokenError,
     PSNAWPNotFoundError,
 )
-from psnawp_api.models import User
 from psnawp_api.utils.misc import parse_npsso_token
 import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     ConfigEntry,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
@@ -169,13 +169,14 @@ class PlaystationNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
 class FriendSubentryFlowHandler(ConfigSubentryFlow):
     """Handle subentry flow for adding a friend."""
 
-    friends_list: dict[str, User]
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Subentry user flow."""
         config_entry: PlaystationNetworkConfigEntry = self._get_entry()
+        if config_entry.state is not ConfigEntryState.LOADED:
+            return self.async_abort(reason="config_entry_disabled")
+        friends_list = config_entry.runtime_data.user_data.psn.friends_list
 
         if user_input is not None:
             config_entries = self.hass.config_entries.async_entries(DOMAIN)
@@ -190,19 +191,12 @@ class FriendSubentryFlowHandler(ConfigSubentryFlow):
                     return self.async_abort(reason="already_configured")
 
             return self.async_create_entry(
-                title=self.friends_list[user_input[CONF_ACCOUNT_ID]].online_id,
+                title=friends_list[user_input[CONF_ACCOUNT_ID]].online_id,
                 data={},
                 unique_id=user_input[CONF_ACCOUNT_ID],
             )
 
-        self.friends_list = await self.hass.async_add_executor_job(
-            lambda: {
-                friend.account_id: friend
-                for friend in config_entry.runtime_data.user_data.psn.user.friends_list()
-            }
-        )
-
-        if not self.friends_list:
+        if not friends_list:
             return self.async_abort(reason="no_friends")
 
         options = [
@@ -210,7 +204,7 @@ class FriendSubentryFlowHandler(ConfigSubentryFlow):
                 value=friend.account_id,
                 label=friend.online_id,
             )
-            for friend in self.friends_list.values()
+            for friend in friends_list.values()
         ]
 
         return self.async_show_form(

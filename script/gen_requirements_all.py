@@ -113,9 +113,9 @@ httplib2>=0.19.0
 # gRPC is an implicit dependency that we want to make explicit so we manage
 # upgrades intentionally. It is a large package to build from source and we
 # want to ensure we have wheels built.
-grpcio==1.72.1
-grpcio-status==1.72.1
-grpcio-reflection==1.72.1
+grpcio==1.75.1
+grpcio-status==1.75.1
+grpcio-reflection==1.75.1
 
 # This is a old unmaintained library and is replaced with pycryptodome
 pycrypto==1000000000.0.0
@@ -135,7 +135,7 @@ uuid==1000000000.0.0
 # these requirements are quite loose. As the entire stack has some outstanding issues, and
 # even newer versions seem to introduce new issues, it's useful for us to pin all these
 # requirements so we can directly link HA versions to these library versions.
-anyio==4.9.0
+anyio==4.10.0
 h11==0.16.0
 httpcore==1.0.9
 
@@ -145,7 +145,7 @@ hyperframe>=5.2.0
 
 # Ensure we run compatible with musllinux build env
 numpy==2.3.2
-pandas==2.3.0
+pandas==2.3.3
 
 # Constrain multidict to avoid typing issues
 # https://github.com/home-assistant/core/pull/67046
@@ -155,10 +155,10 @@ multidict>=6.0.2
 backoff>=2.0
 
 # ensure pydantic version does not float since it might have breaking changes
-pydantic==2.11.7
+pydantic==2.12.2
 
-# Required for Python 3.12.4 compatibility (#119223).
-mashumaro>=3.13.1
+# Required for Python 3.14.0 compatibility (#119223).
+mashumaro>=3.17.0
 
 # Breaks asyncio
 # https://github.com/pubnub/python/issues/130
@@ -245,10 +245,13 @@ num2words==0.5.14
 # pymodbus does not follow SemVer, and it keeps getting
 # downgraded or upgraded by custom components
 # This ensures all use the same version
-pymodbus==3.11.1
+pymodbus==3.11.2
 
 # Some packages don't support gql 4.0.0 yet
 gql<4.0.0
+
+# Pin pytest-rerunfailures to prevent accidental breaks
+pytest-rerunfailures==16.0.1
 """
 
 GENERATED_MESSAGE = (

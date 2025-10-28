@@ -1,5 +1,6 @@
 """The tests for the Modbus sensor component."""
 
+import math
 import struct
 
 import pytest
@@ -23,7 +24,7 @@ from homeassistant.components.modbus.const import (
     CONF_SWAP_WORD_BYTE,
     CONF_VIRTUAL_COUNT,
     CONF_ZERO_SUPPRESS,
-    MODBUS_DOMAIN,
+    DOMAIN,
     DataType,
 )
 from homeassistant.components.sensor import (
@@ -738,8 +739,8 @@ async def test_all_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None:
             [
                 0x5102,
                 0x0304,
-                int.from_bytes(struct.pack(">f", float("nan"))[0:2]),
-                int.from_bytes(struct.pack(">f", float("nan"))[2:4]),
+                int.from_bytes(struct.pack(">f", math.nan)[0:2]),
+                int.from_bytes(struct.pack(">f", math.nan)[2:4]),
             ],
             False,
             ["34899771392.0", STATE_UNKNOWN],
@@ -753,8 +754,8 @@ async def test_all_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None:
             [
                 0x5102,
                 0x0304,
-                int.from_bytes(struct.pack(">f", float("nan"))[0:2]),
-                int.from_bytes(struct.pack(">f", float("nan"))[2:4]),
+                int.from_bytes(struct.pack(">f", math.nan)[0:2]),
+                int.from_bytes(struct.pack(">f", math.nan)[2:4]),
             ],
             False,
             ["34899771392.0", STATE_UNKNOWN],
@@ -1160,8 +1161,8 @@ async def test_wrong_unpack(hass: HomeAssistant, mock_do_cycle) -> None:
                 CONF_DATA_TYPE: DataType.FLOAT32,
             },
             [
-                int.from_bytes(struct.pack(">f", float("nan"))[0:2]),
-                int.from_bytes(struct.pack(">f", float("nan"))[2:4]),
+                int.from_bytes(struct.pack(">f", math.nan)[0:2]),
+                int.from_bytes(struct.pack(">f", math.nan)[2:4]),
             ],
             STATE_UNKNOWN,
         ),
@@ -1224,8 +1225,8 @@ async def test_unpack_ok(hass: HomeAssistant, mock_do_cycle, expected) -> None:
             # floats: nan, 10.600000381469727,
             #         1.000879611487865e-28, 10.566553115844727
             [
-                int.from_bytes(struct.pack(">f", float("nan"))[0:2]),
-                int.from_bytes(struct.pack(">f", float("nan"))[2:4]),
+                int.from_bytes(struct.pack(">f", math.nan)[0:2]),
+                int.from_bytes(struct.pack(">f", math.nan)[2:4]),
                 0x4129,
                 0x999A,
                 0x10FD,
@@ -1357,6 +1358,46 @@ async def test_wrap_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None
     assert hass.states.get(ENTITY_ID).state == expected
 
 
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 201,
+                },
+            ],
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    ("config_addon", "register_words", "expected"),
+    [
+        (
+            {
+                CONF_SWAP: CONF_SWAP_WORD,
+                CONF_DATA_TYPE: DataType.UINT32,
+            },
+            [0x0102, 0x0304],
+            "50594050",
+        ),
+    ],
+)
+async def test_wrap_regs_ok_sensor(
+    hass: HomeAssistant, mock_modbus_ha, mock_do_cycle, expected
+) -> None:
+    """Run test for sensor struct."""
+    assert hass.states.get(ENTITY_ID).state == expected
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+    assert hass.states.get(ENTITY_ID).state == expected
+
+
 @pytest.fixture(name="mock_restore")
 async def mock_restore(hass: HomeAssistant) -> None:
     """Mock restore cache."""
@@ -1442,7 +1483,7 @@ async def test_no_discovery_info_sensor(
     assert await async_setup_component(
         hass,
         SENSOR_DOMAIN,
-        {SENSOR_DOMAIN: {CONF_PLATFORM: MODBUS_DOMAIN}},
+        {SENSOR_DOMAIN: {CONF_PLATFORM: DOMAIN}},
     )
     await hass.async_block_till_done()
     assert SENSOR_DOMAIN in hass.config.components

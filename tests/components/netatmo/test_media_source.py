@@ -4,10 +4,10 @@ import ast
 
 import pytest
 
+from homeassistant.components.media_player import BrowseError
 from homeassistant.components.media_source import (
     DOMAIN as MS_DOMAIN,
     URI_SCHEME,
-    BrowseError,
     PlayMedia,
     async_browse_media,
     async_resolve_media,

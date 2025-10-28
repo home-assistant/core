@@ -81,5 +81,5 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "quality_scale": "bronze",
-  "requirements": ["PSNAWP==3.0.0", "pyrate-limiter==3.7.0"]
+  "requirements": ["PSNAWP==3.0.0", "pyrate-limiter==3.9.0"]
 }

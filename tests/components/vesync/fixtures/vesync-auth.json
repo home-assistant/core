@@ -1,0 +1,9 @@
+{
+  "code": 0,
+  "traceId": "1234",
+  "msg": null,
+  "result": {
+    "accountID": "1234",
+    "authorizeCode": "test-code"
+  }
+}

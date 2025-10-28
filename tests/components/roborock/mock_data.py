@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from PIL import Image
-from roborock.containers import (
+from roborock.data import (
     CleanRecord,
     CleanSummary,
     Consumable,
@@ -61,7 +61,7 @@ USER_DATA = UserData.from_dict(
 MOCK_CONFIG = {
     CONF_USERNAME: USER_EMAIL,
     CONF_USER_DATA: USER_DATA.as_dict(),
-    CONF_BASE_URL: None,
+    CONF_BASE_URL: BASE_URL,
 }
 
 HOME_DATA_RAW = {
