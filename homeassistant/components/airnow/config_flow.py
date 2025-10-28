@@ -26,6 +26,10 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
+# Documentation URL for API key generation
+_API_KEY_URL = "https://docs.airnowapi.org/account/request/"
+
+
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> bool:
     """Validate the user input allows us to connect.
 
@@ -114,6 +118,7 @@ class AirNowConfigFlow(ConfigFlow, domain=DOMAIN):
                     ),
                 }
             ),
+            description_placeholders={"api_key_url": _API_KEY_URL},
             errors=errors,
         )
 

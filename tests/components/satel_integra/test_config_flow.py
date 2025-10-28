@@ -19,42 +19,40 @@ from homeassistant.components.satel_integra.const import (
     CONF_ZONES,
     DEFAULT_PORT,
     DOMAIN,
-    SUBENTRY_TYPE_OUTPUT,
-    SUBENTRY_TYPE_PARTITION,
-    SUBENTRY_TYPE_SWITCHABLE_OUTPUT,
-    SUBENTRY_TYPE_ZONE,
 )
 from homeassistant.config_entries import (
     SOURCE_IMPORT,
     SOURCE_RECONFIGURE,
     SOURCE_USER,
     ConfigSubentry,
-    ConfigSubentryData,
 )
 from homeassistant.const import CONF_CODE, CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
+from . import (
+    MOCK_CONFIG_DATA,
+    MOCK_CONFIG_OPTIONS,
+    MOCK_OUTPUT_SUBENTRY,
+    MOCK_PARTITION_SUBENTRY,
+    MOCK_SWITCHABLE_OUTPUT_SUBENTRY,
+    MOCK_ZONE_SUBENTRY,
+)
 
-CONST_HOST = "192.168.0.2"
-CONST_PORT = 7095
-CONST_CODE = "1234"
+from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
     ("user_input", "entry_data", "entry_options"),
     [
         (
-            {CONF_HOST: CONST_HOST, CONF_PORT: CONST_PORT, CONF_CODE: CONST_CODE},
-            {CONF_HOST: CONST_HOST, CONF_PORT: CONST_PORT},
-            {CONF_CODE: CONST_CODE},
+            {**MOCK_CONFIG_DATA, **MOCK_CONFIG_OPTIONS},
+            MOCK_CONFIG_DATA,
+            MOCK_CONFIG_OPTIONS,
         ),
         (
-            {
-                CONF_HOST: CONST_HOST,
-            },
-            {CONF_HOST: CONST_HOST, CONF_PORT: DEFAULT_PORT},
+            {CONF_HOST: MOCK_CONFIG_DATA[CONF_HOST]},
+            {CONF_HOST: MOCK_CONFIG_DATA[CONF_HOST], CONF_PORT: DEFAULT_PORT},
             {CONF_CODE: None},
         ),
     ],
@@ -81,7 +79,7 @@ async def test_setup_flow(
         user_input,
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == CONST_HOST
+    assert result["title"] == MOCK_CONFIG_DATA[CONF_HOST]
     assert result["data"] == entry_data
     assert result["options"] == entry_options
 
@@ -92,13 +90,13 @@ async def test_setup_connection_failed(
     hass: HomeAssistant, mock_satel: AsyncMock, mock_setup_entry: AsyncMock
 ) -> None:
     """Test the setup flow when connection fails."""
-    user_input = {CONF_HOST: CONST_HOST, CONF_PORT: CONST_PORT, CONF_CODE: CONST_CODE}
+    user_input = MOCK_CONFIG_DATA
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    mock_satel.connect.return_value = False
+    mock_satel.return_value.connect.return_value = False
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -108,7 +106,7 @@ async def test_setup_connection_failed(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
-    mock_satel.connect.return_value = True
+    mock_satel.return_value.connect.return_value = True
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -124,9 +122,9 @@ async def test_setup_connection_failed(
     [
         (
             {
-                CONF_HOST: CONST_HOST,
-                CONF_PORT: CONST_PORT,
-                CONF_CODE: CONST_CODE,
+                CONF_HOST: MOCK_CONFIG_DATA[CONF_HOST],
+                CONF_PORT: MOCK_CONFIG_DATA[CONF_PORT],
+                CONF_CODE: MOCK_CONFIG_OPTIONS[CONF_CODE],
                 CONF_DEVICE_PARTITIONS: {
                     "1": {CONF_NAME: "Partition Import 1", CONF_ARM_HOME_MODE: 1}
                 },
@@ -143,8 +141,8 @@ async def test_setup_connection_failed(
                     "2": {CONF_NAME: "Switchable output Import 2"},
                 },
             },
-            {CONF_HOST: CONST_HOST, CONF_PORT: CONST_PORT},
-            {CONF_CODE: CONST_CODE},
+            MOCK_CONFIG_DATA,
+            MOCK_CONFIG_OPTIONS,
         )
     ],
 )
@@ -162,7 +160,7 @@ async def test_import_flow(
         DOMAIN, context={"source": SOURCE_IMPORT}, data=import_input
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == CONST_HOST
+    assert result["title"] == MOCK_CONFIG_DATA[CONF_HOST]
     assert result["data"] == entry_data
     assert result["options"] == entry_options
 
@@ -176,12 +174,12 @@ async def test_import_flow_connection_failure(
 ) -> None:
     """Test the import flow."""
 
-    mock_satel.connect.return_value = False
+    mock_satel.return_value.connect.return_value = False
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
-        data={CONF_HOST: CONST_HOST, CONF_PORT: CONST_PORT, CONF_CODE: CONST_CODE},
+        data=MOCK_CONFIG_DATA,
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -191,10 +189,7 @@ async def test_import_flow_connection_failure(
 @pytest.mark.parametrize(
     ("user_input", "entry_options"),
     [
-        (
-            {CONF_CODE: CONST_CODE},
-            {CONF_CODE: CONST_CODE},
-        ),
+        (MOCK_CONFIG_OPTIONS, MOCK_CONFIG_OPTIONS),
         ({}, {CONF_CODE: None}),
     ],
 )
@@ -226,92 +221,29 @@ async def test_options_flow(
 
 
 @pytest.mark.parametrize(
-    ("subentry_type", "user_input", "subentry"),
+    ("user_input", "subentry"),
     [
-        (
-            SUBENTRY_TYPE_PARTITION,
-            {CONF_NAME: "Home", CONF_PARTITION_NUMBER: 1, CONF_ARM_HOME_MODE: 1},
-            {
-                "data": {
-                    CONF_NAME: "Home",
-                    CONF_ARM_HOME_MODE: 1,
-                    CONF_PARTITION_NUMBER: 1,
-                },
-                "subentry_type": SUBENTRY_TYPE_PARTITION,
-                "title": "Home",
-                "unique_id": "partition_1",
-            },
-        ),
-        (
-            SUBENTRY_TYPE_ZONE,
-            {
-                CONF_NAME: "Backdoor",
-                CONF_ZONE_TYPE: BinarySensorDeviceClass.DOOR,
-                CONF_ZONE_NUMBER: 2,
-            },
-            {
-                "data": {
-                    CONF_NAME: "Backdoor",
-                    CONF_ZONE_TYPE: BinarySensorDeviceClass.DOOR,
-                    CONF_ZONE_NUMBER: 2,
-                },
-                "subentry_type": SUBENTRY_TYPE_ZONE,
-                "title": "Backdoor",
-                "unique_id": "zone_2",
-            },
-        ),
-        (
-            SUBENTRY_TYPE_OUTPUT,
-            {
-                CONF_NAME: "Power outage",
-                CONF_ZONE_TYPE: BinarySensorDeviceClass.SAFETY,
-                CONF_OUTPUT_NUMBER: 1,
-            },
-            {
-                "data": {
-                    CONF_NAME: "Power outage",
-                    CONF_ZONE_TYPE: BinarySensorDeviceClass.SAFETY,
-                    CONF_OUTPUT_NUMBER: 1,
-                },
-                "subentry_type": SUBENTRY_TYPE_OUTPUT,
-                "title": "Power outage",
-                "unique_id": "output_1",
-            },
-        ),
-        (
-            SUBENTRY_TYPE_SWITCHABLE_OUTPUT,
-            {
-                CONF_NAME: "Gate",
-                CONF_SWITCHABLE_OUTPUT_NUMBER: 3,
-            },
-            {
-                "data": {
-                    CONF_NAME: "Gate",
-                    CONF_SWITCHABLE_OUTPUT_NUMBER: 3,
-                },
-                "subentry_type": SUBENTRY_TYPE_SWITCHABLE_OUTPUT,
-                "title": "Gate",
-                "unique_id": "switchable_output_3",
-            },
-        ),
+        (MOCK_PARTITION_SUBENTRY.data, MOCK_PARTITION_SUBENTRY),
+        (MOCK_ZONE_SUBENTRY.data, MOCK_ZONE_SUBENTRY),
+        (MOCK_OUTPUT_SUBENTRY.data, MOCK_OUTPUT_SUBENTRY),
+        (MOCK_SWITCHABLE_OUTPUT_SUBENTRY.data, MOCK_SWITCHABLE_OUTPUT_SUBENTRY),
     ],
 )
 async def test_subentry_creation(
     hass: HomeAssistant,
     mock_satel: AsyncMock,
-    config_entry: MockConfigEntry,
-    subentry_type: str,
+    mock_config_entry: MockConfigEntry,
     user_input: dict[str, Any],
-    subentry: dict[str, Any],
+    subentry: ConfigSubentry,
 ) -> None:
     """Test partitions options flow."""
-    config_entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     result = await hass.config_entries.subentries.async_init(
-        (config_entry.entry_id, subentry_type),
+        (mock_config_entry.entry_id, subentry.subentry_type),
         context={"source": SOURCE_USER},
     )
 
@@ -323,118 +255,49 @@ async def test_subentry_creation(
         user_input,
     )
 
-    assert len(config_entry.subentries) == 1
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert len(mock_config_entry.subentries) == 1
 
-    subentry_id = list(config_entry.subentries)[0]
+    subentry_id = list(mock_config_entry.subentries)[0]
 
-    subentry["subentry_id"] = subentry_id
-    assert config_entry.subentries == {subentry_id: ConfigSubentry(**subentry)}
+    subentry_result = {
+        **subentry.as_dict(),
+        "subentry_id": subentry_id,
+    }
+    assert mock_config_entry.subentries.get(subentry_id) == ConfigSubentry(
+        **subentry_result
+    )
 
 
 @pytest.mark.parametrize(
     (
         "user_input",
-        "default_subentry_info",
         "subentry",
-        "updated_subentry",
+        "number_property",
     ),
     [
         (
             {CONF_NAME: "New Home", CONF_ARM_HOME_MODE: 3},
-            {
-                "subentry_id": "ABCD",
-                "subentry_type": SUBENTRY_TYPE_PARTITION,
-                "unique_id": "partition_1",
-            },
-            ConfigSubentryData(
-                data={
-                    CONF_NAME: "Home",
-                    CONF_ARM_HOME_MODE: 1,
-                    CONF_PARTITION_NUMBER: 1,
-                },
-                title="Home",
-            ),
-            ConfigSubentryData(
-                data={
-                    CONF_NAME: "New Home",
-                    CONF_ARM_HOME_MODE: 3,
-                    CONF_PARTITION_NUMBER: 1,
-                },
-                title="New Home",
-            ),
+            MOCK_PARTITION_SUBENTRY,
+            CONF_PARTITION_NUMBER,
         ),
         (
             {CONF_NAME: "Backdoor", CONF_ZONE_TYPE: BinarySensorDeviceClass.DOOR},
-            {
-                "subentry_id": "ABCD",
-                "subentry_type": SUBENTRY_TYPE_ZONE,
-                "unique_id": "zone_1",
-            },
-            ConfigSubentryData(
-                data={
-                    CONF_NAME: "Zone 1",
-                    CONF_ZONE_TYPE: BinarySensorDeviceClass.MOTION,
-                    CONF_ZONE_NUMBER: 1,
-                },
-                title="Zone 1",
-            ),
-            ConfigSubentryData(
-                data={
-                    CONF_NAME: "Backdoor",
-                    CONF_ZONE_TYPE: BinarySensorDeviceClass.DOOR,
-                    CONF_ZONE_NUMBER: 1,
-                },
-                title="Backdoor",
-            ),
+            MOCK_ZONE_SUBENTRY,
+            CONF_ZONE_NUMBER,
         ),
         (
             {
                 CONF_NAME: "Alarm Triggered",
                 CONF_ZONE_TYPE: BinarySensorDeviceClass.PROBLEM,
             },
-            {
-                "subentry_id": "ABCD",
-                "subentry_type": SUBENTRY_TYPE_OUTPUT,
-                "unique_id": "output_1",
-            },
-            ConfigSubentryData(
-                data={
-                    CONF_NAME: "Output 1",
-                    CONF_ZONE_TYPE: BinarySensorDeviceClass.SAFETY,
-                    CONF_OUTPUT_NUMBER: 1,
-                },
-                title="Output 1",
-            ),
-            ConfigSubentryData(
-                data={
-                    CONF_NAME: "Alarm Triggered",
-                    CONF_ZONE_TYPE: BinarySensorDeviceClass.PROBLEM,
-                    CONF_OUTPUT_NUMBER: 1,
-                },
-                title="Alarm Triggered",
-            ),
+            MOCK_OUTPUT_SUBENTRY,
+            CONF_OUTPUT_NUMBER,
         ),
         (
             {CONF_NAME: "Gate Lock"},
-            {
-                "subentry_id": "ABCD",
-                "subentry_type": SUBENTRY_TYPE_SWITCHABLE_OUTPUT,
-                "unique_id": "switchable_output_1",
-            },
-            ConfigSubentryData(
-                data={
-                    CONF_NAME: "Switchable Output 1",
-                    CONF_SWITCHABLE_OUTPUT_NUMBER: 1,
-                },
-                title="Switchable Output 1",
-            ),
-            ConfigSubentryData(
-                data={
-                    CONF_NAME: "Gate Lock",
-                    CONF_SWITCHABLE_OUTPUT_NUMBER: 1,
-                },
-                title="Gate Lock",
-            ),
+            MOCK_SWITCHABLE_OUTPUT_SUBENTRY,
+            CONF_SWITCHABLE_OUTPUT_NUMBER,
         ),
     ],
 )
@@ -442,29 +305,28 @@ async def test_subentry_reconfigure(
     hass: HomeAssistant,
     mock_satel: AsyncMock,
     mock_setup_entry: AsyncMock,
-    config_entry: MockConfigEntry,
+    mock_config_entry_with_subentries: MockConfigEntry,
     user_input: dict[str, Any],
-    default_subentry_info: dict[str, Any],
-    subentry: ConfigSubentryData,
-    updated_subentry: ConfigSubentryData,
+    subentry: ConfigSubentry,
+    number_property: str,
 ) -> None:
     """Test subentry reconfiguration."""
 
-    config_entry.add_to_hass(hass)
-    config_entry.subentries = {
-        default_subentry_info["subentry_id"]: ConfigSubentry(
-            **default_subentry_info, **subentry
-        )
-    }
+    mock_config_entry_with_subentries.add_to_hass(hass)
 
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    assert await hass.config_entries.async_setup(
+        mock_config_entry_with_subentries.entry_id
+    )
     await hass.async_block_till_done()
 
     result = await hass.config_entries.subentries.async_init(
-        (config_entry.entry_id, default_subentry_info["subentry_type"]),
+        (
+            mock_config_entry_with_subentries.entry_id,
+            subentry.subentry_type,
+        ),
         context={
             "source": SOURCE_RECONFIGURE,
-            "subentry_id": default_subentry_info["subentry_id"],
+            "subentry_id": subentry.subentry_id,
         },
     )
 
@@ -478,91 +340,48 @@ async def test_subentry_reconfigure(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    assert len(config_entry.subentries) == 1
+    assert len(mock_config_entry_with_subentries.subentries) == 4
 
-    assert config_entry.subentries == {
-        default_subentry_info["subentry_id"]: ConfigSubentry(
-            **default_subentry_info, **updated_subentry
-        )
+    subentry_result = {
+        **subentry.as_dict(),
+        "data": {**subentry.data, **user_input},
+        "title": f"{user_input.get(CONF_NAME)} ({subentry.data[number_property]})",
     }
+
+    assert mock_config_entry_with_subentries.subentries.get(
+        subentry.subentry_id
+    ) == ConfigSubentry(**subentry_result)
 
 
 @pytest.mark.parametrize(
-    ("subentry", "user_input", "error_field"),
+    ("subentry", "error_field"),
     [
-        (
-            {
-                "subentry_type": SUBENTRY_TYPE_PARTITION,
-                "unique_id": "partition_1",
-                "title": "Home",
-            },
-            {
-                CONF_NAME: "Home",
-                CONF_ARM_HOME_MODE: 1,
-                CONF_PARTITION_NUMBER: 1,
-            },
-            CONF_PARTITION_NUMBER,
-        ),
-        (
-            {
-                "subentry_type": SUBENTRY_TYPE_ZONE,
-                "unique_id": "zone_1",
-                "title": "Zone 1",
-            },
-            {
-                CONF_NAME: "Zone 1",
-                CONF_ZONE_TYPE: BinarySensorDeviceClass.MOTION,
-                CONF_ZONE_NUMBER: 1,
-            },
-            CONF_ZONE_NUMBER,
-        ),
-        (
-            {
-                "subentry_type": SUBENTRY_TYPE_OUTPUT,
-                "unique_id": "output_1",
-                "title": "Output 1",
-            },
-            {
-                CONF_NAME: "Output 1",
-                CONF_ZONE_TYPE: BinarySensorDeviceClass.SAFETY,
-                CONF_OUTPUT_NUMBER: 1,
-            },
-            CONF_OUTPUT_NUMBER,
-        ),
-        (
-            {
-                "subentry_type": SUBENTRY_TYPE_SWITCHABLE_OUTPUT,
-                "unique_id": "switchable_output_1",
-                "title": "Switchable Output 1",
-            },
-            {
-                CONF_NAME: "Switchable Output 1",
-                CONF_SWITCHABLE_OUTPUT_NUMBER: 1,
-            },
-            CONF_SWITCHABLE_OUTPUT_NUMBER,
-        ),
+        (MOCK_PARTITION_SUBENTRY, CONF_PARTITION_NUMBER),
+        (MOCK_ZONE_SUBENTRY, CONF_ZONE_NUMBER),
+        (MOCK_OUTPUT_SUBENTRY, CONF_OUTPUT_NUMBER),
+        (MOCK_SWITCHABLE_OUTPUT_SUBENTRY, CONF_SWITCHABLE_OUTPUT_NUMBER),
     ],
 )
 async def test_cannot_create_same_subentry(
     hass: HomeAssistant,
     mock_satel: AsyncMock,
     mock_setup_entry: AsyncMock,
-    config_entry: MockConfigEntry,
-    subentry: dict[str, any],
-    user_input: dict[str, any],
+    mock_config_entry_with_subentries: MockConfigEntry,
+    subentry: ConfigSubentry,
     error_field: str,
 ) -> None:
     """Test subentry reconfiguration."""
-    config_entry.add_to_hass(hass)
-    config_entry.subentries = {
-        "ABCD": ConfigSubentry(**subentry, **ConfigSubentryData({"data": user_input}))
-    }
+    mock_config_entry_with_subentries.add_to_hass(hass)
 
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    assert await hass.config_entries.async_setup(
+        mock_config_entry_with_subentries.entry_id
+    )
     await hass.async_block_till_done()
 
+    mock_setup_entry.reset_mock()
+
     result = await hass.config_entries.subentries.async_init(
-        (config_entry.entry_id, subentry["subentry_type"]),
+        (mock_config_entry_with_subentries.entry_id, subentry.subentry_type),
         context={"source": SOURCE_USER},
     )
 
@@ -570,20 +389,21 @@ async def test_cannot_create_same_subentry(
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"],
-        user_input,
+        result["flow_id"], {**subentry.data}
     )
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {error_field: "already_configured"}
-    assert len(config_entry.subentries) == 1
+    assert len(mock_config_entry_with_subentries.subentries) == 4
+
+    assert len(mock_setup_entry.mock_calls) == 0
 
 
 async def test_one_config_allowed(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test that only one Satel Integra configuration is allowed."""
-    config_entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}

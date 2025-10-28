@@ -1068,7 +1068,7 @@ class EntityPlatform:
         This method must be run in the event loop.
         """
         return await service.async_extract_entities(
-            self.hass, self.entities.values(), service_call, expand_group
+            self.entities.values(), service_call, expand_group
         )
 
     @callback
@@ -1079,6 +1079,8 @@ class EntityPlatform:
         func: str | Callable[..., Any],
         required_features: Iterable[int] | None = None,
         supports_response: SupportsResponse = SupportsResponse.NONE,
+        *,
+        entity_device_classes: Iterable[str | None] | None = None,
     ) -> None:
         """Register an entity service.
 
@@ -1091,6 +1093,7 @@ class EntityPlatform:
             self.hass,
             self.platform_name,
             name,
+            entity_device_classes=entity_device_classes,
             entities=self.domain_platform_entities,
             func=func,
             job_type=None,

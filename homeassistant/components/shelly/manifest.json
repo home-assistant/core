@@ -9,11 +9,11 @@
   "iot_class": "local_push",
   "loggers": ["aioshelly"],
   "quality_scale": "silver",
-  "requirements": ["aioshelly==13.10.0"],
+  "requirements": ["aioshelly==13.15.0"],
   "zeroconf": [
     {
-      "type": "_http._tcp.local.",
-      "name": "shelly*"
+      "name": "shelly*",
+      "type": "_http._tcp.local."
     },
     {
       "type": "_shelly._tcp.local."

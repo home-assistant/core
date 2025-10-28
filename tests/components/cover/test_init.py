@@ -1,7 +1,5 @@
 """The tests for Cover."""
 
-from enum import Enum
-
 from homeassistant.components import cover
 from homeassistant.components.cover import CoverState
 from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM, SERVICE_TOGGLE
@@ -11,7 +9,7 @@ from homeassistant.setup import async_setup_component
 
 from .common import MockCover
 
-from tests.common import help_test_all, setup_test_component_platform
+from tests.common import setup_test_component_platform
 
 
 async def test_services(
@@ -144,12 +142,3 @@ def is_closed(hass: HomeAssistant, ent: Entity) -> bool:
 def is_closing(hass: HomeAssistant, ent: Entity) -> bool:
     """Return if the cover is closed based on the statemachine."""
     return hass.states.is_state(ent.entity_id, CoverState.CLOSING)
-
-
-def _create_tuples(enum: type[Enum], constant_prefix: str) -> list[tuple[Enum, str]]:
-    return [(enum_field, constant_prefix) for enum_field in enum]
-
-
-def test_all() -> None:
-    """Test module.__all__ is correctly set."""
-    help_test_all(cover)
