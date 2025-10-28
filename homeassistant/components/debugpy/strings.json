@@ -1,8 +1,8 @@
 {
   "services": {
     "start": {
-      "name": "[%key:common::action::start%]",
-      "description": "Starts the Remote Python Debugger."
+      "description": "Starts the Remote Python Debugger.",
+      "name": "[%key:common::action::start%]"
     }
   }
 }

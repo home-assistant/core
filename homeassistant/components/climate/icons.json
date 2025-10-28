@@ -42,6 +42,13 @@
             "sleep": "mdi:bed"
           }
         },
+        "swing_horizontal_mode": {
+          "default": "mdi:circle-medium",
+          "state": {
+            "off": "mdi:arrow-oscillating-off",
+            "on": "mdi:arrow-expand-horizontal"
+          }
+        },
         "swing_mode": {
           "default": "mdi:circle-medium",
           "state": {
@@ -51,50 +58,43 @@
             "on": "mdi:arrow-oscillating",
             "vertical": "mdi:arrow-up-down"
           }
-        },
-        "swing_horizontal_mode": {
-          "default": "mdi:circle-medium",
-          "state": {
-            "off": "mdi:arrow-oscillating-off",
-            "on": "mdi:arrow-expand-horizontal"
-          }
         }
       }
     }
   },
   "services": {
+    "set_aux_heat": {
+      "service": "mdi:radiator"
+    },
     "set_fan_mode": {
       "service": "mdi:fan"
     },
     "set_humidity": {
       "service": "mdi:water-percent"
     },
-    "set_swing_mode": {
-      "service": "mdi:arrow-oscillating"
-    },
-    "set_swing_horizontal_mode": {
-      "service": "mdi:arrow-expand-horizontal"
-    },
-    "set_temperature": {
-      "service": "mdi:thermometer"
-    },
-    "set_aux_heat": {
-      "service": "mdi:radiator"
+    "set_hvac_mode": {
+      "service": "mdi:hvac"
     },
     "set_preset_mode": {
       "service": "mdi:sofa"
     },
-    "set_hvac_mode": {
-      "service": "mdi:hvac"
+    "set_swing_horizontal_mode": {
+      "service": "mdi:arrow-expand-horizontal"
     },
-    "turn_on": {
-      "service": "mdi:power-on"
+    "set_swing_mode": {
+      "service": "mdi:arrow-oscillating"
+    },
+    "set_temperature": {
+      "service": "mdi:thermometer"
+    },
+    "toggle": {
+      "service": "mdi:toggle-switch"
     },
     "turn_off": {
       "service": "mdi:power-off"
     },
-    "toggle": {
-      "service": "mdi:toggle-switch"
+    "turn_on": {
+      "service": "mdi:power-on"
     }
   }
 }

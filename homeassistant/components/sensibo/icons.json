@@ -19,28 +19,28 @@
       }
     },
     "sensor": {
-      "filter_last_reset": {
-        "default": "mdi:timer"
+      "airq_tvoc": {
+        "default": "mdi:air-filter"
       },
       "battery_voltage": {
         "default": "mdi:battery"
+      },
+      "filter_last_reset": {
+        "default": "mdi:timer"
       },
       "sensitivity": {
         "default": "mdi:air-filter"
       },
       "timer_time": {
         "default": "mdi:timer"
-      },
-      "airq_tvoc": {
-        "default": "mdi:air-filter"
       }
     },
     "switch": {
-      "timer_on_switch": {
-        "default": "mdi:timer"
-      },
       "climate_react_switch": {
         "default": "mdi:wizard-hat"
+      },
+      "timer_on_switch": {
+        "default": "mdi:timer"
       }
     }
   },
@@ -48,17 +48,17 @@
     "assume_state": {
       "service": "mdi:shape-outline"
     },
-    "enable_timer": {
-      "service": "mdi:timer-play"
+    "enable_climate_react": {
+      "service": "mdi:wizard-hat"
     },
     "enable_pure_boost": {
       "service": "mdi:air-filter"
     },
+    "enable_timer": {
+      "service": "mdi:timer-play"
+    },
     "full_state": {
       "service": "mdi:shape"
-    },
-    "enable_climate_react": {
-      "service": "mdi:wizard-hat"
     },
     "get_device_capabilities": {
       "service": "mdi:shape-outline"

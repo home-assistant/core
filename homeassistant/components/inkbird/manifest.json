@@ -3,58 +3,58 @@
   "name": "INKBIRD",
   "bluetooth": [
     {
-      "local_name": "sps",
-      "connectable": false
+      "connectable": false,
+      "local_name": "sps"
     },
     {
-      "local_name": "Inkbird*",
-      "connectable": false
+      "connectable": false,
+      "local_name": "Inkbird*"
     },
     {
-      "local_name": "iBBQ*",
-      "connectable": false
+      "connectable": false,
+      "local_name": "iBBQ*"
     },
     {
-      "local_name": "xBBQ*",
-      "connectable": false
+      "connectable": false,
+      "local_name": "xBBQ*"
     },
     {
-      "local_name": "tps",
-      "connectable": false
+      "connectable": false,
+      "local_name": "tps"
     },
     {
-      "local_name": "ITH-11-B",
-      "connectable": false
+      "connectable": false,
+      "local_name": "ITH-11-B"
     },
     {
-      "local_name": "ITH-13-B",
-      "connectable": false
+      "connectable": false,
+      "local_name": "ITH-13-B"
     },
     {
-      "local_name": "ITH-21-B",
-      "connectable": false
+      "connectable": false,
+      "local_name": "ITH-21-B"
     },
     {
-      "local_name": "IBS-P02B",
-      "connectable": false
+      "connectable": false,
+      "local_name": "IBS-P02B"
     },
     {
-      "local_name": "Ink@IAM-T1",
-      "connectable": true
+      "connectable": true,
+      "local_name": "Ink@IAM-T1"
     },
     {
-      "local_name": "Ink@IAM-T2",
-      "connectable": true
+      "connectable": true,
+      "local_name": "Ink@IAM-T2"
     },
     {
-      "manufacturer_id": 12628,
+      "connectable": true,
       "manufacturer_data_start": [65, 67, 45],
-      "connectable": true
+      "manufacturer_id": 12628
     },
     {
-      "manufacturer_id": 12884,
+      "connectable": false,
       "manufacturer_data_start": [0, 98, 0],
-      "connectable": false
+      "manufacturer_id": 12884
     }
   ],
   "codeowners": ["@bdraco"],

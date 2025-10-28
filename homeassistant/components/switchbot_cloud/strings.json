@@ -1,20 +1,20 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "data": {
-          "api_token": "[%key:common::config_flow::data::api_token%]",
-          "api_key": "[%key:common::config_flow::data::api_key%]"
-        }
-      }
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "api_token": "[%key:common::config_flow::data::api_token%]"
+        }
+      }
     }
   },
   "entity": {
@@ -23,10 +23,26 @@
         "state_attributes": {
           "preset_mode": {
             "state": {
-              "normal": "[%key:common::state::normal%]",
               "auto": "[%key:common::state::auto%]",
+              "normal": "[%key:common::state::normal%]",
               "pet": "Pet",
               "sleep": "Sleep"
+            }
+          }
+        }
+      }
+    },
+    "humidifier": {
+      "evaporative_humidifier": {
+        "state_attributes": {
+          "mode": {
+            "state": {
+              "drying_filter": "Drying filter",
+              "high": "[%key:common::state::high%]",
+              "low": "[%key:common::state::low%]",
+              "medium": "[%key:common::state::medium%]",
+              "quiet": "Quiet",
+              "target_humidity": "Target humidity"
             }
           }
         }
@@ -35,22 +51,6 @@
     "sensor": {
       "light_level": {
         "name": "Light level"
-      }
-    },
-    "humidifier": {
-      "evaporative_humidifier": {
-        "state_attributes": {
-          "mode": {
-            "state": {
-              "high": "[%key:common::state::high%]",
-              "medium": "[%key:common::state::medium%]",
-              "low": "[%key:common::state::low%]",
-              "quiet": "Quiet",
-              "target_humidity": "Target humidity",
-              "drying_filter": "Drying filter"
-            }
-          }
-        }
       }
     }
   }

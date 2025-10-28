@@ -4,8 +4,8 @@
   "after_dependencies": ["thread"],
   "bluetooth": [
     {
-      "manufacturer_id": 76,
-      "manufacturer_data_start": [6]
+      "manufacturer_data_start": [6],
+      "manufacturer_id": 76
     }
   ],
   "codeowners": ["@Jc2k", "@bdraco"],

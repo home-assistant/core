@@ -1,5 +1,13 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
     "step": {
       "user": {
         "data": {
@@ -9,27 +17,18 @@
           "api_key": "API key for the World Air Quality Index"
         }
       }
-    },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     }
   },
   "config_subentries": {
     "station": {
+      "abort": {
+        "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+      },
+      "entry_type": "Measuring station",
+      "initiate_flow": {
+        "user": "Add measuring station"
+      },
       "step": {
-        "user": {
-          "title": "Add measuring station",
-          "description": "How do you want to select a measuring station?",
-          "menu_options": {
-            "map": "[%key:common::config_flow::data::location%]",
-            "station_number": "Measuring station number"
-          }
-        },
         "map": {
           "data": {
             "location": "[%key:common::config_flow::data::location%]"
@@ -45,39 +44,22 @@
           "data_description": {
             "station_number": "The number of the measuring station"
           }
+        },
+        "user": {
+          "description": "How do you want to select a measuring station?",
+          "menu_options": {
+            "map": "[%key:common::config_flow::data::location%]",
+            "station_number": "Measuring station number"
+          },
+          "title": "Add measuring station"
         }
-      },
-      "abort": {
-        "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
-      },
-      "initiate_flow": {
-        "user": "Add measuring station"
-      },
-      "entry_type": "Measuring station"
+      }
     }
   },
   "entity": {
     "sensor": {
       "carbon_monoxide": {
         "name": "[%key:component::sensor::entity_component::carbon_monoxide::name%]"
-      },
-      "nitrogen_dioxide": {
-        "name": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]"
-      },
-      "ozone": {
-        "name": "[%key:component::sensor::entity_component::ozone::name%]"
-      },
-      "sulphur_dioxide": {
-        "name": "[%key:component::sensor::entity_component::sulphur_dioxide::name%]"
-      },
-      "pm10": {
-        "name": "[%key:component::sensor::entity_component::pm10::name%]"
-      },
-      "pm25": {
-        "name": "[%key:component::sensor::entity_component::pm25::name%]"
-      },
-      "neph": {
-        "name": "Visibility using nephelometry"
       },
       "dominant_pollutant": {
         "name": "Dominant pollutant",
@@ -86,10 +68,28 @@
           "neph": "Nephelometry",
           "no2": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]",
           "o3": "[%key:component::sensor::entity_component::ozone::name%]",
-          "so2": "[%key:component::sensor::entity_component::sulphur_dioxide::name%]",
           "pm10": "[%key:component::sensor::entity_component::pm10::name%]",
-          "pm25": "[%key:component::sensor::entity_component::pm25::name%]"
+          "pm25": "[%key:component::sensor::entity_component::pm25::name%]",
+          "so2": "[%key:component::sensor::entity_component::sulphur_dioxide::name%]"
         }
+      },
+      "neph": {
+        "name": "Visibility using nephelometry"
+      },
+      "nitrogen_dioxide": {
+        "name": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]"
+      },
+      "ozone": {
+        "name": "[%key:component::sensor::entity_component::ozone::name%]"
+      },
+      "pm10": {
+        "name": "[%key:component::sensor::entity_component::pm10::name%]"
+      },
+      "pm25": {
+        "name": "[%key:component::sensor::entity_component::pm25::name%]"
+      },
+      "sulphur_dioxide": {
+        "name": "[%key:component::sensor::entity_component::sulphur_dioxide::name%]"
       }
     }
   }

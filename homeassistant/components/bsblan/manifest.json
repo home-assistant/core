@@ -10,8 +10,8 @@
   "requirements": ["python-bsblan==2.1.0"],
   "zeroconf": [
     {
-      "type": "_http._tcp.local.",
-      "name": "bsb-lan*"
+      "name": "bsb-lan*",
+      "type": "_http._tcp.local."
     }
   ]
 }

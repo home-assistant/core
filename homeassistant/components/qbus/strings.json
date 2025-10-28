@@ -1,12 +1,5 @@
 {
   "config": {
-    "flow_title": "Controller {serial}",
-    "step": {
-      "discovery_confirm": {
-        "title": "Add controller",
-        "description": "Add controller {serial}?"
-      }
-    },
     "abort": {
       "already_configured": "Controller already configured",
       "discovery_in_progress": "Discovery in progress",
@@ -14,6 +7,13 @@
     },
     "error": {
       "no_controller": "No controllers were found"
+    },
+    "flow_title": "Controller {serial}",
+    "step": {
+      "discovery_confirm": {
+        "description": "Add controller {serial}?",
+        "title": "Add controller"
+      }
     }
   },
   "entity": {

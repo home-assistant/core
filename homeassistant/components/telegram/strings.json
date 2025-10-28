@@ -1,8 +1,8 @@
 {
   "services": {
     "reload": {
-      "name": "[%key:common::action::reload%]",
-      "description": "Reloads telegram notify services."
+      "description": "Reloads telegram notify services.",
+      "name": "[%key:common::action::reload%]"
     }
   }
 }

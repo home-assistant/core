@@ -13,8 +13,8 @@
   "requirements": ["regenmaschine==2024.03.0"],
   "zeroconf": [
     {
-      "type": "_http._tcp.local.",
-      "name": "rainmachine*"
+      "name": "rainmachine*",
+      "type": "_http._tcp.local."
     }
   ]
 }

@@ -4,22 +4,22 @@
       "holiday_active": {
         "default": "mdi:bag-suitcase-outline",
         "state": {
-          "on": "mdi:bag-suitcase-outline",
-          "off": "mdi:bag-suitcase-off-outline"
+          "off": "mdi:bag-suitcase-off-outline",
+          "on": "mdi:bag-suitcase-outline"
         }
       },
       "summer_active": {
         "default": "mdi:radiator-off",
         "state": {
-          "on": "mdi:radiator-off",
-          "off": "mdi:radiator"
+          "off": "mdi:radiator",
+          "on": "mdi:radiator-off"
         }
       },
       "window_open": {
         "default": "mdi:window-open",
         "state": {
-          "on": "mdi:window-open",
-          "off": "mdi:window-closed"
+          "off": "mdi:window-closed",
+          "on": "mdi:window-open"
         }
       }
     },

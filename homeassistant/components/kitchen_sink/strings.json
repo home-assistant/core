@@ -11,27 +11,73 @@
   },
   "config_subentries": {
     "entity": {
+      "entry_type": "Sensor",
+      "initiate_flow": {
+        "reconfigure": "Reconfigure sensor",
+        "user": "Add sensor"
+      },
       "step": {
         "add_sensor": {
-          "description": "Configure the new sensor",
           "data": {
             "name": "[%key:common::config_flow::data::name%]",
             "state": "Initial state"
-          }
+          },
+          "description": "Configure the new sensor"
         },
         "reconfigure_sensor": {
-          "description": "Reconfigure the sensor",
           "data": {
             "name": "[%key:component::kitchen_sink::config_subentries::entity::step::reconfigure_sensor::data::state%]",
             "state": "Initial state"
+          },
+          "description": "Reconfigure the sensor"
+        }
+      }
+    }
+  },
+  "device": {
+    "n_ch_power_strip": {
+      "name": "Power strip with {number_of_sockets} sockets"
+    }
+  },
+  "issues": {
+    "bad_psu": {
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "Select **Submit** to confirm the power supply has been replaced",
+            "title": "The power supply needs to be replaced"
           }
         }
       },
-      "initiate_flow": {
-        "user": "Add sensor",
-        "reconfigure": "Reconfigure sensor"
+      "title": "The power supply is not stable"
+    },
+    "cold_tea": {
+      "fix_flow": {
+        "abort": {
+          "not_tea_time": "Can not re-heat the tea at this time"
+        },
+        "step": {}
       },
-      "entry_type": "Sensor"
+      "title": "The tea is cold"
+    },
+    "out_of_blinker_fluid": {
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "Select **Submit** when blinker fluid has been refilled",
+            "title": "Blinker fluid needs to be refilled"
+          }
+        }
+      },
+      "title": "The blinker fluid is empty and needs to be refilled"
+    },
+    "transmogrifier_deprecated": {
+      "description": "The transmogrifier component is now deprecated due to the lack of local control available in the new API",
+      "title": "The transmogrifier component is deprecated"
+    },
+    "unfixable_problem": {
+      "description": "This issue is never going to give up.",
+      "title": "This is not a fixable problem"
     }
   },
   "options": {
@@ -57,78 +103,32 @@
       }
     }
   },
-  "device": {
-    "n_ch_power_strip": {
-      "name": "Power strip with {number_of_sockets} sockets"
-    }
-  },
-  "issues": {
-    "bad_psu": {
-      "title": "The power supply is not stable",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "The power supply needs to be replaced",
-            "description": "Select **Submit** to confirm the power supply has been replaced"
-          }
-        }
-      }
-    },
-    "out_of_blinker_fluid": {
-      "title": "The blinker fluid is empty and needs to be refilled",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "Blinker fluid needs to be refilled",
-            "description": "Select **Submit** when blinker fluid has been refilled"
-          }
-        }
-      }
-    },
-    "cold_tea": {
-      "title": "The tea is cold",
-      "fix_flow": {
-        "step": {},
-        "abort": {
-          "not_tea_time": "Can not re-heat the tea at this time"
-        }
-      }
-    },
-    "transmogrifier_deprecated": {
-      "title": "The transmogrifier component is deprecated",
-      "description": "The transmogrifier component is now deprecated due to the lack of local control available in the new API"
-    },
-    "unfixable_problem": {
-      "title": "This is not a fixable problem",
-      "description": "This issue is never going to give up."
-    }
-  },
   "services": {
     "test_service_1": {
-      "name": "Test action 1",
       "description": "Fake action for testing",
       "fields": {
         "field_1": {
-          "name": "Field 1",
-          "description": "Number of seconds"
+          "description": "Number of seconds",
+          "name": "Field 1"
         },
         "field_2": {
-          "name": "Field 2",
-          "description": "Mode"
+          "description": "Mode",
+          "name": "Field 2"
         },
         "field_3": {
-          "name": "Field 3",
-          "description": "Number of hours"
+          "description": "Number of hours",
+          "name": "Field 3"
         },
         "field_4": {
-          "name": "Field 4",
-          "description": "Direction"
+          "description": "Direction",
+          "name": "Field 4"
         }
       },
+      "name": "Test action 1",
       "sections": {
         "advanced_fields": {
-          "name": "Advanced options",
-          "description": "Some very advanced things"
+          "description": "Some very advanced things",
+          "name": "Advanced options"
         }
       }
     }

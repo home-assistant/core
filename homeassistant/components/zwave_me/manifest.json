@@ -9,8 +9,8 @@
   "requirements": ["zwave-me-ws==0.4.3", "url-normalize==2.2.1"],
   "zeroconf": [
     {
-      "type": "_hap._tcp.local.",
-      "name": "*z.wave-me*"
+      "name": "*z.wave-me*",
+      "type": "_hap._tcp.local."
     }
   ]
 }

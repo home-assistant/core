@@ -4,8 +4,8 @@
       "wash_cycle": {
         "default": "mdi:washing-machine",
         "state": {
-          "on": "mdi:washing-machine",
-          "off": "mdi:washing-machine-off"
+          "off": "mdi:washing-machine-off",
+          "on": "mdi:washing-machine"
         }
       }
     }

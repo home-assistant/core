@@ -1,10 +1,7 @@
 {
-  "title": "Derivative sensor",
   "config": {
     "step": {
       "user": {
-        "title": "Create Derivative sensor",
-        "description": "Create a sensor that estimates the derivative of a sensor.",
         "data": {
           "max_sub_interval": "Max sub-interval",
           "name": "[%key:common::config_flow::data::name%]",
@@ -19,7 +16,9 @@
           "round": "Controls the number of decimal digits in the output.",
           "time_window": "If set, the sensor's value is a time-weighted moving average of derivatives within this window.",
           "unit_prefix": "The output will be scaled according to the selected metric prefix and time unit of the derivative."
-        }
+        },
+        "description": "Create a sensor that estimates the derivative of a sensor.",
+        "title": "Create Derivative sensor"
       }
     }
   },
@@ -45,18 +44,19 @@
     }
   },
   "selector": {
-    "time_unit": {
-      "options": {
-        "s": "Seconds",
-        "min": "Minutes",
-        "h": "Hours",
-        "d": "Days"
-      }
-    },
     "round": {
       "unit_of_measurement": {
         "decimals": "decimals"
       }
+    },
+    "time_unit": {
+      "options": {
+        "d": "Days",
+        "h": "Hours",
+        "min": "Minutes",
+        "s": "Seconds"
+      }
     }
-  }
+  },
+  "title": "Derivative sensor"
 }

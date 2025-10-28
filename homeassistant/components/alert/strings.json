@@ -1,5 +1,4 @@
 {
-  "title": "Alert",
   "entity_component": {
     "_": {
       "name": "[%key:component::alert::title%]",
@@ -12,16 +11,17 @@
   },
   "services": {
     "toggle": {
-      "name": "[%key:common::action::toggle%]",
-      "description": "Toggles alert's notifications."
+      "description": "Toggles alert's notifications.",
+      "name": "[%key:common::action::toggle%]"
     },
     "turn_off": {
-      "name": "[%key:common::action::turn_off%]",
-      "description": "Silences alert's notifications."
+      "description": "Silences alert's notifications.",
+      "name": "[%key:common::action::turn_off%]"
     },
     "turn_on": {
-      "name": "[%key:common::action::turn_on%]",
-      "description": "Resets alert's notifications."
+      "description": "Resets alert's notifications.",
+      "name": "[%key:common::action::turn_on%]"
     }
-  }
+  },
+  "title": "Alert"
 }

@@ -1,5 +1,12 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]"
+    },
     "step": {
       "confirm": {
         "description": "[%key:common::config_flow::description::confirm_setup%]"
@@ -12,13 +19,6 @@
           "url": "The URL of the Tilt Pi instance."
         }
       }
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
-    },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_host": "[%key:common::config_flow::error::invalid_host%]"
     }
   },
   "entity": {

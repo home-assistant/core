@@ -1,12 +1,9 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "description": "SimpliSafe authenticates users via its web app. Due to technical limitations, there is a manual step at the end of this process; please ensure that you read the [documentation]({documentation_url}) before starting.\n\nWhen you are ready, click [here]({url}) to open the SimpliSafe web app and input your credentials. If you've already logged into SimpliSafe in your browser, you may want to open a new tab, then copy/paste the above URL into that tab.\n\nWhen the process is complete, return here and input the authorization code from the `com.simplisafe.mobile` URL.",
-        "data": {
-          "auth_code": "Authorization Code"
-        }
-      }
+    "abort": {
+      "already_configured": "This SimpliSafe account is already in use.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "wrong_account": "The user credentials provided do not match this SimpliSafe account."
     },
     "error": {
       "identifier_exists": "Account already registered",
@@ -14,19 +11,12 @@
       "invalid_auth_code_length": "SimpliSafe authorization codes are 45 characters in length",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
-    "abort": {
-      "already_configured": "This SimpliSafe account is already in use.",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "wrong_account": "The user credentials provided do not match this SimpliSafe account."
-    }
-  },
-  "options": {
     "step": {
-      "init": {
-        "title": "Configure SimpliSafe",
+      "user": {
         "data": {
-          "code": "Code (used in Home Assistant UI)"
-        }
+          "auth_code": "Authorization Code"
+        },
+        "description": "SimpliSafe authenticates users via its web app. Due to technical limitations, there is a manual step at the end of this process; please ensure that you read the [documentation]({documentation_url}) before starting.\n\nWhen you are ready, click [here]({url}) to open the SimpliSafe web app and input your credentials. If you've already logged into SimpliSafe in your browser, you may want to open a new tab, then copy/paste the above URL into that tab.\n\nWhen the process is complete, return here and input the authorization code from the `com.simplisafe.mobile` URL."
       }
     }
   },
@@ -37,84 +27,94 @@
       }
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "code": "Code (used in Home Assistant UI)"
+        },
+        "title": "Configure SimpliSafe"
+      }
+    }
+  },
   "services": {
     "remove_pin": {
-      "name": "Remove PIN",
       "description": "Removes a PIN by its label or value.",
       "fields": {
         "device_id": {
-          "name": "System",
-          "description": "The system to remove the PIN from."
+          "description": "The system to remove the PIN from.",
+          "name": "System"
         },
         "label_or_pin": {
-          "name": "Label/PIN",
-          "description": "The label/value to remove."
+          "description": "The label/value to remove.",
+          "name": "Label/PIN"
         }
-      }
+      },
+      "name": "Remove PIN"
     },
     "set_pin": {
-      "name": "Set PIN",
       "description": "Sets/updates a PIN.",
       "fields": {
         "device_id": {
-          "name": "[%key:component::simplisafe::services::remove_pin::fields::device_id::name%]",
-          "description": "The system to set the PIN on."
+          "description": "The system to set the PIN on.",
+          "name": "[%key:component::simplisafe::services::remove_pin::fields::device_id::name%]"
         },
         "label": {
-          "name": "Label",
-          "description": "The label of the PIN."
+          "description": "The label of the PIN.",
+          "name": "Label"
         },
         "pin": {
-          "name": "PIN",
-          "description": "The value of the PIN."
+          "description": "The value of the PIN.",
+          "name": "PIN"
         }
-      }
+      },
+      "name": "Set PIN"
     },
     "set_system_properties": {
-      "name": "Set system properties",
       "description": "Sets one or more system properties.",
       "fields": {
-        "device_id": {
-          "name": "[%key:component::simplisafe::services::remove_pin::fields::device_id::name%]",
-          "description": "The system whose properties should be set."
-        },
         "alarm_duration": {
-          "name": "Alarm duration",
-          "description": "The length of a triggered alarm."
+          "description": "The length of a triggered alarm.",
+          "name": "Alarm duration"
         },
         "alarm_volume": {
-          "name": "Alarm volume",
-          "description": "The volume level of a triggered alarm."
+          "description": "The volume level of a triggered alarm.",
+          "name": "Alarm volume"
         },
         "chime_volume": {
-          "name": "Chime volume",
-          "description": "The volume level of the door chime."
+          "description": "The volume level of the door chime.",
+          "name": "Chime volume"
+        },
+        "device_id": {
+          "description": "The system whose properties should be set.",
+          "name": "[%key:component::simplisafe::services::remove_pin::fields::device_id::name%]"
         },
         "entry_delay_away": {
-          "name": "Entry delay away",
-          "description": "How long to delay when entering while \"away\"."
+          "description": "How long to delay when entering while \"away\".",
+          "name": "Entry delay away"
         },
         "entry_delay_home": {
-          "name": "Entry delay home",
-          "description": "How long to delay when entering while \"home\"."
+          "description": "How long to delay when entering while \"home\".",
+          "name": "Entry delay home"
         },
         "exit_delay_away": {
-          "name": "Exit delay away",
-          "description": "How long to delay when exiting while \"away\"."
+          "description": "How long to delay when exiting while \"away\".",
+          "name": "Exit delay away"
         },
         "exit_delay_home": {
-          "name": "Exit delay home",
-          "description": "How long to delay when exiting while \"home\"."
+          "description": "How long to delay when exiting while \"home\".",
+          "name": "Exit delay home"
         },
         "light": {
-          "name": "Light",
-          "description": "Whether the armed light should be visible."
+          "description": "Whether the armed light should be visible.",
+          "name": "Light"
         },
         "voice_prompt_volume": {
-          "name": "Voice prompt volume",
-          "description": "The volume level of the voice prompt."
+          "description": "The volume level of the voice prompt.",
+          "name": "Voice prompt volume"
         }
-      }
+      },
+      "name": "Set system properties"
     }
   }
 }

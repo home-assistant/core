@@ -8,16 +8,16 @@
   "integration_type": "hardware",
   "usb": [
     {
-      "vid": "10C4",
-      "pid": "EA60",
       "description": "*skyconnect v1.0*",
-      "known_devices": ["SkyConnect v1.0"]
+      "known_devices": ["SkyConnect v1.0"],
+      "pid": "EA60",
+      "vid": "10C4"
     },
     {
-      "vid": "10C4",
-      "pid": "EA60",
       "description": "*home assistant connect zbt-1*",
-      "known_devices": ["Home Assistant Connect ZBT-1"]
+      "known_devices": ["Home Assistant Connect ZBT-1"],
+      "pid": "EA60",
+      "vid": "10C4"
     }
   ]
 }

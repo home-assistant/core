@@ -10,10 +10,10 @@
   },
   "services": {
     "test_service_1": {
-      "service": "mdi:flask",
       "sections": {
         "advanced_fields": "mdi:test-tube"
-      }
+      },
+      "service": "mdi:flask"
     }
   }
 }

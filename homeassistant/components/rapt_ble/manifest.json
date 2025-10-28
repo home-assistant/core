@@ -3,12 +3,12 @@
   "name": "RAPT Bluetooth",
   "bluetooth": [
     {
-      "manufacturer_id": 16722,
-      "manufacturer_data_start": [80, 84]
+      "manufacturer_data_start": [80, 84],
+      "manufacturer_id": 16722
     },
     {
-      "manufacturer_id": 17739,
-      "manufacturer_data_start": [71]
+      "manufacturer_data_start": [71],
+      "manufacturer_id": 17739
     }
   ],
   "codeowners": ["@sairon"],

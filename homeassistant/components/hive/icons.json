@@ -18,11 +18,11 @@
     }
   },
   "services": {
-    "boost_heating_on": {
-      "service": "mdi:radiator"
-    },
     "boost_heating_off": {
       "service": "mdi:radiator-off"
+    },
+    "boost_heating_on": {
+      "service": "mdi:radiator"
     },
     "boost_hot_water": {
       "service": "mdi:water-boiler"

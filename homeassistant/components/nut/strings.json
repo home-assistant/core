@@ -1,77 +1,77 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "description": "Connect to the NUT server",
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "port": "[%key:common::config_flow::data::port%]",
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
-        },
-        "data_description": {
-          "host": "The IP address or hostname of your NUT server.",
-          "port": "The network port of your NUT server. The NUT server's default port is '3493'.",
-          "username": "The username to sign in to your NUT server. The username is optional.",
-          "password": "The password to sign in to your NUT server. The password is optional."
-        }
-      },
-      "ups": {
-        "title": "Choose the NUT server UPS to monitor",
-        "data": {
-          "alias": "NUT server UPS name"
-        },
-        "data_description": {
-          "alias": "The UPS name configured on the NUT server."
-        }
-      },
-      "reauth_confirm": {
-        "description": "Re-authenticate NUT server at {host}:{port}",
-        "data": {
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
-        },
-        "data_description": {
-          "username": "[%key:component::nut::config::step::user::data_description::username%]",
-          "password": "[%key:component::nut::config::step::user::data_description::password%]"
-        }
-      },
-      "reconfigure": {
-        "description": "[%key:component::nut::config::step::user::description%]",
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "port": "[%key:common::config_flow::data::port%]",
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
-        },
-        "data_description": {
-          "host": "[%key:component::nut::config::step::user::data_description::host%]",
-          "port": "[%key:component::nut::config::step::user::data_description::port%]",
-          "username": "[%key:component::nut::config::step::user::data_description::username%]",
-          "password": "[%key:component::nut::config::step::user::data_description::password%]"
-        }
-      },
-      "reconfigure_ups": {
-        "title": "[%key:component::nut::config::step::ups::title%]",
-        "data": {
-          "alias": "[%key:component::nut::config::step::ups::data::alias%]"
-        },
-        "data_description": {
-          "alias": "[%key:component::nut::config::step::ups::data_description::alias%]"
-        }
-      }
-    },
-    "error": {
-      "cannot_connect": "Connection error: {error}",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
-    },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "no_ups_found": "There are no UPS devices available on the NUT server.",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unique_id_mismatch": "The device's manufacturer, model and serial number identifier does not match the previous identifier."
+    },
+    "error": {
+      "cannot_connect": "Connection error: {error}",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "[%key:component::nut::config::step::user::data_description::password%]",
+          "username": "[%key:component::nut::config::step::user::data_description::username%]"
+        },
+        "description": "Re-authenticate NUT server at {host}:{port}"
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "host": "[%key:component::nut::config::step::user::data_description::host%]",
+          "password": "[%key:component::nut::config::step::user::data_description::password%]",
+          "port": "[%key:component::nut::config::step::user::data_description::port%]",
+          "username": "[%key:component::nut::config::step::user::data_description::username%]"
+        },
+        "description": "[%key:component::nut::config::step::user::description%]"
+      },
+      "reconfigure_ups": {
+        "data": {
+          "alias": "[%key:component::nut::config::step::ups::data::alias%]"
+        },
+        "data_description": {
+          "alias": "[%key:component::nut::config::step::ups::data_description::alias%]"
+        },
+        "title": "[%key:component::nut::config::step::ups::title%]"
+      },
+      "ups": {
+        "data": {
+          "alias": "NUT server UPS name"
+        },
+        "data_description": {
+          "alias": "The UPS name configured on the NUT server."
+        },
+        "title": "Choose the NUT server UPS to monitor"
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "host": "The IP address or hostname of your NUT server.",
+          "password": "The password to sign in to your NUT server. The password is optional.",
+          "port": "The network port of your NUT server. The NUT server's default port is '3493'.",
+          "username": "The username to sign in to your NUT server. The username is optional."
+        },
+        "description": "Connect to the NUT server"
+      }
     }
   },
   "device_automation": {
@@ -113,22 +113,22 @@
       "ambient_humidity_status": {
         "name": "Ambient humidity status",
         "state": {
-          "good": "Good",
-          "warning-low": "Warning low",
+          "critical-high": "Critical high",
           "critical-low": "Critical low",
+          "good": "Good",
           "warning-high": "Warning high",
-          "critical-high": "Critical high"
+          "warning-low": "Warning low"
         }
       },
       "ambient_temperature": { "name": "Ambient temperature" },
       "ambient_temperature_status": {
         "name": "Ambient temperature status",
         "state": {
-          "good": "[%key:component::nut::entity::sensor::ambient_humidity_status::state::good%]",
-          "warning-low": "[%key:component::nut::entity::sensor::ambient_humidity_status::state::warning-low%]",
+          "critical-high": "[%key:component::nut::entity::sensor::ambient_humidity_status::state::critical-high%]",
           "critical-low": "[%key:component::nut::entity::sensor::ambient_humidity_status::state::critical-low%]",
+          "good": "[%key:component::nut::entity::sensor::ambient_humidity_status::state::good%]",
           "warning-high": "[%key:component::nut::entity::sensor::ambient_humidity_status::state::warning-high%]",
-          "critical-high": "[%key:component::nut::entity::sensor::ambient_humidity_status::state::critical-high%]"
+          "warning-low": "[%key:component::nut::entity::sensor::ambient_humidity_status::state::warning-low%]"
         }
       },
       "battery_alarm_threshold": { "name": "Battery alarm threshold" },
@@ -141,12 +141,12 @@
         "name": "Charging status",
         "state": {
           "charging": "[%key:common::state::charging%]",
+          "disabled": "[%key:common::state::disabled%]",
           "discharging": "[%key:common::state::discharging%]",
           "floating": "Floating",
+          "off": "[%key:common::state::off%]",
           "resting": "Resting",
-          "unknown": "Unknown",
-          "disabled": "[%key:common::state::disabled%]",
-          "off": "[%key:common::state::off%]"
+          "unknown": "Unknown"
         }
       },
       "battery_current": { "name": "Battery current" },
@@ -191,11 +191,11 @@
       "input_current_status": {
         "name": "Input current status",
         "state": {
-          "good": "[%key:component::nut::entity::sensor::ambient_humidity_status::state::good%]",
-          "warning-low": "[%key:component::nut::entity::sensor::ambient_humidity_status::state::warning-low%]",
+          "critical-high": "[%key:component::nut::entity::sensor::ambient_humidity_status::state::critical-high%]",
           "critical-low": "[%key:component::nut::entity::sensor::ambient_humidity_status::state::critical-low%]",
+          "good": "[%key:component::nut::entity::sensor::ambient_humidity_status::state::good%]",
           "warning-high": "[%key:component::nut::entity::sensor::ambient_humidity_status::state::warning-high%]",
-          "critical-high": "[%key:component::nut::entity::sensor::ambient_humidity_status::state::critical-high%]"
+          "warning-low": "[%key:component::nut::entity::sensor::ambient_humidity_status::state::warning-low%]"
         }
       },
       "input_frequency": { "name": "Input frequency" },
@@ -233,6 +233,7 @@
       "input_voltage": { "name": "Input voltage" },
       "input_voltage_nominal": { "name": "Nominal input voltage" },
       "input_voltage_status": { "name": "Input voltage status" },
+      "outlet_current": { "name": "Outlet current" },
       "outlet_number_current": { "name": "Outlet {outlet_name} current" },
       "outlet_number_current_status": {
         "name": "Outlet {outlet_name} current status"
@@ -240,7 +241,6 @@
       "outlet_number_desc": { "name": "Outlet {outlet_name} description" },
       "outlet_number_power": { "name": "Outlet {outlet_name} power" },
       "outlet_number_realpower": { "name": "Outlet {outlet_name} real power" },
-      "outlet_current": { "name": "Outlet current" },
       "outlet_power": { "name": "Outlet apparent power" },
       "outlet_realpower": { "name": "Outlet real power" },
       "outlet_voltage": { "name": "Outlet voltage" },
@@ -274,8 +274,8 @@
       "ups_beeper_status": {
         "name": "Beeper status",
         "state": {
-          "enabled": "[%key:common::state::enabled%]",
           "disabled": "[%key:common::state::disabled%]",
+          "enabled": "[%key:common::state::enabled%]",
           "muted": "Muted"
         }
       },

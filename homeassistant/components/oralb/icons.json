@@ -1,13 +1,34 @@
 {
   "entity": {
     "sensor": {
+      "mode": {
+        "default": "mdi:toothbrush-paste",
+        "state": {
+          "daily_clean": "mdi:repeat-once",
+          "deep_clean": "mdi:water",
+          "gum_care": "mdi:tooth-outline",
+          "intense": "mdi:shape-circle-plus",
+          "massage": "mdi:spa",
+          "off": "mdi:power",
+          "sensitive": "mdi:feather",
+          "settings": "mdi:cog-outline",
+          "super_sensitive": "mdi:feather",
+          "tongue_cleaning": "mdi:gate-and",
+          "turbo": "mdi:car-turbocharger",
+          "whiten": "mdi:shimmer",
+          "whitening": "mdi:shimmer"
+        }
+      },
+      "number_of_sectors": {
+        "default": "mdi:chart-pie"
+      },
       "pressure": {
         "default": "mdi:tooth-outline",
         "state": {
+          "button_pressed": "mdi:radiobox-marked",
           "high": "mdi:tooth",
           "low": "mdi:alert",
-          "power_button_pressed": "mdi:power",
-          "button_pressed": "mdi:radiobox-marked"
+          "power_button_pressed": "mdi:power"
         }
       },
       "sector": {
@@ -23,37 +44,16 @@
       "toothbrush_state": {
         "default": "mdi:toothbrush-electric",
         "state": {
-          "initializing": "mdi:sync",
-          "idle": "mdi:toothbrush-electric",
-          "running": "mdi:waveform",
           "charging": "mdi:battery-charging",
-          "setup": "mdi:wrench",
           "flight_menu": "mdi:airplane",
-          "selection_menu": "mdi:menu",
+          "idle": "mdi:toothbrush-electric",
+          "initializing": "mdi:sync",
           "off": "mdi:power",
+          "running": "mdi:waveform",
+          "selection_menu": "mdi:menu",
+          "setup": "mdi:wrench",
           "sleeping": "mdi:sleep",
           "transport": "mdi:dolly"
-        }
-      },
-      "number_of_sectors": {
-        "default": "mdi:chart-pie"
-      },
-      "mode": {
-        "default": "mdi:toothbrush-paste",
-        "state": {
-          "daily_clean": "mdi:repeat-once",
-          "sensitive": "mdi:feather",
-          "gum_care": "mdi:tooth-outline",
-          "intense": "mdi:shape-circle-plus",
-          "whitening": "mdi:shimmer",
-          "whiten": "mdi:shimmer",
-          "tongue_cleaning": "mdi:gate-and",
-          "super_sensitive": "mdi:feather",
-          "massage": "mdi:spa",
-          "deep_clean": "mdi:water",
-          "turbo": "mdi:car-turbocharger",
-          "off": "mdi:power",
-          "settings": "mdi:cog-outline"
         }
       }
     }

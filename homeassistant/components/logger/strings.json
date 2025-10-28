@@ -1,30 +1,30 @@
 {
-  "services": {
-    "set_default_level": {
-      "name": "Set default level",
-      "description": "Sets the default log level for integrations.",
-      "fields": {
-        "level": {
-          "name": "Level",
-          "description": "Default severity level for all integrations."
-        }
-      }
-    },
-    "set_level": {
-      "name": "Set level",
-      "description": "Sets the log level for one or more integrations."
-    }
-  },
   "selector": {
     "level": {
       "options": {
+        "critical": "Critical",
         "debug": "Debug",
-        "info": "Info",
-        "warning": "Warning",
         "error": "Error",
         "fatal": "Fatal",
-        "critical": "Critical"
+        "info": "Info",
+        "warning": "Warning"
       }
+    }
+  },
+  "services": {
+    "set_default_level": {
+      "description": "Sets the default log level for integrations.",
+      "fields": {
+        "level": {
+          "description": "Default severity level for all integrations.",
+          "name": "Level"
+        }
+      },
+      "name": "Set default level"
+    },
+    "set_level": {
+      "description": "Sets the log level for one or more integrations.",
+      "name": "Set level"
     }
   }
 }

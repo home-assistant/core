@@ -1,24 +1,5 @@
 {
   "config": {
-    "flow_title": "Nextcloud",
-    "step": {
-      "user": {
-        "description": "Enter your Nextcloud information.",
-        "data": {
-          "url": "[%key:common::config_flow::data::url%]",
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]",
-          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
-        }
-      },
-      "reauth_confirm": {
-        "description": "Update your login information for {url}.",
-        "data": {
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
-        }
-      }
-    },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "connection_error_during_import": "Connection error occurred during yaml configuration import",
@@ -27,6 +8,25 @@
     "error": {
       "connection_error": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "flow_title": "Nextcloud",
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "description": "Update your login information for {url}."
+      },
+      "user": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "url": "[%key:common::config_flow::data::url%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "description": "Enter your Nextcloud information."
+      }
     }
   },
   "entity": {

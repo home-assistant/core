@@ -1,13 +1,13 @@
 {
   "entity": {
     "sensor": {
-      "e5": {
+      "diesel": {
         "default": "mdi:gas-station"
       },
       "e10": {
         "default": "mdi:gas-station"
       },
-      "diesel": {
+      "e5": {
         "default": "mdi:gas-station"
       }
     }

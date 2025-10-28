@@ -1,33 +1,25 @@
 {
-  "title": "Switch",
   "device_automation": {
     "action_type": {
       "toggle": "[%key:common::device_automation::action_type::toggle%]",
-      "turn_on": "[%key:common::device_automation::action_type::turn_on%]",
-      "turn_off": "[%key:common::device_automation::action_type::turn_off%]"
+      "turn_off": "[%key:common::device_automation::action_type::turn_off%]",
+      "turn_on": "[%key:common::device_automation::action_type::turn_on%]"
     },
     "condition_type": {
-      "is_on": "[%key:common::device_automation::condition_type::is_on%]",
-      "is_off": "[%key:common::device_automation::condition_type::is_off%]"
-    },
-    "trigger_type": {
-      "changed_states": "[%key:common::device_automation::trigger_type::changed_states%]",
-      "turned_on": "[%key:common::device_automation::trigger_type::turned_on%]",
-      "turned_off": "[%key:common::device_automation::trigger_type::turned_off%]"
+      "is_off": "[%key:common::device_automation::condition_type::is_off%]",
+      "is_on": "[%key:common::device_automation::condition_type::is_on%]"
     },
     "extra_fields": {
       "for": "[%key:common::device_automation::extra_fields::for%]"
+    },
+    "trigger_type": {
+      "changed_states": "[%key:common::device_automation::trigger_type::changed_states%]",
+      "turned_off": "[%key:common::device_automation::trigger_type::turned_off%]",
+      "turned_on": "[%key:common::device_automation::trigger_type::turned_on%]"
     }
   },
   "entity_component": {
     "_": {
-      "name": "[%key:component::switch::title%]",
-      "state": {
-        "off": "[%key:common::state::off%]",
-        "on": "[%key:common::state::on%]"
-      }
-    },
-    "switch": {
       "name": "[%key:component::switch::title%]",
       "state": {
         "off": "[%key:common::state::off%]",
@@ -40,20 +32,28 @@
         "off": "[%key:common::state::off%]",
         "on": "[%key:common::state::on%]"
       }
+    },
+    "switch": {
+      "name": "[%key:component::switch::title%]",
+      "state": {
+        "off": "[%key:common::state::off%]",
+        "on": "[%key:common::state::on%]"
+      }
     }
   },
   "services": {
-    "turn_on": {
-      "name": "[%key:common::action::turn_on%]",
-      "description": "Turns a switch on."
+    "toggle": {
+      "description": "Toggles a switch on/off.",
+      "name": "[%key:common::action::toggle%]"
     },
     "turn_off": {
-      "name": "[%key:common::action::turn_off%]",
-      "description": "Turns a switch off."
+      "description": "Turns a switch off.",
+      "name": "[%key:common::action::turn_off%]"
     },
-    "toggle": {
-      "name": "[%key:common::action::toggle%]",
-      "description": "Toggles a switch on/off."
+    "turn_on": {
+      "description": "Turns a switch on.",
+      "name": "[%key:common::action::turn_on%]"
     }
-  }
+  },
+  "title": "Switch"
 }
