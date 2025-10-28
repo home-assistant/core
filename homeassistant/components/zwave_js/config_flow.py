@@ -124,6 +124,11 @@ RF_REGIONS = [
     "USA",
 ]
 
+# Map placeholder keys to values.
+    description_placeholders: Mapping[str, str] = {
+        "api_method": "https://zwave-js.github.io/node-zwave-js/#/api/CCs/index",
+        "api_parameters": "https://zwave-js.github.io/node-zwave-js/#/api/CCs/index",
+    }
 
 def get_manual_schema(user_input: dict[str, Any]) -> vol.Schema:
     """Return a schema for the manual step."""
