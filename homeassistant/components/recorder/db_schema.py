@@ -71,7 +71,7 @@ class LegacyBase(DeclarativeBase):
     """Base class for tables, used for schema migration."""
 
 
-SCHEMA_VERSION = 50
+SCHEMA_VERSION = 51
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -756,6 +756,7 @@ class _StatisticsMeta:
     )
     source: Mapped[str | None] = mapped_column(String(32))
     unit_of_measurement: Mapped[str | None] = mapped_column(String(255))
+    unit_class: Mapped[str | None] = mapped_column(String(255))
     has_mean: Mapped[bool | None] = mapped_column(Boolean)
     has_sum: Mapped[bool | None] = mapped_column(Boolean)
     name: Mapped[str | None] = mapped_column(String(255))

@@ -76,7 +76,7 @@ async def test_rpc_device_virtual_enum(
     ]
 
     assert (entry := entity_registry.async_get(entity_id))
-    assert entry.unique_id == "123456789ABC-enum:203-enum"
+    assert entry.unique_id == "123456789ABC-enum:203-enum_generic"
 
     monkeypatch.setitem(mock_rpc_device.status["enum:203"], "value", "option 2")
     mock_rpc_device.mock_update()
@@ -128,7 +128,7 @@ async def test_rpc_remove_virtual_enum_when_mode_label(
         hass,
         SELECT_PLATFORM,
         "test_name_enum_200",
-        "enum:200-enum",
+        "enum:200-enum_generic",
         config_entry,
         device_id=device_entry.id,
     )
@@ -152,7 +152,7 @@ async def test_rpc_remove_virtual_enum_when_orphaned(
         hass,
         SELECT_PLATFORM,
         "test_name_enum_200",
-        "enum:200-enum",
+        "enum:200-enum_generic",
         config_entry,
         device_id=device_entry.id,
     )

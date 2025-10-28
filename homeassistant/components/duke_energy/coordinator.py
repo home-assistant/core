@@ -24,6 +24,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
+from homeassistant.util.unit_conversion import EnergyConverter
 
 from .const import DOMAIN
 
@@ -146,6 +147,7 @@ class DukeEnergyCoordinator(DataUpdateCoordinator[None]):
                 name=f"{name_prefix} Consumption",
                 source=DOMAIN,
                 statistic_id=consumption_statistic_id,
+                unit_class=EnergyConverter.UNIT_CLASS,
                 unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR
                 if meter["serviceType"] == "ELECTRIC"
                 else UnitOfVolume.CENTUM_CUBIC_FEET,
