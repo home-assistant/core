@@ -613,6 +613,7 @@ class UnitOfFrequency(StrEnum):
 class UnitOfPressure(StrEnum):
     """Pressure units."""
 
+    MILLIPASCAL = "mPa"
     PA = "Pa"
     HPA = "hPa"
     KPA = "kPa"
@@ -664,6 +665,7 @@ class UnitOfVolumeFlowRate(StrEnum):
     LITERS_PER_HOUR = "L/h"
     LITERS_PER_MINUTE = "L/min"
     LITERS_PER_SECOND = "L/s"
+    GALLONS_PER_HOUR = "gal/h"
     GALLONS_PER_MINUTE = "gal/min"
     MILLILITERS_PER_SECOND = "mL/s"
 

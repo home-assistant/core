@@ -43,6 +43,16 @@ ATTR_SOUND_MODE_LIST = "sound_mode_list"
 
 DOMAIN = "media_player"
 
+INTENT_MEDIA_PAUSE = "HassMediaPause"
+INTENT_MEDIA_UNPAUSE = "HassMediaUnpause"
+INTENT_MEDIA_NEXT = "HassMediaNext"
+INTENT_MEDIA_PREVIOUS = "HassMediaPrevious"
+INTENT_PLAYER_MUTE = "HassMediaPlayerMute"
+INTENT_PLAYER_UNMUTE = "HassMediaPlayerUnmute"
+INTENT_SET_VOLUME = "HassSetVolume"
+INTENT_SET_VOLUME_RELATIVE = "HassSetVolumeRelative"
+INTENT_MEDIA_SEARCH_AND_PLAY = "HassMediaSearchAndPlay"
+
 
 class MediaPlayerState(
     StrEnum,
