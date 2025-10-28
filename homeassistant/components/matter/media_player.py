@@ -45,7 +45,7 @@ class MatterMediaPlayer(MatterEntity, MediaPlayerEntity):
     """Representation of a Matter Media Player entity."""
 
     entity_description: MatterMediaPlayerEntityDescription
-    _platform_translation_key = "mediaplayer"
+    _platform_translation_key = "media_player"
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level."""
