@@ -64,16 +64,16 @@
       "description": "Gets data from a worksheet in Google Sheets.",
       "fields": {
         "config_entry": {
-          "name": "[%key:component::google_sheets::services::append_sheet::fields::config_entry::name%]",
-          "description": "The sheet to get data from."
+          "description": "The sheet to get data from.",
+          "name": "[%key:component::google_sheets::services::append_sheet::fields::config_entry::name%]"
         },
         "rows": {
-          "name": "Rows",
-          "description": "Maximum number of rows to be retrieved from the worksheet."
+          "description": "Maximum number of rows to be retrieved from the worksheet.",
+          "name": "Rows"
         },
         "worksheet": {
-          "name": "[%key:component::google_sheets::services::append_sheet::fields::worksheet::name%]",
-          "description": "[%key:component::google_sheets::services::append_sheet::fields::worksheet::description%]"
+          "description": "[%key:component::google_sheets::services::append_sheet::fields::worksheet::description%]",
+          "name": "[%key:component::google_sheets::services::append_sheet::fields::worksheet::name%]"
         }
       },
       "name": "Get data from sheet"
