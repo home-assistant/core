@@ -14,6 +14,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohasupervisor.models import (
     Discovery,
+    JobsInfo,
     Repository,
     ResolutionInfo,
     StoreAddon,
@@ -509,6 +510,13 @@ def resolution_suggestions_for_issue_fixture(supervisor_client: AsyncMock) -> As
     return supervisor_client.resolution.suggestions_for_issue
 
 
+@pytest.fixture(name="jobs_info")
+def jobs_info_fixture(supervisor_client: AsyncMock) -> AsyncMock:
+    """Mock jobs info from supervisor."""
+    supervisor_client.jobs.info.return_value = JobsInfo(ignore_conditions=[], jobs=[])
+    return supervisor_client.jobs.info
+
+
 @pytest.fixture(name="supervisor_client")
 def supervisor_client() -> Generator[AsyncMock]:
     """Mock the supervisor client."""
@@ -552,6 +560,10 @@ def supervisor_client() -> Generator[AsyncMock]:
         ),
         patch(
             "homeassistant.components.hassio.issues.get_supervisor_client",
+            return_value=supervisor_client,
+        ),
+        patch(
+            "homeassistant.components.hassio.jobs.get_supervisor_client",
             return_value=supervisor_client,
         ),
         patch(

@@ -6,7 +6,15 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from telegram import Bot, Chat, ChatFullInfo, Message, User, WebhookInfo
+from telegram import (
+    AcceptedGiftTypes,
+    Bot,
+    Chat,
+    ChatFullInfo,
+    Message,
+    User,
+    WebhookInfo,
+)
 from telegram.constants import AccentColor, ChatType
 
 from homeassistant.components.telegram_bot import (
@@ -106,6 +114,7 @@ def mock_external_calls() -> Generator[None]:
         type="PRIVATE",
         max_reaction_count=100,
         accent_color_id=AccentColor.COLOR_000,
+        accepted_gift_types=AcceptedGiftTypes(True, True, True, True),
     )
     test_user = User(123456, "Testbot", True, "mock last name", "mock username")
     message = Message(

@@ -200,20 +200,19 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
             )
 
         if (
-            self.current_friends
-            - (new_friends := {x.xuid for x in presence_data.values()})
+            self.current_friends - (new_friends := set(presence_data))
             or not self.current_friends
         ):
-            self.remove_stale_devices(presence_data)
+            self.remove_stale_devices(new_friends)
         self.current_friends = new_friends
 
         return XboxData(new_console_data, presence_data)
 
-    def remove_stale_devices(self, presence_data: dict[str, Person]) -> None:
+    def remove_stale_devices(self, xuids: set[str]) -> None:
         """Remove stale devices from registry."""
 
         device_reg = dr.async_get(self.hass)
-        identifiers = {(DOMAIN, xuid) for xuid in set(presence_data)} | {
+        identifiers = {(DOMAIN, xuid) for xuid in xuids} | {
             (DOMAIN, console.id) for console in self.consoles.result
         }
 

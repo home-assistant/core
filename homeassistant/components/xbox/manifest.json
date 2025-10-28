@@ -14,12 +14,12 @@
   "requirements": ["xbox-webapi==2.1.0"],
   "ssdp": [
     {
-      "modelName": "Xbox 360",
-      "manufacturer": "Microsoft Corporation"
+      "manufacturer": "Microsoft Corporation",
+      "modelName": "Xbox 360"
     },
     {
-      "modelName": "Xbox One",
-      "manufacturer": "Microsoft Corporation"
+      "manufacturer": "Microsoft Corporation",
+      "modelName": "Xbox One"
     }
   ]
 }

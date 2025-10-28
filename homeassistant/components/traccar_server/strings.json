@@ -1,6 +1,22 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "description": "The authentication credentials for {host}:{port} need to be updated."
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
@@ -13,40 +29,6 @@
         "data_description": {
           "host": "The hostname or IP address of your Traccar Server",
           "username": "The username (email) you use to log in to your Traccar Server"
-        }
-      },
-      "reauth_confirm": {
-        "description": "The authentication credentials for {host}:{port} need to be updated.",
-        "data": {
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
-        }
-      }
-    },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "max_accuracy": "Max accuracy",
-          "skip_accuracy_filter_for": "Position skip filter for attributes",
-          "custom_attributes": "Custom attributes",
-          "events": "Events"
-        },
-        "data_description": {
-          "max_accuracy": "Any position reports with accuracy higher than this value will be ignored",
-          "skip_accuracy_filter_for": "Attributes defined here will bypass the accuracy filter if they are present in the update",
-          "custom_attributes": "Add any custom or calculated attributes here. These will be added to the device attributes",
-          "events": "Selected events will be fired in Home Assistant"
         }
       }
     }
@@ -77,6 +59,24 @@
       },
       "geofence": {
         "name": "Geofence"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "custom_attributes": "Custom attributes",
+          "events": "Events",
+          "max_accuracy": "Max accuracy",
+          "skip_accuracy_filter_for": "Position skip filter for attributes"
+        },
+        "data_description": {
+          "custom_attributes": "Add any custom or calculated attributes here. These will be added to the device attributes",
+          "events": "Selected events will be fired in Home Assistant",
+          "max_accuracy": "Any position reports with accuracy higher than this value will be ignored",
+          "skip_accuracy_filter_for": "Attributes defined here will bypass the accuracy filter if they are present in the update"
+        }
       }
     }
   }

@@ -52,6 +52,7 @@ MOVE_DETECTED_DESCRIPTION = SwitchBotCloudBinarySensorEntityDescription(
     value_fn=(
         lambda data: data.get("moveDetected") is True
         or data.get("detectionState") == "DETECTED"
+        or data.get("detected") is True
     ),
 )
 
@@ -108,6 +109,7 @@ BINARY_SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
         IS_LIGHT_DESCRIPTION,
         MOVE_DETECTED_DESCRIPTION,
     ),
+    "Presence Sensor": (MOVE_DETECTED_DESCRIPTION,),
 }
 
 

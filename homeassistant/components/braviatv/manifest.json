@@ -10,8 +10,8 @@
   "requirements": ["pybravia==0.3.4"],
   "ssdp": [
     {
-      "st": "urn:schemas-sony-com:service:ScalarWebAPI:1",
-      "manufacturer": "Sony Corporation"
+      "manufacturer": "Sony Corporation",
+      "st": "urn:schemas-sony-com:service:ScalarWebAPI:1"
     }
   ]
 }

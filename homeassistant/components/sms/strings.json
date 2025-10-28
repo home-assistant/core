@@ -1,21 +1,21 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "title": "Connect to the modem",
-        "data": {
-          "device": "[%key:common::config_flow::data::device%]",
-          "baud_speed": "Baud Speed"
-        }
-      }
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    "step": {
+      "user": {
+        "data": {
+          "baud_speed": "Baud Speed",
+          "device": "[%key:common::config_flow::data::device%]"
+        },
+        "title": "Connect to the modem"
+      }
     }
   },
   "entity": {

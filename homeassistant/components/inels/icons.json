@@ -4,10 +4,10 @@
       "bit": {
         "default": "mdi:power-socket-eu"
       },
-      "simple_relay": {
+      "relay": {
         "default": "mdi:power-socket-eu"
       },
-      "relay": {
+      "simple_relay": {
         "default": "mdi:power-socket-eu"
       }
     }

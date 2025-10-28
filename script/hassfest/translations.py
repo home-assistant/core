@@ -317,7 +317,25 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                         translation_value_validator,
                         slug_validator=translation_key_validator,
                     ),
-                    vol.Optional("fields"): cv.schema_with_slug_keys(str),
+                    vol.Optional("fields"): vol.Any(
+                        # Old format:
+                        # "key": "translation"
+                        cv.schema_with_slug_keys(str),
+                        # New format:
+                        # "key": {
+                        #   "name": "translated field name",
+                        #   "description": "translated field description"
+                        # }
+                        cv.schema_with_slug_keys(
+                            {
+                                vol.Required("name"): str,
+                                vol.Required(
+                                    "description"
+                                ): translation_value_validator,
+                            },
+                            slug_validator=translation_key_validator,
+                        ),
+                    ),
                 },
                 slug_validator=vol.Any("_", cv.slug),
             ),

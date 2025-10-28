@@ -1,40 +1,34 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "port": "[%key:common::config_flow::data::port%]",
-          "token": "[%key:common::config_flow::data::access_token%]",
-          "encrypt_token": "Use an encrypted token for authentication."
-        },
-        "data_description": {
-          "host": "The hostname or IP address of your Nuki bridge. For example: {sample_ip}."
-        }
-      },
-      "reauth_confirm": {
-        "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "The Nuki integration needs to re-authenticate with your bridge.",
-        "data": {
-          "token": "[%key:common::config_flow::data::access_token%]",
-          "encrypt_token": "[%key:component::nuki::config::step::user::data::encrypt_token%]"
-        }
-      }
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
-    }
-  },
-  "issues": {
-    "https_webhook": {
-      "title": "Nuki webhook URL uses HTTPS (SSL)",
-      "description": "The Nuki bridge cannot push events to an HTTPS address (SSL), please configure a (local) HTTP address under \"Home Assistant URL\" in the [network settings]({network_link}). The current (local) address is: `{base_url}`, a valid address could, for example, be `{sample_url}` where `{sample_ip}` is the IP of the Home Assistant device"
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "encrypt_token": "[%key:component::nuki::config::step::user::data::encrypt_token%]",
+          "token": "[%key:common::config_flow::data::access_token%]"
+        },
+        "description": "The Nuki integration needs to re-authenticate with your bridge.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "user": {
+        "data": {
+          "encrypt_token": "Use an encrypted token for authentication.",
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "token": "[%key:common::config_flow::data::access_token%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Nuki bridge. For example: {sample_ip}."
+        }
+      }
     }
   },
   "entity": {
@@ -48,34 +42,40 @@
         "state_attributes": {
           "battery_critical": {
             "state": {
-              "on": "[%key:common::state::low%]",
-              "off": "[%key:common::state::normal%]"
+              "off": "[%key:common::state::normal%]",
+              "on": "[%key:common::state::low%]"
             }
           }
         }
       }
     }
   },
+  "issues": {
+    "https_webhook": {
+      "description": "The Nuki bridge cannot push events to an HTTPS address (SSL), please configure a (local) HTTP address under \"Home Assistant URL\" in the [network settings]({network_link}). The current (local) address is: `{base_url}`, a valid address could, for example, be `{sample_url}` where `{sample_ip}` is the IP of the Home Assistant device",
+      "title": "Nuki webhook URL uses HTTPS (SSL)"
+    }
+  },
   "services": {
     "lock_n_go": {
-      "name": "Lock 'n' Go",
       "description": "Unlocks the door, waits a few seconds then re-locks. The wait period can be customized through the app.",
       "fields": {
         "unlatch": {
-          "name": "Unlatch",
-          "description": "Whether to also unlatch the door when unlocking it."
+          "description": "Whether to also unlatch the door when unlocking it.",
+          "name": "Unlatch"
         }
-      }
+      },
+      "name": "Lock 'n' Go"
     },
     "set_continuous_mode": {
-      "name": "Set continuous mode",
       "description": "Enables or disables continuous mode on Nuki Opener.",
       "fields": {
         "enable": {
-          "name": "[%key:common::action::enable%]",
-          "description": "Whether to enable or disable the feature."
+          "description": "Whether to enable or disable the feature.",
+          "name": "[%key:common::action::enable%]"
         }
-      }
+      },
+      "name": "Set continuous mode"
     }
   }
 }

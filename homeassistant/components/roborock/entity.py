@@ -4,7 +4,7 @@ from typing import Any
 
 from roborock.api import RoborockClient
 from roborock.command_cache import CacheableAttribute
-from roborock.containers import Consumable, Status
+from roborock.data import Consumable, Status
 from roborock.exceptions import RoborockException
 from roborock.roborock_message import RoborockDataProtocol
 from roborock.roborock_typing import RoborockCommand

@@ -117,8 +117,8 @@
       'subentries': list([
       ]),
       'title': 'Mock Title',
-      'unique_id': None,
-      'version': 4,
+      'unique_id': '**REDACTED**',
+      'version': 5,
     }),
     'devices': list([
       dict({

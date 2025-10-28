@@ -3,8 +3,8 @@
   "name": "iBeacon Tracker",
   "bluetooth": [
     {
-      "manufacturer_id": 76,
-      "manufacturer_data_start": [2, 21]
+      "manufacturer_data_start": [2, 21],
+      "manufacturer_id": 76
     }
   ],
   "codeowners": [],

@@ -24,6 +24,8 @@ from .coordinator import SwitcherDataUpdateCoordinator
 from .entity import SwitcherEntity
 from .utils import get_breeze_remote_manager
 
+PARALLEL_UPDATES = 1
+
 
 @dataclass(frozen=True, kw_only=True)
 class SwitcherThermostatButtonEntityDescription(ButtonEntityDescription):
