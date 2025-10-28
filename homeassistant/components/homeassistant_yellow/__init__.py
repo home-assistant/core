@@ -65,6 +65,7 @@ async def async_setup_entry(
 
     firmware = ApplicationType(entry.data[FIRMWARE])
 
+    # Auto start the multiprotocol addon if it is in use
     if firmware is ApplicationType.CPC:
         try:
             await check_multi_pan_addon(hass)

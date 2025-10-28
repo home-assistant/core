@@ -4,12 +4,15 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from functools import partial
+import json
 import logging
 from typing import Any, cast
 
 import anthropic
 import voluptuous as vol
+from voluptuous_openapi import convert
 
+from homeassistant.components.zone import ENTITY_ID_HOME
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigEntryState,
@@ -18,7 +21,13 @@ from homeassistant.config_entries import (
     ConfigSubentryFlow,
     SubentryFlowResult,
 )
-from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_NAME
+from homeassistant.const import (
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
+    CONF_API_KEY,
+    CONF_LLM_HASS_API,
+    CONF_NAME,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import llm
 from homeassistant.helpers.selector import (
@@ -37,12 +46,23 @@ from .const import (
     CONF_RECOMMENDED,
     CONF_TEMPERATURE,
     CONF_THINKING_BUDGET,
+    CONF_WEB_SEARCH,
+    CONF_WEB_SEARCH_CITY,
+    CONF_WEB_SEARCH_COUNTRY,
+    CONF_WEB_SEARCH_MAX_USES,
+    CONF_WEB_SEARCH_REGION,
+    CONF_WEB_SEARCH_TIMEZONE,
+    CONF_WEB_SEARCH_USER_LOCATION,
     DEFAULT_CONVERSATION_NAME,
     DOMAIN,
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_TEMPERATURE,
     RECOMMENDED_THINKING_BUDGET,
+    RECOMMENDED_WEB_SEARCH,
+    RECOMMENDED_WEB_SEARCH_MAX_USES,
+    RECOMMENDED_WEB_SEARCH_USER_LOCATION,
+    WEB_SEARCH_UNSUPPORTED_MODELS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -168,6 +188,14 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                 CONF_THINKING_BUDGET, RECOMMENDED_THINKING_BUDGET
             ) >= user_input.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS):
                 errors[CONF_THINKING_BUDGET] = "thinking_budget_too_large"
+            if user_input.get(CONF_WEB_SEARCH, RECOMMENDED_WEB_SEARCH):
+                model = user_input.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
+                if model.startswith(tuple(WEB_SEARCH_UNSUPPORTED_MODELS)):
+                    errors[CONF_WEB_SEARCH] = "web_search_unsupported_model"
+                elif user_input.get(
+                    CONF_WEB_SEARCH_USER_LOCATION, RECOMMENDED_WEB_SEARCH_USER_LOCATION
+                ):
+                    user_input.update(await self._get_location_data())
 
             if not errors:
                 if self._is_new:
@@ -214,6 +242,68 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
             data_schema=schema,
             errors=errors or None,
         )
+
+    async def _get_location_data(self) -> dict[str, str]:
+        """Get approximate location data of the user."""
+        location_data: dict[str, str] = {}
+        zone_home = self.hass.states.get(ENTITY_ID_HOME)
+        if zone_home is not None:
+            client = await self.hass.async_add_executor_job(
+                partial(
+                    anthropic.AsyncAnthropic,
+                    api_key=self._get_entry().data[CONF_API_KEY],
+                )
+            )
+            location_schema = vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_WEB_SEARCH_CITY,
+                        description="Free text input for the city, e.g. `San Francisco`",
+                    ): str,
+                    vol.Optional(
+                        CONF_WEB_SEARCH_REGION,
+                        description="Free text input for the region, e.g. `California`",
+                    ): str,
+                }
+            )
+            response = await client.messages.create(
+                model=RECOMMENDED_CHAT_MODEL,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": "Where are the following coordinates located: "
+                        f"({zone_home.attributes[ATTR_LATITUDE]},"
+                        f" {zone_home.attributes[ATTR_LONGITUDE]})? Please respond "
+                        "only with a JSON object using the following schema:\n"
+                        f"{convert(location_schema)}",
+                    },
+                    {
+                        "role": "assistant",
+                        "content": "{",  # hints the model to skip any preamble
+                    },
+                ],
+                max_tokens=RECOMMENDED_MAX_TOKENS,
+            )
+            _LOGGER.debug("Model response: %s", response.content)
+            location_data = location_schema(
+                json.loads(
+                    "{"
+                    + "".join(
+                        block.text
+                        for block in response.content
+                        if isinstance(block, anthropic.types.TextBlock)
+                    )
+                )
+                or {}
+            )
+
+        if self.hass.config.country:
+            location_data[CONF_WEB_SEARCH_COUNTRY] = self.hass.config.country
+        location_data[CONF_WEB_SEARCH_TIMEZONE] = self.hass.config.time_zone
+
+        _LOGGER.debug("Location data: %s", location_data)
+
+        return location_data
 
     async_step_user = async_step_set_options
     async_step_reconfigure = async_step_set_options
@@ -273,6 +363,18 @@ def anthropic_config_option_schema(
                 CONF_THINKING_BUDGET,
                 default=RECOMMENDED_THINKING_BUDGET,
             ): int,
+            vol.Optional(
+                CONF_WEB_SEARCH,
+                default=RECOMMENDED_WEB_SEARCH,
+            ): bool,
+            vol.Optional(
+                CONF_WEB_SEARCH_MAX_USES,
+                default=RECOMMENDED_WEB_SEARCH_MAX_USES,
+            ): int,
+            vol.Optional(
+                CONF_WEB_SEARCH_USER_LOCATION,
+                default=RECOMMENDED_WEB_SEARCH_USER_LOCATION,
+            ): bool,
         }
     )
     return schema

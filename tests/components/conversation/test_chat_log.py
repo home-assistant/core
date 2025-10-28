@@ -156,6 +156,106 @@ async def test_multiple_llm_apis(
     assert chat_log.llm_api.api.id == "assist|my-api"
 
 
+async def test_dynamic_time_injection(
+    hass: HomeAssistant, mock_conversation_input: ConversationInput
+) -> None:
+    """Test that dynamic time injection works correctly."""
+
+    class MyAPI(llm.API):
+        """Test API."""
+
+        async def async_get_api_instance(
+            self, llm_context: llm.LLMContext
+        ) -> llm.APIInstance:
+            """Return a list of tools."""
+            return llm.APIInstance(self, "My API Prompt", llm_context, [])
+
+    not_assist_1_api = MyAPI(hass=hass, id="not-assist-1", name="Not Assist 1")
+    llm.async_register_api(hass, not_assist_1_api)
+
+    not_assist_2_api = MyAPI(hass=hass, id="not-assist-2", name="Not Assist 2")
+    llm.async_register_api(hass, not_assist_2_api)
+
+    # Helper to track which prompts are rendered
+    rendered_prompts = []
+
+    async def fake_expand_prompt_template(
+        llm_context, prompt, language, user_name=None
+    ):
+        rendered_prompts.append(prompt)
+        return prompt
+
+    # Case 1: No API used -> prompt should contain the time
+    with (
+        chat_session.async_get_chat_session(hass) as session,
+        async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+    ):
+        chat_log._async_expand_prompt_template = fake_expand_prompt_template
+        rendered_prompts.clear()
+        await chat_log.async_provide_llm_data(
+            mock_conversation_input.as_llm_context("test"),
+            user_llm_hass_api=None,
+            user_llm_prompt=None,
+        )
+        assert llm.DATE_TIME_PROMPT in rendered_prompts
+
+    # Case 2: Single API (not assist) -> prompt should contain the time
+    with (
+        chat_session.async_get_chat_session(hass) as session,
+        async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+    ):
+        chat_log._async_expand_prompt_template = fake_expand_prompt_template
+        rendered_prompts.clear()
+        await chat_log.async_provide_llm_data(
+            mock_conversation_input.as_llm_context("test"),
+            user_llm_hass_api=["not-assist-1"],
+            user_llm_prompt=None,
+        )
+        assert llm.DATE_TIME_PROMPT in rendered_prompts
+
+    # Case 3: Single API (assist) -> prompt should NOT contain the time
+    with (
+        chat_session.async_get_chat_session(hass) as session,
+        async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+    ):
+        chat_log._async_expand_prompt_template = fake_expand_prompt_template
+        rendered_prompts.clear()
+        await chat_log.async_provide_llm_data(
+            mock_conversation_input.as_llm_context("test"),
+            user_llm_hass_api=[llm.LLM_API_ASSIST],
+            user_llm_prompt=None,
+        )
+        assert llm.DATE_TIME_PROMPT not in rendered_prompts
+
+    # Case 4: Merged API (without assist) -> prompt should contain the time
+    with (
+        chat_session.async_get_chat_session(hass) as session,
+        async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+    ):
+        chat_log._async_expand_prompt_template = fake_expand_prompt_template
+        rendered_prompts.clear()
+        await chat_log.async_provide_llm_data(
+            mock_conversation_input.as_llm_context("test"),
+            user_llm_hass_api=["not-assist-1", "not-assist-2"],
+            user_llm_prompt=None,
+        )
+        assert llm.DATE_TIME_PROMPT in rendered_prompts
+
+    # Case 5: Merged API (with assist) -> prompt should NOT contain the time
+    with (
+        chat_session.async_get_chat_session(hass) as session,
+        async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+    ):
+        chat_log._async_expand_prompt_template = fake_expand_prompt_template
+        rendered_prompts.clear()
+        await chat_log.async_provide_llm_data(
+            mock_conversation_input.as_llm_context("test"),
+            user_llm_hass_api=[llm.LLM_API_ASSIST, "not-assist-1"],
+            user_llm_prompt=None,
+        )
+        assert llm.DATE_TIME_PROMPT not in rendered_prompts
+
+
 async def test_template_error(
     hass: HomeAssistant,
     mock_conversation_input: ConversationInput,
