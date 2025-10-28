@@ -1050,7 +1050,7 @@ async def test_entity_id_uses_sub_device_name(
     device_info = {
         "devices": sub_devices,
         "name": "main_device",
-        "friendly_name": None,
+        "friendly_name": "Main Device",
     }
 
     # Create entities that belong to different devices
@@ -1132,7 +1132,7 @@ async def test_entity_id_with_empty_sub_device_name(
     device_info = {
         "devices": sub_devices,
         "name": "main_device",
-        "friendly_name": None,
+        "friendly_name": "Main Device",
     }
 
     # Create entity on sub device with empty name
