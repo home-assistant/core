@@ -645,12 +645,19 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
     __progress_task: asyncio.Task[Any] | None = None
     __no_progress_task_reported = False
     deprecated_show_progress = False
-    _progress_step_data: ProgressStepData[_FlowResultT] = {
-        "tasks": {},
-        "abort_reason": "",
-        "abort_description_placeholders": MappingProxyType({}),
-        "next_step_result": None,
-    }
+    __progress_step_data: ProgressStepData[_FlowResultT] | None = None
+
+    @property
+    def _progress_step_data(self) -> ProgressStepData[_FlowResultT]:
+        """Return progress step data, initializing if needed."""
+        if not self.__progress_step_data:
+            self.__progress_step_data = {
+                "tasks": {},
+                "abort_reason": "",
+                "abort_description_placeholders": MappingProxyType({}),
+                "next_step_result": None,
+            }
+        return self.__progress_step_data
 
     @property
     def source(self) -> str | None:
@@ -777,9 +784,10 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         self, user_input: dict[str, Any] | None = None
     ) -> _FlowResultT:
         """Abort the flow."""
+        progress_step_data = self._progress_step_data
         return self.async_abort(
-            reason=self._progress_step_data["abort_reason"],
-            description_placeholders=self._progress_step_data[
+            reason=progress_step_data["abort_reason"],
+            description_placeholders=progress_step_data[
                 "abort_description_placeholders"
             ],
         )
@@ -795,14 +803,15 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         without using async_show_progress_done.
         If no next step is set, abort the flow.
         """
-        if (next_step_result := self._progress_step_data["next_step_result"]) is None:
+        progress_step_data = self._progress_step_data
+        if (next_step_result := progress_step_data["next_step_result"]) is None:
             return self.async_abort(
-                reason=self._progress_step_data["abort_reason"],
-                description_placeholders=self._progress_step_data[
+                reason=progress_step_data["abort_reason"],
+                description_placeholders=progress_step_data[
                     "abort_description_placeholders"
                 ],
             )
-        self._progress_step_data["next_step_result"] = None
+        progress_step_data["next_step_result"] = None
         return next_step_result
 
     @callback
@@ -1022,9 +1031,9 @@ def progress_step[
             self: FlowHandler[Any, ResultT], *args: P.args, **kwargs: P.kwargs
         ) -> ResultT:
             step_id = func.__name__.replace("async_step_", "")
-
+            progress_step_data = self._progress_step_data
             # Check if we have a progress task running
-            progress_task = self._progress_step_data["tasks"].get(step_id)
+            progress_task = progress_step_data["tasks"].get(step_id)
 
             if progress_task is None:
                 # First call - create and start the progress task
@@ -1032,7 +1041,7 @@ def progress_step[
                     func(self, *args, **kwargs),  # type: ignore[arg-type]
                     f"Progress step {step_id}",
                 )
-                self._progress_step_data["tasks"][step_id] = progress_task
+                progress_step_data["tasks"][step_id] = progress_task
 
                 if not progress_task.done():
                     # Handle description placeholders
@@ -1054,8 +1063,8 @@ def progress_step[
             try:
                 progress_task_result = await progress_task
             except AbortFlow as err:
-                self._progress_step_data["abort_reason"] = err.reason
-                self._progress_step_data["abort_description_placeholders"] = (
+                progress_step_data["abort_reason"] = err.reason
+                progress_step_data["abort_description_placeholders"] = (
                     err.description_placeholders or {}
                 )
                 return self.async_show_progress_done(
@@ -1063,10 +1072,10 @@ def progress_step[
                 )
             finally:
                 # Clean up task reference
-                self._progress_step_data["tasks"].pop(step_id, None)
+                progress_step_data["tasks"].pop(step_id, None)
 
             if progress_task_result["type"] != FlowResultType.SHOW_PROGRESS_DONE:
-                self._progress_step_data["next_step_result"] = progress_task_result
+                progress_step_data["next_step_result"] = progress_task_result
 
             return self.async_show_progress_done(
                 next_step_id="_progress_step_progress_done"
