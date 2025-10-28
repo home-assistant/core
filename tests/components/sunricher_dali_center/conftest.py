@@ -60,8 +60,6 @@ def _create_mock_device(
     device.turn_on = MagicMock()
     device.turn_off = MagicMock()
     device.read_status = MagicMock()
-
-    # Add callback registration support
     device._listeners = {}
 
     def register_listener(
