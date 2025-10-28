@@ -8,7 +8,11 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DEFAULT_NAME, DOMAIN
-from .coordinator import PortainerCoordinator, PortainerCoordinatorData
+from .coordinator import (
+    PortainerBeaconCoordinator,
+    PortainerCoordinator,
+    PortainerCoordinatorData,
+)
 
 
 class PortainerCoordinatorEntity(CoordinatorEntity[PortainerCoordinator]):
@@ -79,3 +83,14 @@ class PortainerContainerEntity(PortainerCoordinatorEntity):
             ),
             translation_key=None if self.device_name else "unknown_container",
         )
+
+
+class PortainerContainerUpdateEntity(PortainerCoordinatorEntity):
+    """Describes a Portainer update entity."""
+
+    def __init__(
+        self,
+        coordinator: PortainerBeaconCoordinator,
+    ) -> None:
+        """Initialize entity."""
+        super().__init__(coordinator)

@@ -30,6 +30,7 @@ type PortainerConfigEntry = ConfigEntry[PortainerCoordinator]
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=60)
+BEACON_SCAN_INTERVAL = timedelta(hours=1)
 
 
 @dataclass
@@ -187,3 +188,113 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
         if new_containers:
             _LOGGER.debug("New containers found: %s", new_containers)
             self.known_containers.update(new_containers)
+
+
+class PortainerBeaconCoordinator(DataUpdateCoordinator):
+    """Data Update Coordinator for Portainer periodic background tasks."""
+
+    config_entry: PortainerConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: PortainerConfigEntry,
+        portainer: Portainer,
+    ) -> None:
+        """Initialize the Portainer Beacon Data Update Coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=f"{DOMAIN}",
+            update_interval=BEACON_SCAN_INTERVAL,
+        )
+        self.portainer = portainer
+
+    async def _async_setup(self):
+        _LOGGER.debug("Setting up Portainer Beacon Coordinator")
+        try:
+            await self.portainer.get_endpoints()
+        except PortainerAuthenticationError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+                translation_placeholders={"error": repr(err)},
+            ) from err
+        except PortainerConnectionError as err:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"error": repr(err)},
+            ) from err
+        except PortainerTimeoutError as err:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="timeout_connect",
+                translation_placeholders={"error": repr(err)},
+            ) from err
+
+    async def _async_update_data(self):
+        """Perform periodic background tasks."""
+        _LOGGER.debug("Performing Portainer Beacon Coordinator background tasks")
+
+        # Check for container image updates
+        try:
+            endpoints = await self.portainer.get_endpoints()
+        except PortainerAuthenticationError as err:
+            _LOGGER.error("Authentication error: %s", repr(err))
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+                translation_placeholders={"error": repr(err)},
+            ) from err
+        except PortainerConnectionError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"error": repr(err)},
+            ) from err
+
+        for endpoint in endpoints:
+            if endpoint.status == ENDPOINT_STATUS_DOWN:
+                _LOGGER.debug(
+                    "Skipping offline endpoint: %s (ID: %d)",
+                    endpoint.name,
+                    endpoint.id,
+                )
+                continue
+
+            try:
+                containers = await self.portainer.get_containers(
+                    endpoint_id=endpoint.id
+                )
+                image_info = []
+                for container in containers:
+                    # image_info = await self.portainer.get_image_information(
+                    #     endpoint_id=endpoint.id, image_id=container.image
+                    # )
+
+                    _LOGGER.debug(
+                        "Container %s (ID: %s) on Endpoint %s (ID: %d) uses image %s with info: %s",
+                        container.names[0],
+                        container.id,
+                        endpoint.name,
+                        endpoint.id,
+                        container.image,
+                        image_info,
+                    )
+            except PortainerConnectionError as err:
+                _LOGGER.exception("Connection error")
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="cannot_connect",
+                    translation_placeholders={"error": repr(err)},
+                ) from err
+            except PortainerAuthenticationError as err:
+                _LOGGER.exception("Authentication error")
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_auth",
+                    translation_placeholders={"error": repr(err)},
+                ) from err
+        _LOGGER.debug("Completed Portainer Beacon Coordinator background tasks")
