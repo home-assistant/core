@@ -1,5 +1,4 @@
 {
-  "title": "Alarm control panel",
   "device_automation": {
     "action_type": {
       "arm_away": "Arm {entity_name} away",
@@ -10,24 +9,24 @@
       "trigger": "Trigger {entity_name}"
     },
     "condition_type": {
-      "is_triggered": "{entity_name} is triggered",
-      "is_disarmed": "{entity_name} is disarmed",
-      "is_armed_home": "{entity_name} is armed home",
       "is_armed_away": "{entity_name} is armed away",
+      "is_armed_home": "{entity_name} is armed home",
       "is_armed_night": "{entity_name} is armed night",
-      "is_armed_vacation": "{entity_name} is armed vacation"
+      "is_armed_vacation": "{entity_name} is armed vacation",
+      "is_disarmed": "{entity_name} is disarmed",
+      "is_triggered": "{entity_name} is triggered"
     },
     "extra_fields": {
       "code": "Code",
       "for": "[%key:common::device_automation::extra_fields::for%]"
     },
     "trigger_type": {
-      "triggered": "{entity_name} triggered",
-      "disarmed": "{entity_name} disarmed",
-      "armed_home": "{entity_name} armed home",
       "armed_away": "{entity_name} armed away",
+      "armed_home": "{entity_name} armed home",
       "armed_night": "{entity_name} armed night",
-      "armed_vacation": "{entity_name} armed vacation"
+      "armed_vacation": "{entity_name} armed vacation",
+      "disarmed": "{entity_name} disarmed",
+      "triggered": "{entity_name} triggered"
     }
   },
   "entity_component": {
@@ -35,106 +34,34 @@
       "name": "[%key:component::alarm_control_panel::title%]",
       "state": {
         "armed": "Armed",
-        "disarmed": "Disarmed",
-        "armed_home": "Armed home",
         "armed_away": "Armed away",
+        "armed_custom_bypass": "Armed custom bypass",
+        "armed_home": "Armed home",
         "armed_night": "Armed night",
         "armed_vacation": "Armed vacation",
-        "armed_custom_bypass": "Armed custom bypass",
-        "pending": "Pending",
         "arming": "Arming",
+        "disarmed": "Disarmed",
         "disarming": "Disarming",
+        "pending": "Pending",
         "triggered": "Triggered"
       },
       "state_attributes": {
-        "code_format": {
-          "name": "Code format",
-          "state": {
-            "text": "Text",
-            "number": "Number"
-          }
-        },
         "changed_by": {
           "name": "Changed by"
         },
         "code_arm_required": {
           "name": "Code for arming",
           "state": {
-            "true": "Required",
-            "false": "Not required"
+            "false": "Not required",
+            "true": "Required"
           }
-        }
-      }
-    }
-  },
-  "services": {
-    "alarm_disarm": {
-      "name": "Disarm",
-      "description": "Disarms the alarm.",
-      "fields": {
-        "code": {
-          "name": "Code",
-          "description": "Code to disarm the alarm."
-        }
-      }
-    },
-    "alarm_arm_custom_bypass": {
-      "name": "Arm with custom bypass",
-      "description": "Arms the alarm while allowing to bypass a custom area.",
-      "fields": {
-        "code": {
-          "name": "[%key:component::alarm_control_panel::services::alarm_disarm::fields::code::name%]",
-          "description": "Code to arm the alarm."
-        }
-      }
-    },
-    "alarm_arm_home": {
-      "name": "Arm home",
-      "description": "Arms the alarm in the home mode.",
-      "fields": {
-        "code": {
-          "name": "[%key:component::alarm_control_panel::services::alarm_disarm::fields::code::name%]",
-          "description": "[%key:component::alarm_control_panel::services::alarm_arm_custom_bypass::fields::code::description%]"
-        }
-      }
-    },
-    "alarm_arm_away": {
-      "name": "Arm away",
-      "description": "Arms the alarm in the away mode.",
-      "fields": {
-        "code": {
-          "name": "[%key:component::alarm_control_panel::services::alarm_disarm::fields::code::name%]",
-          "description": "[%key:component::alarm_control_panel::services::alarm_arm_custom_bypass::fields::code::description%]"
-        }
-      }
-    },
-    "alarm_arm_night": {
-      "name": "Arm night",
-      "description": "Arms the alarm in the night mode.",
-      "fields": {
-        "code": {
-          "name": "[%key:component::alarm_control_panel::services::alarm_disarm::fields::code::name%]",
-          "description": "[%key:component::alarm_control_panel::services::alarm_arm_custom_bypass::fields::code::description%]"
-        }
-      }
-    },
-    "alarm_arm_vacation": {
-      "name": "Arm vacation",
-      "description": "Arms the alarm in the vacation mode.",
-      "fields": {
-        "code": {
-          "name": "[%key:component::alarm_control_panel::services::alarm_disarm::fields::code::name%]",
-          "description": "[%key:component::alarm_control_panel::services::alarm_arm_custom_bypass::fields::code::description%]"
-        }
-      }
-    },
-    "alarm_trigger": {
-      "name": "Trigger",
-      "description": "Triggers the alarm manually.",
-      "fields": {
-        "code": {
-          "name": "[%key:component::alarm_control_panel::services::alarm_disarm::fields::code::name%]",
-          "description": "[%key:component::alarm_control_panel::services::alarm_arm_custom_bypass::fields::code::description%]"
+        },
+        "code_format": {
+          "name": "Code format",
+          "state": {
+            "number": "Number",
+            "text": "Text"
+          }
         }
       }
     }
@@ -143,5 +70,78 @@
     "code_arm_required": {
       "message": "Arming requires a code but none was given for {entity_id}."
     }
-  }
+  },
+  "services": {
+    "alarm_arm_away": {
+      "description": "Arms the alarm in the away mode.",
+      "fields": {
+        "code": {
+          "description": "[%key:component::alarm_control_panel::services::alarm_arm_custom_bypass::fields::code::description%]",
+          "name": "[%key:component::alarm_control_panel::services::alarm_disarm::fields::code::name%]"
+        }
+      },
+      "name": "Arm away"
+    },
+    "alarm_arm_custom_bypass": {
+      "description": "Arms the alarm while allowing to bypass a custom area.",
+      "fields": {
+        "code": {
+          "description": "Code to arm the alarm.",
+          "name": "[%key:component::alarm_control_panel::services::alarm_disarm::fields::code::name%]"
+        }
+      },
+      "name": "Arm with custom bypass"
+    },
+    "alarm_arm_home": {
+      "description": "Arms the alarm in the home mode.",
+      "fields": {
+        "code": {
+          "description": "[%key:component::alarm_control_panel::services::alarm_arm_custom_bypass::fields::code::description%]",
+          "name": "[%key:component::alarm_control_panel::services::alarm_disarm::fields::code::name%]"
+        }
+      },
+      "name": "Arm home"
+    },
+    "alarm_arm_night": {
+      "description": "Arms the alarm in the night mode.",
+      "fields": {
+        "code": {
+          "description": "[%key:component::alarm_control_panel::services::alarm_arm_custom_bypass::fields::code::description%]",
+          "name": "[%key:component::alarm_control_panel::services::alarm_disarm::fields::code::name%]"
+        }
+      },
+      "name": "Arm night"
+    },
+    "alarm_arm_vacation": {
+      "description": "Arms the alarm in the vacation mode.",
+      "fields": {
+        "code": {
+          "description": "[%key:component::alarm_control_panel::services::alarm_arm_custom_bypass::fields::code::description%]",
+          "name": "[%key:component::alarm_control_panel::services::alarm_disarm::fields::code::name%]"
+        }
+      },
+      "name": "Arm vacation"
+    },
+    "alarm_disarm": {
+      "description": "Disarms the alarm.",
+      "fields": {
+        "code": {
+          "description": "Code to disarm the alarm.",
+          "name": "Code"
+        }
+      },
+      "name": "Disarm"
+    },
+    "alarm_trigger": {
+      "description": "Triggers the alarm manually.",
+      "fields": {
+        "code": {
+          "description": "[%key:component::alarm_control_panel::services::alarm_arm_custom_bypass::fields::code::description%]",
+          "name": "[%key:component::alarm_control_panel::services::alarm_disarm::fields::code::name%]"
+        }
+      },
+      "name": "Trigger"
+    }
+  },
+  "title": "Alarm control panel"
 }
