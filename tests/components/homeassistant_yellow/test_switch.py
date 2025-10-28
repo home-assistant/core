@@ -47,6 +47,7 @@ TEST_MANIFEST = FirmwareManifest(
 )
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     ("service", "target_state", "expected_prerelease"),
     [
