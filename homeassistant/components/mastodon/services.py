@@ -15,6 +15,7 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from .const import (
     ATTR_CONTENT_WARNING,
+    ATTR_LANGUAGE,
     ATTR_MEDIA,
     ATTR_MEDIA_DESCRIPTION,
     ATTR_MEDIA_WARNING,
@@ -42,6 +43,7 @@ SERVICE_POST_SCHEMA = vol.Schema(
         vol.Required(ATTR_STATUS): str,
         vol.Optional(ATTR_VISIBILITY): vol.In([x.lower() for x in StatusVisibility]),
         vol.Optional(ATTR_CONTENT_WARNING): str,
+        vol.Optional(ATTR_LANGUAGE): str,
         vol.Optional(ATTR_MEDIA): str,
         vol.Optional(ATTR_MEDIA_DESCRIPTION): str,
         vol.Optional(ATTR_MEDIA_WARNING): bool,
@@ -82,6 +84,7 @@ def setup_services(hass: HomeAssistant) -> None:
             else None
         )
         spoiler_text: str | None = call.data.get(ATTR_CONTENT_WARNING)
+        language: str | None = call.data.get(ATTR_LANGUAGE)
         media_path: str | None = call.data.get(ATTR_MEDIA)
         media_description: str | None = call.data.get(ATTR_MEDIA_DESCRIPTION)
         media_warning: str | None = call.data.get(ATTR_MEDIA_WARNING)
@@ -93,6 +96,7 @@ def setup_services(hass: HomeAssistant) -> None:
                 status=status,
                 visibility=visibility,
                 spoiler_text=spoiler_text,
+                language=language,
                 media_path=media_path,
                 media_description=media_description,
                 sensitive=media_warning,

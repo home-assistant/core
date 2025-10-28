@@ -187,13 +187,15 @@ def mock_client(mock_device_info) -> Generator[APIClient]:
         zeroconf_instance: Zeroconf = None,
         noise_psk: str | None = None,
         expected_name: str | None = None,
-    ):
+        timezone: str | None = None,
+    ) -> None:
         """Fake the client constructor."""
         mock_client.host = address
         mock_client.port = port
         mock_client.password = password
         mock_client.zeroconf_instance = zeroconf_instance
         mock_client.noise_psk = noise_psk
+        mock_client.timezone = timezone
         return mock_client
 
     mock_client.side_effect = mock_constructor

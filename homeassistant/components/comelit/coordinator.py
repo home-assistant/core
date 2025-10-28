@@ -161,7 +161,7 @@ class ComelitSerialBridge(
         entry: ComelitConfigEntry,
         host: str,
         port: int,
-        pin: int,
+        pin: str,
         session: ClientSession,
     ) -> None:
         """Initialize the scanner."""
@@ -195,7 +195,7 @@ class ComelitVedoSystem(ComelitBaseCoordinator[AlarmDataObject]):
         entry: ComelitConfigEntry,
         host: str,
         port: int,
-        pin: int,
+        pin: str,
         session: ClientSession,
     ) -> None:
         """Initialize the scanner."""

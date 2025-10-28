@@ -43,7 +43,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         )
 
         entities = await service.async_extract_entities(
-            hass, platform_entities.values(), service_call
+            platform_entities.values(), service_call
         )
 
         if not entities:

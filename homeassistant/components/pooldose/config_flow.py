@@ -7,11 +7,13 @@ from typing import Any
 
 from pooldose.client import PooldoseClient
 from pooldose.request_status import RequestStatus
+from pooldose.type_definitions import APIVersionResponse
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_MAC
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import DOMAIN
@@ -31,15 +33,16 @@ class PooldoseConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     def __init__(self) -> None:
-        """Initialize the config flow and store the discovered IP address."""
+        """Initialize the config flow and store the discovered IP address and MAC."""
         super().__init__()
         self._discovered_ip: str | None = None
+        self._discovered_mac: str | None = None
 
     async def _validate_host(
         self, host: str
-    ) -> tuple[str | None, dict[str, str] | None, dict[str, str] | None]:
+    ) -> tuple[str | None, APIVersionResponse | None, dict[str, str] | None]:
         """Validate the host and return (serial_number, api_versions, errors)."""
-        client = PooldoseClient(host)
+        client = PooldoseClient(host, websession=async_get_clientsession(self.hass))
         client_status = await client.connect()
         if client_status == RequestStatus.HOST_UNREACHABLE:
             return None, None, {"base": "cannot_connect"}
@@ -71,13 +74,20 @@ class PooldoseConfigFlow(ConfigFlow, domain=DOMAIN):
         if not serial_number:
             return self.async_abort(reason="no_serial_number")
 
-        await self.async_set_unique_id(serial_number)
+        # If an existing entry is found
+        existing_entry = await self.async_set_unique_id(serial_number)
+        if existing_entry:
+            # Only update the MAC if it's not already set
+            if CONF_MAC not in existing_entry.data:
+                self.hass.config_entries.async_update_entry(
+                    existing_entry,
+                    data={**existing_entry.data, CONF_MAC: discovery_info.macaddress},
+                )
+            self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
 
-        # Conditionally update IP and abort if entry exists
-        self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
-
-        # Continue with new device flow
+        # Else: Continue with new flow
         self._discovered_ip = discovery_info.ip
+        self._discovered_mac = discovery_info.macaddress
         return self.async_show_form(
             step_id="dhcp_confirm",
             description_placeholders={
@@ -91,10 +101,12 @@ class PooldoseConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Create the entry after the confirmation dialog."""
-        discovered_ip = self._discovered_ip
         return self.async_create_entry(
             title=f"PoolDose {self.unique_id}",
-            data={CONF_HOST: discovered_ip},
+            data={
+                CONF_HOST: self._discovered_ip,
+                CONF_MAC: self._discovered_mac,
+            },
         )
 
     async def async_step_user(
@@ -114,7 +126,14 @@ class PooldoseConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id="user",
                 data_schema=SCHEMA_DEVICE,
                 errors=errors,
-                description_placeholders=api_versions,
+                # Handle API version info for error display; pass version info when available
+                # or None when api_versions is None to avoid displaying version details
+                description_placeholders={
+                    "api_version_is": api_versions.get("api_version_is") or "",
+                    "api_version_should": api_versions.get("api_version_should") or "",
+                }
+                if api_versions
+                else None,
             )
 
         await self.async_set_unique_id(serial_number, raise_on_progress=False)

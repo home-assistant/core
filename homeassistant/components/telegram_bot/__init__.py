@@ -8,6 +8,7 @@ from types import ModuleType
 from typing import Any
 
 from telegram import Bot
+from telegram.constants import InputMediaType
 from telegram.error import InvalidToken, TelegramError
 import voluptuous as vol
 
@@ -52,6 +53,7 @@ from .const import (
     ATTR_IS_BIG,
     ATTR_KEYBOARD,
     ATTR_KEYBOARD_INLINE,
+    ATTR_MEDIA_TYPE,
     ATTR_MESSAGE,
     ATTR_MESSAGE_TAG,
     ATTR_MESSAGE_THREAD_ID,
@@ -98,6 +100,7 @@ from .const import (
     SERVICE_DELETE_MESSAGE,
     SERVICE_EDIT_CAPTION,
     SERVICE_EDIT_MESSAGE,
+    SERVICE_EDIT_MESSAGE_MEDIA,
     SERVICE_EDIT_REPLYMARKUP,
     SERVICE_LEAVE_CHAT,
     SERVICE_SEND_ANIMATION,
@@ -233,6 +236,35 @@ SERVICE_SCHEMA_EDIT_MESSAGE = SERVICE_SCHEMA_SEND_MESSAGE.extend(
     }
 )
 
+SERVICE_SCHEMA_EDIT_MESSAGE_MEDIA = vol.Schema(
+    {
+        vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
+        vol.Required(ATTR_MESSAGEID): vol.Any(
+            cv.positive_int, vol.All(cv.string, "last")
+        ),
+        vol.Required(ATTR_CHAT_ID): vol.Coerce(int),
+        vol.Optional(ATTR_TIMEOUT): cv.positive_int,
+        vol.Optional(ATTR_CAPTION): cv.string,
+        vol.Required(ATTR_MEDIA_TYPE): vol.In(
+            (
+                str(InputMediaType.ANIMATION),
+                str(InputMediaType.AUDIO),
+                str(InputMediaType.VIDEO),
+                str(InputMediaType.DOCUMENT),
+                str(InputMediaType.PHOTO),
+            )
+        ),
+        vol.Optional(ATTR_URL): cv.string,
+        vol.Optional(ATTR_FILE): cv.string,
+        vol.Optional(ATTR_USERNAME): cv.string,
+        vol.Optional(ATTR_PASSWORD): cv.string,
+        vol.Optional(ATTR_AUTHENTICATION): cv.string,
+        vol.Optional(ATTR_VERIFY_SSL): cv.boolean,
+        vol.Optional(ATTR_KEYBOARD_INLINE): cv.ensure_list,
+    },
+    extra=vol.ALLOW_EXTRA,
+)
+
 SERVICE_SCHEMA_EDIT_CAPTION = vol.Schema(
     {
         vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
@@ -311,6 +343,7 @@ SERVICE_MAP = {
     SERVICE_SEND_LOCATION: SERVICE_SCHEMA_SEND_LOCATION,
     SERVICE_SEND_POLL: SERVICE_SCHEMA_SEND_POLL,
     SERVICE_EDIT_MESSAGE: SERVICE_SCHEMA_EDIT_MESSAGE,
+    SERVICE_EDIT_MESSAGE_MEDIA: SERVICE_SCHEMA_EDIT_MESSAGE_MEDIA,
     SERVICE_EDIT_CAPTION: SERVICE_SCHEMA_EDIT_CAPTION,
     SERVICE_EDIT_REPLYMARKUP: SERVICE_SCHEMA_EDIT_REPLYMARKUP,
     SERVICE_ANSWER_CALLBACK_QUERY: SERVICE_SCHEMA_ANSWER_CALLBACK_QUERY,
@@ -435,6 +468,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             await notify_service.leave_chat(context=service.context, **kwargs)
         elif msgtype == SERVICE_SET_MESSAGE_REACTION:
             await notify_service.set_message_reaction(context=service.context, **kwargs)
+        elif msgtype == SERVICE_EDIT_MESSAGE_MEDIA:
+            await notify_service.edit_message_media(context=service.context, **kwargs)
         else:
             await notify_service.edit_message(
                 msgtype, context=service.context, **kwargs
