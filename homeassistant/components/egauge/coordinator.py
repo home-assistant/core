@@ -62,7 +62,7 @@ class EgaugeDataCoordinator(DataUpdateCoordinator[EgaugeData]):
             ),
         )
         # Populated on first refresh
-        self._register_info: dict[str, RegisterInfo] | None = None
+        self._register_info: dict[str, RegisterInfo] = {}
 
     async def _async_update_data(self) -> EgaugeData:
         """Fetch data from eGauge device."""
