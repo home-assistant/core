@@ -96,6 +96,66 @@
       },
       "throughput_network_out": {
         "name": "Network throughput out {interface}"
+      },
+      "memory_pressure_some_avg10": {
+        "name": "Memory Pressure Some 10s Average"
+      },
+      "memory_pressure_some_avg60": {
+        "name": "Memory Pressure Some 60s Average"
+      },
+      "memory_pressure_some_avg300": {
+        "name": "Memory Pressure Some 300s Average"
+      },
+      "memory_pressure_some_total": {
+        "name": "Memory Pressure Some Total"
+      },
+      "memory_pressure_full_avg10": {
+        "name": "Memory Pressure Full 10s Average"
+      },
+      "memory_pressure_full_avg60": {
+        "name": "Memory Pressure Full 60s Average"
+      },
+      "memory_pressure_full_avg300": {
+        "name": "Memory Pressure Full 300s Average"
+      },
+      "memory_pressure_full_total": {
+        "name": "Memory Pressure Full Total"
+      },
+      "io_pressure_some_avg10": {
+        "name": "IO Pressure Some 10s Average"
+      },
+      "io_pressure_some_avg60": {
+        "name": "IO Pressure Some 60s Average"
+      },
+      "io_pressure_some_avg300": {
+        "name": "IO Pressure Some 300s Average"
+      },
+      "io_pressure_some_total": {
+        "name": "IO Pressure Some Total"
+      },
+      "io_pressure_full_avg10": {
+        "name": "IO Pressure Full 10s Average"
+      },
+      "io_pressure_full_avg60": {
+        "name": "IO Pressure Full 60s Average"
+      },
+      "io_pressure_full_avg300": {
+        "name": "IO Pressure Full 300s Average"
+      },
+      "io_pressure_full_total": {
+        "name": "IO Pressure Full Total"
+      },
+      "cpu_pressure_some_avg10": {
+        "name": "CPU Pressure Some 10s Average"
+      },
+      "cpu_pressure_some_avg60": {
+        "name": "CPU Pressure Some 60s Average"
+      },
+      "cpu_pressure_some_avg300": {
+        "name": "CPU Pressure Some 300s Average"
+      },
+      "cpu_pressure_some_total": {
+        "name": "CPU Pressure Some Total"
       }
     }
   },
