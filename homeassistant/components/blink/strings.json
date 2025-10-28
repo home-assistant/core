@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -16,6 +17,14 @@
         },
         "description": "Enter the PIN sent via email or SMS",
         "title": "Two-factor authentication"
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "description": "The credentials for {username} need to be updated",
+        "title": "Re-authenticate Blink"
       },
       "user": {
         "data": {
@@ -73,6 +82,9 @@
     },
     "not_loaded": {
       "message": "{target} is not loaded."
+    },
+    "service_removed": {
+      "message": "The service {service_name} has been removed and is no longer needed. Home Assistant will automatically prompt for reauthentication when required."
     }
   },
   "issues": {
@@ -86,6 +98,10 @@
         }
       },
       "title": "Blink update service is being removed"
+    },
+    "service_send_pin_deprecation": {
+      "description": "The service {service_name} has been removed and is no longer needed. When a new two-factor authentication code is required, Home Assistant will automatically prompt you to reauthenticate through the integration configuration. Please remove any automations or scripts that call this service.",
+      "title": "Blink send PIN service has been removed"
     }
   },
   "options": {
