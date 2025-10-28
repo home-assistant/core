@@ -1167,7 +1167,7 @@ hass-splunk==0.1.1
 
 # homeassistant.components.assist_satellite
 # homeassistant.components.conversation
-hassil==3.2.0
+hassil==3.3.0
 
 # homeassistant.components.jewish_calendar
 hdate[astral]==1.1.2
@@ -2195,7 +2195,7 @@ pymeteoclimatic==0.1.0
 pymicro-vad==1.0.1
 
 # homeassistant.components.miele
-pymiele==0.5.5
+pymiele==0.5.6
 
 # homeassistant.components.xiaomi_tv
 pymitv==1.4.3
@@ -2565,7 +2565,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==3.3.3
+python-roborock==3.7.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.44
