@@ -13,6 +13,9 @@
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
         },
+        "data_description": {
+          "password": "[%key:component::transmission::config::step::user::data_description::password%]"
+        },
         "description": "The password for {username} is invalid.",
         "title": "[%key:common::config_flow::title::reauth%]"
       },
@@ -26,8 +29,12 @@
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
-<<<<<<< HEAD
-          "path": "The RPC request target path. E.g. `/transmission/rpc`"
+          "host": "The hostname or IP address of the Transmission instance.",
+          "password": "The password to authenticate with the Transmission instance, if set.",
+          "path": "The RPC request target path, for example, `/transmission/rpc`.",
+          "port": "The port number of the Transmission instance.",
+          "ssl": "Whether to verify SSL certificates. Disable this for self-signed certificates.",
+          "username": "The username to authenticate with the Transmission instance, if set."
         },
         "title": "Set up Transmission client"
       }
@@ -69,25 +76,6 @@
       },
       "upload_speed": {
         "name": "Upload speed"
-=======
-          "host": "The hostname or IP address of the Transmission instance.",
-          "password": "The password to authenticate with the Transmission instance, if set.",
-          "path": "The RPC request target path, for example, `/transmission/rpc`.",
-          "port": "The port number of the Transmission instance.",
-          "ssl": "Whether to verify SSL certificates. Disable this for self-signed certificates.",
-          "username": "The username to authenticate with the Transmission instance, if set."
-        }
-      },
-      "reauth_confirm": {
-        "description": "The password for {username} is invalid.",
-        "title": "[%key:common::config_flow::title::reauth%]",
-        "data": {
-          "password": "[%key:common::config_flow::data::password%]"
-        },
-        "data_description": {
-          "password": "[%key:component::transmission::config::step::user::data_description::password%]"
-        }
->>>>>>> 6ca862da155 (Add descriptions and selector options to strings)
       }
     },
     "switch": {
@@ -113,66 +101,16 @@
       }
     }
   },
-<<<<<<< HEAD
-=======
   "selector": {
     "order": {
       "options": {
+        "best_ratio_first": "Best ratio first",
         "newest_first": "Newest first",
         "oldest_first": "Oldest first",
-        "best_ratio_first": "Best ratio first",
         "worst_ratio_first": "Worst ratio first"
       }
     }
   },
-  "entity": {
-    "sensor": {
-      "download_speed": {
-        "name": "Download speed"
-      },
-      "upload_speed": {
-        "name": "Upload speed"
-      },
-      "transmission_status": {
-        "name": "Status",
-        "state": {
-          "idle": "[%key:common::state::idle%]",
-          "up_down": "Up/Down",
-          "seeding": "Seeding",
-          "downloading": "Downloading"
-        }
-      },
-      "active_torrents": {
-        "name": "Active torrents",
-        "unit_of_measurement": "torrents"
-      },
-      "paused_torrents": {
-        "name": "Paused torrents",
-        "unit_of_measurement": "[%key:component::transmission::entity::sensor::active_torrents::unit_of_measurement%]"
-      },
-      "total_torrents": {
-        "name": "Total torrents",
-        "unit_of_measurement": "[%key:component::transmission::entity::sensor::active_torrents::unit_of_measurement%]"
-      },
-      "completed_torrents": {
-        "name": "Completed torrents",
-        "unit_of_measurement": "[%key:component::transmission::entity::sensor::active_torrents::unit_of_measurement%]"
-      },
-      "started_torrents": {
-        "name": "Started torrents",
-        "unit_of_measurement": "[%key:component::transmission::entity::sensor::active_torrents::unit_of_measurement%]"
-      }
-    },
-    "switch": {
-      "on_off": {
-        "name": "Switch"
-      },
-      "turtle_mode": {
-        "name": "Turtle mode"
-      }
-    }
-  },
->>>>>>> 6ca862da155 (Add descriptions and selector options to strings)
   "services": {
     "add_torrent": {
       "description": "Adds a new torrent to download (URL, magnet link or Base64 encoded).",
