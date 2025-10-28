@@ -19,8 +19,8 @@ async def test_unique_id_new_entry(
 ) -> None:
     """Test unique ID for a newly added device is correct."""
     entry = MockConfigEntry(domain=DOMAIN, data=VALID_CONFIG, entry_id=ENTRY_ID)
+    hass.config.internal_url = "http://localhost:8123"
     entry.add_to_hass(hass)
-
     with (
         # Mock a valid camera instance"
         patch("homeassistant.components.foscam.FoscamCamera") as mock_foscam_camera,
@@ -46,6 +46,7 @@ async def test_switch_unique_id_migration_ok(
     entry = MockConfigEntry(
         domain=DOMAIN, data=VALID_CONFIG, entry_id=ENTRY_ID, version=1
     )
+    hass.config.internal_url = "http://localhost:8123"
     entry.add_to_hass(hass)
 
     entity_before = entity_registry.async_get_or_create(
@@ -83,6 +84,7 @@ async def test_unique_id_migration_not_needed(
 ) -> None:
     """Test that the unique ID for a sleep switch is not executed if already in right format."""
     entry = MockConfigEntry(domain=DOMAIN, data=VALID_CONFIG, entry_id=ENTRY_ID)
+    hass.config.internal_url = "http://localhost:8123"
     entry.add_to_hass(hass)
 
     entity_registry.async_get_or_create(

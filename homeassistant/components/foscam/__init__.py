@@ -1,7 +1,13 @@
 """The foscam component."""
 
-from libpyfoscamcgi import FoscamCamera
+from http import HTTPStatus
 
+from aiohttp.web import Request, Response
+from libpyfoscamcgi import FoscamCamera
+import voluptuous as vol
+
+from homeassistant.components import webhook
+from homeassistant.components.webhook import async_generate_id, async_generate_url
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -10,13 +16,36 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
 
 from .config_flow import DEFAULT_RTSP_PORT
-from .const import CONF_RTSP_PORT, LOGGER
+from .const import CONF_RTSP_PORT, DOMAIN, LOGGER, VALUE1, VALUE2, VALUE3
 from .coordinator import FoscamConfigEntry, FoscamCoordinator
 
-PLATFORMS = [Platform.CAMERA, Platform.NUMBER, Platform.SWITCH]
+PLATFORMS = [Platform.CAMERA, Platform.EVENT, Platform.NUMBER, Platform.SWITCH]
+WEBHOOK_SCHEMA = vol.Schema(
+    {
+        vol.Required(VALUE1): str,
+        vol.Required(VALUE2): str,
+        vol.Required(VALUE3): str,
+    }
+)
+
+
+async def handle_webhook(
+    hass: HomeAssistant, webhook_id: str, request: Request
+) -> Response:
+    """Handle foscam webhook request."""
+    try:
+        data = WEBHOOK_SCHEMA(await request.json())
+    except vol.MultipleInvalid as error:
+        return Response(
+            text=error.error_message, status=HTTPStatus.UNPROCESSABLE_ENTITY
+        )
+
+    async_dispatcher_send(hass, DOMAIN, webhook_id, data)
+    return Response(status=HTTPStatus.OK)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: FoscamConfigEntry) -> bool:
@@ -31,6 +60,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: FoscamConfigEntry) -> bo
     )
 
     coordinator = FoscamCoordinator(hass, entry, session)
+    WEBHOOK_ID = async_generate_id()
+    webhook.async_register(hass, DOMAIN, entry.title, WEBHOOK_ID, handle_webhook)
+    webhook_url = async_generate_url(hass, WEBHOOK_ID)
+    await hass.async_add_executor_job(
+        coordinator.session.setAlarmHttpServer, webhook_url
+    )
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator

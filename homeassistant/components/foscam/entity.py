@@ -18,7 +18,6 @@ class FoscamEntity(CoordinatorEntity[FoscamCoordinator]):
     def __init__(self, coordinator: FoscamCoordinator, config_entry_id: str) -> None:
         """Initialize the base Foscam entity."""
         super().__init__(coordinator)
-
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, config_entry_id)},
             manufacturer="Foscam",
