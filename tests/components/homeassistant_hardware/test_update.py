@@ -9,9 +9,7 @@ import logging
 from unittest.mock import Mock, patch
 
 import aiohttp
-from ha_silabs_firmware_client import FirmwareManifest, FirmwareMetadata
 import pytest
-from yarl import URL
 
 from homeassistant.components.homeassistant_hardware.coordinator import (
     FirmwareUpdateCoordinator,
@@ -47,7 +45,8 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
+
+from .common import TEST_DOMAIN, TEST_FIRMWARE_RELEASES_URL, TEST_MANIFEST
 
 from tests.common import (
     MockConfigEntry,
@@ -60,32 +59,8 @@ from tests.common import (
     mock_restore_cache_with_extra_data,
 )
 
-TEST_DOMAIN = "test"
 TEST_DEVICE = "/dev/serial/by-id/some-unique-serial-device-12345"
-TEST_FIRMWARE_RELEASES_URL = "https://example.org/firmware"
 TEST_UPDATE_ENTITY_ID = "update.mock_name_firmware"
-TEST_MANIFEST = FirmwareManifest(
-    url=URL("https://example.org/firmware"),
-    html_url=URL("https://example.org/release_notes"),
-    created_at=dt_util.utcnow(),
-    firmwares=(
-        FirmwareMetadata(
-            filename="skyconnect_zigbee_ncp_test.gbl",
-            checksum="aaa",
-            size=123,
-            release_notes="Some release notes go here",
-            metadata={
-                "baudrate": 115200,
-                "ezsp_version": "7.4.4.0",
-                "fw_type": "zigbee_ncp",
-                "fw_variant": None,
-                "metadata_version": 2,
-                "sdk_version": "4.4.4",
-            },
-            url=URL("https://example.org/firmwares/skyconnect_zigbee_ncp_test.gbl"),
-        ),
-    ),
-)
 
 
 TEST_FIRMWARE_ENTITY_DESCRIPTIONS: dict[
