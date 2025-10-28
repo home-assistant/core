@@ -3,21 +3,27 @@
 import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
+import logging
 
 from roborock.data import RoborockDockDustCollectionModeCode
 from roborock.devices.traits.v1 import PropertiesApi
+from roborock.devices.traits.v1.home import HomeTrait
+from roborock.devices.traits.v1.maps import MapsTrait
+from roborock.exceptions import RoborockException
 from roborock.roborock_typing import RoborockCommand
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import MAP_SLEEP
+from .const import DOMAIN, MAP_SLEEP
 from .coordinator import RoborockConfigEntry, RoborockDataUpdateCoordinator
 from .entity import RoborockCoordinatedEntityV1
 
 PARALLEL_UPDATES = 0
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -45,7 +51,7 @@ SELECT_DESCRIPTIONS: list[RoborockSelectDescription] = [
         key="water_box_mode",
         translation_key="mop_intensity",
         api_command=RoborockCommand.SET_WATER_BOX_CUSTOM_MODE,
-        value_fn=lambda api: api.status.water_box_mode.name,
+        value_fn=lambda api: api.status.water_box_mode_name,
         entity_category=EntityCategory.CONFIG,
         options_lambda=lambda api: api.status.water_box_mode.keys()
         if api.status.water_box_mode is not None
@@ -67,7 +73,7 @@ SELECT_DESCRIPTIONS: list[RoborockSelectDescription] = [
         key="dust_collection_mode",
         translation_key="dust_collection_mode",
         api_command=RoborockCommand.SET_DUST_COLLECTION_MODE,
-        value_fn=lambda api: api.dust_collection_mode.mode.name,  # type: ignore[attr-defined]
+        value_fn=lambda api: api.dust_collection_mode.mode.name,  # type: ignore[union-attr]
         entity_category=EntityCategory.CONFIG,
         options_lambda=lambda api: RoborockDockDustCollectionModeCode.keys()
         if api.dust_collection_mode is not None
@@ -96,9 +102,11 @@ async def async_setup_entry(
     )
     async_add_entities(
         RoborockCurrentMapSelectEntity(
-            f"selected_map_{coordinator.duid_slug}", coordinator
+            f"selected_map_{coordinator.duid_slug}", coordinator, home_trait, map_trait
         )
         for coordinator in config_entry.runtime_data.v1
+        if (home_trait := coordinator.properties_api.home) is not None
+        if (map_trait := coordinator.properties_api.maps) is not None
     )
 
 
@@ -143,32 +151,61 @@ class RoborockCurrentMapSelectEntity(RoborockCoordinatedEntityV1, SelectEntity):
     _attr_entity_category = EntityCategory.CONFIG
     _attr_translation_key = "selected_map"
 
+    def __init__(
+        self,
+        unique_id: str,
+        coordinator: RoborockDataUpdateCoordinator,
+        home_trait: HomeTrait,
+        maps_trait: MapsTrait,
+    ) -> None:
+        """Create a select entity to choose the current map."""
+        super().__init__(unique_id, coordinator)
+        self._home_trait = home_trait
+        self._maps_trait = maps_trait
+
+    @property
+    def _available_map_names(self) -> dict[int, str]:
+        """Get the available maps by map id."""
+        return {
+            map_id: map_.name or f"Map {map_id}"
+            for map_id, map_ in (self._home_trait.home_map_info or {}).items()
+        }
+
     async def async_select_option(self, option: str) -> None:
         """Set the option."""
-        maps_trait = self.coordinator.properties_api.maps
-        for map_id, map_ in self.coordinator.maps.items():
-            if map_.name == option:
-                await maps_trait.set_current_map(map_id)
-                # Update the current map id manually so that nothing gets broken
-                # if another service hits the api.
-                self.coordinator.current_map = map_id
+        for map_id, map_name in self._available_map_names.items():
+            if map_name == option:
+                try:
+                    await self._maps_trait.set_current_map(map_id)
+                except RoborockException as err:
+                    raise HomeAssistantError(
+                        translation_domain=DOMAIN,
+                        translation_key="command_failed",
+                        translation_placeholders={
+                            "command": "load_multi_map",
+                        },
+                    ) from err
                 # We need to wait after updating the map
                 # so that other commands will be executed correctly.
                 await asyncio.sleep(MAP_SLEEP)
-                await self.coordinator.async_refresh()
+                try:
+                    await self._home_trait.refresh()
+                except RoborockException as err:
+                    raise HomeAssistantError(
+                        translation_domain=DOMAIN,
+                        translation_key="update_data_fail",
+                    ) from err
                 break
 
     @property
     def options(self) -> list[str]:
         """Gets all of the names of rooms that we are currently aware of."""
-        return [roborock_map.name for roborock_map in self.coordinator.maps.values()]
+        return list(self._available_map_names.values())
 
     @property
     def current_option(self) -> str | None:
         """Get the current status of the select entity from device_status."""
-        if (
-            (current_map := self.coordinator.current_map) is not None
-            and current_map in self.coordinator.maps
-        ):  # 63 means it is searching for a map.
-            return self.coordinator.maps[current_map].name
+        _LOGGER.info("Current map data: %s", self._home_trait.current_map_data)
+        if current_map_info := self._home_trait.current_map_data:
+            return current_map_info.name or f"Map {current_map_info.map_flag}"
         return None

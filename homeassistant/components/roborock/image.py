@@ -3,6 +3,9 @@
 from datetime import datetime
 import logging
 
+from roborock.devices.traits.v1.home import HomeTrait
+from roborock.devices.traits.v1.map_content import MapContent
+
 from homeassistant.components.image import ImageEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
@@ -30,12 +33,13 @@ async def async_setup_entry(
                 config_entry,
                 f"{coord.duid_slug}_map_{map_info.name}",
                 coord,
+                coord.properties_api.home,
                 map_info.map_flag,
                 map_info.name,
             )
             for coord in config_entry.runtime_data.v1
-            if coord.properties_api.home.home_map_info is not None
-            for map_info in coord.properties_api.home.home_map_info.values()
+            if coord.properties_api.home is not None
+            for map_info in (coord.properties_api.home.home_map_info or {}).values()
         ),
     )
 
@@ -52,6 +56,7 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
         config_entry: ConfigEntry,
         unique_id: str,
         coordinator: RoborockDataUpdateCoordinator,
+        home_trait: HomeTrait,
         map_flag: int,
         map_name: str,
     ) -> None:
@@ -60,33 +65,40 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
         ImageEntity.__init__(self, coordinator.hass)
         self.config_entry = config_entry
         self._attr_name = map_name
+        self._home_trait = home_trait
         self.map_flag = map_flag
-        self.cached_map = b""
+        self.cached_map: bytes | None = None
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
-
-    @property
-    def is_selected(self) -> bool:
-        """Return if this map is the currently selected map."""
-        return self.map_flag == self.coordinator.current_map
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass load any previously cached maps from disk."""
         await super().async_added_to_hass()
-        self._attr_image_last_updated = self.coordinator.maps[
-            self.map_flag
-        ].last_updated
+        self._attr_image_last_updated = self.coordinator.last_home_update
         self.async_write_ha_state()
 
+    @property
+    def _map_content(self) -> MapContent | None:
+        if self._home_trait.home_map_content and (
+            map_content := self._home_trait.home_map_content.get(self.map_flag)
+        ):
+            return map_content
+        return None
+
     def _handle_coordinator_update(self) -> None:
-        # If the coordinator has updated the map, we can update the image.
-        self._attr_image_last_updated = self.coordinator.maps[
-            self.map_flag
-        ].last_updated
+        """Handle updated data from the coordinator.
+
+        If the coordinator has updated the map, we can update the image.
+        """
+        if (map_content := self._map_content) is None:
+            return
+        if self.cached_map != map_content.image_content:
+            self.cached_map = map_content.image_content
+            self._attr_image_last_updated = self.coordinator.last_home_update
 
         super()._handle_coordinator_update()
 
     async def async_image(self) -> bytes | None:
         """Get the cached image."""
-        if (map_info := self.coordinator.maps.get(self.map_flag)) is None:
+        if (map_content := self._map_content) is None:
             raise ValueError("Map flag not found in coordinator maps")
-        return map_info.image
+        return map_content.image_content

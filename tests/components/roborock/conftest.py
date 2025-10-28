@@ -23,6 +23,7 @@ from roborock.data import (
     ZeoState,
 )
 from roborock.devices.device import RoborockDevice
+from roborock.devices.traits.v1.map_content import MapContent
 from roborock.devices.traits.v1.volume import SoundVolume
 from roborock.roborock_message import RoborockDyadDataProtocol, RoborockZeoProtocol
 
@@ -202,8 +203,15 @@ def create_v1_properties(network_info: NetworkInfo) -> Mock:
         )
         for map_data in MULTI_MAP_LIST.map_info
     }
+    home_map_content = {
+        map_data.map_flag: MapContent(
+            image_content=b"\x89PNG-001", map_data=deepcopy(MAP_DATA)
+        )
+        for map_data in MULTI_MAP_LIST.map_info
+    }
     v1_properties.home.home_map_info = home_map_info
     v1_properties.home.current_map_data = home_map_info[STATUS.current_map]
+    v1_properties.home.home_map_content = home_map_content
     v1_properties.home.refresh = AsyncMock()
     v1_properties.network_info = deepcopy(network_info)
     v1_properties.network_info.refresh = AsyncMock()

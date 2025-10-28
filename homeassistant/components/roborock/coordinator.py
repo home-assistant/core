@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-import asyncio
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 from typing import Any, TypeVar
 
@@ -19,7 +18,6 @@ from roborock.roborock_message import RoborockDyadDataProtocol, RoborockZeoProto
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_CONNECTIONS
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.typing import StateType
@@ -35,8 +33,7 @@ from .const import (
     V1_LOCAL_IN_CLEANING_INTERVAL,
     V1_LOCAL_NOT_CLEANING_INTERVAL,
 )
-from .models import DeviceState, RoborockMapInfo
-from .roborock_storage import RoborockMapStorage
+from .models import DeviceState
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -94,17 +91,13 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState]):
             model_id=self._device.product.model,
             sw_version=self._device.device_info.fv,
         )
-        self.current_map: int | None = None
         if mac := properties_api.network_info.mac:
             self.device_info[ATTR_CONNECTIONS] = {
                 (dr.CONNECTION_NETWORK_MAC, dr.format_mac(mac))
             }
-        # Maps from map flag to map name
-        self.maps: dict[int, RoborockMapInfo] = {}
-        self.map_storage = RoborockMapStorage(
-            hass, self.config_entry.entry_id, self.duid_slug
-        )
         self.last_update_state: str | None = None
+        self._last_home_update_attempt: datetime | None = None
+        self.last_home_update: datetime | None = None
 
     @cached_property
     def dock_device_info(self) -> DeviceInfo:
@@ -129,62 +122,17 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState]):
         # home and cache the detail. The device can only load information for
         # the current map so from here forward.
         await self.properties_api.status.refresh()
+        self._last_home_update_attempt = dt_util.utcnow()
         try:
             await self.properties_api.home.discover_home()
         except RoborockDeviceBusy:
             _LOGGER.info("Home discovery skipped while device is busy/cleaning")
-
-        roborock_maps = list((self.properties_api.home.home_map_info or {}).values())
-        # Handle loading any stored images for the current or formerly active
-        # maps here. A single active map for each device is refreshed regularly,
-        # and the others maps are served from the cache.
-        stored_images = await asyncio.gather(
-            *[
-                self.map_storage.async_load_map(roborock_map.map_flag)
-                for roborock_map in roborock_maps
-            ]
-        )
-        self.maps = {
-            roborock_map.map_flag: RoborockMapInfo(
-                flag=roborock_map.map_flag,
-                name=roborock_map.name or f"Map {roborock_map.map_flag}",
-                image=image,
-                last_updated=dt_util.utcnow() - IMAGE_CACHE_INTERVAL,
-                map_data=None,
-            )
-            for image, roborock_map in zip(stored_images, roborock_maps, strict=False)
-        }
-
-    async def update_map(self) -> None:
-        """Update the currently selected map."""
-        # The current map was set in the props update, so these can be done without
-        # worry of applying them to the wrong map.
-        if self.current_map is None or self.current_map not in self.maps:
-            # This exists as a safeguard/ to keep mypy happy.
-            return
-        try:
-            await self.properties_api.map_content.refresh()
-        except RoborockException as ex:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="map_failure",
-            ) from ex
-        current_roborock_map_info = self.maps[self.current_map]
-        parsed_image = self.properties_api.map_content.image_content
-        parsed_map = self.properties_api.map_content.map_data
-        if parsed_image is not None and parsed_image != current_roborock_map_info.image:
-            await self.map_storage.async_save_map(
-                self.current_map,
-                parsed_image,
-            )
-            current_roborock_map_info.image = parsed_image
-            current_roborock_map_info.last_updated = dt_util.utcnow()
-        current_roborock_map_info.map_data = parsed_map
+        else:
+            self.last_home_update = dt_util.utcnow()
 
     async def async_shutdown(self) -> None:
         """Shutdown the coordinator."""
         await super().async_shutdown()
-        await self.map_storage.flush()
 
     async def _update_device_prop(self) -> None:
         """Update device properties."""
@@ -222,42 +170,27 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState]):
                 translation_key="update_data_fail",
             ) from ex
 
-        # Set the new map id from the updated device props
-        self._set_current_map()
-        # Get the rooms for that map id.
-
         # If the vacuum is currently cleaning and it has been IMAGE_CACHE_INTERVAL
         # since the last map update, you can update the map.
         new_status = self.properties_api.status
         if (
-            self.current_map is not None
-            and (current_map := self.maps.get(self.current_map))
+            new_status.in_cleaning
             and (
-                (
-                    new_status.in_cleaning
-                    and (dt_util.utcnow() - current_map.last_updated)
-                    > IMAGE_CACHE_INTERVAL
-                )
-                or self.last_update_state != new_status.state_name
+                self._last_home_update_attempt is None
+                or (dt_util.utcnow() - self._last_home_update_attempt)
+                > IMAGE_CACHE_INTERVAL
             )
-        ):
-            _LOGGER.debug("Updating map for map id %s", self.current_map)
+        ) or self.last_update_state != new_status.state_name:
+            self._last_home_update_attempt = dt_util.utcnow()
             try:
-                await self.update_map()
-            except HomeAssistantError as err:
-                _LOGGER.debug("Failed to update map: %s", err)
-
-        try:
-            await self.properties_api.home.discover_home()
-            await self.properties_api.home.refresh()
-        except RoborockDeviceBusy as ex:
-            _LOGGER.debug("Not refreshing home while device is busy: %s", ex)
-        except RoborockException as ex:
-            _LOGGER.debug("Failed to update data: %s", ex)
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="update_data_fail",
-            ) from ex
+                await self.properties_api.home.discover_home()
+                await self.properties_api.home.refresh()
+            except RoborockDeviceBusy as ex:
+                _LOGGER.debug("Not refreshing home while device is busy: %s", ex)
+            except RoborockException as ex:
+                _LOGGER.debug("Failed to update map data: %s", ex)
+            else:
+                self.last_home_update = dt_util.utcnow()
 
         if self.properties_api.status.in_cleaning:
             if self._device.is_local_connected:
@@ -275,13 +208,6 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState]):
             consumable=self.properties_api.consumables,
             clean_summary=self.properties_api.clean_summary,
         )
-
-    def _set_current_map(self) -> None:
-        if (
-            self.properties_api.status is not None
-            and self.properties_api.status.current_map is not None
-        ):
-            self.current_map = self.properties_api.status.current_map
 
     @cached_property
     def duid(self) -> str:

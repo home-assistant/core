@@ -1,6 +1,5 @@
 """Test for Roborock init."""
 
-from http import HTTPStatus
 import pathlib
 from typing import Any
 from unittest.mock import patch
@@ -52,35 +51,6 @@ async def test_reauth_started(
 
 
 @pytest.mark.parametrize("platforms", [[Platform.IMAGE]])
-async def test_remove_from_hass(
-    hass: HomeAssistant,
-    setup_entry: MockConfigEntry,
-    hass_client: ClientSessionGenerator,
-    storage_path: pathlib.Path,
-) -> None:
-    """Test that removing from hass removes any existing images."""
-
-    # Ensure some image content is cached
-    assert hass.states.get("image.roborock_s7_maxv_upstairs") is not None
-    client = await hass_client()
-    resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
-    assert resp.status == HTTPStatus.OK
-
-    config_entry_storage = storage_path / setup_entry.entry_id
-    assert not config_entry_storage.exists()
-
-    # Flush to disk
-    await hass.config_entries.async_unload(setup_entry.entry_id)
-    assert config_entry_storage.exists()
-    paths = list(config_entry_storage.walk())
-    assert len(paths) == 4  # Two map image and two directories
-
-    await hass.config_entries.async_remove(setup_entry.entry_id)
-    # After removal, directories should be empty.
-    assert not config_entry_storage.exists()
-
-
-@pytest.mark.parametrize("platforms", [[Platform.IMAGE]])
 async def test_oserror_remove_image(
     hass: HomeAssistant,
     setup_entry: MockConfigEntry,
@@ -88,28 +58,19 @@ async def test_oserror_remove_image(
     hass_client: ClientSessionGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test that we gracefully handle failing to remove an image."""
+    """Test that we gracefully handle failing to remove old map storage."""
 
-    # Ensure some image content is cached
-    assert hass.states.get("image.roborock_s7_maxv_upstairs") is not None
-    client = await hass_client()
-    resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
-    assert resp.status == HTTPStatus.OK
-
-    # Image content is saved when unloading
-    config_entry_storage = storage_path / setup_entry.entry_id
-    assert not config_entry_storage.exists()
-    await hass.config_entries.async_unload(setup_entry.entry_id)
-
-    assert config_entry_storage.exists()
-    paths = list(config_entry_storage.walk())
-    assert len(paths) == 4  # Two map image and two directories
-
-    with patch(
-        "homeassistant.components.roborock.roborock_storage.shutil.rmtree",
-        side_effect=OSError,
+    with (
+        patch(
+            "homeassistant.components.roborock.roborock_storage.Path.exists",
+        ),
+        patch(
+            "homeassistant.components.roborock.roborock_storage.shutil.rmtree",
+            side_effect=OSError,
+        ) as mock_rmtree,
     ):
         await hass.config_entries.async_remove(setup_entry.entry_id)
+    assert mock_rmtree.called
     assert "Unable to remove map files" in caplog.text
 
 

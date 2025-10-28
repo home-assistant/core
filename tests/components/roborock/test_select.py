@@ -121,7 +121,7 @@ async def test_none_map_select(
 ) -> None:
     """Test that the select entity correctly handles not having a current map."""
     # Set map status to None so that current map is never set
-    fake_vacuum.v1_properties.status.map_status = None
+    fake_vacuum.v1_properties.home.current_map_data = None
     await async_setup_component(hass, DOMAIN, {})
     select_entity = hass.states.get("select.roborock_s7_maxv_selected_map")
     assert select_entity

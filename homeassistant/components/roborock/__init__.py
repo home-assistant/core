@@ -15,7 +15,6 @@ from roborock import (
     RoborockNoUserAgreement,
 )
 from roborock.data import UserData
-from roborock.devices.cache import InMemoryCache
 from roborock.devices.device import RoborockDevice
 from roborock.devices.device_manager import UserParams, create_device_manager
 
@@ -34,7 +33,7 @@ from .coordinator import (
     RoborockDyadUpdateCoordinator,
     RoborockZeoUpdateCoordinator,
 )
-from .roborock_storage import async_remove_map_storage
+from .roborock_storage import CacheStore, async_remove_map_storage
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -50,12 +49,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
         user_data=user_data,
         base_url=entry.data[CONF_BASE_URL],
     )
+    cache = CacheStore(hass, entry.entry_id)
     try:
         device_manager = await create_device_manager(
             user_params,
-            # This can be improved with a local cache of network information and home
-            # information to allow local-only startup in the future.
-            cache=InMemoryCache(),
+            cache=cache,
             session=async_get_clientsession(hass),
         )
         devices = await device_manager.get_devices()
@@ -118,7 +116,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
             *(
                 coordinator.async_shutdown()
                 for coordinator in valid_coordinators.values()
-            )
+            ),
+            cache.flush(),
         )
 
     entry.async_on_unload(
@@ -256,3 +255,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: RoborockConfigEntry) ->
 async def async_remove_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> None:
     """Handle removal of an entry."""
     await async_remove_map_storage(hass, entry.entry_id)
+    store = CacheStore(hass, entry.entry_id)
+    await store.async_remove()
