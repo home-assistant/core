@@ -68,7 +68,7 @@ rules:
   entity-translations: todo
   exception-translations: done
   icon-translations: todo
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues: todo
   stale-devices: todo
 

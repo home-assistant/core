@@ -1,5 +1,12 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
     "flow_title": "{model} ({host})",
     "step": {
       "user": {
@@ -14,25 +21,18 @@
         "description": "Do you want to add Pure Energie Meter (`{model}`) to Home Assistant?",
         "title": "Discovered Pure Energie Meter device"
       }
-    },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
   },
   "entity": {
     "sensor": {
-      "power_flow": {
-        "name": "Power flow"
-      },
       "energy_consumption_total": {
         "name": "Energy consumption"
       },
       "energy_production_total": {
         "name": "Energy production"
+      },
+      "power_flow": {
+        "name": "Power flow"
       }
     }
   }
