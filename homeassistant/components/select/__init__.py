@@ -128,7 +128,7 @@ class SelectEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     entity_description: SelectEntityDescription
     _attr_current_option: str | None = None
-    _attr_options: list[str]
+    _attr_options: list[str] | None = None
     _attr_state: None = None
 
     @property
@@ -150,7 +150,7 @@ class SelectEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @cached_property
     def options(self) -> list[str]:
         """Return a set of selectable options."""
-        if hasattr(self, "_attr_options"):
+        if self._attr_options is not None:
             return self._attr_options
         if (
             hasattr(self, "entity_description")
