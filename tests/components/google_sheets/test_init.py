@@ -24,7 +24,7 @@ from homeassistant.components.google_sheets.services import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -371,3 +371,51 @@ async def test_append_sheet_invalid_config_entry(
             },
             blocking=True,
         )
+
+
+async def test_get_sheet_invalid_config_entry(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    config_entry: MockConfigEntry,
+    expires_at: int,
+    scopes: list[str],
+) -> None:
+    """Test service call get sheet with invalid config entries."""
+    config_entry2 = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_SHEET_ID + "2",
+        data={
+            "auth_implementation": DOMAIN,
+            "token": {
+                "access_token": "mock-access-token",
+                "refresh_token": "mock-refresh-token",
+                "expires_at": expires_at,
+                "scope": " ".join(scopes),
+            },
+        },
+    )
+    config_entry2.add_to_hass(hass)
+
+    await setup_integration()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry2.state is ConfigEntryState.LOADED
+
+    # Exercise service call on a config entry that does not exist
+    with pytest.raises(ServiceValidationError, match="Invalid config entry"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET_SHEET,
+            {
+                DATA_CONFIG_ENTRY: config_entry.entry_id + "XXX",
+                WORKSHEET: "Sheet1",
+                ROWS: 2,
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    # Unload the config entry invoke the service on the unloaded entry id
+    await hass.config_entries.async_unload(config_entry2.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry2.state is ConfigEntryState.NOT_LOADED
