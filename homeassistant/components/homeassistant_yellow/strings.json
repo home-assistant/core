@@ -1,5 +1,10 @@
 {
   "entity": {
+    "switch": {
+      "beta_firmware": {
+        "name": "Radio beta firmware updates"
+      }
+    },
     "update": {
       "radio_firmware": {
         "name": "Radio firmware"
@@ -168,11 +173,6 @@
           "zigbee_integration_zha": "[%key:component::homeassistant_hardware::firmware_picker::options::step::zigbee_integration::menu_options::zigbee_integration_zha%]"
         },
         "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::zigbee_integration::title%]"
-      }
-    },
-    "switch": {
-      "beta_firmware": {
-        "name": "Radio beta firmware updates"
       }
     }
   }

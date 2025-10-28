@@ -90,6 +90,13 @@
       }
     }
   },
+  "entity": {
+    "switch": {
+      "beta_firmware": {
+        "name": "Beta firmware updates"
+      }
+    }
+  },
   "exceptions": {
     "device_disconnected": {
       "message": "The device is not plugged in"
@@ -232,13 +239,6 @@
           "zigbee_integration_zha": "[%key:component::homeassistant_hardware::firmware_picker::options::step::zigbee_integration::menu_options::zigbee_integration_zha%]"
         },
         "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::zigbee_integration::title%]"
-      }
-    }
-  },
-  "entity": {
-    "switch": {
-      "beta_firmware": {
-        "name": "Beta firmware updates"
       }
     }
   }

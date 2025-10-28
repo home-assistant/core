@@ -59,5 +59,5 @@ class BaseBetaFirmwareSwitch(SwitchEntity, RestoreEntity):
 
     async def _update_coordinator_prerelease(self) -> None:
         """Update the coordinator with the current prerelease setting."""
-        self._coordinator.client.update_prerelease(self._attr_is_on)  # type: ignore[attr-defined]
+        self._coordinator.client.update_prerelease(bool(self._attr_is_on))
         await self._coordinator.async_refresh()
