@@ -73,7 +73,7 @@ async def test_migration_from_v1_no_baudrate(
     assert CONF_DEVICE in config_entry_v1.data
     assert config_entry_v1.data[CONF_DEVICE][CONF_DEVICE_PATH] == DATA_PORT_PATH
     assert CONF_USB_PATH not in config_entry_v1.data
-    assert config_entry_v1.version == 4
+    assert config_entry_v1.version == 5
 
 
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
@@ -90,7 +90,7 @@ async def test_migration_from_v1_with_baudrate(
     assert CONF_USB_PATH not in config_entry_v1.data
     assert CONF_BAUDRATE in config_entry_v1.data[CONF_DEVICE]
     assert config_entry_v1.data[CONF_DEVICE][CONF_BAUDRATE] == 115200
-    assert config_entry_v1.version == 4
+    assert config_entry_v1.version == 5
 
 
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
@@ -105,7 +105,7 @@ async def test_migration_from_v1_wrong_baudrate(
     assert CONF_DEVICE in config_entry_v1.data
     assert config_entry_v1.data[CONF_DEVICE][CONF_DEVICE_PATH] == DATA_PORT_PATH
     assert CONF_USB_PATH not in config_entry_v1.data
-    assert config_entry_v1.version == 4
+    assert config_entry_v1.version == 5
 
 
 @pytest.mark.skipif(
@@ -167,7 +167,7 @@ async def test_setup_with_v3_cleaning_uri(
                 CONF_FLOW_CONTROL: None,
             },
         },
-        version=4,
+        version=5,
     )
     config_entry_v4.add_to_hass(hass)
 
@@ -177,7 +177,7 @@ async def test_setup_with_v3_cleaning_uri(
 
     assert config_entry_v4.data[CONF_RADIO_TYPE] == DATA_RADIO_TYPE
     assert config_entry_v4.data[CONF_DEVICE][CONF_DEVICE_PATH] == cleaned_path
-    assert config_entry_v4.version == 4
+    assert config_entry_v4.version == 5
 
 
 @pytest.mark.parametrize(
