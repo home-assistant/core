@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import AsyncGenerator
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, call, patch
 
 import pytest
 
@@ -166,7 +166,7 @@ async def test_switch_default_off_state(
     assert state.state == STATE_OFF
 
     # Verify coordinator was called with False during setup
-    mock_firmware_client.update_prerelease.assert_called_with(False)
+    assert mock_firmware_client.update_prerelease.mock_calls == [call(False)]
 
 
 @pytest.mark.parametrize(
@@ -196,7 +196,9 @@ async def test_switch_restore_state(
     assert state.attributes.get("friendly_name") == "Mock Device None"
 
     # Verify coordinator was called with correct value during setup
-    mock_firmware_client.update_prerelease.assert_called_with(expected_prerelease)
+    assert mock_firmware_client.update_prerelease.mock_calls == [
+        call(expected_prerelease)
+    ]
 
     # Verify entity registry attributes
     entity_registry = er.async_get(hass)
@@ -222,9 +224,17 @@ async def test_switch_turn_on_off(
     expected_prerelease: bool,
 ) -> None:
     """Test turning switch on/off updates state and coordinator."""
-    # Start with opposite state for turn_off test
-    if service == SERVICE_TURN_OFF:
-        mock_restore_cache(hass, [State(TEST_SWITCH_ENTITY_ID, STATE_ON)])
+
+    # Start with opposite state
+    mock_restore_cache(
+        hass,
+        [
+            State(
+                TEST_SWITCH_ENTITY_ID,
+                STATE_ON if service == SERVICE_TURN_OFF else STATE_OFF,
+            )
+        ],
+    )
 
     # Track async_refresh calls
     with patch(
@@ -245,13 +255,13 @@ async def test_switch_turn_on_off(
             blocking=True,
         )
 
-        # Verify state changed
-        state = hass.states.get(TEST_SWITCH_ENTITY_ID)
-        assert state is not None
-        assert state.state == target_state
+    # Verify state changed
+    state = hass.states.get(TEST_SWITCH_ENTITY_ID)
+    assert state is not None
+    assert state.state == target_state
 
-        # Verify coordinator methods were called
-        mock_firmware_client.update_prerelease.assert_called_once_with(
-            expected_prerelease
-        )
-        mock_refresh.assert_called_once()
+    # Verify coordinator methods were called
+    assert mock_firmware_client.update_prerelease.mock_calls == [
+        call(expected_prerelease)
+    ]
+    assert len(mock_refresh.mock_calls) == 1
