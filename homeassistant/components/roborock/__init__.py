@@ -105,10 +105,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
             translation_domain=DOMAIN,
             translation_key="no_coordinators",
         )
-    valid_coordinators = RoborockCoordinators(
-        v1=v1_coords,
-        a01=a01_coords,
-    )
+    valid_coordinators = RoborockCoordinators(v1_coords, a01_coords)
 
     async def on_stop(_: Any) -> None:
         _LOGGER.debug("Shutting down roborock")

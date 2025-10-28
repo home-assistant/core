@@ -18,6 +18,7 @@ from roborock.roborock_message import RoborockDyadDataProtocol, RoborockZeoProto
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_CONNECTIONS
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.typing import StateType
@@ -80,9 +81,6 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState]):
         )
         self._device = device
         self.properties_api = properties_api
-        _LOGGER.debug(
-            "Creating coordinator for device %s - %s", device.duid, device.name
-        )
         self.device_info = DeviceInfo(
             name=self._device.device_info.name,
             identifiers={(DOMAIN, self.duid)},
@@ -96,6 +94,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState]):
                 (dr.CONNECTION_NETWORK_MAC, dr.format_mac(mac))
             }
         self.last_update_state: str | None = None
+        # Keep track of last attempt to refresh maps/rooms to know when to try again.
         self._last_home_update_attempt: datetime | None = None
         self.last_home_update: datetime | None = None
 
@@ -118,15 +117,26 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState]):
 
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
-        # This will either read from the cache or load information about the
-        # home and cache the detail. The device can only load information for
-        # the current map so from here forward.
         await self.properties_api.status.refresh()
+
         self._last_home_update_attempt = dt_util.utcnow()
         try:
             await self.properties_api.home.discover_home()
         except RoborockDeviceBusy:
             _LOGGER.info("Home discovery skipped while device is busy/cleaning")
+        else:
+            self.last_home_update = dt_util.utcnow()
+
+    async def update_map(self) -> None:
+        """Update the currently selected map."""
+        try:
+            await self.properties_api.home.discover_home()
+            await self.properties_api.home.refresh()
+        except RoborockException as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="map_failure",
+            ) from ex
         else:
             self.last_home_update = dt_util.utcnow()
 
@@ -183,14 +193,9 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState]):
         ) or self.last_update_state != new_status.state_name:
             self._last_home_update_attempt = dt_util.utcnow()
             try:
-                await self.properties_api.home.discover_home()
-                await self.properties_api.home.refresh()
-            except RoborockDeviceBusy as ex:
-                _LOGGER.debug("Not refreshing home while device is busy: %s", ex)
-            except RoborockException as ex:
-                _LOGGER.debug("Failed to update map data: %s", ex)
-            else:
-                self.last_home_update = dt_util.utcnow()
+                await self.update_map()
+            except HomeAssistantError as err:
+                _LOGGER.debug("Failed to update map: %s", err)
 
         if self.properties_api.status.in_cleaning:
             if self._device.is_local_connected:
