@@ -185,7 +185,7 @@
     },
     "push_weather_data": {
       "name": "Push weather data",
-      "description": "Sends weather data from Home Assistant to the RainMachine device.\nLocal Weather Push service should be enabled from Settings > Weather > Developer tab for RainMachine to consider the values being sent. Units must be sent in metric; no conversions are performed by the integraion.\nSee details of RainMachine API here: https://rainmachine.docs.apiary.io/#reference/weather-services/parserdata/post.",
+      "description": "Sends weather data from Home Assistant to the RainMachine device.\nLocal Weather Push service should be enabled from Settings > Weather > Developer tab for RainMachine to consider the values being sent. Units must be sent in metric; no conversions are performed by the integraion.\nSee details of RainMachine API here at {api_url}.",
       "fields": {
         "device_id": {
           "name": "[%key:component::rainmachine::services::pause_watering::fields::device_id::name%]",
