@@ -172,7 +172,7 @@
     },
     "switch": {
       "beta_firmware": {
-        "name": "Beta firmware updates"
+        "name": "Radio beta firmware"
       }
     }
   }
