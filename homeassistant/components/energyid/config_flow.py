@@ -26,17 +26,14 @@ from .const import (
     CONF_PROVISIONING_KEY,
     CONF_PROVISIONING_SECRET,
     DOMAIN,
+    ENERGYID_DEVICE_ID_FOR_WEBHOOK_PREFIX,
+    MAX_POLLING_ATTEMPTS,
     NAME,
+    POLLING_INTERVAL,
 )
 from .energyid_sensor_mapping_flow import EnergyIDSensorMappingFlowHandler
 
 _LOGGER = logging.getLogger(__name__)
-
-ENERGYID_DEVICE_ID_FOR_WEBHOOK_PREFIX = "homeassistant_eid_"
-
-# Polling configuration
-POLLING_INTERVAL = 2  # seconds
-MAX_POLLING_ATTEMPTS = 60  # 2 minutes total
 
 
 class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -97,26 +94,29 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _async_poll_for_claim(self) -> None:
         """Poll EnergyID to check if device has been claimed."""
-        for attempt in range(1, MAX_POLLING_ATTEMPTS + 1):
+        for _attempt in range(1, MAX_POLLING_ATTEMPTS + 1):
             await asyncio.sleep(POLLING_INTERVAL)
 
             auth_status = await self._perform_auth_and_get_details()
 
             if auth_status is None:
-                # Device claimed - try to advance flow
-                _LOGGER.debug("Device claimed at polling attempt %s", attempt)
+                # Device claimed - advance flow to async_step_create_entry
+                _LOGGER.debug("Device claimed, advancing to create entry")
                 self.hass.async_create_task(
-                    self.hass.config_entries.flow.async_configure(flow_id=self.flow_id),
-                    eager_start=True,
+                    self.hass.config_entries.flow.async_configure(self.flow_id)
                 )
                 return
 
             if auth_status != "needs_claim":
                 # Stop polling on non-transient errors
-                _LOGGER.debug("Polling stopped: %s", auth_status)
+                # No user notification needed here as the error will be handled
+                # in the next flow step when the user continues the flow
+                _LOGGER.debug("Polling stopped due to error: %s", auth_status)
                 return
 
         _LOGGER.debug("Polling timeout after %s attempts", MAX_POLLING_ATTEMPTS)
+        # No user notification here - timeout will be handled when user continues
+        # the flow and we check the claim status again
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
