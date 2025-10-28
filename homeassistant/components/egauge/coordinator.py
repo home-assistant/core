@@ -61,7 +61,7 @@ class EgaugeDataCoordinator(DataUpdateCoordinator[EgaugeData]):
                 hass, verify_ssl=config_entry.data[CONF_VERIFY_SSL]
             ),
         )
-        # Populated on first refresh
+        # Populated in _async_setup
         self._register_info: dict[str, RegisterInfo] = {}
 
     async def _async_setup(self) -> None:
