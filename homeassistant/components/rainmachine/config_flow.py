@@ -161,12 +161,7 @@ class RainMachineFlowHandler(ConfigFlow, domain=DOMAIN):
             self.context["title_placeholders"] = {"ip": self.discovered_ip_address}
 
         return self.async_show_form(
-            step_id="user",
-            data_schema=self._async_generate_schema(),
-            errors=errors,
-            description_placeholders={
-                "api_url": "https://rainmachine.docs.apiary.io/#reference/weather-services/parserdata/post"
-            },
+            step_id="user", data_schema=self._async_generate_schema(), errors=errors
         )
 
 
