@@ -75,8 +75,8 @@ async def test_config_entry_auth_failed_triggers_reauth(
     # Check that a reauth flow has been started
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
-    assert flows[0].get("context", {}).get("source") == "reauth"
-    assert flows[0].get("context", {}).get("entry_id") == mock_config_entry.entry_id
+    assert flows[0]["context"]["source"] == "reauth"
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
 
 
 @pytest.mark.parametrize(
