@@ -24,7 +24,7 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
-      "no_devices_found": "No Nintendo devices found for this account."
+      "no_devices_found": "There are no devices paired with this Nintendo account, go to [Nintendo Support]({more_info_url}) for further assistance."
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",

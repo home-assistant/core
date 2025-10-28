@@ -15,7 +15,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_SESSION_TOKEN, DOMAIN
+from .const import APP_SETUP_URL, CONF_SESSION_TOKEN, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,7 +57,10 @@ class NintendoConfigFlow(ConfigFlow, domain=DOMAIN):
                     await nintendo_api.async_get_account_devices()
             except HttpException as err:
                 if err.status_code == 404:
-                    return self.async_abort(reason="no_devices_found")
+                    return self.async_abort(
+                        reason="no_devices_found",
+                        description_placeholders={"more_info_url": APP_SETUP_URL},
+                    )
                 errors["base"] = "cannot_connect"
             else:
                 if "base" not in errors:
