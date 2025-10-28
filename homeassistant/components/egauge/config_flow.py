@@ -19,8 +19,8 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.httpx_client import get_async_client
 
-from . import _build_client_url
 from .const import DOMAIN, LOGGER
+from .util import _build_client_url
 
 
 class EgaugeFlowHandler(ConfigFlow, domain=DOMAIN):

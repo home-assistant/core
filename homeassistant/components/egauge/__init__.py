@@ -16,6 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.httpx_client import get_async_client
 
 from .coordinator import EgaugeConfigEntry, EgaugeDataCoordinator
+from .util import _build_client_url
 
 PLATFORMS = [Platform.SENSOR]
 
@@ -46,9 +47,3 @@ async def async_setup_entry(hass: HomeAssistant, entry: EgaugeConfigEntry) -> bo
 async def async_unload_entry(hass: HomeAssistant, entry: EgaugeConfigEntry) -> bool:
     """Unload eGauge config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-
-def _build_client_url(host: str, use_ssl: bool) -> str:
-    """Builds the base URL for EgaugeJsonClient."""
-    protocol = "https://" if use_ssl else "http://"
-    return protocol + host
