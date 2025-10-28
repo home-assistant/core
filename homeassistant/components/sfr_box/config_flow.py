@@ -12,7 +12,7 @@ import voluptuous as vol
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import selector
-from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DEFAULT_HOST, DEFAULT_USERNAME, DOMAIN
 
@@ -44,7 +44,9 @@ class SFRBoxFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is not None:
-            box = SFRBox(ip=user_input[CONF_HOST], client=get_async_client(self.hass))
+            box = SFRBox(
+                ip=user_input[CONF_HOST], client=async_get_clientsession(self.hass)
+            )
             try:
                 system_info = await box.system_get_info()
             except SFRBoxError:
@@ -119,5 +121,7 @@ class SFRBoxFlowHandler(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle failed credentials."""
-        self._box = SFRBox(ip=entry_data[CONF_HOST], client=get_async_client(self.hass))
+        self._box = SFRBox(
+            ip=entry_data[CONF_HOST], client=async_get_clientsession(self.hass)
+        )
         return await self.async_step_auth()
