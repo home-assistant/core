@@ -1,4 +1,11 @@
 {
+  "entity": {
+    "event": {
+      "update_event": {
+        "default": "mdi:message-reply"
+      }
+    }
+  },
   "services": {
     "answer_callback_query": {
       "service": "mdi:check"
