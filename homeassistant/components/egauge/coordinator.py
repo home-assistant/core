@@ -35,6 +35,9 @@ type EgaugeConfigEntry = ConfigEntry[EgaugeDataCoordinator]
 class EgaugeDataCoordinator(DataUpdateCoordinator[EgaugeData]):
     """Class to manage fetching eGauge data."""
 
+    serial_number: str
+    hostname: str
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -59,8 +62,6 @@ class EgaugeDataCoordinator(DataUpdateCoordinator[EgaugeData]):
             ),
         )
         # Populated on first refresh
-        self.serial_number: str
-        self.hostname: str
         self._register_info: dict[str, RegisterInfo] | None = None
 
     async def _async_update_data(self) -> EgaugeData:
