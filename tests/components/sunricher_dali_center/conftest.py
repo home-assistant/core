@@ -1,8 +1,9 @@
 """Common fixtures for the Dali Center tests."""
 
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from PySrDaliGateway import CallbackEventType
 import pytest
 
 from homeassistant.components.sunricher_dali_center.const import (
@@ -59,6 +60,20 @@ def _create_mock_device(
     device.turn_on = MagicMock()
     device.turn_off = MagicMock()
     device.read_status = MagicMock()
+
+    # Add callback registration support
+    device._listeners = {}
+
+    def register_listener(
+        event_type: CallbackEventType, callback: Callable[..., None]
+    ) -> Callable[[], None]:
+        """Register a callback for the given event type."""
+        if event_type not in device._listeners:
+            device._listeners[event_type] = []
+        device._listeners[event_type].append(callback)
+        return lambda: device._listeners[event_type].remove(callback)
+
+    device.register_listener = register_listener
     return device
 
 
