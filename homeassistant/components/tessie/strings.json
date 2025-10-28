@@ -517,17 +517,14 @@
     "command_failed": {
       "message": "Command failed, {message}"
     },
+    "cpd_enabled": {
+      "message": "Child presence detection has blocked the command, remove weight from seats."
+    },
     "incorrect_pin": {
       "message": "Incorrect PIN for {name}."
     },
     "no_cable": {
       "message": "Insert cable to lock"
-    },
-    "command_failed": {
-      "message": "Command failed, {message}"
-    },
-    "cpd_enabled": {
-      "message": "Child presence detection has blocked the command, remove weight from seats."
     },
     "not_supported": {
       "message": "{name} is not supported."
