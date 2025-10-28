@@ -1,0 +1,641 @@
+# serializer version: 1
+# name: test_psi_sensor[sensor.system_monitor_none_35]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'System Monitor None',
+      'icon': 'mdi:gauge',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.system_monitor_none_35',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4.4',
+  })
+# ---
+# name: test_psi_sensor[sensor.system_monitor_none_36]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'System Monitor None',
+      'icon': 'mdi:gauge',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.system_monitor_none_36',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5.5',
+  })
+# ---
+# name: test_psi_sensor[sensor.system_monitor_none_37]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'System Monitor None',
+      'icon': 'mdi:gauge',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.system_monitor_none_37',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '6.6',
+  })
+# ---
+# name: test_psi_sensor[sensor.system_monitor_none_38]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'System Monitor None',
+      'icon': 'mdi:timer-outline',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfTime.MICROSECONDS: 'μs'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.system_monitor_none_38',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '54321',
+  })
+# ---
+# name: test_psi_sensor[sensor.system_monitor_none_39]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'System Monitor None',
+      'icon': 'mdi:gauge',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.system_monitor_none_39',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.4',
+  })
+# ---
+# name: test_psi_sensor[sensor.system_monitor_none_40]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'System Monitor None',
+      'icon': 'mdi:gauge',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.system_monitor_none_40',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.5',
+  })
+# ---
+# name: test_psi_sensor[sensor.system_monitor_none_41]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'System Monitor None',
+      'icon': 'mdi:gauge',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.system_monitor_none_41',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.6',
+  })
+# ---
+# name: test_psi_sensor[sensor.system_monitor_none_42]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'System Monitor None',
+      'icon': 'mdi:timer-outline',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfTime.MICROSECONDS: 'μs'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.system_monitor_none_42',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '432',
+  })
+# ---
+# name: test_psi_sensor[sensor.system_monitor_none_43]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'System Monitor None',
+      'icon': 'mdi:gauge',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.system_monitor_none_43',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '7.7',
+  })
+# ---
+# name: test_psi_sensor[sensor.system_monitor_none_44]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'System Monitor None',
+      'icon': 'mdi:gauge',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.system_monitor_none_44',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '8.8',
+  })
+# ---
+# name: test_psi_sensor[sensor.system_monitor_none_45]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'System Monitor None',
+      'icon': 'mdi:gauge',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.system_monitor_none_45',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '9.9',
+  })
+# ---
+# name: test_psi_sensor[sensor.system_monitor_none_46]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'System Monitor None',
+      'icon': 'mdi:timer-outline',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfTime.MICROSECONDS: 'μs'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.system_monitor_none_46',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '67890',
+  })
+# ---
+# name: test_psi_sensor[sensor.system_monitor_none_47]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'System Monitor None',
+      'icon': 'mdi:gauge',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.system_monitor_none_47',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.7',
+  })
+# ---
+# name: test_psi_sensor[sensor.system_monitor_none_48]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'System Monitor None',
+      'icon': 'mdi:gauge',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.system_monitor_none_48',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.8',
+  })
+# ---
+# name: test_psi_sensor[sensor.system_monitor_none_49]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'System Monitor None',
+      'icon': 'mdi:gauge',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.system_monitor_none_49',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.9',
+  })
+# ---
+# name: test_psi_sensor[sensor.system_monitor_none_50]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'System Monitor None',
+      'icon': 'mdi:timer-outline',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfTime.MICROSECONDS: 'μs'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.system_monitor_none_50',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '789',
+  })
+# ---
+# name: test_psi_sensor[sensor.system_monitor_none_51]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'System Monitor None',
+      'icon': 'mdi:gauge',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.system_monitor_none_51',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.1',
+  })
+# ---
+# name: test_psi_sensor[sensor.system_monitor_none_52]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'System Monitor None',
+      'icon': 'mdi:gauge',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.system_monitor_none_52',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.2',
+  })
+# ---
+# name: test_psi_sensor[sensor.system_monitor_none_53]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'System Monitor None',
+      'icon': 'mdi:gauge',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.system_monitor_none_53',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3.3',
+  })
+# ---
+# name: test_psi_sensor[sensor.system_monitor_none_54]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'System Monitor None',
+      'icon': 'mdi:timer-outline',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfTime.MICROSECONDS: 'μs'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.system_monitor_none_54',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '12345',
+  })
+# ---
+# name: test_psi_sensor_unavailable[sensor.system_monitor_none_35-unavailable]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'System Monitor None',
+      'icon': 'mdi:gauge',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.system_monitor_none_35',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_psi_sensor_unavailable[sensor.system_monitor_none_36-unavailable]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'System Monitor None',
+      'icon': 'mdi:gauge',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.system_monitor_none_36',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_psi_sensor_unavailable[sensor.system_monitor_none_37-unavailable]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'System Monitor None',
+      'icon': 'mdi:gauge',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.system_monitor_none_37',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_psi_sensor_unavailable[sensor.system_monitor_none_38-unavailable]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'System Monitor None',
+      'icon': 'mdi:timer-outline',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfTime.MICROSECONDS: 'μs'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.system_monitor_none_38',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_psi_sensor_unavailable[sensor.system_monitor_none_39-unavailable]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'System Monitor None',
+      'icon': 'mdi:gauge',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.system_monitor_none_39',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_psi_sensor_unavailable[sensor.system_monitor_none_40-unavailable]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'System Monitor None',
+      'icon': 'mdi:gauge',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.system_monitor_none_40',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_psi_sensor_unavailable[sensor.system_monitor_none_41-unavailable]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'System Monitor None',
+      'icon': 'mdi:gauge',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.system_monitor_none_41',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_psi_sensor_unavailable[sensor.system_monitor_none_42-unavailable]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'System Monitor None',
+      'icon': 'mdi:timer-outline',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfTime.MICROSECONDS: 'μs'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.system_monitor_none_42',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_psi_sensor_unavailable[sensor.system_monitor_none_43-unavailable]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'System Monitor None',
+      'icon': 'mdi:gauge',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.system_monitor_none_43',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_psi_sensor_unavailable[sensor.system_monitor_none_44-unavailable]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'System Monitor None',
+      'icon': 'mdi:gauge',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.system_monitor_none_44',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_psi_sensor_unavailable[sensor.system_monitor_none_45-unavailable]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'System Monitor None',
+      'icon': 'mdi:gauge',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.system_monitor_none_45',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_psi_sensor_unavailable[sensor.system_monitor_none_46-unavailable]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'System Monitor None',
+      'icon': 'mdi:timer-outline',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfTime.MICROSECONDS: 'μs'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.system_monitor_none_46',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_psi_sensor_unavailable[sensor.system_monitor_none_47-unavailable]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'System Monitor None',
+      'icon': 'mdi:gauge',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.system_monitor_none_47',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_psi_sensor_unavailable[sensor.system_monitor_none_48-unavailable]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'System Monitor None',
+      'icon': 'mdi:gauge',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.system_monitor_none_48',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_psi_sensor_unavailable[sensor.system_monitor_none_49-unavailable]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'System Monitor None',
+      'icon': 'mdi:gauge',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.system_monitor_none_49',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_psi_sensor_unavailable[sensor.system_monitor_none_50-unavailable]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'System Monitor None',
+      'icon': 'mdi:timer-outline',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfTime.MICROSECONDS: 'μs'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.system_monitor_none_50',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_psi_sensor_unavailable[sensor.system_monitor_none_51-unavailable]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'System Monitor None',
+      'icon': 'mdi:gauge',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.system_monitor_none_51',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_psi_sensor_unavailable[sensor.system_monitor_none_52-unavailable]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'System Monitor None',
+      'icon': 'mdi:gauge',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.system_monitor_none_52',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_psi_sensor_unavailable[sensor.system_monitor_none_53-unavailable]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'System Monitor None',
+      'icon': 'mdi:gauge',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.system_monitor_none_53',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_psi_sensor_unavailable[sensor.system_monitor_none_54-unavailable]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'System Monitor None',
+      'icon': 'mdi:timer-outline',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfTime.MICROSECONDS: 'μs'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.system_monitor_none_54',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
