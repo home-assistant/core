@@ -133,10 +133,10 @@ class Airtouch5AC(Airtouch5ClimateEntity):
         """Initialise the Climate Entity."""
         super().__init__(client)
         self._ability = ability
-        self._attr_unique_id = f"ac_{ability.ac_number}"
+        self._attr_unique_id = f"ac_{ability.ac_name}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"ac_{ability.ac_number}")},
-            name=f"AC {ability.ac_number}",
+            identifiers={(DOMAIN, f"ac_{ability.ac_name}")},
+            name=f"{ability.ac_name}",
             manufacturer="Polyaire",
             model="AirTouch 5",
         )
@@ -283,9 +283,9 @@ class Airtouch5Zone(Airtouch5ClimateEntity):
         super().__init__(client)
         self._name = name
 
-        self._attr_unique_id = f"zone_{name.zone_number}"
+        self._attr_unique_id = f"{ac.ac_name}_{name.zone_number}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"zone_{name.zone_number}")},
+            identifiers={(DOMAIN, f"{ac.ac_name}_{name.zone_number}")},
             name=name.zone_name,
             manufacturer="Polyaire",
             model="AirTouch 5",
