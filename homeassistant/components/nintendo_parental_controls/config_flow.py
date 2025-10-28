@@ -57,9 +57,8 @@ class NintendoConfigFlow(ConfigFlow, domain=DOMAIN):
                     await nintendo_api.async_get_account_devices()
             except HttpException as err:
                 if err.status_code == 404:
-                    errors["base"] = "no_devices_found"
-                else:
-                    errors["base"] = "cannot_connect"
+                    return self.async_abort(reason="no_devices_found")
+                errors["base"] = "cannot_connect"
             else:
                 if "base" not in errors:
                     return self.async_create_entry(

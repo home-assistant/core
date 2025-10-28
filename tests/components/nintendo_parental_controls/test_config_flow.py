@@ -131,8 +131,7 @@ async def test_missing_devices(
         result["flow_id"], user_input={CONF_API_TOKEN: API_TOKEN}
     )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["type"] is FlowResultType.ABORT
     assert result["errors"] == {"base": "no_devices_found"}
 
 
@@ -163,6 +162,18 @@ async def test_cannot_connect(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
+
+    # Test we can recover from the error
+    mock_nintendo_api.async_get_account_devices.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_API_TOKEN: API_TOKEN}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == ACCOUNT_ID
+    assert result["data"][CONF_SESSION_TOKEN] == API_TOKEN
+    assert result["result"].unique_id == ACCOUNT_ID
 
 
 async def test_reauthentication_success(
