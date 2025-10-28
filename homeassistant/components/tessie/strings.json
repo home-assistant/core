@@ -517,6 +517,9 @@
     "command_failed": {
       "message": "Command failed, {message}"
     },
+    "cpd_enabled": {
+      "message": "Child presence detection has blocked the command, remove weight from seats."
+    },
     "incorrect_pin": {
       "message": "Incorrect PIN for {name}."
     },
