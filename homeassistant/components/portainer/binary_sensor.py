@@ -65,7 +65,7 @@ async def async_setup_entry(
     """Set up Portainer binary sensors."""
     coordinator = entry.runtime_data
 
-    def _async_add_new_endpoints(new_endpoints: list[PortainerCoordinatorData]) -> None:
+    def _async_add_new_endpoints(endpoints: list[PortainerCoordinatorData]) -> None:
         """Add new endpoint binary sensors."""
         async_add_entities(
             PortainerEndpointSensor(
@@ -74,12 +74,12 @@ async def async_setup_entry(
                 endpoint,
             )
             for entity_description in ENDPOINT_SENSORS
-            for endpoint in new_endpoints
+            for endpoint in endpoints
             if entity_description.state_fn(endpoint)
         )
 
     def _async_add_new_containers(
-        new_containers: list[tuple[PortainerCoordinatorData, DockerContainer]],
+        containers: list[tuple[PortainerCoordinatorData, DockerContainer]],
     ) -> None:
         """Add new container binary sensors."""
         async_add_entities(
@@ -89,7 +89,7 @@ async def async_setup_entry(
                 container,
                 endpoint,
             )
-            for (endpoint, container) in new_containers
+            for (endpoint, container) in containers
             for entity_description in CONTAINER_SENSORS
             if entity_description.state_fn(container)
         )
