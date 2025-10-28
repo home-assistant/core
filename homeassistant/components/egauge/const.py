@@ -3,4 +3,4 @@
 import logging
 
 DOMAIN = "egauge"
-LOGGER = logging.getLogger(__package__)
+_LOGGER = logging.getLogger(__package__)

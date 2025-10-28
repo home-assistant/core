@@ -18,7 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.httpx_client import get_async_client
 
-from .const import DOMAIN, LOGGER
+from .const import _LOGGER, DOMAIN
 from .util import _build_client_url
 
 
@@ -49,7 +49,7 @@ class EgaugeFlowHandler(ConfigFlow, domain=DOMAIN):
             except ConnectError:
                 errors["base"] = "cannot_connect"
             except Exception:  # noqa: BLE001
-                LOGGER.exception("Unexpected exception")
+                _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(serial_number)
