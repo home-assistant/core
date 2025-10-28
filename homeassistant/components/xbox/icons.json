@@ -24,15 +24,15 @@
       "last_online": {
         "default": "mdi:account-clock"
       },
-      "status": {
-        "default": "mdi:message-text-outline"
-      },
       "now_playing": {
         "default": "mdi:microsoft-xbox-controller",
         "state": {
-          "unknown": "mdi:microsoft-xbox-controller-off",
-          "unavailable": "mdi:microsoft-xbox-controller-off"
+          "unavailable": "mdi:microsoft-xbox-controller-off",
+          "unknown": "mdi:microsoft-xbox-controller-off"
         }
+      },
+      "status": {
+        "default": "mdi:message-text-outline"
       }
     }
   }
