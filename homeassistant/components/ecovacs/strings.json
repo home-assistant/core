@@ -46,8 +46,8 @@
       "relocate": {
         "name": "Relocate"
       },
-      "reset_lifespan_base_station_filter": {
-        "name": "Reset station filter lifespan"
+      "reset_lifespan_air_freshener": {
+        "name": "Reset air freshener lifespan"
       },
       "reset_lifespan_blade": {
         "name": "Reset blade lifespan"
@@ -55,8 +55,14 @@
       "reset_lifespan_brush": {
         "name": "Reset main brush lifespan"
       },
+      "reset_lifespan_dust_bag": {
+        "name": "Reset dust bag lifespan"
+      },
       "reset_lifespan_filter": {
         "name": "Reset filter lifespan"
+      },
+      "reset_lifespan_hand_filter": {
+        "name": "Reset hand filter lifespan"
       },
       "reset_lifespan_lens_brush": {
         "name": "Reset lens brush lifespan"
@@ -67,8 +73,14 @@
       "reset_lifespan_side_brush": {
         "name": "Reset side brush lifespan"
       },
+      "reset_lifespan_station_filter": {
+        "name": "Reset station filter lifespan"
+      },
       "reset_lifespan_unit_care": {
         "name": "Reset unit care lifespan"
+      },
+      "reset_lifespan_uv_sanitizer": {
+        "name": "Reset UV sanitizer lifespan"
       },
       "station_action_clean_base": {
         "name": "Clean base"
@@ -145,8 +157,8 @@
           }
         }
       },
-      "lifespan_base_station_filter": {
-        "name": "Station filter lifespan"
+      "lifespan_air_freshener": {
+        "name": "Air freshener lifespan"
       },
       "lifespan_blade": {
         "name": "Blade lifespan"
@@ -154,8 +166,14 @@
       "lifespan_brush": {
         "name": "Main brush lifespan"
       },
+      "lifespan_dust_bag": {
+        "name": "Dust bag lifespan"
+      },
       "lifespan_filter": {
         "name": "Filter lifespan"
+      },
+      "lifespan_hand_filter": {
+        "name": "Hand filter lifespan"
       },
       "lifespan_lens_brush": {
         "name": "Lens brush lifespan"
@@ -171,6 +189,9 @@
       },
       "lifespan_unit_care": {
         "name": "Unit care lifespan"
+      },
+      "lifespan_uv_sanitizer": {
+        "name": "UV sanitizer lifespan"
       },
       "network_ip": {
         "name": "IP address"
