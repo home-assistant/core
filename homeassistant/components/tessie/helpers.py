@@ -15,11 +15,6 @@ async def handle_command(command) -> dict[str, Any]:
     try:
         result = await command
     except TeslaFleetError as e:
-        if e.message == "cpd_enabled":
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="cpd_enabled",
-            ) from e
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="command_failed",
