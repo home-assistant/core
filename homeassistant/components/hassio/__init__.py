@@ -13,6 +13,7 @@ import struct
 from typing import Any, NamedTuple
 
 from aiohasupervisor import SupervisorError
+from aiohasupervisor.models import GreenOptions, YellowOptions  # noqa: F401
 import voluptuous as vol
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
@@ -123,11 +124,6 @@ from .discovery import async_setup_discovery_view
 from .handler import (  # noqa: F401
     HassIO,
     HassioAPIError,
-    async_create_backup,
-    async_get_green_settings,
-    async_get_yellow_settings,
-    async_set_green_settings,
-    async_set_yellow_settings,
     async_update_diagnostics,
     get_supervisor_client,
 )
