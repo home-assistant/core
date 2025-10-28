@@ -157,7 +157,7 @@ class XiaomiAqaraFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="select",
             data_schema=select_schema,
-            errors=errors
+            errors=errors,
         )
 
     async def async_step_zeroconf(
