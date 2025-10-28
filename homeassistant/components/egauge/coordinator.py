@@ -64,20 +64,18 @@ class EgaugeDataCoordinator(DataUpdateCoordinator[EgaugeData]):
         # Populated on first refresh
         self._register_info: dict[str, RegisterInfo] = {}
 
+    async def _async_setup(self) -> None:
+        try:
+            self.serial_number = await self.client.get_device_serial_number()
+            self.hostname = await self.client.get_hostname()
+            self._register_info = await self.client.get_register_info()
+        except EgaugeAuthenticationError as err:
+            raise ConfigEntryAuthFailed from err
+        except (ConnectError, EgaugeParsingException) as err:
+            raise UpdateFailed(f"Error fetching device info: {err}") from err
+
     async def _async_update_data(self) -> EgaugeData:
         """Fetch data from eGauge device."""
-        # First time only: fetch static device info
-        if not self._register_info:
-            try:
-                self.serial_number = await self.client.get_device_serial_number()
-                self.hostname = await self.client.get_hostname()
-                self._register_info = await self.client.get_register_info()
-            except EgaugeAuthenticationError as err:
-                raise ConfigEntryAuthFailed from err
-            except (ConnectError, EgaugeParsingException) as err:
-                raise UpdateFailed(f"Error fetching device info: {err}") from err
-
-        # Every time: fetch dynamic measurements
         try:
             measurements = await self.client.get_current_measurements()
             counters = await self.client.get_current_counters()
