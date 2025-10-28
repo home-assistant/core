@@ -1,6 +1,6 @@
 """Test Backblaze B2 diagnostics."""
 
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from homeassistant.components.backblaze_b2.diagnostics import (
     async_get_config_entry_diagnostics,
@@ -49,22 +49,35 @@ async def test_diagnostics_bucket_data_redaction(
     """Test diagnostics redacts bucket-specific sensitive data."""
     await setup_integration(hass, mock_config_entry)
 
-    # Mock restricted bucket data to trigger redaction
-    with patch.object(
-        mock_config_entry.runtime_data.api.account_info,
-        "get_allowed",
-        return_value={
-            "capabilities": ["writeFiles", "listFiles", "readFiles"],
-            "bucketId": "test_bucket_id_123",
-            "bucketName": "restricted_bucket",
-            "namePrefix": "restricted/path/",
-        },
-    ):
+    mock_bucket = Mock()
+    mock_bucket.name = "test-bucket"
+    mock_bucket.id_ = "bucket_id_123"
+    mock_bucket.type_ = "allPrivate"
+    mock_bucket.cors_rules = []
+    mock_bucket.lifecycle_rules = []
+    mock_bucket.revision = 1
+
+    mock_api = Mock()
+    mock_account_info = Mock()
+    mock_account_info.get_account_id.return_value = "account123"
+    mock_account_info.get_api_url.return_value = "https://api.backblazeb2.com"
+    mock_account_info.get_download_url.return_value = "https://f001.backblazeb2.com"
+    mock_account_info.get_minimum_part_size.return_value = 5000000
+    mock_account_info.get_allowed.return_value = {
+        "capabilities": ["writeFiles", "listFiles", "readFiles"],
+        "bucketId": "test_bucket_id_123",
+        "bucketName": "restricted_bucket",
+        "namePrefix": "restricted/path/",
+    }
+
+    mock_bucket.api = mock_api
+    mock_api.account_info = mock_account_info
+
+    with patch.object(mock_config_entry, "runtime_data", mock_bucket):
         result = await async_get_config_entry_diagnostics(hass, mock_config_entry)
 
     account_data = result["account_info"]
 
-    # Capabilities preserved, sensitive data redacted
     assert account_data["allowed"]["capabilities"] == [
         "writeFiles",
         "listFiles",

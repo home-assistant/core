@@ -24,7 +24,7 @@ from tests.common import MockConfigEntry
 @pytest.fixture
 def mock_entry():
     """Create a mock config entry with runtime data."""
-    entry = MockConfigEntry(domain="backblaze", data={"bucket": "test"})
+    entry = MockConfigEntry(domain="backblaze_b2", data={"bucket": "test"})
     entry.runtime_data = Mock()
     return entry
 

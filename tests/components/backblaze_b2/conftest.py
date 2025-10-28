@@ -4,6 +4,7 @@ from collections.abc import Generator
 import hashlib
 import io
 import json
+import time
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -37,22 +38,28 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 def b2_fixture():
     """Create account and application keys."""
     sim = RawSimulator()
+
+    allowed = {
+        "capabilities": [
+            "writeFiles",
+            "listFiles",
+            "deleteFiles",
+            "readFiles",
+        ]
+    }
+    account_info = AccountInfo(allowed)
+
     with (
         patch("b2sdk.v2.B2Api", return_value=sim) as mock_client,
         patch("homeassistant.components.backblaze_b2.B2Api", return_value=sim),
+        patch.object(
+            RawSimulator,
+            "get_bucket_by_name",
+            RawSimulator._get_bucket_by_name,
+            create=True,
+        ),
+        patch.object(RawSimulator, "account_info", account_info, create=True),
     ):
-        RawSimulator.get_bucket_by_name = RawSimulator._get_bucket_by_name
-
-        allowed = {
-            "capabilities": [
-                "writeFiles",
-                "listFiles",
-                "deleteFiles",
-                "readFiles",
-            ]
-        }
-        RawSimulator.account_info = AccountInfo(allowed)
-
         sim: RawSimulator = mock_client.return_value
         account_id, application_key = sim.create_account()
         auth = sim.authorize_account("production", account_id, application_key)
@@ -76,9 +83,7 @@ def b2_fixture():
         )
 
         application_key_id: str = key["applicationKeyId"]
-        application_key: str = key[
-            "applicationKey"
-        ]  # Corrected typo based on prev conversation
+        application_key: str = key["applicationKey"]
 
         bucket = sim.create_bucket(
             api_url=api_url,
@@ -90,15 +95,11 @@ def b2_fixture():
 
         upload_url = sim.get_upload_url(api_url, auth_token, bucket["bucketId"])
 
-        # --- Upload the main backup file (e.g., .tar) ---
         test_backup_data = b"This is the actual backup data for the tar file."
         stream_backup = io.BytesIO(test_backup_data)
         stream_backup.seek(0)
 
-        # The filename of the backup archive is based on TEST_BACKUP.backup_id
-        backup_filename = (
-            f"{TEST_BACKUP.backup_id}.tar"  # Ensure it starts with backup_id
-        )
+        backup_filename = f"{TEST_BACKUP.backup_id}.tar"
         sha1_backup = hashlib.sha1(test_backup_data).hexdigest()
 
         file_backup_upload_result = sim.upload_file(
@@ -108,18 +109,14 @@ def b2_fixture():
             len(test_backup_data),
             "application/octet-stream",
             sha1_backup,
-            {
-                "backup_metadata": json.dumps(BACKUP_METADATA)
-            },  # Store the full BACKUP_METADATA dict as user_file_info on the tar file
+            {"backup_metadata": json.dumps(BACKUP_METADATA)},
             stream_backup,
         )
 
-        # --- Upload the metadata JSON file ---
         metadata_json_content_bytes = json.dumps(BACKUP_METADATA).encode("utf-8")
         stream_metadata = io.BytesIO(metadata_json_content_bytes)
         stream_metadata.seek(0)
 
-        # The filename for the metadata JSON is based on TEST_BACKUP.backup_id
         metadata_filename = f"{TEST_BACKUP.backup_id}.metadata.json"
         sha1_metadata = hashlib.sha1(metadata_json_content_bytes).hexdigest()
 
@@ -128,19 +125,17 @@ def b2_fixture():
             upload_url["authorizationToken"],
             f"testprefix/{metadata_filename}",
             len(metadata_json_content_bytes),
-            "application/json",  # Explicitly set content type to JSON
+            "application/json",
             sha1_metadata,
-            {},  # No custom user metadata for the metadata file itself
+            {},
             stream_metadata,
         )
 
-        # Store all uploaded file results for the ls mock
         uploaded_files_results = [
             file_backup_upload_result,
             file_metadata_upload_result,
         ]
 
-        # Define a mock for DownloadedFile
         class MockDownloadedFile:
             def __init__(self, content: bytes) -> None:
                 self._content = content
@@ -151,14 +146,11 @@ def b2_fixture():
 
             @property
             def response(self):
-                # This is a simplified mock for the response object
-                # It should provide an iter_content method that yields the content
                 mock_response = Mock()
                 mock_response.iter_content.return_value = iter([self._content])
-                mock_response.content = self._content  # Add this line
+                mock_response.content = self._content
                 return mock_response
 
-        # Define a mock for download_file_by_id on RawSimulator
         def mock_sim_download_file_by_id(
             file_id,
             file_name=None,
@@ -177,10 +169,6 @@ def b2_fixture():
                 f"Mocked download_file_by_id: File with id {file_id} or name {file_name} not found."
             )
 
-        # Assign the mock method to the RawSimulator instance
-        sim.download_file_by_id = mock_sim_download_file_by_id
-
-        # --- Modify the ls mock to return ALL uploaded files ---
         def ls(
             self,
             prefix: str = "",
@@ -200,9 +188,7 @@ def b2_fixture():
                             file_data["contentLength"],
                             file_data.get("contentType", "application/octet-stream"),
                             file_data["fileInfo"].get("sha1", ""),
-                            file_data[
-                                "fileInfo"
-                            ],  # Use the fileInfo stored during upload
+                            file_data["fileInfo"],
                             file_data["uploadTimestamp"],
                             file_data["accountId"],
                             file_data["bucketId"],
@@ -215,14 +201,10 @@ def b2_fixture():
                 )
             return listed_files
 
-        BucketSimulator.ls = ls
-
-        # Patch BucketSimulator to have the same attributes as real Bucket for diagnostics
         original_init = BucketSimulator.__init__
 
         def patched_init(self, *args, **kwargs):
             original_init(self, *args, **kwargs)
-            # Add attributes that match real Bucket class for diagnostics compatibility
             self.name = self.bucket_name
             self.id_ = self.bucket_id
             self.type_ = self.bucket_type
@@ -230,29 +212,73 @@ def b2_fixture():
             self.lifecycle_rules = []
             self.revision = 1
 
-        BucketSimulator.__init__ = patched_init
-
-        # Mock start_large_file and cancel_large_file for BucketSimulator
         def mock_start_large_file(
             file_name, content_type, file_info, account_auth_token
         ):
-            del (
-                content_type,
-                file_info,
-                account_auth_token,
-            )  # Required by interface but not used
             mock_large_file = Mock()
             mock_large_file.file_name = file_name
             mock_large_file.file_id = "mock_file_id"
             return mock_large_file
 
         def mock_cancel_large_file(file_id, account_auth_token):
-            del file_id, account_auth_token  # Required by interface but not used
+            pass
 
-        BucketSimulator.start_large_file = mock_start_large_file
-        BucketSimulator.cancel_large_file = mock_cancel_large_file
+        def mock_upload_bytes(
+            self,
+            data_bytes,
+            file_name,
+            content_type=None,
+            file_info=None,
+        ):
+            """Mock upload_bytes for metadata uploads."""
+            stream = io.BytesIO(data_bytes)
+            stream.seek(0)
+            sha1_hash = hashlib.sha1(data_bytes).hexdigest()
+            return sim.upload_file(
+                upload_url["uploadUrl"],
+                upload_url["authorizationToken"],
+                file_name,
+                content_length=len(data_bytes),
+                content_type=content_type or "application/octet-stream",
+                content_sha1=sha1_hash,
+                file_info=file_info or {},
+                data_stream=stream,
+            )
 
-        # Mock upload_local_file for the Bucket object - needed for direct file uploads
+        def mock_upload_unbound_stream(
+            self,
+            stream_reader,
+            file_name,
+            content_type=None,
+            file_info=None,
+        ):
+            """Mock upload_unbound_stream for backup uploads."""
+            # Read all data from the stream
+            data = b""
+            while True:
+                chunk = stream_reader.read(8192)
+                if not chunk:
+                    break
+                data += chunk
+
+            stream = io.BytesIO(data)
+            stream.seek(0)
+            return FileVersion(
+                sim,
+                "test_file_id",
+                file_name,
+                len(data),
+                content_type or "application/octet-stream",
+                hashlib.sha1(data).hexdigest(),
+                file_info or {},
+                int(time.time() * 1000),
+                account_id,
+                bucket["bucketId"],
+                "upload",
+                None,
+                None,
+            )
+
         def mock_upload_local_file(
             local_file,
             file_name,
@@ -260,12 +286,9 @@ def b2_fixture():
             file_info=None,
             progress_listener=None,
         ):
-            del progress_listener  # Required by interface but not used
-            # Read the file content
             with open(local_file, "rb") as f:
                 content = f.read()
 
-            # Use the existing upload_file mock logic
             stream = io.BytesIO(content)
             stream.seek(0)
             return sim.upload_file(
@@ -279,30 +302,44 @@ def b2_fixture():
                 data_stream=stream,
             )
 
-        # We need to patch the actual Bucket class, not BucketSimulator
         import b2sdk.v2.bucket  # noqa: PLC0415
 
-        original_upload_local_file = getattr(
-            b2sdk.v2.bucket.Bucket, "upload_local_file", None
-        )
-        b2sdk.v2.bucket.Bucket.upload_local_file = mock_upload_local_file
-
-        try:
+        with (
+            patch.object(
+                sim, "download_file_by_id", mock_sim_download_file_by_id, create=True
+            ),
+            patch.object(BucketSimulator, "ls", ls, create=True),
+            patch.object(BucketSimulator, "__init__", patched_init),
+            patch.object(
+                BucketSimulator, "start_large_file", mock_start_large_file, create=True
+            ),
+            patch.object(
+                BucketSimulator,
+                "cancel_large_file",
+                mock_cancel_large_file,
+                create=True,
+            ),
+            patch.object(
+                BucketSimulator, "upload_bytes", mock_upload_bytes, create=True
+            ),
+            patch.object(
+                BucketSimulator,
+                "upload_unbound_stream",
+                mock_upload_unbound_stream,
+                create=True,
+            ),
+            patch.object(
+                b2sdk.v2.bucket.Bucket, "upload_local_file", mock_upload_local_file
+            ),
+        ):
             yield BackblazeFixture(
                 application_key_id, application_key, bucket, sim, auth
             )
-        finally:
-            # Restore original method if it existed
-            if original_upload_local_file is not None:
-                b2sdk.v2.bucket.Bucket.upload_local_file = original_upload_local_file
-            else:
-                delattr(b2sdk.v2.bucket.Bucket, "upload_local_file")
 
 
 @pytest.fixture
 def backup_fixture(request: pytest.FixtureRequest) -> AgentBackup:
     """Test backup fixture."""
-    del request  # Required by pytest but not used
     return TEST_BACKUP
 
 

@@ -34,6 +34,7 @@ type BackblazeConfigEntry = ConfigEntry[Bucket]
 
 async def async_setup_entry(hass: HomeAssistant, entry: BackblazeConfigEntry) -> bool:
     """Set up Backblaze B2 from a config entry."""
+
     info = InMemoryAccountInfo()
     b2_api = B2Api(info)
 

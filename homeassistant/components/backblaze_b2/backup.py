@@ -20,22 +20,9 @@ from homeassistant.components.backup import (
     suggested_filename,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.util.async_iterator import AsyncIteratorReader
 
 from . import BackblazeConfigEntry
-
-# Compatibility: AsyncIteratorReader moved from backup.util to util.async_iterator
-# and its signature changed from (hass, stream) to (loop, stream)
-try:
-    from homeassistant.util.async_iterator import AsyncIteratorReader
-
-    _USE_NEW_SIGNATURE = True
-except ImportError:
-    from homeassistant.components.backup.util import (  # pylint: disable=hass-component-root-import
-        AsyncIteratorReader,
-    )
-
-    _USE_NEW_SIGNATURE = False
-
 from .const import (
     CONF_PREFIX,
     DATA_BACKUP_AGENT_LISTENERS,
@@ -144,7 +131,7 @@ def async_register_backup_agents_listener(
         """Remove the listener."""
         hass.data[DATA_BACKUP_AGENT_LISTENERS].remove(listener)
         if not hass.data[DATA_BACKUP_AGENT_LISTENERS]:
-            del hass.data[DATA_BACKUP_AGENT_LISTENERS]
+            hass.data.pop(DATA_BACKUP_AGENT_LISTENERS, None)
 
     return remove_listener
 
@@ -343,11 +330,7 @@ class BackblazeBackupAgent(BackupAgent):
         _LOGGER.debug("Starting streaming upload for %s", filename)
 
         stream = await open_stream()
-        # Handle both old (hass, stream) and new (loop, stream) signatures
-        if _USE_NEW_SIGNATURE:
-            reader = AsyncIteratorReader(self._hass.loop, stream)
-        else:
-            reader = AsyncIteratorReader(self._hass, stream)  # type: ignore[arg-type]
+        reader = AsyncIteratorReader(self._hass.loop, stream)
 
         _LOGGER.info("Uploading backup file %s with streaming", filename)
         try:
@@ -381,29 +364,27 @@ class BackblazeBackupAgent(BackupAgent):
         if not file:
             raise BackupNotFound(f"Backup {backup_id} not found")
 
+        # Invariant: when file is not None, metadata_file is also not None
+        assert metadata_file is not None
+
         _LOGGER.debug(
             "Deleting backup file: %s and metadata file: %s",
             file.file_name,
-            metadata_file.file_name if metadata_file else "None",
+            metadata_file.file_name,
         )
 
         await self._hass.async_add_executor_job(file.delete)
 
-        if metadata_file:
-            try:
-                await self._hass.async_add_executor_job(metadata_file.delete)
-            except Exception as e:
-                _LOGGER.error("Unexpected error from executor for metadata: %s", e)
-                raise BackupAgentError("Unexpected error in metadata deletion") from e
-        else:
-            _LOGGER.warning(
-                "Metadata file for backup %s not found for deletion", backup_id
-            )
+        try:
+            await self._hass.async_add_executor_job(metadata_file.delete)
+        except Exception as e:
+            _LOGGER.error("Unexpected error from executor for metadata: %s", e)
+            raise BackupAgentError("Unexpected error in metadata deletion") from e
 
         self._invalidate_caches(
             backup_id,
             file.file_name,
-            metadata_file.file_name if metadata_file else None,
+            metadata_file.file_name,
             remove_files=True,
         )
 
