@@ -509,14 +509,14 @@ def resolution_suggestions_for_issue_fixture(supervisor_client: AsyncMock) -> As
     supervisor_client.resolution.suggestions_for_issue.return_value = []
     return supervisor_client.resolution.suggestions_for_issue
 
-  
+
 @pytest.fixture(name="jobs_info")
 def jobs_info_fixture(supervisor_client: AsyncMock) -> AsyncMock:
     """Mock jobs info from supervisor."""
     supervisor_client.jobs.info.return_value = JobsInfo(ignore_conditions=[], jobs=[])
     return supervisor_client.jobs.info
 
-  
+
 @pytest.fixture(name="os_yellow_info")
 def os_yellow_info_fixture(supervisor_client: AsyncMock) -> AsyncMock:
     """Mock yellow info API from supervisor OS."""
