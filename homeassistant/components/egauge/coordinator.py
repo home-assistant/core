@@ -67,7 +67,7 @@ class EgaugeDataCoordinator(DataUpdateCoordinator[EgaugeData]):
     async def _async_update_data(self) -> EgaugeData:
         """Fetch data from eGauge device."""
         # First time only: fetch static device info
-        if self._register_info is None:
+        if not self._register_info:
             try:
                 self.serial_number = await self.client.get_device_serial_number()
                 self.hostname = await self.client.get_hostname()
