@@ -13,12 +13,21 @@ from egauge_async.json.models import RegisterInfo
 from httpx import ConnectError
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_SSL,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER
 from .models import EgaugeData
+from .util import _build_client_url
 
 type EgaugeConfigEntry = ConfigEntry[EgaugeDataCoordinator]
 
@@ -29,7 +38,6 @@ class EgaugeDataCoordinator(DataUpdateCoordinator[EgaugeData]):
     def __init__(
         self,
         hass: HomeAssistant,
-        client: EgaugeJsonClient,
         config_entry: ConfigEntry,
     ) -> None:
         """Initialize the coordinator."""
@@ -40,7 +48,16 @@ class EgaugeDataCoordinator(DataUpdateCoordinator[EgaugeData]):
             update_interval=timedelta(seconds=30),
             config_entry=config_entry,
         )
-        self.client = client
+        self.client = EgaugeJsonClient(
+            base_url=_build_client_url(
+                config_entry.data[CONF_HOST], config_entry.data[CONF_SSL]
+            ),
+            username=config_entry.data[CONF_USERNAME],
+            password=config_entry.data[CONF_PASSWORD],
+            client=get_async_client(
+                hass, verify_ssl=config_entry.data[CONF_VERIFY_SSL]
+            ),
+        )
         # Populated on first refresh
         self.serial_number: str
         self.hostname: str
