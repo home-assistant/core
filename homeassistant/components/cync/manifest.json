@@ -7,5 +7,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_push",
   "quality_scale": "bronze",
-  "requirements": ["pycync==0.4.1"]
+  "requirements": ["pycync==0.4.2"]
 }

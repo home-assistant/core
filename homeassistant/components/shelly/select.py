@@ -15,6 +15,7 @@ from homeassistant.components.select import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import ROLE_GENERIC
 from .coordinator import ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     RpcEntityDescription,
@@ -44,7 +45,7 @@ RPC_SELECT_ENTITIES: Final = {
         removal_condition=lambda config, _status, key: not is_view_for_platform(
             config, key, SELECT_PLATFORM
         ),
-        role="generic",
+        role=ROLE_GENERIC,
     ),
 }
 
