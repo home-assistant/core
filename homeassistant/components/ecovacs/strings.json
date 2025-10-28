@@ -82,6 +82,12 @@
       "reset_lifespan_uv_sanitizer": {
         "name": "Reset UV sanitizer lifespan"
       },
+      "station_action_clean_base": {
+        "name": "Clean base"
+      },
+      "station_action_dry_mop": {
+        "name": "Dry mop"
+      },
       "station_action_empty_dustbin": {
         "name": "Empty dustbin"
       }

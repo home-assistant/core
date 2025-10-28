@@ -48,6 +48,12 @@
       "reset_lifespan_uv_sanitizer": {
         "default": "mdi:lightbulb-on-outline"
       },
+      "station_action_clean_base": {
+        "default": "mdi:home"
+      },
+      "station_action_dry_mop": {
+        "default": "mdi:broom"
+      },
       "station_action_empty_dustbin": {
         "default": "mdi:delete-restore"
       }

@@ -27,7 +27,11 @@ SUPPORTED_LIFESPANS = (
     LifeSpan.UV_SANITIZER,
 )
 
-SUPPORTED_STATION_ACTIONS = (StationAction.EMPTY_DUSTBIN,)
+SUPPORTED_STATION_ACTIONS = (
+    StationAction.CLEAN_BASE,
+    StationAction.DRY_MOP,
+    StationAction.EMPTY_DUSTBIN,
+)
 
 LEGACY_SUPPORTED_LIFESPANS = (
     "main_brush",
