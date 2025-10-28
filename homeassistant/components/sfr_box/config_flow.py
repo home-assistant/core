@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+import logging
 from typing import TYPE_CHECKING, Any
 
 from sfrbox_api.bridge import SFRBox
@@ -15,6 +16,8 @@ from homeassistant.helpers import selector
 from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import DEFAULT_HOST, DEFAULT_USERNAME, DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -48,6 +51,7 @@ class SFRBoxFlowHandler(ConfigFlow, domain=DOMAIN):
             try:
                 system_info = await box.system_get_info()
             except SFRBoxError:
+                _LOGGER.exception("Unexpected exception")
                 errors["base"] = "cannot_connect"
             else:
                 if TYPE_CHECKING:
