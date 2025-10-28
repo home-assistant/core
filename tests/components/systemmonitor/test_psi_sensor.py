@@ -12,8 +12,7 @@ from homeassistant.helpers import entity_registry as er
 from tests.common import MockConfigEntry
 
 MOCK_PRESSURE_INFO = {
-    "cpu": {
-        "some": {"avg10": 1.1, "avg60": 2.2, "avg300": 3.3, "total": 12345}    },
+    "cpu": {"some": {"avg10": 1.1, "avg60": 2.2, "avg300": 3.3, "total": 12345}},
     "memory": {
         "some": {"avg10": 4.4, "avg60": 5.5, "avg300": 6.6, "total": 54321},
         "full": {"avg10": 0.4, "avg60": 0.5, "avg300": 0.6, "total": 432},
