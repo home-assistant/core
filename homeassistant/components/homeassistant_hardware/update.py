@@ -153,12 +153,7 @@ class BaseFirmwareUpdateEntity(
         # Fetch firmware info early to avoid prolonged "unknown" state when the device
         # is initially set up
         if self._latest_manifest is None:
-            try:
-                await self.coordinator.async_request_refresh()
-            except Exception:  # noqa: BLE001
-                _LOGGER.debug(
-                    "Failed to fetch firmware manifest on startup", exc_info=True
-                )
+            await self.coordinator.async_request_refresh()
 
     @property
     def extra_restore_state_data(self) -> FirmwareUpdateExtraStoredData:
