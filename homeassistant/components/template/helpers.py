@@ -22,15 +22,17 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers import template
+from homeassistant.helpers import issue_registry as ir, template
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
     async_get_platforms,
 )
+from homeassistant.helpers.issue_registry import IssueSeverity
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import yaml as yaml_util
 
 from .const import (
     CONF_ADVANCED_OPTIONS,
@@ -180,6 +182,44 @@ def async_create_template_tracking_entities(
     async_add_entities(entities)
 
 
+def format_migration_config(config: ConfigType) -> ConfigType:
+    """Replace templates with strings from config."""
+    formatted_config = {}
+
+    def format_template(value: Any) -> Any:
+        if isinstance(value, template.Template):
+            return value.template
+        return value
+
+    for field, value in config.items():
+        if field == CONF_ATTRIBUTES and isinstance(value, dict):
+            formatted_config[field] = {k: format_template(v) for k, v in value.items()}
+        else:
+            formatted_config[field] = format_template(value)
+
+    return formatted_config
+
+
+def create_legacy_template_issue(
+    hass: HomeAssistant, config: ConfigType, domain: str
+) -> None:
+    """Create a repair for legacy template entities."""
+    issue_id = hex(hash(frozenset(config)))
+
+    yaml_config = yaml_util.dump(
+        {DOMAIN: [{domain: [format_migration_config(config)]}]}
+    )
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_legacy_templates",
+        translation_placeholders={"domain": domain, "config": yaml_config},
+    )
+
+
 async def async_setup_template_platform(
     hass: HomeAssistant,
     domain: str,
@@ -201,6 +241,10 @@ async def async_setup_template_platform(
                 )
             else:
                 configs = [rewrite_legacy_to_modern_config(hass, config, legacy_fields)]
+
+            for definition in configs:
+                create_legacy_template_issue(hass, definition, domain)
+
             async_create_template_tracking_entities(
                 state_entity_cls,
                 async_add_entities,

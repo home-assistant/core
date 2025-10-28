@@ -29,7 +29,9 @@ from homeassistant.components.template.vacuum import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.template import Template
+from homeassistant.setup import async_setup_component
 
 
 @pytest.mark.parametrize(
@@ -377,3 +379,74 @@ async def test_platform_not_ready(
             None,
             {"coordinator": None, "entities": []},
         )
+
+
+@pytest.mark.parametrize(
+    ("domain", "config"),
+    [
+        (
+            "sensor",
+            {
+                "sensor": {
+                    "platform": "template",
+                    "sensors": {
+                        "test_template_sensor": {
+                            "value_template": "It {{ states.sensor.test_state.state }}.",
+                            "attribute_templates": {"something": "{{ 'bar' }}"},
+                        }
+                    },
+                },
+            },
+        ),
+    ],
+)
+async def test_legacy_deprecation(
+    hass: HomeAssistant,
+    domain: str,
+    config: dict,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test legacy configuration raises issue."""
+
+    await async_setup_component(hass, domain, config)
+    await hass.async_block_till_done()
+
+    assert len(issue_registry.issues) == 1
+    issue = next(iter(issue_registry.issues.values()))
+
+    assert issue.domain == "template"
+    assert issue.severity == ir.IssueSeverity.WARNING
+
+
+@pytest.mark.parametrize(
+    ("domain", "config"),
+    [
+        (
+            "template",
+            {"template": [{"sensor": {"name": "test_template_sensor", "state": "OK"}}]},
+        ),
+        (
+            "template",
+            {
+                "template": [
+                    {
+                        "triggers": {"trigger": "event", "event_type": "test"},
+                        "sensor": {"name": "test_template_sensor", "state": "OK"},
+                    }
+                ]
+            },
+        ),
+    ],
+)
+async def test_modern_configuration_does_not_raise_issue(
+    hass: HomeAssistant,
+    domain: str,
+    config: dict,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test modern configuration does not raise issue."""
+
+    await async_setup_component(hass, domain, config)
+    await hass.async_block_till_done()
+
+    assert len(issue_registry.issues) == 0
