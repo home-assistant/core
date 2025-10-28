@@ -131,7 +131,6 @@ class RoborockButtonEntity(RoborockEntityV1, ButtonEntity):
 
     async def async_press(self) -> None:
         """Press the button."""
-        _LOGGER.debug("Pressing button %s", self._consumable)
         try:
             await self._consumable.reset_consumable(self.entity_description.attribute)
         except RoborockException as err:
