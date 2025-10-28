@@ -44,7 +44,7 @@ from tests.common import (
 )
 
 TEST_DEVICE = "/dev/serial/by-id/test-device-12345"
-TEST_SWITCH_ENTITY_ID = "switch.mock_device_none"
+TEST_SWITCH_ENTITY_ID = "switch.mock_device_beta_firmware_updates"
 
 
 class MockBetaFirmwareSwitch(BaseBetaFirmwareSwitch):
@@ -58,6 +58,7 @@ class MockBetaFirmwareSwitch(BaseBetaFirmwareSwitch):
         """Initialize the mock beta firmware switch."""
         super().__init__(coordinator, config_entry)
         self._attr_unique_id = "beta_firmware"
+        self._attr_name = "Beta firmware updates"
         self._attr_device_info = DeviceInfo(
             identifiers={(TEST_DOMAIN, "test_device")},
             name="Mock Device",
@@ -193,7 +194,7 @@ async def test_switch_restore_state(
     state = hass.states.get(TEST_SWITCH_ENTITY_ID)
     assert state is not None
     assert state.state == expected_state
-    assert state.attributes.get("friendly_name") == "Mock Device None"
+    assert state.attributes.get("friendly_name") == "Mock Device Beta firmware updates"
 
     # Verify coordinator was called with correct value during setup
     assert mock_firmware_client.update_prerelease.mock_calls == [
