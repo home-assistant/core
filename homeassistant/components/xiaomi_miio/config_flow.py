@@ -284,7 +284,12 @@ class XiaomiMiioFlowHandler(ConfigFlow, domain=DOMAIN):
             return await self.async_step_select()
 
         return self.async_show_form(
-            step_id="cloud", data_schema=DEVICE_CLOUD_CONFIG, errors=errors
+            step_id="cloud",
+            data_schema=DEVICE_CLOUD_CONFIG,
+            errors=errors,
+            description_placeholders={
+                "country_servers_url": "https://www.openhab.org/addons/bindings/miio/#country-servers",
+            },
         )
 
     async def async_step_select(
@@ -322,7 +327,14 @@ class XiaomiMiioFlowHandler(ConfigFlow, domain=DOMAIN):
         else:
             schema = DEVICE_CONFIG
 
-        return self.async_show_form(step_id="manual", data_schema=schema, errors=errors)
+        return self.async_show_form(
+            step_id="manual",
+            data_schema=schema,
+            errors=errors,
+            description_placeholders={
+                "retrieving_token_url": "https://www.home-assistant.io/integrations/xiaomi_miio#retrieving-the-access-token",
+            },
+        )
 
     async def async_step_connect(
         self, user_input: dict[str, Any] | None = None
