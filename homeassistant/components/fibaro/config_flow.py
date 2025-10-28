@@ -84,7 +84,10 @@ class FibaroConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(title=info["name"], data=user_input)
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=STEP_USER_DATA_SCHEMA,
+            errors=errors,
+            description_placeholders={"url_example": "http(s)://IP"},
         )
 
     async def async_step_reauth(

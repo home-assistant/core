@@ -9,7 +9,7 @@
           "import_plugins": "Import entities from fibaro plugins / quickapps"
         },
         "data_description": {
-          "url": "The URL of the Fibaro hub in the format `http(s)://IP`.",
+          "url": "The URL of the Fibaro hub in the format `{url_example}`.",
           "username": "The username of the Fibaro hub user.",
           "password": "The password of the Fibaro hub user.",
           "import_plugins": "Select if entities from Fibaro plugins / quickapps should be imported."
