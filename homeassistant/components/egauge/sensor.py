@@ -68,11 +68,6 @@ class EgaugeEnergySensor(EgaugeEntity, SensorEntity):
         # Convert Ws → kWh
         return watt_seconds / 3_600_000
 
-    @property
-    def last_reset(self) -> None:
-        """Counter never resets (lifetime total)."""
-        return None
-
 
 # To add support for additional sensor types:
 # 1. Create sensor class (e.g., EgaugeTemperatureSensor)
