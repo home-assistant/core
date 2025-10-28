@@ -15,13 +15,14 @@ from aiohasupervisor.models import (
     AddonsOptions,
     AddonState as SupervisorAddonState,
     InstalledAddonComplete,
+    PartialBackupOptions,
     StoreAddonUpdate,
 )
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 
-from .handler import HassioAPIError, async_create_backup, get_supervisor_client
+from .handler import HassioAPIError, get_supervisor_client
 
 type _FuncType[_T, **_P, _R] = Callable[Concatenate[_T, _P], Awaitable[_R]]
 type _ReturnFuncType[_T, **_P, _R] = Callable[
@@ -261,17 +262,18 @@ class AddonManager:
         """Stop the managed add-on."""
         await self._supervisor_client.addons.stop_addon(self.addon_slug)
 
-    @api_error("Failed to create a backup of the {addon_name} add-on")
+    @api_error(
+        "Failed to create a backup of the {addon_name} add-on",
+        expected_error_type=SupervisorError,
+    )
     async def async_create_backup(self) -> None:
         """Create a partial backup of the managed add-on."""
         addon_info = await self.async_get_addon_info()
         name = f"addon_{self.addon_slug}_{addon_info.version}"
 
         self._logger.debug("Creating backup: %s", name)
-        await async_create_backup(
-            self._hass,
-            {"name": name, "addons": [self.addon_slug]},
-            partial=True,
+        await self._supervisor_client.backups.partial_backup(
+            PartialBackupOptions(name=name, addons={self.addon_slug})
         )
 
     async def async_configure_addon(
