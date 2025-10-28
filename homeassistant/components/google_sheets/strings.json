@@ -76,7 +76,7 @@
           "description": "[%key:component::google_sheets::services::append_sheet::fields::worksheet::description%]"
         }
       },
-      "name": "Get data from sheet",
+      "name": "Get data from sheet"
     }
   }
 }
