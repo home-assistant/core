@@ -72,7 +72,7 @@ class EgaugeDataCoordinator(DataUpdateCoordinator[EgaugeData]):
         except EgaugeAuthenticationError as err:
             raise ConfigEntryAuthFailed from err
         except (ConnectError, EgaugeParsingException) as err:
-            raise UpdateFailed(f"Error fetching device info: {err}") from err
+            raise ConfigEntryError from err
 
     async def _async_update_data(self) -> EgaugeData:
         """Fetch data from eGauge device."""
@@ -82,7 +82,7 @@ class EgaugeDataCoordinator(DataUpdateCoordinator[EgaugeData]):
         except EgaugeAuthenticationError as err:
             raise ConfigEntryAuthFailed from err
         except (ConnectError, EgaugeParsingException) as err:
-            raise ConfigEntryError from err
+            raise UpdateFailed(f"Error fetching device info: {err}") from err
 
         return EgaugeData(
             measurements=measurements,
