@@ -1,24 +1,8 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "description": "To obtain your access token, click [Nintendo Login]({link}) to sign in to your Nintendo account. Then, for the account you want to link, right-click on the red **Select this person** button and choose **Copy Link Address**.",
-        "data": {
-          "api_token": "Access token"
-        },
-        "data_description": {
-          "api_token": "The link copied from the Nintendo website"
-        }
-      },
-      "reauth_confirm": {
-        "description": "To obtain your access token, click [Nintendo Login]({link}) to sign in to your Nintendo account. Then, for the account you want to link, right-click on the red **Select this person** button and choose **Copy Link Address**.",
-        "data": {
-          "api_token": "Access token"
-        },
-        "data_description": {
-          "api_token": "The link copied from the Nintendo website"
-        }
-      }
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -26,12 +10,33 @@
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "no_devices_found": "There are no devices paired with this Nintendo account, go to [Nintendo Support]({more_info_url}) for further assistance."
     },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_token": "Access token"
+        },
+        "data_description": {
+          "api_token": "The link copied from the Nintendo website"
+        },
+        "description": "To obtain your access token, click [Nintendo Login]({link}) to sign in to your Nintendo account. Then, for the account you want to link, right-click on the red **Select this person** button and choose **Copy Link Address**."
+      },
+      "user": {
+        "data": {
+          "api_token": "Access token"
+        },
+        "data_description": {
+          "api_token": "The link copied from the Nintendo website"
+        },
+        "description": "To obtain your access token, click [Nintendo Login]({link}) to sign in to your Nintendo account. Then, for the account you want to link, right-click on the red **Select this person** button and choose **Copy Link Address**."
+      }
     }
   },
   "entity": {
+    "number": {
+      "today_max_screentime": {
+        "name": "Max screentime today"
+      }
+    },
     "sensor": {
       "playing_time": {
         "name": "Used screen time"
@@ -40,19 +45,14 @@
         "name": "Screen time remaining"
       }
     },
-    "time": {
-      "bedtime_alarm": {
-        "name": "Bedtime alarm"
-      }
-    },
     "switch": {
       "suspend_software": {
         "name": "Suspend software"
       }
     },
-    "number": {
-      "today_max_screentime": {
-        "name": "Max screentime today"
+    "time": {
+      "bedtime_alarm": {
+        "name": "Bedtime alarm"
       }
     }
   },
