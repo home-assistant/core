@@ -276,29 +276,15 @@ def _setup_keypad_handlers(hass: HomeAssistant, elk: Elk) -> None:
 
 async def _ensure_elk_connection(elk: Elk, host: str) -> None:
     """Ensure ElkM1 connection is established and authenticated."""
-
-    def _raise_auth_failed(message: str) -> None:
-        """Raise ConfigEntryAuthFailed with cleanup."""
-        elk.disconnect()
-        raise ConfigEntryAuthFailed(message)
-
-    def _raise_not_ready(message: str, exc: Exception) -> None:
-        """Raise ConfigEntryNotReady with cleanup."""
-        elk.disconnect()
-        raise ConfigEntryNotReady(message) from exc
-
     try:
         if not await async_wait_for_elk_to_sync(elk, LOGIN_TIMEOUT, SYNC_TIMEOUT):
             # Connection failed, likely due to invalid credentials
             _LOGGER.error("Failed to connect to ElkM1 at %s", host)
-            _raise_auth_failed(f"Authentication failed for {host}")
+            elk.disconnect()
+            raise ConfigEntryAuthFailed(f"Authentication failed for {host}")
     except TimeoutError as exc:
-        _raise_not_ready(f"Timed out connecting to {host}", exc)
-    except Exception as exc:
-        if "login failed" in str(exc).lower() or "invalid" in str(exc).lower():
-            _raise_auth_failed(f"Authentication failed for {host}")
         elk.disconnect()
-        raise
+        raise ConfigEntryNotReady(f"Timed out connecting to {host}") from exc
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ElkM1ConfigEntry) -> bool:
@@ -366,7 +352,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ElkM1ConfigEntry) -> boo
 
 def _included(ranges: list[tuple[int, int]], set_to: bool, values: list[bool]) -> None:
     for rng in ranges:
-        if not (rng[0] >= 1 and rng[0] <= rng[1] and rng[1] <= len(values)):
+        if not rng[0] <= rng[1] <= len(values):
             raise vol.Invalid(f"Invalid range {rng}")
         values[rng[0] - 1 : rng[1]] = [set_to] * (rng[1] - rng[0] + 1)
 
@@ -374,11 +360,7 @@ def _included(ranges: list[tuple[int, int]], set_to: bool, values: list[bool]) -
 async def async_unload_entry(hass: HomeAssistant, entry: ElkM1ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    # disconnect cleanly
-    if getattr(entry, "runtime_data", None) and getattr(
-        entry.runtime_data, "elk", None
-    ):
-        entry.runtime_data.elk.disconnect()
+    entry.runtime_data.elk.disconnect()
     return unload_ok
 
 
