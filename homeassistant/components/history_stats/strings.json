@@ -87,17 +87,17 @@
     }
   },
   "selector": {
+    "state_class": {
+      "options": {
+        "measurement": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::measurement%]",
+        "total_increasing": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::total_increasing%]"
+      }
+    },    
     "type": {
       "options": {
         "count": "Count",
         "ratio": "Ratio",
         "time": "Time"
-      }
-    },
-    "state_class": {
-      "options": {
-        "measurement": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::measurement%]",
-        "total_increasing": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::total_increasing%]"
       }
     }
   },
