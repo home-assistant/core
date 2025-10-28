@@ -9,15 +9,15 @@
     "very_long_press_timeout": "Very long press"
   },
   "config": {
-    "error": {
-      "api_exception": "[%key:common::config_flow::error::cannot_connect%]",
-      "client_connector_error": "[%key:common::config_flow::error::cannot_connect%]",
-      "timeout_error": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_ip": "Invalid IPv4 address"
-    },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]"
+    },
+    "error": {
+      "api_exception": "[%key:common::config_flow::error::cannot_connect%]",
+      "client_connector_error": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_ip": "Invalid IPv4 address",
+      "timeout_error": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "flow_title": "{name}",
     "step": {
@@ -29,8 +29,8 @@
         "description": "Manually configure your Bang & Olufsen device."
       },
       "zeroconf_confirm": {
-        "title": "Set up Bang & Olufsen device",
-        "description": "Confirm the configuration of the {model}-{serial_number} @ {host}."
+        "description": "Confirm the configuration of the {model}-{serial_number} @ {host}.",
+        "title": "Set up Bang & Olufsen device"
       }
     }
   },
@@ -41,11 +41,11 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "short_press_release": "[%key:component::bang_olufsen::common::short_press_release%]",
-              "long_press_timeout": "[%key:component::bang_olufsen::common::long_press_timeout%]",
               "long_press_release": "[%key:component::bang_olufsen::common::long_press_release%]",
-              "very_long_press_timeout": "[%key:component::bang_olufsen::common::very_long_press_timeout%]",
-              "very_long_press_release": "[%key:component::bang_olufsen::common::very_long_press_release%]"
+              "long_press_timeout": "[%key:component::bang_olufsen::common::long_press_timeout%]",
+              "short_press_release": "[%key:component::bang_olufsen::common::short_press_release%]",
+              "very_long_press_release": "[%key:component::bang_olufsen::common::very_long_press_release%]",
+              "very_long_press_timeout": "[%key:component::bang_olufsen::common::very_long_press_timeout%]"
             }
           }
         }
@@ -55,11 +55,11 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "short_press_release": "[%key:component::bang_olufsen::common::short_press_release%]",
-              "long_press_timeout": "[%key:component::bang_olufsen::common::long_press_timeout%]",
               "long_press_release": "[%key:component::bang_olufsen::common::long_press_release%]",
-              "very_long_press_timeout": "[%key:component::bang_olufsen::common::very_long_press_timeout%]",
-              "very_long_press_release": "[%key:component::bang_olufsen::common::very_long_press_release%]"
+              "long_press_timeout": "[%key:component::bang_olufsen::common::long_press_timeout%]",
+              "short_press_release": "[%key:component::bang_olufsen::common::short_press_release%]",
+              "very_long_press_release": "[%key:component::bang_olufsen::common::very_long_press_release%]",
+              "very_long_press_timeout": "[%key:component::bang_olufsen::common::very_long_press_timeout%]"
             }
           }
         }
@@ -69,11 +69,11 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "short_press_release": "[%key:component::bang_olufsen::common::short_press_release%]",
-              "long_press_timeout": "[%key:component::bang_olufsen::common::long_press_timeout%]",
               "long_press_release": "[%key:component::bang_olufsen::common::long_press_release%]",
-              "very_long_press_timeout": "[%key:component::bang_olufsen::common::very_long_press_timeout%]",
-              "very_long_press_release": "[%key:component::bang_olufsen::common::very_long_press_release%]"
+              "long_press_timeout": "[%key:component::bang_olufsen::common::long_press_timeout%]",
+              "short_press_release": "[%key:component::bang_olufsen::common::short_press_release%]",
+              "very_long_press_release": "[%key:component::bang_olufsen::common::very_long_press_release%]",
+              "very_long_press_timeout": "[%key:component::bang_olufsen::common::very_long_press_timeout%]"
             }
           }
         }
@@ -83,11 +83,11 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "short_press_release": "[%key:component::bang_olufsen::common::short_press_release%]",
-              "long_press_timeout": "[%key:component::bang_olufsen::common::long_press_timeout%]",
               "long_press_release": "[%key:component::bang_olufsen::common::long_press_release%]",
-              "very_long_press_timeout": "[%key:component::bang_olufsen::common::very_long_press_timeout%]",
-              "very_long_press_release": "[%key:component::bang_olufsen::common::very_long_press_release%]"
+              "long_press_timeout": "[%key:component::bang_olufsen::common::long_press_timeout%]",
+              "short_press_release": "[%key:component::bang_olufsen::common::short_press_release%]",
+              "very_long_press_release": "[%key:component::bang_olufsen::common::very_long_press_release%]",
+              "very_long_press_timeout": "[%key:component::bang_olufsen::common::very_long_press_timeout%]"
             }
           }
         }
@@ -97,11 +97,11 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "short_press_release": "[%key:component::bang_olufsen::common::short_press_release%]",
-              "long_press_timeout": "[%key:component::bang_olufsen::common::long_press_timeout%]",
               "long_press_release": "[%key:component::bang_olufsen::common::long_press_release%]",
-              "very_long_press_timeout": "[%key:component::bang_olufsen::common::very_long_press_timeout%]",
-              "very_long_press_release": "[%key:component::bang_olufsen::common::very_long_press_release%]"
+              "long_press_timeout": "[%key:component::bang_olufsen::common::long_press_timeout%]",
+              "short_press_release": "[%key:component::bang_olufsen::common::short_press_release%]",
+              "very_long_press_release": "[%key:component::bang_olufsen::common::very_long_press_release%]",
+              "very_long_press_timeout": "[%key:component::bang_olufsen::common::very_long_press_timeout%]"
             }
           }
         }
@@ -111,11 +111,11 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "short_press_release": "[%key:component::bang_olufsen::common::short_press_release%]",
-              "long_press_timeout": "[%key:component::bang_olufsen::common::long_press_timeout%]",
               "long_press_release": "[%key:component::bang_olufsen::common::long_press_release%]",
-              "very_long_press_timeout": "[%key:component::bang_olufsen::common::very_long_press_timeout%]",
-              "very_long_press_release": "[%key:component::bang_olufsen::common::very_long_press_release%]"
+              "long_press_timeout": "[%key:component::bang_olufsen::common::long_press_timeout%]",
+              "short_press_release": "[%key:component::bang_olufsen::common::short_press_release%]",
+              "very_long_press_release": "[%key:component::bang_olufsen::common::very_long_press_release%]",
+              "very_long_press_timeout": "[%key:component::bang_olufsen::common::very_long_press_timeout%]"
             }
           }
         }
@@ -125,11 +125,11 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "short_press_release": "[%key:component::bang_olufsen::common::short_press_release%]",
-              "long_press_timeout": "[%key:component::bang_olufsen::common::long_press_timeout%]",
               "long_press_release": "[%key:component::bang_olufsen::common::long_press_release%]",
-              "very_long_press_timeout": "[%key:component::bang_olufsen::common::very_long_press_timeout%]",
-              "very_long_press_release": "[%key:component::bang_olufsen::common::very_long_press_release%]"
+              "long_press_timeout": "[%key:component::bang_olufsen::common::long_press_timeout%]",
+              "short_press_release": "[%key:component::bang_olufsen::common::short_press_release%]",
+              "very_long_press_release": "[%key:component::bang_olufsen::common::very_long_press_release%]",
+              "very_long_press_timeout": "[%key:component::bang_olufsen::common::very_long_press_timeout%]"
             }
           }
         }
@@ -139,11 +139,11 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "short_press_release": "[%key:component::bang_olufsen::common::short_press_release%]",
-              "long_press_timeout": "[%key:component::bang_olufsen::common::long_press_timeout%]",
               "long_press_release": "[%key:component::bang_olufsen::common::long_press_release%]",
-              "very_long_press_timeout": "[%key:component::bang_olufsen::common::very_long_press_timeout%]",
-              "very_long_press_release": "[%key:component::bang_olufsen::common::very_long_press_release%]"
+              "long_press_timeout": "[%key:component::bang_olufsen::common::long_press_timeout%]",
+              "short_press_release": "[%key:component::bang_olufsen::common::short_press_release%]",
+              "very_long_press_release": "[%key:component::bang_olufsen::common::very_long_press_release%]",
+              "very_long_press_timeout": "[%key:component::bang_olufsen::common::very_long_press_timeout%]"
             }
           }
         }
@@ -153,11 +153,11 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "short_press_release": "[%key:component::bang_olufsen::common::short_press_release%]",
-              "long_press_timeout": "[%key:component::bang_olufsen::common::long_press_timeout%]",
               "long_press_release": "[%key:component::bang_olufsen::common::long_press_release%]",
-              "very_long_press_timeout": "[%key:component::bang_olufsen::common::very_long_press_timeout%]",
-              "very_long_press_release": "[%key:component::bang_olufsen::common::very_long_press_release%]"
+              "long_press_timeout": "[%key:component::bang_olufsen::common::long_press_timeout%]",
+              "short_press_release": "[%key:component::bang_olufsen::common::short_press_release%]",
+              "very_long_press_release": "[%key:component::bang_olufsen::common::very_long_press_release%]",
+              "very_long_press_timeout": "[%key:component::bang_olufsen::common::very_long_press_timeout%]"
             }
           }
         }
@@ -167,28 +167,48 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "short_press_release": "[%key:component::bang_olufsen::common::short_press_release%]",
-              "long_press_timeout": "[%key:component::bang_olufsen::common::long_press_timeout%]",
               "long_press_release": "[%key:component::bang_olufsen::common::long_press_release%]",
-              "very_long_press_timeout": "[%key:component::bang_olufsen::common::very_long_press_timeout%]",
-              "very_long_press_release": "[%key:component::bang_olufsen::common::very_long_press_release%]"
+              "long_press_timeout": "[%key:component::bang_olufsen::common::long_press_timeout%]",
+              "short_press_release": "[%key:component::bang_olufsen::common::short_press_release%]",
+              "very_long_press_release": "[%key:component::bang_olufsen::common::very_long_press_release%]",
+              "very_long_press_timeout": "[%key:component::bang_olufsen::common::very_long_press_timeout%]"
             }
           }
         }
       }
     }
   },
+  "exceptions": {
+    "invalid_grouping_entity": {
+      "message": "Entity with ID {entity_id} can't be added to the Beolink session. Is the entity a Bang & Olufsen media_player?"
+    },
+    "invalid_media_type": {
+      "message": "{invalid_media_type} is an invalid type. Valid values are: {valid_media_types}."
+    },
+    "invalid_sound_mode": {
+      "message": "{invalid_sound_mode} is an invalid sound mode. Valid values are: {valid_sound_modes}."
+    },
+    "invalid_source": {
+      "message": "Invalid source: {invalid_source}. Valid sources are: {valid_sources}"
+    },
+    "m3u_invalid_format": {
+      "message": "Media sources with the .m3u extension are not supported."
+    },
+    "play_media_error": {
+      "message": "An error occurred while attempting to play {media_type}: {error_message}."
+    }
+  },
   "selector": {
     "source_ids": {
       "options": {
-        "beoradio": "ASE Beoradio",
-        "deezer": "ASE / Mozart Deezer",
-        "spotify": "ASE / Mozart Spotify",
-        "tidal": "Mozart Tidal",
         "aux_a": "Beolink Converter NL/ML AUX_A",
+        "beoradio": "ASE Beoradio",
         "cd": "Beolink Converter NL/ML CD",
+        "deezer": "ASE / Mozart Deezer",
         "ph": "Beolink Converter NL/ML PH",
         "radio": "Beolink Converter NL/ML RADIO",
+        "spotify": "ASE / Mozart Spotify",
+        "tidal": "Mozart Tidal",
         "tp1": "Beolink Converter NL/ML TP1",
         "tp2": "Beolink Converter NL/ML TP2"
       }
@@ -196,88 +216,68 @@
   },
   "services": {
     "beolink_allstandby": {
-      "name": "Beolink all standby",
-      "description": "Sets all connected Beolink devices to standby."
+      "description": "Sets all connected Beolink devices to standby.",
+      "name": "Beolink all standby"
     },
     "beolink_expand": {
-      "name": "Beolink expand",
       "description": "Adds devices to the current Beolink experience.",
       "fields": {
         "all_discovered": {
-          "name": "All discovered",
-          "description": "Expand Beolink experience to all discovered devices."
+          "description": "Expand Beolink experience to all discovered devices.",
+          "name": "All discovered"
         },
         "beolink_jids": {
-          "name": "Beolink JIDs",
-          "description": "Specify which Beolink JIDs will join current Beolink experience."
+          "description": "Specify which Beolink JIDs will join current Beolink experience.",
+          "name": "Beolink JIDs"
         }
       },
+      "name": "Beolink expand",
       "sections": {
         "jid_options": {
-          "name": "[%key:component::bang_olufsen::common::jid_options_name%]",
-          "description": "[%key:component::bang_olufsen::common::jid_options_description%]"
+          "description": "[%key:component::bang_olufsen::common::jid_options_description%]",
+          "name": "[%key:component::bang_olufsen::common::jid_options_name%]"
         }
       }
     },
     "beolink_join": {
-      "name": "Beolink join",
       "description": "Joins a Beolink experience.",
       "fields": {
         "beolink_jid": {
-          "name": "Beolink JID",
-          "description": "Manually specify Beolink JID to join."
+          "description": "Manually specify Beolink JID to join.",
+          "name": "Beolink JID"
         },
         "source_id": {
-          "name": "Source",
-          "description": "Specify which source to join, behavior varies between hardware platforms. Source names prefaced by a platform name can only be used when connecting to that platform. For example \"ASE Beoradio\" can only be used when joining an ASE device, while ”ASE / Mozart Deezer” can be used with ASE or Mozart devices. A defined Beolink JID is required."
+          "description": "Specify which source to join, behavior varies between hardware platforms. Source names prefaced by a platform name can only be used when connecting to that platform. For example \"ASE Beoradio\" can only be used when joining an ASE device, while ”ASE / Mozart Deezer” can be used with ASE or Mozart devices. A defined Beolink JID is required.",
+          "name": "Source"
         }
       },
+      "name": "Beolink join",
       "sections": {
         "jid_options": {
-          "name": "[%key:component::bang_olufsen::common::jid_options_name%]",
-          "description": "[%key:component::bang_olufsen::common::jid_options_description%]"
+          "description": "[%key:component::bang_olufsen::common::jid_options_description%]",
+          "name": "[%key:component::bang_olufsen::common::jid_options_name%]"
         }
       }
     },
     "beolink_leave": {
-      "name": "Beolink leave",
-      "description": "Leaves a Beolink experience."
+      "description": "Leaves a Beolink experience.",
+      "name": "Beolink leave"
     },
     "beolink_unexpand": {
-      "name": "Beolink unexpand",
       "description": "Removes devices from the current Beolink experience.",
       "fields": {
         "beolink_jids": {
-          "name": "Beolink JIDs",
-          "description": "Specify which Beolink JIDs will leave from current Beolink experience."
+          "description": "Specify which Beolink JIDs will leave from current Beolink experience.",
+          "name": "Beolink JIDs"
         }
       },
+      "name": "Beolink unexpand",
       "sections": {
         "jid_options": {
-          "name": "[%key:component::bang_olufsen::common::jid_options_name%]",
-          "description": "[%key:component::bang_olufsen::common::jid_options_description%]"
+          "description": "[%key:component::bang_olufsen::common::jid_options_description%]",
+          "name": "[%key:component::bang_olufsen::common::jid_options_name%]"
         }
       }
-    }
-  },
-  "exceptions": {
-    "m3u_invalid_format": {
-      "message": "Media sources with the .m3u extension are not supported."
-    },
-    "invalid_source": {
-      "message": "Invalid source: {invalid_source}. Valid sources are: {valid_sources}"
-    },
-    "invalid_media_type": {
-      "message": "{invalid_media_type} is an invalid type. Valid values are: {valid_media_types}."
-    },
-    "play_media_error": {
-      "message": "An error occurred while attempting to play {media_type}: {error_message}."
-    },
-    "invalid_grouping_entity": {
-      "message": "Entity with ID {entity_id} can't be added to the Beolink session. Is the entity a Bang & Olufsen media_player?"
-    },
-    "invalid_sound_mode": {
-      "message": "{invalid_sound_mode} is an invalid sound mode. Valid values are: {valid_sound_modes}."
     }
   }
 }

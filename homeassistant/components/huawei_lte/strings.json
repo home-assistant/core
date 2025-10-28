@@ -21,8 +21,6 @@
     "flow_title": "{name}",
     "step": {
       "reauth_confirm": {
-        "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "Enter device access credentials.",
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]"
@@ -30,7 +28,9 @@
         "data_description": {
           "password": "[%key:component::huawei_lte::config::step::user::data_description::password%]",
           "username": "[%key:component::huawei_lte::config::step::user::data_description::username%]"
-        }
+        },
+        "description": "Enter device access credentials.",
+        "title": "[%key:common::config_flow::title::reauth%]"
       },
       "user": {
         "data": {
@@ -50,52 +50,39 @@
       }
     }
   },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "name": "Notification service name (change requires restart)",
-          "recipient": "SMS notification recipients",
-          "track_wired_clients": "Track wired network clients",
-          "unauthenticated_mode": "Unauthenticated mode (change requires reload)"
-        },
-        "data_description": {
-          "name": "Used to distinguish between notification services in case there are multiple Huawei LTE devices configured. Changes to this option value take effect after Home Assistant restart.",
-          "recipient": "Comma-separated list of default recipient SMS phone numbers for the notification service, used in case the notification sender does not specify any.",
-          "track_wired_clients": "Whether the device tracker entities track also clients attached to the router's wired Ethernet network, in addition to wireless clients.",
-          "unauthenticated_mode": "Whether to run in unauthenticated mode. Unauthenticated mode provides a limited set of features, but may help in case there are problems accessing the router's web interface from a browser while the integration is active. Changes to this option value take effect after integration reload."
-        }
-      }
-    }
-  },
   "entity": {
     "binary_sensor": {
-      "mobile_connection": {
-        "name": "Mobile connection"
-      },
-      "wifi_status": {
-        "name": "Wi-Fi status"
+      "5ghz_wifi_status": {
+        "name": "5GHz Wi-Fi status"
       },
       "24ghz_wifi_status": {
         "name": "2.4GHz Wi-Fi status"
       },
-      "5ghz_wifi_status": {
-        "name": "5GHz Wi-Fi status"
+      "mobile_connection": {
+        "name": "Mobile connection"
       },
       "sms_storage_full": {
         "name": "SMS storage full"
+      },
+      "wifi_status": {
+        "name": "Wi-Fi status"
+      }
+    },
+    "select": {
+      "preferred_network_mode": {
+        "name": "Preferred network mode",
+        "state": {
+          "00": "4G/3G/2G auto",
+          "01": "2G only",
+          "02": "3G only",
+          "03": "4G only",
+          "0201": "3G/2G auto",
+          "0301": "4G/2G auto",
+          "0302": "4G/3G auto"
+        }
       }
     },
     "sensor": {
-      "uptime": {
-        "name": "Uptime"
-      },
-      "wan_ip_address": {
-        "name": "WAN IP address"
-      },
-      "wan_ipv6_address": {
-        "name": "WAN IPv6 address"
-      },
       "arfcn": {
         "name": "ARFCN"
       },
@@ -104,6 +91,9 @@
       },
       "base_station_identity_code": {
         "name": "Base station identity code"
+      },
+      "battery": {
+        "name": "Battery"
       },
       "cell_id": {
         "name": "Cell ID"
@@ -114,14 +104,38 @@
       "cqi1": {
         "name": "CQI 1"
       },
-      "downlink_mcs": {
-        "name": "Downlink MCS"
+      "current_connection_download": {
+        "name": "Current connection download"
+      },
+      "current_connection_duration": {
+        "name": "Current connection duration"
+      },
+      "current_connection_upload": {
+        "name": "Current connection upload"
+      },
+      "current_day_transfer": {
+        "name": "Current day transfer"
+      },
+      "current_download_rate": {
+        "name": "Current download rate"
+      },
+      "current_month_download": {
+        "name": "Current month download"
+      },
+      "current_month_upload": {
+        "name": "Current month upload"
+      },
+      "current_upload_rate": {
+        "name": "Current upload rate"
       },
       "downlink_bandwidth": {
         "name": "Downlink bandwidth"
       },
       "downlink_frequency": {
         "name": "Downlink frequency"
+      },
+      "downlink_mcs": {
+        "name": "Downlink MCS"
       },
       "earfcn": {
         "name": "EARFCN"
@@ -189,11 +203,42 @@
       "nrulmcs": {
         "name": "5G uplink MCS"
       },
+      "operator_code": {
+        "name": "Operator code"
+      },
+      "operator_name": {
+        "name": "Operator name"
+      },
+      "operator_search_mode": {
+        "name": "Operator search mode",
+        "state": {
+          "0": "[%key:common::state::auto%]",
+          "1": "[%key:common::state::manual%]"
+        }
+      },
       "pci": {
         "name": "PCI"
       },
       "plmn": {
         "name": "PLMN"
+      },
+      "preferred_network_mode": {
+        "name": "Preferred network mode",
+        "state": {
+          "00": "4G/3G/2G auto",
+          "01": "2G only",
+          "02": "3G only",
+          "03": "4G only",
+          "0201": "3G/2G auto",
+          "0301": "4G/2G auto",
+          "0302": "4G/3G auto"
+        }
+      },
+      "primary_dns_server": {
+        "name": "Primary DNS server"
+      },
+      "primary_ipv6_dns_server": {
+        "name": "Primary IPv6 DNS server"
       },
       "rac": {
         "name": "RAC"
@@ -219,77 +264,59 @@
       "sc": {
         "name": "Scrambling code"
       },
-      "sinr": {
-        "name": "SINR"
-      },
-      "tac": {
-        "name": "TAC"
-      },
-      "tdd": {
-        "name": "TDD"
-      },
-      "transmission_mode": {
-        "name": "Transmission mode"
-      },
-      "transmit_power": {
-        "name": "Transmit power"
-      },
-      "uplink_mcs": {
-        "name": "Uplink MCS"
-      },
-      "uplink_bandwidth": {
-        "name": "Uplink bandwidth"
-      },
-      "uplink_frequency": {
-        "name": "Uplink frequency"
-      },
-      "wdlfreq": {
-        "name": "WCDMA downlink frequency"
-      },
-      "sms_unread": {
-        "name": "SMS unread"
-      },
-      "current_day_transfer": {
-        "name": "Current day transfer"
-      },
-      "current_month_download": {
-        "name": "Current month download"
-      },
-      "current_month_upload": {
-        "name": "Current month upload"
-      },
-      "battery": {
-        "name": "Battery"
-      },
-      "wifi_clients_connected": {
-        "name": "Wi-Fi clients connected"
-      },
-      "primary_dns_server": {
-        "name": "Primary DNS server"
-      },
-      "primary_ipv6_dns_server": {
-        "name": "Primary IPv6 DNS server"
-      },
       "secondary_dns_server": {
         "name": "Secondary DNS server"
       },
       "secondary_ipv6_dns_server": {
         "name": "Secondary IPv6 DNS server"
       },
-      "current_connection_duration": {
-        "name": "Current connection duration"
+      "sinr": {
+        "name": "SINR"
       },
-      "current_connection_download": {
-        "name": "Current connection download"
+      "sms_capacity_device": {
+        "name": "SMS capacity (device)"
       },
-      "current_download_rate": {
-        "name": "Current download rate"
+      "sms_capacity_sim": {
+        "name": "SMS capacity (SIM)"
       },
-      "current_connection_upload": {
-        "name": "Current connection upload"
+      "sms_deleted_device": {
+        "name": "SMS deleted (device)"
       },
-      "current_upload_rate": {
-        "name": "Current upload rate"
+      "sms_drafts_device": {
+        "name": "SMS drafts (device)"
+      },
+      "sms_drafts_sim": {
+        "name": "SMS drafts (SIM)"
+      },
+      "sms_inbox_device": {
+        "name": "SMS inbox (device)"
+      },
+      "sms_inbox_sim": {
+        "name": "SMS inbox (SIM)"
+      },
+      "sms_messages_sim": {
+        "name": "SMS messages (SIM)"
+      },
+      "sms_outbox_device": {
+        "name": "SMS outbox (device)"
+      },
+      "sms_outbox_sim": {
+        "name": "SMS outbox (SIM)"
+      },
+      "sms_unread": {
+        "name": "SMS unread"
+      },
+      "sms_unread_device": {
+        "name": "SMS unread (device)"
+      },
+      "sms_unread_sim": {
+        "name": "SMS unread (SIM)"
+      },
+      "tac": {
+        "name": "TAC"
+      },
+      "tdd": {
+        "name": "TDD"
       },
       "total_connected_duration": {
         "name": "Total connected duration"
@@ -300,80 +327,35 @@
       "total_upload": {
         "name": "Total upload"
       },
-      "operator_name": {
-        "name": "Operator name"
+      "transmission_mode": {
+        "name": "Transmission mode"
       },
-      "operator_code": {
-        "name": "Operator code"
+      "transmit_power": {
+        "name": "Transmit power"
       },
-      "operator_search_mode": {
-        "name": "Operator search mode",
-        "state": {
-          "0": "[%key:common::state::auto%]",
-          "1": "[%key:common::state::manual%]"
-        }
+      "uplink_bandwidth": {
+        "name": "Uplink bandwidth"
       },
-      "preferred_network_mode": {
-        "name": "Preferred network mode",
-        "state": {
-          "00": "4G/3G/2G auto",
-          "0302": "4G/3G auto",
-          "0301": "4G/2G auto",
-          "03": "4G only",
-          "0201": "3G/2G auto",
-          "02": "3G only",
-          "01": "2G only"
-        }
+      "uplink_frequency": {
+        "name": "Uplink frequency"
       },
-      "sms_deleted_device": {
-        "name": "SMS deleted (device)"
+      "uplink_mcs": {
+        "name": "Uplink MCS"
       },
-      "sms_drafts_device": {
-        "name": "SMS drafts (device)"
+      "uptime": {
+        "name": "Uptime"
       },
-      "sms_inbox_device": {
-        "name": "SMS inbox (device)"
+      "wan_ip_address": {
+        "name": "WAN IP address"
       },
-      "sms_capacity_device": {
-        "name": "SMS capacity (device)"
+      "wan_ipv6_address": {
+        "name": "WAN IPv6 address"
       },
-      "sms_outbox_device": {
-        "name": "SMS outbox (device)"
+      "wdlfreq": {
+        "name": "WCDMA downlink frequency"
       },
-      "sms_unread_device": {
-        "name": "SMS unread (device)"
-      },
-      "sms_drafts_sim": {
-        "name": "SMS drafts (SIM)"
-      },
-      "sms_inbox_sim": {
-        "name": "SMS inbox (SIM)"
-      },
-      "sms_capacity_sim": {
-        "name": "SMS capacity (SIM)"
-      },
-      "sms_outbox_sim": {
-        "name": "SMS outbox (SIM)"
-      },
-      "sms_unread_sim": {
-        "name": "SMS unread (SIM)"
-      },
-      "sms_messages_sim": {
-        "name": "SMS messages (SIM)"
-      }
-    },
-    "select": {
-      "preferred_network_mode": {
-        "name": "Preferred network mode",
-        "state": {
-          "00": "4G/3G/2G auto",
-          "0302": "4G/3G auto",
-          "0301": "4G/2G auto",
-          "03": "4G only",
-          "0201": "3G/2G auto",
-          "02": "3G only",
-          "01": "2G only"
-        }
+      "wifi_clients_connected": {
+        "name": "Wi-Fi clients connected"
       }
     },
     "switch": {
@@ -385,26 +367,44 @@
       }
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "name": "Notification service name (change requires restart)",
+          "recipient": "SMS notification recipients",
+          "track_wired_clients": "Track wired network clients",
+          "unauthenticated_mode": "Unauthenticated mode (change requires reload)"
+        },
+        "data_description": {
+          "name": "Used to distinguish between notification services in case there are multiple Huawei LTE devices configured. Changes to this option value take effect after Home Assistant restart.",
+          "recipient": "Comma-separated list of default recipient SMS phone numbers for the notification service, used in case the notification sender does not specify any.",
+          "track_wired_clients": "Whether the device tracker entities track also clients attached to the router's wired Ethernet network, in addition to wireless clients.",
+          "unauthenticated_mode": "Whether to run in unauthenticated mode. Unauthenticated mode provides a limited set of features, but may help in case there are problems accessing the router's web interface from a browser while the integration is active. Changes to this option value take effect after integration reload."
+        }
+      }
+    }
+  },
   "services": {
     "resume_integration": {
-      "name": "Resume integration",
       "description": "Resumes suspended integration.",
       "fields": {
         "url": {
-          "name": "[%key:common::config_flow::data::url%]",
-          "description": "URL of router to resume integration for; optional when only one is configured."
+          "description": "URL of router to resume integration for; optional when only one is configured.",
+          "name": "[%key:common::config_flow::data::url%]"
         }
-      }
+      },
+      "name": "Resume integration"
     },
     "suspend_integration": {
-      "name": "Suspend integration",
       "description": "Suspends integration. Suspending logs the integration out from the router, and stops accessing it. Useful e.g. if accessing the router web interface from another source such as a web browser is temporarily required. Invoke the 'Resume integration' action to resume.",
       "fields": {
         "url": {
-          "name": "[%key:common::config_flow::data::url%]",
-          "description": "URL of router to suspend integration for; optional when only one is configured."
+          "description": "URL of router to suspend integration for; optional when only one is configured.",
+          "name": "[%key:common::config_flow::data::url%]"
         }
-      }
+      },
+      "name": "Suspend integration"
     }
   }
 }
