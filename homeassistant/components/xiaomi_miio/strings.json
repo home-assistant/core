@@ -37,7 +37,7 @@
           "host": "[%key:common::config_flow::data::ip%]",
           "token": "[%key:common::config_flow::data::api_token%]"
         },
-        "description": "You will need the 32 character API token, see {retrieving_token_url} for instructions. Please note, that this API token is different from the key used by the Xiaomi Aqara integration."
+        "description": "You will need the 32 character API token, see {retrieving_token_url} for instructions. Please note that this API token is different from the key used by the Xiaomi Aqara integration."
       },
       "reauth_confirm": {
         "description": "The Xiaomi Home integration needs to re-authenticate your account in order to update the tokens or add missing credentials.",
