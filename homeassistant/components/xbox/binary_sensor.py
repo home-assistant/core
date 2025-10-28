@@ -9,7 +9,6 @@ from typing import Any
 
 from xbox.webapi.api.provider.people.models import Person
 from xbox.webapi.api.provider.titlehub.models import Title
-from yarl import URL
 
 from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
@@ -20,7 +19,12 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import XboxConfigEntry
-from .entity import XboxBaseEntity, XboxBaseEntityDescription, check_deprecated_entity
+from .entity import (
+    XboxBaseEntity,
+    XboxBaseEntityDescription,
+    check_deprecated_entity,
+    profile_pic,
+)
 
 
 class XboxBinarySensor(StrEnum):
@@ -41,23 +45,6 @@ class XboxBinarySensorEntityDescription(
 
     is_on_fn: Callable[[Person], bool | None]
     deprecated: bool | None = None
-
-
-def profile_pic(person: Person, _: Title | None) -> str | None:
-    """Return the gamer pic."""
-
-    # Xbox sometimes returns a domain that uses a wrong certificate which
-    # creates issues with loading the image.
-    # The correct domain is images-eds-ssl which can just be replaced
-    # to point to the correct image, with the correct domain and certificate.
-    # We need to also remove the 'mode=Padding' query because with it,
-    # it results in an error 400.
-    url = URL(person.display_pic_raw)
-    if url.host == "images-eds.xboxlive.com":
-        url = url.with_host("images-eds-ssl.xboxlive.com").with_scheme("https")
-    query = dict(url.query)
-    query.pop("mode", None)
-    return str(url.with_query(query))
 
 
 def profile_attributes(person: Person, _: Title | None) -> dict[str, Any]:
