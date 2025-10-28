@@ -1,13 +1,20 @@
 """Tests for the eGauge sensor platform."""
 
+from datetime import timedelta
+from unittest.mock import MagicMock
+
+from egauge_async.json.client import EgaugeAuthenticationError
+from freezegun.api import FrozenDateTimeFactory
+from httpx import ConnectError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.egauge.const import DOMAIN
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
@@ -77,3 +84,36 @@ async def test_energy_sensor_values(hass: HomeAssistant) -> None:
     assert state.state == "87.5"
     assert state.attributes["unit_of_measurement"] == "kWh"
     assert state.attributes["device_class"] == "energy"
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    "exception", [EgaugeAuthenticationError, ConnectError("Connection failed")]
+)
+@pytest.mark.freeze_time("2025-01-15T10:00:00+00:00")
+async def test_sensor_error(
+    hass: HomeAssistant,
+    mock_egauge_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    exception: Exception,
+) -> None:
+    """Test errors that occur after setup are handled."""
+    # Initial setup handled by fixture
+
+    # Trigger exception on next update
+    mock_egauge_client.get_current_measurements.side_effect = exception
+
+    # Trigger update
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Test Grid power sensor
+    state = hass.states.get("sensor.egauge_home_grid")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+    # Test Grid energy sensor
+    state = hass.states.get("sensor.egauge_home_grid_energy")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
