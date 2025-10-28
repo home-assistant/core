@@ -282,66 +282,40 @@ async def test_subscribe_topic(
         unsub()
 
 
-async def test_await_subscription(
+async def test_status_subscription_done(
     hass: HomeAssistant,
     mqtt_client_mock: MqttMockPahoClient,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     recorded_calls: list[ReceiveMessage],
     record_calls: MessageCallbackType,
 ) -> None:
-    """Test the subscription of a topic."""
-    mock_mqtt = await mqtt_mock_entry()
-    # Fail when no subscription is queued
-    with pytest.raises(HomeAssistantError) as exc:
-        await mqtt.async_await_subscription(hass, "test-topic")
-    assert exc.value.args[0] == (
-        "Cannot find subscription to topic 'test-topic' "
-        "and QoS 0, make sure the subscription is successful"
+    """Test the on subscription status."""
+    await mqtt_mock_entry()
+
+    on_status = asyncio.Event()
+
+    def _on_subscribe_status() -> None:
+        on_status.set()
+
+    subscribe_callback = await mqtt.async_subscribe(
+        hass, "test-topic", record_calls, qos=0
     )
-    assert exc.value.translation_key == "mqtt_not_setup_cannot_find_subscription"
-    assert exc.value.translation_placeholders == {"topic": "test-topic", "qos": "0"}
+    handler = mqtt.async_on_subscribe_done(
+        hass, "test-topic", 0, on_subscribe_status=_on_subscribe_status
+    )
+    await on_status.wait()
+    assert ("test-topic", 0) in help_all_subscribe_calls(mqtt_client_mock)
 
-    # Test awaiting pending subscription
-    with (
-        patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.5),
-        patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.5),
-    ):
-        unsub_no_wait = await mqtt.async_subscribe(hass, "test-topic", record_calls)
-        # assert ("test-topic", 0) not in help_all_subscribe_calls(mqtt_client_mock)
-        await mqtt.async_await_subscription(hass, "test-topic")
-        assert ("test-topic", 0) in help_all_subscribe_calls(mqtt_client_mock)
-
-    async_fire_mqtt_message(hass, "test-topic", "test-payload")
-
-    await hass.async_block_till_done()
+    await mqtt.async_publish(hass, "test-topic", "beer ready", 0)
+    handler()
+    subscribe_callback()
     assert len(recorded_calls) == 1
     assert recorded_calls[0].topic == "test-topic"
-    assert recorded_calls[0].payload == "test-payload"
-    recorded_calls.clear()
-
-    unsub_no_wait()
-    await hass.async_block_till_done()
-
-    # Test existing subscription, should return immediately
-    unsub = await mqtt.async_subscribe(hass, "test-topic", record_calls, wait=True)
-    await mqtt.async_await_subscription(hass, "test-topic")
-
-    async_fire_mqtt_message(hass, "test-topic", "test-payload")
-
-    await hass.async_block_till_done()
-    assert len(recorded_calls) == 1
-    assert recorded_calls[0].topic == "test-topic"
-    assert recorded_calls[0].payload == "test-payload"
-
-    assert mock_mqtt.is_active_subscription("test-topic")
-
-    unsub()
-    assert not mock_mqtt.is_active_subscription("test-topic")
-
-    recorded_calls.clear()
+    assert recorded_calls[0].payload == "beer ready"
+    assert recorded_calls[0].qos == 0
 
 
-async def test_subscribe_topic_and_wait(
+async def test_subscribe_topic_with_subscribe_done(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     recorded_calls: list[ReceiveMessage],
@@ -349,74 +323,42 @@ async def test_subscribe_topic_and_wait(
 ) -> None:
     """Test the subscription of a topic."""
     await mqtt_mock_entry()
-    unsub_no_wait = await mqtt.async_subscribe(hass, "other-test-topic/#", record_calls)
-    unsub_wait = await mqtt.async_subscribe(hass, "test-topic", record_calls, wait=True)
 
-    async_fire_mqtt_message(hass, "test-topic", "test-payload")
-    async_fire_mqtt_message(hass, "other-test-topic/test", "other-test-payload")
+    on_status = asyncio.Event()
 
+    def _on_subscribe() -> None:
+        hass.async_create_task(mqtt.async_publish(hass, "test-topic", "beer ready", 0))
+        on_status.set()
+
+    # Start a first subscription
+    unsub1 = await mqtt.async_subscribe(
+        hass, "test-topic", record_calls, on_subscribe=_on_subscribe
+    )
+    await on_status.wait()
+    await hass.async_block_till_done()
+    assert len(recorded_calls) == 1
+    assert recorded_calls[0].topic == "test-topic"
+    assert recorded_calls[0].payload == "beer ready"
+    assert recorded_calls[0].qos == 0
+    recorded_calls.clear()
+
+    # Start a second subscription to the same topic
+    on_status.clear()
+    unsub2 = await mqtt.async_subscribe(
+        hass, "test-topic", record_calls, on_subscribe=_on_subscribe
+    )
+    await on_status.wait()
     await hass.async_block_till_done()
     assert len(recorded_calls) == 2
     assert recorded_calls[0].topic == "test-topic"
-    assert recorded_calls[0].payload == "test-payload"
-    assert recorded_calls[1].topic == "other-test-topic/test"
-    assert recorded_calls[1].payload == "other-test-payload"
+    assert recorded_calls[0].payload == "beer ready"
+    assert recorded_calls[0].qos == 0
+    assert recorded_calls[1].topic == "test-topic"
+    assert recorded_calls[1].payload == "beer ready"
+    assert recorded_calls[1].qos == 0
 
-    unsub_no_wait()
-    unsub_wait()
-
-    async_fire_mqtt_message(hass, "test-topic", "test-payload")
-
-    await hass.async_block_till_done()
-    assert len(recorded_calls) == 2
-
-    # Cannot unsubscribe twice
-    with pytest.raises(HomeAssistantError):
-        unsub_no_wait()
-
-    with pytest.raises(HomeAssistantError):
-        unsub_wait()
-
-
-async def test_subscribe_topic_and_wait_timeout(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    recorded_calls: list[ReceiveMessage],
-    record_calls: MessageCallbackType,
-) -> None:
-    """Test the subscription of a topic."""
-    await mqtt_mock_entry()
-    with (
-        patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.5),
-        patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.5),
-        patch("homeassistant.components.mqtt.client.SUBSCRIBE_TIMEOUT", 0),
-        pytest.raises(HomeAssistantError) as exc,
-    ):
-        await mqtt.async_subscribe(hass, "test-topic", record_calls, wait=True)
-
-    assert exc.value.translation_domain == mqtt.DOMAIN
-    assert exc.value.translation_key == "subscribe_timeout"
-
-
-async def test_await_subscription_and_wait_timeout(
-    hass: HomeAssistant,
-    mock_debouncer: asyncio.Event,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    record_calls: MessageCallbackType,
-) -> None:
-    """Test the subscription of a topic."""
-    await mqtt_mock_entry()
-    await mqtt.async_subscribe(hass, "test-topic", record_calls)
-    with (
-        patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.5),
-        patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.5),
-        patch("homeassistant.components.mqtt.client.SUBSCRIBE_TIMEOUT", 0.0),
-        pytest.raises(HomeAssistantError) as exc,
-    ):
-        await mqtt.async_await_subscription(hass, "test-topic", 0)
-
-    assert exc.value.translation_domain == mqtt.DOMAIN
-    assert exc.value.translation_key == "subscribe_timeout"
+    unsub1()
+    unsub2()
 
 
 @pytest.mark.usefixtures("mqtt_mock_entry")
@@ -428,15 +370,6 @@ async def test_subscribe_topic_not_initialize(
         HomeAssistantError, match=r".*make sure MQTT is set up correctly"
     ):
         await mqtt.async_subscribe(hass, "test-topic", record_calls)
-
-
-@pytest.mark.usefixtures("mqtt_mock_entry")
-async def test_await_subscription_not_initialize(hass: HomeAssistant) -> None:
-    """Test the subscription of a topic when MQTT was not initialized."""
-    with pytest.raises(
-        HomeAssistantError, match=r".*make sure MQTT is set up correctly"
-    ):
-        await mqtt.async_await_subscription(hass, "test-topic")
 
 
 async def test_subscribe_mqtt_config_entry_disabled(

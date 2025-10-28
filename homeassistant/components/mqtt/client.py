@@ -189,62 +189,28 @@ async def async_publish(
     )
 
 
-async def async_await_subscription(
+@callback
+def async_on_subscribe_done(
     hass: HomeAssistant,
     topic: str,
-    qos: int = DEFAULT_QOS,
-) -> None:
-    """Wait for an MQTT subscription to be completed."""
-    subscription_complete: asyncio.Future[None]
+    qos: int,
+    on_subscribe_status: CALLBACK_TYPE,
+) -> CALLBACK_TYPE:
+    """Call on_subscribe_done when the matched subscription was completed.
+
+    If a subscription is already present the callback will call
+    on_subscribe_status directly.
+    Call the returned callback to stop and cleanup status monitoring.
+    """
 
     async def _sync_mqtt_subscribe(subscriptions: list[tuple[str, int]]) -> None:
         if (topic, qos) not in subscriptions:
             return
-        subscription_complete.set_result(None)
+        hass.loop.call_soon(on_subscribe_status)
 
-    def _async_timeout_subscribe() -> None:
-        if not subscription_complete.done():
-            subscription_complete.set_exception(TimeoutError)
-
-    try:
-        mqtt_data = hass.data[DATA_MQTT]
-    except KeyError as exc:
-        raise HomeAssistantError(
-            f"Cannot wait for subscription to topic '{topic}' QoS {qos}, "
-            "make sure MQTT is set up correctly",
-            translation_key="mqtt_not_setup_cannot_wait_for_subscribe",
-            translation_domain=DOMAIN,
-            translation_placeholders={"topic": topic, "qos": str(qos)},
-        ) from exc
-    client = mqtt_data.client
-
-    if not client.is_active_subscription(topic):
-        raise HomeAssistantError(
-            f"Cannot find subscription to topic '{topic}' and QoS {qos}, "
-            "make sure the subscription is successful",
-            translation_key="mqtt_not_setup_cannot_find_subscription",
-            translation_domain=DOMAIN,
-            translation_placeholders={"topic": topic, "qos": str(qos)},
-        )
-    if not client.is_pending_subscription(topic):
-        # Existing non pending subscription are assumed to be completed already
-        return
-
-    subscription_complete = hass.loop.create_future()
-    dispatcher = async_dispatcher_connect(
+    return async_dispatcher_connect(
         hass, MQTT_PROCESSED_SUBSCRIPTIONS, _sync_mqtt_subscribe
     )
-    try:
-        hass.loop.call_later(SUBSCRIBE_TIMEOUT, _async_timeout_subscribe)
-        await subscription_complete
-    except TimeoutError as exc:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="subscribe_timeout",
-        ) from exc
-    finally:
-        dispatcher()
-    return
 
 
 @bind_hass
@@ -254,46 +220,27 @@ async def async_subscribe(
     msg_callback: Callable[[ReceiveMessage], Coroutine[Any, Any, None] | None],
     qos: int = DEFAULT_QOS,
     encoding: str | None = DEFAULT_ENCODING,
-    wait: bool = False,
+    on_subscribe: CALLBACK_TYPE | None = None,
 ) -> CALLBACK_TYPE:
     """Subscribe to an MQTT topic.
 
+    If the on_subcribe callback hook is set, it will be called once
+    when the subscription has been completed.
+
     Call the return value to unsubscribe.
     """
-    subscription_complete: asyncio.Future[None]
+    handler: CALLBACK_TYPE | None = None
 
-    async def _sync_mqtt_subscribe(subscriptions: list[tuple[str, int]]) -> None:
-        if (topic, qos) not in subscriptions:
-            return
-        subscription_complete.set_result(None)
+    def _on_subscribe_done() -> None:
+        """Call once when the subscription was completed."""
+        if TYPE_CHECKING:
+            assert on_subscribe is not None and handler is not None
 
-    def _async_timeout_subscribe() -> None:
-        if not subscription_complete.done():
-            subscription_complete.set_exception(TimeoutError)
+        handler()
+        on_subscribe()
 
-    if (
-        wait
-        and DATA_MQTT in hass.data
-        and not hass.data[DATA_MQTT].client.is_active_subscription(topic)
-    ):
-        subscription_complete = hass.loop.create_future()
-        dispatcher = async_dispatcher_connect(
-            hass, MQTT_PROCESSED_SUBSCRIPTIONS, _sync_mqtt_subscribe
-        )
-        subscribe_callback = async_subscribe_internal(
-            hass, topic, msg_callback, qos, encoding
-        )
-        try:
-            hass.loop.call_later(SUBSCRIBE_TIMEOUT, _async_timeout_subscribe)
-            await subscription_complete
-        except TimeoutError as exc:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="subscribe_timeout",
-            ) from exc
-        finally:
-            dispatcher()
-        return subscribe_callback
+    if on_subscribe is not None:
+        handler = async_on_subscribe_done(hass, topic, qos, _on_subscribe_done)
 
     return async_subscribe_internal(hass, topic, msg_callback, qos, encoding)
 
@@ -739,15 +686,11 @@ class MQTT:
         if fileno > -1:
             self.loop.remove_writer(sock)
 
-    def is_active_subscription(self, topic: str) -> bool:
+    def _is_active_subscription(self, topic: str) -> bool:
         """Check if a topic has an active subscription."""
         return topic in self._simple_subscriptions or any(
             other.topic == topic for other in self._wildcard_subscriptions
         )
-
-    def is_pending_subscription(self, topic: str) -> bool:
-        """Check if a topic has a pending subscription."""
-        return topic in self._pending_subscriptions
 
     async def async_publish(
         self, topic: str, payload: PublishPayloadType, qos: int, retain: bool
@@ -1002,7 +945,7 @@ class MQTT:
     @callback
     def _async_unsubscribe(self, topic: str) -> None:
         """Unsubscribe from a topic."""
-        if self.is_active_subscription(topic):
+        if self._is_active_subscription(topic):
             if self._max_qos[topic] == 0:
                 return
             subs = self._matching_subscriptions(topic)
