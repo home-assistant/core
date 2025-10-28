@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from PIL import Image
-from roborock.containers import (
+from roborock.data import (
     CleanRecord,
     CleanSummary,
     Consumable,
