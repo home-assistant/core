@@ -829,7 +829,7 @@ faadelays==2023.9.1
 # face-recognition==1.2.3
 
 # homeassistant.components.fastdotcom
-fastdotcom==0.0.3
+fastdotcom==0.0.6
 
 # homeassistant.components.feedreader
 feedparser==6.0.12
@@ -1189,7 +1189,7 @@ led-ble==1.1.7
 lektricowifi==0.1
 
 # homeassistant.components.letpot
-letpot==0.6.2
+letpot==0.6.3
 
 # homeassistant.components.foscam
 libpyfoscamcgi==0.0.8
@@ -2350,7 +2350,7 @@ sentence-stream==1.2.0
 sentry-sdk==1.45.1
 
 # homeassistant.components.sfr_box
-sfrbox-api==0.0.12
+sfrbox-api==0.1.0
 
 # homeassistant.components.sharkiq
 sharkiq==1.4.2

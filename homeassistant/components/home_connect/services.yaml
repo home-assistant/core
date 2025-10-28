@@ -81,6 +81,7 @@ set_program_and_options:
             - dishcare_dishwasher_program_steam_fresh
             - dishcare_dishwasher_program_maximum_cleaning
             - dishcare_dishwasher_program_mixed_load
+            - dishcare_dishwasher_program_learning_dishwasher
             - heating_ventilation_air_conditioning_air_conditioner_program_active_clean
             - heating_ventilation_air_conditioning_air_conditioner_program_auto
             - heating_ventilation_air_conditioning_air_conditioner_program_cool
