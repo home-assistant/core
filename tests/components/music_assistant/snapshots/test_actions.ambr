@@ -12,6 +12,9 @@
             'version': '',
           }),
         ]),
+        'discart_image': None,
+        'explicit': False,
+        'favorite': False,
         'image': None,
         'media_type': <MediaType.ALBUM: 'album'>,
         'name': 'Synth Punk EP',
@@ -28,6 +31,9 @@
             'version': '',
           }),
         ]),
+        'discart_image': None,
+        'explicit': False,
+        'favorite': False,
         'image': None,
         'media_type': <MediaType.ALBUM: 'album'>,
         'name': 'Synthwave (The 80S Revival)',
@@ -45,6 +51,9 @@
   dict({
     'items': list([
       dict({
+        'explicit': None,
+        'fanart_image': None,
+        'favorite': False,
         'image': None,
         'media_type': <MediaType.ARTIST: 'artist'>,
         'name': 'W O L F C L U B',
@@ -62,6 +71,8 @@
   dict({
     'items': list([
       dict({
+        'explicit': None,
+        'favorite': False,
         'image': None,
         'media_type': <MediaType.AUDIOBOOK: 'audiobook'>,
         'name': 'Test Audiobook',
@@ -69,6 +80,8 @@
         'version': '',
       }),
       dict({
+        'explicit': None,
+        'favorite': False,
         'image': None,
         'media_type': <MediaType.AUDIOBOOK: 'audiobook'>,
         'name': 'Test Audiobook 0',
@@ -76,6 +89,8 @@
         'version': '',
       }),
       dict({
+        'explicit': None,
+        'favorite': False,
         'image': None,
         'media_type': <MediaType.AUDIOBOOK: 'audiobook'>,
         'name': 'Test Audiobook 1',
@@ -83,6 +98,8 @@
         'version': '',
       }),
       dict({
+        'explicit': None,
+        'favorite': False,
         'image': None,
         'media_type': <MediaType.AUDIOBOOK: 'audiobook'>,
         'name': 'Test Audiobook 2',
@@ -90,6 +107,8 @@
         'version': '',
       }),
       dict({
+        'explicit': None,
+        'favorite': False,
         'image': None,
         'media_type': <MediaType.AUDIOBOOK: 'audiobook'>,
         'name': 'Test Audiobook 3',
@@ -97,6 +116,8 @@
         'version': '',
       }),
       dict({
+        'explicit': None,
+        'favorite': False,
         'image': None,
         'media_type': <MediaType.AUDIOBOOK: 'audiobook'>,
         'name': 'Test Audiobook 4',
@@ -114,6 +135,8 @@
   dict({
     'items': list([
       dict({
+        'explicit': None,
+        'favorite': True,
         'image': None,
         'media_type': <MediaType.PLAYLIST: 'playlist'>,
         'name': '1970s Rock Hits',
@@ -131,6 +154,8 @@
   dict({
     'items': list([
       dict({
+        'explicit': None,
+        'favorite': False,
         'image': None,
         'media_type': <MediaType.PODCAST: 'podcast'>,
         'name': 'Test Podcast 0',
@@ -138,6 +163,8 @@
         'version': '',
       }),
       dict({
+        'explicit': None,
+        'favorite': False,
         'image': None,
         'media_type': <MediaType.PODCAST: 'podcast'>,
         'name': 'Test Podcast 1',
@@ -145,6 +172,8 @@
         'version': '',
       }),
       dict({
+        'explicit': None,
+        'favorite': False,
         'image': None,
         'media_type': <MediaType.PODCAST: 'podcast'>,
         'name': 'Test Podcast 2',
@@ -152,6 +181,8 @@
         'version': '',
       }),
       dict({
+        'explicit': None,
+        'favorite': False,
         'image': None,
         'media_type': <MediaType.PODCAST: 'podcast'>,
         'name': 'Test Podcast 3',
@@ -159,6 +190,8 @@
         'version': '',
       }),
       dict({
+        'explicit': None,
+        'favorite': False,
         'image': None,
         'media_type': <MediaType.PODCAST: 'podcast'>,
         'name': 'Test Podcast 4',
@@ -176,6 +209,8 @@
   dict({
     'items': list([
       dict({
+        'explicit': None,
+        'favorite': True,
         'image': None,
         'media_type': <MediaType.RADIO: 'radio'>,
         'name': 'fm4 | ORF | HQ',
@@ -209,6 +244,8 @@
             'version': '',
           }),
         ]),
+        'explicit': False,
+        'favorite': True,
         'image': None,
         'media_type': <MediaType.TRACK: 'track'>,
         'name': 'Tennessee Whiskey',
@@ -232,6 +269,8 @@
             'version': '',
           }),
         ]),
+        'explicit': False,
+        'favorite': True,
         'image': None,
         'media_type': <MediaType.TRACK: 'track'>,
         'name': 'Thelma + Louise',
@@ -255,6 +294,8 @@
             'version': '',
           }),
         ]),
+        'explicit': False,
+        'favorite': True,
         'image': None,
         'media_type': <MediaType.TRACK: 'track'>,
         'name': "They Don't Care About Us",
@@ -285,6 +326,8 @@
             'version': '',
           }),
         ]),
+        'explicit': True,
+        'favorite': True,
         'image': None,
         'media_type': <MediaType.TRACK: 'track'>,
         'name': "They Don't Give A F**** About Us",
@@ -308,6 +351,8 @@
             'version': '',
           }),
         ]),
+        'explicit': False,
+        'favorite': True,
         'image': None,
         'media_type': <MediaType.TRACK: 'track'>,
         'name': 'Things We Lost In The Fire',
@@ -331,6 +376,8 @@
             'version': '',
           }),
         ]),
+        'explicit': False,
+        'favorite': True,
         'image': None,
         'media_type': <MediaType.TRACK: 'track'>,
         'name': 'Those Nights',
@@ -357,6 +404,9 @@
             'version': '',
           }),
         ]),
+        'discart_image': None,
+        'explicit': False,
+        'favorite': False,
         'image': None,
         'media_type': <MediaType.ALBUM: 'album'>,
         'name': 'Synth Punk EP',
@@ -373,6 +423,9 @@
             'version': '',
           }),
         ]),
+        'discart_image': None,
+        'explicit': False,
+        'favorite': False,
         'image': None,
         'media_type': <MediaType.ALBUM: 'album'>,
         'name': 'Synthwave (The 80S Revival)',

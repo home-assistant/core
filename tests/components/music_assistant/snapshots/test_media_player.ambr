@@ -227,6 +227,8 @@
               'version': '',
             }),
           ]),
+          'explicit': False,
+          'favorite': False,
           'image': None,
           'media_type': <MediaType.TRACK: 'track'>,
           'name': 'November Rain',
@@ -237,6 +239,7 @@
         'queue_item_id': '5d95dc5be77e4f7eb4939f62cfef527b',
         'stream_details': dict({
           'bit_depth': 16,
+          'bit_rate': 0,
           'content_type': 'ogg',
           'item_id': '3YRCqOhFifThpSRFJ1VWFM',
           'provider': 'spotify',
@@ -265,6 +268,8 @@
               'version': '',
             }),
           ]),
+          'explicit': None,
+          'favorite': False,
           'image': None,
           'media_type': <MediaType.TRACK: 'track'>,
           'name': 'Golden Brown',
@@ -275,6 +280,7 @@
         'queue_item_id': '990ae8f29cdf4fb588d679b115621f55',
         'stream_details': dict({
           'bit_depth': 16,
+          'bit_rate': 0,
           'content_type': 'flac',
           'item_id': '1004735',
           'provider': 'qobuz',
