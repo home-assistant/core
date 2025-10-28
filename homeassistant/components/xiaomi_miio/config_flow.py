@@ -328,7 +328,7 @@ class XiaomiMiioFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=select_schema,
             errors=errors,
             description_placeholders={
-                "api_token": "https://www.home-assistant.io/integrations/xiaomi_miio#retrieving-the-access-token"
+                "api_token_url": "https://www.home-assistant.io/integrations/xiaomi_miio#retrieving-the-access-token"
             },
         )
 
