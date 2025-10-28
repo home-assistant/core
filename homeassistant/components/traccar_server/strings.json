@@ -18,15 +18,15 @@
       },
       "user": {
         "data": {
+          "api_token": "[%key:common::config_flow::data::api_token%]",
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
           "ssl": "[%key:common::config_flow::data::ssl%]",
-          "api_token": "[%key:common::config_flow::data::api_token%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of your Traccar Server",
-          "api_token": "The API token generated from your account on your Traccar Server"
+          "api_token": "The API token generated from your account on your Traccar Server",
+          "host": "The hostname or IP address of your Traccar Server"
         }
       }
     }
