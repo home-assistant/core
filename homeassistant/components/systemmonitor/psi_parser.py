@@ -1,9 +1,10 @@
 """Parses Pressure Stall Information (PSI) from /proc/pressure files on Linux systems."""
 
 import re
+from typing import Any
 
 
-def parse_pressure_file(file_path):
+def parse_pressure_file(file_path: str) -> dict[str, dict[str, float | int]] | None:
     """Parses a single /proc/pressure file (cpu, memory, or io).
 
     Args:
@@ -21,7 +22,7 @@ def parse_pressure_file(file_path):
     except OSError:
         return None
 
-    data = {}
+    data: dict[str, dict[str, float | int]] = {}
     # The regex looks for 'some' and 'full' lines and captures the values.
     # It accounts for floating point numbers and integer values.
     # Example line: "some avg10=0.00 avg60=0.00 avg300=0.00 total=0"
@@ -32,7 +33,7 @@ def parse_pressure_file(file_path):
         match = pattern.match(line)
         if match:
             line_type, values_str = match.groups()
-            values = {}
+            values: dict[str, float | int] = {}
             for item in values_str.split():
                 key, value = item.split("=")
                 # Convert values to float, except for 'total' which is an integer
@@ -45,14 +46,14 @@ def parse_pressure_file(file_path):
     return data
 
 
-def get_all_pressure_info():
+def get_all_pressure_info() -> dict[str, Any]:
     """Parses all available pressure information from /proc/pressure/.
 
     Returns:
         dict: A dictionary containing cpu, memory, and io pressure info.
               Returns an empty dictionary if no pressure files are found.
     """
-    pressure_info = {}
+    pressure_info: dict[str, Any] = {}
     resources = ["cpu", "memory", "io"]
 
     for resource in resources:
