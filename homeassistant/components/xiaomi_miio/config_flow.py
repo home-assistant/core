@@ -97,8 +97,8 @@ class OptionsFlowHandler(OptionsFlowWithReload):
             data_schema=settings_schema,
             errors=errors,
             description_placeholders={
-            "cloud_servers_url": "https://www.openhab.org/addons/bindings/miio/#country-servers"
-        },
+                "cloud_servers_url": "https://www.openhab.org/addons/bindings/miio/#country-servers"
+            },
         )
 
 
@@ -233,7 +233,7 @@ class XiaomiMiioFlowHandler(ConfigFlow, domain=DOMAIN):
                     data_schema=DEVICE_CLOUD_CONFIG,
                     errors=errors,
                     description_placeholders={
-                    "cloud_servers_url": "https://www.openhab.org/addons/bindings/miio/#country-servers"
+                        "cloud_servers_url": "https://www.openhab.org/addons/bindings/miio/#country-servers"
                     },
                 )
 
@@ -270,9 +270,7 @@ class XiaomiMiioFlowHandler(ConfigFlow, domain=DOMAIN):
             if not devices_raw:
                 errors["base"] = "cloud_no_devices"
                 return self.async_show_form(
-                    step_id="cloud",
-                    data_schema=DEVICE_CLOUD_CONFIG,
-                    errors=errors
+                    step_id="cloud", data_schema=DEVICE_CLOUD_CONFIG, errors=errors
                 )
 
             self.cloud_devices = {}
