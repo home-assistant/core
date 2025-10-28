@@ -584,6 +584,7 @@ async def test_update_entity_graceful_firmware_type_callback_errors(
         entity_description=TEST_FIRMWARE_ENTITY_DESCRIPTIONS[ApplicationType.EZSP],
     )
     update_entity.hass = hass
+    update_entity._latest_manifest = TEST_MANIFEST
     await update_entity.async_added_to_hass()
 
     callback = Mock(side_effect=RuntimeError("Callback failed"))
