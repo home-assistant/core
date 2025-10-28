@@ -83,10 +83,9 @@ class AuthProvider:
         """Return whether multi-factor auth supported by the auth provider."""
         return True
 
-    @callback
-    def async_credentials(self) -> list[Credentials]:
+    async def async_credentials(self) -> list[Credentials]:
         """Return all credentials of this provider."""
-        users = self.store.async_get_users()
+        users = await self.store.async_get_users()
         return [
             credentials
             for user in users
@@ -176,18 +175,20 @@ async def load_auth_provider_module(
             f"Unable to load auth provider {provider}: {err}"
         ) from err
 
-    # Process requirements if needed
-    if not hass.config.skip_pip and hasattr(module, "REQUIREMENTS"):
-        if (processed := hass.data.get(DATA_REQS)) is None:
-            processed = hass.data[DATA_REQS] = set()
+    if hass.config.skip_pip or not hasattr(module, "REQUIREMENTS"):
+        return module
 
-        if provider not in processed:
-            reqs = module.REQUIREMENTS
-            await requirements.async_process_requirements(
-                hass, f"auth provider {provider}", reqs
-            )
-            processed.add(provider)
+    if (processed := hass.data.get(DATA_REQS)) is None:
+        processed = hass.data[DATA_REQS] = set()
+    elif provider in processed:
+        return module
 
+    reqs = module.REQUIREMENTS
+    await requirements.async_process_requirements(
+        hass, f"auth provider {provider}", reqs
+    )
+
+    processed.add(provider)
     return module
 
 

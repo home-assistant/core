@@ -1,5 +1,6 @@
 """Tests for the auth store."""
 
+import asyncio
 from typing import Any
 from unittest.mock import PropertyMock, patch
 
@@ -73,7 +74,7 @@ async def test_loading_no_group_data_format(
 
     store = auth_store.AuthStore(hass)
     await store.async_load()
-    groups = store.async_get_groups()
+    groups = await store.async_get_groups()
     assert len(groups) == 3
     admin_group = groups[0]
     assert admin_group.name == auth_store.GROUP_NAME_ADMIN
@@ -88,7 +89,7 @@ async def test_loading_no_group_data_format(
     assert user_group.system_generated
     assert user_group.id == auth_store.GROUP_ID_USER
 
-    users = store.async_get_users()
+    users = await store.async_get_users()
     assert len(users) == 2
 
     owner, system = users
@@ -116,7 +117,7 @@ async def test_loading_all_access_group_data_format(
 
     store = auth_store.AuthStore(hass)
     await store.async_load()
-    groups = store.async_get_groups()
+    groups = await store.async_get_groups()
     assert len(groups) == 3
     admin_group = groups[0]
     assert admin_group.name == auth_store.GROUP_NAME_ADMIN
@@ -131,7 +132,7 @@ async def test_loading_all_access_group_data_format(
     assert user_group.system_generated
     assert user_group.id == auth_store.GROUP_ID_USER
 
-    users = store.async_get_users()
+    users = await store.async_get_users()
     assert len(users) == 2
 
     owner, system = users
@@ -157,7 +158,7 @@ async def test_loading_empty_data(
     """Test we correctly load with no existing data."""
     store = auth_store.AuthStore(hass)
     await store.async_load()
-    groups = store.async_get_groups()
+    groups = await store.async_get_groups()
     assert len(groups) == 3
     admin_group = groups[0]
     assert admin_group.name == auth_store.GROUP_NAME_ADMIN
@@ -172,7 +173,7 @@ async def test_loading_empty_data(
     assert read_group.system_generated
     assert read_group.id == auth_store.GROUP_ID_READ_ONLY
 
-    users = store.async_get_users()
+    users = await store.async_get_users()
     assert len(users) == 0
 
 
@@ -208,7 +209,7 @@ async def test_loading_only_once(hass: HomeAssistant) -> None:
         with pytest.raises(RuntimeError, match="Auth storage is already loaded"):
             await store.async_load()
 
-        results = [store.async_get_users(), store.async_get_users()]
+        results = await asyncio.gather(store.async_get_users(), store.async_get_users())
 
         mock_ent_registry.assert_called_once_with(hass)
         mock_dev_registry.assert_called_once_with(hass)
@@ -268,7 +269,7 @@ async def test_dont_change_expire_at_on_load(
     store = auth_store.AuthStore(hass)
     await store.async_load()
 
-    users = store.async_get_users()
+    users = await store.async_get_users()
 
     assert len(users[0].refresh_tokens) == 2
     token1, token2 = users[0].refresh_tokens.values()
@@ -308,7 +309,7 @@ async def test_duplicate_uuid(
     await store.async_load()
     with patch("uuid.UUID.hex", new_callable=PropertyMock) as hex_mock:
         hex_mock.side_effect = ["user-id", "new-id"]
-        user = store.async_create_user("Test User")
+        user = await store.async_create_user("Test User")
     assert len(hex_mock.mock_calls) == 2
     assert user.id == "new-id"
 
@@ -319,16 +320,16 @@ async def test_add_remove_user_affects_tokens(
     """Test adding and removing a user removes the tokens."""
     store = auth_store.AuthStore(hass)
     await store.async_load()
-    user = store.async_create_user("Test User")
+    user = await store.async_create_user("Test User")
     assert user.name == "Test User"
     refresh_token = await store.async_create_refresh_token(
         user, "client_id", "access_token_expiration"
     )
     assert user.refresh_tokens == {refresh_token.id: refresh_token}
-    assert store.async_get_user(user.id) == user
+    assert await store.async_get_user(user.id) == user
     assert store.async_get_refresh_token(refresh_token.id) == refresh_token
     assert store.async_get_refresh_token_by_token(refresh_token.token) == refresh_token
-    store.async_remove_user(user)
+    await store.async_remove_user(user)
     assert store.async_get_refresh_token(refresh_token.id) is None
     assert store.async_get_refresh_token_by_token(refresh_token.token) is None
     assert user.refresh_tokens == {}
@@ -369,7 +370,7 @@ async def test_set_expiry_date(
     store = auth_store.AuthStore(hass)
     await store.async_load()
 
-    users = store.async_get_users()
+    users = await store.async_get_users()
 
     assert len(users[0].refresh_tokens) == 1
     (token,) = users[0].refresh_tokens.values()
