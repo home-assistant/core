@@ -7,7 +7,7 @@
       "isFollowedByCaller": false,
       "isIdentityShared": false,
       "addedDateTimeUtc": null,
-      "displayName": null,
+      "displayName": "GSR Ae",
       "realName": "Test Test",
       "displayPicRaw": "https://images-eds-ssl.xboxlive.com/image?url=wHwbXKif8cus8csoZ03RW_ES.ojiJijNBGRVUbTnZKsoCCCkjlsEJrrMqDkYqs3M0aLOK2kxE9mbLm9M2.R0stAQYoDsGCDJxqDzG9WF3oa4rOCjEK7DbZXdBmBWnMrfErA3M_Q4y_mUTEQLqSAEeYFGlGeCXYsccnQMvEecxRg-&format=png",
       "showUserAsAvatar": "0",
@@ -17,7 +17,7 @@
       "modernGamertagSuffix": "",
       "uniqueModernGamertag": "GSR Ae",
       "xboxOneRep": "GoodPlayer",
-      "presenceState": "Offline",
+      "presenceState": "Online",
       "presenceText": "Last seen 49m ago: Xbox App",
       "presenceDevices": null,
       "isBroadcasting": false,
@@ -43,13 +43,13 @@
       "presenceDetails": [
         {
           "IsBroadcasting": false,
-          "Device": "iOS",
-          "PresenceText": "Last seen 49m ago: Xbox App",
-          "State": "LastSeen",
-          "TitleId": "328178078",
+          "Device": "Xbox360",
+          "PresenceText": "Blue Dragon",
+          "State": "Active",
+          "TitleId": "1297287135",
           "TitleType": null,
           "IsPrimary": true,
-          "IsGame": false,
+          "IsGame": true,
           "RichPresenceText": null
         }
       ],
@@ -58,7 +58,7 @@
       "presenceTitleIds": null,
       "detail": {
         "accountTier": "Gold",
-        "bio": null,
+        "bio": "My mind is a swirling miasma of scintillating thoughts and turgid ideas.",
         "isVerified": false,
         "location": null,
         "tenure": null,
