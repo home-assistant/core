@@ -528,6 +528,9 @@
     },
     "command_failed": {
       "message": "Command failed, {message}"
+    },
+    "cpd_enabled": {
+      "message": "Child presence detection has blocked the command, remove weight from seats."
     }
   }
 }
