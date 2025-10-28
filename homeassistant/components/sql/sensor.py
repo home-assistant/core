@@ -174,7 +174,7 @@ async def async_setup_sensor(
     ) = await async_create_sessionmaker(hass, db_url)
     if sessmaker is None:
         return
-    validate_query(hass, query_str, uses_recorder_db, unique_id)
+    validate_query(hass, query_template, uses_recorder_db, unique_id)
 
     query_str = check_and_render_sql_query(hass, query_template)
     upper_query = query_str.upper()
@@ -225,7 +225,6 @@ class SQLSensor(ManualTriggerSensorEntity):
         self.sessionmaker = sessmaker
         self._attr_extra_state_attributes = {}
         self._use_database_executor = use_database_executor
-        self._lambda_stmt = generate_lambda_stmt(query)
         if not yaml and (unique_id := trigger_entity_config.get(CONF_UNIQUE_ID)):
             self._attr_name = None
             self._attr_has_entity_name = True
@@ -267,7 +266,7 @@ class SQLSensor(ManualTriggerSensorEntity):
         sess: scoped_session = self.sessionmaker()
         try:
             rendered_query = check_and_render_sql_query(self.hass, self._query)
-            _lambda_stmt = _generate_lambda_stmt(rendered_query)
+            _lambda_stmt = generate_lambda_stmt(rendered_query)
             result: Result = sess.execute(_lambda_stmt)
         except ValueError as err:
             _LOGGER.error(

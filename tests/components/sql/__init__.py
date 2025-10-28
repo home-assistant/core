@@ -48,9 +48,11 @@ ENTRY_CONFIG_BLANK_QUERY = {
     CONF_NAME: "Get Value",
     CONF_QUERY: "  ",
     CONF_COLUMN_NAME: "value",
-    CONF_UNIT_OF_MEASUREMENT: "MiB",
-    CONF_DEVICE_CLASS: SensorDeviceClass.DATA_SIZE,
-    CONF_STATE_CLASS: SensorStateClass.TOTAL,
+    CONF_ADVANCED_OPTIONS: {
+        CONF_UNIT_OF_MEASUREMENT: "MiB",
+        CONF_DEVICE_CLASS: SensorDeviceClass.DATA_SIZE,
+        CONF_STATE_CLASS: SensorStateClass.TOTAL,
+    },
 }
 
 ENTRY_CONFIG_WITH_VALUE_TEMPLATE = {
@@ -63,26 +65,30 @@ ENTRY_CONFIG_WITH_VALUE_TEMPLATE = {
 }
 
 ENTRY_CONFIG_WITH_QUERY_TEMPLATE = {
-    CONF_NAME: "Get Value",
     CONF_QUERY: "SELECT {% if states('sensor.input1')=='on' %} 5 {% else %} 6 {% endif %} as value",
     CONF_COLUMN_NAME: "value",
-    CONF_UNIT_OF_MEASUREMENT: "MiB",
-    CONF_VALUE_TEMPLATE: "{{ value }}",
+    CONF_ADVANCED_OPTIONS: {
+        CONF_UNIT_OF_MEASUREMENT: "MiB",
+        CONF_VALUE_TEMPLATE: "{{ value }}",
+    },
 }
 
 ENTRY_CONFIG_WITH_BROKEN_QUERY_TEMPLATE = {
-    CONF_NAME: "Get Value",
     CONF_QUERY: "SELECT {{ 5 as value",
     CONF_COLUMN_NAME: "value",
-    CONF_UNIT_OF_MEASUREMENT: "MiB",
-    CONF_VALUE_TEMPLATE: "{{ value }}",
+    CONF_ADVANCED_OPTIONS: {
+        CONF_UNIT_OF_MEASUREMENT: "MiB",
+        CONF_VALUE_TEMPLATE: "{{ value }}",
+    },
 }
 
 ENTRY_CONFIG_WITH_BROKEN_QUERY_TEMPLATE_OPT = {
     CONF_QUERY: "SELECT {{ 5 as value",
     CONF_COLUMN_NAME: "value",
-    CONF_UNIT_OF_MEASUREMENT: "MiB",
-    CONF_VALUE_TEMPLATE: "{{ value }}",
+    CONF_ADVANCED_OPTIONS: {
+        CONF_UNIT_OF_MEASUREMENT: "MiB",
+        CONF_VALUE_TEMPLATE: "{{ value }}",
+    },
 }
 
 ENTRY_CONFIG_INVALID_QUERY = {

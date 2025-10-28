@@ -24,6 +24,7 @@ from homeassistant.components.sql.const import (
     CONF_QUERY,
     DOMAIN,
 )
+from homeassistant.components.sql.util import generate_lambda_stmt
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
@@ -113,14 +114,14 @@ async def test_template_query(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the SQL sensor with a query template."""
-    config = {
-        "db_url": "sqlite://",
-        "query": "SELECT {% if states('sensor.input1')=='on' %} 5 {% else %} 6 {% endif %} as value",
-        "column": "value",
-        "name": "count_tables",
-        "value_template": "{{ value | int }}",
+    options = {
+        CONF_QUERY: "SELECT {% if states('sensor.input1')=='on' %} 5 {% else %} 6 {% endif %} as value",
+        CONF_COLUMN_NAME: "value",
+        CONF_ADVANCED_OPTIONS: {
+            CONF_VALUE_TEMPLATE: "{{ value | int }}",
+        },
     }
-    await init_integration(hass, config)
+    await init_integration(hass, title="count_tables", options=options)
 
     state = hass.states.get("sensor.count_tables")
     assert state.state == "6"
@@ -155,14 +156,14 @@ async def test_broken_template_query(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the SQL sensor with a query template which is broken."""
-    config = {
-        "db_url": "sqlite://",
-        "query": "SELECT {{ 5 as value",
-        "column": "value",
-        "name": "count_tables",
-        "value_template": "{{ value | int }}",
+    options = {
+        CONF_QUERY: "SELECT {{ 5 as value",
+        CONF_COLUMN_NAME: "value",
+        CONF_ADVANCED_OPTIONS: {
+            CONF_VALUE_TEMPLATE: "{{ value | int }}",
+        },
     }
-    await init_integration(hass, config)
+    await init_integration(hass, title="count_tables", options=options)
 
     state = hass.states.get("sensor.count_tables")
     assert not state
@@ -178,13 +179,11 @@ async def test_broken_template_query_2(
     hass.states.async_set("sensor.input1", "5")
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    config = {
-        "db_url": "sqlite://",
-        "query": "SELECT {{ states.sensor.input1.state | int / 1000}} as value",
-        "column": "value",
-        "name": "count_tables",
+    options = {
+        CONF_QUERY: "SELECT {{ states.sensor.input1.state | int / 1000}} as value",
+        CONF_COLUMN_NAME: "value",
     }
-    await init_integration(hass, config)
+    await init_integration(hass, title="count_tables", options=options)
 
     state = hass.states.get("sensor.count_tables")
     assert state.state == "0.005"
@@ -725,8 +724,8 @@ async def test_query_recover_from_rollback(
     assert state.attributes["value"] == 5
 
     with patch(
-        "homeassistant.components.sql.sensor._generate_lambda_stmt",
-        return_value=_generate_lambda_stmt("Faulty syntax create operational issue"),
+        "homeassistant.components.sql.sensor.generate_lambda_stmt",
+        return_value=generate_lambda_stmt("Faulty syntax create operational issue"),
     ):
         freezer.tick(timedelta(minutes=1))
         async_fire_time_changed(hass)

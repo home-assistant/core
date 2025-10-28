@@ -4,6 +4,9 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
+import pytest
+import voluptuous as vol
+
 from homeassistant.components.recorder import CONF_DB_URL, Recorder
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
@@ -16,6 +19,7 @@ from homeassistant.components.sql.const import (
     CONF_QUERY,
     DOMAIN,
 )
+from homeassistant.components.sql.util import validate_sql_select
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import (
     CONF_DEVICE_CLASS,

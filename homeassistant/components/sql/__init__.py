@@ -25,7 +25,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, discovery
-from homeassistant.helpers.template import Template
 from homeassistant.helpers.trigger_template_entity import (
     CONF_AVAILABILITY,
     CONF_PICTURE,
@@ -41,7 +40,7 @@ from .const import (
     PLATFORMS,
 )
 from .services import async_setup_services
-from .util import check_and_render_sql_query, redact_credentials, validate_sql_select
+from .util import redact_credentials, validate_sql_select
 
 _LOGGER = logging.getLogger(__name__)
 

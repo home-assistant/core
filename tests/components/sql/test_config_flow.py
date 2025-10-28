@@ -124,20 +124,25 @@ async def test_form_with_query_template(
         "homeassistant.components.sql.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            DATA_CONFIG,
+        )
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             ENTRY_CONFIG_WITH_QUERY_TEMPLATE,
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Get Value"
-    assert result2["options"] == {
-        "name": "Get Value",
-        "query": "SELECT {% if states('sensor.input1')=='on' %} 5 {% else %} 6 {% endif %} as value",
-        "column": "value",
-        "unit_of_measurement": "MiB",
-        "value_template": "{{ value }}",
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Get Value"
+    assert result["options"] == {
+        CONF_QUERY: "SELECT {% if states('sensor.input1')=='on' %} 5 {% else %} 6 {% endif %} as value",
+        CONF_COLUMN_NAME: "value",
+        CONF_ADVANCED_OPTIONS: {
+            CONF_UNIT_OF_MEASUREMENT: "MiB",
+            CONF_VALUE_TEMPLATE: "{{ value }}",
+        },
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -152,6 +157,11 @@ async def test_form_with_broken_query_template(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        DATA_CONFIG,
+    )
 
     with pytest.raises(InvalidData):
         result = await hass.config_entries.flow.async_configure(
@@ -174,11 +184,12 @@ async def test_form_with_broken_query_template(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Get Value"
     assert result["options"] == {
-        "name": "Get Value",
-        "query": "SELECT {% if states('sensor.input1')=='on' %} 5 {% else %} 6 {% endif %} as value",
-        "column": "value",
-        "unit_of_measurement": "MiB",
-        "value_template": "{{ value }}",
+        CONF_QUERY: "SELECT {% if states('sensor.input1')=='on' %} 5 {% else %} 6 {% endif %} as value",
+        CONF_COLUMN_NAME: "value",
+        CONF_ADVANCED_OPTIONS: {
+            CONF_UNIT_OF_MEASUREMENT: "MiB",
+            CONF_VALUE_TEMPLATE: "{{ value }}",
+        },
     }
     assert len(mock_setup_entry.mock_calls) == 1
 

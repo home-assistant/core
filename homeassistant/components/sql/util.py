@@ -46,16 +46,14 @@ def resolve_db_url(hass: HomeAssistant, db_url: str | None) -> str:
     return get_instance(hass).db_url
 
 
-def validate_sql_select(value: str) -> str:
+def validate_sql_select(value: Template) -> Template:
     """Validate that value is a SQL SELECT query."""
-    if len(query := sqlparse.parse(value.lstrip().lstrip(";"))) > 1:
-        raise vol.Invalid("Multiple SQL queries are not supported")
-    if len(query) == 0 or (query_type := query[0].get_type()) == "UNKNOWN":
-        raise vol.Invalid("Invalid SQL query")
-    if query_type != "SELECT":
-        _LOGGER.debug("The SQL query %s is of type %s", query, query_type)
-        raise vol.Invalid("Only SELECT queries allowed")
-    return str(query[0])
+    try:
+        assert value.hass
+        check_and_render_sql_query(value.hass, value)
+    except ValueError as err:
+        raise vol.Invalid(str(err)) from err
+    return value
 
 
 async def async_create_sessionmaker(
@@ -115,7 +113,7 @@ async def async_create_sessionmaker(
 
 def validate_query(
     hass: HomeAssistant,
-    query_str: str,
+    query_template: str | Template,
     uses_recorder_db: bool,
     unique_id: str | None = None,
 ) -> None:
@@ -123,7 +121,7 @@ def validate_query(
 
     Args:
         hass: The Home Assistant instance.
-        query_str: The SQL query string to be validated.
+        query_template: The SQL query string to be validated.
         uses_recorder_db: A boolean indicating if the query is against the recorder database.
         unique_id: The unique ID of the entity, used for creating issue registry keys.
 
@@ -133,6 +131,10 @@ def validate_query(
     """
     if not uses_recorder_db:
         return
+    if isinstance(query_template, Template):
+        query_str = query_template.async_render()
+    else:
+        query_str = Template(query_template, hass).async_render()
     redacted_query = redact_credentials(query_str)
 
     issue_key = unique_id if unique_id else redacted_query
