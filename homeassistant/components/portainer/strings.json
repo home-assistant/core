@@ -2,7 +2,8 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -20,6 +21,20 @@
         },
         "description": "The access token for your Portainer instance needs to be re-authenticated. You can create a new access token in the Portainer UI. Go to **My account > Access tokens** and select **Add access token**"
       },
+      "reconfigure": {
+        "data": {
+          "api_token": "[%key:common::config_flow::data::api_token%]",
+          "url": "[%key:common::config_flow::data::url%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "api_token": "[%key:component::portainer::config::step::user::data_description::api_token%]",
+          "url": "[%key:component::portainer::config::step::user::data_description::url%]",
+          "verify_ssl": "[%key:component::portainer::config::step::user::data_description::verify_ssl%]"
+        },
+        "description": "Use the following form to reconfigure your Portainer instance.",
+        "title": "Reconfigure Portainer Integration"
+      },
       "user": {
         "data": {
           "api_token": "[%key:common::config_flow::data::api_token%]",
@@ -32,41 +47,7 @@
           "verify_ssl": "Whether to verify SSL certificates. Disable only if you have a self-signed certificate"
         },
         "description": "You can create an access token in the Portainer UI. Go to **My account > Access tokens** and select **Add access token**"
-      },
-      "reauth_confirm": {
-        "data": {
-          "api_token": "[%key:common::config_flow::data::api_token%]"
-        },
-        "data_description": {
-          "api_token": "The new API access token for authenticating with Portainer"
-        },
-        "description": "The access token for your Portainer instance needs to be re-authenticated. You can create a new access token in the Portainer UI. Go to **My account > Access tokens** and select **Add access token**"
-      },
-      "reconfigure": {
-        "title": "Reconfigure Portainer Integration",
-        "description": "Use the following form to reconfigure your Portainer instance.",
-        "data": {
-          "url": "[%key:common::config_flow::data::url%]",
-          "api_token": "[%key:common::config_flow::data::api_token%]",
-          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
-        },
-        "data_description": {
-          "url": "[%key:component::portainer::config::step::user::data_description::url%]",
-          "api_token": "[%key:component::portainer::config::step::user::data_description::api_token%]",
-          "verify_ssl": "[%key:component::portainer::config::step::user::data_description::verify_ssl%]"
-        }
       }
-    },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
   "device": {
