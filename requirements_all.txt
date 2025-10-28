@@ -648,7 +648,7 @@ bleak==1.0.1
 blebox-uniapi==2.5.0
 
 # homeassistant.components.blink
-blinkpy==0.23.0
+blinkpy==0.24.1
 
 # homeassistant.components.bitcoin
 blockchain==1.4.4
@@ -672,7 +672,7 @@ bluetooth-auto-recovery==1.5.3
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
 # homeassistant.components.private_ble_device
-bluetooth-data-tools==1.28.3
+bluetooth-data-tools==1.28.4
 
 # homeassistant.components.bond
 bond-async==0.2.1
@@ -950,7 +950,7 @@ faadelays==2023.9.1
 # face-recognition==1.2.3
 
 # homeassistant.components.fastdotcom
-fastdotcom==0.0.3
+fastdotcom==0.0.6
 
 # homeassistant.components.feedreader
 feedparser==6.0.12
@@ -1367,7 +1367,7 @@ led-ble==1.1.7
 lektricowifi==0.1
 
 # homeassistant.components.letpot
-letpot==0.6.2
+letpot==0.6.3
 
 # homeassistant.components.foscam
 libpyfoscamcgi==0.0.8
@@ -2462,7 +2462,7 @@ python-awair==0.2.4
 python-blockchain-api==0.0.2
 
 # homeassistant.components.bsblan
-python-bsblan==2.1.0
+python-bsblan==3.1.0
 
 # homeassistant.components.citybikes
 python-citybikes==0.3.3
@@ -2565,7 +2565,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==3.3.3
+python-roborock==3.7.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.44
@@ -2825,7 +2825,7 @@ sentence-stream==1.2.0
 sentry-sdk==1.45.1
 
 # homeassistant.components.sfr_box
-sfrbox-api==0.0.12
+sfrbox-api==0.1.0
 
 # homeassistant.components.sharkiq
 sharkiq==1.4.2
