@@ -60,9 +60,6 @@ async def test_entry_diagnostics(
         },
         "configuration": {
             "devices:local": {
-                "EnergySensor:SensorPosition": "1",
-                "EnergySensor:InstalledSensor": "1",
-                "Battery:Type": "0",
                 "Properties:String0Features": "1",
                 "Properties:String1Features": "1",
             },

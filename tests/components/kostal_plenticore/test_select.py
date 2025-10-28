@@ -91,14 +91,6 @@ async def test_select_battery_charging_usage_excess_energy_available(
         ]
     )
 
-    mock_get_setting_values["devices:local"].update(
-        {
-            "Battery:Type": "1",
-            "EnergySensor:SensorPosition": "2",
-            "EnergySensor:InstalledSensor": "1",
-        }
-    )
-
     mock_config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -111,7 +103,6 @@ async def test_select_battery_charging_usage_excess_energy_available(
         "None",
         "Battery:SmartBatteryControl:Enable",
         "Battery:TimeControl:Enable",
-        "EnergyMgmt:AcStorage",
     ]
 
 

@@ -16,9 +16,6 @@ from tests.common import MockConfigEntry
 DEFAULT_SETTING_VALUES = {
     "devices:local": {
         "Properties:StringCnt": "2",
-        "EnergySensor:SensorPosition": "1",
-        "EnergySensor:InstalledSensor": "1",
-        "Battery:Type": "0",
         "Properties:String0Features": "1",
         "Properties:String1Features": "1",
         "Properties:SerialNo": "42",

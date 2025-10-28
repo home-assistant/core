@@ -8,10 +8,9 @@ from homeassistant.components.diagnostics import REDACTED, async_redact_data
 from homeassistant.const import ATTR_IDENTIFIERS, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_SERVICE_CODE
 from .coordinator import PlenticoreConfigEntry
 
-TO_REDACT = {CONF_PASSWORD, CONF_SERVICE_CODE}
+TO_REDACT = {CONF_PASSWORD}
 
 
 async def async_get_config_entry_diagnostics(
@@ -48,12 +47,7 @@ async def async_get_config_entry_diagnostics(
 
     configuration_settings = await plenticore.client.get_setting_values(
         "devices:local",
-        (
-            "EnergySensor:SensorPosition",
-            "EnergySensor:InstalledSensor",
-            "Battery:Type",
-            *(f"Properties:String{idx}Features" for idx in range(string_count)),
-        ),
+        (*(f"Properties:String{idx}Features" for idx in range(string_count)),),
     )
 
     data["configuration"] = {
