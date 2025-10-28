@@ -1,28 +1,28 @@
 {
   "entity": {
-    "switch": {
-      "switch": {
-        "default": "mdi:water"
-      }
-    },
     "binary_sensor": {
+      "freeze_prevent": {
+        "default": "mdi:snowflake-alert"
+      },
+      "standby": {
+        "default": "mdi:pause-circle"
+      },
       "watering_running": {
         "default": "mdi:sprinkler",
         "state": {
           "off": "mdi:sprinkler-variant"
         }
       },
-      "standby": {
-        "default": "mdi:pause-circle"
-      },
-      "freeze_prevent": {
-        "default": "mdi:snowflake-alert"
-      },
       "zone_enabled": {
         "default": "mdi:toggle-switch",
         "state": {
           "off": "mdi:toggle-switch-off"
         }
+      }
+    },
+    "switch": {
+      "switch": {
+        "default": "mdi:water"
       }
     }
   },

@@ -1,32 +1,16 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]"
-        }
-      }
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
-    }
-  },
-  "services": {
-    "set_away_mode": {
-      "name": "Set away mode",
-      "description": "Sets the home/away mode for a Streamlabs Water Monitor.",
-      "fields": {
-        "away_mode": {
-          "name": "Away mode",
-          "description": "Home or away."
-        },
-        "location_id": {
-          "name": "Location ID",
-          "description": "The location ID of the Streamlabs Water Monitor."
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
         }
       }
     }
@@ -47,6 +31,22 @@
       "yearly_usage": {
         "name": "Yearly usage"
       }
+    }
+  },
+  "services": {
+    "set_away_mode": {
+      "description": "Sets the home/away mode for a Streamlabs Water Monitor.",
+      "fields": {
+        "away_mode": {
+          "description": "Home or away.",
+          "name": "Away mode"
+        },
+        "location_id": {
+          "description": "The location ID of the Streamlabs Water Monitor.",
+          "name": "Location ID"
+        }
+      },
+      "name": "Set away mode"
     }
   }
 }
