@@ -7,8 +7,8 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]",
-      "no_devices_found": "There are no devices paired with this Nintendo account, go to [Nintendo Support]({more_info_url}) for further assistance."
+      "no_devices_found": "There are no devices paired with this Nintendo account, go to [Nintendo Support]({more_info_url}) for further assistance.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
       "reauth_confirm": {
