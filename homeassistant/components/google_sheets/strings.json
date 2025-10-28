@@ -59,6 +59,24 @@
         }
       },
       "name": "Append to sheet"
+    },
+    "get_sheet": {
+      "description": "Gets data from a worksheet in Google Sheets.",
+      "fields": {
+        "config_entry": {
+          "description": "The sheet to get data from.",
+          "name": "[%key:component::google_sheets::services::append_sheet::fields::config_entry::name%]"
+        },
+        "rows": {
+          "description": "Maximum number of rows from the end of the worksheet to return.",
+          "name": "Rows"
+        },
+        "worksheet": {
+          "description": "[%key:component::google_sheets::services::append_sheet::fields::worksheet::description%]",
+          "name": "[%key:component::google_sheets::services::append_sheet::fields::worksheet::name%]"
+        }
+      },
+      "name": "Get data from sheet"
     }
   }
 }
