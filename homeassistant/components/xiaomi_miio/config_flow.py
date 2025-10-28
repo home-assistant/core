@@ -303,7 +303,10 @@ class XiaomiMiioFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="cloud",
             data_schema=DEVICE_CLOUD_CONFIG,
-            errors=errors
+            errors=errors,
+            description_placeholders={
+                "cloud_servers_url": "https://www.openhab.org/addons/bindings/miio/#country-servers"
+            },
         )
 
     async def async_step_select(
