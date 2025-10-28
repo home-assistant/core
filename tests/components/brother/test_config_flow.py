@@ -98,15 +98,14 @@ async def test_errors(
     assert result["errors"] == {"base": base_error}
 
 
-async def test_unsupported_model_error(hass: HomeAssistant) -> None:
+async def test_unsupported_model_error(
+    hass: HomeAssistant, mock_brother: AsyncMock, mock_brother_client: AsyncMock
+) -> None:
     """Test unsupported printer model error."""
-    with patch(
-        "homeassistant.components.brother.Brother.create",
-        new=AsyncMock(side_effect=UnsupportedModelError("error")),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
-        )
+    mock_brother.create.side_effect = UnsupportedModelError("error")
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unsupported_model"
@@ -153,25 +152,24 @@ async def test_zeroconf_exception(
     assert result["reason"] == "cannot_connect"
 
 
-async def test_zeroconf_unsupported_model(hass: HomeAssistant) -> None:
+async def test_zeroconf_unsupported_model(
+    hass: HomeAssistant, mock_brother: AsyncMock, mock_brother_client: AsyncMock
+) -> None:
     """Test unsupported printer model error."""
-    with patch(
-        "homeassistant.components.brother.Brother.create",
-        new=AsyncMock(side_effect=UnsupportedModelError("error")),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_ZEROCONF},
-            data=ZeroconfServiceInfo(
-                ip_address=ip_address("127.0.0.1"),
-                ip_addresses=[ip_address("127.0.0.1")],
-                hostname="example.local.",
-                name="Brother Printer",
-                port=None,
-                properties={"product": "MFC-8660DN"},
-                type="mock_type",
-            ),
-        )
+    mock_brother.create.side_effect = UnsupportedModelError("error")
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZeroconfServiceInfo(
+            ip_address=ip_address("127.0.0.1"),
+            ip_addresses=[ip_address("127.0.0.1")],
+            hostname="example.local.",
+            name="Brother Printer",
+            port=None,
+            properties={"product": "MFC-8660DN"},
+            type="mock_type",
+        ),
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unsupported_model"
