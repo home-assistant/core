@@ -21,7 +21,7 @@ from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, mock_restore_cache
 
-SWITCH_ENTITY_ID = "switch.home_assistant_yellow_radio_beta_firmware"
+SWITCH_ENTITY_ID = "switch.home_assistant_yellow_radio_beta_firmware_updates"
 
 TEST_MANIFEST = FirmwareManifest(
     url=URL("https://example.org/firmware"),

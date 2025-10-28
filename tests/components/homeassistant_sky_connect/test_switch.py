@@ -22,7 +22,7 @@ from .common import USB_DATA_ZBT1
 
 from tests.common import MockConfigEntry, mock_restore_cache
 
-SWITCH_ENTITY_ID = "switch.home_assistant_connect_zbt_1_9e2adbd7_beta_firmware"
+SWITCH_ENTITY_ID = "switch.home_assistant_connect_zbt_1_9e2adbd7_beta_firmware_updates"
 
 TEST_MANIFEST = FirmwareManifest(
     url=URL("https://example.org/firmware"),
