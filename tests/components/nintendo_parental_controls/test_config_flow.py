@@ -132,7 +132,7 @@ async def test_missing_devices(
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["errors"] == {"base": "no_devices_found"}
+    assert result["reason"] == "no_devices_found"
 
 
 async def test_cannot_connect(
