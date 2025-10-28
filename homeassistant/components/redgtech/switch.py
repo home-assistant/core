@@ -31,7 +31,9 @@ async def async_setup_entry(
     """Set up the switch platform."""
     coordinator = config_entry.runtime_data
     async_add_entities(
-        RedgtechSwitch(coordinator, device) for device in coordinator.data
+        RedgtechSwitch(coordinator, device)
+        for device in coordinator.data
+        if device.type == "switch"
     )
 
 
@@ -52,7 +54,7 @@ class RedgtechSwitch(CoordinatorEntity[RedgtechDataUpdateCoordinator], SwitchEnt
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.unique_id)},
             name=device.name,
-            manufacturer="Redgtech",
+            manufacturer=INTEGRATION_NAME,
         )
 
     @property

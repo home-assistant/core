@@ -46,11 +46,13 @@ def mock_redgtech_api() -> AsyncMock:
                     "endpointId": "switch_001",
                     "friendlyName": "Living Room Switch",
                     "value": False,
+                    "displayCategories": ["SWITCH"],
                 },
                 {
                     "endpointId": "switch_002",
                     "friendlyName": "Kitchen Switch",
                     "value": True,
+                    "displayCategories": ["SWITCH"],
                 },
             ]
         }
@@ -215,7 +217,10 @@ async def test_coordinator_data_update_success(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test successful data update through coordinator."""
-    coordinator = mock_config_entry.runtime_data
+    # Get coordinator from config entry runtime_data after setup
+    entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
+    assert entry is not None
+    coordinator = entry.runtime_data
 
     # Update mock data
     mock_redgtech_api.get_data.return_value = {
@@ -224,6 +229,7 @@ async def test_coordinator_data_update_success(
                 "endpointId": "switch_001",
                 "friendlyName": "Living Room Switch",
                 "value": True,  # Changed to True
+                "displayCategories": ["SWITCH"],
             }
         ]
     }
@@ -272,6 +278,11 @@ async def test_coordinator_auth_error_with_token_renewal(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test coordinator handling auth errors with token renewal."""
+    # Get coordinator from config entry runtime_data after setup
+    entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
+    assert entry is not None
+    coordinator = entry.runtime_data
+
     # First call fails with auth error, second succeeds after token renewal
     mock_redgtech_api.get_data.side_effect = [
         RedgtechAuthError("Auth failed"),
@@ -281,12 +292,11 @@ async def test_coordinator_auth_error_with_token_renewal(
                     "endpointId": "switch_001",
                     "friendlyName": "Living Room Switch",
                     "value": True,
+                    "displayCategories": ["SWITCH"],
                 }
             ]
         },
     ]
-
-    coordinator = mock_config_entry.runtime_data
 
     # Use freezer to advance time and trigger update
     freezer.tick(delta=timedelta(minutes=2))

@@ -29,11 +29,13 @@ def mock_redgtech_api() -> Callable[..., AsyncMock]:
                         "endpointId": "switch_001",
                         "friendlyName": "Living Room Switch",
                         "value": False,
+                        "displayCategories": ["SWITCH"],
                     },
                     {
                         "endpointId": "switch_002",
                         "friendlyName": "Kitchen Switch",
                         "value": True,
+                        "displayCategories": ["SWITCH"],
                     },
                 ]
             }
