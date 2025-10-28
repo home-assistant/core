@@ -287,16 +287,11 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         ]
 
         self._attr_group_members = group_members_entity_ids
-        if self.player.type == PlayerType.GROUP:
-            self._attr_volume_level = (
-                self.player.group_volume / 100
-                if self.player.group_volume is not None
-                else None
-            )
+        if player.type == PlayerType.GROUP:
+            volume = player.group_volume
         else:
-            self._attr_volume_level = (
-                player.volume_level / 100 if player.volume_level is not None else None
-            )
+            volume = player.volume_level
+        self._attr_volume_level = volume / 100 if volume is not None else None
         self._attr_is_volume_muted = player.volume_muted
         self._update_media_attributes(player, active_queue)
         self._update_media_image_url(player, active_queue)
