@@ -376,9 +376,8 @@ DISCOVERY_SCHEMAS = [
             native_step=1,
             device_to_ha=lambda x: None
             if x is None
-            # round to integer percentage,
-            else round(min(x, 254) / 2.54),  # Matter range (0-254, capped at 254)
-            ha_to_device=lambda x: round(x * 2.54),  # HA range 0–100%
+            else round(min(x, 254) * 100 / 254),  # Linear mapping: 0→0%, 254→100%
+            ha_to_device=lambda x: round(min(x * 254 / 100, 254)),  # HA range 0–100%
             mode=NumberMode.SLIDER,
         ),
         entity_class=MatterLevelControlNumber,
