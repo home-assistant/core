@@ -59,6 +59,10 @@ DEVICE_CLOUD_CONFIG = vol.Schema(
     }
 )
 
+CLOUD_STEP_PLACEHOLDERS = {
+    "country_servers_url": "https://www.openhab.org/addons/bindings/miio/#country-servers",
+}
+
 
 class OptionsFlowHandler(OptionsFlowWithReload):
     """Options for the component."""
@@ -224,7 +228,10 @@ class XiaomiMiioFlowHandler(ConfigFlow, domain=DOMAIN):
             if not cloud_username or not cloud_password or not cloud_country:
                 errors["base"] = "cloud_credentials_incomplete"
                 return self.async_show_form(
-                    step_id="cloud", data_schema=DEVICE_CLOUD_CONFIG, errors=errors
+                    step_id="cloud",
+                    data_schema=DEVICE_CLOUD_CONFIG,
+                    errors=errors,
+                    description_placeholders=CLOUD_STEP_PLACEHOLDERS,
                 )
 
             miio_cloud = await self.hass.async_add_executor_job(
@@ -241,7 +248,10 @@ class XiaomiMiioFlowHandler(ConfigFlow, domain=DOMAIN):
 
             if errors:
                 return self.async_show_form(
-                    step_id="cloud", data_schema=DEVICE_CLOUD_CONFIG, errors=errors
+                    step_id="cloud",
+                    data_schema=DEVICE_CLOUD_CONFIG,
+                    errors=errors,
+                    description_placeholders=CLOUD_STEP_PLACEHOLDERS,
                 )
 
             try:
@@ -255,7 +265,10 @@ class XiaomiMiioFlowHandler(ConfigFlow, domain=DOMAIN):
             if not devices_raw:
                 errors["base"] = "cloud_no_devices"
                 return self.async_show_form(
-                    step_id="cloud", data_schema=DEVICE_CLOUD_CONFIG, errors=errors
+                    step_id="cloud",
+                    data_schema=DEVICE_CLOUD_CONFIG,
+                    errors=errors,
+                    description_placeholders=CLOUD_STEP_PLACEHOLDERS,
                 )
 
             self.cloud_devices = {}
@@ -287,9 +300,7 @@ class XiaomiMiioFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="cloud",
             data_schema=DEVICE_CLOUD_CONFIG,
             errors=errors,
-            description_placeholders={
-                "country_servers_url": "https://www.openhab.org/addons/bindings/miio/#country-servers",
-            },
+            description_placeholders=CLOUD_STEP_PLACEHOLDERS,
         )
 
     async def async_step_select(
