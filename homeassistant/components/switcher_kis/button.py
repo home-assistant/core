@@ -16,14 +16,12 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SwitcherConfigEntry
-from .const import SIGNAL_DEVICE_ADD
+from .const import API_CONTROL_BREEZE_DEVICE, SIGNAL_DEVICE_ADD
 from .coordinator import SwitcherDataUpdateCoordinator
 from .entity import SwitcherEntity
 from .utils import get_breeze_remote_manager
 
 PARALLEL_UPDATES = 1
-
-API_CONTROL_BREEZE_DEVICE = "control_breeze_device"
 
 
 @dataclass(frozen=True, kw_only=True)
