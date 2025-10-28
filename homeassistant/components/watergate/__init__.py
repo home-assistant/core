@@ -20,6 +20,7 @@ from homeassistant.components.webhook import (
 from homeassistant.const import CONF_IP_ADDRESS, CONF_WEBHOOK_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import AUTO_SHUT_OFF_EVENT_NAME, DOMAIN
@@ -51,11 +52,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: WatergateConfigEntry) ->
     )
 
     watergate_client = WatergateLocalApiClient(
-        base_url=(
-            sonic_address
-            if sonic_address.startswith("http")
-            else f"http://{sonic_address}"
-        ),
+        base_url=sonic_address
+        if sonic_address.startswith("http")
+        else f"http://{sonic_address}",
         session=async_get_clientsession(hass),
     )
 
