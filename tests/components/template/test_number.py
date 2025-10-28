@@ -611,6 +611,37 @@ async def test_optimistic(hass: HomeAssistant) -> None:
         (
             1,
             {
+                "state": "{{ states('sensor.test_state') }}",
+                "optimistic": False,
+                "set_value": [],
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_number")
+async def test_not_optimistic(hass: HomeAssistant) -> None:
+    """Test optimistic yaml option set to false."""
+    await hass.services.async_call(
+        number.DOMAIN,
+        number.SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: _TEST_NUMBER, "value": 4},
+        blocking=True,
+    )
+
+    state = hass.states.get(_TEST_NUMBER)
+    assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    ("count", "number_config"),
+    [
+        (
+            1,
+            {
                 "set_value": [],
                 "state": "{{ states('number.test_state') }}",
                 "availability": "{{ is_state('binary_sensor.test_availability', 'on') }}",

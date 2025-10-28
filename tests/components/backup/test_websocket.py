@@ -76,7 +76,7 @@ DEFAULT_STORAGE_DATA: dict[str, Any] = {
             "copies": None,
             "days": None,
         },
-        "schedule": {"days": [], "recurrence": "never", "state": "never", "time": None},
+        "schedule": {"days": [], "recurrence": "never", "time": None},
     },
 }
 DAILY = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
@@ -1009,7 +1009,6 @@ async def test_agents_info(
                         "schedule": {
                             "days": DAILY,
                             "recurrence": "custom_days",
-                            "state": "never",
                             "time": None,
                         },
                     },
@@ -1041,7 +1040,6 @@ async def test_agents_info(
                         "schedule": {
                             "days": [],
                             "recurrence": "never",
-                            "state": "never",
                             "time": None,
                         },
                     },
@@ -1073,7 +1071,6 @@ async def test_agents_info(
                         "schedule": {
                             "days": [],
                             "recurrence": "never",
-                            "state": "never",
                             "time": None,
                         },
                     },
@@ -1105,7 +1102,6 @@ async def test_agents_info(
                         "schedule": {
                             "days": ["mon"],
                             "recurrence": "custom_days",
-                            "state": "never",
                             "time": None,
                         },
                     },
@@ -1137,7 +1133,6 @@ async def test_agents_info(
                         "schedule": {
                             "days": [],
                             "recurrence": "never",
-                            "state": "never",
                             "time": None,
                         },
                     },
@@ -1169,7 +1164,6 @@ async def test_agents_info(
                         "schedule": {
                             "days": ["mon", "sun"],
                             "recurrence": "custom_days",
-                            "state": "never",
                             "time": None,
                         },
                     },
@@ -1204,7 +1198,6 @@ async def test_agents_info(
                         "schedule": {
                             "days": ["mon", "sun"],
                             "recurrence": "custom_days",
-                            "state": "never",
                             "time": None,
                         },
                     },
@@ -1236,7 +1229,6 @@ async def test_agents_info(
                         "schedule": {
                             "days": [],
                             "recurrence": "never",
-                            "state": "never",
                             "time": None,
                         },
                     },
@@ -1268,7 +1260,6 @@ async def test_agents_info(
                         "schedule": {
                             "days": [],
                             "recurrence": "never",
-                            "state": "never",
                             "time": None,
                         },
                     },
@@ -1309,7 +1300,6 @@ async def test_agents_info(
                         "schedule": {
                             "days": ["mon", "sun"],
                             "recurrence": "custom_days",
-                            "state": "never",
                             "time": None,
                         },
                     },
@@ -1960,7 +1950,6 @@ async def test_config_schedule_logic(
             "schedule": {
                 "days": [],
                 "recurrence": "daily",
-                "state": "never",
                 "time": None,
             },
         },
@@ -2870,7 +2859,6 @@ async def test_config_retention_copies_logic(
             "schedule": {
                 "days": [],
                 "recurrence": "daily",
-                "state": "never",
                 "time": None,
             },
         },
@@ -3149,7 +3137,6 @@ async def test_config_retention_copies_logic_manual_backup(
             "schedule": {
                 "days": [],
                 "recurrence": "daily",
-                "state": "never",
                 "time": None,
             },
         },
@@ -3814,7 +3801,6 @@ async def test_config_retention_days_logic(
             "schedule": {
                 "days": [],
                 "recurrence": "never",
-                "state": "never",
                 "time": None,
             },
         },
@@ -3886,7 +3872,6 @@ async def test_configured_agents_unavailable_repair(
                         "schedule": {
                             "days": ["mon"],
                             "recurrence": "custom_days",
-                            "state": "never",
                             "time": None,
                         },
                     },

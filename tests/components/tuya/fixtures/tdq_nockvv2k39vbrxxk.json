@@ -1,10 +1,8 @@
 {
   "endpoint": "https://apigw.tuyain.com",
-  "terminal_id": "REDACTED",
   "mqtt_connected": true,
   "disabled_by": null,
   "disabled_polling": false,
-  "id": "d7ca553b5f406266350poc",
   "name": "Seating side 6-ch Smart Switch ",
   "category": "tdq",
   "product_id": "nockvv2k39vbrxxk",

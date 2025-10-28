@@ -1,10 +1,8 @@
 {
   "endpoint": "https://apigw.tuyaeu.com",
-  "terminal_id": "REDACTED",
   "mqtt_connected": true,
   "disabled_by": null,
   "disabled_polling": false,
-  "id": "bf7b8e59f8cd49f425mmfm",
   "name": "CAM GARAGE",
   "category": "sp",
   "product_id": "drezasavompxpcgm",

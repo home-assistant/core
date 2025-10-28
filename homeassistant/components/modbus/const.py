@@ -1,6 +1,7 @@
 """Constants used in modbus integration."""
 
 from enum import Enum
+import logging
 
 from homeassistant.const import (
     CONF_ADDRESS,
@@ -96,6 +97,7 @@ CONF_VIRTUAL_COUNT = "virtual_count"
 CONF_WRITE_TYPE = "write_type"
 CONF_ZERO_SUPPRESS = "zero_suppress"
 
+DEVICE_ID = "device_id"
 RTUOVERTCP = "rtuovertcp"
 SERIAL = "serial"
 TCP = "tcp"
@@ -157,6 +159,7 @@ DEFAULT_TEMP_UNIT = "C"
 DEFAULT_HVAC_ON_VALUE = 1
 DEFAULT_HVAC_OFF_VALUE = 0
 MODBUS_DOMAIN = "modbus"
+DOMAIN = "modbus"
 
 ACTIVE_SCAN_INTERVAL = 2  # limit to force an extra update
 
@@ -177,3 +180,5 @@ LIGHT_MAX_BRIGHTNESS = 255
 LIGHT_MODBUS_SCALE_MIN = 0
 LIGHT_MODBUS_SCALE_MAX = 100
 LIGHT_MODBUS_INVALID_VALUE = 0xFFFF
+
+_LOGGER = logging.getLogger(__package__)

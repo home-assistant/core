@@ -24,6 +24,7 @@ from homeassistant.util.color import (
 from . import HomeeConfigEntry
 from .const import LIGHT_PROFILES
 from .entity import HomeeNodeEntity
+from .helpers import setup_homee_platform
 
 LIGHT_ATTRIBUTES = [
     AttributeType.COLOR,
@@ -85,19 +86,28 @@ def decimal_to_rgb_list(color: float) -> list[int]:
     ]
 
 
+async def add_light_entities(
+    config_entry: HomeeConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+    nodes: list[HomeeNode],
+) -> None:
+    """Add homee light entities."""
+    async_add_entities(
+        HomeeLight(node, light, config_entry)
+        for node in nodes
+        for light in get_light_attribute_sets(node)
+        if is_light_node(node)
+    )
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: HomeeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Add the Homee platform for the light entity."""
+    """Add the homee platform for the light entity."""
 
-    async_add_entities(
-        HomeeLight(node, light, config_entry)
-        for node in config_entry.runtime_data.nodes
-        for light in get_light_attribute_sets(node)
-        if is_light_node(node)
-    )
+    await setup_homee_platform(add_light_entities, async_add_entities, config_entry)
 
 
 class HomeeLight(HomeeNodeEntity, LightEntity):

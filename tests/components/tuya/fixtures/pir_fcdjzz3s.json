@@ -1,10 +1,8 @@
 {
   "endpoint": "https://apigw.tuyaeu.com",
-  "terminal_id": "REDACTED",
   "mqtt_connected": true,
   "disabled_by": null,
   "disabled_polling": false,
-  "id": "bf445324326cbde7c5rg7b",
   "name": "Motion sensor lidl zigbee",
   "category": "pir",
   "product_id": "fcdjzz3s",

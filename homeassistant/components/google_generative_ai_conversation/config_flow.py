@@ -377,7 +377,7 @@ async def google_generative_ai_config_option_schema(
             value=api_model.name,
         )
         for api_model in sorted(
-            api_models, key=lambda x: x.name.lstrip("models/") or ""
+            api_models, key=lambda x: (x.name or "").lstrip("models/")
         )
         if (
             api_model.name

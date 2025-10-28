@@ -28,7 +28,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.network import NoURLAvailableError
 from homeassistant.util.aiohttp import MockRequest
 
-from .conftest import TEST_NVR_NAME
+from .conftest import TEST_CAM_NAME
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.diagnostics import get_diagnostics_for_config_entry
@@ -92,7 +92,7 @@ async def test_webhook_callback(
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
-    entity_id = f"{Platform.BINARY_SENSOR}.{TEST_NVR_NAME}_motion"
+    entity_id = f"{Platform.BINARY_SENSOR}.{TEST_CAM_NAME}_motion"
     webhook_id = config_entry.runtime_data.host.webhook_id
     unique_id = config_entry.runtime_data.host.unique_id
 

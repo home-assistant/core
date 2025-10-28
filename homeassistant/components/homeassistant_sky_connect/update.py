@@ -168,7 +168,8 @@ async def async_setup_entry(
 class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
     """SkyConnect firmware update entity."""
 
-    bootloader_reset_type = None
+    # The ZBT-1 does not have a hardware bootloader trigger
+    bootloader_reset_methods = []
 
     def __init__(
         self,

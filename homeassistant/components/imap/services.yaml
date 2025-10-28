@@ -56,3 +56,22 @@ fetch:
       example: "12"
       selector:
         text:
+
+fetch_part:
+  fields:
+    entry:
+      required: true
+      selector:
+        config_entry:
+          integration: "imap"
+    uid:
+      required: true
+      example: "12"
+      selector:
+        text:
+
+    part:
+      required: true
+      example: "0,1"
+      selector:
+        text:

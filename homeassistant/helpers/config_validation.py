@@ -373,6 +373,17 @@ def entity_id(value: Any) -> str:
     raise vol.Invalid(f"Entity ID {value} is an invalid entity ID")
 
 
+def strict_entity_id(value: Any) -> str:
+    """Validate Entity ID, strictly."""
+    if not isinstance(value, str):
+        raise vol.Invalid(f"Entity ID {value} is not a string")
+
+    if valid_entity_id(value):
+        return value
+
+    raise vol.Invalid(f"Entity ID {value} is not a valid entity ID")
+
+
 def entity_id_or_uuid(value: Any) -> str:
     """Validate Entity specified by entity_id or uuid."""
     with contextlib.suppress(vol.Invalid):
@@ -728,15 +739,7 @@ def template(value: Any | None) -> template_helper.Template:
     if isinstance(value, (list, dict, template_helper.Template)):
         raise vol.Invalid("template value should be a string")
     if not (hass := _async_get_hass_or_none()):
-        from .frame import ReportBehavior, report_usage  # noqa: PLC0415
-
-        report_usage(
-            (
-                "validates schema outside the event loop, "
-                "which will stop working in HA Core 2025.10"
-            ),
-            core_behavior=ReportBehavior.LOG,
-        )
+        raise vol.Invalid("Validates schema outside the event loop")
 
     template_value = template_helper.Template(str(value), hass)
 
@@ -1097,11 +1100,21 @@ def key_value_schemas(
     value_schemas: ValueSchemas,
     default_schema: VolSchemaType | Callable[[Any], dict[str, Any]] | None = None,
     default_description: str | None = None,
+    list_alternatives: bool = True,
 ) -> Callable[[Any], dict[Hashable, Any]]:
     """Create a validator that validates based on a value for specific key.
 
     This gives better error messages.
+
+    default_schema: An optional schema to use if the key value is not in value_schemas.
+    default_description: A description of what is expected by the default schema, this
+    will be added to the error message.
+    list_alternatives: If True, list the keys in `value_schemas` in the error message.
     """
+    if not list_alternatives and not default_description:
+        raise ValueError(
+            "default_description must be provided if list_alternatives is False"
+        )
 
     def key_value_validator(value: Any) -> dict[Hashable, Any]:
         if not isinstance(value, dict):
@@ -1116,9 +1129,13 @@ def key_value_schemas(
             with contextlib.suppress(vol.Invalid):
                 return cast(dict[Hashable, Any], default_schema(value))
 
-        alternatives = ", ".join(str(alternative) for alternative in value_schemas)
-        if default_description:
-            alternatives = f"{alternatives}, {default_description}"
+        if list_alternatives:
+            alternatives = ", ".join(str(alternative) for alternative in value_schemas)
+            if default_description:
+                alternatives = f"{alternatives}, {default_description}"
+        else:
+            # mypy does not understand that default_description is not None here
+            alternatives = default_description  # type: ignore[assignment]
         raise vol.Invalid(
             f"Unexpected value for {key}: '{key_value}'. Expected {alternatives}"
         )
@@ -1291,6 +1308,15 @@ PLATFORM_SCHEMA = vol.Schema(
 )
 
 PLATFORM_SCHEMA_BASE = PLATFORM_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
+
+
+TARGET_FIELDS: VolDictType = {
+    vol.Optional(ATTR_ENTITY_ID): vol.All(ensure_list, [strict_entity_id]),
+    vol.Optional(ATTR_DEVICE_ID): vol.All(ensure_list, [str]),
+    vol.Optional(ATTR_AREA_ID): vol.All(ensure_list, [str]),
+    vol.Optional(ATTR_FLOOR_ID): vol.All(ensure_list, [str]),
+    vol.Optional(ATTR_LABEL_ID): vol.All(ensure_list, [str]),
+}
 
 ENTITY_SERVICE_FIELDS: VolDictType = {
     # Either accept static entity IDs, a single dynamic template or a mixed list
@@ -1511,9 +1537,6 @@ STATE_CONDITION_BASE_SCHEMA = {
     ),
     vol.Optional(CONF_ATTRIBUTE): str,
     vol.Optional(CONF_FOR): positive_time_period_template,
-    # To support use_trigger_value in automation
-    # Deprecated 2016/04/25
-    vol.Optional("from"): str,
 }
 
 STATE_CONDITION_STATE_SCHEMA = vol.Schema(
@@ -1733,7 +1756,7 @@ def _base_condition_validator(value: Any) -> Any:
     vol.Schema(
         {
             **CONDITION_BASE_SCHEMA,
-            CONF_CONDITION: vol.NotIn(BUILT_IN_CONDITIONS),
+            CONF_CONDITION: vol.All(str, vol.NotIn(BUILT_IN_CONDITIONS)),
         },
         extra=vol.ALLOW_EXTRA,
     )(value)
@@ -1748,6 +1771,8 @@ CONDITION_SCHEMA: vol.Schema = vol.Schema(
                 CONF_CONDITION,
                 BUILT_IN_CONDITIONS,
                 _base_condition_validator,
+                "a condition, a list of conditions or a valid template",
+                list_alternatives=False,
             ),
         ),
         dynamic_template_condition,
@@ -1779,7 +1804,8 @@ CONDITION_ACTION_SCHEMA: vol.Schema = vol.Schema(
                 dynamic_template_condition_action,
                 _base_condition_validator,
             ),
-            "a list of conditions or a valid template",
+            "a condition, a list of conditions or a valid template",
+            list_alternatives=False,
         ),
     )
 )

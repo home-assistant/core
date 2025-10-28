@@ -1,10 +1,8 @@
 {
   "endpoint": "https://apigw.tuyaeu.com",
-  "terminal_id": "REDACTED",
   "mqtt_connected": true,
   "disabled_by": null,
   "disabled_polling": false,
-  "id": "bf6574iutyikgwkx",
   "name": "Smart Odor Eliminator-Pro",
   "category": "cwjwq",
   "product_id": "agwu93lr",

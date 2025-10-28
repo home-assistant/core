@@ -37,6 +37,8 @@ from .coordinator import SwitcherDataUpdateCoordinator
 from .entity import SwitcherEntity
 from .utils import get_breeze_remote_manager
 
+PARALLEL_UPDATES = 1
+
 API_CONTROL_BREEZE_DEVICE = "control_breeze_device"
 
 DEVICE_MODE_TO_HA = {

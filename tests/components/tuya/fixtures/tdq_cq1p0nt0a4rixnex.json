@@ -1,10 +1,8 @@
 {
   "endpoint": "https://apigw.tuyaeu.com",
-  "terminal_id": "REDACTED",
   "mqtt_connected": true,
   "disabled_by": null,
   "disabled_polling": false,
-  "id": "bf082711d275c0c883vb4p",
   "name": "4-433",
   "category": "tdq",
   "product_id": "cq1p0nt0a4rixnex",

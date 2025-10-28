@@ -1,51 +1,3 @@
-start_program:
-  fields:
-    device_id:
-      required: true
-      selector:
-        device:
-          integration: home_connect
-    program:
-      example: "Dishcare.Dishwasher.Program.Auto2"
-      required: true
-      selector:
-        text:
-    key:
-      example: "BSH.Common.Option.StartInRelative"
-      selector:
-        text:
-    value:
-      example: 1800
-      selector:
-        object:
-    unit:
-      example: "seconds"
-      selector:
-        text:
-select_program:
-  fields:
-    device_id:
-      required: true
-      selector:
-        device:
-          integration: home_connect
-    program:
-      example: "Dishcare.Dishwasher.Program.Auto2"
-      required: true
-      selector:
-        text:
-    key:
-      example: "BSH.Common.Option.StartInRelative"
-      selector:
-        text:
-    value:
-      example: 1800
-      selector:
-        object:
-    unit:
-      example: "seconds"
-      selector:
-        text:
 set_program_and_options:
   fields:
     device_id:
@@ -250,6 +202,22 @@ set_program_and_options:
                 - consumer_products_cleaning_robot_enum_type_cleaning_modes_silent
                 - consumer_products_cleaning_robot_enum_type_cleaning_modes_standard
                 - consumer_products_cleaning_robot_enum_type_cleaning_modes_power
+                - consumer_products_cleaning_robot_enum_type_cleaning_mode_intelligent_mode
+                - consumer_products_cleaning_robot_enum_type_cleaning_mode_vacuum_only
+                - consumer_products_cleaning_robot_enum_type_cleaning_mode_mop_only
+                - consumer_products_cleaning_robot_enum_type_cleaning_mode_vacuum_and_mop
+                - consumer_products_cleaning_robot_enum_type_cleaning_mode_mop_after_vacuum
+        consumer_products_cleaning_robot_option_suction_power:
+          example: consumer_products_cleaning_robot_enum_type_suction_power_standard
+          required: false
+          selector:
+            select:
+              mode: dropdown
+              translation_key: suction_power
+              options:
+                - consumer_products_cleaning_robot_enum_type_suction_power_silent
+                - consumer_products_cleaning_robot_enum_type_suction_power_standard
+                - consumer_products_cleaning_robot_enum_type_suction_power_max
     coffee_maker_options:
       collapsed: true
       fields:
@@ -599,54 +567,6 @@ set_program_and_options:
                 - laundry_care_common_enum_type_vario_perfect_off
                 - laundry_care_common_enum_type_vario_perfect_eco_perfect
                 - laundry_care_common_enum_type_vario_perfect_speed_perfect
-pause_program:
-  fields:
-    device_id:
-      required: true
-      selector:
-        device:
-          integration: home_connect
-resume_program:
-  fields:
-    device_id:
-      required: true
-      selector:
-        device:
-          integration: home_connect
-set_option_active:
-  fields:
-    device_id:
-      required: true
-      selector:
-        device:
-          integration: home_connect
-    key:
-      example: "LaundryCare.Dryer.Option.DryingTarget"
-      required: true
-      selector:
-        text:
-    value:
-      example: "LaundryCare.Dryer.EnumType.DryingTarget.IronDry"
-      required: true
-      selector:
-        object:
-set_option_selected:
-  fields:
-    device_id:
-      required: true
-      selector:
-        device:
-          integration: home_connect
-    key:
-      example: "LaundryCare.Dryer.Option.DryingTarget"
-      required: true
-      selector:
-        text:
-    value:
-      example: "LaundryCare.Dryer.EnumType.DryingTarget.IronDry"
-      required: true
-      selector:
-        object:
 change_setting:
   fields:
     device_id:

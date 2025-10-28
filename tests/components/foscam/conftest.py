@@ -60,6 +60,34 @@ def setup_mock_foscam_camera(mock_foscam_camera):
         mock_foscam_camera.get_dev_info.return_value = (dev_info_rc, dev_info_data)
         mock_foscam_camera.get_port_info.return_value = (dev_info_rc, {})
         mock_foscam_camera.is_asleep.return_value = (0, True)
+        mock_foscam_camera.get_infra_led_config.return_value = (0, {"mode": "1"})
+        mock_foscam_camera.get_mirror_and_flip_setting.return_value = (
+            0,
+            {"isFlip": "0", "isMirror": "0"},
+        )
+        mock_foscam_camera.is_asleep.return_value = (0, "0")
+        mock_foscam_camera.getWhiteLightBrightness.return_value = (0, {"enable": "1"})
+        mock_foscam_camera.getSirenConfig.return_value = (0, {"sirenEnable": "1"})
+        mock_foscam_camera.getAudioVolume.return_value = (0, {"volume": "100"})
+        mock_foscam_camera.getSpeakVolume.return_value = (0, {"SpeakVolume": "100"})
+        mock_foscam_camera.getVoiceEnableState.return_value = (0, {"isEnable": "1"})
+        mock_foscam_camera.getLedEnableState.return_value = (0, {"isEnable": "0"})
+        mock_foscam_camera.getWdrMode.return_value = (0, {"mode": "0"})
+        mock_foscam_camera.getHdrMode.return_value = (0, {"mode": "0"})
+        mock_foscam_camera.get_motion_detect_config.return_value = (0, 1)
+        mock_foscam_camera.getSWCapabilities.return_value = (
+            0,
+            {
+                "swCapabilities1": "100",
+                "swCapabilities2": "768",
+                "swCapabilities3": "100",
+                "swCapabilities4": "100",
+            },
+        )
+        mock_foscam_camera.get_motion_detect_config.return_value = (
+            0,
+            {"petEnable": "1", "carEnable": "1", "humanEnable": "1"},
+        )
 
         return mock_foscam_camera
 

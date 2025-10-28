@@ -1,10 +1,8 @@
 {
   "endpoint": "https://apigw.tuyaeu.com",
-  "terminal_id": "REDACTED",
   "mqtt_connected": true,
   "disabled_by": null,
   "disabled_polling": false,
-  "id": "bfb3c90d87dac93d2bdxn3",
   "name": "Living room left",
   "category": "tdq",
   "product_id": "uoa3mayicscacseb",

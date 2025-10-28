@@ -4,7 +4,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -42,6 +44,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'Echo Test Temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
