@@ -327,6 +327,9 @@ aiomodernforms==0.1.8
 # homeassistant.components.yamaha_musiccast
 aiomusiccast==0.14.8
 
+# homeassistant.components.sql
+aiomysql==0.3.2
+
 # homeassistant.components.nanoleaf
 aionanoleaf==0.2.1
 
@@ -403,6 +406,9 @@ aioslimproto==3.0.0
 
 # homeassistant.components.solaredge
 aiosolaredge==0.2.0
+
+# homeassistant.components.sql
+aiosqlite==0.21.0
 
 # homeassistant.components.steamist
 aiosteamist==1.0.1
@@ -552,6 +558,9 @@ asyncarve==0.1.1
 
 # homeassistant.components.keyboard_remote
 asyncinotify==4.2.0
+
+# homeassistant.components.sql
+asyncpg==0.30.0
 
 # homeassistant.components.supla
 asyncpysupla==0.0.5
@@ -1119,6 +1128,9 @@ greeclimate==2.1.0
 
 # homeassistant.components.greeneye_monitor
 greeneye_monitor==3.0.3
+
+# homeassistant.components.sql
+greenlet==3.2.4
 
 # homeassistant.components.greenwave
 greenwavereality==0.5.1

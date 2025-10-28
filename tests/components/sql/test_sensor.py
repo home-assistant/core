@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import copy
 from datetime import timedelta
 from pathlib import Path
 import sqlite3
-from typing import Any
+import types
+from typing import Any, Self
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -255,6 +257,17 @@ async def test_invalid_url_on_update(
     class MockSession:
         """Mock session."""
 
+        def __enter__(self) -> Self:
+            return self
+
+        def __exit__(
+            self,
+            type: type[BaseException] | None,
+            value: BaseException | None,
+            traceback: types.TracebackType | None,
+        ) -> None:
+            pass
+
         def execute(self, query: Any) -> None:
             """Execute the query."""
             raise SQLAlchemyError("sqlite://homeassistant:hunter2@homeassistant.local")
@@ -277,6 +290,21 @@ async def test_query_from_yaml(recorder_mock: Recorder, hass: HomeAssistant) -> 
     """Test the SQL sensor from yaml config."""
 
     assert await async_setup_component(hass, DOMAIN, YAML_CONFIG)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.get_value")
+    assert state.state == "5"
+
+
+async def test_async_query_from_yaml(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Test the SQL sensor from yaml config using async driver."""
+
+    config = copy.deepcopy(YAML_CONFIG)
+    config["sql"][CONF_DB_URL] = "sqlite+aiosqlite://"
+
+    assert await async_setup_component(hass, DOMAIN, config)
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.get_value")
@@ -626,6 +654,42 @@ async def test_attributes_from_entry_config(
     assert state.attributes[CONF_UNIT_OF_MEASUREMENT] == "MiB"
     assert CONF_DEVICE_CLASS not in state.attributes
     assert CONF_STATE_CLASS not in state.attributes
+
+
+async def test_session_rollback_on_error(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the SQL sensor."""
+    options = {
+        CONF_QUERY: "SELECT 5 as value",
+        CONF_COLUMN_NAME: "value",
+        CONF_UNIQUE_ID: "very_unique_id",
+    }
+    await init_integration(hass, title="Select value SQL query", options=options)
+    platforms = async_get_platforms(hass, "sql")
+    sql_entity = platforms[0].entities["sensor.select_value_sql_query"]
+
+    state = hass.states.get("sensor.select_value_sql_query")
+    assert state.state == "5"
+    assert state.attributes["value"] == 5
+
+    with (
+        patch.object(
+            sql_entity,
+            "_lambda_stmt",
+            generate_lambda_stmt("Faulty syntax create operational issue"),
+        ),
+        patch("sqlalchemy.orm.session.Session.rollback") as mock_session_rollback,
+    ):
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert "sqlite3.OperationalError" in caplog.text
+
+    assert mock_session_rollback.call_count == 1
 
 
 async def test_query_recover_from_rollback(
