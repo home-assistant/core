@@ -24,6 +24,9 @@
       "reset_lifespan_lens_brush": {
         "default": "mdi:broom"
       },
+      "reset_lifespan_round_mop": {
+        "default": "mdi:broom"
+      },
       "reset_lifespan_side_brush": {
         "default": "mdi:broom"
       },
@@ -33,7 +36,10 @@
       "reset_lifespan_unit_care": {
         "default": "mdi:robot-vacuum"
       },
-      "reset_lifespan_round_mop": {
+      "station_action_clean_base": {
+        "default": "mdi:home"
+      },
+      "station_action_dry_mop": {
         "default": "mdi:broom"
       },
       "station_action_empty_dustbin": {
@@ -59,6 +65,17 @@
         }
       }
     },
+    "select": {
+      "active_map": {
+        "default": "mdi:floor-plan"
+      },
+      "water_amount": {
+        "default": "mdi:water"
+      },
+      "work_mode": {
+        "default": "mdi:cog"
+      }
+    },
     "sensor": {
       "error": {
         "default": "mdi:alert-circle"
@@ -75,6 +92,9 @@
       "lifespan_lens_brush": {
         "default": "mdi:broom"
       },
+      "lifespan_round_mop": {
+        "default": "mdi:broom"
+      },
       "lifespan_side_brush": {
         "default": "mdi:broom"
       },
@@ -83,9 +103,6 @@
       },
       "lifespan_unit_care": {
         "default": "mdi:robot-vacuum"
-      },
-      "lifespan_round_mop": {
-        "default": "mdi:broom"
       },
       "network_ip": {
         "default": "mdi:ip-network-outline"
@@ -108,22 +125,11 @@
       "total_stats_area": {
         "default": "mdi:floor-plan"
       },
-      "total_stats_time": {
-        "default": "mdi:timer-outline"
-      },
       "total_stats_cleanings": {
         "default": "mdi:counter"
-      }
-    },
-    "select": {
-      "active_map": {
-        "default": "mdi:floor-plan"
       },
-      "water_amount": {
-        "default": "mdi:water"
-      },
-      "work_mode": {
-        "default": "mdi:cog"
+      "total_stats_time": {
+        "default": "mdi:timer-outline"
       }
     },
     "switch": {
@@ -142,11 +148,11 @@
       "clean_preference": {
         "default": "mdi:broom"
       },
-      "cross_map_border_warning": {
-        "default": "mdi:border-none-variant"
-      },
       "continuous_cleaning": {
         "default": "mdi:refresh-auto"
+      },
+      "cross_map_border_warning": {
+        "default": "mdi:border-none-variant"
       },
       "move_up_warning": {
         "default": "mdi:arrow-up-bold-box-outline"
