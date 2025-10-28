@@ -98,17 +98,18 @@ def entity_used_in(hass: HomeAssistant, entity_id: str) -> list[str]:
 
 def check_deprecated_entity(
     hass: HomeAssistant,
-    entity: XboxBaseEntity,
+    xuid: str,
+    entity_description: EntityDescription,
     entity_domain: str,
 ) -> bool:
     """Check for deprecated entity and remove it."""
-    if not getattr(entity.entity_description, "deprecated", False):
+    if not getattr(entity_description, "deprecated", False):
         return True
     ent_reg = er.async_get(hass)
     if entity_id := ent_reg.async_get_entity_id(
         entity_domain,
         DOMAIN,
-        f"{entity.xuid}_{entity.entity_description.key}",
+        f"{xuid}_{entity_description.key}",
     ):
         ent_reg.async_remove(entity_id)
 

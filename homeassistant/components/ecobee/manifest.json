@@ -16,16 +16,16 @@
       "type": "_ecobee._tcp.local."
     },
     {
-      "type": "_sideplay._tcp.local.",
       "properties": {
         "mdl": "eb-*"
-      }
+      },
+      "type": "_sideplay._tcp.local."
     },
     {
-      "type": "_sideplay._tcp.local.",
       "properties": {
         "mdl": "ecobee*"
-      }
+      },
+      "type": "_sideplay._tcp.local."
     }
   ]
 }

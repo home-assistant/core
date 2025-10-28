@@ -7,7 +7,7 @@
 AEMET-OpenData==0.6.4
 
 # homeassistant.components.honeywell
-AIOSomecomfort==0.0.33
+AIOSomecomfort==0.0.35
 
 # homeassistant.components.adax
 Adax-local==0.2.0
@@ -277,7 +277,7 @@ aioharmony==0.5.3
 aiohasupervisor==0.3.3
 
 # homeassistant.components.home_connect
-aiohomeconnect==0.22.0
+aiohomeconnect==0.23.0
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.20
@@ -1167,7 +1167,7 @@ hass-splunk==0.1.1
 
 # homeassistant.components.assist_satellite
 # homeassistant.components.conversation
-hassil==3.2.0
+hassil==3.3.0
 
 # homeassistant.components.jewish_calendar
 hdate[astral]==1.1.2
@@ -1788,7 +1788,7 @@ pushover_complete==1.2.0
 pvo==2.2.1
 
 # homeassistant.components.aosmith
-py-aosmith==1.0.14
+py-aosmith==1.0.15
 
 # homeassistant.components.canary
 py-canary==0.5.4
@@ -2195,7 +2195,7 @@ pymeteoclimatic==0.1.0
 pymicro-vad==1.0.1
 
 # homeassistant.components.miele
-pymiele==0.5.5
+pymiele==0.5.6
 
 # homeassistant.components.xiaomi_tv
 pymitv==1.4.3
@@ -2719,7 +2719,7 @@ refoss-ha==1.2.5
 regenmaschine==2024.03.0
 
 # homeassistant.components.renault
-renault-api==0.4.4
+renault-api==0.5.0
 
 # homeassistant.components.renson
 renson-endura-delta==1.7.2
