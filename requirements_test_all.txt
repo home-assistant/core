@@ -1025,7 +1025,7 @@ hass-nabucasa==1.4.0
 
 # homeassistant.components.assist_satellite
 # homeassistant.components.conversation
-hassil==3.2.0
+hassil==3.3.0
 
 # homeassistant.components.jewish_calendar
 hdate[astral]==1.1.2
@@ -1840,7 +1840,7 @@ pymeteoclimatic==0.1.0
 pymicro-vad==1.0.1
 
 # homeassistant.components.miele
-pymiele==0.5.5
+pymiele==0.5.6
 
 # homeassistant.components.mochad
 pymochad==0.2.0
