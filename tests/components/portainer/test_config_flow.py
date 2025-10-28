@@ -9,7 +9,7 @@ from pyportainer.exceptions import (
 )
 import pytest
 
-from homeassistant.components.portainer.const import DOMAIN, SECTION_DANGER_ZONE
+from homeassistant.components.portainer.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_TOKEN, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
@@ -26,11 +26,9 @@ MOCK_USER_SETUP = {
 }
 
 USER_INPUT_RECONFIGURE = {
+    CONF_URL: "https://new_domain:9000/",
     CONF_API_TOKEN: "new_api_key",
-    SECTION_DANGER_ZONE: {
-        CONF_URL: "https://new_domain:9000/",
-        CONF_VERIFY_SSL: True,
-    },
+    CONF_VERIFY_SSL: True,
 }
 
 
