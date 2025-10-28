@@ -1,20 +1,40 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "detect_error": "Unable to process discovered devices data, check the documentation for supported devices",
+      "discovery_failed": "Unable to start discovery, check logs for details",
+      "listen_error": "Unable to start listening for devices",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "Re-authentication should be used for the same device not a new one"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
+      "key_data_missing": "Expected data not returned from the device, check the documentation for supported devices",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
     "flow_title": "Ubiquiti airOS device",
+    "progress": {
+      "connecting": "Connecting to the airOS device",
+      "discovering": "Listening for any airOS devices for {seconds} seconds"
+    },
     "step": {
       "configure_device": {
-        "description": "Enter the username and password for {device_name}",
         "data": {
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
-          "username": "[%key:component::airos::config::step::manual::data_description::username%]",
-          "password": "[%key:component::airos::config::step::manual::data_description::password%]"
+          "password": "[%key:component::airos::config::step::manual::data_description::password%]",
+          "username": "[%key:component::airos::config::step::manual::data_description::username%]"
         },
+        "description": "Enter the username and password for {device_name}",
         "sections": {
           "advanced_settings": {
-            "name": "[%key:component::airos::config::step::manual::sections::advanced_settings::name%]",
             "data": {
               "ssl": "[%key:component::airos::config::step::manual::sections::advanced_settings::data::ssl%]",
               "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
@@ -22,7 +42,33 @@
             "data_description": {
               "ssl": "[%key:component::airos::config::step::manual::sections::advanced_settings::data_description::ssl%]",
               "verify_ssl": "[%key:component::airos::config::step::manual::sections::advanced_settings::data_description::verify_ssl%]"
-            }
+            },
+            "name": "[%key:component::airos::config::step::manual::sections::advanced_settings::name%]"
+          }
+        }
+      },
+      "manual": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "host": "IP address or hostname of the airOS device",
+          "password": "Password configured through the UISP app or web interface",
+          "username": "Administrator username for the airOS device, normally 'ubnt'"
+        },
+        "sections": {
+          "advanced_settings": {
+            "data": {
+              "ssl": "Use HTTPS",
+              "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+            },
+            "data_description": {
+              "ssl": "Whether the connection should be encrypted (required for most devices)",
+              "verify_ssl": "Whether the certificate should be verified when using HTTPS. This should be off for self-signed certificates"
+            },
+            "name": "Advanced settings"
           }
         }
       },
@@ -43,7 +89,6 @@
         },
         "sections": {
           "advanced_settings": {
-            "name": "[%key:component::airos::config::step::manual::sections::advanced_settings::name%]",
             "data": {
               "ssl": "[%key:component::airos::config::step::manual::sections::advanced_settings::data::ssl%]",
               "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
@@ -51,7 +96,8 @@
             "data_description": {
               "ssl": "[%key:component::airos::config::step::manual::sections::advanced_settings::data_description::ssl%]",
               "verify_ssl": "[%key:component::airos::config::step::manual::sections::advanced_settings::data_description::verify_ssl%]"
-            }
+            },
+            "name": "[%key:component::airos::config::step::manual::sections::advanced_settings::name%]"
           }
         }
       },
@@ -68,59 +114,13 @@
           "discovery": "Listen for airOS devices on the network",
           "manual": "Manually configure airOS device"
         }
-      },
-      "manual": {
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
-        },
-        "data_description": {
-          "host": "IP address or hostname of the airOS device",
-          "username": "Administrator username for the airOS device, normally 'ubnt'",
-          "password": "Password configured through the UISP app or web interface"
-        },
-        "sections": {
-          "advanced_settings": {
-            "name": "Advanced settings",
-            "data": {
-              "ssl": "Use HTTPS",
-              "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
-            },
-            "data_description": {
-              "ssl": "Whether the connection should be encrypted (required for most devices)",
-              "verify_ssl": "Whether the certificate should be verified when using HTTPS. This should be off for self-signed certificates"
-            }
-          }
-        }
       }
-    },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
-      "key_data_missing": "Expected data not returned from the device, check the documentation for supported devices",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
-      "unique_id_mismatch": "Re-authentication should be used for the same device not a new one",
-      "detect_error": "Unable to process discovered devices data, check the documentation for supported devices",
-      "discovery_failed": "Unable to start discovery, check logs for details",
-      "listen_error": "Unable to start listening for devices",
-      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
-    },
-    "progress": {
-      "connecting": "Connecting to the airOS device",
-      "discovering": "Listening for any airOS devices for {seconds} seconds"
     }
   },
   "entity": {
     "binary_sensor": {
-      "port_forwarding": {
-        "name": "Port forwarding"
+      "dhcp6_server": {
+        "name": "DHCPv6 server"
       },
       "dhcp_client": {
         "name": "DHCP client"
@@ -128,8 +128,8 @@
       "dhcp_server": {
         "name": "DHCP server"
       },
-      "dhcp6_server": {
-        "name": "DHCPv6 server"
+      "port_forwarding": {
+        "name": "Port forwarding"
       },
       "pppoe": {
         "name": "PPPoE link"
@@ -146,20 +146,27 @@
           "router": "Router"
         }
       },
-      "wireless_frequency": {
-        "name": "Wireless frequency"
-      },
-      "wireless_essid": {
-        "name": "Wireless SSID"
+      "host_uptime": {
+        "name": "Uptime"
       },
       "wireless_antenna_gain": {
         "name": "Antenna gain"
       },
-      "wireless_throughput_tx": {
-        "name": "Throughput transmit (actual)"
+      "wireless_distance": {
+        "name": "Wireless distance"
       },
-      "wireless_throughput_rx": {
-        "name": "Throughput receive (actual)"
+      "wireless_essid": {
+        "name": "Wireless SSID"
+      },
+      "wireless_frequency": {
+        "name": "Wireless frequency"
+      },
+      "wireless_mode": {
+        "name": "Wireless mode",
+        "state": {
+          "point_to_multipoint": "Point-to-multipoint",
+          "point_to_point": "Point-to-point"
+        }
       },
       "wireless_polling_dl_capacity": {
         "name": "Download capacity"
@@ -170,12 +177,6 @@
       "wireless_remote_hostname": {
         "name": "Remote hostname"
       },
-      "host_uptime": {
-        "name": "Uptime"
-      },
-      "wireless_distance": {
-        "name": "Wireless distance"
-      },
       "wireless_role": {
         "name": "Wireless role",
         "state": {
@@ -183,27 +184,26 @@
           "station": "Station"
         }
       },
-      "wireless_mode": {
-        "name": "Wireless mode",
-        "state": {
-          "point_to_point": "Point-to-point",
-          "point_to_multipoint": "Point-to-multipoint"
-        }
+      "wireless_throughput_rx": {
+        "name": "Throughput receive (actual)"
+      },
+      "wireless_throughput_tx": {
+        "name": "Throughput transmit (actual)"
       }
     }
   },
   "exceptions": {
-    "invalid_auth": {
-      "message": "[%key:common::config_flow::error::invalid_auth%]"
-    },
     "cannot_connect": {
       "message": "[%key:common::config_flow::error::cannot_connect%]"
     },
-    "key_data_missing": {
-      "message": "Key data not returned from device"
-    },
     "error_data_missing": {
       "message": "Data incomplete or missing"
+    },
+    "invalid_auth": {
+      "message": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "key_data_missing": {
+      "message": "Key data not returned from device"
     }
   }
 }
