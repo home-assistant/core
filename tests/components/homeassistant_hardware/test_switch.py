@@ -205,7 +205,7 @@ async def test_switch_restore_state(
     entity_registry = er.async_get(hass)
     entity_entry = entity_registry.async_get(TEST_SWITCH_ENTITY_ID)
     assert entity_entry is not None
-    assert entity_entry.entity_category == EntityCategory.CONFIG
+    assert entity_entry.entity_category == EntityCategory.DIAGNOSTIC
     assert entity_entry.translation_key == "beta_firmware"
 
 

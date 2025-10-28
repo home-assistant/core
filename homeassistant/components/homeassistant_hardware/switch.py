@@ -19,7 +19,7 @@ class BaseBetaFirmwareSwitch(SwitchEntity, RestoreEntity):
     """Base switch to enable beta firmware updates."""
 
     _attr_has_entity_name = True
-    _attr_entity_category = EntityCategory.CONFIG
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_translation_key = "beta_firmware"
 
     def __init__(
