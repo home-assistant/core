@@ -12,7 +12,7 @@ rules:
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
-  dependency-transparency: done
+  dependency-transparency: todo
   docs-actions:
     status: exempt
     comment: |
