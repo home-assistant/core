@@ -231,10 +231,13 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState]):
 
 
 async def _refresh_traits(traits: list[Any]) -> None:
-    """Refresh multiple traits concurrently."""
+    """Refresh a list of traits serially.
+
+    We refresh traits serially to avoid overloading the cloud servers or device
+    with requests.
+    """
     for trait in traits:
         try:
-            # await asyncio.gather(*[trait.refresh() for trait in traits])
             await trait.refresh()
         except RoborockException as ex:
             _LOGGER.debug(
