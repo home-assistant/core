@@ -511,13 +511,6 @@
       "switch": {
         "name": "[%key:component::switch::title%]"
       },
-      "dead_front": {
-        "name": "Control panel lock",
-        "state": {
-          "on": "[%key:common::state::on%]",
-          "off": "[%key:common::state::off%]"
-        }
-      },
       "power": {
         "name": "Power"
       },
