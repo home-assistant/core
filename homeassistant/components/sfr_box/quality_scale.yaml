@@ -27,8 +27,8 @@ rules:
     status: todo
     comment: Under review
   docs-actions:
-    status: todo
-    comment: Under review
+    status: exempt
+    comment: There are no service actions
   brands: done
 
   ## Silver
