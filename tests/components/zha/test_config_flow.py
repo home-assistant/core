@@ -97,6 +97,9 @@ def mock_app() -> Generator[AsyncMock]:
     mock_app = AsyncMock()
     mock_app.backups = create_autospec(BackupManager, instance=True)
     mock_app.backups.backups = []
+    mock_app.state.network_info.extended_pan_id = zigpy.types.EUI64.convert(
+        "AABBCCDDEE000000"
+    )
     mock_app.state.network_info.metadata = {
         "ezsp": {
             "can_burn_userdata_custom_eui64": True,
@@ -188,7 +191,7 @@ def usb_port(device="/dev/ttyUSB1234") -> USBDevice:
         (
             # TubesZB, old ESPHome devices (ZNP)
             "tubeszb-cc2652-poe",
-            "tubeszb-cc2652-poe",
+            "epid=aa:bb:cc:dd:ee:00:00:00",
             RadioType.znp,
             ZeroconfServiceInfo(
                 ip_address=ip_address("192.168.1.200"),
@@ -211,7 +214,7 @@ def usb_port(device="/dev/ttyUSB1234") -> USBDevice:
         (
             # TubesZB, old ESPHome device (EFR32)
             "tubeszb-efr32-poe",
-            "tubeszb-efr32-poe",
+            "epid=aa:bb:cc:dd:ee:00:00:00",
             RadioType.ezsp,
             ZeroconfServiceInfo(
                 ip_address=ip_address("192.168.1.200"),
@@ -234,7 +237,7 @@ def usb_port(device="/dev/ttyUSB1234") -> USBDevice:
         (
             # TubesZB, newer devices
             "TubeZB",
-            "tubeszb-cc2652-poe",
+            "epid=aa:bb:cc:dd:ee:00:00:00",
             RadioType.znp,
             ZeroconfServiceInfo(
                 ip_address=ip_address("192.168.1.200"),
@@ -255,7 +258,7 @@ def usb_port(device="/dev/ttyUSB1234") -> USBDevice:
         (
             # Expected format for all new devices
             "Some Zigbee Gateway (12345)",
-            "aabbccddeeff",
+            "epid=aa:bb:cc:dd:ee:00:00:00",
             RadioType.znp,
             ZeroconfServiceInfo(
                 ip_address=ip_address("192.168.1.200"),
@@ -1655,7 +1658,14 @@ async def test_formation_strategy_form_initial_network(
     advanced_pick_radio: RadioPicker, mock_app: AsyncMock, hass: HomeAssistant
 ) -> None:
     """Test forming a new network, with no previous settings on the radio."""
+    # Initially, no network is formed
     mock_app.load_network_info = AsyncMock(side_effect=NetworkNotFormed())
+
+    # After form_network is called, load_network_info should return the network settings
+    async def form_network_side_effect(*args, **kwargs):
+        mock_app.load_network_info = AsyncMock(return_value=mock_app.state.network_info)
+
+    mock_app.form_network.side_effect = form_network_side_effect
 
     result = await advanced_pick_radio(RadioType.ezsp)
     result2 = await hass.config_entries.flow.async_configure(
@@ -1676,8 +1686,16 @@ async def test_onboarding_auto_formation_new_hardware(
     mock_app: AsyncMock, hass: HomeAssistant
 ) -> None:
     """Test auto network formation with new hardware during onboarding."""
+    # Initially, no network is formed
     mock_app.load_network_info = AsyncMock(side_effect=NetworkNotFormed())
     mock_app.get_device = MagicMock(return_value=MagicMock(spec=zigpy.device.Device))
+
+    # After form_network is called, load_network_info should return the network settings
+    async def form_network_side_effect(*args, **kwargs):
+        mock_app.load_network_info = AsyncMock(return_value=mock_app.state.network_info)
+
+    mock_app.form_network.side_effect = form_network_side_effect
+
     discovery_info = UsbServiceInfo(
         device="/dev/ttyZIGBEE",
         pid="AAAA",

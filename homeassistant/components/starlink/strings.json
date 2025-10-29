@@ -16,23 +16,23 @@
   },
   "entity": {
     "binary_sensor": {
-      "roaming": {
-        "name": "Roaming mode"
-      },
       "currently_obstructed": {
         "name": "Obstructed"
       },
       "heating": {
         "name": "Heating"
       },
-      "power_save_idle": {
-        "name": "Sleep"
-      },
       "mast_near_vertical": {
         "name": "Mast near vertical"
       },
       "motors_stuck": {
         "name": "Motors stuck"
+      },
+      "power_save_idle": {
+        "name": "Sleep"
+      },
+      "roaming": {
+        "name": "Roaming mode"
       },
       "slow_ethernet": {
         "name": "Ethernet speeds"
@@ -50,48 +50,48 @@
       }
     },
     "sensor": {
-      "ping": {
-        "name": "Ping"
-      },
       "azimuth": {
         "name": "Azimuth"
-      },
-      "elevation": {
-        "name": "[%key:common::config_flow::data::elevation%]"
-      },
-      "uplink_throughput": {
-        "name": "Uplink throughput"
       },
       "downlink_throughput": {
         "name": "Downlink throughput"
       },
+      "download": {
+        "name": "Download"
+      },
+      "elevation": {
+        "name": "[%key:common::config_flow::data::elevation%]"
+      },
       "last_boot_time": {
         "name": "Last boot time"
+      },
+      "ping": {
+        "name": "Ping"
       },
       "ping_drop_rate": {
         "name": "Ping drop rate"
       },
+      "uplink_throughput": {
+        "name": "Uplink throughput"
+      },
       "upload": {
         "name": "Upload"
-      },
-      "download": {
-        "name": "Download"
       }
     },
     "switch": {
-      "stowed": {
-        "name": "Stowed"
-      },
       "sleep_schedule": {
         "name": "Sleep schedule"
+      },
+      "stowed": {
+        "name": "Stowed"
       }
     },
     "time": {
-      "sleep_start": {
-        "name": "Sleep start"
-      },
       "sleep_end": {
         "name": "Sleep end"
+      },
+      "sleep_start": {
+        "name": "Sleep start"
       }
     }
   }
