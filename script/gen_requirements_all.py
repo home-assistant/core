@@ -34,7 +34,6 @@ EXCLUDED_REQUIREMENTS_ALL = {
     "pycups",
     "python-gammu",
     "python-lirc",
-    "pyuserinput",
     "tensorflow",
     "tf-models-official",
 }
@@ -45,7 +44,6 @@ INCLUDED_REQUIREMENTS_WHEELS = {
     "evdev",
     "pycups",
     "python-gammu",
-    "pyuserinput",
 }
 
 
