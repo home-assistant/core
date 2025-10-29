@@ -14,7 +14,9 @@ rules:
   action-setup:
     status: exempt
     comment: There are no service actions
-  common-modules: done
+  common-modules:
+    status: todo
+    comment: https://github.com/home-assistant/core/pull/155418
   docs-high-level-description:
     status: todo
     comment: Under review
