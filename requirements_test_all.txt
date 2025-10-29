@@ -2088,9 +2088,6 @@ python-kasa[speedups]==0.10.2
 # homeassistant.components.linkplay
 python-linkplay==0.2.12
 
-# homeassistant.components.lirc
-# python-lirc==1.2.3
-
 # homeassistant.components.matter
 python-matter-server==8.1.0
 

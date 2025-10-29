@@ -33,7 +33,6 @@ EXCLUDED_REQUIREMENTS_ALL = {
     "pycocotools",
     "pycups",
     "python-gammu",
-    "python-lirc",
     "pyuserinput",
     "tensorflow",
     "tf-models-official",
