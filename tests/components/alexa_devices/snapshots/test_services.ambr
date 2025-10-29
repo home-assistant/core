@@ -17,6 +17,8 @@
         'endpoint_id': 'G1234567890123456789012345678A',
         'entity_id': '11111111-2222-3333-4444-555555555555',
         'household_device': False,
+        'notifications': dict({
+        }),
         'online': True,
         'sensors': dict({
           'dnd': dict({
@@ -63,6 +65,8 @@
         'endpoint_id': 'G1234567890123456789012345678A',
         'entity_id': '11111111-2222-3333-4444-555555555555',
         'household_device': False,
+        'notifications': dict({
+        }),
         'online': True,
         'sensors': dict({
           'dnd': dict({
