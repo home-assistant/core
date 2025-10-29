@@ -86,10 +86,7 @@ def async_clear_install_history(hass: HomeAssistant) -> None:
 
 
 async def async_pip_kwargs(config_dir: str | None) -> dict[str, Any]:
-    """Return keyword arguments for PIP install.
-
-    This function is a coroutine.
-    """
+    """Return keyword arguments for PIP install."""
     is_docker = pkg_util.is_docker_env()
     kwargs = {
         "constraints": os.path.join(os.path.dirname(__file__), CONSTRAINT_FILE),
