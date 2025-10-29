@@ -301,23 +301,17 @@ async def test_invalid_url_on_update(
     assert "sqlite://****:****@homeassistant.local" in caplog.text
 
 
-async def test_query_from_yaml(recorder_mock: Recorder, hass: HomeAssistant) -> None:
-    """Test the SQL sensor from yaml config."""
-
-    assert await async_setup_component(hass, DOMAIN, YAML_CONFIG)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.get_value")
-    assert state.state == "5"
-
-
-async def test_async_query_from_yaml(
-    recorder_mock: Recorder, hass: HomeAssistant
+@pytest.mark.parametrize("async_driver", [False, True])
+async def test_query_from_yaml(
+    recorder_mock: Recorder, hass: HomeAssistant, async_driver: bool
 ) -> None:
     """Test the SQL sensor from yaml config using async driver."""
 
-    config = copy.deepcopy(YAML_CONFIG)
-    config["sql"][CONF_DB_URL] = "sqlite+aiosqlite://"
+    config = YAML_CONFIG
+
+    if async_driver:
+        config = copy.deepcopy(YAML_CONFIG)
+        config["sql"][CONF_DB_URL] = "sqlite+aiosqlite://"
 
     assert await async_setup_component(hass, DOMAIN, config)
     await hass.async_block_till_done()
