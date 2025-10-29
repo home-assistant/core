@@ -161,6 +161,7 @@
         "humidifierMode": "manual",
         "hasHeatPump": true,
         "compressorProtectionMinTemp": 100,
+        "auxMaxOutdoorTemp": 410,
         "humidity": "30"
       },
       "equipmentStatus": "fan",
