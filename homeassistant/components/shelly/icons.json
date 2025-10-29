@@ -32,11 +32,26 @@
       "gas_detected": {
         "default": "mdi:gas-burner"
       },
+      "illuminance_level": {
+        "default": "mdi:brightness-5"
+      },
       "lamp_life": {
         "default": "mdi:progress-wrench"
       },
+      "left_slot_level": {
+        "default": "mdi:bottle-tonic-outline"
+      },
+      "left_slot_vial": {
+        "default": "mdi:scent"
+      },
       "operation": {
         "default": "mdi:cog-transfer"
+      },
+      "right_slot_level": {
+        "default": "mdi:bottle-tonic-outline"
+      },
+      "right_slot_vial": {
+        "default": "mdi:scent"
       },
       "self_test": {
         "default": "mdi:progress-wrench"
@@ -49,31 +64,9 @@
       },
       "valve_status": {
         "default": "mdi:valve"
-      },
-      "illuminance_level": {
-        "default": "mdi:brightness-5"
-      },
-      "left_slot_vial": {
-        "default": "mdi:scent"
-      },
-      "left_slot_level": {
-        "default": "mdi:bottle-tonic-outline"
-      },
-      "right_slot_vial": {
-        "default": "mdi:scent"
-      },
-      "right_slot_level": {
-        "default": "mdi:bottle-tonic-outline"
       }
     },
     "switch": {
-      "valve_switch": {
-        "default": "mdi:valve",
-        "state": {
-          "off": "mdi:valve-closed",
-          "on": "mdi:valve-open"
-        }
-      },
       "cury_boost": {
         "default": "mdi:rocket-launch"
       },
@@ -82,6 +75,13 @@
         "state": {
           "off": "mdi:scent-off",
           "on": "mdi:scent"
+        }
+      },
+      "valve_switch": {
+        "default": "mdi:valve",
+        "state": {
+          "off": "mdi:valve-closed",
+          "on": "mdi:valve-open"
         }
       }
     }

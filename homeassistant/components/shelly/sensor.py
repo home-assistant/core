@@ -546,6 +546,14 @@ RPC_SENSORS: Final = {
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    "power_rgbcct": RpcSensorDescription(
+        key="rgbcct",
+        sub_key="apower",
+        name="Power",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
     "a_act_power": RpcSensorDescription(
         key="em",
         sub_key="a_act_power",
@@ -969,6 +977,17 @@ RPC_SENSORS: Final = {
     "energy_rgbw": RpcSensorDescription(
         key="rgbw",
         sub_key="aenergy",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        value=lambda status, _: status["total"],
+        suggested_display_precision=2,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    "energy_rgbcct": RpcSensorDescription(
+        key="rgbcct",
+        sub_key="aenergy",
+        name="Energy",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value=lambda status, _: status["total"],
