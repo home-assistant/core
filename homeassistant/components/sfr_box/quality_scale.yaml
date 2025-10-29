@@ -1,8 +1,6 @@
 rules:
   ## Bronze
-  config-flow:
-    status: todo
-    comment: https://github.com/home-assistant/core/pull/155420
+  config-flow: done
   test-before-configure: done
   unique-config-entry: done
   config-flow-test-coverage: done
@@ -19,15 +17,9 @@ rules:
     status: exempt
     comment: There are no service actions
   common-modules: done
-  docs-high-level-description:
-    status: todo
-    comment: Under review
-  docs-installation-instructions:
-    status: todo
-    comment: Under review
-  docs-removal-instructions:
-    status: todo
-    comment: Under review
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
   docs-actions:
     status: exempt
     comment: There are no service actions
