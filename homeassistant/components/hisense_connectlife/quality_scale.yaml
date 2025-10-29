@@ -5,15 +5,15 @@ rules:
     status: done
     comment: |
       Uses WebSocket for real-time updates with 30-second polling fallback
-  brands: exempt
+  brands: done
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
-  docs-actions: exempt
-  docs-high-level-description: exempt
-  docs-installation-instructions: exempt
-  docs-removal-instructions: exempt
+  docs-actions: not_relevant
+  docs-high-level-description: pending
+  docs-installation-instructions: pending
+  docs-removal-instructions: pending
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
@@ -25,8 +25,8 @@ rules:
   # Silver
   action-exceptions: done
   config-entry-unloading: done
-  docs-configuration-parameters: exempt
-  docs-installation-parameters: exempt
+  docs-configuration-parameters: pending
+  docs-installation-parameters: pending
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
@@ -37,24 +37,24 @@ rules:
   # Gold
   devices: done
   diagnostics: done
-  discovery-update-info: exempt
-  discovery: exempt
-  docs-data-update: exempt
-  docs-examples: exempt
-  docs-known-limitations: exempt
-  docs-supported-devices: exempt
-  docs-supported-functions: exempt
-  docs-troubleshooting: exempt
-  docs-use-cases: exempt
+  discovery-update-info: not_relevant
+  discovery: not_relevant
+  docs-data-update: pending
+  docs-examples: pending
+  docs-known-limitations: pending
+  docs-supported-devices: pending
+  docs-supported-functions: pending
+  docs-troubleshooting: pending
+  docs-use-cases: pending
   dynamic-devices: done
   entity-category: done
   entity-device-class: done
-  entity-disabled-by-default: exempt
+  entity-disabled-by-default: not_relevant
   entity-translations: done
-  exception-translations: exempt
+  exception-translations: pending
   icon-translations: done
-  reconfiguration-flow: exempt
-  repair-issues: exempt
+  reconfiguration-flow: not_relevant
+  repair-issues: not_relevant
   stale-devices: done
 
   # Platinum

@@ -78,9 +78,9 @@ async def async_get_config_entry_diagnostics(
     if hasattr(coordinator, "api_client"):
         api_client = coordinator.api_client
         api_data = {
-            "has_auth_provider": api_client.auth_provider is not None,
-            "has_oauth_session": api_client.oauth_session is not None,
-            "has_config_entry": api_client.config_entry is not None,
+            "has_auth_provider": hasattr(api_client, "auth_provider") and api_client.auth_provider is not None,
+            "has_oauth_session": hasattr(api_client, "oauth_session") and api_client.oauth_session is not None,
+            "has_config_entry": hasattr(api_client, "config_entry") and api_client.config_entry is not None,
             "websocket_connected": getattr(api_client, "_websocket", None) is not None,
             "parsers_count": len(api_client.parsers) if hasattr(api_client, "parsers") else 0,
             "static_data_count": len(api_client.static_data) if hasattr(api_client, "static_data") else 0,
