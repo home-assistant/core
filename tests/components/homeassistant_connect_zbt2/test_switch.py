@@ -99,8 +99,7 @@ async def test_switch_turn_on_off(
 
     with (
         patch(
-            "homeassistant.components.homeassistant_hardware.coordinator.FirmwareUpdateClient",
-            autospec=True,
+            "homeassistant.components.homeassistant_hardware.coordinator.FirmwareUpdateClient"
         ) as mock_client,
         patch(
             "homeassistant.components.homeassistant_hardware.coordinator.FirmwareUpdateCoordinator.async_refresh"
