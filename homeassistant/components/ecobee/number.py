@@ -76,6 +76,16 @@ async def async_setup_entry(
         )
     )
 
+    _LOGGER.debug("Adding auxiliary max outdoor temp (if present)")
+    entities.extend(
+        (
+            EcobeeAuxMaxOutdoorTemp(data, index)
+            for index, thermostat in enumerate(data.ecobee.thermostats)
+            if thermostat["settings"]["hasHeatPump"] and 
+                (thermostat["settings"]["hasForcedAir"] or thermostat["settings"]["hasBoiler"])
+        )
+    )
+    
     async_add_entities(entities, True)
 
 
@@ -166,4 +176,48 @@ class EcobeeCompressorMinTemp(EcobeeBaseEntity, NumberEntity):
     def set_native_value(self, value: float) -> None:
         """Set new compressor minimum temperature."""
         self.data.ecobee.set_aux_cutover_threshold(self.thermostat_index, value)
+        self.update_without_throttle = True
+
+class EcobeeAuxMaxOutdoorTemp(EcobeeBaseEntity, NumberEntity):
+    """Maximum outdoor temperature at which aux heat will operate.
+
+    This applies to dual-fuel systems to determine at which outdoor temperature
+    auxiliary heat shouldn't be used anymore.
+    """
+
+    _attr_device_class = NumberDeviceClass.TEMPERATURE
+    _attr_has_entity_name = True
+    _attr_icon = "mdi:thermometer-off"
+    _attr_mode = NumberMode.BOX
+    _attr_native_min_value = 0
+    _attr_native_max_value = 80
+    _attr_native_step = 1
+    _attr_native_unit_of_measurement = UnitOfTemperature.FAHRENHEIT
+    _attr_translation_key = "aux_max_outdoor_temp"
+
+    def __init__(
+        self,
+        data: EcobeeData,
+        thermostat_index: int,
+    ) -> None:
+        """Initialize ecobee compressor min temperature."""
+        super().__init__(data, thermostat_index)
+        self._attr_unique_id = f"{self.base_unique_id}_aux_max_outdoor_temp"
+        self.update_without_throttle = False
+
+    async def async_update(self) -> None:
+        """Get the latest state from the thermostat."""
+        if self.update_without_throttle:
+            await self.data.update(no_throttle=True)
+            self.update_without_throttle = False
+        else:
+            await self.data.update()
+
+        self._attr_native_value = (
+            (self.thermostat["settings"]["auxMaxOutdoorTemp"]) / 10
+        )
+
+    def set_native_value(self, value: float) -> None:
+        """Set new aux max outdoor max temp."""
+        self.data.ecobee.set_aux_maxtemp_threshold(self.thermostat_index, value)
         self.update_without_throttle = True
