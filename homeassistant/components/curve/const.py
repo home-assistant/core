@@ -1,0 +1,17 @@
+"""Constants for the Curve integration."""
+
+DOMAIN = "curve"
+
+CONF_SOURCE = "source"
+CONF_SEGMENTS = "segments"
+
+INTERPOLATION_LINEAR = "linear"
+INTERPOLATION_STEP = "step"
+INTERPOLATION_TYPES = [INTERPOLATION_LINEAR, INTERPOLATION_STEP]
+
+SEGMENT_X0 = "x0"
+SEGMENT_Y0 = "y0"
+SEGMENT_X1 = "x1"
+SEGMENT_Y1 = "y1"
+SEGMENT_TYPE = "type"
+SEGMENT_Z = "z"
