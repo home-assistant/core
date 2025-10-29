@@ -1229,12 +1229,6 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
-    "decora": {
-      "name": "Leviton Decora",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
-    },
     "decora_wifi": {
       "name": "Leviton Decora Wi-Fi",
       "integration_type": "hub",
@@ -1369,18 +1363,6 @@
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
-    },
-    "dlib_face_detect": {
-      "name": "Dlib Face Detect",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_push"
-    },
-    "dlib_face_identify": {
-      "name": "Dlib Face Identify",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_push"
     },
     "dlink": {
       "name": "D-Link Wi-Fi Smart Plugs",
@@ -1590,12 +1572,6 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
-    },
-    "eddystone_temperature": {
-      "name": "Eddystone",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
     },
     "edimax": {
       "name": "Edimax",
@@ -2592,12 +2568,6 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
-    },
-    "gstreamer": {
-      "name": "GStreamer",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_push"
     },
     "gtfs": {
       "name": "General Transit Feed Specification (GTFS)",
@@ -4345,12 +4315,6 @@
       "integration_type": "virtual",
       "supported_by": "opower"
     },
-    "neato": {
-      "name": "Neato Botvac",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
-    },
     "nederlandse_spoorwegen": {
       "name": "Nederlandse Spoorwegen (NS)",
       "integration_type": "service",
@@ -4953,12 +4917,6 @@
           "name": "Panasonic Viera"
         }
       }
-    },
-    "pandora": {
-      "name": "Pandora",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
     },
     "paperless_ngx": {
       "name": "Paperless-ngx",
@@ -6229,12 +6187,6 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
-    "sms": {
-      "name": "SMS notifications via GSM-modem",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "local_polling"
-    },
     "smtp": {
       "name": "SMTP",
       "integration_type": "hub",
@@ -6250,12 +6202,6 @@
       "name": "Snapcast",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "local_push"
-    },
-    "snips": {
-      "name": "Snips",
-      "integration_type": "hub",
-      "config_flow": false,
       "iot_class": "local_push"
     },
     "snmp": {
@@ -6755,12 +6701,6 @@
     },
     "temper": {
       "name": "TEMPer",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
-    },
-    "tensorflow": {
-      "name": "TensorFlow",
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_polling"
