@@ -1043,21 +1043,21 @@ def progress_step[
                 )
                 progress_step_data["tasks"][step_id] = progress_task
 
-                if not progress_task.done():
-                    # Handle description placeholders
-                    placeholders = None
-                    if description_placeholders is not None:
-                        if callable(description_placeholders):
-                            placeholders = description_placeholders(self)
-                        else:
-                            placeholders = description_placeholders
+            if not progress_task.done():
+                # Handle description placeholders
+                placeholders = None
+                if description_placeholders is not None:
+                    if callable(description_placeholders):
+                        placeholders = description_placeholders(self)
+                    else:
+                        placeholders = description_placeholders
 
-                    return self.async_show_progress(
-                        step_id=step_id,
-                        progress_action=step_id,
-                        progress_task=progress_task,
-                        description_placeholders=placeholders,
-                    )
+                return self.async_show_progress(
+                    step_id=step_id,
+                    progress_action=step_id,
+                    progress_task=progress_task,
+                    description_placeholders=placeholders,
+                )
 
             # Task is done or this is a subsequent call
             try:
