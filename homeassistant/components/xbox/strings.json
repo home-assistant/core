@@ -35,6 +35,13 @@
       },
       "in_game": {
         "name": "In game"
+      },
+      "online": {
+        "state_attributes": {
+          "bio": { "name": "Bio" },
+          "display_name": { "name": "Display name" },
+          "real_name": { "name": "Real name" }
+        }
       }
     },
     "sensor": {
@@ -52,6 +59,22 @@
       },
       "last_online": {
         "name": "Last online"
+      },
+      "now_playing": {
+        "name": "Now playing",
+        "state_attributes": {
+          "achievements": { "name": "Achievements" },
+          "developer": { "name": "Developer" },
+          "gamerscore": {
+            "name": "[%key:component::xbox::entity::sensor::gamer_score::name%]"
+          },
+          "genres": { "name": "Genres" },
+          "min_age": { "name": "Minimum age" },
+          "progress": { "name": "Progress" },
+          "publisher": { "name": "Publisher" },
+          "release_date": { "name": "Release date" },
+          "short_description": { "name": "Short description" }
+        }
       },
       "status": {
         "name": "Status"
