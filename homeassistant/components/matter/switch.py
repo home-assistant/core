@@ -9,6 +9,7 @@ from typing import Any
 from chip.clusters import Objects as clusters
 from chip.clusters.Objects import ClusterCommand, NullValue
 from matter_server.client.models import device_types
+from matter_server.common.errors import MatterError
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -18,6 +19,7 @@ from homeassistant.components.switch import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import MatterEntity, MatterEntityDescription
@@ -54,15 +56,21 @@ class MatterSwitch(MatterEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn switch on."""
-        await self.send_device_command(
-            clusters.OnOff.Commands.On(),
-        )
+        try:
+            await self.send_device_command(
+                clusters.OnOff.Commands.On(),
+            )
+        except MatterError as err:
+            raise HomeAssistantError(f"Failed to set value: {err}") from err
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn switch off."""
-        await self.send_device_command(
-            clusters.OnOff.Commands.Off(),
-        )
+        try:
+            await self.send_device_command(
+                clusters.OnOff.Commands.Off(),
+            )
+        except MatterError as err:
+            raise HomeAssistantError(f"Failed to set value: {err}") from err
 
     @callback
     def _update_from_device(self) -> None:
@@ -83,18 +91,24 @@ class MatterGenericCommandSwitch(MatterSwitch):
         """Turn switch on."""
         if self.entity_description.on_command:
             # custom command defined to set the new value
-            await self.send_device_command(
-                self.entity_description.on_command(),
-                self.entity_description.command_timeout,
-            )
+            try:
+                await self.send_device_command(
+                    self.entity_description.on_command(),
+                    self.entity_description.command_timeout,
+                )
+            except MatterError as err:
+                raise HomeAssistantError(f"Failed to set value: {err}") from err
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn switch off."""
         if self.entity_description.off_command:
-            await self.send_device_command(
-                self.entity_description.off_command(),
-                self.entity_description.command_timeout,
-            )
+            try:
+                await self.send_device_command(
+                    self.entity_description.off_command(),
+                    self.entity_description.command_timeout,
+                )
+            except MatterError as err:
+                raise HomeAssistantError(f"Failed to set value: {err}") from err
 
     @callback
     def _update_from_device(self) -> None:
@@ -111,13 +125,16 @@ class MatterGenericCommandSwitch(MatterSwitch):
         **kwargs: Any,
     ) -> None:
         """Send device command with timeout."""
-        await self.matter_client.send_device_command(
-            node_id=self._endpoint.node.node_id,
-            endpoint_id=self._endpoint.endpoint_id,
-            command=command,
-            timed_request_timeout_ms=command_timeout,
-            **kwargs,
-        )
+        try:
+            await self.matter_client.send_device_command(
+                node_id=self._endpoint.node.node_id,
+                endpoint_id=self._endpoint.endpoint_id,
+                command=command,
+                timed_request_timeout_ms=command_timeout,
+                **kwargs,
+            )
+        except MatterError as err:
+            raise HomeAssistantError(f"Failed to set value: {err}") from err
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -148,9 +165,12 @@ class MatterNumericSwitch(MatterSwitch):
         """Update the current value."""
         if value_convert := self.entity_description.ha_to_device:
             send_value = value_convert(value)
-        await self.write_attribute(
-            value=send_value,
-        )
+        try:
+            await self.write_attribute(
+                value=send_value,
+            )
+        except MatterError as err:
+            raise HomeAssistantError(f"Failed to set value: {err}") from err
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn switch on."""
