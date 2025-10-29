@@ -510,8 +510,6 @@ build.json @home-assistant/supervisor
 /tests/components/fjaraskupan/ @elupus
 /homeassistant/components/flexit_bacnet/ @lellky @piotrbulinski
 /tests/components/flexit_bacnet/ @lellky @piotrbulinski
-/homeassistant/components/flick_electric/ @ZephireNZ
-/tests/components/flick_electric/ @ZephireNZ
 /homeassistant/components/flipr/ @cnico
 /tests/components/flipr/ @cnico
 /homeassistant/components/flo/ @dmulcahey
