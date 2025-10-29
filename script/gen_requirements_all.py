@@ -23,19 +23,12 @@ EXCLUDED_REQUIREMENTS_ALL = {
     "atenpdu",  # depends on pysnmp which is not maintained at this time
     "avea",  # depends on bluepy
     "avion",
-    "beacontools",
     "beewi-smartclim",  # depends on bluepy
     "bluepy",
-    "decora",
     "evdev",
-    "face-recognition",
     "pybluez",
-    "pycocotools",
     "pycups",
-    "python-gammu",
     "pyuserinput",
-    "tensorflow",
-    "tf-models-official",
 }
 
 # Requirements excluded by EXCLUDED_REQUIREMENTS_ALL which should be included when
@@ -43,7 +36,6 @@ EXCLUDED_REQUIREMENTS_ALL = {
 INCLUDED_REQUIREMENTS_WHEELS = {
     "evdev",
     "pycups",
-    "python-gammu",
     "pyuserinput",
 }
 
@@ -57,7 +49,7 @@ INCLUDED_REQUIREMENTS_WHEELS = {
 OVERRIDDEN_REQUIREMENTS_ACTIONS = {
     "pytest": {
         "exclude": set(),
-        "include": {"python-gammu"},
+        "include": set(),
         "markers": {},
     },
     "wheels_aarch64": {

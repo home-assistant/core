@@ -35,7 +35,6 @@ PSNAWP==3.0.0
 # homeassistant.components.qrcode
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
-# homeassistant.components.tensorflow
 Pillow==12.0.0
 
 # homeassistant.components.plex
@@ -560,9 +559,6 @@ babel==2.15.0
 # homeassistant.components.homekit
 base36==0.1.1
 
-# homeassistant.components.eddystone_temperature
-# beacontools[scan]==2.1.0
-
 # homeassistant.components.scrape
 beautifulsoup4==4.13.3
 
@@ -589,9 +585,6 @@ bluecurrent-api==1.3.1
 
 # homeassistant.components.bluemaestro
 bluemaestro-ble==0.4.1
-
-# homeassistant.components.decora
-# bluepy==1.3.0
 
 # homeassistant.components.bluetooth
 bluetooth-adapters==2.1.0
@@ -686,9 +679,6 @@ dbus-fast==2.44.5
 
 # homeassistant.components.debugpy
 debugpy==1.8.16
-
-# homeassistant.components.decora
-# decora==0.6
 
 # homeassistant.components.ecovacs
 deebot-client==16.1.0
@@ -823,10 +813,6 @@ evolutionhttp==0.0.18
 
 # homeassistant.components.faa_delays
 faadelays==2023.9.1
-
-# homeassistant.components.dlib_face_detect
-# homeassistant.components.dlib_face_identify
-# face-recognition==1.2.3
 
 # homeassistant.components.fastdotcom
 fastdotcom==0.0.6
@@ -992,9 +978,6 @@ growattServer==1.7.1
 
 # homeassistant.components.google_sheets
 gspread==5.5.0
-
-# homeassistant.components.gstreamer
-gstreamer-player==1.1.2
 
 # homeassistant.components.profiler
 guppy3==3.1.5;python_version<'3.14'
@@ -1372,7 +1355,6 @@ numato-gpio==0.13.0
 # homeassistant.components.compensation
 # homeassistant.components.iqvia
 # homeassistant.components.stream
-# homeassistant.components.tensorflow
 # homeassistant.components.trend
 numpy==2.3.2
 
@@ -1460,11 +1442,6 @@ peco==0.1.2
 
 # homeassistant.components.escea
 pescea==1.0.12
-
-# homeassistant.components.aruba
-# homeassistant.components.cisco_ios
-# homeassistant.components.pandora
-pexpect==4.9.0
 
 # homeassistant.components.modem_callerid
 phone-modem==0.1.1
@@ -1621,9 +1598,6 @@ pybravia==0.3.4
 
 # homeassistant.components.cloudflare
 pycfdns==3.0.0
-
-# homeassistant.components.tensorflow
-# pycocotools==2.0.6
 
 # homeassistant.components.comfoconnect
 pycomfoconnect==0.5.1
@@ -1867,7 +1841,7 @@ pynintendoparental==1.1.2
 pynobo==1.8.1
 
 # homeassistant.components.nordpool
-pynordpool==0.3.1
+pynordpool==0.3.2
 
 # homeassistant.components.nuki
 pynuki==1.6.3
@@ -2066,9 +2040,6 @@ python-ecobee-api==0.2.20
 
 # homeassistant.components.fully_kiosk
 python-fullykiosk==0.0.14
-
-# homeassistant.components.sms
-# python-gammu==3.2.4
 
 # homeassistant.components.google_drive
 python-google-drive-api==0.1.0
@@ -2453,9 +2424,6 @@ temescal==0.5
 # homeassistant.components.temper
 temperusb==1.6.1
 
-# homeassistant.components.tensorflow
-# tensorflow==2.5.0
-
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
@@ -2472,9 +2440,6 @@ teslemetry-stream==0.7.10
 
 # homeassistant.components.tessie
 tessie-api==0.1.1
-
-# homeassistant.components.tensorflow
-# tf-models-official==2.5.0
 
 # homeassistant.components.thermobeacon
 thermobeacon-ble==0.10.0
