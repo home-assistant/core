@@ -2615,7 +2615,7 @@ wallbox==0.9.0
 watchdog==6.0.0
 
 # homeassistant.components.watergate
-watergate-local-api==2024.4.1
+watergate-local-api==2025.1.0
 
 # homeassistant.components.weatherflow_cloud
 weatherflow4py==1.4.1
