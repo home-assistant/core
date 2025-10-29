@@ -1983,6 +1983,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[asarvfadmfkd6ex5nq]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'asarvfadmfkd6ex5nq',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Inverter pool Heat pump',
+    'model_id': '5xe6dkfmdafvrasa',
+    'name': 'Pool Heater',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[ase6htln9tdni2sijxq]
   DeviceRegistryEntrySnapshot({
     'area_id': None,

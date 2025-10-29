@@ -549,6 +549,9 @@
           "168h": "168h",
           "cancel": "Cancel"
         }
+      },
+      "work_mode": {
+        "name": "Work mode"
       }
     },
     "sensor": {
@@ -574,6 +577,9 @@
           "level_5": "Level 5",
           "level_6": "Level 6"
         }
+      },
+      "ambient_temperature": {
+        "name": "Ambient temperature"
       },
       "battery": {
         "name": "[%key:component::sensor::entity_component::battery::name%]"
@@ -601,6 +607,12 @@
       },
       "cleaning_time": {
         "name": "Cleaning time"
+      },
+      "coil_temperature": {
+        "name": "Coil temperature"
+      },
+      "compressor_strength": {
+        "name": "Compressor strength"
       },
       "concentration_carbon_dioxide": {
         "name": "Concentration of carbon dioxide"
@@ -656,6 +668,12 @@
       "indexed_temperature_external": {
         "name": "Probe temperature channel {index}"
       },
+      "inflow_temperature": {
+        "name": "Inflow temperature"
+      },
+      "inner_coil_temperature": {
+        "name": "Inner coil temperature"
+      },
       "inverter_output_power": {
         "name": "Inverter output power"
       },
@@ -709,6 +727,9 @@
           "work": "Working"
         }
       },
+      "outlet_water_temperature": {
+        "name": "Outlet water temperature"
+      },
       "phase_a_current": {
         "name": "Phase A current"
       },
@@ -748,6 +769,9 @@
       "power": {
         "name": "[%key:component::sensor::entity_component::power::name%]"
       },
+      "power_consumption": {
+        "name": "Power consumption"
+      },
       "precipitation_intensity": {
         "name": "[%key:component::sensor::entity_component::precipitation_intensity::name%]"
       },
@@ -760,8 +784,14 @@
       "pv_channel_power": {
         "name": "PV channel {index} power"
       },
+      "radiator_temperature": {
+        "name": "Radiator temperature"
+      },
       "remaining_time": {
         "name": "Remaining time"
+      },
+      "return_air_temperature": {
+        "name": "Return air temperature"
       },
       "rolling_brush_life": {
         "name": "Rolling brush lifetime"
@@ -891,6 +921,12 @@
       },
       "energy_saving": {
         "name": "Energy saving"
+      },
+      "exhaust_temperature": {
+        "name": "Exhaust temperature"
+      },
+      "expansion_valve_opening": {
+        "name": "Expansion valve opening"
       },
       "filter_cartridge_reset": {
         "name": "Filter cartridge reset"

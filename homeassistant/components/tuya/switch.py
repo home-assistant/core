@@ -635,6 +635,12 @@ SWITCHES: dict[DeviceCategory, tuple[SwitchEntityDescription, ...]] = {
             translation_key="child_lock",
             entity_category=EntityCategory.CONFIG,
         ),
+        # Pool heat pump - child lock (zone 1 variant)
+        SwitchEntityDescription(
+            key=DPCode.CHILD_LOCK1,
+            translation_key="child_lock",
+            entity_category=EntityCategory.CONFIG,
+        ),
     ),
     DeviceCategory.QXJ: (
         SwitchEntityDescription(

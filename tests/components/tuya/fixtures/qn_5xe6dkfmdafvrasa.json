@@ -1,0 +1,320 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Pool Heater",
+  "category": "qn",
+  "product_id": "5xe6dkfmdafvrasa",
+  "product_name": "Inverter pool Heat pump",
+  "online": true,
+  "sub": false,
+  "time_zone": "+11:00",
+  "active_time": "2025-01-20T12:00:00+00:00",
+  "create_time": "2025-01-20T12:00:00+00:00",
+  "update_time": "2025-01-20T12:00:00+00:00",
+  "function": {
+    "switch1": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "mode1": {
+      "type": "Enum",
+      "value": {
+        "range": ["auto", "heating", "cold"]
+      }
+    },
+    "child_lock1": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "temp_set1": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": "-22",
+        "max": "104",
+        "scale": "0",
+        "step": "1"
+      }
+    },
+    "work_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["power", "boost", "silence", "perfect"]
+      }
+    },
+    "temp_unit_convert1": {
+      "type": "Enum",
+      "value": {
+        "range": ["f", "c"]
+      }
+    }
+  },
+  "status_range": {
+    "switch1": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "mode1": {
+      "type": "Enum",
+      "value": {
+        "range": ["auto", "heating", "cold"]
+      }
+    },
+    "child_lock1": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "temp_set1": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": "-22",
+        "max": "104",
+        "scale": "0",
+        "step": "1"
+      }
+    },
+    "work_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["power", "boost", "silence", "perfect"]
+      }
+    },
+    "temp_unit_convert1": {
+      "type": "Enum",
+      "value": {
+        "range": ["f", "c"]
+      }
+    },
+    "fault1": {
+      "type": "Bitmap",
+      "value": {
+        "label": [
+          "E1",
+          "E2",
+          "E3",
+          "E4",
+          "E5",
+          "E6",
+          "E7",
+          "E8",
+          "E9",
+          "EA",
+          "EB",
+          "ED",
+          "P0",
+          "P1",
+          "P2",
+          "P3",
+          "P4",
+          "P5",
+          "P6",
+          "P7",
+          "P8",
+          "P9",
+          "PA",
+          "F1",
+          "F2",
+          "F3",
+          "F4",
+          "F5",
+          "F6",
+          "F7"
+        ],
+        "maxlen": "30"
+      }
+    },
+    "temp_current1": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": "-22",
+        "max": "250",
+        "scale": "0",
+        "step": "1"
+      }
+    },
+    "compressor_strength": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": "0",
+        "max": "150",
+        "scale": "0",
+        "step": "1"
+      }
+    },
+    "temp_top": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": "-22",
+        "max": "104",
+        "scale": "0",
+        "step": "1"
+      }
+    },
+    "temp_bottom": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": "-22",
+        "max": "104",
+        "scale": "0",
+        "step": "1"
+      }
+    },
+    "temp_coiler": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": "-22",
+        "max": "250",
+        "scale": "0",
+        "step": "1"
+      }
+    },
+    "temp_venting": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": "-22",
+        "max": "250",
+        "scale": "0",
+        "step": "1"
+      }
+    },
+    "temp_effluent": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": "-300",
+        "max": "2500",
+        "scale": "1",
+        "step": "1"
+      }
+    },
+    "temp_around": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": "-22",
+        "max": "250",
+        "scale": "0",
+        "step": "1"
+      }
+    },
+    "fault2": {
+      "type": "Bitmap",
+      "value": {
+        "label": ["F8", "F9", "Fb", "Fa", "OFF"],
+        "maxlen": "5"
+      }
+    },
+    "temp_inflow": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": "-300",
+        "max": "2500",
+        "scale": "1",
+        "step": "1"
+      }
+    },
+    "temp_return": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": "-22",
+        "max": "250",
+        "scale": "0",
+        "step": "1"
+      }
+    },
+    "temp_coiler_inside": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": "-22",
+        "max": "250",
+        "scale": "0",
+        "step": "1"
+      }
+    },
+    "temp_radiator": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": "-22",
+        "max": "250",
+        "scale": "0",
+        "step": "1"
+      }
+    },
+    "expansion_valve": {
+      "type": "Integer",
+      "value": {
+        "unit": "P",
+        "min": "0",
+        "max": "560",
+        "scale": "0",
+        "step": "1"
+      }
+    },
+    "power_w": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "cool_enable": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "oc_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["oc_0", "oc_1", "oc_2"]
+      }
+    },
+    "power": {
+      "type": "Integer",
+      "value": {
+        "unit": "KW",
+        "min": "0",
+        "max": "5000",
+        "scale": "3",
+        "step": "1"
+      }
+    }
+  },
+  "status": {
+    "switch1": true,
+    "mode1": "heating",
+    "child_lock1": false,
+    "temp_set1": 30,
+    "work_mode": "power",
+    "temp_unit_convert1": "c",
+    "fault1": 0,
+    "temp_current1": -22,
+    "compressor_strength": 100,
+    "temp_top": 40,
+    "temp_bottom": 18,
+    "temp_coiler": 5,
+    "temp_venting": 71,
+    "temp_effluent": 280,
+    "temp_around": 12,
+    "fault2": 0,
+    "temp_inflow": 250,
+    "temp_return": 7,
+    "temp_coiler_inside": 30,
+    "temp_radiator": 41,
+    "expansion_valve": 311,
+    "power_w": true,
+    "cool_enable": true,
+    "oc_mode": "oc_1",
+    "power": 4491
+  },
+  "set_up": true,
+  "support_local": true
+}

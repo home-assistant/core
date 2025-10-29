@@ -651,6 +651,7 @@ class DPCode(StrEnum):
     CH4_SENSOR_VALUE = "ch4_sensor_value"
     CHARGE_STATE = "charge_state"
     CHILD_LOCK = "child_lock"  # Child lock
+    CHILD_LOCK1 = "child_lock1"  # Child lock (zone 1)
     CISTERN = "cistern"
     CLEAN_AREA = "clean_area"
     CLEAN_TIME = "clean_time"
@@ -664,6 +665,7 @@ class DPCode(StrEnum):
     CO2_VALUE = "co2_value"  # CO2 concentration
     COLLECTION_MODE = "collection_mode"
     COLOR_DATA_V2 = "color_data_v2"
+    COMPRESSOR_STRENGTH = "compressor_strength"  # Compressor strength percentage
     COLOUR_DATA = "colour_data"  # Colored light mode
     COLOUR_DATA_HSV = "colour_data_hsv"  # Colored light mode
     COLOUR_DATA_V2 = "colour_data_v2"  # Colored light mode
@@ -676,6 +678,7 @@ class DPCode(StrEnum):
     COOK_TEMPERATURE = "cook_temperature"
     COOK_TEMPERATURE_2 = "cook_temperature_2"
     COOK_TIME = "cook_time"
+    COOL_ENABLE = "cool_enable"  # Cooling mode support
     COUNTDOWN = "countdown"  # Countdown
     COUNTDOWN_1 = "countdown_1"
     COUNTDOWN_2 = "countdown_2"
@@ -714,6 +717,7 @@ class DPCode(StrEnum):
     ECO2 = "eco2"
     EDGE_BRUSH = "edge_brush"
     ELECTRICITY_LEFT = "electricity_left"
+    EXPANSION_VALVE = "expansion_valve"  # Electronic expansion valve opening
     FAN_BEEP = "fan_beep"  # Sound
     FAN_COOL = "fan_cool"  # Cool wind
     FAN_DIRECTION = "fan_direction"  # Fan direction
@@ -726,6 +730,8 @@ class DPCode(StrEnum):
     FAN_VERTICAL = "fan_vertical"  # Vertical swing flap angle
     FAR_DETECTION = "far_detection"
     FAULT = "fault"
+    FAULT1 = "fault1"  # Fault code (zone 1)
+    FAULT2 = "fault2"  # Fault code (zone 2)
     FEED_REPORT = "feed_report"
     FEED_STATE = "feed_state"
     FEEDIN_POWER_LIMIT_ENABLE = "feedin_power_limit_enable"
@@ -777,6 +783,7 @@ class DPCode(StrEnum):
     MAX_SET = "max_set"
     MINI_SET = "mini_set"
     MODE = "mode"  # Working mode / Mode
+    MODE1 = "mode1"  # Working mode (zone 1)
     MOODLIGHTING = "moodlighting"  # Mood light
     MOTION_RECORD = "motion_record"
     MOTION_SENSITIVITY = "motion_sensitivity"
@@ -788,6 +795,7 @@ class DPCode(StrEnum):
     OPPOSITE = "opposite"
     OUTPUT_POWER_LIMIT = "output_power_limit"
     OXYGEN = "oxygen"  # Oxygen bar
+    OC_MODE = "oc_mode"  # Overclock mode
     PAUSE = "pause"
     PERCENT_CONTROL = "percent_control"
     PERCENT_CONTROL_2 = "percent_control_2"
@@ -809,6 +817,7 @@ class DPCode(StrEnum):
     POWER = "power"
     POWER_GO = "power_go"
     POWER_TOTAL = "power_total"
+    POWER_W = "power_w"  # Power availability
     PREHEAT = "preheat"
     PREHEAT_1 = "preheat_1"
     PREHEAT_2 = "preheat_2"
@@ -868,6 +877,7 @@ class DPCode(StrEnum):
     SWITCH_6 = "switch_6"  # Switch 6
     SWITCH_7 = "switch_7"  # Switch 7
     SWITCH_8 = "switch_8"  # Switch 8
+    SWITCH1 = "switch1"  # Switch (zone 1)
     SWITCH_ALARM_LIGHT = "switch_alarm_light"
     SWITCH_ALARM_SOUND = "switch_alarm_sound"
     SWITCH_BACKLIGHT = "switch_backlight"  # Backlight switch
@@ -907,8 +917,12 @@ class DPCode(StrEnum):
     TEMP = "temp"  # Temperature setting
     TEMP_BOILING_C = "temp_boiling_c"
     TEMP_BOILING_F = "temp_boiling_f"
+    TEMP_AROUND = "temp_around"  # Ambient temperature
+    TEMP_BOTTOM = "temp_bottom"  # Minimum temperature limit
     TEMP_CONTROLLER = "temp_controller"
     TEMP_CORRECTION = "temp_correction"
+    TEMP_COILER = "temp_coiler"  # External coil temperature
+    TEMP_COILER_INSIDE = "temp_coiler_inside"  # Inner coil temperature
     TEMP_CURRENT = "temp_current"  # Current temperature in °C
     TEMP_CURRENT_2 = "temp_current_2"
     TEMP_CURRENT_EXTERNAL = (
@@ -927,12 +941,21 @@ class DPCode(StrEnum):
         "temp_current_external_f"  # Current external temperature in Fahrenheit
     )
     TEMP_CURRENT_F = "temp_current_f"  # Current temperature in °F
+    TEMP_CURRENT1 = "temp_current1"  # Current temperature (zone 1) in °C
+    TEMP_EFFLUENT = "temp_effluent"  # Outlet water temperature
     TEMP_INDOOR = "temp_indoor"  # Indoor temperature in °C
+    TEMP_INFLOW = "temp_inflow"  # Inflow water temperature
+    TEMP_RADIATOR = "temp_radiator"  # Radiator/cooling plate temperature
+    TEMP_RETURN = "temp_return"  # Return air temperature
     TEMP_SET = "temp_set"  # Set the temperature in °C
     TEMP_SET_F = "temp_set_f"  # Set the temperature in °F
+    TEMP_SET1 = "temp_set1"  # Set temperature (zone 1) in °C
+    TEMP_TOP = "temp_top"  # Maximum temperature limit
     TEMP_UNIT_CONVERT = "temp_unit_convert"  # Temperature unit switching
+    TEMP_UNIT_CONVERT1 = "temp_unit_convert1"  # Temperature unit switching (zone 1)
     TEMP_VALUE = "temp_value"  # Color temperature
     TEMP_VALUE_V2 = "temp_value_v2"
+    TEMP_VENTING = "temp_venting"  # Exhaust/venting temperature
     TEMPER_ALARM = "temper_alarm"  # Tamper alarm
     TIME_TOTAL = "time_total"
     TIME_USE = "time_use"  # Total seconds of irrigation

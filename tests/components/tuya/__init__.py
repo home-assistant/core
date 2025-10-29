@@ -184,6 +184,7 @@ DEVICE_MOCKS = [
     "pir_wqz93nrdomectyoz",  # https://github.com/home-assistant/core/issues/149704
     "qccdz_7bvgooyjhiua1yyq",  # https://github.com/home-assistant/core/issues/136207
     "qn_5ls2jw49hpczwqng",  # https://github.com/home-assistant/core/issues/149233
+    "qn_5xe6dkfmdafvrasa",  # Pool heater with variant DPCodes
     "qt_TtXKwTMwiPpURWLJ",  # https://github.com/home-assistant/core/issues/139966
     "qxj_fsea1lat3vuktbt6",  # https://github.com/orgs/home-assistant/discussions/318
     "qxj_is2indt9nlth6esa",  # https://github.com/home-assistant/core/issues/136472

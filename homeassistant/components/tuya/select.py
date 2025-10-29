@@ -179,6 +179,12 @@ SELECTS: dict[DeviceCategory, tuple[SelectEntityDescription, ...]] = {
             key=DPCode.LEVEL,
             translation_key="temperature_level",
         ),
+        # Pool heat pump - work mode
+        SelectEntityDescription(
+            key=DPCode.WORK_MODE,
+            translation_key="work_mode",
+            entity_category=EntityCategory.CONFIG,
+        ),
     ),
     DeviceCategory.SD: (
         SelectEntityDescription(
