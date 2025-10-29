@@ -11,7 +11,9 @@ rules:
   appropriate-polling: done
   entity-unique-id: done
   has-entity-name: done
-  entity-event-setup: done
+  entity-event-setup:
+    status: exempt
+    comment: local_polling without events
   dependency-transparency: done
   action-setup:
     status: exempt
