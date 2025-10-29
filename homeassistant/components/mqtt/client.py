@@ -208,6 +208,14 @@ def async_on_subscribe_done(
             return
         hass.loop.call_soon(on_subscribe_status)
 
+    mqtt_data = hass.data[DATA_MQTT]
+    if (
+        mqtt_data.client.connected
+        and mqtt_data.client.is_active_subscription(topic)
+        and not mqtt_data.client.is_pending_subscription(topic)
+    ):
+        hass.loop.call_soon(on_subscribe_status)
+
     return async_dispatcher_connect(
         hass, MQTT_PROCESSED_SUBSCRIPTIONS, _sync_mqtt_subscribe
     )
@@ -239,10 +247,13 @@ async def async_subscribe(
         handler()
         on_subscribe()
 
+    subscription_handler = async_subscribe_internal(
+        hass, topic, msg_callback, qos, encoding
+    )
     if on_subscribe is not None:
         handler = async_on_subscribe_done(hass, topic, qos, _on_subscribe_done)
 
-    return async_subscribe_internal(hass, topic, msg_callback, qos, encoding)
+    return subscription_handler
 
 
 @callback
@@ -686,11 +697,15 @@ class MQTT:
         if fileno > -1:
             self.loop.remove_writer(sock)
 
-    def _is_active_subscription(self, topic: str) -> bool:
+    def is_active_subscription(self, topic: str) -> bool:
         """Check if a topic has an active subscription."""
         return topic in self._simple_subscriptions or any(
             other.topic == topic for other in self._wildcard_subscriptions
         )
+
+    def is_pending_subscription(self, topic: str) -> bool:
+        """Check if a topic has a pending subscription."""
+        return topic in self._pending_subscriptions
 
     async def async_publish(
         self, topic: str, payload: PublishPayloadType, qos: int, retain: bool
@@ -945,7 +960,7 @@ class MQTT:
     @callback
     def _async_unsubscribe(self, topic: str) -> None:
         """Unsubscribe from a topic."""
-        if self._is_active_subscription(topic):
+        if self.is_active_subscription(topic):
             if self._max_qos[topic] == 0:
                 return
             subs = self._matching_subscriptions(topic)

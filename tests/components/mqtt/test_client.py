@@ -293,9 +293,11 @@ async def test_status_subscription_done(
     await mqtt_mock_entry()
 
     on_status = asyncio.Event()
+    on_status_calls: list[bool] = []
 
     def _on_subscribe_status() -> None:
         on_status.set()
+        on_status_calls.append(True)
 
     subscribe_callback = await mqtt.async_subscribe(
         hass, "test-topic", record_calls, qos=0
@@ -308,11 +310,24 @@ async def test_status_subscription_done(
 
     await mqtt.async_publish(hass, "test-topic", "beer ready", 0)
     handler()
-    subscribe_callback()
     assert len(recorded_calls) == 1
     assert recorded_calls[0].topic == "test-topic"
     assert recorded_calls[0].payload == "beer ready"
     assert recorded_calls[0].qos == 0
+
+    # Test as we have an existing subscription, test we get a callback
+    recorded_calls.clear()
+    on_status.clear()
+    handler = mqtt.async_on_subscribe_done(
+        hass, "test-topic", 0, on_subscribe_status=_on_subscribe_status
+    )
+    assert len(on_status_calls) == 1
+    await on_status.wait()
+    assert len(on_status_calls) == 2
+
+    # cleanup
+    handler()
+    subscribe_callback()
 
 
 async def test_subscribe_topic_with_subscribe_done(
@@ -370,6 +385,16 @@ async def test_subscribe_topic_not_initialize(
         HomeAssistantError, match=r".*make sure MQTT is set up correctly"
     ):
         await mqtt.async_subscribe(hass, "test-topic", record_calls)
+
+    def _on_subscribe_callback() -> None:
+        pass
+
+    with pytest.raises(
+        HomeAssistantError, match=r".*make sure MQTT is set up correctly"
+    ):
+        await mqtt.async_subscribe(
+            hass, "test-topic", record_calls, on_subscribe=_on_subscribe_callback
+        )
 
 
 async def test_subscribe_mqtt_config_entry_disabled(
