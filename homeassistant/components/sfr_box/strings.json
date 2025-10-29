@@ -13,6 +13,10 @@
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "The password for accessing your SFR box's web interface, the default is the WiFi security key found on the device label",
+          "username": "The username for accessing your SFR box's web interface, the default is 'admin'"
         }
       },
       "choose_auth": {
