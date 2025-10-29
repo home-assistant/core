@@ -1025,7 +1025,7 @@ hass-nabucasa==1.4.0
 
 # homeassistant.components.assist_satellite
 # homeassistant.components.conversation
-hassil==3.3.0
+hassil==3.4.0
 
 # homeassistant.components.jewish_calendar
 hdate[astral]==1.1.2
