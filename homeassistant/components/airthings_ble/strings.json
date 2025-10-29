@@ -30,6 +30,9 @@
       "ambient_noise": {
         "name": "Ambient noise"
       },
+      "connectivity_mode": {
+        "name": "Connectivity mode"
+      },
       "illuminance": {
         "name": "[%key:component::sensor::entity_component::illuminance::name%]"
       },
@@ -45,6 +48,12 @@
       "radon_longterm_level": {
         "name": "Radon longterm level"
       }
+    }
+  },
+  "issues": {
+    "smartlink_detected": {
+      "description": "The Airthings {device_name} is using SmartLink (hub), which isn’t supported in Home Assistant. Switch the device to Bluetooth mode in the Airthings app.",
+      "title": "Unsupported connectivity mode"
     }
   }
 }
