@@ -452,6 +452,10 @@ class ZWaveServices:
                     has_at_least_one_node,
                 ),
             ),
+            description_placeholders={
+                "api_method": "https://zwave-js.github.io/node-zwave-js/#/api/CCs/index",
+                "api_parameters": "https://zwave-js.github.io/node-zwave-js/#/api/CCs/index"
+            },
         )
 
         self._hass.services.async_register(

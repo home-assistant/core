@@ -622,8 +622,6 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders={
                 "example_server_url": EXAMPLE_SERVER_URL,
                 "server_instructions": ZWAVE_JS_SERVER_INSTRUCTIONS,
-                "api_method": "https://zwave-js.github.io/node-zwave-js/#/api/CCs/index",
-                "api_parameters": "https://zwave-js.github.io/node-zwave-js/#/api/CCs/index"
             },
             errors=errors,
         )
