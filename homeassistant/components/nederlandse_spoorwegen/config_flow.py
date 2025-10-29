@@ -77,6 +77,39 @@ class NSConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration to update the API key from the UI."""
+        errors: dict[str, str] = {}
+
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            client = NSAPI(user_input[CONF_API_KEY])
+            try:
+                await self.hass.async_add_executor_job(client.get_stations)
+            except HTTPError:
+                errors["base"] = "invalid_auth"
+            except (RequestsConnectionError, Timeout):
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected exception validating API key")
+                errors["base"] = "unknown"
+
+            if not errors:
+                # Update the API key and reload the entry
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data_updates={CONF_API_KEY: user_input[CONF_API_KEY]},
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
+            errors=errors,
+        )
+
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle import from YAML configuration."""
         self._async_abort_entries_match({CONF_API_KEY: import_data[CONF_API_KEY]})

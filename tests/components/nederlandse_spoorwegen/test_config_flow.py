@@ -15,7 +15,7 @@ from homeassistant.components.nederlandse_spoorwegen.const import (
     CONF_VIA,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_RECONFIGURE, SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -331,3 +331,73 @@ async def test_import_flow_exceptions(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == expected_error
+
+
+async def test_reconfigure_success(
+    hass: HomeAssistant, mock_nsapi: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test successfully reconfiguring (updating) the API key."""
+    new_key = "new_api_key_123456"
+
+    mock_config_entry.add_to_hass(hass)
+
+    # Start reconfigure flow
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    # Submit new API key, mock_nsapi.get_stations returns OK by default
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_API_KEY: new_key}
+    )
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reconfigure_successful"
+
+    # Entry should be updated with the new API key
+    assert mock_config_entry.data[CONF_API_KEY] == new_key
+
+
+@pytest.mark.parametrize(
+    ("exception", "expected_error"),
+    [
+        (HTTPError("Invalid API key"), "invalid_auth"),
+        (Timeout("Cannot connect"), "cannot_connect"),
+        (RequestsConnectionError("Cannot connect"), "cannot_connect"),
+        (Exception("Unexpected error"), "unknown"),
+    ],
+)
+async def test_reconfigure_errors(
+    hass: HomeAssistant,
+    mock_nsapi: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    exception: Exception,
+    expected_error: str,
+) -> None:
+    """Test reconfigure flow error handling (invalid auth and cannot connect)."""
+    mock_config_entry.add_to_hass(hass)
+
+    # First present the form
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    # Make get_stations raise the requested exception
+    mock_nsapi.get_stations.side_effect = exception
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_API_KEY: "bad_key"}
+    )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": expected_error}
+
+    # Clear side effect for cleanup
+    mock_nsapi.get_stations.side_effect = None
