@@ -38,7 +38,7 @@ async def test_setup_and_update(
     assert entry.disabled
     assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
-    # check if device is linked to the device
+    # Verify that the device_tracker and binary_sensor entities are linked to the same device
     binary_sensor = entity_registry.async_get("binary_sensor.10_10_10_10")
     assert entry.device_id == binary_sensor.device_id
 
