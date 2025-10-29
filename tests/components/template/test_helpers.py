@@ -386,6 +386,36 @@ async def test_platform_not_ready(
     ("domain", "config", "breadcrumb"),
     [
         (
+            "template",
+            {
+                "template": [
+                    {
+                        "sensors": {
+                            "undocumented_configuration": {
+                                "value_template": "{{ 'armed_away' }}",
+                            }
+                        }
+                    },
+                ]
+            },
+            "undocumented_configuration",
+        ),
+        (
+            "template",
+            {
+                "template": [
+                    {
+                        "binary_sensors": {
+                            "undocumented_configuration": {
+                                "value_template": "{{ 'armed_away' }}",
+                            }
+                        }
+                    },
+                ]
+            },
+            "undocumented_configuration",
+        ),
+        (
             "alarm_control_panel",
             {
                 "alarm_control_panel": {
