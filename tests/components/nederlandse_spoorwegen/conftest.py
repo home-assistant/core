@@ -76,8 +76,7 @@ def mock_single_trip_nsapi() -> Generator[AsyncMock]:
         ]
         # Always return only one trip, so there is no 'next' trip
         trips_data = load_json_object_fixture("trip_single.json", DOMAIN)
-        trips = [Trip(trip) for trip in trips_data["trips"]]
-        client.get_trips.return_value = trips
+        client.get_trips.return_value = [Trip(trip) for trip in trips_data["trips"]]
         yield client
 
 
