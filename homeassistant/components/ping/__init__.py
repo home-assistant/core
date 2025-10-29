@@ -25,7 +25,7 @@ DATA_PRIVILEGED_KEY: HassKey[bool | None] = HassKey(DOMAIN)
 
 async def async_migrate_entry(hass: HomeAssistant, entry: PingConfigEntry) -> bool:
     """Migrate old config entries."""
-    if entry.minor_version == 1:
+    if entry.version == 1 and entry.minor_version == 1:
         _LOGGER.debug("Migrating to minor version 2")
 
         # Migrate device registry identifiers from homeassistant domain to ping domain
