@@ -40,6 +40,9 @@
       },
       "ventilator_min_type_home": {
         "name": "Ventilator minimum time home"
+      },
+      "aux_max_outdoor_temp": {
+        "name": "Auxiliary maximum outdoor temperature"
       }
     },
     "switch": {
