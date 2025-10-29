@@ -70,31 +70,32 @@ class AirthingsBLEDataUpdateCoordinator(DataUpdateCoordinator[AirthingsDevice]):
         except Exception as err:
             raise UpdateFailed(f"Unable to fetch data: {err}") from err
 
-        try:
-            if connectivity_mode := data.sensors.get("connectivity_mode"):
-                issue_id = f"smartlink_detected_{data.address}"
-
-                # Find sensors with connectivity mode set to smartlink (hub)
-                # or not configured
-                if connectivity_mode in [
-                    AirthingsConnectivityMode.SMARTLINK.value,
-                    AirthingsConnectivityMode.NOT_CONFIGURED.value,
-                ]:
-                    ir.async_create_issue(
-                        hass=self.hass,
-                        domain=DOMAIN,
-                        issue_id=issue_id,
-                        is_fixable=False,
-                        severity=ir.IssueSeverity.WARNING,
-                        translation_key="smartlink_detected",
-                        translation_placeholders={"device_name": data.friendly_name()},
-                    )
-                elif connectivity_mode == AirthingsConnectivityMode.BLE.value:
-                    ir.async_delete_issue(
-                        hass=self.hass,
-                        domain=DOMAIN,
-                        issue_id=issue_id,
-                    )
-        except (AttributeError, ValueError):
-            _LOGGER.exception("Error checking connectivity mode for issues")
+        await self._check_connectivity_mode_issue(data)
         return data
+
+    async def _check_connectivity_mode_issue(self, data: AirthingsDevice) -> None:
+        """Create or remove connectivity mode issue based on device data."""
+        if connectivity_mode := data.sensors.get("connectivity_mode"):
+            issue_id = f"smartlink_detected_{data.address}"
+
+            # Find sensors with connectivity mode set to smartlink (hub)
+            # or not configured
+            if connectivity_mode in [
+                AirthingsConnectivityMode.SMARTLINK.value,
+                AirthingsConnectivityMode.NOT_CONFIGURED.value,
+            ]:
+                ir.async_create_issue(
+                    hass=self.hass,
+                    domain=DOMAIN,
+                    issue_id=issue_id,
+                    is_fixable=False,
+                    severity=ir.IssueSeverity.WARNING,
+                    translation_key="smartlink_detected",
+                    translation_placeholders={"device_name": data.friendly_name()},
+                )
+            elif connectivity_mode == AirthingsConnectivityMode.BLE.value:
+                ir.async_delete_issue(
+                    hass=self.hass,
+                    domain=DOMAIN,
+                    issue_id=issue_id,
+                )
