@@ -22,5 +22,5 @@ class IOmeterEntity(CoordinatorEntity[IOMeterCoordinator]):
             manufacturer="IOmeter GmbH",
             model="IOmeter",
             sw_version=coordinator.current_fw_version,
-            configuration_url=f"http://{host}/",
+            configuration_url=f"http://{coordinator.config_entry.data[CONF_HOST]}/",
         )
