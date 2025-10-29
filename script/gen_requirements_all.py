@@ -56,7 +56,7 @@ INCLUDED_REQUIREMENTS_WHEELS = {
 OVERRIDDEN_REQUIREMENTS_ACTIONS = {
     "pytest": {
         "exclude": set(),
-        "include": {},
+        "include": set(),
         "markers": {},
     },
     "wheels_aarch64": {
