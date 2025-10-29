@@ -26,7 +26,6 @@ EXCLUDED_REQUIREMENTS_ALL = {
     "beacontools",
     "beewi-smartclim",  # depends on bluepy
     "bluepy",
-    "decora",
     "evdev",
     "face-recognition",
     "pybluez",
