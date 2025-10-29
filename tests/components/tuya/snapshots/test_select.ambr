@@ -3795,6 +3795,67 @@
     'state': 'back',
   })
 # ---
+# name: test_platform_setup_and_discovery[select.pool_heater_work_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'power',
+        'boost',
+        'silence',
+        'perfect',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.pool_heater_work_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Work mode',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'work_mode',
+    'unique_id': 'tuya.asarvfadmfkd6ex5nqwork_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.pool_heater_work_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Pool Heater Work mode',
+      'options': list([
+        'power',
+        'boost',
+        'silence',
+        'perfect',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.pool_heater_work_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'power',
+  })
+# ---
 # name: test_platform_setup_and_discovery[select.projector_screen_motor_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

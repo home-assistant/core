@@ -238,6 +238,19 @@ BINARY_SENSORS: dict[DeviceCategory, tuple[TuyaBinarySensorEntityDescription, ..
         ),
         TAMPER_BINARY_SENSOR,
     ),
+    DeviceCategory.QN: (
+        # Pool heat pump - fault detection
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.FAULT1,
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.FAULT2,
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+    ),
     DeviceCategory.QXJ: (TAMPER_BINARY_SENSOR,),
     DeviceCategory.RQBJ: (
         TuyaBinarySensorEntityDescription(
