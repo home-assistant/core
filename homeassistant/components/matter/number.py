@@ -255,6 +255,31 @@ DISCOVERY_SCHEMAS = [
     ),
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
+        entity_description=MatterRangeNumberEntityDescription(
+            key="ThermostatOccupiedSetback",
+            name=None,
+            translation_key="occupied_setback",
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            device_to_ha=lambda x: None
+            if x is None
+            else x / 10,
+            ha_to_device=lambda x: round(x * 10),
+            format_min_value=lambda x: x / 10,
+            format_max_value=lambda x: x / 10,
+            min_attribute=clusters.Thermostat.Attributes.OccupiedSetbackMin,
+            max_attribute=clusters.Thermostat.Attributes.OccupiedSetbackMax,
+            step=0.5,
+            mode=NumberMode.SLIDER,
+        ),
+        entity_class=MatterRangeNumber,
+        required_attributes=(
+            clusters.Thermostat.Attributes.OccupiedSetback,
+            clusters.Thermostat.Attributes.OccupiedSetbackMin,
+            clusters.Thermostat.Attributes.OccupiedSetbackMax,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.NUMBER,
         entity_description=MatterNumberEntityDescription(
             key="EveTemperatureOffset",
             device_class=NumberDeviceClass.TEMPERATURE,
