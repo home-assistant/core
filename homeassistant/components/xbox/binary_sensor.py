@@ -5,9 +5,10 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
+from typing import Any
 
 from xbox.webapi.api.provider.people.models import Person
-from yarl import URL
+from xbox.webapi.api.provider.titlehub.models import Title
 
 from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
@@ -18,7 +19,12 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import XboxConfigEntry
-from .entity import XboxBaseEntity, check_deprecated_entity
+from .entity import (
+    XboxBaseEntity,
+    XboxBaseEntityDescription,
+    check_deprecated_entity,
+    profile_pic,
+)
 
 
 class XboxBinarySensor(StrEnum):
@@ -32,29 +38,22 @@ class XboxBinarySensor(StrEnum):
 
 
 @dataclass(kw_only=True, frozen=True)
-class XboxBinarySensorEntityDescription(BinarySensorEntityDescription):
+class XboxBinarySensorEntityDescription(
+    XboxBaseEntityDescription, BinarySensorEntityDescription
+):
     """Xbox binary sensor description."""
 
     is_on_fn: Callable[[Person], bool | None]
-    entity_picture_fn: Callable[[Person], str | None] | None = None
     deprecated: bool | None = None
 
 
-def profile_pic(person: Person) -> str | None:
-    """Return the gamer pic."""
-
-    # Xbox sometimes returns a domain that uses a wrong certificate which
-    # creates issues with loading the image.
-    # The correct domain is images-eds-ssl which can just be replaced
-    # to point to the correct image, with the correct domain and certificate.
-    # We need to also remove the 'mode=Padding' query because with it,
-    # it results in an error 400.
-    url = URL(person.display_pic_raw)
-    if url.host == "images-eds.xboxlive.com":
-        url = url.with_host("images-eds-ssl.xboxlive.com").with_scheme("https")
-    query = dict(url.query)
-    query.pop("mode", None)
-    return str(url.with_query(query))
+def profile_attributes(person: Person, _: Title | None) -> dict[str, Any]:
+    """Attributes for the profile."""
+    attributes: dict[str, Any] = {}
+    attributes["display_name"] = person.display_name
+    attributes["real_name"] = person.real_name or None
+    attributes["bio"] = person.detail.bio if person.detail else None
+    return attributes
 
 
 def in_game(person: Person) -> bool:
@@ -80,6 +79,7 @@ SENSOR_DESCRIPTIONS: tuple[XboxBinarySensorEntityDescription, ...] = (
         is_on_fn=lambda x: x.presence_state == "Online",
         name=None,
         entity_picture_fn=profile_pic,
+        attributes_fn=profile_attributes,
     ),
     XboxBinarySensorEntityDescription(
         key=XboxBinarySensor.IN_PARTY,
@@ -146,13 +146,3 @@ class XboxBinarySensorEntity(XboxBaseEntity, BinarySensorEntity):
         """Return the status of the requested attribute."""
 
         return self.entity_description.is_on_fn(self.data)
-
-    @property
-    def entity_picture(self) -> str | None:
-        """Return the gamer pic."""
-
-        return (
-            fn(self.data)
-            if (fn := self.entity_description.entity_picture_fn) is not None
-            else super().entity_picture
-        )

@@ -4339,12 +4339,6 @@
       "integration_type": "virtual",
       "supported_by": "opower"
     },
-    "neato": {
-      "name": "Neato Botvac",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
-    },
     "nederlandse_spoorwegen": {
       "name": "Nederlandse Spoorwegen (NS)",
       "integration_type": "service",
@@ -7046,7 +7040,7 @@
     },
     "transmission": {
       "name": "Transmission",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_polling"
     },
