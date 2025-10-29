@@ -57,7 +57,7 @@ async def async_get_service(
         hass,
         DOMAIN,
         "migrate_notify",
-        breaks_in_ha_version="2026.3.0",
+        breaks_in_ha_version="2026.6.0",
         is_fixable=False,
         translation_key="migrate_notify",
         severity=ir.IssueSeverity.WARNING,
