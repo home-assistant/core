@@ -27,11 +27,17 @@
   },
   "entity": {
     "binary_sensor": {
+      "bag_full": {
+        "name": "Bag full"
+      },
       "carbon_dioxide": {
         "name": "Carbon dioxide"
       },
       "carbon_monoxide": {
         "name": "Carbon monoxide"
+      },
+      "cover_off": {
+        "name": "Cover off"
       },
       "defrost": {
         "name": "Defrost"
@@ -68,12 +74,6 @@
       },
       "wet": {
         "name": "Wet"
-      },
-      "bag_full": {
-        "name": "Bag full"
-      },
-      "cover_off": {
-        "name": "Cover off"
       }
     },
     "button": {
