@@ -86,7 +86,7 @@ def save_language_translations(lang: str, translations: dict[str, Any]) -> None:
     """Save translations for a single language."""
     components = translations.get("component", {})
 
-    flattened_all_translations = flatten_translations(translations)
+    flattened_translations = flatten_translations(translations)
 
     for component, component_translations in components.items():
         # Remove legacy platform translations
@@ -114,7 +114,7 @@ def save_language_translations(lang: str, translations: dict[str, Any]) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
 
         component_translations = substitute_references(
-            component_translations, flattened_all_translations, fail_on_missing=False
+            component_translations, flattened_translations, fail_on_missing=False
         )
 
         filter_translations(component_translations, strings)
