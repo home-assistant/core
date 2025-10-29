@@ -19,11 +19,10 @@ from homeassistant.components.button import (
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
 from .coordinator import SFRConfigEntry
+from .entity import SFREntity
 
 
 def with_error_wrapping[**_P, _R](
@@ -80,11 +79,10 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class SFRBoxButton(ButtonEntity):
-    """Mixin for button specific attributes."""
+class SFRBoxButton(SFREntity, ButtonEntity):
+    """SFR Box button."""
 
     entity_description: SFRBoxButtonEntityDescription
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -92,13 +90,9 @@ class SFRBoxButton(ButtonEntity):
         description: SFRBoxButtonEntityDescription,
         system_info: SystemInfo,
     ) -> None:
-        """Initialize the sensor."""
-        self.entity_description = description
+        """Initialize the button."""
+        super().__init__(description, system_info)
         self._box = box
-        self._attr_unique_id = f"{system_info.mac_addr}_{description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, system_info.mac_addr)},
-        )
 
     @with_error_wrapping
     async def async_press(self) -> None:
