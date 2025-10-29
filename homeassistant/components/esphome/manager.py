@@ -6,6 +6,7 @@ import base64
 from functools import partial
 import logging
 import secrets
+import struct
 from typing import TYPE_CHECKING, Any, NamedTuple
 
 from aioesphomeapi import (
@@ -22,6 +23,8 @@ from aioesphomeapi import (
     RequiresEncryptionAPIError,
     UserService,
     UserServiceArgType,
+    ZWaveProxyRequest,
+    ZWaveProxyRequestType,
     parse_log_message,
 )
 from awesomeversion import AwesomeVersion
@@ -44,12 +47,18 @@ from homeassistant.core import (
     State,
     callback,
 )
-from homeassistant.exceptions import HomeAssistantError, TemplateError
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    ServiceNotFound,
+    ServiceValidationError,
+    TemplateError,
+)
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
     issue_registry as ir,
+    json,
     template,
 )
 from homeassistant.helpers.device_registry import format_mac
@@ -84,6 +93,8 @@ from .encryption_key_storage import async_get_encryption_key_storage
 from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
 
 DEVICE_CONFLICT_ISSUE_FORMAT = "device_conflict-{}"
+UNPACK_UINT32_BE = struct.Struct(">I").unpack_from
+
 
 if TYPE_CHECKING:
     from aioesphomeapi.api_pb2 import SubscribeLogsResponse  # type: ignore[attr-defined]  # noqa: I001
@@ -268,11 +279,32 @@ class ESPHomeManager:
         elif self.entry.options.get(
             CONF_ALLOW_SERVICE_CALLS, DEFAULT_ALLOW_SERVICE_CALLS
         ):
-            hass.async_create_task(
-                hass.services.async_call(
-                    domain, service_name, service_data, blocking=True
+            call_id = service.call_id
+            if call_id and service.wants_response:
+                # Service call with response expected
+                self.entry.async_create_task(
+                    hass,
+                    self._handle_service_call_with_response(
+                        domain,
+                        service_name,
+                        service_data,
+                        call_id,
+                        service.response_template,
+                    ),
                 )
-            )
+            elif call_id:
+                # Service call without response but needs success/failure notification
+                self.entry.async_create_task(
+                    hass,
+                    self._handle_service_call_with_notification(
+                        domain, service_name, service_data, call_id
+                    ),
+                )
+            else:
+                # Fire and forget service call
+                self.entry.async_create_task(
+                    hass, hass.services.async_call(domain, service_name, service_data)
+                )
         else:
             device_info = self.entry_data.device_info
             assert device_info is not None
@@ -297,6 +329,98 @@ class ESPHomeManager:
                 service_name,
                 service_data,
             )
+
+    async def _handle_service_call_with_response(
+        self,
+        domain: str,
+        service_name: str,
+        service_data: dict,
+        call_id: int,
+        response_template: str | None = None,
+    ) -> None:
+        """Handle service call that expects a response and send response back to ESPHome."""
+        try:
+            # Call the service with response capture enabled
+            action_response = await self.hass.services.async_call(
+                domain=domain,
+                service=service_name,
+                service_data=service_data,
+                blocking=True,
+                return_response=True,
+            )
+
+            if response_template:
+                try:
+                    # Render response template
+                    tmpl = Template(response_template, self.hass)
+                    response = tmpl.async_render(
+                        variables={"response": action_response},
+                        strict=True,
+                    )
+                    response_dict = {"response": response}
+
+                except TemplateError as ex:
+                    raise HomeAssistantError(
+                        f"Error rendering response template: {ex}"
+                    ) from ex
+            else:
+                response_dict = {"response": action_response}
+
+            # JSON encode response data for ESPHome
+            response_data = json.json_bytes(response_dict)
+
+        except (
+            ServiceNotFound,
+            ServiceValidationError,
+            vol.Invalid,
+            HomeAssistantError,
+        ) as ex:
+            self._send_service_call_response(
+                call_id, success=False, error_message=str(ex), response_data=b""
+            )
+
+        else:
+            # Send success response back to ESPHome
+            self._send_service_call_response(
+                call_id=call_id,
+                success=True,
+                error_message="",
+                response_data=response_data,
+            )
+
+    async def _handle_service_call_with_notification(
+        self, domain: str, service_name: str, service_data: dict, call_id: int
+    ) -> None:
+        """Handle service call that needs success/failure notification."""
+        try:
+            await self.hass.services.async_call(
+                domain, service_name, service_data, blocking=True
+            )
+        except (ServiceNotFound, ServiceValidationError, vol.Invalid) as ex:
+            self._send_service_call_response(call_id, False, str(ex), b"")
+        else:
+            self._send_service_call_response(call_id, True, "", b"")
+
+    def _send_service_call_response(
+        self,
+        call_id: int,
+        success: bool,
+        error_message: str,
+        response_data: bytes,
+    ) -> None:
+        """Send service call response back to ESPHome device."""
+        _LOGGER.debug(
+            "Service call response for call_id %s: success=%s, error=%s",
+            call_id,
+            success,
+            error_message,
+        )
+        self.cli.send_homeassistant_action_response(
+            call_id,
+            success,
+            error_message,
+            response_data,
+        )
 
     @callback
     def _send_home_assistant_state(
@@ -557,6 +681,11 @@ class ESPHomeManager:
             )
             entry_data.loaded_platforms.add(Platform.ASSIST_SATELLITE)
 
+        if device_info.zwave_proxy_feature_flags:
+            entry_data.disconnect_callbacks.add(
+                cli.subscribe_zwave_proxy_request(self._async_zwave_proxy_request)
+            )
+
         cli.subscribe_home_assistant_states_and_services(
             on_state=entry_data.async_update_state,
             on_service_call=self.async_on_service_call,
@@ -567,6 +696,25 @@ class ESPHomeManager:
         entry_data.async_save_to_store()
         _async_check_firmware_version(hass, device_info, api_version)
         _async_check_using_api_password(hass, device_info, bool(self.password))
+
+    def _async_zwave_proxy_request(self, request: ZWaveProxyRequest) -> None:
+        """Handle a request to create a zwave_js config flow."""
+        if request.type != ZWaveProxyRequestType.HOME_ID_CHANGE:
+            return
+        # ESPHome will send a home id change on every connection
+        # if the Z-Wave controller is connected to the ESPHome device
+        # so we know for sure that the Z-Wave controller is connected
+        # when we get the message. This makes it safe to start
+        # the zwave_js config flow automatically even if the zwave_home_id
+        # is 0 (not yet provisioned) as we know for sure the controller
+        # is connected to the ESPHome device and do not have to guess
+        # if it's a broken connection or Z-Wave controller or a not
+        # yet provisioned controller.
+        zwave_home_id: int = UNPACK_UINT32_BE(request.data[0:4])[0]
+        assert self.entry_data.device_info is not None
+        self.entry_data.async_create_zwave_js_flow(
+            self.hass, self.entry_data.device_info, zwave_home_id
+        )
 
     async def on_disconnect(self, expected_disconnect: bool) -> None:
         """Run disconnect callbacks on API disconnect."""

@@ -143,3 +143,69 @@ async def test_unload_entry(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_remove_stale_device_on_startup(
+    hass: HomeAssistant,
+    mock_homee: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test removal of stale device on startup."""
+    mock_homee.nodes = [
+        build_mock_node("homee.json"),
+        build_mock_node("light_single.json"),  # id 2
+        build_mock_node("add_device.json"),  # id 3
+    ]
+    mock_homee.get_node_by_id = lambda node_id: mock_homee.nodes[node_id - 1]
+    await setup_integration(hass, mock_config_entry)
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, f"{HOMEE_ID}-3")})
+    assert device is not None
+
+    mock_homee.nodes.pop()  # Remove node with id 3
+    # Reload integration
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Stale device should be removed
+    device = device_registry.async_get_device(identifiers={(DOMAIN, f"{HOMEE_ID}-3")})
+    assert device is None
+
+
+async def test_remove_node_callback(
+    hass: HomeAssistant,
+    mock_homee: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test removal of device when node is removed in homee."""
+    mock_homee.nodes = [
+        build_mock_node("homee.json"),
+        build_mock_node("light_single.json"),  # id 2
+        build_mock_node("add_device.json"),  # id 3
+    ]
+    mock_homee.get_node_by_id = lambda node_id: mock_homee.nodes[node_id - 1]
+    await setup_integration(hass, mock_config_entry)
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, f"{HOMEE_ID}-3")})
+    assert device is not None
+
+    # Test device not removed when callback called with add=True
+    await mock_homee.add_nodes_listener.call_args_list[0][0][0](
+        mock_homee.nodes[2], add=True
+    )
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, f"{HOMEE_ID}-3")})
+    assert device is not None
+
+    # Simulate removal of node with id 3 in homee
+    await mock_homee.add_nodes_listener.call_args_list[0][0][0](
+        mock_homee.nodes[2], add=False
+    )
+    await hass.async_block_till_done()
+
+    # Device should be removed
+    device = device_registry.async_get_device(identifiers={(DOMAIN, f"{HOMEE_ID}-3")})
+    assert device is None

@@ -88,11 +88,10 @@ async def test_sensors_are_updated(
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test sensors are updated."""
+    """Test sensors are updated with properly formatted values."""
     await init_integration(hass, mock_config_entry)
 
     entity_id = "sensor.amd_ryzen_7_7800x3d_package_temperature"
-
     state = hass.states.get(entity_id)
 
     assert state
@@ -175,7 +174,7 @@ async def test_orphaned_devices_are_removed(
     device_registry = dr.async_get(hass)
     orphaned_device = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
-        identifiers={(DOMAIN, "lpc-nct6687d-0")},
+        identifiers={(DOMAIN, f"{mock_config_entry.entry_id}_lpc-nct6687d-0")},
     )
 
     with patch.object(
@@ -209,4 +208,10 @@ async def test_integration_does_not_log_new_devices_on_first_refresh(
 
     with caplog.at_level(logging.WARNING):
         await init_integration(hass, mock_config_entry)
-        assert len(caplog.records) == 0
+
+        libre_hardware_monitor_logs = [
+            record
+            for record in caplog.records
+            if record.name.startswith("homeassistant.components.libre_hardware_monitor")
+        ]
+        assert len(libre_hardware_monitor_logs) == 0
