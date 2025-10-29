@@ -3,16 +3,15 @@
 from __future__ import annotations
 
 import asyncio
+from contextlib import suppress
 import logging
-import ssl
 from typing import Any
 
-from aiohttp import ClientResponseError
-from olarmflowclient import OlarmFlowClient
+from olarmflowclient import MqttConnectError, MqttTimeoutError, OlarmFlowClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .const import DOMAIN
@@ -49,62 +48,18 @@ class OlarmFlowClientMQTT:
         # olarm connect client
         self._olarm_flow_client: OlarmFlowClient = olarm_client
 
-    async def _ensure_valid_token(self) -> None:
-        """Ensure the OAuth2 access token is valid and refresh if needed.
-
-        Checks if access token has expired and if not uses refresh token to fetch new.
-        """
-        # Check if token needs refresh
-        token_valid: bool = self._oauth_session.valid_token
-        if not token_valid:
-            _LOGGER.debug("Access token expired, refreshing")
-
-        try:
-            await self._oauth_session.async_ensure_token_valid()
-            new_token: str = self._oauth_session.token["access_token"]
-            expires_at: float = self._oauth_session.token["expires_at"]
-            _LOGGER.debug("Access token expires at: %s ", expires_at)
-
-            await self._olarm_flow_client.update_access_token(new_token, expires_at)
-        except ClientResponseError as e:
-            _LOGGER.error("Failed to refresh OAuth2 token: %s", e)
-
-            # Check if this is an invalid_grant error (status 400) that indicates expired/invalid refresh token
-            if e.status == 400:
-                _LOGGER.error(
-                    "OAuth2 refresh token is invalid (status 400). Integration will remain in error state"
-                    "Please remove and re-add the integration to fix authentication"
-                )
-                raise ConfigEntryError(
-                    "OAuth2 refresh token is invalid. Please remove and re-add the integration."
-                ) from e
-
-            # For other HTTP errors, treat as temporary and retry
-            raise ConfigEntryNotReady("Failed to refresh OAuth2 token") from e
-        except Exception as e:
-            _LOGGER.error("Failed to refresh OAuth2 token: %s", e)
-            raise ConfigEntryNotReady("Failed to refresh OAuth2 token") from e
+        # Track the assigned client ID suffix for this instance
+        self.client_id_suffix: str | None = None
 
     def _mqtt_reconnection_callback(self) -> None:
-        """Thread-safe callback for MQTT reconnection events."""
-        # Schedule the token refresh in the main event loop
-        asyncio.run_coroutine_threadsafe(
-            self._handle_mqtt_reconnection(), self._hass.loop
-        )
+        """Thread-safe callback for MQTT reconnection events.
 
-    async def _handle_mqtt_reconnection(self) -> None:
-        """Handle MQTT reconnection by refreshing the OAuth2 token.
-
-        Handles MQTT reconnection when connection is lost, also checks access token hasn't expired and gets a new one if required.
+        Called by the library when MQTT disconnects due to authentication issues.
+        Schedules token refresh in the main event loop.
         """
-        _LOGGER.debug("Handling MQTT reconnection - refreshing token")
-        try:
-            # Ensure we have a valid token before reconnecting
-            await self._ensure_valid_token()
-        except (ConfigEntryError, ConfigEntryNotReady, OSError, TimeoutError) as e:
-            _LOGGER.error("Failed to refresh token for MQTT reconnection: %s", e)
-
-        _LOGGER.debug("Token refreshed successfully for MQTT reconnection")
+        asyncio.run_coroutine_threadsafe(
+            self._coordinator.async_ensure_token_valid(), self._hass.loop
+        )
 
     async def init_mqtt(self) -> None:
         """Initialize and connect to the Olarm MQTT service."""
@@ -118,36 +73,17 @@ class OlarmFlowClientMQTT:
 
         try:
             # Ensure token is valid before connecting to MQTT
-            await self._ensure_valid_token()
+            await self._coordinator.async_ensure_token_valid()
 
-            # Olarm limits the MQTT connections per user and each needs a unique client_id
-            sorted_olarm_entries: list[ConfigEntry] = sorted(
-                self._hass.config_entries.async_entries(DOMAIN),
-                key=lambda x: x.entry_id,
-            )
-            client_id_suffix: str = "1"  # default fallback
-            for i, entry in enumerate(sorted_olarm_entries):
-                if entry.data.get("device_id") == self.device_id:
-                    client_id_suffix = str(i + 1)
-                    break
-            _LOGGER.debug(
-                "Determine client_id_suffix for mqtt connection %s: %s -> %s",
-                DOMAIN,
-                [entry.entry_id for entry in sorted_olarm_entries],
-                client_id_suffix,
-            )
+            # Get a unique client ID suffix for this connection
+            self.client_id_suffix = self._get_unique_client_id_suffix()
 
-            # Create a wrapper function that creates the SSL context inside the executor
-            def start_mqtt_with_ssl() -> Any:
-                ssl_context: ssl.SSLContext = ssl.create_default_context()
-                return self._olarm_flow_client.start_mqtt(
-                    self._user_id, ssl_context, client_id_suffix
-                )
-
-            # Run the blocking MQTT connection in an executor to avoid blocking the event loop
-            await asyncio.wait_for(
-                self._hass.async_add_executor_job(start_mqtt_with_ssl),
-                timeout=30.0,
+            # Startup MQTT
+            await self._olarm_flow_client.start_mqtt_async(
+                user_id=self._user_id,
+                client_id_suffix=self.client_id_suffix,
+                event_loop=self._hass.loop,
+                timeout=10.0,
             )
 
             # Subscribe to Device Events
@@ -156,11 +92,14 @@ class OlarmFlowClientMQTT:
             )
             _LOGGER.debug("Successfully connected to Olarm MQTT Service")
 
-        except TimeoutError:
-            _LOGGER.error("Timeout connecting to Olarm MQTT Service")
+        except MqttTimeoutError as e:
+            _LOGGER.error("Timeout connecting to Olarm MQTT Service: %s", e)
+            raise ConfigEntryNotReady("Timeout connecting to Olarm MQTT Service") from e
+        except MqttConnectError as e:
+            _LOGGER.error("Failed to connect to Olarm MQTT Service: %s", e)
             raise ConfigEntryNotReady(
-                "Timeout connecting to Olarm MQTT Service"
-            ) from None
+                f"Failed to connect to Olarm MQTT Service: {e}"
+            ) from e
         except Exception as e:
             _LOGGER.error("Failed to connect to Olarm MQTT Service: %s", e)
             raise ConfigEntryNotReady(
@@ -185,3 +124,36 @@ class OlarmFlowClientMQTT:
                 )
             except Exception as e:  # noqa: BLE001
                 _LOGGER.warning("Error stopping MQTT client: %s", e)
+            finally:
+                # Release the client ID suffix for reuse
+                self.client_id_suffix = None
+
+    def _get_unique_client_id_suffix(self) -> str:
+        """Determine a unique client ID suffix for this MQTT connection."""
+
+        # Collect all suffixes currently in use by running entries
+        used_suffixes: set[int] = set()
+
+        for entry in self._hass.config_entries.async_entries(DOMAIN):
+            # Only check entries that are loaded and have runtime data
+            if hasattr(entry, "runtime_data") and entry.runtime_data is not None:
+                mqtt_client = entry.runtime_data.mqtt_client
+                if mqtt_client.client_id_suffix is not None:
+                    # Skip if suffix is not a valid integer
+                    with suppress(ValueError, AttributeError):
+                        used_suffixes.add(int(mqtt_client.client_id_suffix))
+
+        # Find the lowest available suffix starting from 1
+        suffix_num = 1
+        while suffix_num in used_suffixes:
+            suffix_num += 1
+
+        client_id_suffix = str(suffix_num)
+
+        _LOGGER.debug(
+            "Using %s as client_id_suffix for MQTT connection for device_id=%s",
+            client_id_suffix,
+            self.device_id,
+        )
+
+        return client_id_suffix

@@ -6,10 +6,12 @@ from dataclasses import dataclass, field
 import logging
 from typing import Any
 
+from aiohttp import ClientResponseError
 from olarmflowclient import OlarmFlowClient, OlarmFlowClientApiError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -66,6 +68,46 @@ class OlarmDataUpdateCoordinator(DataUpdateCoordinator[OlarmDeviceData]):
             name=f"{DOMAIN}_{self.device_id}",
             update_interval=None,  # No periodic updates, MQTT handles ongoing updates
         )
+
+    async def _ensure_valid_token(self) -> None:
+        """Ensure the OAuth2 access token is valid and refresh if needed.
+
+        Checks if access token has expired and if not uses refresh token to fetch new.
+        """
+        # Check if token needs refresh
+        token_valid: bool = self._oauth_session.valid_token
+        if not token_valid:
+            _LOGGER.debug("Access token expired, refreshing")
+
+        try:
+            await self._oauth_session.async_ensure_token_valid()
+            new_token: str = self._oauth_session.token["access_token"]
+            expires_at: float = self._oauth_session.token["expires_at"]
+            _LOGGER.debug("Access token expires at: %s ", expires_at)
+
+            await self._olarm_connect_client.update_access_token(new_token, expires_at)
+        except ClientResponseError as e:
+            _LOGGER.error("Failed to refresh OAuth2 token: %s", e)
+
+            # Check if this is an invalid_grant error (status 400) that indicates expired/invalid refresh token
+            if e.status == 400:
+                _LOGGER.error(
+                    "OAuth2 refresh token is invalid (status 400). Integration will remain in error state"
+                    "Please remove and re-add the integration to fix authentication"
+                )
+                raise ConfigEntryError(
+                    "OAuth2 refresh token is invalid. Please remove and re-add the integration."
+                ) from e
+
+            # For other HTTP errors, treat as temporary and retry
+            raise ConfigEntryNotReady("Failed to refresh OAuth2 token") from e
+        except Exception as e:
+            _LOGGER.error("Failed to refresh OAuth2 token: %s", e)
+            raise ConfigEntryNotReady("Failed to refresh OAuth2 token") from e
+
+    async def async_ensure_token_valid(self) -> None:
+        """Public method to ensure token is valid before sending commands."""
+        await self._ensure_valid_token()
 
     async def _async_update_data(self) -> OlarmDeviceData:
         """Fetch initial device information from the Olarm HTTP API."""
