@@ -33,6 +33,8 @@ async def test_device_migration(
         identifiers={(HOMEASSISTANT_DOMAIN, config_entry.entry_id)},
     )
 
+    assert config_entry.minor_version == 1
+
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -44,3 +46,4 @@ async def test_device_migration(
     assert device is not None
     assert device.id == old_device.id
     assert device.config_entries == {config_entry.entry_id}
+    assert config_entry.minor_version == 2
