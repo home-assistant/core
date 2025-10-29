@@ -330,32 +330,14 @@ async def test_update_entity_installation(
         mock_hw_module.get_firmware_info(hass, owning_config_entry),
     )
 
-    state_before_update = hass.states.get(TEST_UPDATE_ENTITY_ID)
-    assert state_before_update is not None
-    assert state_before_update.state == "unknown"
-    assert state_before_update.attributes["title"] == "EmberZNet"
-    assert state_before_update.attributes["installed_version"] == "7.3.1.0"
-    assert state_before_update.attributes["latest_version"] is None
-
-    # When we check for an update, one will be shown
-    await hass.services.async_call(
-        "homeassistant",
-        "update_entity",
-        {"entity_id": TEST_UPDATE_ENTITY_ID},
-        blocking=True,
-    )
-    state_after_update = hass.states.get(TEST_UPDATE_ENTITY_ID)
-    assert state_after_update is not None
-    assert state_after_update.state == "on"
-    assert state_after_update.attributes["title"] == "EmberZNet"
-    assert state_after_update.attributes["installed_version"] == "7.3.1.0"
-    assert state_after_update.attributes["latest_version"] == "7.4.4.0"
-    assert state_after_update.attributes["release_summary"] == (
-        "Some release notes go here"
-    )
-    assert state_after_update.attributes["release_url"] == (
-        "https://example.org/release_notes"
-    )
+    state = hass.states.get(TEST_UPDATE_ENTITY_ID)
+    assert state is not None
+    assert state.state == "on"
+    assert state.attributes["title"] == "EmberZNet"
+    assert state.attributes["installed_version"] == "7.3.1.0"
+    assert state.attributes["latest_version"] == "7.4.4.0"
+    assert state.attributes["release_summary"] == ("Some release notes go here")
+    assert state.attributes["release_url"] == ("https://example.org/release_notes")
 
     async def mock_flash_firmware(
         hass: HomeAssistant,
@@ -604,6 +586,7 @@ async def test_update_entity_graceful_firmware_type_callback_errors(
         entity_description=TEST_FIRMWARE_ENTITY_DESCRIPTIONS[ApplicationType.EZSP],
     )
     update_entity.hass = hass
+    update_entity._latest_manifest = TEST_MANIFEST
     await update_entity.async_added_to_hass()
 
     callback = Mock(side_effect=RuntimeError("Callback failed"))
@@ -624,3 +607,93 @@ async def test_update_entity_graceful_firmware_type_callback_errors(
 
     unregister_callback()
     assert "Failed to call firmware type changed callback" in caplog.text
+
+
+async def test_early_firmware_check_on_unknown_state(
+    hass: HomeAssistant, update_config_entry: ConfigEntry
+) -> None:
+    """Test early firmware check fetches manifest without needing manual update."""
+    assert await hass.config_entries.async_setup(update_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Notify firmware info - the state should become "on" immediately
+    # because early check already fetched the manifest
+    await async_notify_firmware_info(
+        hass,
+        "test_integration",
+        FirmwareInfo(
+            device=TEST_DEVICE,
+            firmware_type=ApplicationType.EZSP,
+            firmware_version="7.3.1.0 build 0",
+            owners=[],
+            source="test_integration",
+        ),
+    )
+    await hass.async_block_till_done()
+
+    # The entity should immediately show update available (no manual update_entity call needed)
+    state = hass.states.get(TEST_UPDATE_ENTITY_ID)
+    assert state is not None
+    assert state.state == "on"
+    assert state.attributes["title"] == "EmberZNet"
+    assert state.attributes["installed_version"] == "7.3.1.0"
+    assert state.attributes["latest_version"] == "7.4.4.0"
+
+
+@pytest.mark.parametrize(
+    "error", [aiohttp.ClientError("Network error"), RuntimeError("Unexpected error")]
+)
+async def test_early_firmware_check_handles_errors(
+    hass: HomeAssistant, update_config_entry: ConfigEntry, error: Exception
+) -> None:
+    """Test early firmware check gracefully handles errors."""
+
+    with (
+        patch(
+            "homeassistant.components.homeassistant_hardware.coordinator.FirmwareUpdateClient"
+        ) as mock_update_client,
+    ):
+        mock_update_client.return_value.async_update_data.side_effect = error
+
+        assert await hass.config_entries.async_setup(update_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Entity should still be created, even though early check failed
+    state = hass.states.get(TEST_UPDATE_ENTITY_ID)
+    assert state is not None
+
+    # Entity is unavailable because coordinator failed to fetch manifest
+    assert state.state == "unavailable"
+
+
+async def test_early_firmware_check_skipped_with_restored_state(
+    hass: HomeAssistant, update_config_entry: ConfigEntry
+) -> None:
+    """Test early firmware check is skipped when state is restored."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State(TEST_UPDATE_ENTITY_ID, "on"),
+                FirmwareUpdateExtraStoredData(
+                    firmware_manifest=TEST_MANIFEST
+                ).as_dict(),
+            )
+        ],
+    )
+
+    with (
+        patch(
+            "homeassistant.components.homeassistant_hardware.coordinator.FirmwareUpdateClient"
+        ) as mock_update_client,
+    ):
+        assert await hass.config_entries.async_setup(update_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_update_client.return_value.async_update_data.call_count == 0
+
+    # The entity state is already known from restored data
+    state = hass.states.get(TEST_UPDATE_ENTITY_ID)
+    assert state is not None
+    assert state.state == "on"
+    assert state.attributes["latest_version"] == "7.4.4.0"
