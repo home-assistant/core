@@ -188,6 +188,10 @@ async def init_integration(
 
         yield mock_config_entry
 
+        # Properly unload the integration to trigger cleanup
+        await hass.config_entries.async_unload(mock_config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
 
 @pytest.fixture
 def controller(init_integration: MockConfigEntry) -> EcovacsController:
