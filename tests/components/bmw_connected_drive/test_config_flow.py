@@ -274,10 +274,14 @@ async def test_reauth(hass: HomeAssistant) -> None:
 
 async def test_reconfigure(hass: HomeAssistant) -> None:
     """Test the reconfiguration form."""
-    with patch(
-        BIMMER_CONNECTED_LOGIN_PATCH,
-        side_effect=login_sideeffect,
-        autospec=True,
+    with (
+        patch(
+            BIMMER_CONNECTED_LOGIN_PATCH, side_effect=login_sideeffect, autospec=True
+        ),
+        patch(
+            "homeassistant.components.bmw_connected_drive.async_setup_entry",
+            return_value=True,
+        ),
     ):
         config_entry = MockConfigEntry(**FIXTURE_CONFIG_ENTRY)
         config_entry.add_to_hass(hass)
