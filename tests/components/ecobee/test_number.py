@@ -140,7 +140,7 @@ async def test_auxiliary_max_outdoor_temp_attributes(hass: HomeAssistant) -> Non
     )
 
 
-async def test_set_compressor_protection_min_temp(hass: HomeAssistant) -> None:
+async def test_set_auxiliary_max_outdoor_temp(hass: HomeAssistant) -> None:
     """Test the number can set aux max outdoor temp.
 
     Ecobee runs in Fahrenheit; the test rig runs in Celsius. Conversions are necessary
