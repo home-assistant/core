@@ -1,0 +1,138 @@
+rules:
+  ## Bronze
+  config-flow: done
+  test-before-configure: done
+  unique-config-entry: done
+  config-flow-test-coverage: done
+  runtime-data: done
+  test-before-setup: done
+  appropriate-polling: done
+  entity-unique-id: done
+  has-entity-name: done
+  entity-event-setup: done
+  dependency-transparency: done
+  action-setup:
+    status: exempt
+    comment: There are no service actions
+  common-modules: done
+  docs-high-level-description:
+    status: todo
+    comment: Under review
+  docs-installation-instructions:
+    status: todo
+    comment: Under review
+  docs-removal-instructions:
+    status: todo
+    comment: Under review
+  docs-actions:
+    status: todo
+    comment: Under review
+  brands: done
+
+  ## Silver
+  config-entry-unloading:
+    status: todo
+    comment: Under review
+  log-when-unavailable:
+    status: todo
+    comment: Under review
+  entity-unavailable:
+    status: todo
+    comment: Under review
+  action-exceptions:
+    status: todo
+    comment: Under review
+  reauthentication-flow:
+    status: todo
+    comment: Under review
+  parallel-updates:
+    status: todo
+    comment: Under review
+  test-coverage:
+    status: todo
+    comment: Under review
+  integration-owner:
+    status: todo
+    comment: Under review
+  docs-installation-parameters:
+    status: todo
+    comment: Under review
+  docs-configuration-parameters:
+    status: todo
+    comment: Under review
+
+  ## Gold
+  entity-translations:
+    status: todo
+    comment: Under review
+  entity-device-class:
+    status: todo
+    comment: Under review
+  devices:
+    status: todo
+    comment: Under review
+  entity-category:
+    status: todo
+    comment: Under review
+  entity-disabled-by-default:
+    status: todo
+    comment: Under review
+  discovery:
+    status: todo
+    comment: Under review
+  stale-devices:
+    status: todo
+    comment: Under review
+  diagnostics:
+    status: todo
+    comment: Under review
+  exception-translations:
+    status: todo
+    comment: Under review
+  icon-translations:
+    status: todo
+    comment: Under review
+  reconfiguration-flow:
+    status: todo
+    comment: Under review
+  dynamic-devices:
+    status: todo
+    comment: Under review
+  discovery-update-info:
+    status: todo
+    comment: Under review
+  repair-issues:
+    status: todo
+    comment: Under review
+  docs-use-cases:
+    status: todo
+    comment: Under review
+  docs-supported-devices:
+    status: todo
+    comment: Under review
+  docs-supported-functions:
+    status: todo
+    comment: Under review
+  docs-data-update:
+    status: todo
+    comment: Under review
+  docs-known-limitations:
+    status: todo
+    comment: Under review
+  docs-troubleshooting:
+    status: todo
+    comment: Under review
+  docs-examples:
+    status: todo
+    comment: Under review
+
+  ## Platinum
+  async-dependency:
+    status: done
+    comment: sfrbox-api is asynchronous
+  inject-websession:
+    status: done
+    comment: sfrbox-api uses injected aiohttp websession
+  strict-typing:
+    status: done
+    comment: sfrbox-api is fully typed, and integration uses strict typing
