@@ -23,7 +23,7 @@ rules:
     status: todo
     comment: light name still needs to be fixed, all else ok
   runtime-data:
-    status: todo
+    status: done
     comment: addressed in https://github.com/home-assistant/core/pull/155207
   test-before-configure: done
   test-before-setup:
