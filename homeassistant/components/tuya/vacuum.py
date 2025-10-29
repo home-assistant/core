@@ -16,7 +16,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
-from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
+from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, DPType
 from .entity import TuyaEntity
 from .models import EnumTypeData
 from .util import get_dpcode
@@ -55,19 +55,19 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tuya vacuum dynamically through Tuya discovery."""
-    hass_data = entry.runtime_data
+    manager = entry.runtime_data.manager
 
     @callback
     def async_discover_device(device_ids: list[str]) -> None:
         """Discover and add a discovered Tuya vacuum."""
         entities: list[TuyaVacuumEntity] = []
         for device_id in device_ids:
-            device = hass_data.manager.device_map[device_id]
-            if device.category == "sd":
-                entities.append(TuyaVacuumEntity(device, hass_data.manager))
+            device = manager.device_map[device_id]
+            if device.category == DeviceCategory.SD:
+                entities.append(TuyaVacuumEntity(device, manager))
         async_add_entities(entities)
 
-    async_discover_device([*hass_data.manager.device_map])
+    async_discover_device([*manager.device_map])
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, TUYA_DISCOVERY_NEW, async_discover_device)

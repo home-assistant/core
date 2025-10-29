@@ -31,7 +31,7 @@
     'platform': 'open_router',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <AITaskEntityFeature: 1>,
+    'supported_features': <AITaskEntityFeature: 3>,
     'translation_key': None,
     'unique_id': 'ABCDEG',
     'unit_of_measurement': None,
@@ -41,7 +41,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Gemini 1.5 Pro',
-      'supported_features': <AITaskEntityFeature: 1>,
+      'supported_features': <AITaskEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'ai_task.gemini_1_5_pro',

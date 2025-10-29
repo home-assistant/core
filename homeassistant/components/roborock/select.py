@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from roborock.code_mappings import RoborockDockDustCollectionModeCode
+from roborock.data import RoborockDockDustCollectionModeCode
 from roborock.roborock_message import RoborockDataProtocol
 from roborock.roborock_typing import DeviceProp, RoborockCommand
 
@@ -151,7 +151,7 @@ class RoborockCurrentMapSelectEntity(RoborockCoordinatedEntityV1, SelectEntity):
             if map_.name == option:
                 await self._send_command(
                     RoborockCommand.LOAD_MULTI_MAP,
-                    self.api,
+                    self.cloud_api,
                     [map_id],
                 )
                 # Update the current map id manually so that nothing gets broken
