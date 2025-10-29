@@ -5,7 +5,11 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from airthings_ble import AirthingsBluetoothDeviceData, AirthingsDevice
+from airthings_ble import (
+    AirthingsBluetoothDeviceData,
+    AirthingsConnectivityMode,
+    AirthingsDevice,
+)
 from bleak.backends.device import BLEDevice
 from bleak_retry_connector import close_stale_connections_by_address
 
@@ -13,6 +17,7 @@ from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
@@ -65,4 +70,31 @@ class AirthingsBLEDataUpdateCoordinator(DataUpdateCoordinator[AirthingsDevice]):
         except Exception as err:
             raise UpdateFailed(f"Unable to fetch data: {err}") from err
 
+        try:
+            if connectivity_mode := data.sensors.get("connectivity_mode"):
+                issue_id = f"smartlink_detected_{data.address}"
+
+                # Find sensors with connectivity mode set to smartlink (hub)
+                # or not configured
+                if connectivity_mode in [
+                    AirthingsConnectivityMode.SMARTLINK.value,
+                    AirthingsConnectivityMode.NOT_CONFIGURED.value,
+                ]:
+                    ir.async_create_issue(
+                        hass=self.hass,
+                        domain=DOMAIN,
+                        issue_id=issue_id,
+                        is_fixable=False,
+                        severity=ir.IssueSeverity.WARNING,
+                        translation_key="smartlink_detected",
+                        translation_placeholders={"device_name": data.friendly_name()},
+                    )
+                elif connectivity_mode == AirthingsConnectivityMode.BLE.value:
+                    ir.async_delete_issue(
+                        hass=self.hass,
+                        domain=DOMAIN,
+                        issue_id=f"smartlink_detected_{data.address}",
+                    )
+        except Exception:
+            _LOGGER.exception("Error checking connectivity mode for issues")
         return data
