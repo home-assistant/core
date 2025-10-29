@@ -2,6 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "no_devices_found": "There are no devices paired with this Nintendo account, go to [Nintendo Support]({more_info_url}) for further assistance.",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
@@ -67,6 +68,9 @@
     },
     "device_not_found": {
       "message": "Device not found."
+    },
+    "no_devices_found": {
+      "message": "No Nintendo devices found for this account."
     }
   },
   "services": {
