@@ -282,9 +282,7 @@ DISCOVERY_SCHEMAS = [
             clusters.Thermostat.Attributes.OccupiedSetbackMin,
             clusters.Thermostat.Attributes.OccupiedSetbackMax,
         ),
-        featuremap_contains=(
-            clusters.Thermostat.Bitmaps.Feature.kSetback,
-        ),
+        featuremap_contains=(clusters.Thermostat.Bitmaps.Feature.kSetback),
     ),
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
