@@ -120,3 +120,42 @@ async def test_set_compressor_protection_min_temp(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
         mock_set_compressor_min_temp.assert_called_once_with(1, 32)
+
+
+AUX_MAX_OUTDOOR_TEMP_ID = "number.ecobee2_auxiliary_maximum_outdoor_temperature"
+
+
+async def test_auxiliary_max_outdoor_temp_attributes(hass: HomeAssistant) -> None:
+    """Test the aux max outdoor temp value is correct.
+
+    Ecobee runs in Fahrenheit; the test rig runs in Celsius. Conversions are necessary.
+    """
+    await setup_platform(hass, NUMBER_DOMAIN)
+
+    state = hass.states.get(AUX_MAX_OUTDOOR_TEMP_ID)
+    assert state.state == "5"
+    assert (
+        state.attributes.get("friendly_name")
+        == "ecobee2 Auxiliary maximum outdoor temperature"
+    )
+
+
+async def test_set_compressor_protection_min_temp(hass: HomeAssistant) -> None:
+    """Test the number can set aux max outdoor temp.
+
+    Ecobee runs in Fahrenheit; the test rig runs in Celsius. Conversions are necessary
+    """
+    target_value = 0
+    with patch(
+        "homeassistant.components.ecobee.Ecobee.set_aux_maxtemp_threshold"
+    ) as mock_set_aux_max_temp_threshold:
+        await setup_platform(hass, NUMBER_DOMAIN)
+
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {ATTR_ENTITY_ID: AUX_MAX_OUTDOOR_TEMP_ID, ATTR_VALUE: target_value},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        mock_set_aux_max_temp_threshold.assert_called_once_with(1, 32)
