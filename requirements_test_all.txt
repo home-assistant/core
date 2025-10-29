@@ -35,7 +35,6 @@ PSNAWP==3.0.0
 # homeassistant.components.qrcode
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
-# homeassistant.components.tensorflow
 Pillow==12.0.0
 
 # homeassistant.components.plex
@@ -1372,7 +1371,6 @@ numato-gpio==0.13.0
 # homeassistant.components.compensation
 # homeassistant.components.iqvia
 # homeassistant.components.stream
-# homeassistant.components.tensorflow
 # homeassistant.components.trend
 numpy==2.3.2
 
@@ -1621,9 +1619,6 @@ pybravia==0.3.4
 
 # homeassistant.components.cloudflare
 pycfdns==3.0.0
-
-# homeassistant.components.tensorflow
-# pycocotools==2.0.6
 
 # homeassistant.components.comfoconnect
 pycomfoconnect==0.5.1
@@ -2456,9 +2451,6 @@ temescal==0.5
 # homeassistant.components.temper
 temperusb==1.6.1
 
-# homeassistant.components.tensorflow
-# tensorflow==2.5.0
-
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
@@ -2475,9 +2467,6 @@ teslemetry-stream==0.7.10
 
 # homeassistant.components.tessie
 tessie-api==0.1.1
-
-# homeassistant.components.tensorflow
-# tf-models-official==2.5.0
 
 # homeassistant.components.thermobeacon
 thermobeacon-ble==0.10.0

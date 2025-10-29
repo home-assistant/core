@@ -30,13 +30,10 @@ EXCLUDED_REQUIREMENTS_ALL = {
     "evdev",
     "face-recognition",
     "pybluez",
-    "pycocotools",
     "pycups",
     "python-gammu",
     "python-lirc",
     "pyuserinput",
-    "tensorflow",
-    "tf-models-official",
 }
 
 # Requirements excluded by EXCLUDED_REQUIREMENTS_ALL which should be included when

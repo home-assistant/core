@@ -6747,12 +6747,6 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
-    "tensorflow": {
-      "name": "TensorFlow",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
-    },
     "tesla": {
       "name": "Tesla",
       "integrations": {
