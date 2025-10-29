@@ -44,6 +44,17 @@
         }
       }
     },
+    "image": {
+      "avatar": {
+        "name": "Avatar"
+      },
+      "gamerpic": {
+        "name": "Gamerpic"
+      },
+      "now_playing": {
+        "name": "[%key:component::xbox::entity::sensor::now_playing::name%]"
+      }
+    },
     "sensor": {
       "follower": {
         "name": "Follower",
