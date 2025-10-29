@@ -135,10 +135,7 @@
             "state": {
               "schedule": "mdi:calendar-clock",
               "manual": "mdi:hand-back-right",
-              "off": "mdi:hvac-off",
-              "economic": "mdi:leaf",
-              "comfort": "mdi:sofa-outline",
-              "fast_heating": "mdi:thermometer-chevron-up"
+              "off": "mdi:hvac-off"
             }
           }
         }
