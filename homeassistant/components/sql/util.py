@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import date
+from decimal import Decimal
 import logging
+from typing import Any
 
 import sqlalchemy
 from sqlalchemy import lambda_stmt
@@ -210,7 +213,7 @@ def _async_get_or_init_domain_data(hass: HomeAssistant) -> SQLData:
 async def _async_validate_and_get_session_maker_for_db_url(
     hass: HomeAssistant, db_url: str
 ) -> async_scoped_session[AsyncSession] | scoped_session[Session] | None:
-    """Validate the db_url and return a async session maker."""
+    """Validate the db_url and return a session maker."""
     try:
         if "+aiomysql" in db_url or "+aiosqlite" in db_url or "+asyncpg" in db_url:
             maker = async_scoped_session(
@@ -254,3 +257,16 @@ def generate_lambda_stmt(query: str) -> StatementLambdaElement:
     """Generate the lambda statement."""
     text = sqlalchemy.text(query)
     return lambda_stmt(lambda: text, lambda_cache=_SQL_LAMBDA_CACHE)
+
+
+def ensure_serializable(value: Any) -> Any:
+    """Ensure value is serializable."""
+    match value:
+        case Decimal():
+            return float(value)
+        case date():
+            return value.isoformat()
+        case bytes() | bytearray():
+            return f"0x{value.hex()}"
+        case _:
+            return value

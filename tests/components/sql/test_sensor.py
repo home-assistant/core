@@ -305,7 +305,7 @@ async def test_invalid_url_on_update(
 async def test_query_from_yaml(
     recorder_mock: Recorder, hass: HomeAssistant, async_driver: bool
 ) -> None:
-    """Test the SQL sensor from yaml config using async driver."""
+    """Test the SQL sensor from yaml config."""
 
     config = YAML_CONFIG
 
