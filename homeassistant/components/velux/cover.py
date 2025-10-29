@@ -32,13 +32,13 @@ PARALLEL_UPDATES = 1
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config: VeluxConfigEntry,
+    config_entry: VeluxConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up cover(s) for Velux platform."""
-    pyvlx = config.runtime_data
+    pyvlx = config_entry.runtime_data.pyvlx
     async_add_entities(
-        VeluxCover(node, config.entry_id)
+        VeluxCover(node, config_entry)
         for node in pyvlx.nodes
         if isinstance(node, OpeningDevice)
     )
@@ -53,9 +53,9 @@ class VeluxCover(VeluxEntity, CoverEntity):
     # Do not name the "main" feature of the device (position control)
     _attr_name = None
 
-    def __init__(self, node: OpeningDevice, config_entry_id: str) -> None:
+    def __init__(self, node: OpeningDevice, config_entry: VeluxConfigEntry) -> None:
         """Initialize VeluxCover."""
-        super().__init__(node, config_entry_id)
+        super().__init__(node, config_entry)
         # Window is the default device class for covers
         self._attr_device_class = CoverDeviceClass.WINDOW
         if isinstance(node, Awning):

@@ -95,3 +95,11 @@ async def test_rain_sensor_device_association(
     # Verify device has correct identifiers
     assert ("velux", mock_window.serial_number) in device_entry.identifiers
     assert device_entry.name == mock_window.name
+
+    # Verify via_device is gateway
+    assert device_entry.via_device_id is not None
+    via_device_entry = device_registry.async_get(device_entry.via_device_id)
+    assert via_device_entry is not None
+    assert via_device_entry.identifiers == {
+        mock_config_entry.runtime_data.gateway_device_id
+    }
