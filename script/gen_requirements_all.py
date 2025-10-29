@@ -31,7 +31,6 @@ EXCLUDED_REQUIREMENTS_ALL = {
     "face-recognition",
     "pybluez",
     "pycups",
-    "python-gammu",
     "python-lirc",
     "pyuserinput",
 }
@@ -41,7 +40,6 @@ EXCLUDED_REQUIREMENTS_ALL = {
 INCLUDED_REQUIREMENTS_WHEELS = {
     "evdev",
     "pycups",
-    "python-gammu",
     "pyuserinput",
 }
 
@@ -55,7 +53,7 @@ INCLUDED_REQUIREMENTS_WHEELS = {
 OVERRIDDEN_REQUIREMENTS_ACTIONS = {
     "pytest": {
         "exclude": set(),
-        "include": {"python-gammu"},
+        "include": set(),
         "markers": {},
     },
     "wheels_aarch64": {

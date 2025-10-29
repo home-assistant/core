@@ -502,7 +502,6 @@ jobs:
             libavfilter-dev \
             libavformat-dev \
             libavutil-dev \
-            libgammu-dev \
             libswresample-dev \
             libswscale-dev \
             libudev-dev
@@ -801,8 +800,7 @@ jobs:
             -o Dir::State::Lists=${{ env.APT_LIST_CACHE_DIR }} \
             bluez \
             ffmpeg \
-            libturbojpeg \
-            libgammu-dev
+            libturbojpeg
       - *checkout
       - *setup-python-default
       - *cache-restore-python-default
@@ -853,7 +851,6 @@ jobs:
             bluez \
             ffmpeg \
             libturbojpeg \
-            libgammu-dev \
             libxml2-utils
       - *checkout
       - *setup-python-matrix
@@ -1233,7 +1230,6 @@ jobs:
             bluez \
             ffmpeg \
             libturbojpeg \
-            libgammu-dev \
             libxml2-utils
       - *checkout
       - *setup-python-matrix

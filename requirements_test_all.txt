@@ -2062,9 +2062,6 @@ python-ecobee-api==0.2.20
 # homeassistant.components.fully_kiosk
 python-fullykiosk==0.0.14
 
-# homeassistant.components.sms
-# python-gammu==3.2.4
-
 # homeassistant.components.google_drive
 python-google-drive-api==0.1.0
 
