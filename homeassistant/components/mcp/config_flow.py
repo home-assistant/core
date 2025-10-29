@@ -112,16 +112,19 @@ async def async_discover_oauth_config(
     )
 
 
-async def async_autodiscover_transport(mcp_server_url: str) -> str:
+async def async_autodiscover_transport(mcp_server_url: str) -> tuple[str, str]:
     """Autodiscover the transport protocol for the MCP server.
 
     According to the MCP specification for backwards compatibility:
     1. Attempt to POST an InitializeRequest to the server URL with proper Accept header
     2. If it succeeds: assume Streamable HTTP transport
     3. If it fails with HTTP 4xx: try GET request expecting SSE stream, indicating old HTTP+SSE transport
+
+    Returns:
+        A tuple of (transport_type, final_url) where final_url is the URL after any redirects.
     """
     try:
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(follow_redirects=True) as client:
             # Try Streamable HTTP transport first
             # Send a test POST request with proper Accept header
             response = await client.post(
@@ -146,13 +149,14 @@ async def async_autodiscover_transport(mcp_server_url: str) -> str:
                 timeout=5,
             )
             response.raise_for_status()
+            final_url = str(response.url)
             _LOGGER.debug("Transport autodiscovery: Streamable HTTP detected")
-            return TRANSPORT_STREAMABLE_HTTP
+            return TRANSPORT_STREAMABLE_HTTP, final_url
     except httpx.HTTPStatusError as error:
         if 400 <= error.response.status_code < 500:
             # Try SSE transport (old HTTP+SSE transport)
             try:
-                async with httpx.AsyncClient() as client:
+                async with httpx.AsyncClient(follow_redirects=True) as client:
                     response = await client.get(
                         mcp_server_url,
                         headers={"Accept": "text/event-stream"},
@@ -162,8 +166,9 @@ async def async_autodiscover_transport(mcp_server_url: str) -> str:
                     if response.headers.get("content-type", "").startswith(
                         "text/event-stream"
                     ):
+                        final_url = str(response.url)
                         _LOGGER.debug("Transport autodiscovery: SSE transport detected")
-                        return TRANSPORT_SSE
+                        return TRANSPORT_SSE, final_url
             except (httpx.HTTPError, httpx.TimeoutException) as sse_error:
                 _LOGGER.debug(
                     "Transport autodiscovery: SSE detection failed: %s", sse_error
@@ -172,12 +177,12 @@ async def async_autodiscover_transport(mcp_server_url: str) -> str:
         _LOGGER.debug(
             "Transport autodiscovery: Failed to detect transport, using default SSE"
         )
-        return TRANSPORT_SSE
+        return TRANSPORT_SSE, mcp_server_url
     except (httpx.HTTPError, httpx.TimeoutException) as error:
         _LOGGER.debug(
             "Transport autodiscovery: Network error, using default SSE: %s", error
         )
-        return TRANSPORT_SSE
+        return TRANSPORT_SSE, mcp_server_url
 
 
 async def validate_input(
@@ -240,8 +245,16 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         if user_input is not None:
             # Autodiscover transport protocol instead of setting default
             try:
-                transport = await async_autodiscover_transport(user_input[CONF_URL])
+                transport, final_url = await async_autodiscover_transport(
+                    user_input[CONF_URL]
+                )
                 user_input[CONF_TRANSPORT] = transport
+                # Update URL if it was redirected
+                if final_url != user_input[CONF_URL]:
+                    _LOGGER.info(
+                        "URL redirected from %s to %s", user_input[CONF_URL], final_url
+                    )
+                    user_input[CONF_URL] = final_url
                 _LOGGER.info(
                     "Autodiscovered transport: %s for URL: %s",
                     transport,

@@ -60,6 +60,16 @@ def mock_mcp_client() -> Generator[AsyncMock]:
         yield session_instance
 
 
+@pytest.fixture
+def mock_autodiscover_transport() -> Generator[AsyncMock]:
+    """Fixture to mock the transport autodiscovery."""
+    with patch(
+        "homeassistant.components.mcp.config_flow.async_autodiscover_transport",
+        return_value=("sse", MCP_SERVER_URL),
+    ) as mock_autodiscover:
+        yield mock_autodiscover
+
+
 @pytest.fixture(name="config_entry")
 def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Fixture to load the integration."""

@@ -72,7 +72,10 @@ def encode_state(hass: HomeAssistant, flow_id: str) -> str:
 
 
 async def test_form(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_mcp_client: Mock
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_mcp_client: Mock,
+    mock_autodiscover_transport: AsyncMock,
 ) -> None:
     """Test the complete configuration flow."""
     result = await hass.config_entries.flow.async_init(
