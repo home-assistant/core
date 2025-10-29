@@ -13,8 +13,12 @@ from pyportainer import (
     PortainerConnectionError,
     PortainerTimeoutError,
 )
-from pyportainer.models.docker import DockerContainer
-from pyportainer.models.docker_inspect import DockerInfo, DockerVersion
+from pyportainer.models.docker import (
+    DockerContainer,
+    ImageInformation,
+    ImageManifestDescriptor,
+)
+from pyportainer.models.docker_inspect import DockerInfo, DockerInspect, DockerVersion
 from pyportainer.models.portainer import Endpoint
 
 from homeassistant.config_entries import ConfigEntry
@@ -43,6 +47,28 @@ class PortainerCoordinatorData:
     containers: dict[str, DockerContainer]
     docker_version: DockerVersion
     docker_info: DockerInfo
+
+
+@dataclass(slots=True, kw_only=True)
+class ContainerBeaconData:
+    """Data class for Container Beacon Data."""
+
+    core: DockerContainer
+    image_info: ImageInformation
+    container_inspect: DockerInspect
+    old_digest: str
+    new_digest: str | None
+    image_update: bool = False
+
+
+@dataclass
+class PortainerBeaconData:
+    """Data class for Portainer Beacon Data."""
+
+    id: int
+    name: str | None
+    endpoint: Endpoint
+    containers: dict[str, ContainerBeaconData]
 
 
 class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorData]]):
@@ -255,6 +281,7 @@ class PortainerBeaconCoordinator(DataUpdateCoordinator):
                 translation_placeholders={"error": repr(err)},
             ) from err
 
+        mapped_endpoints: dict[int, PortainerBeaconData] = {}
         for endpoint in endpoints:
             if endpoint.status == ENDPOINT_STATUS_DOWN:
                 _LOGGER.debug(
@@ -268,20 +295,44 @@ class PortainerBeaconCoordinator(DataUpdateCoordinator):
                 containers = await self.portainer.get_containers(
                     endpoint_id=endpoint.id
                 )
-                image_info = []
+
+                container_data: dict[str, ContainerBeaconData] = {}
                 for container in containers:
                     # image_info = await self.portainer.get_image_information(
                     #     endpoint_id=endpoint.id, image_id=container.image
                     # )
+                    # @ERWIN: Silly local stub data
+                    image_info = ImageInformation(
+                        descriptor=ImageManifestDescriptor(
+                            digest=f"sha256:stub-{container.id[:8]}"
+                        )
+                    )
+                    container_inspect = await self.portainer.inspect_container(
+                        endpoint_id=endpoint.id, container_id=container.id
+                    )
 
-                    _LOGGER.debug(
-                        "Container %s (ID: %s) on Endpoint %s (ID: %d) uses image %s with info: %s",
-                        container.names[0],
-                        container.id,
-                        endpoint.name,
-                        endpoint.id,
-                        container.image,
-                        image_info,
+                    if (
+                        update_available := image_info.descriptor.digest
+                        != container_inspect.image
+                    ):
+                        # TODO: works perfect for debugging. Can be refactored later on.
+                        _LOGGER.debug(
+                            "Container %s (ID: %s) on Endpoint %s (ID: %d) has an update available",
+                            container.names[0],
+                            container.id,
+                            endpoint.name,
+                            endpoint.id,
+                        )
+
+                    container_data[container.names[0].replace("/", " ").strip()] = (
+                        ContainerBeaconData(
+                            core=container,
+                            image_info=image_info,
+                            container_inspect=container_inspect,
+                            old_digest=container_inspect.image,
+                            new_digest=image_info.descriptor.digest,
+                            image_update=update_available,
+                        )
                     )
             except PortainerConnectionError as err:
                 _LOGGER.exception("Connection error")
@@ -297,4 +348,13 @@ class PortainerBeaconCoordinator(DataUpdateCoordinator):
                     translation_key="invalid_auth",
                     translation_placeholders={"error": repr(err)},
                 ) from err
-        _LOGGER.debug("Completed Portainer Beacon Coordinator background tasks")
+            _LOGGER.debug("Completed Portainer Beacon Coordinator background tasks")
+
+            mapped_endpoints[endpoint.id] = PortainerBeaconData(
+                id=endpoint.id,
+                name=endpoint.name,
+                endpoint=endpoint,
+                containers=container_data,
+            )
+
+        return mapped_endpoints

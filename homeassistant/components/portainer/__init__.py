@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from pyportainer import Portainer
 
 from homeassistant.config_entries import ConfigEntry
@@ -30,6 +32,14 @@ _PLATFORMS: list[Platform] = [
 type PortainerConfigEntry = ConfigEntry[PortainerCoordinator]
 
 
+@dataclass(frozen=True, kw_only=True)
+class PortainerRuntimeData:
+    """Class to hold Portainer runtime data."""
+
+    coordinator: PortainerCoordinator
+    beacon: PortainerBeaconCoordinator
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) -> bool:
     """Set up Portainer from a config entry."""
 
@@ -47,7 +57,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) ->
     beacon_coordinator = PortainerBeaconCoordinator(hass, entry, client)
     await beacon_coordinator.async_config_entry_first_refresh()
 
-    entry.runtime_data = (coordinator, beacon_coordinator)
+    entry.runtime_data = PortainerRuntimeData(
+        coordinator=coordinator, beacon=beacon_coordinator
+    )
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
     return True
