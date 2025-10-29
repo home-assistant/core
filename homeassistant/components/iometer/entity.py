@@ -1,5 +1,6 @@
 """Base class for IOmeter entities."""
 
+from homeassistant.const import CONF_HOST
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -16,7 +17,6 @@ class IOmeterEntity(CoordinatorEntity[IOMeterCoordinator]):
         """Initialize IOmeter entity."""
         super().__init__(coordinator)
         status = coordinator.data.status
-        host = coordinator.config_entry.data["host"]
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, status.device.id)},
             manufacturer="IOmeter GmbH",
