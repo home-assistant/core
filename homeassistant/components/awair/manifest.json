@@ -9,8 +9,8 @@
   "requirements": ["python-awair==0.2.4"],
   "zeroconf": [
     {
-      "type": "_http._tcp.local.",
-      "name": "awair*"
+      "name": "awair*",
+      "type": "_http._tcp.local."
     }
   ]
 }
