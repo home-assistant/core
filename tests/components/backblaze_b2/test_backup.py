@@ -11,10 +11,8 @@ from unittest.mock import Mock, patch
 from b2sdk._internal.raw_simulator import BucketSimulator
 from b2sdk.v2.exception import B2Error
 import pytest
-import requests
 
 from homeassistant.components.backblaze_b2.backup import (
-    MAX_CONCURRENT_DOWNLOADS,
     _parse_metadata,
     async_register_backup_agents_listener,
 )
@@ -422,7 +420,7 @@ async def test_upload_with_cleanup_and_logging(
             return_value=TEST_BACKUP,
         ),
         patch("pathlib.Path.open") as mocked_open,
-        caplog.at_level(logging.INFO),
+        caplog.at_level(logging.DEBUG),
     ):
         mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
         resp = await client.post(
@@ -458,7 +456,7 @@ async def test_upload_with_cleanup_and_logging(
         patch.object(
             BucketSimulator, "get_file_info_by_name", return_value=mock_file_info
         ),
-        caplog.at_level(logging.INFO),
+        caplog.at_level(logging.DEBUG),
     ):
         mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
         resp = await client.post(
@@ -473,12 +471,12 @@ async def test_upload_with_cleanup_and_logging(
     )
 
 
-async def test_upload_error_logging(
+async def test_upload_with_cleanup_failure(
     hass_client: ClientSessionGenerator,
     mock_config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test upload error logging."""
+    """Test upload with cleanup failure when metadata upload fails."""
     client = await hass_client()
 
     with (
@@ -492,37 +490,16 @@ async def test_upload_error_logging(
         ),
         patch("pathlib.Path.open") as mocked_open,
         patch.object(
-            BucketSimulator, "upload_unbound_stream", side_effect=B2Error("B2 error")
+            BucketSimulator,
+            "upload_bytes",
+            side_effect=B2Error("Metadata upload failed"),
         ),
-        caplog.at_level(logging.ERROR),
-    ):
-        mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
-        resp = await client.post(
-            f"/api/backup/upload?agent_id={DOMAIN}.{mock_config_entry.entry_id}",
-            data={"file": StringIO("test")},
-        )
-
-    assert resp.status == 201
-    assert "B2 connection error during upload" in caplog.text
-
-    caplog.clear()
-
-    with (
-        patch(
-            "homeassistant.components.backup.manager.BackupManager.async_get_backup",
-            return_value=TEST_BACKUP,
-        ),
-        patch(
-            "homeassistant.components.backup.manager.read_backup",
-            return_value=TEST_BACKUP,
-        ),
-        patch("pathlib.Path.open") as mocked_open,
         patch.object(
             BucketSimulator,
-            "upload_unbound_stream",
-            side_effect=RuntimeError("Generic error"),
+            "get_file_info_by_name",
+            side_effect=B2Error("Cleanup failed"),
         ),
-        caplog.at_level(logging.ERROR),
+        caplog.at_level(logging.DEBUG),
     ):
         mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
         resp = await client.post(
@@ -531,7 +508,10 @@ async def test_upload_error_logging(
         )
 
     assert resp.status == 201
-    assert "An error occurred during upload" in caplog.text
+    assert any(
+        "Failed to clean up partially uploaded main backup file" in msg
+        for msg in caplog.messages
+    )
 
 
 async def test_cache_behavior(
@@ -829,21 +809,12 @@ async def test_delete_clears_backup_cache(
     mock_metadata.delete.assert_called_once()
 
 
-@pytest.mark.parametrize(
-    ("semaphore_count", "expected_max_concurrent"),
-    [
-        (MAX_CONCURRENT_DOWNLOADS, MAX_CONCURRENT_DOWNLOADS),
-        (100, 15),
-    ],
-)
-async def test_semaphore_limits_concurrent_metadata_downloads(
+async def test_metadata_downloads_are_sequential(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     mock_config_entry: MockConfigEntry,
-    semaphore_count: int,
-    expected_max_concurrent: int,
 ) -> None:
-    """Test semaphore limits concurrent metadata downloads."""
+    """Test that metadata downloads are processed sequentially to avoid exhausting executor pool."""
     current_concurrent = 0
     max_concurrent = 0
     lock = threading.Lock()
@@ -881,13 +852,7 @@ async def test_semaphore_limits_concurrent_metadata_downloads(
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    with (
-        patch(
-            "homeassistant.components.backblaze_b2.backup.MAX_CONCURRENT_DOWNLOADS",
-            semaphore_count,
-        ),
-        patch.object(BucketSimulator, "ls", mock_ls),
-    ):
+    with patch.object(BucketSimulator, "ls", mock_ls):
         await setup_integration(hass, mock_config_entry)
         await hass.async_block_till_done()
 
@@ -896,23 +861,5 @@ async def test_semaphore_limits_concurrent_metadata_downloads(
         response = await client.receive_json()
 
     assert response["success"]
-    assert max_concurrent <= expected_max_concurrent
-
-
-def test_requests_pool_maxsize_assumption() -> None:
-    """Verify requests library pool size assumption used for MAX_CONCURRENT_DOWNLOADS.
-
-    The Backblaze B2 backup agent limits concurrent metadata downloads to avoid
-    exhausting the requests library's HTTPAdapter connection pool. This test
-    verifies our assumption about the default pool size hasn't changed.
-
-    If this test fails after a library upgrade:
-    1. Check requests release notes for pool size changes
-    2. Update MAX_CONCURRENT_DOWNLOADS in backup.py accordingly
-    3. Update expected_pool_maxsize below
-    """
-    adapter = requests.adapters.HTTPAdapter()
-    expected_pool_maxsize = 10  # Default as of requests 2.31.0
-
-    assert adapter._pool_maxsize == expected_pool_maxsize  # type: ignore[attr-defined]
-    assert expected_pool_maxsize // 2 >= MAX_CONCURRENT_DOWNLOADS
+    # Verify downloads were sequential (max 1 at a time)
+    assert max_concurrent == 1

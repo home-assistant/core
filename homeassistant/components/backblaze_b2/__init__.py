@@ -53,22 +53,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: BackblazeConfigEntry) ->
     try:
         bucket = await hass.async_add_executor_job(_authorize_and_get_bucket_sync)
     except exception.Unauthorized as err:
-        _LOGGER.error(
-            "Backblaze B2 authentication failed for key ID '%s': %s",
-            entry.data[CONF_KEY_ID],
-            err,
-        )
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="invalid_credentials",
         ) from err
     except exception.RestrictedBucket as err:
-        _LOGGER.error(
-            "Access to Backblaze B2 bucket '%s' is restricted for key ID '%s': %s",
-            entry.data[CONF_BUCKET],
-            entry.data[CONF_KEY_ID],
-            err,
-        )
         create_bucket_access_restricted_issue(hass, entry, err.bucket_name)
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
@@ -78,41 +67,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: BackblazeConfigEntry) ->
             },
         ) from err
     except exception.NonExistentBucket as err:
-        _LOGGER.error(
-            "Backblaze B2 bucket '%s' does not exist for key ID '%s': %s",
-            entry.data[CONF_BUCKET],
-            entry.data[CONF_KEY_ID],
-            err,
-        )
         create_bucket_not_found_issue(hass, entry, entry.data[CONF_BUCKET])
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="invalid_bucket_name",
         ) from err
     except exception.ConnectionReset as err:
-        _LOGGER.error("Failed to connect to Backblaze B2. Connection reset: %s", err)
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="cannot_connect",
         ) from err
     except exception.MissingAccountData as err:
-        _LOGGER.error(
-            "Missing account data during Backblaze B2 authorization for key ID '%s': %s",
-            entry.data[CONF_KEY_ID],
-            err,
-        )
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="invalid_auth",
-        ) from err
-    except Exception as err:
-        _LOGGER.exception(
-            "An unexpected error occurred during Backblaze B2 setup for key ID '%s'",
-            entry.data[CONF_KEY_ID],
-        )
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="unknown_error",
         ) from err
 
     entry.runtime_data = bucket

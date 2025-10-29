@@ -36,11 +36,6 @@ _LOGGER = logging.getLogger(__name__)
 # Cache TTL for backup list (in seconds)
 CACHE_TTL = 300
 
-# Maximum concurrent metadata downloads
-# This is set to half of the requests library's default HTTPAdapter pool_maxsize (10)
-# to avoid exhausting the connection pool when listing many backups
-MAX_CONCURRENT_DOWNLOADS = 5
-
 
 def suggested_filenames(backup: AgentBackup) -> tuple[str, str]:
     """Return the suggested filenames for the backup and metadata files."""
@@ -158,8 +153,6 @@ class BackblazeBackupAgent(BackupAgent):
 
         self._all_files_cache_lock = asyncio.Lock()
         self._backup_list_cache_lock = asyncio.Lock()
-        # Limit concurrent metadata downloads to avoid exhausting connection pool
-        self._download_semaphore = asyncio.Semaphore(MAX_CONCURRENT_DOWNLOADS)
 
     def _is_cache_valid(self, expiration_time: float) -> bool:
         """Check if cache is still valid based on expiration time."""
@@ -177,14 +170,15 @@ class BackblazeBackupAgent(BackupAgent):
                 self._bucket.get_file_info_by_name, filename
             )
             await self._hass.async_add_executor_job(uploaded_main_file_info.delete)
-        except Exception:
-            _LOGGER.exception(
+        except B2Error:
+            _LOGGER.debug(
                 "Failed to clean up partially uploaded main backup file %s. "
                 "Manual intervention may be required to delete it from Backblaze B2",
                 filename,
+                exc_info=True,
             )
         else:
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Successfully deleted partially uploaded main backup file %s", filename
             )
 
@@ -255,21 +249,21 @@ class BackblazeBackupAgent(BackupAgent):
         upload_successful = False
         try:
             await self._upload_backup_file(prefixed_tar_filename, open_stream, {})
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Main backup file upload finished for %s", prefixed_tar_filename
             )
 
-            _LOGGER.info("Uploading metadata file: %s", prefixed_metadata_filename)
+            _LOGGER.debug("Uploading metadata file: %s", prefixed_metadata_filename)
             await self._upload_metadata_file(
                 metadata_content_bytes, prefixed_metadata_filename
             )
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Metadata file upload finished for %s", prefixed_metadata_filename
             )
             upload_successful = True
         finally:
             if upload_successful:
-                _LOGGER.info("Backup upload complete: %s", prefixed_tar_filename)
+                _LOGGER.debug("Backup upload complete: %s", prefixed_tar_filename)
                 self._invalidate_caches(
                     backup.backup_id, prefixed_tar_filename, prefixed_metadata_filename
                 )
@@ -332,7 +326,7 @@ class BackblazeBackupAgent(BackupAgent):
         stream = await open_stream()
         reader = AsyncIteratorReader(self._hass.loop, stream)
 
-        _LOGGER.info("Uploading backup file %s with streaming", filename)
+        _LOGGER.debug("Uploading backup file %s with streaming", filename)
         try:
             content_type, _ = mimetypes.guess_type(filename)
             file_version = await self._hass.async_add_executor_job(
@@ -342,18 +336,10 @@ class BackblazeBackupAgent(BackupAgent):
                 content_type or "application/x-tar",
                 file_info,
             )
-        except B2Error:
-            _LOGGER.exception("B2 connection error during upload for %s", filename)
-            raise
-        except Exception:
-            _LOGGER.exception("An error occurred during upload for %s:", filename)
-            raise
-        else:
-            _LOGGER.info(
-                "Successfully uploaded %s (ID: %s)", filename, file_version.id_
-            )
         finally:
             reader.close()
+
+        _LOGGER.debug("Successfully uploaded %s (ID: %s)", filename, file_version.id_)
 
     @handle_b2_errors
     async def async_delete_backup(self, backup_id: str, **kwargs: Any) -> None:
@@ -374,12 +360,7 @@ class BackblazeBackupAgent(BackupAgent):
         )
 
         await self._hass.async_add_executor_job(file.delete)
-
-        try:
-            await self._hass.async_add_executor_job(metadata_file.delete)
-        except Exception as e:
-            _LOGGER.error("Unexpected error from executor for metadata: %s", e)
-            raise BackupAgentError("Unexpected error in metadata deletion") from e
+        await self._hass.async_add_executor_job(metadata_file.delete)
 
         self._invalidate_caches(
             backup_id,
@@ -409,27 +390,18 @@ class BackblazeBackupAgent(BackupAgent):
                 list(all_files_in_prefix.keys()),
             )
 
-            async def process_with_semaphore(
-                file_name: str, file_version: FileVersion
-            ) -> AgentBackup | None:
-                """Process metadata file with semaphore to limit concurrency."""
-                async with self._download_semaphore:
-                    return await self._hass.async_add_executor_job(
+            # Process metadata files sequentially to avoid exhausting executor pool
+            backups = {}
+            for file_name, file_version in all_files_in_prefix.items():
+                if file_name.endswith(METADATA_FILE_SUFFIX):
+                    backup = await self._hass.async_add_executor_job(
                         self._process_metadata_file_sync,
                         file_name,
                         file_version,
                         all_files_in_prefix,
                     )
-
-            tasks = [
-                process_with_semaphore(file_name, file_version)
-                for file_name, file_version in all_files_in_prefix.items()
-                if file_name.endswith(METADATA_FILE_SUFFIX)
-            ]
-
-            results = await asyncio.gather(*tasks)
-
-            backups = {backup.backup_id: backup for backup in results if backup}
+                    if backup:
+                        backups[backup.backup_id] = backup
             self._backup_list_cache = backups
             self._backup_list_cache_expiration = time() + CACHE_TTL
 
@@ -474,29 +446,21 @@ class BackblazeBackupAgent(BackupAgent):
         """Find the main backup file and its associated metadata file version by backup ID."""
         all_files_in_prefix = await self._get_all_files_in_prefix()
 
-        async def process_with_semaphore(
-            file_name: str, file_version: FileVersion
-        ) -> tuple[FileVersion | None, FileVersion | None]:
-            """Process metadata file with semaphore to limit concurrency."""
-            async with self._download_semaphore:
-                return await self._hass.async_add_executor_job(
+        # Process metadata files sequentially to avoid exhausting executor pool
+        for file_name, file_version in all_files_in_prefix.items():
+            if file_name.endswith(METADATA_FILE_SUFFIX):
+                (
+                    result_backup_file,
+                    result_metadata_file_version,
+                ) = await self._hass.async_add_executor_job(
                     self._process_metadata_file_for_id_sync,
                     file_name,
                     file_version,
                     backup_id,
                     all_files_in_prefix,
                 )
-
-        tasks = [
-            process_with_semaphore(file_name, file_version)
-            for file_name, file_version in all_files_in_prefix.items()
-            if file_name.endswith(METADATA_FILE_SUFFIX)
-        ]
-
-        results = await asyncio.gather(*tasks)
-        for result_backup_file, result_metadata_file_version in results:
-            if result_backup_file and result_metadata_file_version:
-                return result_backup_file, result_metadata_file_version
+                if result_backup_file and result_metadata_file_version:
+                    return result_backup_file, result_metadata_file_version
 
         _LOGGER.debug("Backup %s not found", backup_id)
         return None, None
