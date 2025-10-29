@@ -134,7 +134,6 @@ SENSORS_MAPPING_TEMPLATE: dict[str, SensorEntityDescription] = {
         translation_key="connectivity_mode",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        entity_registry_visible_default=False,
     ),
 }
 
