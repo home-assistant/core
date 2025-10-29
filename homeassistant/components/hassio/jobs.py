@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass, replace
 from functools import partial
+import logging
 from typing import Any
 from uuid import UUID
 
@@ -29,6 +30,8 @@ from .const import (
 )
 from .handler import get_supervisor_client
 
+_LOGGER = logging.getLogger(__name__)
+
 
 @dataclass(slots=True, frozen=True)
 class JobSubscription:
@@ -45,7 +48,7 @@ class JobSubscription:
     event_callback: Callable[[Job], Any]
     uuid: str | None = None
     name: str | None = None
-    reference: str | None | type[Any] = Any
+    reference: str | None = None
 
     def __post_init__(self) -> None:
         """Validate at least one filter option is present."""
@@ -58,7 +61,7 @@ class JobSubscription:
         """Return true if job matches subscription filters."""
         if self.uuid:
             return job.uuid == self.uuid
-        return job.name == self.name and self.reference in (Any, job.reference)
+        return job.name == self.name and self.reference in (None, job.reference)
 
 
 class SupervisorJobs:
@@ -70,6 +73,7 @@ class SupervisorJobs:
         self._supervisor_client = get_supervisor_client(hass)
         self._jobs: dict[UUID, Job] = {}
         self._subscriptions: set[JobSubscription] = set()
+        self._dispatcher_disconnect: Callable[[], None] | None = None
 
     @property
     def current_jobs(self) -> list[Job]:
@@ -79,20 +83,24 @@ class SupervisorJobs:
     def subscribe(self, subscription: JobSubscription) -> CALLBACK_TYPE:
         """Subscribe to updates for job. Return callback is used to unsubscribe.
 
-        If any jobs match the subscription at the time this is called, creates
-        tasks to run their callback on it.
+        If any jobs match the subscription at the time this is called, runs the
+        callback on them.
         """
         self._subscriptions.add(subscription)
 
-        # As these are callbacks they are safe to run in the event loop
-        # We wrap these in an asyncio task so subscribing does not wait on the logic
-        if matches := [job for job in self._jobs.values() if subscription.matches(job)]:
-
-            async def event_callback_async(job: Job) -> Any:
-                return subscription.event_callback(job)
-
-            for match in matches:
-                self._hass.async_create_task(event_callback_async(match))
+        # Run the callback on each existing match
+        # We catch all errors to prevent an error in one from stopping the others
+        for match in [job for job in self._jobs.values() if subscription.matches(job)]:
+            try:
+                return subscription.event_callback(match)
+            except Exception as err:  # noqa: BLE001
+                _LOGGER.error(
+                    "Error encountered processing Supervisor Job (%s %s %s) - %s",
+                    match.name,
+                    match.reference,
+                    match.uuid,
+                    err,
+                )
 
         return partial(self._subscriptions.discard, subscription)
 
@@ -131,7 +139,7 @@ class SupervisorJobs:
 
         # If this is the first update register to receive Supervisor events
         if first_update:
-            async_dispatcher_connect(
+            self._dispatcher_disconnect = async_dispatcher_connect(
                 self._hass, EVENT_SUPERVISOR_EVENT, self._supervisor_events_to_jobs
             )
 
@@ -158,3 +166,9 @@ class SupervisorJobs:
         for sub in self._subscriptions:
             if sub.matches(job):
                 sub.event_callback(job)
+
+    @callback
+    def unload(self) -> None:
+        """Unregister with dispatcher on config entry unload."""
+        if self._dispatcher_disconnect:
+            self._dispatcher_disconnect()
