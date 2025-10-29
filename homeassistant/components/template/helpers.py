@@ -1,6 +1,7 @@
 """Helpers for template integration."""
 
 from collections.abc import Callable
+from enum import Enum
 import itertools
 import logging
 from typing import Any
@@ -182,20 +183,42 @@ def async_create_template_tracking_entities(
     async_add_entities(entities)
 
 
-def format_migration_config(config: ConfigType) -> ConfigType:
-    """Replace templates with strings from config."""
-    formatted_config = {}
+def _format_template(value: Any) -> Any:
+    if isinstance(value, template.Template):
+        return value.template
 
-    def format_template(value: Any) -> Any:
-        if isinstance(value, template.Template):
-            return value.template
+    if isinstance(value, Enum):
+        return value.name
+
+    if isinstance(value, (int, float, str, bool)):
         return value
 
+    return str(value)
+
+
+def format_migration_config(
+    config: ConfigType | list[ConfigType], depth: int = 0
+) -> ConfigType | list[ConfigType]:
+    """Recursive method to format templates as strings from ConfigType."""
+    types = (dict, list)
+    if depth > 9:
+        raise RecursionError
+
+    if isinstance(config, list):
+        items = []
+        for item in config:
+            if isinstance(item, types):
+                items.append(format_migration_config(item, depth + 1))
+            else:
+                items.append(_format_template(item))
+        return items  # type: ignore[return-value]
+
+    formatted_config = {}
     for field, value in config.items():
-        if field == CONF_ATTRIBUTES and isinstance(value, dict):
-            formatted_config[field] = {k: format_template(v) for k, v in value.items()}
+        if isinstance(value, types):
+            formatted_config[field] = format_migration_config(value, depth + 1)
         else:
-            formatted_config[field] = format_template(value)
+            formatted_config[field] = _format_template(value)
 
     return formatted_config
 
@@ -206,17 +229,37 @@ def create_legacy_template_issue(
     """Create a repair for legacy template entities."""
     issue_id = hex(hash(frozenset(config)))
 
-    yaml_config = yaml_util.dump(
-        {DOMAIN: [{domain: [format_migration_config(config)]}]}
-    )
+    breadcrumb = "Template Entity"
+    # Default entity id should be in most legacy configuration because
+    # it's created from the legacy slug. Vacuum and Lock do not have a
+    # slug, therefore we need to use the name or unique_id.
+    if (default_entity_id := config.get(CONF_DEFAULT_ENTITY_ID)) is not None:
+        breadcrumb = default_entity_id.split(".")[-1]
+    elif (unique_id := config.get(CONF_UNIQUE_ID)) is not None:
+        breadcrumb = f"unique_id: {unique_id}"
+    elif (name := config.get(CONF_NAME)) and isinstance(name, template.Template):
+        breadcrumb = name.template
+
+    try:
+        modified_yaml = format_migration_config(config)
+        yaml_config = yaml_util.dump({DOMAIN: [{domain: [modified_yaml]}]})
+    except RecursionError:
+        yaml_config = f"{DOMAIN}:\n  - {domain}:      - ..."
+
     ir.async_create_issue(
         hass,
         DOMAIN,
         issue_id,
+        breaks_in_ha_version="2026.6",
+        is_persistent=True,
         is_fixable=False,
         severity=IssueSeverity.WARNING,
         translation_key="deprecated_legacy_templates",
-        translation_placeholders={"domain": domain, "config": yaml_config},
+        translation_placeholders={
+            "domain": domain,
+            "breadcrumb": breadcrumb,
+            "config": yaml_config,
+        },
     )
 
 
