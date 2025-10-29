@@ -28,7 +28,6 @@ EXCLUDED_REQUIREMENTS_ALL = {
     "bluepy",
     "decora",
     "evdev",
-    "face-recognition",
     "pybluez",
     "pycocotools",
     "pycups",

@@ -945,10 +945,6 @@ evolutionhttp==0.0.18
 # homeassistant.components.faa_delays
 faadelays==2023.9.1
 
-# homeassistant.components.dlib_face_detect
-# homeassistant.components.dlib_face_identify
-# face-recognition==1.2.3
-
 # homeassistant.components.fastdotcom
 fastdotcom==0.0.6
 
