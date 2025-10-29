@@ -179,6 +179,7 @@
       "left": "Left",
       "open": "[%key:common::action::open%]",
       "right": "Right",
+      "rotary_knob": "Rotary knob",
       "turn_off": "[%key:common::action::turn_off%]",
       "turn_on": "[%key:common::action::turn_on%]"
     },
@@ -206,7 +207,10 @@
       "remote_button_quintuple_press": "\"{subtype}\" quintuple clicked",
       "remote_button_short_press": "\"{subtype}\" pressed",
       "remote_button_short_release": "\"{subtype}\" released",
-      "remote_button_triple_press": "\"{subtype}\" triple clicked"
+      "remote_button_triple_press": "\"{subtype}\" triple clicked",
+      "rotary_knob_continued_rotating": "Rotary knob continued rotating \"{subtype}\"",
+      "rotary_knob_started_rotating": "Rotary knob started rotating \"{subtype}\"",
+      "rotary_knob_stopped_rotating": "\"{subtype}\" stopped rotating"
     }
   },
   "entity": {
