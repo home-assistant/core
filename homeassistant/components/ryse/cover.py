@@ -75,7 +75,7 @@ class SmartShadeCover(CoverEntity):
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Set the shade to a specific position."""
-        position = 100 - kwargs.get("position", 0)
+        position = 100 - kwargs.get(ATTR_POSITION, 0)
         pdata = build_position_packet(position)
         await self._device.write_data(pdata)
         _LOGGER.debug("Binary packet to change position to a specific position")
