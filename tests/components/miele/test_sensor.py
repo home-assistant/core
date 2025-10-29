@@ -585,6 +585,7 @@ async def test_laundry_dry_scenario(
     check_sensor_state(hass, "sensor.tumble_dryer_elapsed_time", "20", step)
 
 
+@pytest.mark.parametrize("restore_state", ["45", STATE_UNKNOWN, STATE_UNAVAILABLE])
 @pytest.mark.parametrize("load_device_file", ["laundry.json"])
 @pytest.mark.parametrize("platforms", [(SENSOR_DOMAIN,)])
 async def test_elapsed_time_sensor_restored(
@@ -594,6 +595,7 @@ async def test_elapsed_time_sensor_restored(
     setup_platform: None,
     device_fixture: MieleDevices,
     freezer: FrozenDateTimeFactory,
+    restore_state,
 ) -> None:
     """Test that elapsed time returns the restored value when program ended."""
 
@@ -650,75 +652,6 @@ async def test_elapsed_time_sensor_restored(
 
     assert hass.states.get(entity_id).state == "unavailable"
 
-    await hass.config_entries.async_reload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # check that elapsed time is the one restored and not the value reported by API (0)
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == "12"
-
-
-@pytest.mark.parametrize("restore_state", ["45", STATE_UNKNOWN, STATE_UNAVAILABLE])
-@pytest.mark.parametrize("load_device_file", ["laundry.json"])
-@pytest.mark.parametrize("platforms", [(SENSOR_DOMAIN,)])
-async def test_elapsed_time_sensor_restore_value(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_miele_client: MagicMock,
-    setup_platform: None,
-    device_fixture: MieleDevices,
-    freezer: FrozenDateTimeFactory,
-    restore_state,
-) -> None:
-    """Test that elapsed time returns the correct restored value."""
-
-    entity_id = "sensor.washing_machine_elapsed_time"
-
-    # Simulate program started
-    device_fixture["DummyWasher"]["state"]["status"]["value_raw"] = 5
-    device_fixture["DummyWasher"]["state"]["status"]["value_localized"] = "In use"
-    device_fixture["DummyWasher"]["state"]["ProgramID"]["value_raw"] = 3
-    device_fixture["DummyWasher"]["state"]["ProgramID"]["value_localized"] = (
-        "Minimum iron"
-    )
-    device_fixture["DummyWasher"]["state"]["programPhase"]["value_raw"] = 260
-    device_fixture["DummyWasher"]["state"]["programPhase"]["value_localized"] = (
-        "Main wash"
-    )
-    device_fixture["DummyWasher"]["state"]["remainingTime"][0] = 1
-    device_fixture["DummyWasher"]["state"]["remainingTime"][1] = 45
-    device_fixture["DummyWasher"]["state"]["targetTemperature"][0]["value_raw"] = 3000
-    device_fixture["DummyWasher"]["state"]["targetTemperature"][0][
-        "value_localized"
-    ] = 30.0
-    device_fixture["DummyWasher"]["state"]["elapsedTime"][0] = 0
-    device_fixture["DummyWasher"]["state"]["elapsedTime"][1] = 12
-    device_fixture["DummyWasher"]["state"]["spinningSpeed"]["value_raw"] = 1200
-    device_fixture["DummyWasher"]["state"]["spinningSpeed"]["value_localized"] = "1200"
-
-    freezer.tick(timedelta(seconds=130))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    assert hass.states.get(entity_id).state == "12"
-
-    # Simulate program ended
-    device_fixture["DummyWasher"]["state"]["status"]["value_raw"] = 7
-    device_fixture["DummyWasher"]["state"]["status"]["value_localized"] = "Finished"
-    device_fixture["DummyWasher"]["state"]["programPhase"]["value_raw"] = 267
-    device_fixture["DummyWasher"]["state"]["programPhase"]["value_localized"] = (
-        "Anti-crease"
-    )
-    device_fixture["DummyWasher"]["state"]["remainingTime"][0] = 0
-    device_fixture["DummyWasher"]["state"]["remainingTime"][1] = 0
-    device_fixture["DummyWasher"]["state"]["elapsedTime"][0] = 0
-    device_fixture["DummyWasher"]["state"]["elapsedTime"][1] = 0
-
-    freezer.tick(timedelta(seconds=130))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
     # simulate restore with state different from native value
     mock_restore_cache_with_extra_data(
         hass,
@@ -739,7 +672,10 @@ async def test_elapsed_time_sensor_restore_value(
         ],
     )
 
-    # check that elapsed time is the one restored
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # check that elapsed time is the one restored and not the value reported by API (0)
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "12"
