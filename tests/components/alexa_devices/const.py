@@ -39,6 +39,7 @@ TEST_DEVICE_1 = AmazonDevice(
             scale="CELSIUS",
         ),
     },
+    notifications={},
 )
 
 TEST_DEVICE_2_SN = "echo_test_2_serial_number"
@@ -66,4 +67,5 @@ TEST_DEVICE_2 = AmazonDevice(
             scale="CELSIUS",
         )
     },
+    notifications={},
 )
