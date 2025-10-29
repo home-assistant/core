@@ -9,8 +9,6 @@ CONF_PARTNER_BASE_URL = "partner_base_url"
 # Default base URLs (can be overridden via YAML options or other configuration)
 DEFAULT_OAUTH2_BASE_URL = "https://oauth2-dev.level.co"
 DEFAULT_PARTNER_BASE_URL = "https://sidewalk-dev.level.co"
-# DEFAULT_OAUTH2_BASE_URL = "http://localhost:27915"
-# DEFAULT_PARTNER_BASE_URL = "http://localhost:15178"
 
 # API paths
 OAUTH2_AUTHORIZE_PATH = "/v1/authorize"
