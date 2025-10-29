@@ -205,7 +205,6 @@ class NSDepartureSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity
         route = _get_route(first_trip)
         status = first_trip.status
 
-        # Static attributes
         return {
             "going": first_trip.going,
             "departure_time_planned": _get_time_str(first_trip.departure_time_planned),
