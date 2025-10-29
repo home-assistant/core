@@ -7,6 +7,7 @@ import sqlite3
 from unittest.mock import patch
 
 import pytest
+from sqlalchemy.exc import SQLAlchemyError
 import voluptuous as vol
 from voluptuous import MultipleInvalid
 
@@ -84,6 +85,46 @@ async def test_query_service_external_db(hass: HomeAssistant, tmp_path: Path) ->
             {"name": "Alice", "age": 30},
         ]
     }
+
+
+async def test_query_service_rollback_on_error(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the query service."""
+    db_path = tmp_path / "test.db"
+    db_url = f"sqlite:///{db_path}"
+
+    # Create and populate the external database
+    conn = sqlite3.connect(db_path)
+    conn.execute("CREATE TABLE users (name TEXT, age INTEGER)")
+    conn.execute("INSERT INTO users (name, age) VALUES ('Alice', 30), ('Bob', 25)")
+    conn.commit()
+    conn.close()
+
+    await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    with (
+        patch(
+            "homeassistant.components.sql.services.generate_lambda_stmt",
+            side_effect=SQLAlchemyError("Error executing query"),
+        ),
+        pytest.raises(
+            ServiceValidationError, match="An error occurred when executing the query"
+        ),
+        patch("sqlalchemy.orm.session.Session.rollback") as mock_session_rollback,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_QUERY,
+            {"query": "SELECT name, age FROM users ORDER BY age", "db_url": db_url},
+            blocking=True,
+            return_response=True,
+        )
+
+    assert mock_session_rollback.call_count == 1
 
 
 async def test_query_service_data_conversion(
