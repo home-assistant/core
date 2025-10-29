@@ -45,7 +45,7 @@ class SmartShadeCover(CoverEntity):
         """Return device information for Home Assistant device registry."""
         return DeviceInfo(
             identifiers={("ryse", self._device.address)},
-            name=f"Smart Shade {self._device.address}",
+            name=config_entry.title",
             manufacturer="RYSE",
             model="SmartShade BLE",
             connections={("bluetooth", self._device.address)},
