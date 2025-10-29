@@ -243,6 +243,59 @@ async def test_invalid_url_setup(
         assert pattern in caplog.text
 
 
+@pytest.mark.parametrize(
+    ("url", "expected_patterns", "not_expected_patterns"),
+    [
+        (
+            "sqlite+aiosqlite://homeassistant:hunter2@homeassistant.local",
+            ["sqlite+aiosqlite://****:****@homeassistant.local"],
+            ["sqlite+aiosqlite://homeassistant:hunter2@homeassistant.local"],
+        ),
+        (
+            "sqlite+aiosqlite://homeassistant.local",
+            ["sqlite+aiosqlite://homeassistant.local"],
+            [],
+        ),
+    ],
+)
+async def test_async_invalid_url_setup(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    url: str,
+    expected_patterns: str,
+    not_expected_patterns: str,
+) -> None:
+    """Test invalid db url with redacted credentials."""
+    config = {
+        CONF_QUERY: "SELECT 5 as value",
+        CONF_COLUMN_NAME: "value",
+    }
+    entry = MockConfigEntry(
+        title="count_tables",
+        domain=DOMAIN,
+        source=SOURCE_USER,
+        data={CONF_DB_URL: url},
+        options=config,
+        entry_id="1",
+        version=2,
+    )
+
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.sql.util.create_async_engine",
+        side_effect=SQLAlchemyError(url),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    for pattern in not_expected_patterns:
+        assert pattern not in caplog.text
+    for pattern in expected_patterns:
+        assert pattern in caplog.text
+
+
 async def test_invalid_url_on_update(
     recorder_mock: Recorder,
     hass: HomeAssistant,
