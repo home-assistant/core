@@ -3,7 +3,6 @@
 import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
-import logging
 
 from roborock.data import RoborockDockDustCollectionModeCode
 from roborock.devices.traits.v1 import PropertiesApi
@@ -23,7 +22,6 @@ from .coordinator import RoborockConfigEntry, RoborockDataUpdateCoordinator
 from .entity import RoborockCoordinatedEntityV1
 
 PARALLEL_UPDATES = 0
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -205,7 +203,6 @@ class RoborockCurrentMapSelectEntity(RoborockCoordinatedEntityV1, SelectEntity):
     @property
     def current_option(self) -> str | None:
         """Get the current status of the select entity from device_status."""
-        _LOGGER.info("Current map data: %s", self._home_trait.current_map_data)
         if current_map_info := self._home_trait.current_map_data:
             return current_map_info.name or f"Map {current_map_info.map_flag}"
         return None
