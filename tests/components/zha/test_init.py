@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Callable
+import logging
 import typing
 from unittest.mock import AsyncMock, Mock, patch
 import zoneinfo
@@ -388,6 +389,7 @@ async def test_device_path_migration_to_unique_path(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_zigpy_connect: ControllerApplication,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that device path is migrated to unique path when available."""
     config_entry.add_to_hass(hass)
@@ -422,6 +424,7 @@ async def test_device_path_migration_to_unique_path(
         await hass.async_block_till_done()
 
     # Verify the config entry was updated with the unique path
+    assert "Migrating ZHA device path from" in caplog.text
     assert (
         config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
         == "/dev/serial/by-id/coordinator-symlink"
@@ -433,6 +436,7 @@ async def test_device_path_not_changed_when_already_unique(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_zigpy_connect: ControllerApplication,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that device path is not changed when already using unique path."""
     config_entry.add_to_hass(hass)
@@ -460,13 +464,17 @@ async def test_device_path_not_changed_when_already_unique(
         description="Test Device",
     )
 
-    with patch(
-        "homeassistant.components.zha.usb_device_from_path",
-        return_value=mock_usb_device,
+    with (
+        patch(
+            "homeassistant.components.zha.usb_device_from_path",
+            return_value=mock_usb_device,
+        ),
+        caplog.at_level(logging.DEBUG),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    # Verify the config entry was NOT updated (path remains the same)
+    # The path remains the same and the config entry was not updated unnecessarily
+    assert "Migrating ZHA device path from" not in caplog.text
     assert config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH] == unique_path
     assert config_entry.state is ConfigEntryState.LOADED
