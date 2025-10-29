@@ -32,6 +32,9 @@
       }
     },
     "number": {
+      "aux_max_outdoor_temp": {
+        "name": "Auxiliary maximum outdoor temperature"
+      },
       "compressor_protection_min_temp": {
         "name": "Compressor minimum temperature"
       },
@@ -40,9 +43,6 @@
       },
       "ventilator_min_type_home": {
         "name": "Ventilator minimum time home"
-      },
-      "aux_max_outdoor_temp": {
-        "name": "Auxiliary maximum outdoor temperature"
       }
     },
     "switch": {
