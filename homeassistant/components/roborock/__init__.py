@@ -137,11 +137,6 @@ def _remove_stale_devices(
     entry: RoborockConfigEntry,
     devices: list[RoborockDevice],
 ) -> None:
-    """Remove stale devices from the device registry.
-
-    The devices that are no longer in the account are removed from the device registry.
-    The API returns all devices, even if they are offline.
-    """
     device_map: dict[str, RoborockDevice] = {device.duid: device for device in devices}
     device_registry = dr.async_get(hass)
     device_entries = dr.async_entries_for_config_entry(
@@ -202,7 +197,7 @@ def build_setup_functions(
         RoborockDataUpdateCoordinator | RoborockDataUpdateCoordinatorA01 | None,
     ]
 ]:
-    """Create coordinators for all devices."""
+    """Create a list of setup functions that can later be called asynchronously."""
     coordinators: list[
         RoborockDataUpdateCoordinator | RoborockDataUpdateCoordinatorA01
     ] = []

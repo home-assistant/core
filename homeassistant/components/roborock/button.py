@@ -9,7 +9,6 @@ import logging
 from typing import Any
 
 from roborock.devices.traits.v1.consumeable import ConsumableAttribute
-from roborock.devices.traits.v1.routines import RoutinesTrait
 from roborock.exceptions import RoborockException
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
@@ -74,11 +73,7 @@ async def async_setup_entry(
     """Set up Roborock button platform."""
     _LOGGER.debug("Setting up Roborock button platform")
     routines_lists = await asyncio.gather(
-        *[
-            routines_trait.get_routines()
-            for coordinator in config_entry.runtime_data.v1
-            if (routines_trait := coordinator.properties_api.routines) is not None
-        ],
+        *[coordinator.get_routines() for coordinator in config_entry.runtime_data.v1],
     )
     async_add_entities(
         itertools.chain(
@@ -98,12 +93,10 @@ async def async_setup_entry(
                         key=str(routine.id),
                         name=routine.name,
                     ),
-                    routines_trait=routines_trait,
                 )
                 for coordinator, routines in zip(
                     config_entry.runtime_data.v1, routines_lists, strict=True
                 )
-                if (routines_trait := coordinator.properties_api.routines) is not None
                 for routine in routines
             ),
         )
@@ -152,7 +145,6 @@ class RoborockRoutineButtonEntity(RoborockEntity, ButtonEntity):
         self,
         coordinator: RoborockDataUpdateCoordinator,
         entity_description: ButtonEntityDescription,
-        routines_trait: RoutinesTrait,
     ) -> None:
         """Create a button entity."""
         super().__init__(
@@ -160,18 +152,9 @@ class RoborockRoutineButtonEntity(RoborockEntity, ButtonEntity):
             coordinator.device_info,
         )
         self._routine_id = int(entity_description.key)
-        self._routines_trait = routines_trait
+        self._coordinator = coordinator
         self.entity_description = entity_description
 
     async def async_press(self, **kwargs: Any) -> None:
         """Press the button."""
-        try:
-            await self._routines_trait.execute_routine(self._routine_id)
-        except RoborockException as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="command_failed",
-                translation_placeholders={
-                    "command": "execute_scene",
-                },
-            ) from err
+        await self._coordinator.execute_routines(self._routine_id)

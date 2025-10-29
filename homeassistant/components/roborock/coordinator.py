@@ -8,7 +8,7 @@ import logging
 from typing import Any, TypeVar
 
 from propcache.api import cached_property
-from roborock.data import RoborockCategory
+from roborock.data import HomeDataScene, RoborockCategory
 from roborock.devices.device import RoborockDevice
 from roborock.devices.traits.a01 import DyadApi, ZeoApi
 from roborock.devices.traits.v1 import PropertiesApi
@@ -81,7 +81,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState]):
             _LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
-            # Update interval is adjusted in `_async_update_data`
+            # Assume we can use the local api.
             update_interval=V1_LOCAL_NOT_CLEANING_INTERVAL,
         )
         self._device = device
@@ -130,8 +130,16 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState]):
             await self.properties_api.home.discover_home()
         except RoborockDeviceBusy:
             _LOGGER.info("Home discovery skipped while device is busy/cleaning")
+        except RoborockException as err:
+            _LOGGER.debug("Failed to get maps: %s", err)
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="map_failure",
+                translation_placeholders={"error": str(err)},
+            ) from err
         else:
-            self.last_home_update = dt_util.utcnow()
+            # Force a map refresh on first setup
+            self.last_home_update = dt_util.utcnow() - IMAGE_CACHE_INTERVAL
 
     async def update_map(self) -> None:
         """Update the currently selected map."""
@@ -236,6 +244,34 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState]):
             consumable=self.properties_api.consumables,
             clean_summary=self.properties_api.clean_summary,
         )
+
+    async def get_routines(self) -> list[HomeDataScene]:
+        """Get routines."""
+        try:
+            return await self.properties_api.routines.get_routines()
+        except RoborockException as err:
+            _LOGGER.error("Failed to get routines %s", err)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={
+                    "command": "get_scenes",
+                },
+            ) from err
+
+    async def execute_routines(self, routine_id: int) -> None:
+        """Execute routines."""
+        try:
+            await self.properties_api.routines.execute_routine(routine_id)
+        except RoborockException as err:
+            _LOGGER.error("Failed to execute routines %s %s", routine_id, err)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={
+                    "command": "execute_scene",
+                },
+            ) from err
 
     @cached_property
     def duid(self) -> str:
