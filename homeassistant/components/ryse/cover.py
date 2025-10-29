@@ -100,7 +100,7 @@ class SmartShadeCover(CoverEntity):
     @property
     def is_closed(self) -> bool | None:
         """Return True if the shade is closed."""
-        return self._state == "closed"
+        return self._current_position != 0
 
     @property
     def current_cover_position(self) -> int | None:
