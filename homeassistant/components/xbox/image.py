@@ -1,4 +1,4 @@
-"""Sensor platform for the Xbox integration."""
+"""Image platform for the Xbox integration."""
 
 from __future__ import annotations
 
