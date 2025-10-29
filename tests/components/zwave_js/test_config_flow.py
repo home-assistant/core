@@ -4944,6 +4944,51 @@ async def test_get_usb_ports_single_valid_port() -> None:
         ]
 
 
+async def test_get_usb_ports_ignored_devices() -> None:
+    """Test that get_usb_ports filters out ignored non-Z-Wave devices."""
+    mock_ports = [
+        ListPortInfo("/dev/ttyUSB0"),
+        ListPortInfo("/dev/ttyUSB1"),
+        ListPortInfo("/dev/ttyUSB2"),
+        ListPortInfo("/dev/ttyUSB3"),
+        ListPortInfo("/dev/ttyUSB4"),
+        ListPortInfo("/dev/ttyUSB5"),
+    ]
+    # ZBT-2, should be filtered
+    mock_ports[0].manufacturer = "Nabu Casa"
+    mock_ports[0].description = "ZBT-2"
+
+    # ZBT-1, should be filtered
+    mock_ports[2].manufacturer = "Nabu Casa"
+    mock_ports[2].description = "Home Assistant Connect ZBT-1"
+
+    # SkyConnect, should be filtered
+    mock_ports[1].manufacturer = "Nabu Casa"
+    mock_ports[1].description = "SkyConnect v1.0"
+
+    # ZWA-2, should be shown
+    mock_ports[3].manufacturer = "Nabu Casa"
+    mock_ports[3].description = "ZWA-2"
+
+    # unknown device with manufacturer/description, should be shown
+    mock_ports[4].manufacturer = "Another Manufacturer"
+    mock_ports[4].description = "Z-Wave USB Adapter"
+
+    # unknown device with no manufacturer/description, should be shown
+    mock_ports[5].manufacturer = None
+    mock_ports[5].description = None
+
+    with patch("serial.tools.list_ports.comports", return_value=mock_ports):
+        result = get_usb_ports()
+        descriptions = list(result.values())
+
+        assert descriptions == [
+            "ZWA-2 - /dev/ttyUSB3, s/n: n/a - Nabu Casa",
+            "Z-Wave USB Adapter - /dev/ttyUSB4, s/n: n/a - Another Manufacturer",
+            "/dev/ttyUSB5, s/n: n/a",
+        ]
+
+
 @pytest.mark.usefixtures("supervisor", "addon_not_installed", "addon_info")
 async def test_intent_recommended_user(
     hass: HomeAssistant,
