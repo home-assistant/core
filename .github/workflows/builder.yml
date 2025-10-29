@@ -64,6 +64,9 @@ jobs:
         env:
           LOKALISE_TOKEN: ${{ secrets.LOKALISE_TOKEN }}
 
+      - name: Validate Translations
+        run: python3 -m script.translations validate
+
       - name: Archive translations
         shell: bash
         run: find ./homeassistant/components/*/translations -name "*.json" | tar zcvf translations.tar.gz -T -

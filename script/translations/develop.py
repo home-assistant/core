@@ -11,6 +11,10 @@ from .const import INTEGRATIONS_DIR
 from .util import flatten_translations, get_base_arg_parser
 
 
+class InvalidSubstitutionKey(Exception):
+    """Exception for invalid substitution keys."""
+
+
 def valid_integration(integration):
     """Test if it's a valid integration."""
     if not (INTEGRATIONS_DIR / integration).is_dir():
@@ -39,7 +43,11 @@ def substitute_translation_references(integration_strings, flattened_translation
             sub_dict = substitute_translation_references(value, flattened_translations)
             result[key] = sub_dict
         elif isinstance(value, str):
-            result[key] = substitute_reference(value, flattened_translations)
+            try:
+                result[key] = substitute_reference(value, flattened_translations)
+            except InvalidSubstitutionKey as err:
+                print(f"Error: {err}")
+                sys.exit(1)
 
     return result
 
@@ -61,8 +69,9 @@ def substitute_reference(value, flattened_translations):
                 ),
             )
         else:
-            print(f"Invalid substitution key '{key}' found in string '{value}'")
-            sys.exit(1)
+            raise InvalidSubstitutionKey(
+                f"Invalid substitution key '{key}' found in string '{value}'"
+            )
 
     return new
 

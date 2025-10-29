@@ -4,6 +4,7 @@ import argparse
 import json
 import os
 import pathlib
+import string
 import subprocess
 from typing import Any
 
@@ -24,6 +25,7 @@ def get_base_arg_parser() -> argparse.ArgumentParser:
             "frontend",
             "migrate",
             "upload",
+            "validate",
         ],
     )
     parser.add_argument("--debug", action="store_true", help="Enable log output")
@@ -89,3 +91,9 @@ def flatten_translations(translations):
                 key_stack.pop()
 
     return flattened_translations
+
+
+def extract_placeholders(value: str) -> set[str]:
+    """Extract placeholders from a format string."""
+    tuples = list(string.Formatter().parse(value))
+    return {tup[1] for tup in tuples if tup[1] is not None}
