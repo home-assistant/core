@@ -15,6 +15,7 @@ from homeassistant.components.roborock.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.setup import async_setup_component
 
@@ -224,3 +225,41 @@ async def test_migrate_config_entry_unique_id(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.unique_id == ROBOROCK_RRUID
+
+
+async def test_cloud_api_repair(
+    hass: HomeAssistant,
+    mock_roborock_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+) -> None:
+    """Test that a repair is created when we use the cloud api."""
+
+    # Fake that the device is only reachable via cloud
+    fake_vacuum.is_connected = True
+    fake_vacuum.is_local_connected = False
+
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    issue_registry = ir.async_get(hass)
+    assert len(issue_registry.issues) == 1
+    # Check that both expected device names are present, regardless of order
+    assert all(
+        issue.translation_key == "cloud_api_used"
+        for issue in issue_registry.issues.values()
+    )
+    names = {
+        issue.translation_placeholders["device_name"]
+        for issue in issue_registry.issues.values()
+    }
+    assert names == {"Roborock S7 MaxV"}
+    await hass.config_entries.async_unload(mock_roborock_entry.entry_id)
+
+    # Now fake that the device is reachable locally again
+    fake_vacuum.is_local_connected = True
+
+    # Set it back up
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(issue_registry.issues) == 0

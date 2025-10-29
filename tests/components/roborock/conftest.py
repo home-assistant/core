@@ -107,6 +107,9 @@ def bypass_api_client_fixture() -> None:
 class FakeDevice(RoborockDevice):
     """A fake device that returns a list of devices."""
 
+    is_connected: bool = True
+    is_local_connected: bool = True
+
     def __init__(
         self,
         device_info: HomeDataDevice,
@@ -235,6 +238,8 @@ def fake_devices_fixture() -> list[FakeDevice]:
             device_info=deepcopy(device_data),
             product=deepcopy(device_product_data),
         )
+        fake_device.is_connected = True
+        fake_device.is_local_connected = True
         if device_data.pv == "1.0":
             fake_device.v1_properties = create_v1_properties(
                 NETWORK_INFO_BY_DEVICE[device_data.duid]

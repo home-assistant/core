@@ -21,6 +21,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util, slugify
@@ -117,6 +122,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState]):
 
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
+        await self._verify_api()
         await self.properties_api.status.refresh()
 
         self._last_home_update_attempt = dt_util.utcnow()
@@ -139,6 +145,26 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState]):
             ) from ex
         else:
             self.last_home_update = dt_util.utcnow()
+
+    async def _verify_api(self) -> None:
+        """Verify that the api is reachable. If it is not, switch clients."""
+        if self._device.is_connected:
+            if self._device.is_local_connected:
+                async_delete_issue(
+                    self.hass, DOMAIN, f"cloud_api_used_{self.duid_slug}"
+                )
+            else:
+                self.update_interval = V1_CLOUD_NOT_CLEANING_INTERVAL
+                async_create_issue(
+                    self.hass,
+                    DOMAIN,
+                    f"cloud_api_used_{self.duid_slug}",
+                    is_fixable=False,
+                    severity=IssueSeverity.WARNING,
+                    translation_key="cloud_api_used",
+                    translation_placeholders={"device_name": self._device.name},
+                    learn_more_url="https://www.home-assistant.io/integrations/roborock/#the-integration-tells-me-it-cannot-reach-my-vacuum-and-is-using-the-cloud-api-and-that-this-is-not-supported-or-i-am-having-any-networking-issues",
+                )
 
     async def async_shutdown(self) -> None:
         """Shutdown the coordinator."""
