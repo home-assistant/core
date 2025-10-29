@@ -409,16 +409,30 @@ async def test_config_from_old_yaml(
 
 
 @pytest.mark.parametrize(
-    ("url", "expected_patterns", "not_expected_patterns"),
+    ("patch_create", "url", "expected_patterns", "not_expected_patterns"),
     [
         (
+            "homeassistant.components.sql.util.sqlalchemy.create_engine",
             "sqlite://homeassistant:hunter2@homeassistant.local",
             ["sqlite://****:****@homeassistant.local"],
             ["sqlite://homeassistant:hunter2@homeassistant.local"],
         ),
         (
+            "homeassistant.components.sql.util.sqlalchemy.create_engine",
             "sqlite://homeassistant.local",
             ["sqlite://homeassistant.local"],
+            [],
+        ),
+        (
+            "homeassistant.components.sql.util.create_async_engine",
+            "sqlite+aiosqlite://homeassistant:hunter2@homeassistant.local",
+            ["sqlite+aiosqlite://****:****@homeassistant.local"],
+            ["sqlite+aiosqlite://homeassistant:hunter2@homeassistant.local"],
+        ),
+        (
+            "homeassistant.components.sql.util.create_async_engine",
+            "sqlite+aiosqlite://homeassistant.local",
+            ["sqlite+aiosqlite://homeassistant.local"],
             [],
         ),
     ],
@@ -427,6 +441,7 @@ async def test_invalid_url_setup_from_yaml(
     recorder_mock: Recorder,
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
+    patch_create: str,
     url: str,
     expected_patterns: str,
     not_expected_patterns: str,
@@ -441,11 +456,9 @@ async def test_invalid_url_setup_from_yaml(
         }
     }
 
-    with patch(
-        "homeassistant.components.sql.util.sqlalchemy.create_engine",
-        side_effect=SQLAlchemyError(url),
-    ):
+    with patch(patch_create, side_effect=SQLAlchemyError(url)):
         assert await async_setup_component(hass, DOMAIN, config)
+
     await hass.async_block_till_done()
 
     for pattern in not_expected_patterns:
