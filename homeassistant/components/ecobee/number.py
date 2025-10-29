@@ -81,11 +81,14 @@ async def async_setup_entry(
         (
             EcobeeAuxMaxOutdoorTemp(data, index)
             for index, thermostat in enumerate(data.ecobee.thermostats)
-            if thermostat["settings"]["hasHeatPump"] and 
-                (thermostat["settings"]["hasForcedAir"] or thermostat["settings"]["hasBoiler"])
+            if thermostat["settings"]["hasHeatPump"]
+            and (
+                thermostat["settings"]["hasForcedAir"]
+                or thermostat["settings"]["hasBoiler"]
+            )
         )
     )
-    
+
     async_add_entities(entities, True)
 
 
@@ -178,6 +181,7 @@ class EcobeeCompressorMinTemp(EcobeeBaseEntity, NumberEntity):
         self.data.ecobee.set_aux_cutover_threshold(self.thermostat_index, value)
         self.update_without_throttle = True
 
+
 class EcobeeAuxMaxOutdoorTemp(EcobeeBaseEntity, NumberEntity):
     """Maximum outdoor temperature at which aux heat will operate.
 
@@ -219,5 +223,5 @@ class EcobeeAuxMaxOutdoorTemp(EcobeeBaseEntity, NumberEntity):
 
     def set_native_value(self, value: float) -> None:
         """Set new aux max outdoor max temp."""
-        self.data.ecobee.set_aux_maxtemp_threshold(self.thermostat_index, value)
+        self.data.ecobee.set_aux_maxtemp_threshold(self.thermostat_index, int(value))
         self.update_without_throttle = True
