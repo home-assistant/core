@@ -1160,7 +1160,7 @@ habiticalib==0.4.6
 habluetooth==5.7.0
 
 # homeassistant.components.cloud
-hass-nabucasa==1.4.0
+hass-nabucasa==1.5.1
 
 # homeassistant.components.splunk
 hass-splunk==0.1.1
