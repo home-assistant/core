@@ -399,8 +399,16 @@ async def test_reconfigure_errors(
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": expected_error}
 
-    # Clear side effect for cleanup
+    # Clear side effect and submit valid API key to complete the flow
     mock_nsapi.get_stations.side_effect = None
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_API_KEY: "new_valid_key"}
+    )
+
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_API_KEY] == "new_valid_key"
 
 
 async def test_reconfigure_already_configured(
@@ -439,3 +447,12 @@ async def test_reconfigure_already_configured(
 
     # Verify the original entry was not changed
     assert mock_config_entry.data[CONF_API_KEY] == API_KEY
+
+    # Now submit a valid unique API key to complete the flow
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_API_KEY: "new_unique_key_789"}
+    )
+
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_API_KEY] == "new_unique_key_789"
