@@ -41,12 +41,6 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_URL): str,
-        vol.Optional(CONF_TRANSPORT, default=TRANSPORT_SSE): vol.In(
-            {
-                TRANSPORT_SSE: "SSE",
-                TRANSPORT_STREAMABLE_HTTP: "Streamable HTTP",
-            }
-        ),
     }
 )
 
@@ -118,6 +112,74 @@ async def async_discover_oauth_config(
     )
 
 
+async def async_autodiscover_transport(mcp_server_url: str) -> str:
+    """Autodiscover the transport protocol for the MCP server.
+
+    According to the MCP specification for backwards compatibility:
+    1. Attempt to POST an InitializeRequest to the server URL with proper Accept header
+    2. If it succeeds: assume Streamable HTTP transport
+    3. If it fails with HTTP 4xx: try GET request expecting SSE stream, indicating old HTTP+SSE transport
+    """
+    try:
+        async with httpx.AsyncClient() as client:
+            # Try Streamable HTTP transport first
+            # Send a test POST request with proper Accept header
+            response = await client.post(
+                mcp_server_url,
+                headers={
+                    "Accept": "application/json, text/event-stream",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "jsonrpc": "2.0",
+                    "id": "discover",
+                    "method": "initialize",
+                    "params": {
+                        "protocolVersion": "2025-06-18",
+                        "capabilities": {},
+                        "clientInfo": {
+                            "name": "Home Assistant",
+                            "version": "1.0.0",
+                        },
+                    },
+                },
+                timeout=5,
+            )
+            response.raise_for_status()
+            _LOGGER.debug("Transport autodiscovery: Streamable HTTP detected")
+            return TRANSPORT_STREAMABLE_HTTP
+    except httpx.HTTPStatusError as error:
+        if 400 <= error.response.status_code < 500:
+            # Try SSE transport (old HTTP+SSE transport)
+            try:
+                async with httpx.AsyncClient() as client:
+                    response = await client.get(
+                        mcp_server_url,
+                        headers={"Accept": "text/event-stream"},
+                        timeout=5,
+                    )
+                    response.raise_for_status()
+                    if response.headers.get("content-type", "").startswith(
+                        "text/event-stream"
+                    ):
+                        _LOGGER.debug("Transport autodiscovery: SSE transport detected")
+                        return TRANSPORT_SSE
+            except (httpx.HTTPError, httpx.TimeoutException) as sse_error:
+                _LOGGER.debug(
+                    "Transport autodiscovery: SSE detection failed: %s", sse_error
+                )
+        # If both methods fail, fall back to default
+        _LOGGER.debug(
+            "Transport autodiscovery: Failed to detect transport, using default SSE"
+        )
+        return TRANSPORT_SSE
+    except (httpx.HTTPError, httpx.TimeoutException) as error:
+        _LOGGER.debug(
+            "Transport autodiscovery: Network error, using default SSE: %s", error
+        )
+        return TRANSPORT_SSE
+
+
 async def validate_input(
     hass: HomeAssistant, data: dict[str, Any], token_manager: TokenManager | None = None
 ) -> dict[str, Any]:
@@ -158,7 +220,11 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
     VERSION = 1
     DOMAIN = DOMAIN
-    logger = _LOGGER
+
+    @property
+    def logger(self) -> logging.Logger:
+        """Return logger."""
+        return logging.getLogger(__name__)
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -172,7 +238,21 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            transport = user_input.setdefault(CONF_TRANSPORT, TRANSPORT_SSE)
+            # Autodiscover transport protocol instead of setting default
+            try:
+                transport = await async_autodiscover_transport(user_input[CONF_URL])
+                user_input[CONF_TRANSPORT] = transport
+                _LOGGER.info(
+                    "Autodiscovered transport: %s for URL: %s",
+                    transport,
+                    user_input[CONF_URL],
+                )
+            except (httpx.HTTPError, httpx.TimeoutException, OSError) as error:
+                _LOGGER.debug("Transport autodiscovery failed: %s", error)
+                # Fall back to default SSE transport
+                transport = TRANSPORT_SSE
+                user_input[CONF_TRANSPORT] = transport
+
             try:
                 info = await validate_input(self.hass, user_input)
             except InvalidUrl:

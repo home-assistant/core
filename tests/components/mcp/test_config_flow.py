@@ -13,9 +13,7 @@ from homeassistant.components.mcp.const import (
     CONF_AUTHORIZATION_URL,
     CONF_SCOPE,
     CONF_TOKEN_URL,
-    CONF_TRANSPORT,
     DOMAIN,
-    TRANSPORT_STREAMABLE_HTTP,
 )
 from homeassistant.const import CONF_TOKEN, CONF_URL
 from homeassistant.core import HomeAssistant
@@ -106,10 +104,10 @@ async def test_form(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_streamable_http(
+async def test_form_defaults_to_sse_transport(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_mcp_client: Mock
 ) -> None:
-    """Test configuration when selecting Streamable HTTP transport."""
+    """Test configuration flow defaults to SSE transport when transport is hidden from UI."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -124,7 +122,6 @@ async def test_form_streamable_http(
         result["flow_id"],
         {
             CONF_URL: MCP_SERVER_URL,
-            CONF_TRANSPORT: TRANSPORT_STREAMABLE_HTTP,
         },
     )
 
@@ -132,9 +129,9 @@ async def test_form_streamable_http(
     assert result["title"] == TEST_API_NAME
     assert result["data"] == {
         CONF_URL: MCP_SERVER_URL,
-        CONF_TRANSPORT: TRANSPORT_STREAMABLE_HTTP,
     }
-    assert mock_mcp_client.streamable_client.called
+    # Transport is hidden from UI, so no transport field should be stored
+    assert "transport" not in result["data"]
     assert len(mock_setup_entry.mock_calls) == 1
 
 
