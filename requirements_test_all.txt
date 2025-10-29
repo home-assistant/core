@@ -84,7 +84,7 @@ PyRMVtransport==0.3.3
 PySrDaliGateway==0.13.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.72.0
+PySwitchbot==0.72.1
 
 # homeassistant.components.syncthru
 PySyncThru==0.8.0
@@ -1012,7 +1012,7 @@ ha-iotawattpy==0.1.2
 ha-philipsjs==3.2.4
 
 # homeassistant.components.homeassistant_hardware
-ha-silabs-firmware-client==0.2.0
+ha-silabs-firmware-client==0.3.0
 
 # homeassistant.components.habitica
 habiticalib==0.4.6
@@ -2166,7 +2166,7 @@ pytouchlinesl==0.5.0
 
 # homeassistant.components.traccar
 # homeassistant.components.traccar_server
-pytraccar==2.1.1
+pytraccar==3.0.0
 
 # homeassistant.components.tradfri
 pytradfri[async]==9.0.1
@@ -2612,7 +2612,7 @@ wallbox==0.9.0
 watchdog==6.0.0
 
 # homeassistant.components.watergate
-watergate-local-api==2024.4.1
+watergate-local-api==2025.1.0
 
 # homeassistant.components.weatherflow_cloud
 weatherflow4py==1.4.1
