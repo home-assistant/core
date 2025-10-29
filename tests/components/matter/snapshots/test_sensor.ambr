@@ -4257,7 +4257,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[haijai_switch][sensor.hjmt_6b_battery-entry]
+# name: test_sensors[haojai_switch][sensor.hjmt_6b_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4294,7 +4294,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[haijai_switch][sensor.hjmt_6b_battery-state]
+# name: test_sensors[haojai_switch][sensor.hjmt_6b_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -4310,7 +4310,7 @@
     'state': '1',
   })
 # ---
-# name: test_sensors[haijai_switch][sensor.hjmt_6b_battery_voltage-entry]
+# name: test_sensors[haojai_switch][sensor.hjmt_6b_battery_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4353,7 +4353,7 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[haijai_switch][sensor.hjmt_6b_battery_voltage-state]
+# name: test_sensors[haojai_switch][sensor.hjmt_6b_battery_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
@@ -4369,7 +4369,7 @@
     'state': '2.316',
   })
 # ---
-# name: test_sensors[haijai_switch][sensor.hjmt_6b_current_switch_position_1-entry]
+# name: test_sensors[haojai_switch][sensor.hjmt_6b_current_switch_position_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4406,7 +4406,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[haijai_switch][sensor.hjmt_6b_current_switch_position_1-state]
+# name: test_sensors[haojai_switch][sensor.hjmt_6b_current_switch_position_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'HJMT-6B Current switch position (1)',
@@ -4420,7 +4420,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[haijai_switch][sensor.hjmt_6b_current_switch_position_2-entry]
+# name: test_sensors[haojai_switch][sensor.hjmt_6b_current_switch_position_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4457,7 +4457,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[haijai_switch][sensor.hjmt_6b_current_switch_position_2-state]
+# name: test_sensors[haojai_switch][sensor.hjmt_6b_current_switch_position_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'HJMT-6B Current switch position (2)',
@@ -4471,7 +4471,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[haijai_switch][sensor.hjmt_6b_current_switch_position_3-entry]
+# name: test_sensors[haojai_switch][sensor.hjmt_6b_current_switch_position_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4508,7 +4508,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[haijai_switch][sensor.hjmt_6b_current_switch_position_3-state]
+# name: test_sensors[haojai_switch][sensor.hjmt_6b_current_switch_position_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'HJMT-6B Current switch position (3)',
@@ -4522,7 +4522,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[haijai_switch][sensor.hjmt_6b_current_switch_position_4-entry]
+# name: test_sensors[haojai_switch][sensor.hjmt_6b_current_switch_position_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4559,7 +4559,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[haijai_switch][sensor.hjmt_6b_current_switch_position_4-state]
+# name: test_sensors[haojai_switch][sensor.hjmt_6b_current_switch_position_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'HJMT-6B Current switch position (4)',
@@ -4573,7 +4573,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[haijai_switch][sensor.hjmt_6b_current_switch_position_5-entry]
+# name: test_sensors[haojai_switch][sensor.hjmt_6b_current_switch_position_5-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4610,7 +4610,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[haijai_switch][sensor.hjmt_6b_current_switch_position_5-state]
+# name: test_sensors[haojai_switch][sensor.hjmt_6b_current_switch_position_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'HJMT-6B Current switch position (5)',
@@ -4624,7 +4624,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[haijai_switch][sensor.hjmt_6b_current_switch_position_6-entry]
+# name: test_sensors[haojai_switch][sensor.hjmt_6b_current_switch_position_6-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4661,7 +4661,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[haijai_switch][sensor.hjmt_6b_current_switch_position_6-state]
+# name: test_sensors[haojai_switch][sensor.hjmt_6b_current_switch_position_6-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'HJMT-6B Current switch position (6)',
