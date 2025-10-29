@@ -1463,7 +1463,6 @@ pescea==1.0.12
 
 # homeassistant.components.aruba
 # homeassistant.components.cisco_ios
-# homeassistant.components.pandora
 pexpect==4.9.0
 
 # homeassistant.components.modem_callerid

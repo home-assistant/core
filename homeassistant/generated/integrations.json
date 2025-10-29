@@ -4942,12 +4942,6 @@
         }
       }
     },
-    "pandora": {
-      "name": "Pandora",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
-    },
     "paperless_ngx": {
       "name": "Paperless-ngx",
       "integration_type": "service",
