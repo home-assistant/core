@@ -95,6 +95,6 @@ class AirthingsBLEDataUpdateCoordinator(DataUpdateCoordinator[AirthingsDevice]):
                         domain=DOMAIN,
                         issue_id=issue_id,
                     )
-        except Exception:
+        except (AttributeError, ValueError):
             _LOGGER.exception("Error checking connectivity mode for issues")
         return data
