@@ -23,7 +23,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
-from .models import SFRConfigEntry
+from .coordinator import SFRConfigEntry
 
 
 def with_error_wrapping[**_P, _R](

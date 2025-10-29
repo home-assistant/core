@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 
-from .models import SFRConfigEntry
+from .coordinator import SFRConfigEntry
 
 if TYPE_CHECKING:
     from _typeshed import DataclassInstance

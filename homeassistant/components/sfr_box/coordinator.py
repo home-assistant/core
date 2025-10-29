@@ -1,20 +1,36 @@
 """SFR Box coordinator."""
 
+from __future__ import annotations
+
 from collections.abc import Callable, Coroutine
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import Any
 
 from sfrbox_api.bridge import SFRBox
 from sfrbox_api.exceptions import SFRBoxError
+from sfrbox_api.models import DslInfo, FtthInfo, SystemInfo, WanInfo
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .models import SFRConfigEntry
-
 _LOGGER = logging.getLogger(__name__)
 _SCAN_INTERVAL = timedelta(minutes=1)
+
+type SFRConfigEntry = ConfigEntry[SFRRuntimeData]
+
+
+@dataclass
+class SFRRuntimeData:
+    """Runtime data for SFR Box."""
+
+    box: SFRBox
+    dsl: SFRDataUpdateCoordinator[DslInfo]
+    ftth: SFRDataUpdateCoordinator[FtthInfo]
+    system: SFRDataUpdateCoordinator[SystemInfo]
+    wan: SFRDataUpdateCoordinator[WanInfo]
 
 
 class SFRDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT | None]):

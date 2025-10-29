@@ -15,8 +15,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, PLATFORMS, PLATFORMS_WITH_AUTH
-from .coordinator import SFRDataUpdateCoordinator
-from .models import SFRConfigEntry, SFRRuntimeData
+from .coordinator import SFRConfigEntry, SFRDataUpdateCoordinator, SFRRuntimeData
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SFRConfigEntry) -> bool:

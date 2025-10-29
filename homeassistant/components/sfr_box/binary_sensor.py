@@ -20,8 +20,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import SFRDataUpdateCoordinator
-from .models import SFRConfigEntry
+from .coordinator import SFRConfigEntry, SFRDataUpdateCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)
