@@ -165,12 +165,9 @@ class MatterNumericSwitch(MatterSwitch):
         """Update the current value."""
         if value_convert := self.entity_description.ha_to_device:
             send_value = value_convert(value)
-        try:
-            await self.write_attribute(
-                value=send_value,
-            )
-        except MatterError as err:
-            raise HomeAssistantError(f"Failed to set value: {err}") from err
+        await self.write_attribute(
+            value=send_value,
+        )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn switch on."""
