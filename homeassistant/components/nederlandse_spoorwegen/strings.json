@@ -16,7 +16,7 @@
           "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
-          "api_key": "Your NS API key."
+          "api_key": "[%key:common::config_flow::data_description::api_key%]"
         },
         "description": "Update your Nederlandse Spoorwegen API key."
       },
