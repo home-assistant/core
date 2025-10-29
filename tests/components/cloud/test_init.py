@@ -141,6 +141,7 @@ async def test_setup_existing_cloud_user(
                     "user_pool_id": "test-user_pool_id",
                     "region": "test-region",
                     "relayer_server": "test-relayer-serer",
+                    "api_server": "test-api-server",
                 },
             },
         )
