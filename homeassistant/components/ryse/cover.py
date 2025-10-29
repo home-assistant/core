@@ -93,9 +93,15 @@ class SmartShadeCover(CoverEntity):
                 bytesinfo = build_get_position_packet()
                 await self._device.write_data(bytesinfo)
         except (TimeoutError, OSError) as err:
-            _LOGGER.error("BLE communication error while reading device data: %s", err)
+            if self._attr_available:
+                _LOGGER.error("BLE communication error while reading device data: %s", err)
+            self._attr_available = False
         except Exception:
-            _LOGGER.exception("Unexpected error while reading device data")
+            if self._attr_available:
+                _LOGGER.exception("Unexpected error while reading device data")
+            self._attr_available = False
+        else:
+            self._attr_available = True
 
     @property
     def is_closed(self) -> bool | None:
