@@ -264,7 +264,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.NUMBER,
         entity_description=MatterRangeNumberEntityDescription(
             key="ThermostatOccupiedSetback",
-            name=None,
+            entity_category=EntityCategory.CONFIG,
             translation_key="occupied_setback",
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             device_to_ha=lambda x: None if x is None else x / 10,
@@ -274,7 +274,7 @@ DISCOVERY_SCHEMAS = [
             min_attribute=clusters.Thermostat.Attributes.OccupiedSetbackMin,
             max_attribute=clusters.Thermostat.Attributes.OccupiedSetbackMax,
             native_step=0.5,
-            mode=NumberMode.SLIDER,
+            mode=NumberMode.BOX,
         ),
         entity_class=MatterRangeNumber,
         required_attributes=(
