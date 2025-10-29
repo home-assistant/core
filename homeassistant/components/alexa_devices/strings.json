@@ -66,6 +66,17 @@
         "name": "Speak"
       }
     },
+    "sensor": {
+      "alarm": {
+        "name": "Next alarm"
+      },
+      "reminder": {
+        "name": "Next reminder"
+      },
+      "timer": {
+        "name": "Next timer"
+      }
+    },
     "switch": {
       "do_not_disturb": {
         "name": "Do not disturb"
