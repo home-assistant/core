@@ -23,7 +23,6 @@ EXCLUDED_REQUIREMENTS_ALL = {
     "atenpdu",  # depends on pysnmp which is not maintained at this time
     "avea",  # depends on bluepy
     "avion",
-    "beacontools",
     "beewi-smartclim",  # depends on bluepy
     "bluepy",
     "decora",

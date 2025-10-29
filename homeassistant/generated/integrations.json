@@ -1585,12 +1585,6 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
-    "eddystone_temperature": {
-      "name": "Eddystone",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
-    },
     "edimax": {
       "name": "Edimax",
       "integration_type": "hub",
