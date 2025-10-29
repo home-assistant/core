@@ -201,7 +201,7 @@ aioaseko==1.0.0
 aioasuswrt==1.5.1
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2.6.0
+aioautomower==2.7.0
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.2.2
@@ -582,7 +582,7 @@ bleak==1.0.1
 blebox-uniapi==2.5.0
 
 # homeassistant.components.blink
-blinkpy==0.23.0
+blinkpy==0.24.1
 
 # homeassistant.components.blue_current
 bluecurrent-api==1.3.1
@@ -1053,7 +1053,7 @@ holidays==0.83
 home-assistant-frontend==20251001.4
 
 # homeassistant.components.conversation
-home-assistant-intents==2025.10.1
+home-assistant-intents==2025.10.28
 
 # homeassistant.components.homematicip_cloud
 homematicip==2.3.1
@@ -1505,7 +1505,7 @@ prowlpy==1.1.1
 psutil-home-assistant==0.0.1
 
 # homeassistant.components.systemmonitor
-psutil==7.1.0
+psutil==7.1.2
 
 # homeassistant.components.pushbullet
 pushbullet.py==0.11.0
@@ -2062,7 +2062,7 @@ python-MotionMount==2.3.0
 python-awair==0.2.4
 
 # homeassistant.components.bsblan
-python-bsblan==2.1.0
+python-bsblan==3.1.0
 
 # homeassistant.components.ecobee
 python-ecobee-api==0.2.20
