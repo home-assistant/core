@@ -29,11 +29,12 @@ async def async_setup_entry(
 
 class SmartShadeCover(CoverEntity):
     """Representation of a RYSE Smart Shade BLE cover entity."""
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, device: RyseBLEDevice) -> None:
         """Initialize the Smart Shade cover entity."""
         self._device = device
-        self._attr_name = f"Smart Shade {device.address}"
         self._attr_unique_id = f"smart_shade_{device.address}"
         self._state: str | None = None
         self._current_position: int | None = None
