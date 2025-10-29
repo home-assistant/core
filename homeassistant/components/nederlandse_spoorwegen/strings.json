@@ -5,6 +5,7 @@
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
+      "already_configured": "This API key is already configured for another entry.",
       "cannot_connect": "Could not connect to NS API. Check your API key.",
       "invalid_auth": "[%key:common::config_flow::error::invalid_api_key%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
@@ -25,7 +26,8 @@
         },
         "data_description": {
           "api_key": "Your NS API key."
-        }
+        },
+        "description": "Set up your Nederlandse Spoorwegen integration."
       }
     }
   },
