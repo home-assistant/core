@@ -31,7 +31,6 @@ EXCLUDED_REQUIREMENTS_ALL = {
     "face-recognition",
     "pybluez",
     "pycocotools",
-    "pycups",
     "python-gammu",
     "python-lirc",
     "pyuserinput",
@@ -43,7 +42,6 @@ EXCLUDED_REQUIREMENTS_ALL = {
 # building integration wheels for all architectures.
 INCLUDED_REQUIREMENTS_WHEELS = {
     "evdev",
-    "pycups",
     "python-gammu",
     "pyuserinput",
 }

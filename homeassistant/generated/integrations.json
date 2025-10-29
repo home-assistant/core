@@ -1157,12 +1157,6 @@
       "config_flow": true,
       "iot_class": "cloud_push"
     },
-    "cups": {
-      "name": "CUPS",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
-    },
     "currencylayer": {
       "name": "currencylayer",
       "integration_type": "hub",
