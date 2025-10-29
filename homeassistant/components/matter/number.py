@@ -302,8 +302,7 @@ DISCOVERY_SCHEMAS = [
             mode=NumberMode.BOX,
         ),
         entity_class=MatterNumber,
-        required_attributes=(
-            clusters.Thermostat.Attributes.LocalTemperatureCalibration,
+        required_attributes=(clusters.Thermostat.Attributes.LocalTemperatureCalibration),
         ),
         vendor_id=(4874,),
     ),
