@@ -17,10 +17,6 @@ def convert_temperature(
         # No temperature provided; nothing to convert.
         return None
 
-    if from_unit == to_unit:
-        # Units match; short-circuit without calling converter.
-        return value
-
     # Perform conversion through HA's TemperatureConverter.
     return TemperatureConverter.convert(value, from_unit, to_unit)
 

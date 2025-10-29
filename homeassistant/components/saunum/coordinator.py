@@ -5,13 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from pysaunum import (
-    SaunumClient,
-    SaunumCommunicationError,
-    SaunumConnectionError,
-    SaunumData,
-    SaunumException,
-)
+from pysaunum import SaunumClient, SaunumData, SaunumException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -50,7 +44,7 @@ class LeilSaunaCoordinator(DataUpdateCoordinator[SaunumData]):
         """Fetch data from the sauna controller."""
         try:
             data = await self.client.async_get_data()
-        except (SaunumCommunicationError, SaunumConnectionError) as err:
+        except SaunumException as err:
             if not self._unavailable_logged:
                 _LOGGER.info("Device became unavailable: %s", err)
                 self._unavailable_logged = True
