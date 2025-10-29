@@ -25,7 +25,6 @@ EXCLUDED_REQUIREMENTS_ALL = {
     "avion",
     "beewi-smartclim",  # depends on bluepy
     "bluepy",
-    "decora",
     "evdev",
     "pybluez",
     "pycups",
