@@ -133,7 +133,7 @@ async def test_auxiliary_max_outdoor_temp_attributes(hass: HomeAssistant) -> Non
     await setup_platform(hass, NUMBER_DOMAIN)
 
     state = hass.states.get(AUX_MAX_OUTDOOR_TEMP_ID)
-    assert state.state == "5"
+    assert state.state == "5.0"
     assert (
         state.attributes.get("friendly_name")
         == "ecobee2 Auxiliary maximum outdoor temperature"
