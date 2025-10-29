@@ -2093,9 +2093,15 @@ class ConfigEntries:
             raise HomeAssistantError(
                 f"An entry with the id {entry.entry_id} already exists."
             )
+        if entry.unique_id and self._entries.get_entry_by_domain_and_unique_id(
+            entry.domain, entry.unique_id
+        ):
+            raise HomeAssistantError(
+                f"An entry for domain {entry.domain} with unique id"
+                f" {entry.unique_id} already exists."
+            )
 
         self._entries[entry.entry_id] = entry
-        self.async_update_issues()
         self._async_dispatch(ConfigEntryChange.ADDED, entry)
         await self.async_setup(entry.entry_id)
         self._async_schedule_save()
@@ -2127,7 +2133,6 @@ class ConfigEntries:
             del self._entries[entry.entry_id]
             await entry.async_remove(self.hass)
 
-            self.async_update_issues()
             self._async_schedule_save()
 
         return (unload_success, entry)
@@ -2197,7 +2202,7 @@ class ConfigEntries:
             entries[entry_id] = config_entry
 
         self._entries = entries
-        self.async_update_issues()
+        await self.check_duplicate_unique_ids()
 
     async def async_setup(self, entry_id: str, _lock: bool = True) -> bool:
         """Set up a config entry.
@@ -2409,22 +2414,13 @@ class ConfigEntries:
                 and self.async_entry_for_domain_unique_id(entry.domain, unique_id)
                 is not None
             ):
-                report_issue = async_suggest_report_issue(
-                    self.hass, integration_domain=entry.domain
+                raise HomeAssistantError(
+                    f"Cannot update config entry '{entry.title}' ({entry.domain})."
+                    f" An entry with unique_id '{unique_id}' already exists"
                 )
-                _LOGGER.error(
-                    (
-                        "Unique id of config entry '%s' from integration %s changed to"
-                        " '%s' which is already in use, please %s"
-                    ),
-                    entry.title,
-                    entry.domain,
-                    unique_id,
-                    report_issue,
-                )
+
             # Reindex the entry if the unique_id has changed
             self._entries.update_unique_id(entry, unique_id)
-            self.async_update_issues()
             changed = True
 
         for attr, value in (
@@ -2716,80 +2712,36 @@ class ConfigEntries:
             return False
         return entry.state is ConfigEntryState.LOADED
 
-    @callback
-    def async_update_issues(self) -> None:
-        """Update unique id collision issues."""
-        issue_registry = ir.async_get(self.hass)
-        issues: set[str] = set()
+    async def check_duplicate_unique_ids(self) -> None:
+        """Check duplicate unique ids and remove them."""
 
-        for issue in issue_registry.issues.values():
-            if (
-                issue.domain != HOMEASSISTANT_DOMAIN
-                or not (issue_data := issue.data)
-                or issue_data.get("issue_type") != ISSUE_UNIQUE_ID_COLLISION
-            ):
-                continue
-            issues.add(issue.issue_id)
-
-        for (
-            domain,
-            unique_ids,
-        ) in self._entries._domain_unique_id_index.items():  # noqa: SLF001
-            for unique_id, entries in unique_ids.items():
-                # We might mutate the list of entries, so we need a copy to not mess up
-                # the index
+        entries_to_remove = []
+        for unique_ids in self._entries._domain_unique_id_index.values():  # noqa: SLF001
+            for entries in unique_ids.values():
                 entries = list(entries)
-
-                # There's no need to raise an issue for ignored entries, we can
-                # safely remove them once we no longer allow unique id collisions.
-                # Iterate over a copy of the copy to allow mutating while iterating
-                for entry in list(entries):
-                    if entry.source == SOURCE_IGNORE:
-                        entries.remove(entry)
+                if len(entries) > 1:
+                    # If more than one entry, remove any ignored entry first
+                    for entry in entries:
+                        if entry.source == SOURCE_IGNORE:
+                            await self._async_remove(entry.entry_id)
 
                 if len(entries) < 2:
                     continue
-                issue_id = f"{ISSUE_UNIQUE_ID_COLLISION}_{domain}_{unique_id}"
-                issues.discard(issue_id)
-                titles = [f"'{entry.title}'" for entry in entries]
-                translation_placeholders = {
-                    "domain": domain,
-                    "configure_url": f"/config/integrations/integration/{domain}",
-                    "unique_id": str(unique_id),
-                }
-                if len(titles) <= UNIQUE_ID_COLLISION_TITLE_LIMIT:
-                    translation_key = "config_entry_unique_id_collision"
-                    translation_placeholders["titles"] = ", ".join(titles)
-                else:
-                    translation_key = "config_entry_unique_id_collision_many"
-                    translation_placeholders["number_of_entries"] = str(len(titles))
-                    translation_placeholders["titles"] = ", ".join(
-                        titles[:UNIQUE_ID_COLLISION_TITLE_LIMIT]
-                    )
-                    translation_placeholders["title_limit"] = str(
-                        UNIQUE_ID_COLLISION_TITLE_LIMIT
-                    )
 
-                ir.async_create_issue(
-                    self.hass,
-                    HOMEASSISTANT_DOMAIN,
-                    issue_id,
-                    breaks_in_ha_version="2025.11.0",
-                    data={
-                        "issue_type": ISSUE_UNIQUE_ID_COLLISION,
-                        "unique_id": unique_id,
-                    },
-                    is_fixable=False,
-                    issue_domain=domain,
-                    severity=ir.IssueSeverity.ERROR,
-                    translation_key=translation_key,
-                    translation_placeholders=translation_placeholders,
+                titles = ", ".join(f"'{entry.title}'" for entry in entries)
+                domain = entries[0].domain
+
+                _LOGGER.error(
+                    (
+                        "There are multiple '%s' config entries with the same unique ID."
+                        " The config entries named %s have been removed"
+                    ),
+                    domain,
+                    titles,
                 )
-
-                break  # Only create one issue per domain
-
-        for issue_id in issues:
-            ir.async_delete_issue(self.hass, HOMEASSISTANT_DOMAIN, issue_id)
+                entries_to_remove.extend([entry.entry_id for entry in entries])
+        for entry_id in entries_to_remove:
+            await self._async_remove(entry_id)
 
 
 @callback

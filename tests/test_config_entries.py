@@ -8945,14 +8945,8 @@ async def test_create_entry_reauth_reconfigure_fails(
 async def test_async_update_entry_unique_id_collision(
     hass: HomeAssistant,
     manager: config_entries.ConfigEntries,
-    caplog: pytest.LogCaptureFixture,
-    issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test we warn when async_update_entry creates a unique_id collision.
-
-    Also test an issue registry issue is created.
-    """
-    assert len(issue_registry.issues) == 0
+    """Test we warn when async_update_entry creates a unique_id collision and raises."""
 
     entry1 = MockConfigEntry(domain="test", unique_id=None)
     entry2 = MockConfigEntry(domain="test", unique_id="not none")
@@ -8964,106 +8958,76 @@ async def test_async_update_entry_unique_id_collision(
     entry4.add_to_manager(manager)
 
     manager.async_update_entry(entry2, unique_id=None)
-    assert len(issue_registry.issues) == 0
-    assert len(caplog.record_tuples) == 0
 
-    manager.async_update_entry(entry4, unique_id="very unique")
-    assert len(issue_registry.issues) == 1
-    assert len(caplog.record_tuples) == 1
-
-    assert (
-        "Unique id of config entry 'Mock Title' from integration test changed to "
-        "'very unique' which is already in use"
-    ) in caplog.text
-
-    issue_id = "config_entry_unique_id_collision_test_very unique"
-    assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, issue_id)
-
-
-async def test_unique_id_collision_issues(
-    hass: HomeAssistant,
-    manager: config_entries.ConfigEntries,
-    caplog: pytest.LogCaptureFixture,
-    issue_registry: ir.IssueRegistry,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test issue registry issues are created and remove on unique id collision."""
-    assert len(issue_registry.issues) == 0
-
-    mock_setup_entry = AsyncMock(return_value=True)
-    for i in range(3):
-        mock_integration(
-            hass, MockModule(f"test{i + 1}", async_setup_entry=mock_setup_entry)
-        )
-        mock_platform(hass, f"test{i + 1}.config_flow", None)
-
-    test2_group_1: list[MockConfigEntry] = []
-    test2_group_2: list[MockConfigEntry] = []
-    test3: list[MockConfigEntry] = []
-    for _ in range(3):
-        await manager.async_add(MockConfigEntry(domain="test1", unique_id=None))
-        test2_group_1.append(MockConfigEntry(domain="test2", unique_id="group_1"))
-        test2_group_2.append(MockConfigEntry(domain="test2", unique_id="group_2"))
-        await manager.async_add(test2_group_1[-1])
-        await manager.async_add(test2_group_2[-1])
-    for _ in range(6):
-        test3.append(MockConfigEntry(domain="test3", unique_id="not_unique"))
-        await manager.async_add(test3[-1])
-    # Add an ignored config entry
-    await manager.async_add(
-        MockConfigEntry(
-            domain="test2", unique_id="group_1", source=config_entries.SOURCE_IGNORE
-        )
+    message = re.escape(
+        "Cannot update config entry 'Mock Title' (test)."
+        " An entry with unique_id 'very unique' already exists"
     )
 
-    # Check we get one issue for domain test2 and one issue for domain test3
-    assert len(issue_registry.issues) == 2
-    issue_id = "config_entry_unique_id_collision_test2_group_1"
-    assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, issue_id) == snapshot
-    issue_id = "config_entry_unique_id_collision_test3_not_unique"
-    assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, issue_id) == snapshot
+    with pytest.raises(
+        HomeAssistantError,
+        match=message,
+    ):
+        manager.async_update_entry(entry4, unique_id="very unique")
 
-    # Remove one config entry for domain test3, the translations should be updated
-    await manager.async_remove(test3[0].entry_id)
-    assert set(issue_registry.issues) == {
-        (HOMEASSISTANT_DOMAIN, "config_entry_unique_id_collision_test2_group_1"),
-        (HOMEASSISTANT_DOMAIN, "config_entry_unique_id_collision_test3_not_unique"),
+
+async def test_async_add_entry_unique_id_collision(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+) -> None:
+    """Test we warn when async_add creates a unique_id collision and raises."""
+
+    entry1 = MockConfigEntry(domain="test", unique_id="very_unique")
+    entry2 = MockConfigEntry(domain="test", unique_id="very_unique")
+    await manager.async_add(entry1)
+
+    with pytest.raises(
+        HomeAssistantError,
+        match="An entry for domain test with unique id very_unique already exists.",
+    ):
+        await manager.async_add(entry2)
+
+
+async def test_loading_config_entries_duplicated_unique_id_removes_them(
+    hass: HomeAssistant, hass_storage: dict[str, Any], caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test duplicate unique id's at loading removed both entries."""
+    hass_storage[config_entries.STORAGE_KEY] = {
+        "version": 1,
+        "data": {
+            "entries": [
+                {
+                    "version": 5,
+                    "domain": "my_domain",
+                    "entry_id": "mock-id",
+                    "data": {"my": "data"},
+                    "source": "user",
+                    "title": "Mock title",
+                    "unique_id": "very_unique",
+                    "system_options": {"disable_new_entities": True},
+                },
+                {
+                    "version": 5,
+                    "domain": "my_domain",
+                    "entry_id": "mock-id2",
+                    "data": {"my": "data"},
+                    "source": "user",
+                    "title": "Mock title 2",
+                    "unique_id": "very_unique",
+                    "system_options": {"disable_new_entities": True},
+                },
+            ]
+        },
     }
-    assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, issue_id) == snapshot
+    manager = config_entries.ConfigEntries(hass, {})
+    await manager.async_initialize()
 
-    # Remove all but two config entries for domain test 3
-    for i in range(3):
-        await manager.async_remove(test3[1 + i].entry_id)
-        assert set(issue_registry.issues) == {
-            (HOMEASSISTANT_DOMAIN, "config_entry_unique_id_collision_test2_group_1"),
-            (HOMEASSISTANT_DOMAIN, "config_entry_unique_id_collision_test3_not_unique"),
-        }
-
-    # Remove the last test3 duplicate, the issue is cleared
-    await manager.async_remove(test3[-1].entry_id)
-    assert set(issue_registry.issues) == {
-        (HOMEASSISTANT_DOMAIN, "config_entry_unique_id_collision_test2_group_1"),
-    }
-
-    await manager.async_remove(test2_group_1[0].entry_id)
-    assert set(issue_registry.issues) == {
-        (HOMEASSISTANT_DOMAIN, "config_entry_unique_id_collision_test2_group_1"),
-    }
-
-    # Remove the last test2 group1 duplicate, a new issue is created
-    await manager.async_remove(test2_group_1[1].entry_id)
-    assert set(issue_registry.issues) == {
-        (HOMEASSISTANT_DOMAIN, "config_entry_unique_id_collision_test2_group_2"),
-    }
-
-    await manager.async_remove(test2_group_2[0].entry_id)
-    assert set(issue_registry.issues) == {
-        (HOMEASSISTANT_DOMAIN, "config_entry_unique_id_collision_test2_group_2"),
-    }
-
-    # Remove the last test2 group2 duplicate, the issue is cleared
-    await manager.async_remove(test2_group_2[1].entry_id)
-    assert not issue_registry.issues
+    entries = manager.async_entries()
+    assert len(entries) == 0
+    assert (
+        "There are multiple 'my_domain' config entries with the same unique ID."
+        " The config entries named 'Mock title', 'Mock title 2' have been removed"
+    ) in caplog.text
 
 
 async def test_context_no_leak(hass: HomeAssistant) -> None:
