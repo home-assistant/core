@@ -25,7 +25,9 @@ from homeassistant.components.climate import (
     SERVICE_SET_TEMPERATURE,
     HVACMode,
 )
-from homeassistant.components.sensibo.climate import (
+from homeassistant.components.sensibo.climate import _find_valid_target_temp
+from homeassistant.components.sensibo.const import DOMAIN
+from homeassistant.components.sensibo.services import (
     ATTR_AC_INTEGRATION,
     ATTR_GEO_INTEGRATION,
     ATTR_HIGH_TEMPERATURE_STATE,
@@ -46,9 +48,7 @@ from homeassistant.components.sensibo.climate import (
     SERVICE_ENABLE_TIMER,
     SERVICE_FULL_STATE,
     SERVICE_GET_DEVICE_CAPABILITIES,
-    _find_valid_target_temp,
 )
-from homeassistant.components.sensibo.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,

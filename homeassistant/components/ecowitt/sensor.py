@@ -151,14 +151,14 @@ ECOWITT_SENSORS_MAPPING: Final = {
         key="RAIN_COUNT_MM",
         native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
         device_class=SensorDeviceClass.PRECIPITATION,
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
         suggested_display_precision=1,
     ),
     EcoWittSensorTypes.RAIN_COUNT_INCHES: SensorEntityDescription(
         key="RAIN_COUNT_INCHES",
         native_unit_of_measurement=UnitOfPrecipitationDepth.INCHES,
         device_class=SensorDeviceClass.PRECIPITATION,
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
         suggested_display_precision=2,
     ),
     EcoWittSensorTypes.RAIN_RATE_MM: SensorEntityDescription(
@@ -253,6 +253,7 @@ ECOWITT_SENSORS_MAPPING: Final = {
     ),
     EcoWittSensorTypes.PM4: SensorEntityDescription(
         key="PM4",
+        device_class=SensorDeviceClass.PM4,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),

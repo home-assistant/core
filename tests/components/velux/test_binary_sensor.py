@@ -16,7 +16,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-@pytest.mark.usefixtures("mock_module")
+@pytest.mark.usefixtures("mock_pyvlx")
 async def test_rain_sensor_state(
     hass: HomeAssistant,
     mock_window: MagicMock,
@@ -62,7 +62,7 @@ async def test_rain_sensor_state(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-@pytest.mark.usefixtures("mock_module")
+@pytest.mark.usefixtures("mock_pyvlx")
 async def test_rain_sensor_device_association(
     hass: HomeAssistant,
     mock_window: MagicMock,
