@@ -325,6 +325,9 @@ async def test_invalid_url_on_update(
             """Execute the query."""
             raise SQLAlchemyError("sqlite://homeassistant:hunter2@homeassistant.local")
 
+        def rollback(self) -> None:
+            pass
+
     with patch(
         "homeassistant.components.sql.util.scoped_session",
         return_value=MockSession,
