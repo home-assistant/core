@@ -87,7 +87,7 @@ PyRMVtransport==0.3.3
 PySrDaliGateway==0.13.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.72.0
+PySwitchbot==0.72.1
 
 # homeassistant.components.switchmate
 PySwitchmate==0.5.1
@@ -1151,7 +1151,7 @@ ha-iotawattpy==0.1.2
 ha-philipsjs==3.2.4
 
 # homeassistant.components.homeassistant_hardware
-ha-silabs-firmware-client==0.2.0
+ha-silabs-firmware-client==0.3.0
 
 # homeassistant.components.habitica
 habiticalib==0.4.6
@@ -1160,14 +1160,14 @@ habiticalib==0.4.6
 habluetooth==5.7.0
 
 # homeassistant.components.cloud
-hass-nabucasa==1.4.0
+hass-nabucasa==1.5.1
 
 # homeassistant.components.splunk
 hass-splunk==0.1.1
 
 # homeassistant.components.assist_satellite
 # homeassistant.components.conversation
-hassil==3.3.0
+hassil==3.4.0
 
 # homeassistant.components.jewish_calendar
 hdate[astral]==1.1.2
@@ -1201,7 +1201,7 @@ hole==0.9.0
 holidays==0.83
 
 # homeassistant.components.frontend
-home-assistant-frontend==20251001.4
+home-assistant-frontend==20251029.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.10.28
@@ -1911,9 +1911,6 @@ pyblackbird==0.6
 # homeassistant.components.bluesound
 pyblu==2.0.5
 
-# homeassistant.components.neato
-pybotvac==0.0.28
-
 # homeassistant.components.braviatv
 pybravia==0.3.4
 
@@ -2608,7 +2605,7 @@ pytouchlinesl==0.5.0
 
 # homeassistant.components.traccar
 # homeassistant.components.traccar_server
-pytraccar==2.1.1
+pytraccar==3.0.0
 
 # homeassistant.components.tradfri
 pytradfri[async]==9.0.1
@@ -3084,7 +3081,7 @@ unifi_ap==0.0.2
 unifiled==0.11
 
 # homeassistant.components.homeassistant_hardware
-universal-silabs-flasher==0.0.35
+universal-silabs-flasher==0.0.37
 
 # homeassistant.components.upb
 upb-lib==0.6.1
@@ -3107,7 +3104,7 @@ vacuum-map-parser-roborock==0.1.4
 vallox-websocket-api==5.3.0
 
 # homeassistant.components.vegehub
-vegehub==0.1.24
+vegehub==0.1.26
 
 # homeassistant.components.rdw
 vehicle==2.2.2
@@ -3153,7 +3150,7 @@ watchdog==6.0.0
 waterfurnace==1.2.0
 
 # homeassistant.components.watergate
-watergate-local-api==2024.4.1
+watergate-local-api==2025.1.0
 
 # homeassistant.components.weatherflow_cloud
 weatherflow4py==1.4.1

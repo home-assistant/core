@@ -77,6 +77,20 @@ def mock_nintendo_authenticator() -> Generator[MagicMock]:
 
 
 @pytest.fixture
+def mock_nintendo_api() -> Generator[AsyncMock]:
+    """Mock Nintendo API."""
+    with patch(
+        "homeassistant.components.nintendo_parental_controls.config_flow.Api",
+        autospec=True,
+    ) as mock_api_class:
+        mock_api_instance = MagicMock()
+        # patch async_get_account_devices as an AsyncMock
+        mock_api_instance.async_get_account_devices = AsyncMock()
+        mock_api_class.return_value = mock_api_instance
+        yield mock_api_instance
+
+
+@pytest.fixture
 def mock_failed_nintendo_authenticator() -> Generator[MagicMock]:
     """Mock a failed Nintendo Authenticator."""
     with (
