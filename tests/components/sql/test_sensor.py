@@ -585,6 +585,53 @@ async def test_multiple_sensors_using_same_db(
         await hass.async_stop()
 
 
+async def test_multiple_sensors_using_same_external_db(
+    recorder_mock: Recorder, hass: HomeAssistant, tmp_path: Path
+) -> None:
+    """Test multiple sensors using the same external db."""
+    db_path = tmp_path / "test.db"
+
+    # Create and populate the external database
+    conn = sqlite3.connect(db_path)
+    conn.execute("CREATE TABLE users (name TEXT, age INTEGER)")
+    conn.execute("INSERT INTO users (name, age) VALUES ('Alice', 30), ('Bob', 25)")
+    conn.commit()
+    conn.close()
+
+    config = {CONF_DB_URL: f"sqlite:///{db_path}"}
+    config2 = {CONF_DB_URL: f"sqlite:///{db_path}"}
+    options = {
+        CONF_QUERY: "SELECT name FROM users ORDER BY age LIMIT 1",
+        CONF_COLUMN_NAME: "name",
+    }
+    options2 = {
+        CONF_QUERY: "SELECT name FROM users ORDER BY age DESC LIMIT 1",
+        CONF_COLUMN_NAME: "name",
+    }
+
+    await init_integration(
+        hass, title="Select name SQL query", config=config, options=options
+    )
+
+    assert hass.data["sql"]
+    assert len(hass.data["sql"].session_makers_by_db_url) == 1
+    assert hass.states.get("sensor.select_name_sql_query").state == "Bob"
+
+    await init_integration(
+        hass,
+        title="Select name SQL query 2",
+        config=config2,
+        options=options2,
+        entry_id="2",
+    )
+
+    assert len(hass.data["sql"].session_makers_by_db_url) == 1
+    assert hass.states.get("sensor.select_name_sql_query_2").state == "Alice"
+
+    with patch("sqlalchemy.engine.base.Engine.dispose"):
+        await hass.async_stop()
+
+
 async def test_engine_is_disposed_at_stop(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:

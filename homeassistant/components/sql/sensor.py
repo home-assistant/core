@@ -279,8 +279,10 @@ class SQLSensor(ManualTriggerSensorEntity):
             _LOGGER.warning("%s returned no results", self._query)
 
     def _update(self) -> None:
-        """Retrieve sensor data from the query."""
-        self._attr_extra_state_attributes = {}
+        """Retrieve sensor data from the query.
+
+        This does I/O and should be run in the executor.
+        """
         if TYPE_CHECKING:
             assert isinstance(self.sessionmaker, scoped_session)
         with self.sessionmaker() as session:
@@ -296,8 +298,8 @@ class SQLSensor(ManualTriggerSensorEntity):
 
     async def async_update(self) -> None:
         """Retrieve sensor data from the query using the right executor."""
+        self._attr_extra_state_attributes = {}
         if isinstance(self.sessionmaker, async_scoped_session):
-            self._attr_extra_state_attributes = {}
             async with self.sessionmaker() as session:
                 try:
                     self._process(await session.execute(self._lambda_stmt))

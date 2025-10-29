@@ -215,7 +215,9 @@ async def _async_validate_and_get_session_maker_for_db_url(
     """Validate the db_url and return a async session maker."""
     try:
         maker = async_scoped_session(
-            async_sessionmaker(bind=create_async_engine(db_url)),
+            async_sessionmaker(
+                bind=create_async_engine(db_url, future=True), future=True
+            ),
             scopefunc=asyncio.current_task,
         )
         # Run a dummy query just to test the db_url
