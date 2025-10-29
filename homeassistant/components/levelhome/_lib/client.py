@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
+from http import HTTPStatus
 from typing import Any
 
 from aiohttp import ClientError, ClientSession
@@ -27,6 +28,7 @@ class Client:
     def __init__(
         self, session: ClientSession, base_url: str, get_token: TokenProvider
     ) -> None:
+        """Initialize the Level API client."""
         self._session = session
         self._base_url = base_url.rstrip("/")
         self._get_token = get_token
@@ -41,7 +43,7 @@ class Client:
             async with self._session.request(
                 method, url, headers=headers, json=json
             ) as resp:
-                if resp.status >= 400:
+                if resp.status >= HTTPStatus.BAD_REQUEST:
                     text = await resp.text()
                     raise ApiError(f"HTTP {resp.status} for {method} {path}: {text}")
                 if resp.content_type == "application/json":
@@ -60,9 +62,11 @@ class Client:
         return await self._request("GET", f"/v1/locks/{lock_id}")
 
     async def async_lock(self, lock_id: str) -> None:
+        """Send lock command to the specified lock."""
         await self._request("POST", f"/v1/locks/{lock_id}/lock")
 
     async def async_unlock(self, lock_id: str) -> None:
+        """Send unlock command to the specified lock."""
         await self._request("POST", f"/v1/locks/{lock_id}/unlock")
 
     async def async_list_locks_normalized(self) -> list[dict[str, Any]]:

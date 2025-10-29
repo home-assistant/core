@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import timedelta
 import logging
 from typing import Any
 
@@ -13,7 +14,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from ._lib.level_ha import ApiError, Client, WebsocketManager as LevelWebsocketManager
 
 LOGGER = logging.getLogger(__name__)
-SCAN_INTERVAL = None  # Use push updates; no periodic polling
+SCAN_INTERVAL: timedelta | None = None  # Use push updates; no periodic polling
 
 
 @dataclass(slots=True)
@@ -63,6 +64,7 @@ class LevelLocksCoordinator(DataUpdateCoordinator[dict[str, LevelLockDevice]]):
     def __init__(
         self, hass: HomeAssistant, client: Client, *, config_entry: ConfigEntry
     ) -> None:
+        """Initialize the Level locks coordinator."""
         super().__init__(
             hass,
             logger=LOGGER,
@@ -80,14 +82,13 @@ class LevelLocksCoordinator(DataUpdateCoordinator[dict[str, LevelLockDevice]]):
             raise UpdateFailed(str(err)) from err
         result: dict[str, LevelLockDevice] = {d.lock_id: d for d in devices}
         missing_status = [d for d in result.values() if d.is_locked is None]
-        if missing_status:
-            for device in missing_status:
-                try:
-                    device.is_locked = await self._client.async_get_lock_status(
-                        device.lock_id
-                    )
-                except ApiError as err:
-                    raise UpdateFailed(str(err)) from err
+        for device in missing_status:
+            try:
+                device.is_locked = await self._client.async_get_lock_status(
+                    device.lock_id
+                )
+            except ApiError as err:
+                raise UpdateFailed(str(err)) from err
         return result
 
     def attach_ws_manager(self, ws_manager: LevelWebsocketManager) -> None:
@@ -116,34 +117,36 @@ class LevelLocksCoordinator(DataUpdateCoordinator[dict[str, LevelLockDevice]]):
         if device is None:
             # Unknown lock; fetch list once to incorporate
             try:
-                try:
-                    devices = await self._client.async_list_locks()
-                except ApiError:
-                    LOGGER.debug("Push update for unknown lock %s", lock_id)
-                    return
-                current = {d.lock_id: d for d in devices}
-                device = current.get(lock_id)
-            except Exception:  # noqa: BLE001
+                devices = await self._client.async_list_locks()
+            except (ApiError, Exception):
                 LOGGER.debug("Push update for unknown lock %s", lock_id)
                 return
-        if device is not None:
-            if is_locked is not None:
-                device.is_locked = is_locked
-            # Update the raw state from payload if available
-            if payload is not None and "state" in payload:
-                state = payload.get("state")
-                device.state = str(state) if state is not None else None
+            current = {d.lock_id: d for d in devices}
+            device = current.get(lock_id)
+            if device is None:
+                LOGGER.debug("Push update for unknown lock %s", lock_id)
+                return
+
+        if is_locked is not None:
+            device.is_locked = is_locked
+        # Update the raw state from payload if available
+        if payload is not None and "state" in payload:
+            state = payload.get("state")
+            device.state = str(state) if state is not None else None
         self.async_set_updated_data(current)
 
     async def async_send_command(self, lock_id: str, command: str) -> None:
         """Send a command via push channel if available; fallback to HTTP."""
         if self._ws_manager is not None and command in ("lock", "unlock"):
             try:
-                # type: ignore[arg-type]
-                await self._ws_manager.async_send_command(lock_id, command)
-                return
+                await self._ws_manager.async_send_command(
+                    lock_id,
+                    command,  # type: ignore[arg-type]
+                )
             except Exception as err:  # noqa: BLE001
                 LOGGER.debug("WS command failed; falling back to HTTP: %s", err)
+            else:
+                return
         try:
             if command == "lock":
                 await self._client.async_lock(lock_id)
