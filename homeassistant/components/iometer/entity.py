@@ -16,9 +16,11 @@ class IOmeterEntity(CoordinatorEntity[IOMeterCoordinator]):
         """Initialize IOmeter entity."""
         super().__init__(coordinator)
         status = coordinator.data.status
+        host = coordinator.config_entry.data["host"]
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, status.device.id)},
             manufacturer="IOmeter GmbH",
             model="IOmeter",
             sw_version=coordinator.current_fw_version,
+            configuration_url=f"http://{host}/",
         )
