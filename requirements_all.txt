@@ -118,8 +118,10 @@ RestrictedPython==8.1
 RtmAPI==0.7.2
 
 # homeassistant.components.recorder
-# homeassistant.components.sql
 SQLAlchemy==2.0.41
+
+# homeassistant.components.sql
+SQLAlchemy[asyncio]==2.0.41
 
 # homeassistant.components.tami4
 Tami4EdgeAPI==3.0
@@ -1128,9 +1130,6 @@ greeclimate==2.1.0
 
 # homeassistant.components.greeneye_monitor
 greeneye_monitor==3.0.3
-
-# homeassistant.components.sql
-greenlet==3.2.4
 
 # homeassistant.components.greenwave
 greenwavereality==0.5.1

@@ -10,8 +10,7 @@
     "aiomysql==0.3.2",
     "aiosqlite==0.21.0",
     "asyncpg==0.30.0",
-    "greenlet==3.2.4",
-    "SQLAlchemy==2.0.41",
+    "SQLAlchemy[asyncio]==2.0.41",
     "sqlparse==0.5.0"
   ]
 }
