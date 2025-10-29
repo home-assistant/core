@@ -126,22 +126,6 @@
     "alert_url": "https://alerts.home-assistant.io/#logi_circle.markdown"
   },
   {
-    "id": "neato",
-    "title": "New Neato Botvacs Do Not Support Existing API",
-    "created": "2021-12-20T13:27:00.000Z",
-    "integrations": [
-      {
-        "package": "neato"
-      }
-    ],
-    "homeassistant": {
-      "package": "homeassistant",
-      "affected_from_version": "0.30"
-    },
-    "filename": "neato.markdown",
-    "alert_url": "https://alerts.home-assistant.io/#neato.markdown"
-  },
-  {
     "id": "nest",
     "title": "Nest Desktop Auth Deprecation",
     "created": "2022-05-12T14:04:00.000Z",

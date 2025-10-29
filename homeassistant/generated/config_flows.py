@@ -428,7 +428,6 @@ FLOWS = {
         "nam",
         "nanoleaf",
         "nasweb",
-        "neato",
         "nederlandse_spoorwegen",
         "nest",
         "netatmo",
