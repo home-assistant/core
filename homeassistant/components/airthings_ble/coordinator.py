@@ -93,7 +93,7 @@ class AirthingsBLEDataUpdateCoordinator(DataUpdateCoordinator[AirthingsDevice]):
                     ir.async_delete_issue(
                         hass=self.hass,
                         domain=DOMAIN,
-                        issue_id=f"smartlink_detected_{data.address}",
+                        issue_id=issue_id,
                     )
         except Exception:
             _LOGGER.exception("Error checking connectivity mode for issues")
