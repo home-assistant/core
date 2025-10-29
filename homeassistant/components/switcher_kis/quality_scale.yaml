@@ -28,7 +28,7 @@ rules:
     comment: The integration only supports a single config entry.
 
   # Silver
-  action-exceptions: todo
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
