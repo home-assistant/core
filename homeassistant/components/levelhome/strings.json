@@ -12,9 +12,12 @@
       },
       "otp": {
         "title": "Enter verification code",
-        "description": "We sent a 5-digit code to your user ID. Enter it to continue.",
+        "description": "We sent a verification code to your Level Home app. Enter the code in format ABCD-1234.",
         "data": {
           "code": "Verification code"
+        },
+        "data_description": {
+          "code": "Format: ABCD-1234 (4 letters and 4 digits)"
         }
       },
       "pick_implementation": {
@@ -40,7 +43,8 @@
     },
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "invalid_code_format": "Code must be 8 characters: 4 letters followed by 4 digits (example: ABCD-1234 or ABCD1234)"
     }
   }
 }

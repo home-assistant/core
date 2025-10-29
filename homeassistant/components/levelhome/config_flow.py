@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from contextlib import suppress
 from http import HTTPStatus
 import logging
 import re
@@ -26,6 +28,42 @@ from .const import (
     OAUTH2_TOKEN_EXCHANGE_PATH,
     PARTNER_OTP_START_PATH,
 )
+
+# Regex patterns for extracting request_uuid from HTML
+REQUEST_UUID_PATTERN_DOUBLE_QUOTES = r'name="request_uuid"[^>]*value="([^"]+)"'
+REQUEST_UUID_PATTERN_REVERSE_ORDER = r'value="([^"]+)"[^>]*name="request_uuid"'
+REQUEST_UUID_PATTERN_SINGLE_QUOTES = r"name='request_uuid'[^>]*value='([^']+)'"
+
+
+def validate_and_format_otp_code(code: str) -> str:
+    """Validate and format OTP code to ABCD-1234 format.
+
+    Args:
+        code: Raw user input code
+
+    Returns:
+        Formatted code in ABCD-1234 format
+
+    Raises:
+        vol.Invalid: If code format is invalid
+    """
+    # Strip whitespace, remove all dashes, and convert to uppercase
+    code_cleaned = code.strip().replace("-", "").upper()
+
+    # Validate: must be exactly 8 characters (4 letters + 4 digits)
+    if len(code_cleaned) != 8:
+        raise vol.Invalid("invalid_code_format")
+
+    # Validate first 4 characters are letters
+    if not code_cleaned[:4].isalpha():
+        raise vol.Invalid("invalid_code_format")
+
+    # Validate last 4 characters are digits
+    if not code_cleaned[4:].isdigit():
+        raise vol.Invalid("invalid_code_format")
+
+    # Return formatted code with dash
+    return f"{code_cleaned[:4]}-{code_cleaned[4:]}"
 
 
 class OAuth2FlowHandler(
@@ -53,6 +91,10 @@ class OAuth2FlowHandler(
     def extra_authorize_data(self) -> dict[str, Any]:
         """Append Level Lock scopes."""
         return {"scope": "all"}
+
+    def _build_oauth2_url(self, path: str) -> str:
+        """Build an OAuth2 URL by appending path to the base URL."""
+        return f"{self._oauth2_base_url}{path}"
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -103,7 +145,7 @@ class OAuth2FlowHandler(
         if not implementations:
             if (
                 self.DOMAIN
-                in await config_entry_oauth2_flow.async_get_application_credentials(
+                in await config_entry_oauth2_flow.async_get_application_credentials(  # type: ignore[attr-defined]
                     self.hass
                 )
             ):
@@ -134,16 +176,12 @@ class OAuth2FlowHandler(
             return self.async_abort(reason="oauth_failed")
 
         # Extract request_uuid from hidden input
-        match = re.search(
-            r"name=\"request_uuid\"[^>]*value=\"([^\"]+)\"", html, re.IGNORECASE
-        )
+        match = re.search(REQUEST_UUID_PATTERN_DOUBLE_QUOTES, html, re.IGNORECASE)
         if not match:
             # Try alternative attribute order or single quotes
             match = re.search(
-                r"value=\"([^\"]+)\"[^>]*name=\"request_uuid\"", html, re.IGNORECASE
-            ) or re.search(
-                r"name='request_uuid'[^>]*value='([^']+)'", html, re.IGNORECASE
-            )
+                REQUEST_UUID_PATTERN_REVERSE_ORDER, html, re.IGNORECASE
+            ) or re.search(REQUEST_UUID_PATTERN_SINGLE_QUOTES, html, re.IGNORECASE)
         if not match:
             self.logger.error("Missing request_uuid in authorize response HTML")
             return self.async_abort(reason="oauth_error")
@@ -182,11 +220,21 @@ class OAuth2FlowHandler(
         assert self._request_uuid is not None
         assert self._user_id is not None
 
-        code = user_input["code"].strip()
+        # Validate and format the OTP code
+        try:
+            code = validate_and_format_otp_code(user_input["code"])
+        except vol.Invalid:
+            errors["code"] = "invalid_code_format"
+            return self.async_show_form(
+                step_id="otp",
+                data_schema=vol.Schema({vol.Required("code"): str}),
+                errors=errors,
+            )
+
         session = aiohttp_client.async_get_clientsession(self.hass)
 
         # Confirm OTP
-        otp_confirm_url = f"{self._oauth2_base_url}{OAUTH2_OTP_CONFIRM_PATH}"
+        otp_confirm_url = self._build_oauth2_url(OAUTH2_OTP_CONFIRM_PATH)
         self.logger.warning("OTP Confirm URL: %s", otp_confirm_url)
         try:
             async with session.post(
@@ -212,7 +260,7 @@ class OAuth2FlowHandler(
             )
 
         # Accept grant permissions
-        grant_url = f"{self._oauth2_base_url}{OAUTH2_GRANT_PERMISSIONS_ACCEPT_PATH}"
+        grant_url = self._build_oauth2_url(OAUTH2_GRANT_PERMISSIONS_ACCEPT_PATH)
         redirect_uri_from_grant: str | None = None
         self.logger.warning("Grant URL: %s", grant_url)
         try:
@@ -243,20 +291,17 @@ class OAuth2FlowHandler(
             return self.async_abort(reason="oauth_error")
 
         # Exchange code for token (PKCE: include code_verifier; include client_secret if available)
-        token_url = f"{self._oauth2_base_url}{OAUTH2_TOKEN_EXCHANGE_PATH}"
+        token_url = self._build_oauth2_url(OAUTH2_TOKEN_EXCHANGE_PATH)
         self.logger.warning("Token Exchange URL: %s", token_url)
         payload: dict[str, Any] = {
             "grant_type": "authorization_code",
             "code": authorization_code,
-            "redirect_uri": self.flow_impl.redirect_uri,
-            "client_id": self.flow_impl.client_id,
+            "redirect_uri": self.flow_impl.redirect_uri,  # type: ignore[attr-defined]
+            "client_id": self.flow_impl.client_id,  # type: ignore[attr-defined]
         }
         # Add PKCE token parameters if provided by the implementation
-        try:
-            payload.update(self.flow_impl.extra_token_resolve_data)
-        except Exception:  # noqa: BLE001
-            # Fallback to no-op if implementation does not support PKCE
-            pass
+        with suppress(Exception):
+            payload.update(self.flow_impl.extra_token_resolve_data)  # type: ignore[attr-defined]
 
         # Some authorization servers require a client_secret even with PKCE
         client_secret: str | None = getattr(self.flow_impl, "client_secret", None)
@@ -289,7 +334,9 @@ class OAuth2FlowHandler(
             {"auth_implementation": self.flow_impl.domain, "token": token}
         )
 
-    async def async_step_reauth(self, entry_data: dict[str, Any]) -> ConfigFlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle reauth by restarting the OTP flow."""
         return await self.async_step_reauth_confirm()
 
@@ -301,7 +348,7 @@ class OAuth2FlowHandler(
             return self.async_show_form(step_id="reauth_confirm")
         return await self.async_step_user()
 
-    async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:  # type: ignore[override]
+    async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
         """Create or update an entry and store base URLs in options."""
         options = {
             CONF_OAUTH2_BASE_URL: self._oauth2_base_url,
@@ -312,4 +359,6 @@ class OAuth2FlowHandler(
             return self.async_update_reload_and_abort(
                 self._get_reauth_entry(), data=data, options=options
             )
-        return self.async_create_entry(title=self.flow_impl.name, data=data, options=options)
+        return self.async_create_entry(
+            title=self.flow_impl.name, data=data, options=options
+        )

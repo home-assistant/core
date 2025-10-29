@@ -2,127 +2,149 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from collections.abc import Awaitable, Callable
+from http import HTTPStatus
+import time
 
-from homeassistant import config_entries
-from homeassistant.const import Platform
+import pytest
+
+from homeassistant.components.levelhome.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
+from .conftest import OAUTH2_TOKEN, SERVER_ACCESS_TOKEN
+
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_setup_unload_entry(hass: HomeAssistant) -> None:
+async def test_setup_unload_entry(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[], Awaitable[bool]],
+    setup_credentials: None,
+) -> None:
     """Test setting up and unloading a config entry."""
-
-    # Minimal mock config entry with OAuth2 data
-    from homeassistant.components.levelhome.const import DOMAIN
-
-    entry = MockConfigEntry(
-        domain=DOMAIN, 
-        data={
-            "auth_implementation": "levelhome",
-            "token": {
-                "access_token": "test-token",
-                "refresh_token": "test-refresh-token",
-                "expires_at": 9999999999,
-                "expires_in": 3600,
-            }
-        }, 
-        unique_id="test-uid"
-    )
-    entry.add_to_hass(hass)
-
-    # Create a mock OAuth2 implementation
-    from types import SimpleNamespace
-    from homeassistant.helpers import config_entry_oauth2_flow
-    
-    mock_impl = SimpleNamespace(
-        domain="levelhome",
-        name="Level Lock",
-        client_id="test-client-id",
-        redirect_uri="https://example.com/redirect",
-        extra_token_resolve_data={},
-    )
-
-    # Use fakes for Client and WebSocket manager to capture closures and avoid I/O
-    class _FakeClient:
-        last: object | None = None
-
-        def __init__(self, session, base_url, get_token):
-            self.get_token = get_token
-            _FakeClient.last = self
-
-        async def async_list_locks_normalized(self):
-            return []
-
-        async def async_get_lock_status_bool(self, lock_id):
-            return True
-
-        async def async_lock(self, lock_id):
-            return None
-
-        async def async_unlock(self, lock_id):
-            return None
-
-    class _FakeWS:
-        last: object | None = None
-
-        def __init__(self, session, base_url, get_token, on_state_update):
-            self.on_state_update = on_state_update
-            _FakeWS.last = self
-
-        async def async_start(self, lock_ids):
-            return None
-
-        async def async_stop(self):
-            return None
-
-    # Patch OAuth token retrieval to avoid touching real OAuth2 machinery
-    with (
-        patch(
-            "homeassistant.components.levelhome.auth.AsyncConfigEntryAuth.async_get_access_token",
-            return_value="test-token",
-        ),
-        # Mock the OAuth2 implementation lookup
-        patch(
-            "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
-            return_value=mock_impl,
-        ),
-        # Skip initial refresh to avoid real HTTP in setup
-        patch(
-            "homeassistant.components.levelhome.coordinator.LevelLocksCoordinator.async_config_entry_first_refresh",
-            new=AsyncMock(return_value=None),
-        ),
-        # Replace symbols where they are used (aliased in __init__.py)
-        patch(
-            "homeassistant.components.levelhome.__init__.LibClient",
-            new=_FakeClient,
-        ),
-        patch(
-            "homeassistant.components.levelhome.__init__.LevelWebsocketManager",
-            new=_FakeWS,
-        ),
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-        # Trigger the captured token provider to cover _get_token in __init__.py
-        if _FakeClient.last is not None:
-            get_token = getattr(_FakeClient.last, "get_token", None)
-            if get_token is not None:
-                await get_token()
-
-        # Trigger the captured on_state callback to cover _on_state wrapper in __init__.py
-        if _FakeWS.last is not None:
-            on_state = getattr(_FakeWS.last, "on_state_update", None)
-            if on_state is not None:
-                await on_state("lock-id", True, {"state": "locked"})
-
-    assert entry.state is config_entries.ConfigEntryState.LOADED
+    assert await integration_setup()
+    assert config_entry.state is ConfigEntryState.LOADED
 
     # Unload
-    assert await hass.config_entries.async_unload(entry.entry_id)
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
-    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
+@pytest.mark.parametrize("expires_at", [time.time() - 3600], ids=["expired"])
+async def test_expired_token_refresh_success(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[], Awaitable[bool]],
+    setup_credentials: None,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test expired token is refreshed during setup."""
+    # Mock the token refresh endpoint
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        json=SERVER_ACCESS_TOKEN,
+    )
+
+    # Verify initial token
+    assert config_entry.data["token"]["access_token"] == "test-access-token"
+    assert config_entry.data["token"]["refresh_token"] == "test-refresh-token"
+
+    # Setup integration - should trigger token refresh
+    assert await integration_setup()
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    # Verify token was refreshed
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert (
+        entries[0].data["token"]["access_token"] == SERVER_ACCESS_TOKEN["access_token"]
+    )
+    assert (
+        entries[0].data["token"]["refresh_token"]
+        == SERVER_ACCESS_TOKEN["refresh_token"]
+    )
+    assert entries[0].data["token"]["expires_in"] == SERVER_ACCESS_TOKEN["expires_in"]
+
+
+@pytest.mark.parametrize("expires_at", [time.time() - 3600], ids=["expired"])
+@pytest.mark.parametrize(
+    "status",
+    [
+        HTTPStatus.UNAUTHORIZED,
+        HTTPStatus.BAD_REQUEST,
+    ],
+    ids=["unauthorized", "bad_request"],
+)
+async def test_expired_token_refresh_failure_auth_error(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[], Awaitable[bool]],
+    setup_credentials: None,
+    aioclient_mock: AiohttpClientMocker,
+    status: HTTPStatus,
+) -> None:
+    """Test failed token refresh due to auth errors results in setup retry."""
+    # Mock token refresh failure with auth error
+    aioclient_mock.post(OAUTH2_TOKEN, status=status)
+
+    # Setup should fail - currently results in SETUP_RETRY
+    # (Level Lock integration doesn't yet catch ConfigEntryAuthFailed specifically)
+    assert not await integration_setup()
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize("expires_at", [time.time() - 3600], ids=["expired"])
+@pytest.mark.parametrize(
+    "status",
+    [
+        HTTPStatus.INTERNAL_SERVER_ERROR,
+        HTTPStatus.FORBIDDEN,
+        HTTPStatus.NOT_FOUND,
+    ],
+    ids=["internal_server_error", "forbidden", "not_found"],
+)
+async def test_expired_token_refresh_transient_failure(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[], Awaitable[bool]],
+    setup_credentials: None,
+    aioclient_mock: AiohttpClientMocker,
+    status: HTTPStatus,
+) -> None:
+    """Test transient refresh failures result in setup retry."""
+    # Mock transient failure
+    aioclient_mock.post(OAUTH2_TOKEN, status=status)
+
+    # Setup should fail with retry state
+    assert not await integration_setup()
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize("expires_at", [time.time() + 3600], ids=["valid"])
+async def test_valid_token_no_refresh(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[], Awaitable[bool]],
+    setup_credentials: None,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test valid token does not trigger refresh."""
+    # Setup integration with valid token
+    assert await integration_setup()
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    # Verify no token refresh calls were made
+    assert not any(
+        call[0] == "POST" and OAUTH2_TOKEN in str(call[1])
+        for call in aioclient_mock.mock_calls
+    )
+
+    # Verify token unchanged
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].data["token"]["access_token"] == "test-access-token"
+    assert entries[0].data["token"]["refresh_token"] == "test-refresh-token"
