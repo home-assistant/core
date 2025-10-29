@@ -1,6 +1,8 @@
 rules:
   ## Bronze
-  config-flow: done
+  config-flow:
+    status: todo
+    comment: Under review
   test-before-configure: done
   unique-config-entry: done
   config-flow-test-coverage: done
