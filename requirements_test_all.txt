@@ -1461,10 +1461,6 @@ peco==0.1.2
 # homeassistant.components.escea
 pescea==1.0.12
 
-# homeassistant.components.aruba
-# homeassistant.components.cisco_ios
-pexpect==4.9.0
-
 # homeassistant.components.modem_callerid
 phone-modem==0.1.1
 
