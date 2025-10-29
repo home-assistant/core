@@ -918,10 +918,16 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
         # Without confirmation, discovery can automatically progress into parts of the
         # config flow logic that interacts with hardware.
         # Ignore Zeroconf discoveries during onboarding, as they may be in use already.
-        if user_input is not None or (
-            not onboarding.async_is_onboarded(self.hass)
-            and not zha_config_entries
-            and self.source != SOURCE_ZEROCONF
+        # If we have a flow strategy provided by a previous hardware flow, we can skip
+        # confirmation.
+        if (
+            user_input is not None
+            or self._flow_strategy is not None
+            or (
+                not onboarding.async_is_onboarded(self.hass)
+                and not zha_config_entries
+                and self.source != SOURCE_ZEROCONF
+            )
         ):
             # Probe the radio type if we don't have one yet
             if self._radio_mgr.radio_type is None:
