@@ -126,11 +126,11 @@ RF_REGIONS = [
 
 # USB devices to ignore in serial port selection (non-Z-Wave devices)
 # Format: (manufacturer, description)
-IGNORED_USB_DEVICES = [
+IGNORED_USB_DEVICES = {
     ("Nabu Casa", "SkyConnect v1.0"),
     ("Nabu Casa", "Home Assistant Connect ZBT-1"),
     ("Nabu Casa", "ZBT-2"),
-]
+}
 
 
 def get_manual_schema(user_input: dict[str, Any]) -> vol.Schema:
