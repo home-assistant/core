@@ -73,7 +73,8 @@
       "button1": "First button",
       "button2": "Second button",
       "button3": "Third button",
-      "button4": "Fourth button"
+      "button4": "Fourth button",
+      "button5": "Fifth button"
     },
     "trigger_type": {
       "btn_down": "{subtype} button down",
