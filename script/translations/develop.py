@@ -91,7 +91,7 @@ def run_single(translations, flattened_translations, integration):
         json.dumps({"component": {integration: translations["component"][integration]}})
     )
 
-    download.write_integration_translations()
+    download.save_integrations_translations()
 
 
 def run():
