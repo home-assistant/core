@@ -267,7 +267,7 @@ DISCOVERY_SCHEMAS = [
             format_max_value=lambda x: x / 10,
             min_attribute=clusters.Thermostat.Attributes.OccupiedSetbackMin,
             max_attribute=clusters.Thermostat.Attributes.OccupiedSetbackMax,
-            step=0.5,
+            native_step=0.5,
             mode=NumberMode.SLIDER,
         ),
         entity_class=MatterRangeNumber,
