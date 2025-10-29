@@ -123,7 +123,7 @@
     'capabilities': dict({
       'max': 255,
       'min': 1,
-      'mode': <NumberMode.BOX: 'box'>,
+      'mode': <NumberMode.SLIDER: 'slider'>,
       'step': 1,
     }),
     'config_entry_id': <ANY>,
@@ -161,7 +161,7 @@
       'friendly_name': 'Aqara Smart Lock U200 Wrong code limit',
       'max': 255,
       'min': 1,
-      'mode': <NumberMode.BOX: 'box'>,
+      'mode': <NumberMode.SLIDER: 'slider'>,
       'step': 1,
     }),
     'context': <ANY>,
@@ -699,7 +699,7 @@
     'capabilities': dict({
       'max': 255,
       'min': 1,
-      'mode': <NumberMode.BOX: 'box'>,
+      'mode': <NumberMode.SLIDER: 'slider'>,
       'step': 1,
     }),
     'config_entry_id': <ANY>,
@@ -737,7 +737,7 @@
       'friendly_name': 'Mock Door Lock Wrong code limit',
       'max': 255,
       'min': 1,
-      'mode': <NumberMode.BOX: 'box'>,
+      'mode': <NumberMode.SLIDER: 'slider'>,
       'step': 1,
     }),
     'context': <ANY>,
@@ -872,7 +872,7 @@
     'capabilities': dict({
       'max': 255,
       'min': 1,
-      'mode': <NumberMode.BOX: 'box'>,
+      'mode': <NumberMode.SLIDER: 'slider'>,
       'step': 1,
     }),
     'config_entry_id': <ANY>,
@@ -910,7 +910,7 @@
       'friendly_name': 'Mock Door Lock with unbolt Wrong code limit',
       'max': 255,
       'min': 1,
-      'mode': <NumberMode.BOX: 'box'>,
+      'mode': <NumberMode.SLIDER: 'slider'>,
       'step': 1,
     }),
     'context': <ANY>,
@@ -1102,9 +1102,9 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'max': 75,
+      'max': 100,
       'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
+      'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1,
     }),
     'config_entry_id': <ANY>,
@@ -1133,17 +1133,18 @@
     'supported_features': 0,
     'translation_key': 'led_indicator_intensity_off',
     'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-1-InovelliLEDIndicatorIntensityOff-305134641-305070178',
-    'unit_of_measurement': None,
+    'unit_of_measurement': '%',
   })
 # ---
 # name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_led_off_intensity_load_control-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'White Series OnOff Switch LED off intensity (Load Control)',
-      'max': 75,
+      'max': 100,
       'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
+      'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1,
+      'unit_of_measurement': '%',
     }),
     'context': <ANY>,
     'entity_id': 'number.white_series_onoff_switch_led_off_intensity_load_control',
@@ -1159,9 +1160,9 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'max': 75,
+      'max': 100,
       'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
+      'mode': <NumberMode.SLIDER: 'slider'>,
       'step': 1,
     }),
     'config_entry_id': <ANY>,
@@ -1190,24 +1191,25 @@
     'supported_features': 0,
     'translation_key': 'led_indicator_intensity_on',
     'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-1-InovelliLEDIndicatorIntensityOn-305134641-305070177',
-    'unit_of_measurement': None,
+    'unit_of_measurement': '%',
   })
 # ---
 # name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_led_on_intensity_load_control-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'White Series OnOff Switch LED on intensity (Load Control)',
-      'max': 75,
+      'max': 100,
       'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
+      'mode': <NumberMode.SLIDER: 'slider'>,
       'step': 1,
+      'unit_of_measurement': '%',
     }),
     'context': <ANY>,
     'entity_id': 'number.white_series_onoff_switch_led_on_intensity_load_control',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '33',
+    'state': '44',
   })
 # ---
 # name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_off_transition_time_load_control-entry]
@@ -1678,9 +1680,9 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'max': 75,
+      'max': 100,
       'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
+      'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1,
     }),
     'config_entry_id': <ANY>,
@@ -1709,17 +1711,18 @@
     'supported_features': 0,
     'translation_key': 'led_indicator_intensity_off',
     'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-1-InovelliLEDIndicatorIntensityOff-305134641-305070178',
-    'unit_of_measurement': None,
+    'unit_of_measurement': '%',
   })
 # ---
 # name: test_numbers[multi_endpoint_light][number.inovelli_led_off_intensity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Inovelli LED off intensity',
-      'max': 75,
+      'max': 100,
       'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
+      'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1,
+      'unit_of_measurement': '%',
     }),
     'context': <ANY>,
     'entity_id': 'number.inovelli_led_off_intensity',
@@ -1735,9 +1738,9 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'max': 75,
+      'max': 100,
       'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
+      'mode': <NumberMode.SLIDER: 'slider'>,
       'step': 1,
     }),
     'config_entry_id': <ANY>,
@@ -1766,24 +1769,25 @@
     'supported_features': 0,
     'translation_key': 'led_indicator_intensity_on',
     'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-1-InovelliLEDIndicatorIntensityOn-305134641-305070177',
-    'unit_of_measurement': None,
+    'unit_of_measurement': '%',
   })
 # ---
 # name: test_numbers[multi_endpoint_light][number.inovelli_led_on_intensity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Inovelli LED on intensity',
-      'max': 75,
+      'max': 100,
       'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
+      'mode': <NumberMode.SLIDER: 'slider'>,
       'step': 1,
+      'unit_of_measurement': '%',
     }),
     'context': <ANY>,
     'entity_id': 'number.inovelli_led_on_intensity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '33',
+    'state': '44',
   })
 # ---
 # name: test_numbers[multi_endpoint_light][number.inovelli_off_transition_time-entry]
