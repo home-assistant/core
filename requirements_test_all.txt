@@ -1025,7 +1025,7 @@ hass-nabucasa==1.5.1
 
 # homeassistant.components.assist_satellite
 # homeassistant.components.conversation
-hassil==3.3.0
+hassil==3.4.0
 
 # homeassistant.components.jewish_calendar
 hdate[astral]==1.1.2
@@ -2552,7 +2552,7 @@ ultraheat-api==0.5.7
 unifi-discovery==1.2.0
 
 # homeassistant.components.homeassistant_hardware
-universal-silabs-flasher==0.0.35
+universal-silabs-flasher==0.0.37
 
 # homeassistant.components.upb
 upb-lib==0.6.1
