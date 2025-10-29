@@ -2563,12 +2563,6 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
-    "gstreamer": {
-      "name": "GStreamer",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_push"
-    },
     "gtfs": {
       "name": "General Transit Feed Specification (GTFS)",
       "integration_type": "hub",
