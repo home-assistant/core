@@ -13,6 +13,10 @@
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "Password as needed to login on the SFR box",
+          "username": "Username as needed to login on the SFR box"
         }
       },
       "choose_auth": {
