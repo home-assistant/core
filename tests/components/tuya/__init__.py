@@ -15,6 +15,7 @@ from tests.common import MockConfigEntry
 DEVICE_MOCKS = [
     "bzyd_45idzfufidgee7ir",  # https://github.com/orgs/home-assistant/discussions/717
     "bzyd_ssimhf6r8kgwepfb",  # https://github.com/orgs/home-assistant/discussions/718
+    "cjkg_hmabvy81",  # https://github.com/orgs/home-assistant/discussions/1297
     "cjkg_uenof8jd",  # https://github.com/home-assistant/core/issues/151825
     "ckmkzq_1yyqfw4djv9eii3q",  # https://github.com/home-assistant/core/issues/150856
     "cl_3r8gc33pnqsxfe1g",  # https://github.com/tuya/tuya-home-assistant/issues/754
@@ -230,7 +231,7 @@ DEVICE_MOCKS = [
     "wg2_tmwhss6ntjfc7prs",  # https://github.com/home-assistant/core/issues/150662
     "wg2_v7owd9tzcaninc36",  # https://github.com/orgs/home-assistant/discussions/539
     "wk_6kijc7nd",  # https://github.com/home-assistant/core/issues/136513
-    "wk_IAYz2WK1th0cMLmL",  # https://github.com/orgs/home-assistant/discussions/842
+    "wk_IAYz2WK1th0cMLmL",  # https://github.com/home-assistant/core/issues/150077
     "wk_aqoouq7x",  # https://github.com/home-assistant/core/issues/146263
     "wk_ccpwojhalfxryigz",  # https://github.com/home-assistant/core/issues/145551
     "wk_cpmgn2cf",  # https://github.com/orgs/home-assistant/discussions/684

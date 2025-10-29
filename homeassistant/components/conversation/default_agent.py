@@ -1242,10 +1242,14 @@ class DefaultAgent(ConversationEntity):
                 intent_name: {
                     combo_key: [
                         SlotCombinationInfo(
-                            name_domains=(set(name_domains) if name_domains else None)
+                            name_domains=(
+                                set(combo_info.name_domains)
+                                if combo_info.name_domains
+                                else None
+                            )
                         )
                     ]
-                    for combo_key, name_domains in intent_combos.items()
+                    for combo_key, combo_info in intent_combos.items()
                 }
                 for intent_name, intent_combos in self._fuzzy_config.slot_combinations.items()
             },

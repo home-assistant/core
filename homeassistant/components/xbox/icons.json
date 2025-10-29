@@ -1,0 +1,39 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "has_game_pass": {
+        "default": "mdi:microsoft-xbox"
+      },
+      "in_game": {
+        "default": "mdi:microsoft-xbox-controller"
+      },
+      "online": {
+        "default": "mdi:account"
+      }
+    },
+    "sensor": {
+      "follower": {
+        "default": "mdi:account-arrow-left"
+      },
+      "following": {
+        "default": "mdi:account-arrow-right"
+      },
+      "gamer_score": {
+        "default": "mdi:alpha-g-circle"
+      },
+      "last_online": {
+        "default": "mdi:account-clock"
+      },
+      "now_playing": {
+        "default": "mdi:microsoft-xbox-controller",
+        "state": {
+          "unavailable": "mdi:microsoft-xbox-controller-off",
+          "unknown": "mdi:microsoft-xbox-controller-off"
+        }
+      },
+      "status": {
+        "default": "mdi:message-text-outline"
+      }
+    }
+  }
+}
