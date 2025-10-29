@@ -96,14 +96,11 @@ class NSConfigFlow(ConfigFlow, domain=DOMAIN):
             except Exception:
                 _LOGGER.exception("Unexpected exception validating API key")
                 errors["base"] = "unknown"
-
             if not errors:
-                # Update the API key and reload the entry
                 return self.async_update_reload_and_abort(
                     reconfigure_entry,
                     data_updates={CONF_API_KEY: user_input[CONF_API_KEY]},
                 )
-
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
