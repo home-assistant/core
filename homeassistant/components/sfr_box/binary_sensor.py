@@ -6,7 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from sfrbox_api.models import DslInfo, FtthInfo, SystemInfo, WanInfo
+from sfrbox_api.models import DslInfo, FtthInfo, WanInfo
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -15,12 +15,10 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
-from .coordinator import SFRConfigEntry, SFRDataUpdateCoordinator
+from .coordinator import SFRConfigEntry
+from .entity import SFRCoordinatorEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -88,29 +86,10 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class SFRBoxBinarySensor[_T](
-    CoordinatorEntity[SFRDataUpdateCoordinator[_T]], BinarySensorEntity
-):
-    """SFR Box sensor."""
+class SFRBoxBinarySensor[_T](SFRCoordinatorEntity[_T], BinarySensorEntity):
+    """SFR Box binary sensor."""
 
     entity_description: SFRBoxBinarySensorEntityDescription[_T]
-    _attr_has_entity_name = True
-
-    def __init__(
-        self,
-        coordinator: SFRDataUpdateCoordinator[_T],
-        description: SFRBoxBinarySensorEntityDescription,
-        system_info: SystemInfo,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator)
-        self.entity_description = description
-        self._attr_unique_id = (
-            f"{system_info.mac_addr}_{coordinator.name}_{description.key}"
-        )
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, system_info.mac_addr)},
-        )
 
     @property
     def is_on(self) -> bool | None:

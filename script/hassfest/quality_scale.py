@@ -1988,7 +1988,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "switch_as_x",
     "switchbee",
     "switchbot_cloud",
-    "switcher_kis",
     "switchmate",
     "syncthing",
     "syncthru",

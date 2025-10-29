@@ -1012,7 +1012,7 @@ ha-iotawattpy==0.1.2
 ha-philipsjs==3.2.4
 
 # homeassistant.components.homeassistant_hardware
-ha-silabs-firmware-client==0.2.0
+ha-silabs-firmware-client==0.3.0
 
 # homeassistant.components.habitica
 habiticalib==0.4.6
@@ -2166,7 +2166,7 @@ pytouchlinesl==0.5.0
 
 # homeassistant.components.traccar
 # homeassistant.components.traccar_server
-pytraccar==2.1.1
+pytraccar==3.0.0
 
 # homeassistant.components.tradfri
 pytradfri[async]==9.0.1
