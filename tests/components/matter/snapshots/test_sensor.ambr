@@ -1622,6 +1622,174 @@
     'state': '37.0',
   })
 # ---
+# name: test_sensors[aqara_thermostat_w500][sensor.floor_heating_thermostat_energy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.floor_heating_thermostat_energy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000064-MatterNodeDevice-0-ElectricalEnergyMeasurementCumulativeEnergyImported-145-1',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensors[aqara_thermostat_w500][sensor.floor_heating_thermostat_energy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Floor Heating Thermostat Energy',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.floor_heating_thermostat_energy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensors[aqara_thermostat_w500][sensor.floor_heating_thermostat_humidity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.floor_heating_thermostat_humidity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
+    'original_icon': None,
+    'original_name': 'Humidity',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000064-MatterNodeDevice-2-HumiditySensor-1029-0',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[aqara_thermostat_w500][sensor.floor_heating_thermostat_humidity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'humidity',
+      'friendly_name': 'Floor Heating Thermostat Humidity',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.floor_heating_thermostat_humidity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '59.0',
+  })
+# ---
+# name: test_sensors[aqara_thermostat_w500][sensor.floor_heating_thermostat_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.floor_heating_thermostat_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000064-MatterNodeDevice-1-ThermostatLocalTemperature-513-0',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensors[aqara_thermostat_w500][sensor.floor_heating_thermostat_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Floor Heating Thermostat Temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.floor_heating_thermostat_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '21.18',
+  })
+# ---
 # name: test_sensors[aqara_u200][sensor.aqara_smart_lock_u200_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -4089,7 +4257,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[haijai_switch][sensor.hjmt_6b_battery-entry]
+# name: test_sensors[haojai_switch][sensor.hjmt_6b_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4126,7 +4294,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[haijai_switch][sensor.hjmt_6b_battery-state]
+# name: test_sensors[haojai_switch][sensor.hjmt_6b_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -4142,7 +4310,7 @@
     'state': '1',
   })
 # ---
-# name: test_sensors[haijai_switch][sensor.hjmt_6b_battery_voltage-entry]
+# name: test_sensors[haojai_switch][sensor.hjmt_6b_battery_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4185,7 +4353,7 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[haijai_switch][sensor.hjmt_6b_battery_voltage-state]
+# name: test_sensors[haojai_switch][sensor.hjmt_6b_battery_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
@@ -4201,7 +4369,7 @@
     'state': '2.316',
   })
 # ---
-# name: test_sensors[haijai_switch][sensor.hjmt_6b_current_switch_position_1-entry]
+# name: test_sensors[haojai_switch][sensor.hjmt_6b_current_switch_position_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4238,7 +4406,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[haijai_switch][sensor.hjmt_6b_current_switch_position_1-state]
+# name: test_sensors[haojai_switch][sensor.hjmt_6b_current_switch_position_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'HJMT-6B Current switch position (1)',
@@ -4252,7 +4420,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[haijai_switch][sensor.hjmt_6b_current_switch_position_2-entry]
+# name: test_sensors[haojai_switch][sensor.hjmt_6b_current_switch_position_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4289,7 +4457,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[haijai_switch][sensor.hjmt_6b_current_switch_position_2-state]
+# name: test_sensors[haojai_switch][sensor.hjmt_6b_current_switch_position_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'HJMT-6B Current switch position (2)',
@@ -4303,7 +4471,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[haijai_switch][sensor.hjmt_6b_current_switch_position_3-entry]
+# name: test_sensors[haojai_switch][sensor.hjmt_6b_current_switch_position_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4340,7 +4508,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[haijai_switch][sensor.hjmt_6b_current_switch_position_3-state]
+# name: test_sensors[haojai_switch][sensor.hjmt_6b_current_switch_position_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'HJMT-6B Current switch position (3)',
@@ -4354,7 +4522,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[haijai_switch][sensor.hjmt_6b_current_switch_position_4-entry]
+# name: test_sensors[haojai_switch][sensor.hjmt_6b_current_switch_position_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4391,7 +4559,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[haijai_switch][sensor.hjmt_6b_current_switch_position_4-state]
+# name: test_sensors[haojai_switch][sensor.hjmt_6b_current_switch_position_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'HJMT-6B Current switch position (4)',
@@ -4405,7 +4573,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[haijai_switch][sensor.hjmt_6b_current_switch_position_5-entry]
+# name: test_sensors[haojai_switch][sensor.hjmt_6b_current_switch_position_5-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4442,7 +4610,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[haijai_switch][sensor.hjmt_6b_current_switch_position_5-state]
+# name: test_sensors[haojai_switch][sensor.hjmt_6b_current_switch_position_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'HJMT-6B Current switch position (5)',
@@ -4456,7 +4624,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[haijai_switch][sensor.hjmt_6b_current_switch_position_6-entry]
+# name: test_sensors[haojai_switch][sensor.hjmt_6b_current_switch_position_6-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4493,7 +4661,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[haijai_switch][sensor.hjmt_6b_current_switch_position_6-state]
+# name: test_sensors[haojai_switch][sensor.hjmt_6b_current_switch_position_6-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'HJMT-6B Current switch position (6)',

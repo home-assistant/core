@@ -9,6 +9,7 @@ from typing import Any
 from deebot_client.capabilities import CapabilityEvent, CapabilityLifeSpan, DeviceType
 from deebot_client.device import Device
 from deebot_client.events import (
+    AutoEmptyEvent,
     BatteryEvent,
     ErrorEvent,
     Event,
@@ -17,6 +18,7 @@ from deebot_client.events import (
     NetworkInfoEvent,
     StatsEvent,
     TotalStatsEvent,
+    auto_empty,
     station,
 )
 from sucks import VacBot
@@ -157,6 +159,14 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSensorEntityDescription, ...] = (
         translation_key="station_state",
         device_class=SensorDeviceClass.ENUM,
         options=get_options(station.State),
+    ),
+    EcovacsSensorEntityDescription[AutoEmptyEvent](
+        capability_fn=lambda caps: caps.station.auto_empty if caps.station else None,
+        value_fn=lambda e: get_name_key(e.frequency) if e.frequency else None,
+        key="auto_empty",
+        translation_key="auto_empty",
+        device_class=SensorDeviceClass.ENUM,
+        options=get_options(auto_empty.Frequency),
     ),
 )
 
