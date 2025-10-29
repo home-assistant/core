@@ -202,9 +202,6 @@ class NSDepartureSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity
         if not first_trip:
             return None
 
-        route = _get_route(first_trip)
-        status = first_trip.status
-
         return {
             "going": first_trip.going,
             "departure_time_planned": _get_time_str(first_trip.departure_time_planned),
@@ -224,8 +221,8 @@ class NSDepartureSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity
             "arrival_platform_planned": first_trip.arrival_platform_planned,
             "arrival_platform_actual": first_trip.arrival_platform_actual,
             "next": _get_time_str(_get_departure_time(next_trip)),
-            "status": status.lower() if status else None,
+            "status": first_trip.status.lower() if first_trip.status else None,
             "transfers": first_trip.nr_transfers,
-            "route": route,
+            "route": _get_route(first_trip),
             "remarks": None,
         }
