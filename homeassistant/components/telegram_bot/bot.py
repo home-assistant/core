@@ -46,6 +46,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util.json import JsonValueType
 from homeassistant.util.ssl import get_default_context, get_default_no_verify_context
 
@@ -111,6 +112,7 @@ from .const import (
     SERVICE_SEND_STICKER,
     SERVICE_SEND_VIDEO,
     SERVICE_SEND_VOICE,
+    SIGNAL_UPDATE_EVENT,
 )
 
 _FILE_TYPES = ("animation", "document", "photo", "sticker", "video", "voice")
@@ -171,6 +173,7 @@ class BaseTelegramBot:
 
         _LOGGER.debug("Firing event %s: %s", event_type, event_data)
         self.hass.bus.async_fire(event_type, event_data, context=event_context)
+        async_dispatcher_send(self.hass, SIGNAL_UPDATE_EVENT, event_type, event_data)
         return True
 
     @staticmethod
@@ -550,6 +553,9 @@ class TelegramNotificationService:
 
                 self.hass.bus.async_fire(
                     EVENT_TELEGRAM_SENT, event_data, context=context
+                )
+                async_dispatcher_send(
+                    self.hass, SIGNAL_UPDATE_EVENT, EVENT_TELEGRAM_SENT, event_data
                 )
         except TelegramError as exc:
             if not suppress_error:

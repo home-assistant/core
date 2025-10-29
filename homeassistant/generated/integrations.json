@@ -1442,7 +1442,7 @@
     },
     "downloader": {
       "name": "Downloader",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "single_config_entry": true
     },
@@ -1472,7 +1472,7 @@
     },
     "dsmr_reader": {
       "name": "DSMR Reader",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -1933,7 +1933,7 @@
     },
     "fastdotcom": {
       "name": "Fast.com",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling",
       "single_config_entry": true
@@ -3878,7 +3878,7 @@
     },
     "melcloud": {
       "name": "MELCloud",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -6151,7 +6151,7 @@
     },
     "sma": {
       "name": "SMA Solar",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -6488,6 +6488,12 @@
       "config_flow": true,
       "iot_class": "calculated",
       "single_config_entry": true
+    },
+    "sunricher_dali_center": {
+      "name": "DALI Center",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
     },
     "sunweg": {
       "name": "Sun WEG",
@@ -7040,7 +7046,7 @@
     },
     "transmission": {
       "name": "Transmission",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_polling"
     },

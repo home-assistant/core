@@ -52,6 +52,7 @@ SERVICE_DELETE_MESSAGE = "delete_message"
 SERVICE_LEAVE_CHAT = "leave_chat"
 SERVICE_DOWNLOAD_FILE = "download_file"
 
+SIGNAL_UPDATE_EVENT = "telegram_bot_update_event"
 EVENT_TELEGRAM_CALLBACK = "telegram_callback"
 EVENT_TELEGRAM_COMMAND = "telegram_command"
 EVENT_TELEGRAM_TEXT = "telegram_text"
