@@ -13,7 +13,6 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -22,7 +21,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import SFRDataUpdateCoordinator
-from .models import DomainData
+from .models import SFRConfigEntry
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -63,11 +62,11 @@ WAN_SENSOR_TYPES: tuple[SFRBoxBinarySensorEntityDescription[WanInfo], ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SFRConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensors."""
-    data: DomainData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
     system_info = data.system.data
     if TYPE_CHECKING:
         assert system_info is not None

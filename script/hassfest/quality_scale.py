@@ -872,7 +872,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "sesame",
     "seven_segments",
     "seventeentrack",
-    "sfr_box",
     "sharkiq",
     "shell_command",
     "shodan",

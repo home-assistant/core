@@ -8,9 +8,10 @@ from typing import Any
 from sfrbox_api.bridge import SFRBox
 from sfrbox_api.exceptions import SFRBoxError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+from .models import SFRConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 _SCAN_INTERVAL = timedelta(minutes=1)
@@ -19,12 +20,12 @@ _SCAN_INTERVAL = timedelta(minutes=1)
 class SFRDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT | None]):
     """Coordinator to manage data updates."""
 
-    config_entry: ConfigEntry
+    config_entry: SFRConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: SFRConfigEntry,
         box: SFRBox,
         name: str,
         method: Callable[[SFRBox], Coroutine[Any, Any, _DataT | None]],

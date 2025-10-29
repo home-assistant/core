@@ -12,7 +12,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS,
     EntityCategory,
@@ -28,7 +27,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import SFRDataUpdateCoordinator
-from .models import DomainData
+from .models import SFRConfigEntry
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -220,11 +219,11 @@ def _get_temperature(value: float | None) -> float | None:
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SFRConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensors."""
-    data: DomainData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
     system_info = data.system.data
     if TYPE_CHECKING:
         assert system_info is not None
