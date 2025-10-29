@@ -60,10 +60,10 @@ async def test_entry_diagnostics(
         },
         "configuration": {
             "devices:local": {
+                "Properties:StringCnt": "2",
                 "Properties:String0Features": "1",
                 "Properties:String1Features": "1",
             },
-            "string_count": 2,
         },
         "device": {
             "configuration_url": "http://192.168.1.2",
@@ -73,4 +73,29 @@ async def test_entry_diagnostics(
             "name": "scb",
             "sw_version": "IOC: 01.45 MC: 01.46",
         },
+    }
+
+
+async def test_entry_diagnostics_invalid_string_count(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_plenticore_client: Mock,
+    mock_get_setting_values: Mock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test config entry diagnostics if string count is invalid."""
+
+    # set some test process data for the diagnostics output
+    mock_plenticore_client.get_process_data.return_value = {
+        "devices:local": ["HomeGrid_P", "HomePv_P"]
+    }
+
+    mock_get_setting_values["devices:local"]["Properties:StringCnt"] = "invalid"
+
+    diagnostic_data = await get_diagnostics_for_config_entry(
+        hass, hass_client, init_integration
+    )
+
+    assert diagnostic_data["configuration"] == {
+        "devices:local": {"Properties:StringCnt": "invalid"}
     }

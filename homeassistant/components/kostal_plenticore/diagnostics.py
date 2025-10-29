@@ -47,11 +47,13 @@ async def async_get_config_entry_diagnostics(
 
     configuration_settings = await plenticore.client.get_setting_values(
         "devices:local",
-        (*(f"Properties:String{idx}Features" for idx in range(string_count)),),
+        (
+            "Properties:StringCnt",
+            *(f"Properties:String{idx}Features" for idx in range(string_count)),
+        ),
     )
 
     data["configuration"] = {
-        "string_count": string_count,
         **configuration_settings,
     }
 
