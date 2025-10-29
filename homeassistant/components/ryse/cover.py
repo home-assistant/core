@@ -48,7 +48,6 @@ class SmartShadeCover(CoverEntity):
             name=config_entry.title",
             manufacturer="RYSE",
             model="SmartShade BLE",
-            connections={("bluetooth", self._device.address)},
         )
 
     async def _update_position(self, position: int) -> None:
