@@ -176,7 +176,7 @@ async def test_numeric_switch_matter_exception_on_command(
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
-    """Test if a MatterError gets converted to HomeAssistantError using an Eve Thermo fixture ."""
+    """Test if a MatterError gets converted to HomeAssistantError using an Eve Thermo fixture."""
     state = hass.states.get("switch.eve_thermo_child_lock")
     assert state
     matter_client.write_attribute.side_effect = MatterError("Unable to write attribute")
