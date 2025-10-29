@@ -57,7 +57,7 @@
     'state': '30',
   })
 # ---
-# name: test_numbers[aqara_thermostat_w500][number.floor_heating_thermostat-entry]
+# name: test_numbers[aqara_thermostat_w500][number.floor_heating_thermostat_none-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -65,7 +65,7 @@
     'capabilities': dict({
       'max': 3.0,
       'min': 0.5,
-      'mode': <NumberMode.SLIDER: 'slider'>,
+      'mode': <NumberMode.BOX: 'box'>,
       'step': 0.5,
     }),
     'config_entry_id': <ANY>,
@@ -74,8 +74,8 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'number',
-    'entity_category': None,
-    'entity_id': 'number.floor_heating_thermostat',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.floor_heating_thermostat_none',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -97,18 +97,18 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_numbers[aqara_thermostat_w500][number.floor_heating_thermostat-state]
+# name: test_numbers[aqara_thermostat_w500][number.floor_heating_thermostat_none-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Floor Heating Thermostat',
+      'friendly_name': 'Floor Heating Thermostat None',
       'max': 3.0,
       'min': 0.5,
-      'mode': <NumberMode.SLIDER: 'slider'>,
+      'mode': <NumberMode.BOX: 'box'>,
       'step': 0.5,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.floor_heating_thermostat',
+    'entity_id': 'number.floor_heating_thermostat_none',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
