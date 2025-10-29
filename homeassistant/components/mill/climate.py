@@ -1,17 +1,18 @@
 """Support for mill wifi-enabled home heaters."""
 
+import logging
 from typing import Any
 
 import mill
 from mill_local import OperationMode
 import voluptuous as vol
-import logging
 
 from homeassistant.components.climate import (
+    ATTR_HVAC_MODE,
     ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
-    HVACMode, ATTR_HVAC_MODE,
+    HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -121,7 +122,10 @@ class MillHeater(MillBaseEntity, ClimateEntity):
             self._id, float(temperature)
         )
         if hvac_mode := kwargs.get(ATTR_HVAC_MODE):
-            await self._do_set_hvac_mode(hvac_mode)
+            if hvac_mode in self._attr_hvac_modes:
+                await self._do_set_hvac_mode(hvac_mode)
+            else:
+                _LOGGER.warning("Unsupported HVAC mode: %s", hvac_mode)
         await self.coordinator.async_request_refresh()
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
@@ -129,6 +133,8 @@ class MillHeater(MillBaseEntity, ClimateEntity):
         if hvac_mode in self._attr_hvac_modes:
             await self._do_set_hvac_mode(hvac_mode)
             await self.coordinator.async_request_refresh()
+        else:
+            _LOGGER.warning("Unsupported HVAC mode: %s", hvac_mode)
 
     async def _do_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode, pre-checked, without async_request_refresh."""
@@ -205,7 +211,10 @@ class LocalMillHeater(CoordinatorEntity[MillDataUpdateCoordinator], ClimateEntit
             float(temperature)
         )
         if hvac_mode := kwargs.get(ATTR_HVAC_MODE):
-            await self._do_set_hvac_mode(hvac_mode)
+            if hvac_mode in self._attr_hvac_modes:
+                await self._do_set_hvac_mode(hvac_mode)
+            else:
+                _LOGGER.warning("Unsupported HVAC mode: %s", hvac_mode)
         await self.coordinator.async_request_refresh()
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
@@ -213,6 +222,8 @@ class LocalMillHeater(CoordinatorEntity[MillDataUpdateCoordinator], ClimateEntit
         if hvac_mode in self._attr_hvac_modes:
             await self._do_set_hvac_mode(hvac_mode)
             await self.coordinator.async_request_refresh()
+        else:
+            _LOGGER.warning("Unsupported HVAC mode: %s", hvac_mode)
 
     async def _do_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode, pre-checked, without async_request_refresh."""
