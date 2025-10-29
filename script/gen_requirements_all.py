@@ -32,7 +32,6 @@ EXCLUDED_REQUIREMENTS_ALL = {
     "pybluez",
     "pycocotools",
     "pycups",
-    "python-gammu",
     "python-lirc",
     "pyuserinput",
     "tensorflow",
@@ -44,7 +43,6 @@ EXCLUDED_REQUIREMENTS_ALL = {
 INCLUDED_REQUIREMENTS_WHEELS = {
     "evdev",
     "pycups",
-    "python-gammu",
     "pyuserinput",
 }
 
@@ -58,7 +56,7 @@ INCLUDED_REQUIREMENTS_WHEELS = {
 OVERRIDDEN_REQUIREMENTS_ACTIONS = {
     "pytest": {
         "exclude": set(),
-        "include": {"python-gammu"},
+        "include": {},
         "markers": {},
     },
     "wheels_aarch64": {

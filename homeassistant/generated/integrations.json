@@ -6217,12 +6217,6 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
-    "sms": {
-      "name": "SMS notifications via GSM-modem",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "local_polling"
-    },
     "smtp": {
       "name": "SMTP",
       "integration_type": "hub",
