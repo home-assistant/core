@@ -261,9 +261,7 @@ DISCOVERY_SCHEMAS = [
             name=None,
             translation_key="occupied_setback",
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-            device_to_ha=lambda x: None
-            if x is None
-            else x / 10,
+            device_to_ha=lambda x: None if x is None else x / 10,
             ha_to_device=lambda x: round(x * 10),
             format_min_value=lambda x: x / 10,
             format_max_value=lambda x: x / 10,
