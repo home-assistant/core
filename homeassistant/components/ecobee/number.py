@@ -204,7 +204,7 @@ class EcobeeAuxMaxOutdoorTemp(EcobeeBaseEntity, NumberEntity):
         data: EcobeeData,
         thermostat_index: int,
     ) -> None:
-        """Initialize ecobee compressor min temperature."""
+        """Initialize ecobee auxiliary maximum outdoor temperature."""
         super().__init__(data, thermostat_index)
         self._attr_unique_id = f"{self.base_unique_id}_aux_max_outdoor_temp"
         self.update_without_throttle = False
@@ -222,6 +222,6 @@ class EcobeeAuxMaxOutdoorTemp(EcobeeBaseEntity, NumberEntity):
         )
 
     def set_native_value(self, value: float) -> None:
-        """Set new aux max outdoor max temp."""
+        """Set new auxiliary maximum outdoor temperature."""
         self.data.ecobee.set_aux_maxtemp_threshold(self.thermostat_index, int(value))
         self.update_without_throttle = True
