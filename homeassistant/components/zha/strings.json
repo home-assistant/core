@@ -305,6 +305,9 @@
       "calibrate_valve": {
         "name": "Calibrate valve"
       },
+      "calibrate_z_axis": {
+        "name": "Calibrate Z axis"
+      },
       "feed": {
         "name": "Feed"
       },
@@ -322,6 +325,12 @@
       },
       "reset_summation_delivered": {
         "name": "Reset summation delivered"
+      },
+      "reset_summation_delivered_left": {
+        "name": "Reset left summation delivered"
+      },
+      "reset_summation_delivered_right": {
+        "name": "Reset right summation delivered"
       },
       "restart_device": {
         "name": "Restart device"
@@ -463,6 +472,9 @@
       },
       "comfort_temperature_min": {
         "name": "Comfort temperature min"
+      },
+      "compensation_speed": {
+        "name": "Compensation speed"
       },
       "deadzone_temperature": {
         "name": "Deadzone temperature"
@@ -623,6 +635,9 @@
       "lift_drive_up_time": {
         "name": "Lift drive up time"
       },
+      "limit_position": {
+        "name": "Limit position"
+      },
       "liquid_depth_max": {
         "name": "Height from sensor to liquid level"
       },
@@ -719,6 +734,9 @@
       "on_transition_time": {
         "name": "On transition time"
       },
+      "open_delay_time": {
+        "name": "Open delay time"
+      },
       "open_window_detection_guard_period": {
         "name": "Open window detection guard period"
       },
@@ -745,6 +763,9 @@
       },
       "presence_timeout": {
         "name": "Fade time"
+      },
+      "pulse_configuration": {
+        "name": "Pulse configuration"
       },
       "quantitative_watering": {
         "name": "Quantitative watering"
@@ -853,6 +874,24 @@
       },
       "transmit_power": {
         "name": "Transmit power"
+      },
+      "turn_off_delay": {
+        "name": "Turn off delay"
+      },
+      "turn_off_delay_left": {
+        "name": "Turn off delay left"
+      },
+      "turn_off_delay_right": {
+        "name": "Turn off delay right"
+      },
+      "turn_on_delay": {
+        "name": "Turn on delay"
+      },
+      "turn_on_delay_left": {
+        "name": "Turn on delay left"
+      },
+      "turn_on_delay_right": {
+        "name": "Turn on delay right"
       },
       "up_movement": {
         "name": "Up movement"
@@ -1590,6 +1629,9 @@
       },
       "double_up_full": {
         "name": "Double tap on - full"
+      },
+      "enable_pir_mode": {
+        "name": "Enable PIR remote"
       },
       "enable_siren": {
         "name": "Enable siren"
