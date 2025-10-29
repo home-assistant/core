@@ -129,6 +129,13 @@ SENSORS_MAPPING_TEMPLATE: dict[str, SensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
     ),
+    "connectivity_mode": SensorEntityDescription(
+        key="connectivity_mode",
+        translation_key="connectivity_mode",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        entity_registry_visible_default=False,
+    ),
 }
 
 PARALLEL_UPDATES = 0
