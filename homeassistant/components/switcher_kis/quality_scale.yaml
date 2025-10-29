@@ -8,9 +8,7 @@ rules:
     comment: The integration does not poll.
   brands: done
   common-modules: done
-  config-flow-test-coverage:
-    status: todo
-    comment: make sure flows end with created entry or abort
+  config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
   docs-actions: done
@@ -20,7 +18,7 @@ rules:
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
-  runtime-data: todo
+  runtime-data: done
   test-before-configure: done
   test-before-setup:
     status: exempt
