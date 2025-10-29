@@ -2,7 +2,7 @@ rules:
   ## Bronze
   config-flow:
     status: todo
-    comment: Under review
+    comment: https://github.com/home-assistant/core/pull/155420
   test-before-configure: done
   unique-config-entry: done
   config-flow-test-coverage: done
