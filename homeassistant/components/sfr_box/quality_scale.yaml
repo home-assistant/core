@@ -107,7 +107,9 @@ rules:
   stale-devices:
     status: todo
     comment: Under review
-  diagnostics: done
+  diagnostics:
+    status: todo
+    comment: Under review
   exception-translations:
     status: todo
     comment: Under review
