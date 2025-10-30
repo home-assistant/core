@@ -18,10 +18,29 @@
     }),
     dict({
       'agent_id': 'conversation.claude_conversation',
-      'content': 'Certainly, calling it now!',
+      'content': None,
+      'native': ThinkingBlock(signature='ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==', thinking='', type='thinking'),
       'role': 'assistant',
+      'thinking_content': 'The user asked me to call a test function.Is it a test? What would the function do? Would it violate any privacy or security policies?',
+      'tool_calls': None,
+    }),
+    dict({
+      'agent_id': 'conversation.claude_conversation',
+      'content': None,
+      'native': RedactedThinkingBlock(data='EroBCkYIARgCKkBJDytPJhw//4vy3t7aE+LfIkxvkAh51cBPrAvBCo6AjgI57Zt9KWPnUVV50OQJ0KZzUFoGZG5sxg95zx4qMwkoEgz43Su3myJKckvj03waDBZLIBSeoAeRUeVsJCIwQ5edQN0sa+HNeB/KUBkoMUwV+IT0eIhcpFxnILdvxUAKM4R1o4KG3x+yO0eo/kyOKiKfrCPFQhvBVmTZPFhgA2Ow8L9gGDVipcz6x3Uu9YETGEny', type='redacted_thinking'),
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': None,
+    }),
+    dict({
+      'agent_id': 'conversation.claude_conversation',
+      'content': 'Certainly, calling it now!',
+      'native': ThinkingBlock(signature='ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==', thinking='', type='thinking'),
+      'role': 'assistant',
+      'thinking_content': "Okay, let's give it a shot. Will I pass the test?",
       'tool_calls': list([
         dict({
+          'external': False,
           'id': 'toolu_0123456789AbCdEfGhIjKlM',
           'tool_args': dict({
             'param1': 'test_value',
@@ -40,7 +59,9 @@
     dict({
       'agent_id': 'conversation.claude_conversation',
       'content': 'I have successfully called the function',
+      'native': None,
       'role': 'assistant',
+      'thinking_content': None,
       'tool_calls': None,
     }),
   ])
@@ -317,6 +338,156 @@
     }),
   ])
 # ---
+# name: test_history_conversion[content5]
+  list([
+    dict({
+      'content': "What's on the news today?",
+      'role': 'user',
+    }),
+    dict({
+      'content': list([
+        dict({
+          'signature': 'ErU/V+ayA==',
+          'thinking': "The user is asking about today's news, which requires current, real-time information. This is clearly something that requires recent information beyond my knowledge cutoff. I should use the web_search tool to find today's news.",
+          'type': 'thinking',
+        }),
+        dict({
+          'text': "To get today's news, I'll perform a web search",
+          'type': 'text',
+        }),
+        dict({
+          'id': 'srvtoolu_12345ABC',
+          'input': dict({
+            'query': "today's news",
+          }),
+          'name': 'web_search',
+          'type': 'server_tool_use',
+        }),
+        dict({
+          'content': list([
+            dict({
+              'encrypted_content': 'ABCDEFG',
+              'page_age': '2 days ago',
+              'title': "Today's News - Example.com",
+              'type': 'web_search_result',
+              'url': 'https://www.example.com/todays-news',
+            }),
+            dict({
+              'encrypted_content': 'ABCDEFG',
+              'page_age': None,
+              'title': 'Breaking News - NewsSite.com',
+              'type': 'web_search_result',
+              'url': 'https://www.newssite.com/breaking-news',
+            }),
+          ]),
+          'tool_use_id': 'srvtoolu_12345ABC',
+          'type': 'web_search_tool_result',
+        }),
+        dict({
+          'text': '''
+            Here's what I found on the web about today's news:
+            1. 
+          ''',
+          'type': 'text',
+        }),
+        dict({
+          'citations': list([
+            dict({
+              'cited_text': 'This release iterates on some of the features we introduced in the last couple of releases, but also...',
+              'encrypted_index': 'AAA==',
+              'title': 'Home Assistant Release',
+              'type': 'web_search_result_location',
+              'url': 'https://www.example.com/todays-news',
+            }),
+          ]),
+          'text': 'New Home Assistant release',
+          'type': 'text',
+        }),
+        dict({
+          'text': '''
+            
+            2. 
+          ''',
+          'type': 'text',
+        }),
+        dict({
+          'citations': list([
+            dict({
+              'cited_text': 'Breaking news from around the world today includes major events in technology, politics, and culture...',
+              'encrypted_index': 'AQE=',
+              'title': 'Breaking News',
+              'type': 'web_search_result_location',
+              'url': 'https://www.newssite.com/breaking-news',
+            }),
+            dict({
+              'cited_text': 'Well, this happened...',
+              'encrypted_index': 'AgI=',
+              'title': 'Breaking News',
+              'type': 'web_search_result_location',
+              'url': 'https://www.newssite.com/breaking-news',
+            }),
+          ]),
+          'text': 'Something incredible happened',
+          'type': 'text',
+        }),
+        dict({
+          'text': '''
+            
+            Those are the main headlines making news today.
+          ''',
+          'type': 'text',
+        }),
+      ]),
+      'role': 'assistant',
+    }),
+    dict({
+      'content': 'Are you sure?',
+      'role': 'user',
+    }),
+    dict({
+      'content': list([
+        dict({
+          'text': 'Yes, I am sure!',
+          'type': 'text',
+        }),
+      ]),
+      'role': 'assistant',
+    }),
+  ])
+# ---
+# name: test_redacted_thinking
+  list([
+    dict({
+      'attachments': None,
+      'content': 'ANTHROPIC_MAGIC_STRING_TRIGGER_REDACTED_THINKING_46C9A13E193C177646C7398A98432ECCCE4C1253D5E2D82641AC0E52CC2876CB',
+      'role': 'user',
+    }),
+    dict({
+      'agent_id': 'conversation.claude_conversation',
+      'content': None,
+      'native': RedactedThinkingBlock(data='EroBCkYIARgCKkBJDytPJhw//4vy3t7aE+LfIkxvkAh51cBPrAvBCo6AjgI57Zt9KWPnUVV50OQJ0KZzUFoGZG5sxg95zx4qMwkoEgz43Su3myJKckvj03waDBZLIBSeoAeRUeVsJCIwQ5edQN0sa+HNeB/KUBkoMUwV+IT0eIhcpFxnILdvxUAKM4R1o4KG3x+yO0eo/kyOKiKfrCPFQhvBVmTZPFhgA2Ow8L9gGDVipcz6x3Uu9YETGEny', type='redacted_thinking'),
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': None,
+    }),
+    dict({
+      'agent_id': 'conversation.claude_conversation',
+      'content': None,
+      'native': RedactedThinkingBlock(data='EroBCkYIARgCKkBJDytPJhw//4vy3t7aE+LfIkxvkAh51cBPrAvBCo6AjgI57Zt9KWPnUVV50OQJ0KZzUFoGZG5sxg95zx4qMwkoEgz43Su3myJKckvj03waDBZLIBSeoAeRUeVsJCIwQ5edQN0sa+HNeB/KUBkoMUwV+IT0eIhcpFxnILdvxUAKM4R1o4KG3x+yO0eo/kyOKiKfrCPFQhvBVmTZPFhgA2Ow8L9gGDVipcz6x3Uu9YETGEny', type='redacted_thinking'),
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': None,
+    }),
+    dict({
+      'agent_id': 'conversation.claude_conversation',
+      'content': 'How can I help you today?',
+      'native': RedactedThinkingBlock(data='EroBCkYIARgCKkBJDytPJhw//4vy3t7aE+LfIkxvkAh51cBPrAvBCo6AjgI57Zt9KWPnUVV50OQJ0KZzUFoGZG5sxg95zx4qMwkoEgz43Su3myJKckvj03waDBZLIBSeoAeRUeVsJCIwQ5edQN0sa+HNeB/KUBkoMUwV+IT0eIhcpFxnILdvxUAKM4R1o4KG3x+yO0eo/kyOKiKfrCPFQhvBVmTZPFhgA2Ow8L9gGDVipcz6x3Uu9YETGEny', type='redacted_thinking'),
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': None,
+    }),
+  ])
+# ---
 # name: test_unknown_hass_api
   dict({
     'continue_conversation': False,
@@ -350,4 +521,103 @@
       ]),
     ),
   })
+# ---
+# name: test_web_search
+  list([
+    dict({
+      'attachments': None,
+      'content': "What's on the news today?",
+      'role': 'user',
+    }),
+    dict({
+      'agent_id': 'conversation.claude_conversation',
+      'content': "To get today's news, I'll perform a web search",
+      'native': ThinkingBlock(signature='ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==', thinking='', type='thinking'),
+      'role': 'assistant',
+      'thinking_content': "The user is asking about today's news, which requires current, real-time information. This is clearly something that requires recent information beyond my knowledge cutoff. I should use the web_search tool to find today's news.",
+      'tool_calls': list([
+        dict({
+          'external': True,
+          'id': 'srvtoolu_12345ABC',
+          'tool_args': dict({
+            'query': "today's news",
+          }),
+          'tool_name': 'web_search',
+        }),
+      ]),
+    }),
+    dict({
+      'agent_id': 'conversation.claude_conversation',
+      'role': 'tool_result',
+      'tool_call_id': 'srvtoolu_12345ABC',
+      'tool_name': 'web_search',
+      'tool_result': dict({
+        'content': list([
+          dict({
+            'encrypted_content': 'ABCDEFG',
+            'page_age': '2 days ago',
+            'title': "Today's News - Example.com",
+            'type': 'web_search_result',
+            'url': 'https://www.example.com/todays-news',
+          }),
+          dict({
+            'encrypted_content': 'ABCDEFG',
+            'page_age': None,
+            'title': 'Breaking News - NewsSite.com',
+            'type': 'web_search_result',
+            'url': 'https://www.newssite.com/breaking-news',
+          }),
+        ]),
+      }),
+    }),
+    dict({
+      'agent_id': 'conversation.claude_conversation',
+      'content': '''
+        Here's what I found on the web about today's news:
+        1. New Home Assistant release
+        2. Something incredible happened
+        Those are the main headlines making news today.
+      ''',
+      'native': dict({
+        'citation_details': list([
+          dict({
+            'citations': list([
+              dict({
+                'cited_text': 'This release iterates on some of the features we introduced in the last couple of releases, but also...',
+                'encrypted_index': 'AAA==',
+                'title': 'Home Assistant Release',
+                'type': 'web_search_result_location',
+                'url': 'https://www.example.com/todays-news',
+              }),
+            ]),
+            'index': 54,
+            'length': 26,
+          }),
+          dict({
+            'citations': list([
+              dict({
+                'cited_text': 'Breaking news from around the world today includes major events in technology, politics, and culture...',
+                'encrypted_index': 'AQE=',
+                'title': 'Breaking News',
+                'type': 'web_search_result_location',
+                'url': 'https://www.newssite.com/breaking-news',
+              }),
+              dict({
+                'cited_text': 'Well, this happened...',
+                'encrypted_index': 'AgI=',
+                'title': 'Breaking News',
+                'type': 'web_search_result_location',
+                'url': 'https://www.newssite.com/breaking-news',
+              }),
+            ]),
+            'index': 84,
+            'length': 29,
+          }),
+        ]),
+      }),
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': None,
+    }),
+  ])
 # ---

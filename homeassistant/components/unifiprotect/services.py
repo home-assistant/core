@@ -60,43 +60,31 @@ ALL_GLOBAL_SERIVCES = [
     SERVICE_GET_USER_KEYRING_INFO,
 ]
 
-DOORBELL_TEXT_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            **cv.ENTITY_SERVICE_FIELDS,
-            vol.Required(ATTR_MESSAGE): cv.string,
-        },
-    ),
-    cv.has_at_least_one_key(ATTR_DEVICE_ID),
+DOORBELL_TEXT_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): str,
+        vol.Required(ATTR_MESSAGE): cv.string,
+    },
 )
 
-CHIME_PAIRED_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            **cv.ENTITY_SERVICE_FIELDS,
-            "doorbells": cv.TARGET_SERVICE_FIELDS,
-        },
-    ),
-    cv.has_at_least_one_key(ATTR_DEVICE_ID),
+CHIME_PAIRED_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): str,
+        "doorbells": cv.ENTITY_SERVICE_FIELDS,
+    },
 )
 
-REMOVE_PRIVACY_ZONE_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            **cv.ENTITY_SERVICE_FIELDS,
-            vol.Required(ATTR_NAME): cv.string,
-        },
-    ),
-    cv.has_at_least_one_key(ATTR_DEVICE_ID),
+REMOVE_PRIVACY_ZONE_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): str,
+        vol.Required(ATTR_NAME): cv.string,
+    },
 )
 
-GET_USER_KEYRING_INFO_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            **cv.ENTITY_SERVICE_FIELDS,
-        },
-    ),
-    cv.has_at_least_one_key(ATTR_DEVICE_ID),
+GET_USER_KEYRING_INFO_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): str,
+    },
 )
 
 

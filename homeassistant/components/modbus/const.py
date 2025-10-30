@@ -97,6 +97,7 @@ CONF_VIRTUAL_COUNT = "virtual_count"
 CONF_WRITE_TYPE = "write_type"
 CONF_ZERO_SUPPRESS = "zero_suppress"
 
+DEVICE_ID = "device_id"
 RTUOVERTCP = "rtuovertcp"
 SERIAL = "serial"
 TCP = "tcp"
@@ -158,6 +159,7 @@ DEFAULT_TEMP_UNIT = "C"
 DEFAULT_HVAC_ON_VALUE = 1
 DEFAULT_HVAC_OFF_VALUE = 0
 MODBUS_DOMAIN = "modbus"
+DOMAIN = "modbus"
 
 ACTIVE_SCAN_INTERVAL = 2  # limit to force an extra update
 

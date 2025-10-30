@@ -1,0 +1,66 @@
+# serializer version: 1
+# name: test_function_call
+  list([
+    Content(
+    parts=[
+      Part(
+        text='Please call the test function'
+      ),
+    ],
+    role='user'
+  ),
+    Content(
+    parts=[
+      Part(
+        text='Hi there!',
+        thought_signature=b'_thought_signature_2'
+      ),
+      Part(
+        text='The user asked me to call a function',
+        thought=True,
+        thought_signature=b'_thought_signature_1'
+      ),
+      Part(
+        function_call=FunctionCall(
+          args={
+            'param1': [
+              'test_value',
+              "param1's value",
+            ],
+            'param2': 2.7
+          },
+          name='test_tool'
+        ),
+        thought_signature=b'_thought_signature_3'
+      ),
+    ],
+    role='model'
+  ),
+    Content(
+    parts=[
+      Part(
+        function_response=FunctionResponse(
+          name='test_tool',
+          response={
+            'result': 'Test response'
+          }
+        )
+      ),
+    ],
+    role='user'
+  ),
+    Content(
+    parts=[
+      Part(
+        text="I've called the ",
+        thought_signature=b'_thought_signature_4'
+      ),
+      Part(
+        text='test function with the provided parameters.',
+        thought_signature=b'_thought_signature_5'
+      ),
+    ],
+    role='model'
+  ),
+  ])
+# ---

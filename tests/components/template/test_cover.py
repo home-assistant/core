@@ -628,8 +628,35 @@ async def test_template_position(
     ],
 )
 @pytest.mark.usefixtures("setup_cover")
-async def test_template_not_optimistic(hass: HomeAssistant) -> None:
+async def test_template_not_optimistic(
+    hass: HomeAssistant,
+    calls: list[ServiceCall],
+) -> None:
     """Test the is_closed attribute."""
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_UNKNOWN
+
+    # Test to make sure optimistic is not set with only a position template.
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_UNKNOWN
+
+    # Test to make sure optimistic is not set with only a position template.
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_CLOSE_COVER,
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.state == STATE_UNKNOWN
 

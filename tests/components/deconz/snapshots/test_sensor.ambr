@@ -829,7 +829,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'xx:xx:xx:xx:xx:xx:xx:xx-01-042a-particulate_matter_pm2_5',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload14-expected14][sensor.starkvind_airpurifier_pm25-state]
@@ -838,7 +838,7 @@
       'device_class': 'pm25',
       'friendly_name': 'STARKVIND AirPurifier PM25',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.starkvind_airpurifier_pm25',
@@ -1377,7 +1377,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:01-02-0113-air_quality_formaldehyde',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload2-expected2][sensor.airquality_1_ch2o-state]
@@ -1386,7 +1386,7 @@
       'device_class': 'volatile_organic_compounds',
       'friendly_name': 'AirQuality 1 CH2O',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.airquality_1_ch2o',
@@ -1483,7 +1483,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:01-02-0113-air_quality_pm2_5',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload2-expected2][sensor.airquality_1_pm25-state]
@@ -1492,7 +1492,7 @@
       'device_class': 'pm25',
       'friendly_name': 'AirQuality 1 PM25',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.airquality_1_pm25',
@@ -1699,7 +1699,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:01-02-0113-air_quality_formaldehyde',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload3-expected3][sensor.airquality_1_ch2o-state]
@@ -1708,7 +1708,7 @@
       'device_class': 'volatile_organic_compounds',
       'friendly_name': 'AirQuality 1 CH2O',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.airquality_1_ch2o',
@@ -1805,7 +1805,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:01-02-0113-air_quality_pm2_5',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload3-expected3][sensor.airquality_1_pm25-state]
@@ -1814,7 +1814,7 @@
       'device_class': 'pm25',
       'friendly_name': 'AirQuality 1 PM25',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.airquality_1_pm25',
@@ -1910,7 +1910,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:01-02-0113-air_quality_formaldehyde',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload4-expected4][sensor.airquality_1_ch2o-state]
@@ -1919,7 +1919,7 @@
       'device_class': 'volatile_organic_compounds',
       'friendly_name': 'AirQuality 1 CH2O',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.airquality_1_ch2o',
@@ -2016,7 +2016,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:01-02-0113-air_quality_pm2_5',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload4-expected4][sensor.airquality_1_pm25-state]
@@ -2025,7 +2025,7 @@
       'device_class': 'pm25',
       'friendly_name': 'AirQuality 1 PM25',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.airquality_1_pm25',

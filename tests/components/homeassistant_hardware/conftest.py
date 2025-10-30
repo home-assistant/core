@@ -27,7 +27,7 @@ def mock_zha_config_flow_setup() -> Generator[None]:
             side_effect=mock_probe,
         ),
         patch(
-            "homeassistant.components.zha.radio_manager.ZhaRadioManager.connect_zigpy_app",
+            "homeassistant.components.zha.radio_manager.ZhaRadioManager.create_zigpy_app",
             return_value=mock_connect_app,
         ),
         patch(
