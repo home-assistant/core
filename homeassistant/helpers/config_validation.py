@@ -1345,10 +1345,14 @@ TARGET_SERVICE_FIELDS: VolDictType = {
     vol.Optional(ATTR_ENTITY_ID): comp_entity_ids_or_uuids,
 }
 
-_ENTITY_SERVICE_FIELDS_TEMPLATED: VolDictType = {
+TARGET_SERVICE_FIELDS_TEMPLATED: VolDictType = {
     # Either accept static entity IDs, a single dynamic template or a mixed list
     # of static and dynamic templates. While this could be solved with a single
     # complex template, handling it like this, keeps config validation useful.
+    # Entity ID can be specified as either a user visible one or by entity registry ID.
+    #
+    # The schema supports templates as it is meant to be used in the initial validation
+    # before templates are automatically rendered by the core logic.
     vol.Optional(ATTR_ENTITY_ID): vol.Any(
         comp_entity_ids,
         dynamic_template,
@@ -1366,12 +1370,6 @@ _ENTITY_SERVICE_FIELDS_TEMPLATED: VolDictType = {
     vol.Optional(ATTR_LABEL_ID): vol.Any(
         ENTITY_MATCH_NONE, vol.All(ensure_list, [vol.Any(dynamic_template, str)])
     ),
-}
-
-TARGET_SERVICE_FIELDS_TEMPLATED: VolDictType = {
-    # Same as ENTITY_SERVICE_FIELDS_TEMPLATED but supports specifying entity
-    # by entity registry ID.
-    **_ENTITY_SERVICE_FIELDS_TEMPLATED,
     vol.Optional(ATTR_ENTITY_ID): vol.Any(
         comp_entity_ids_or_uuids,
         dynamic_template,
