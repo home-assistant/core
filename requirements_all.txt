@@ -49,9 +49,6 @@ ProgettiHWSW==0.1.3
 # homeassistant.components.cast
 PyChromecast==14.0.9
 
-# homeassistant.components.flick_electric
-PyFlick==1.1.3
-
 # homeassistant.components.flume
 PyFlume==0.6.5
 
@@ -606,6 +603,9 @@ azure-servicebus==7.10.0
 
 # homeassistant.components.azure_storage
 azure-storage-blob==12.24.0
+
+# homeassistant.components.backblaze_b2
+b2sdk==2.8.1
 
 # homeassistant.components.holiday
 babel==2.15.0
@@ -1922,11 +1922,8 @@ pycountry==24.6.1
 # homeassistant.components.microsoft
 pycsspeechtts==1.0.8
 
-# homeassistant.components.cups
-# pycups==2.0.4
-
 # homeassistant.components.cync
-pycync==0.4.2
+pycync==0.4.3
 
 # homeassistant.components.daikin
 pydaikin==2.17.1
@@ -2283,7 +2280,7 @@ pyplaato==0.0.19
 pypoint==3.0.0
 
 # homeassistant.components.portainer
-pyportainer==1.0.11
+pyportainer==1.0.12
 
 # homeassistant.components.probe_plus
 pyprobeplus==1.1.2
@@ -2593,9 +2590,6 @@ pytrydan==0.8.0
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
-
-# homeassistant.components.keyboard
-# pyuserinput==0.1.11
 
 # homeassistant.components.vera
 pyvera==0.3.16
