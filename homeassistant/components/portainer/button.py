@@ -19,12 +19,12 @@ from homeassistant.components.button import (
     ButtonEntity,
     ButtonEntityDescription,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import PortainerConfigEntry
 from .const import DOMAIN
 from .coordinator import PortainerCoordinator, PortainerCoordinatorData
 from .entity import PortainerContainerEntity
@@ -57,7 +57,7 @@ BUTTONS: tuple[PortainerButtonDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: PortainerConfigEntry,
+    entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Portainer buttons."""

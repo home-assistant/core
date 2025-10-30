@@ -29,9 +29,6 @@ _PLATFORMS: list[Platform] = [
 ]
 
 
-type PortainerConfigEntry = ConfigEntry[PortainerCoordinator]
-
-
 @dataclass(frozen=True, kw_only=True)
 class PortainerRuntimeData:
     """Class to hold Portainer runtime data."""
@@ -40,7 +37,7 @@ class PortainerRuntimeData:
     beacon: PortainerBeaconCoordinator
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Portainer from a config entry."""
 
     client = Portainer(
@@ -65,12 +62,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) ->
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: PortainerConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: PortainerConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Migrate old entry."""
 
     if entry.version < 2:

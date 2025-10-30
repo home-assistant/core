@@ -20,12 +20,12 @@ from homeassistant.components.update import (
     UpdateEntityDescription,
     UpdateEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import PortainerConfigEntry
 from .const import DOMAIN
 from .coordinator import (
     ContainerBeaconData,
@@ -39,9 +39,9 @@ from .entity import PortainerContainerUpdateEntity
 class PortainerContainerUpdateEntityDescription(UpdateEntityDescription):
     """Describes Portainer container update entity."""
 
-    latest_version: Callable[[ImageInformation], str]
+    latest_version: Callable[[ImageInformation], str | None]
     update_func: Callable[
-        [Portainer, int, str],
+        [Portainer, int, str, str | None],
         Coroutine[Any, Any, None],
     ]
     display_precision: int = 0
@@ -56,13 +56,17 @@ CONTAINER_IMAGE: tuple[PortainerContainerUpdateEntityDescription] = (
         translation_key="container_image_update",
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
-        latest_version=lambda data: data.image_info.descriptor.digest,
+        latest_version=lambda data: (
+            data.descriptor.digest
+            if (data.descriptor and data.descriptor.digest)
+            else None
+        ),
         update_func=(
             lambda portainer,
             endpoint_id,
             container_id,
             image: portainer.container_recreate_helper(
-                endpoint_id, container_id, image, DEFAULT_RECREATE_TIMEOUT
+                endpoint_id, container_id, str(image), DEFAULT_RECREATE_TIMEOUT
             )
         ),
     ),
@@ -71,11 +75,10 @@ CONTAINER_IMAGE: tuple[PortainerContainerUpdateEntityDescription] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: PortainerConfigEntry,
+    entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Portainer update entities based on a config entry."""
-    coordinator = entry.runtime_data.coordinator
     beacon = entry.runtime_data.beacon
 
     async_add_entities(
@@ -85,7 +88,7 @@ async def async_setup_entry(
             container,
             entity_description,
         )
-        for endpoint in coordinator.data.values()
+        for endpoint in beacon.data.values()
         for container in endpoint.containers.values()
         for entity_description in CONTAINER_IMAGE
     )
@@ -115,7 +118,7 @@ class PortainerContainerImageUpdateEntity(PortainerContainerUpdateEntity, Update
         self._in_progress_old_version: str | None = None
 
     @property
-    def installed_version(self) -> str:
+    def installed_version(self) -> str | None:
         """Return installed version."""
         return (
             self.coordinator.data[self.endpoint.id]
@@ -124,11 +127,10 @@ class PortainerContainerImageUpdateEntity(PortainerContainerUpdateEntity, Update
         )
 
     @property
-    def latest_version(self) -> str:
+    def latest_version(self) -> str | None:
         """Return latest version."""
-        return self.entity_description.latest_version(
-            self.coordinator.data[self.endpoint.id].containers[self.device_name]
-        )
+        container = self.coordinator.data[self.endpoint.id].containers[self.device_name]
+        return self.entity_description.latest_version(container.image_info)
 
     @property
     def in_progress(self) -> bool:
@@ -144,19 +146,19 @@ class PortainerContainerImageUpdateEntity(PortainerContainerUpdateEntity, Update
             await self.entity_description.update_func(
                 self.coordinator.portainer,
                 self.endpoint.id,
-                self.container.id,
+                self.container.core.id,
                 self.latest_version,
             )
         except PortainerAuthenticationError as ex:
-            self.entry.async_start_reauth(self.hass)
+            self.coordinator.config_entry.async_start_reauth(self.hass)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="invalid_auth",
-                translation_placeholders={"title": self.entry.title},
+                translation_placeholders={"title": self.coordinator.config_entry.title},
             ) from ex
         except PortainerConnectionError as ex:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
-                translation_placeholders={"title": self.entry.title},
+                translation_placeholders={"title": self.coordinator.config_entry.title},
             ) from ex
