@@ -30,6 +30,7 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfFrequency,
     UnitOfPower,
+    UnitOfPrecipitationDepth,
     UnitOfPressure,
     UnitOfTemperature,
     UnitOfTime,
@@ -104,7 +105,10 @@ class RpcSensor(ShellyRpcAttributeEntity, SensorEntity):
         super().__init__(coordinator, key, attribute, description)
 
         if self.option_map:
-            self._attr_options = list(self.option_map.values())
+            if description.role == ROLE_GENERIC:
+                self._attr_options = list(self.option_map.values())
+            else:
+                self._attr_options = list(self.option_map)
 
     @property
     def native_value(self) -> StateType:
@@ -117,7 +121,10 @@ class RpcSensor(ShellyRpcAttributeEntity, SensorEntity):
         if not isinstance(attribute_value, str):
             return None
 
-        return self.option_map[attribute_value]
+        if self.entity_description.role == ROLE_GENERIC:
+            return self.option_map[attribute_value]
+
+        return attribute_value
 
 
 class RpcEnergyConsumedSensor(RpcSensor):
@@ -540,6 +547,14 @@ RPC_SENSORS: Final = {
     ),
     "power_rgbw": RpcSensorDescription(
         key="rgbw",
+        sub_key="apower",
+        name="Power",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "power_rgbcct": RpcSensorDescription(
+        key="rgbcct",
         sub_key="apower",
         name="Power",
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -1016,6 +1031,17 @@ RPC_SENSORS: Final = {
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
+    "energy_rgbcct": RpcSensorDescription(
+        key="rgbcct",
+        sub_key="aenergy",
+        name="Energy",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        value=lambda status, _: status["total"],
+        suggested_display_precision=2,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
     "total_act": RpcSensorDescription(
         key="emdata",
         sub_key="total_act",
@@ -1442,7 +1468,6 @@ RPC_SENSORS: Final = {
         removal_condition=lambda config, _, key: not is_view_for_platform(
             config, key, SENSOR_PLATFORM
         ),
-        options_fn=lambda config: config["options"],
         device_class=SensorDeviceClass.ENUM,
         role=ROLE_GENERIC,
     ),
@@ -1485,6 +1510,27 @@ RPC_SENSORS: Final = {
         translation_key="illuminance_level",
         device_class=SensorDeviceClass.ENUM,
         options=["dark", "twilight", "bright"],
+    ),
+    "number_average_temperature": RpcSensorDescription(
+        key="number",
+        sub_key="value",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=1,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        role="average_temperature",
+        removal_condition=lambda config, _s, _k: not config.get("service:0", {}).get(
+            "weather_api", False
+        ),
+    ),
+    "number_last_precipitation": RpcSensorDescription(
+        key="number",
+        sub_key="value",
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+        device_class=SensorDeviceClass.PRECIPITATION,
+        role="last_precipitation",
+        removal_condition=lambda config, _s, _k: not config.get("service:0", {}).get(
+            "weather_api", False
+        ),
     ),
     "number_current_humidity": RpcSensorDescription(
         key="number",
@@ -1532,21 +1578,11 @@ RPC_SENSORS: Final = {
         state_class=SensorStateClass.MEASUREMENT,
         role="water_temperature",
     ),
-    "number_work_state": RpcSensorDescription(
-        key="number",
+    "enum_work_state": RpcSensorDescription(
+        key="enum",
         sub_key="value",
         translation_key="charger_state",
         device_class=SensorDeviceClass.ENUM,
-        options=[
-            "charger_charging",
-            "charger_end",
-            "charger_fault",
-            "charger_free",
-            "charger_free_fault",
-            "charger_insert",
-            "charger_pause",
-            "charger_wait",
-        ],
         role="work_state",
     ),
     "number_energy_charge": RpcSensorDescription(
