@@ -5,14 +5,14 @@ from __future__ import annotations
 import asyncio
 from contextlib import suppress
 import logging
-from typing import Any
+from typing import Any, Literal
 
 from olarmflowclient import MqttConnectError, MqttTimeoutError, OlarmFlowClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers import config_entry_oauth2_flow, issue_registry as ir
 
 from .const import DOMAIN
 from .coordinator import OlarmDataUpdateCoordinator
@@ -51,25 +51,49 @@ class OlarmFlowClientMQTT:
         # Track the assigned client ID suffix for this instance
         self.client_id_suffix: str | None = None
 
-    def _mqtt_reconnection_callback(self) -> None:
-        """Thread-safe callback for MQTT reconnection events.
+    def _mqtt_status_callback(
+        self,
+        status: Literal["connecting", "connected", "disconnected", "reconnecting"],
+        info: dict[str, Any],
+    ) -> None:
+        """Thread-safe callback for MQTT connection status changes."""
 
-        Called by the library when MQTT disconnects due to authentication issues.
-        Schedules token refresh in the main event loop.
-        """
-        asyncio.run_coroutine_threadsafe(
-            self._coordinator.async_ensure_token_valid(), self._hass.loop
-        )
+        if status == "connecting":
+            _LOGGER.debug("MQTT connecting to Olarm service")
+        elif status == "connected":
+            _LOGGER.debug("MQTT connected to Olarm service")
+            # Clear any disconnection repair issues
+            ir.async_delete_issue(
+                self._hass, DOMAIN, f"mqtt_disconnected_{self.device_id}"
+            )
+        elif status == "disconnected":
+            reason = info.get("reason", "Unknown reason")
+            _LOGGER.error("MQTT disconnected from Olarm service: %s", reason)
+            # Create repair issue for disconnection
+            ir.async_create_issue(
+                self._hass,
+                DOMAIN,
+                f"mqtt_disconnected_{self.device_id}",
+                is_fixable=False,
+                severity=ir.IssueSeverity.ERROR,
+                translation_key="mqtt_disconnected",
+                translation_placeholders={"reason": reason},
+            )
+        elif status == "reconnecting":
+            reason = info.get("reason", "Unknown reason")
+            _LOGGER.debug("MQTT reconnecting to Olarm service: %s", reason)
+            # Trigger token refresh for authentication-related reconnections
+            asyncio.run_coroutine_threadsafe(
+                self._coordinator.async_ensure_token_valid(), self._hass.loop
+            )
 
     async def init_mqtt(self) -> None:
         """Initialize and connect to the Olarm MQTT service."""
 
         _LOGGER.debug("Attempting to connect to Olarm MQTT Service")
 
-        # Set up the reconnection callback before starting MQTT
-        self._olarm_flow_client.set_mqtt_reconnection_callback(
-            self._mqtt_reconnection_callback
-        )
+        # Set up the connection status callback before starting MQTT
+        self._olarm_flow_client.set_mqtt_status_callback(self._mqtt_status_callback)
 
         try:
             # Ensure token is valid before connecting to MQTT
@@ -127,6 +151,10 @@ class OlarmFlowClientMQTT:
             finally:
                 # Release the client ID suffix for reuse
                 self.client_id_suffix = None
+                # Clean up any repair issues
+                ir.async_delete_issue(
+                    self._hass, DOMAIN, f"mqtt_disconnected_{self.device_id}"
+                )
 
     def _get_unique_client_id_suffix(self) -> str:
         """Determine a unique client ID suffix for this MQTT connection."""
