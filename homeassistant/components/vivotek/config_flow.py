@@ -44,7 +44,7 @@ CONF_SCHEMA = vol.Schema(
         vol.Required(CONF_SSL, default=False): cv.boolean,
         vol.Required(CONF_VERIFY_SSL, default=True): cv.boolean,
         vol.Required(CONF_FRAMERATE, default=2): cv.positive_int,
-        vol.Required(CONF_SECURITY_LEVEL, DEFAULT_SECURITY_LEVEL): cv.string,
+        vol.Required(CONF_SECURITY_LEVEL, default=DEFAULT_SECURITY_LEVEL): cv.string,
         vol.Required(
             CONF_STREAM_PATH,
             default=DEFAULT_STREAM_SOURCE,
