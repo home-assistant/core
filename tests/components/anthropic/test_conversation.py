@@ -454,7 +454,10 @@ async def test_function_call(
             agent_id=agent_id,
         )
 
-    assert "Today's date is 2024-06-03." in mock_create.mock_calls[1][2]["system"]
+    assert (
+        "You are a voice assistant for Home Assistant."
+        in mock_create.mock_calls[1][2]["system"]
+    )
 
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     assert (
