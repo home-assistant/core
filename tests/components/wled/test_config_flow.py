@@ -38,6 +38,102 @@ async def test_full_user_flow_implementation(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_wled")
+async def test_full_reconfigure_flow_success(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_wled: MagicMock
+) -> None:
+    """Test the full reconfigure flow from start to finish."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    # Assert show form initially
+    assert result.get("step_id") == "user"
+    assert result.get("type") is FlowResultType.FORM
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "10.10.0.10"}
+    )
+
+    # Assert show text message and close flow
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "reconfigure_successful"
+
+    # Assert config entry has been updated.
+    new_entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
+    assert new_entry is not None
+    assert new_entry.data[CONF_HOST] == "10.10.0.10"
+
+
+@pytest.mark.usefixtures("mock_setup_entry", "mock_wled")
+async def test_full_reconfigure_flow_unique_id_mismatch(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_wled: MagicMock
+) -> None:
+    """Test reconfiguration failure when the unique ID changes."""
+    mock_config_entry.add_to_hass(hass)
+
+    # Change mac address
+    device = mock_wled.update.return_value
+    device.info.mac_address = "invalid"
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    # Assert show form initially
+    assert result.get("step_id") == "user"
+    assert result.get("type") is FlowResultType.FORM
+
+    # Input new host value
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "10.10.0.10"}
+    )
+
+    # Assert Show text message and close flow
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "unique_id_mismatch"
+
+
+@pytest.mark.usefixtures("mock_setup_entry", "mock_wled")
+async def test_full_reconfigure_flow_connection_error_and_success(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_wled: MagicMock
+) -> None:
+    """Test we show user form on WLED connection error and allows user to change host."""
+    mock_config_entry.add_to_hass(hass)
+
+    # Mock connection error
+    mock_wled.update.side_effect = WLEDConnectionError
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    # Assert show form initially
+    assert result.get("step_id") == "user"
+    assert result.get("type") is FlowResultType.FORM
+
+    # Input new host value
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "10.10.0.10"}
+    )
+
+    # Assert form with errors
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "user"
+    assert result.get("errors") == {"base": "cannot_connect"}
+
+    # Remove mock for connection error
+    mock_wled.update.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "10.10.0.10"}
+    )
+
+    # Assert show text message and close flow
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "reconfigure_successful"
+
+    # Assert config entry has been updated.
+    new_entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
+    assert new_entry is not None
+    assert new_entry.data[CONF_HOST] == "10.10.0.10"
+
+
+@pytest.mark.usefixtures("mock_setup_entry", "mock_wled")
 async def test_full_zeroconf_flow_implementation(hass: HomeAssistant) -> None:
     """Test the full manual user flow from start to finish."""
     result = await hass.config_entries.flow.async_init(

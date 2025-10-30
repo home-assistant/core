@@ -5,6 +5,7 @@ from collections.abc import Callable
 from copy import deepcopy
 from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from wled import (
     Device as WLEDDevice,
@@ -14,6 +15,7 @@ from wled import (
 )
 
 from homeassistant.components.wled.const import SCAN_INTERVAL
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     STATE_OFF,
@@ -195,3 +197,26 @@ async def test_websocket_disconnect_on_home_assistant_stop(
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     assert mock_wled.disconnect.call_count == 2
+
+
+async def test_fail_when_other_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    mock_wled: MagicMock,
+) -> None:
+    """Ensure entry fails to setup when mac mismatch."""
+    device = mock_wled.update.return_value
+    device.info.mac_address = "invalid"
+
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    await hass.async_block_till_done()
+
+    entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
+    assert entry is not None
+    assert entry.state == ConfigEntryState.SETUP_ERROR
+    assert entry.reason
+    assert "MAC address mismatch." in entry.reason

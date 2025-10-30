@@ -9,6 +9,7 @@ from wled import WLED, Device, WLEDConnectionError
 
 from homeassistant.components import onboarding
 from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -49,6 +50,13 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
             except WLEDConnectionError:
                 errors["base"] = "cannot_connect"
             else:
+                if self.source == SOURCE_RECONFIGURE:
+                    await self.async_set_unique_id(device.info.mac_address)
+                    self._abort_if_unique_id_mismatch()
+                    return self.async_update_reload_and_abort(
+                        self._get_reconfigure_entry(),
+                        data_updates=user_input,
+                    )
                 await self.async_set_unique_id(
                     device.info.mac_address, raise_on_progress=False
                 )
@@ -67,6 +75,12 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
             errors=errors or {},
         )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfigure flow for WLED entry."""
+        return await self.async_step_user(user_input)
 
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo

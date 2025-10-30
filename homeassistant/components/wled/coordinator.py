@@ -14,7 +14,9 @@ from wled import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -119,6 +121,13 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
                 translation_key="invalid_response_wled_error",
                 translation_placeholders={"error": str(error)},
             ) from error
+
+        if device.info.mac_address != self.config_entry.unique_id:
+            raise ConfigEntryError(
+                f"MAC address mismatch. "
+                f"Expected to connect to device with MAC: {format_mac(self.config_entry.unique_id)}, "
+                f"but connected to device with MAC: {format_mac(device.info.mac_address)}"
+            )
 
         # If the device supports a WebSocket, try activating it.
         if (
