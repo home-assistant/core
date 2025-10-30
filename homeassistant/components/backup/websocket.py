@@ -10,7 +10,11 @@ from homeassistant.helpers import config_validation as cv
 
 from .config import Day, ScheduleRecurrence
 from .const import DATA_MANAGER, LOGGER
-from .manager import DecryptOnDowloadNotSupported, IncorrectPasswordError
+from .manager import (
+    DecryptOnDowloadNotSupported,
+    IncorrectPasswordError,
+    ManagerStateEvent,
+)
 from .models import BackupNotFound, Folder
 
 
@@ -30,6 +34,7 @@ def async_register_websocket_handlers(hass: HomeAssistant, with_hassio: bool) ->
     websocket_api.async_register_command(hass, handle_create_with_automatic_settings)
     websocket_api.async_register_command(hass, handle_delete)
     websocket_api.async_register_command(hass, handle_restore)
+    websocket_api.async_register_command(hass, handle_subscribe_events)
 
     websocket_api.async_register_command(hass, handle_config_info)
     websocket_api.async_register_command(hass, handle_config_update)
@@ -326,9 +331,6 @@ async def handle_config_info(
     """Send the stored backup config."""
     manager = hass.data[DATA_MANAGER]
     config = manager.config.data.to_dict()
-    # Remove state from schedule, it's not needed in the frontend
-    # mypy doesn't like deleting from TypedDict, ignore it
-    del config["schedule"]["state"]  # type: ignore[misc]
     connection.send_result(
         msg["id"],
         {
@@ -416,4 +418,23 @@ def handle_config_update(
     changes.pop("id")
     changes.pop("type")
     manager.config.update(**changes)
+    connection.send_result(msg["id"])
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({vol.Required("type"): "backup/subscribe_events"})
+@websocket_api.async_response
+async def handle_subscribe_events(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Subscribe to backup events."""
+
+    def on_event(event: ManagerStateEvent) -> None:
+        connection.send_message(websocket_api.event_message(msg["id"], event))
+
+    manager = hass.data[DATA_MANAGER]
+    on_event(manager.last_event)
+    connection.subscriptions[msg["id"]] = manager.async_subscribe_events(on_event)
     connection.send_result(msg["id"])

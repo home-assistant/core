@@ -67,7 +67,7 @@ async def async_setup_entry(
                 TeslemetryVehiclePollingClimateEntity(
                     vehicle, TeslemetryClimateSide.DRIVER, entry.runtime_data.scopes
                 )
-                if vehicle.api.pre2021 or vehicle.firmware < "2024.44.25"
+                if vehicle.poll or vehicle.firmware < "2024.44.25"
                 else TeslemetryStreamingClimateEntity(
                     vehicle, TeslemetryClimateSide.DRIVER, entry.runtime_data.scopes
                 )
@@ -77,7 +77,7 @@ async def async_setup_entry(
                 TeslemetryVehiclePollingCabinOverheatProtectionEntity(
                     vehicle, entry.runtime_data.scopes
                 )
-                if vehicle.api.pre2021 or vehicle.firmware < "2024.44.25"
+                if vehicle.poll or vehicle.firmware < "2024.44.25"
                 else TeslemetryStreamingCabinOverheatProtectionEntity(
                     vehicle, entry.runtime_data.scopes
                 )

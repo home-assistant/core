@@ -8,6 +8,7 @@ from collections import defaultdict
 from collections.abc import Callable, Coroutine, Iterable
 from dataclasses import dataclass, field
 import functools
+import inspect
 import logging
 from typing import TYPE_CHECKING, Any, Protocol, TypedDict, cast
 
@@ -17,15 +18,20 @@ from homeassistant.const import (
     CONF_ALIAS,
     CONF_ENABLED,
     CONF_ID,
+    CONF_OPTIONS,
     CONF_PLATFORM,
+    CONF_SELECTOR,
+    CONF_TARGET,
     CONF_VARIABLES,
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
     Context,
     HassJob,
+    HassJobType,
     HomeAssistant,
     callback,
+    get_hassjob_callable_job_type,
     is_callback,
 )
 from homeassistant.exceptions import HomeAssistantError, TemplateError
@@ -38,10 +44,11 @@ from homeassistant.loader import (
 from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.yaml import load_yaml_dict
-from homeassistant.util.yaml.loader import JSON_TYPE
 
-from . import config_validation as cv
+from . import config_validation as cv, selector
+from .automation import get_absolute_description_key, get_relative_description_key
 from .integration_platform import async_process_integration_platforms
+from .selector import TargetSelector
 from .template import Template
 from .typing import ConfigType, TemplateVarsType
 
@@ -71,14 +78,17 @@ TRIGGERS: HassKey[dict[str, str]] = HassKey("triggers")
 
 # Basic schemas to sanity check the trigger descriptions,
 # full validation is done by hassfest.triggers
-_FIELD_SCHEMA = vol.Schema(
-    {},
+_FIELD_DESCRIPTION_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_SELECTOR): selector.validate_selector,
+    },
     extra=vol.ALLOW_EXTRA,
 )
 
-_TRIGGER_SCHEMA = vol.Schema(
+_TRIGGER_DESCRIPTION_SCHEMA = vol.Schema(
     {
-        vol.Optional("fields"): vol.Schema({str: _FIELD_SCHEMA}),
+        vol.Optional("target"): TargetSelector.CONFIG_SCHEMA,
+        vol.Optional("fields"): vol.Schema({str: _FIELD_DESCRIPTION_SCHEMA}),
     },
     extra=vol.ALLOW_EXTRA,
 )
@@ -91,10 +101,10 @@ def starts_with_dot(key: str) -> str:
     return key
 
 
-_TRIGGERS_SCHEMA = vol.Schema(
+_TRIGGERS_DESCRIPTION_SCHEMA = vol.Schema(
     {
         vol.Remove(vol.All(str, starts_with_dot)): object,
-        cv.slug: vol.Any(None, _TRIGGER_SCHEMA),
+        cv.underscore_slug: vol.Any(None, _TRIGGER_DESCRIPTION_SCHEMA),
     }
 )
 
@@ -133,6 +143,7 @@ async def _register_trigger_platform(
 
     if hasattr(platform, "async_get_triggers"):
         for trigger_key in await platform.async_get_triggers(hass):
+            trigger_key = get_absolute_description_key(integration_domain, trigger_key)
             hass.data[TRIGGERS][trigger_key] = integration_domain
             new_triggers.add(trigger_key)
     elif hasattr(platform, "async_validate_trigger_config") or hasattr(
@@ -147,33 +158,91 @@ async def _register_trigger_platform(
         )
         return
 
-    tasks: list[asyncio.Task[None]] = [
-        create_eager_task(listener(new_triggers))
-        for listener in hass.data[TRIGGER_PLATFORM_SUBSCRIPTIONS]
-    ]
-    await asyncio.gather(*tasks)
+    # We don't use gather here because gather adds additional overhead
+    # when wrapping each coroutine in a task, and we expect our listeners
+    # to call trigger.async_get_all_descriptions which will only yield
+    # the first time it's called, after that it returns cached data.
+    for listener in hass.data[TRIGGER_PLATFORM_SUBSCRIPTIONS]:
+        try:
+            await listener(new_triggers)
+        except Exception:
+            _LOGGER.exception("Error while notifying trigger platform listener")
+
+
+_TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
+    {
+        vol.Optional(CONF_OPTIONS): object,
+        vol.Optional(CONF_TARGET): cv.TARGET_FIELDS,
+    }
+)
 
 
 class Trigger(abc.ABC):
     """Trigger class."""
 
-    def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
-        """Initialize trigger."""
+    _hass: HomeAssistant
+
+    @classmethod
+    async def async_validate_complete_config(
+        cls, hass: HomeAssistant, complete_config: ConfigType
+    ) -> ConfigType:
+        """Validate complete config.
+
+        The complete config includes fields that are generic to all triggers,
+        such as the alias or the ID.
+        This method should be overridden by triggers that need to migrate
+        from the old-style config.
+        """
+        complete_config = _TRIGGER_SCHEMA(complete_config)
+
+        specific_config: ConfigType = {}
+        for key in (CONF_OPTIONS, CONF_TARGET):
+            if key in complete_config:
+                specific_config[key] = complete_config.pop(key)
+        specific_config = await cls.async_validate_config(hass, specific_config)
+
+        for key in (CONF_OPTIONS, CONF_TARGET):
+            if key in specific_config:
+                complete_config[key] = specific_config[key]
+
+        return complete_config
 
     @classmethod
     @abc.abstractmethod
-    async def async_validate_trigger_config(
+    async def async_validate_config(
         cls, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
         """Validate config."""
 
-    @abc.abstractmethod
-    async def async_attach_trigger(
+    def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
+        """Initialize trigger."""
+        self._hass = hass
+
+    async def async_attach_action(
         self,
-        action: TriggerActionType,
-        trigger_info: TriggerInfo,
+        action: TriggerAction,
+        action_payload_builder: TriggerActionPayloadBuilder,
     ) -> CALLBACK_TYPE:
-        """Attach a trigger."""
+        """Attach the trigger to an action."""
+
+        @callback
+        def run_action(
+            extra_trigger_payload: dict[str, Any],
+            description: str,
+            context: Context | None = None,
+        ) -> asyncio.Task[Any]:
+            """Run action with trigger variables."""
+
+            payload = action_payload_builder(extra_trigger_payload, description)
+            return self._hass.async_create_task(action(payload, context))
+
+        return await self.async_attach_runner(run_action)
+
+    @abc.abstractmethod
+    async def async_attach_runner(
+        self, run_action: TriggerActionRunner
+    ) -> CALLBACK_TYPE:
+        """Attach the trigger to an action runner."""
 
 
 class TriggerProtocol(Protocol):
@@ -202,14 +271,61 @@ class TriggerProtocol(Protocol):
         """Attach a trigger."""
 
 
-class TriggerActionType(Protocol):
+@dataclass(slots=True, frozen=True)
+class TriggerConfig:
+    """Trigger config."""
+
+    key: str  # The key used to identify the trigger, e.g. "zwave.event"
+    target: dict[str, Any] | None = None
+    options: dict[str, Any] | None = None
+
+
+class TriggerActionRunner(Protocol):
+    """Protocol type for the trigger action runner helper callback."""
+
+    @callback
+    def __call__(
+        self,
+        extra_trigger_payload: dict[str, Any],
+        description: str,
+        context: Context | None = None,
+    ) -> asyncio.Task[Any]:
+        """Define trigger action runner type.
+
+        Returns:
+            A Task that allows awaiting for the action to finish.
+        """
+
+
+class TriggerActionPayloadBuilder(Protocol):
+    """Protocol type for the trigger action payload builder."""
+
+    def __call__(
+        self, extra_trigger_payload: dict[str, Any], description: str
+    ) -> dict[str, Any]:
+        """Define trigger action payload builder type."""
+
+
+class TriggerAction(Protocol):
     """Protocol type for trigger action callback."""
 
     async def __call__(
+        self, run_variables: dict[str, Any], context: Context | None = None
+    ) -> Any:
+        """Define action callback type."""
+
+
+class TriggerActionType(Protocol):
+    """Protocol type for trigger action callback.
+
+    Contrary to TriggerAction, this type supports both sync and async callables.
+    """
+
+    def __call__(
         self,
         run_variables: dict[str, Any],
         context: Context | None = None,
-    ) -> Any:
+    ) -> Coroutine[Any, Any, Any] | Any:
         """Define action callback type."""
 
 
@@ -239,7 +355,7 @@ class PluggableActionsEntry:
     actions: dict[
         object,
         tuple[
-            HassJob[[dict[str, Any], Context | None], Coroutine[Any, Any, None]],
+            HassJob[[dict[str, Any], Context | None], Coroutine[Any, Any, None] | Any],
             dict[str, Any],
         ],
     ] = field(default_factory=dict)
@@ -347,9 +463,8 @@ class PluggableAction:
 
 
 async def _async_get_trigger_platform(
-    hass: HomeAssistant, config: ConfigType
-) -> TriggerProtocol:
-    trigger_key: str = config[CONF_PLATFORM]
+    hass: HomeAssistant, trigger_key: str
+) -> tuple[str, TriggerProtocol]:
     platform_and_sub_type = trigger_key.split(".")
     platform = platform_and_sub_type[0]
     platform = _PLATFORM_ALIASES.get(platform, platform)
@@ -358,7 +473,7 @@ async def _async_get_trigger_platform(
     except IntegrationNotFound:
         raise vol.Invalid(f"Invalid trigger '{trigger_key}' specified") from None
     try:
-        return await integration.async_get_platform("trigger")
+        return platform, await integration.async_get_platform("trigger")
     except ImportError:
         raise vol.Invalid(
             f"Integration '{platform}' does not provide trigger support"
@@ -371,13 +486,16 @@ async def async_validate_trigger_config(
     """Validate triggers."""
     config = []
     for conf in trigger_config:
-        platform = await _async_get_trigger_platform(hass, conf)
+        trigger_key: str = conf[CONF_PLATFORM]
+        platform_domain, platform = await _async_get_trigger_platform(hass, trigger_key)
         if hasattr(platform, "async_get_triggers"):
             trigger_descriptors = await platform.async_get_triggers(hass)
-            trigger_key: str = conf[CONF_PLATFORM]
-            if not (trigger := trigger_descriptors.get(trigger_key)):
+            relative_trigger_key = get_relative_description_key(
+                platform_domain, trigger_key
+            )
+            if not (trigger := trigger_descriptors.get(relative_trigger_key)):
                 raise vol.Invalid(f"Invalid trigger '{trigger_key}' specified")
-            conf = await trigger.async_validate_trigger_config(hass, conf)
+            conf = await trigger.async_validate_complete_config(hass, conf)
         elif hasattr(platform, "async_validate_trigger_config"):
             conf = await platform.async_validate_trigger_config(hass, conf)
         else:
@@ -403,7 +521,7 @@ def _trigger_action_wrapper(
         check_func = check_func.func
 
     wrapper_func: Callable[..., Any] | Callable[..., Coroutine[Any, Any, Any]]
-    if asyncio.iscoroutinefunction(check_func):
+    if inspect.iscoroutinefunction(check_func):
         async_action = cast(Callable[..., Coroutine[Any, Any, Any]], action)
 
         @functools.wraps(async_action)
@@ -420,7 +538,7 @@ def _trigger_action_wrapper(
     else:
 
         @functools.wraps(action)
-        async def with_vars(
+        def with_vars(
             run_variables: dict[str, Any], context: Context | None = None
         ) -> Any:
             """Wrap action with extra vars."""
@@ -434,6 +552,72 @@ def _trigger_action_wrapper(
         wrapper_func = with_vars
 
     return wrapper_func
+
+
+async def _async_attach_trigger_cls(
+    hass: HomeAssistant,
+    trigger_cls: type[Trigger],
+    trigger_key: str,
+    conf: ConfigType,
+    action: Callable,
+    trigger_info: TriggerInfo,
+) -> CALLBACK_TYPE:
+    """Initialize a new Trigger class and attach it."""
+
+    def action_payload_builder(
+        extra_trigger_payload: dict[str, Any], description: str
+    ) -> dict[str, Any]:
+        """Build action variables."""
+        payload = {
+            "trigger": {
+                **trigger_info["trigger_data"],
+                CONF_PLATFORM: trigger_key,
+                "description": description,
+                **extra_trigger_payload,
+            }
+        }
+        if CONF_VARIABLES in conf:
+            trigger_variables = conf[CONF_VARIABLES]
+            payload.update(trigger_variables.async_render(hass, payload))
+        return payload
+
+    # Wrap sync action so that it is always async.
+    # This simplifies the Trigger action runner interface by always returning a coroutine,
+    # removing the need for integrations to check for the return type when awaiting the action.
+    match get_hassjob_callable_job_type(action):
+        case HassJobType.Executor:
+            original_action = action
+
+            async def wrapped_executor_action(
+                run_variables: dict[str, Any], context: Context | None = None
+            ) -> Any:
+                """Wrap sync action to be called in executor."""
+                return await hass.async_add_executor_job(
+                    original_action, run_variables, context
+                )
+
+            action = wrapped_executor_action
+
+        case HassJobType.Callback:
+            original_action = action
+
+            async def wrapped_callback_action(
+                run_variables: dict[str, Any], context: Context | None = None
+            ) -> Any:
+                """Wrap callback action to be awaitable."""
+                return original_action(run_variables, context)
+
+            action = wrapped_callback_action
+
+    trigger = trigger_cls(
+        hass,
+        TriggerConfig(
+            key=trigger_key,
+            target=conf.get(CONF_TARGET),
+            options=conf.get(CONF_OPTIONS),
+        ),
+    )
+    return await trigger.async_attach_action(action, action_payload_builder)
 
 
 async def async_initialize_triggers(
@@ -461,7 +645,8 @@ async def async_initialize_triggers(
             if not enabled:
                 continue
 
-        platform = await _async_get_trigger_platform(hass, conf)
+        trigger_key: str = conf[CONF_PLATFORM]
+        platform_domain, platform = await _async_get_trigger_platform(hass, trigger_key)
         trigger_id = conf.get(CONF_ID, f"{idx}")
         trigger_idx = f"{idx}"
         trigger_alias = conf.get(CONF_ALIAS)
@@ -474,12 +659,17 @@ async def async_initialize_triggers(
             trigger_data=trigger_data,
         )
 
-        action_wrapper = _trigger_action_wrapper(hass, action, conf)
         if hasattr(platform, "async_get_triggers"):
             trigger_descriptors = await platform.async_get_triggers(hass)
-            trigger = trigger_descriptors[conf[CONF_PLATFORM]](hass, conf)
-            coro = trigger.async_attach_trigger(action_wrapper, info)
+            relative_trigger_key = get_relative_description_key(
+                platform_domain, trigger_key
+            )
+            trigger_cls = trigger_descriptors[relative_trigger_key]
+            coro = _async_attach_trigger_cls(
+                hass, trigger_cls, trigger_key, conf, action, info
+            )
         else:
+            action_wrapper = _trigger_action_wrapper(hass, action, conf)
             coro = platform.async_attach_trigger(hass, conf, action_wrapper, info)
 
         triggers.append(create_eager_task(coro))
@@ -515,12 +705,12 @@ async def async_initialize_triggers(
     return remove_triggers
 
 
-def _load_triggers_file(hass: HomeAssistant, integration: Integration) -> JSON_TYPE:
+def _load_triggers_file(integration: Integration) -> dict[str, Any]:
     """Load triggers file for an integration."""
     try:
         return cast(
-            JSON_TYPE,
-            _TRIGGERS_SCHEMA(
+            dict[str, Any],
+            _TRIGGERS_DESCRIPTION_SCHEMA(
                 load_yaml_dict(str(integration.file_path / "triggers.yaml"))
             ),
         )
@@ -539,11 +729,14 @@ def _load_triggers_file(hass: HomeAssistant, integration: Integration) -> JSON_T
 
 
 def _load_triggers_files(
-    hass: HomeAssistant, integrations: Iterable[Integration]
-) -> dict[str, JSON_TYPE]:
+    integrations: Iterable[Integration],
+) -> dict[str, dict[str, Any]]:
     """Load trigger files for multiple integrations."""
     return {
-        integration.domain: _load_triggers_file(hass, integration)
+        integration.domain: {
+            get_absolute_description_key(integration.domain, key): value
+            for key, value in _load_triggers_file(integration).items()
+        }
         for integration in integrations
     }
 
@@ -564,7 +757,7 @@ async def async_get_all_descriptions(
         return descriptions_cache
 
     # Files we loaded for missing descriptions
-    new_triggers_descriptions: dict[str, JSON_TYPE] = {}
+    new_triggers_descriptions: dict[str, dict[str, Any]] = {}
     # We try to avoid making a copy in the event the cache is good,
     # but now we must make a copy in case new triggers get added
     # while we are loading the missing ones so we do not
@@ -591,7 +784,7 @@ async def async_get_all_descriptions(
 
         if integrations:
             new_triggers_descriptions = await hass.async_add_executor_job(
-                _load_triggers_files, hass, integrations
+                _load_triggers_files, integrations
             )
 
     # Make a copy of the old cache and add missing descriptions to it
@@ -600,7 +793,7 @@ async def async_get_all_descriptions(
         domain = triggers[missing_trigger]
 
         if (
-            yaml_description := new_triggers_descriptions.get(domain, {}).get(  # type: ignore[union-attr]
+            yaml_description := new_triggers_descriptions.get(domain, {}).get(
                 missing_trigger
             )
         ) is None:

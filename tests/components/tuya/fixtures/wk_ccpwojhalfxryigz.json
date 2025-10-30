@@ -1,0 +1,121 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Boiler Temperature Controller",
+  "category": "wk",
+  "product_id": "ccpwojhalfxryigz",
+  "product_name": "Intelligent temperature controller",
+  "online": true,
+  "sub": false,
+  "time_zone": "+01:00",
+  "active_time": "2024-01-24T19:20:54+00:00",
+  "create_time": "2024-01-24T19:20:54+00:00",
+  "update_time": "2024-01-24T19:20:54+00:00",
+  "function": {
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "upper_temp": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": -400,
+        "max": 1200,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "lower_temp": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": -400,
+        "max": 1200,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "temp_correction": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": -99,
+        "max": 99,
+        "scale": 1,
+        "step": 1
+      }
+    }
+  },
+  "status_range": {
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "work_state": {
+      "type": "Enum",
+      "value": {
+        "range": ["cold", "hot"]
+      }
+    },
+    "upper_temp": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": -400,
+        "max": 1200,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "temp_current": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": -400,
+        "max": 1200,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "lower_temp": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": -400,
+        "max": 1200,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "temp_correction": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": -99,
+        "max": 99,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "fault": {
+      "type": "Bitmap",
+      "value": {
+        "label": ["e1", "e2", "e3"]
+      }
+    }
+  },
+  "status": {
+    "switch": true,
+    "work_state": "hot",
+    "upper_temp": 585,
+    "temp_current": 575,
+    "lower_temp": 600,
+    "temp_correction": -8,
+    "fault": 0
+  },
+  "set_up": true,
+  "support_local": true
+}

@@ -50,7 +50,6 @@
               '<<envoyserial>>',
             ]),
           ]),
-          'is_new': False,
           'labels': list([
           ]),
           'manufacturer': 'Enphase',
@@ -60,7 +59,6 @@
           'name_by_user': None,
           'primary_config_entry': '45a36e55aaddb2007c5f6602e0c38e72',
           'serial_number': '<<envoyserial>>',
-          'suggested_area': None,
           'sw_version': '7.6.175',
         }),
         'entities': list([
@@ -298,7 +296,6 @@
               '1',
             ]),
           ]),
-          'is_new': False,
           'labels': list([
           ]),
           'manufacturer': 'Enphase',
@@ -307,8 +304,7 @@
           'name': 'Inverter 1',
           'name_by_user': None,
           'primary_config_entry': '45a36e55aaddb2007c5f6602e0c38e72',
-          'serial_number': None,
-          'suggested_area': None,
+          'serial_number': '1',
           'sw_version': None,
         }),
         'entities': list([
@@ -929,7 +925,6 @@
               '<<envoyserial>>',
             ]),
           ]),
-          'is_new': False,
           'labels': list([
           ]),
           'manufacturer': 'Enphase',
@@ -939,7 +934,6 @@
           'name_by_user': None,
           'primary_config_entry': '45a36e55aaddb2007c5f6602e0c38e72',
           'serial_number': '<<envoyserial>>',
-          'suggested_area': None,
           'sw_version': '7.6.175',
         }),
         'entities': list([
@@ -1177,7 +1171,6 @@
               '1',
             ]),
           ]),
-          'is_new': False,
           'labels': list([
           ]),
           'manufacturer': 'Enphase',
@@ -1186,8 +1179,7 @@
           'name': 'Inverter 1',
           'name_by_user': None,
           'primary_config_entry': '45a36e55aaddb2007c5f6602e0c38e72',
-          'serial_number': None,
-          'suggested_area': None,
+          'serial_number': '1',
           'sw_version': None,
         }),
         'entities': list([
@@ -1852,7 +1844,6 @@
               '<<envoyserial>>',
             ]),
           ]),
-          'is_new': False,
           'labels': list([
           ]),
           'manufacturer': 'Enphase',
@@ -1862,7 +1853,6 @@
           'name_by_user': None,
           'primary_config_entry': '45a36e55aaddb2007c5f6602e0c38e72',
           'serial_number': '<<envoyserial>>',
-          'suggested_area': None,
           'sw_version': '7.6.175',
         }),
         'entities': list([
@@ -2100,7 +2090,6 @@
               '1',
             ]),
           ]),
-          'is_new': False,
           'labels': list([
           ]),
           'manufacturer': 'Enphase',
@@ -2109,8 +2098,7 @@
           'name': 'Inverter 1',
           'name_by_user': None,
           'primary_config_entry': '45a36e55aaddb2007c5f6602e0c38e72',
-          'serial_number': None,
-          'suggested_area': None,
+          'serial_number': '1',
           'sw_version': None,
         }),
         'entities': list([
@@ -2796,7 +2784,6 @@
               '1',
             ]),
           ]),
-          'is_new': False,
           'labels': list([
           ]),
           'manufacturer': 'Enphase',
@@ -2805,8 +2792,7 @@
           'name': 'Inverter 1',
           'name_by_user': None,
           'primary_config_entry': '45a36e55aaddb2007c5f6602e0c38e72',
-          'serial_number': None,
-          'suggested_area': None,
+          'serial_number': '1',
           'sw_version': None,
         }),
         'entities': list([
@@ -3346,7 +3332,6 @@
               '<<envoyserial>>',
             ]),
           ]),
-          'is_new': False,
           'labels': list([
           ]),
           'manufacturer': 'Enphase',
@@ -3356,7 +3341,6 @@
           'name_by_user': None,
           'primary_config_entry': '45a36e55aaddb2007c5f6602e0c38e72',
           'serial_number': '<<envoyserial>>',
-          'suggested_area': None,
           'sw_version': '7.6.175',
         }),
         'entities': list([

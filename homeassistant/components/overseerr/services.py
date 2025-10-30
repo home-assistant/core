@@ -7,6 +7,7 @@ from python_overseerr import OverseerrClient, OverseerrConnectionError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -17,14 +18,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.util.json import JsonValueType
 
-from .const import (
-    ATTR_CONFIG_ENTRY_ID,
-    ATTR_REQUESTED_BY,
-    ATTR_SORT_ORDER,
-    ATTR_STATUS,
-    DOMAIN,
-    LOGGER,
-)
+from .const import ATTR_REQUESTED_BY, ATTR_SORT_ORDER, ATTR_STATUS, DOMAIN, LOGGER
 from .coordinator import OverseerrConfigEntry
 
 SERVICE_GET_REQUESTS = "get_requests"

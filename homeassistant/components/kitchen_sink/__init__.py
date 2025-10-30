@@ -32,9 +32,15 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
+from homeassistant.util.unit_conversion import (
+    EnergyConverter,
+    TemperatureConverter,
+    VolumeConverter,
+)
 
 from .const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 
@@ -101,17 +107,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Start a reauth flow
     entry.async_start_reauth(hass)
 
-    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
-
     # Notify backup listeners
     hass.async_create_task(_notify_backup_listeners(hass), eager_start=False)
 
     return True
-
-
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Handle update."""
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -122,6 +121,20 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await hass.config_entries.async_unload_platforms(
         entry, COMPONENTS_WITH_DEMO_PLATFORM
     )
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
+) -> bool:
+    """Remove a config entry from a device."""
+
+    # Allow deleting any device except statistics_issues, just to give
+    # something to test the negative case.
+    for identifier in device_entry.identifiers:
+        if identifier[0] == DOMAIN and identifier[1] == "statistics_issues":
+            return False
+
+    return True
 
 
 async def _notify_backup_listeners(hass: HomeAssistant) -> None:
@@ -246,6 +259,7 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
         "source": DOMAIN,
         "name": "Outdoor temperature",
         "statistic_id": f"{DOMAIN}:temperature_outdoor",
+        "unit_class": TemperatureConverter.UNIT_CLASS,
         "unit_of_measurement": UnitOfTemperature.CELSIUS,
         "mean_type": StatisticMeanType.ARITHMETIC,
         "has_sum": False,
@@ -259,6 +273,7 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
         "source": DOMAIN,
         "name": "Energy consumption 1",
         "statistic_id": f"{DOMAIN}:energy_consumption_kwh",
+        "unit_class": EnergyConverter.UNIT_CLASS,
         "unit_of_measurement": UnitOfEnergy.KILO_WATT_HOUR,
         "mean_type": StatisticMeanType.NONE,
         "has_sum": True,
@@ -271,6 +286,7 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
         "source": DOMAIN,
         "name": "Energy consumption 2",
         "statistic_id": f"{DOMAIN}:energy_consumption_mwh",
+        "unit_class": EnergyConverter.UNIT_CLASS,
         "unit_of_measurement": UnitOfEnergy.MEGA_WATT_HOUR,
         "mean_type": StatisticMeanType.NONE,
         "has_sum": True,
@@ -285,6 +301,7 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
         "source": DOMAIN,
         "name": "Gas consumption 1",
         "statistic_id": f"{DOMAIN}:gas_consumption_m3",
+        "unit_class": VolumeConverter.UNIT_CLASS,
         "unit_of_measurement": UnitOfVolume.CUBIC_METERS,
         "mean_type": StatisticMeanType.NONE,
         "has_sum": True,
@@ -299,6 +316,7 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
         "source": DOMAIN,
         "name": "Gas consumption 2",
         "statistic_id": f"{DOMAIN}:gas_consumption_ft3",
+        "unit_class": VolumeConverter.UNIT_CLASS,
         "unit_of_measurement": UnitOfVolume.CUBIC_FEET,
         "mean_type": StatisticMeanType.NONE,
         "has_sum": True,
@@ -311,6 +329,7 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
         "source": RECORDER_DOMAIN,
         "name": None,
         "statistic_id": "sensor.statistics_issues_issue_1",
+        "unit_class": VolumeConverter.UNIT_CLASS,
         "unit_of_measurement": UnitOfVolume.CUBIC_METERS,
         "mean_type": StatisticMeanType.ARITHMETIC,
         "has_sum": False,
@@ -323,6 +342,7 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
         "source": RECORDER_DOMAIN,
         "name": None,
         "statistic_id": "sensor.statistics_issues_issue_2",
+        "unit_class": None,
         "unit_of_measurement": "cats",
         "mean_type": StatisticMeanType.ARITHMETIC,
         "has_sum": False,
@@ -335,6 +355,7 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
         "source": RECORDER_DOMAIN,
         "name": None,
         "statistic_id": "sensor.statistics_issues_issue_3",
+        "unit_class": VolumeConverter.UNIT_CLASS,
         "unit_of_measurement": UnitOfVolume.CUBIC_METERS,
         "mean_type": StatisticMeanType.ARITHMETIC,
         "has_sum": False,
@@ -347,6 +368,7 @@ async def _insert_statistics(hass: HomeAssistant) -> None:
         "source": RECORDER_DOMAIN,
         "name": None,
         "statistic_id": "sensor.statistics_issues_issue_4",
+        "unit_class": VolumeConverter.UNIT_CLASS,
         "unit_of_measurement": UnitOfVolume.CUBIC_METERS,
         "mean_type": StatisticMeanType.ARITHMETIC,
         "has_sum": False,
@@ -367,6 +389,7 @@ async def _insert_wrong_wind_direction_statistics(hass: HomeAssistant) -> None:
         "source": RECORDER_DOMAIN,
         "name": None,
         "statistic_id": "sensor.statistics_issues_issue_5",
+        "unit_class": None,
         "unit_of_measurement": DEGREE,
         "mean_type": StatisticMeanType.ARITHMETIC,
         "has_sum": False,

@@ -60,11 +60,26 @@
     },
     {
       "macaddress": "D44B5E*"
+    },
+    {
+      "macaddress": "F8D0AC*"
+    },
+    {
+      "macaddress": "E86E3A*"
+    },
+    {
+      "macaddress": "FC0FE6*"
+    },
+    {
+      "macaddress": "9C37CB*"
+    },
+    {
+      "macaddress": "84E657*"
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/playstation_network",
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "quality_scale": "bronze",
-  "requirements": ["PSNAWP==3.0.0", "pyrate-limiter==3.7.0"]
+  "requirements": ["PSNAWP==3.0.0", "pyrate-limiter==3.9.0"]
 }

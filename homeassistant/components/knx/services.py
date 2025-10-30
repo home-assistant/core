@@ -35,13 +35,13 @@ from .expose import create_knx_exposure
 from .schema import ExposeSchema, dpt_base_type_validator, ga_validator
 
 if TYPE_CHECKING:
-    from . import KNXModule
+    from .knx_module import KNXModule
 
 _LOGGER = logging.getLogger(__name__)
 
 
 @callback
-def register_knx_services(hass: HomeAssistant) -> None:
+def async_setup_services(hass: HomeAssistant) -> None:
     """Register KNX integration services."""
     hass.services.async_register(
         DOMAIN,

@@ -1,0 +1,13 @@
+{
+  "entity": {
+    "number": {
+      "humidity": {
+        "default": "mdi:water",
+        "range": {
+          "0": "mdi:water-off",
+          "1": "mdi:water"
+        }
+      }
+    }
+  }
+}

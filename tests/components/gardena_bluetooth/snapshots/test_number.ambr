@@ -2,6 +2,7 @@
 # name: test_bluetooth_error_unavailable
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'duration',
       'friendly_name': 'Mock Title Remaining open time',
       'max': 86400,
       'min': 0.0,
@@ -20,6 +21,7 @@
 # name: test_bluetooth_error_unavailable.1
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'duration',
       'friendly_name': 'Mock Title Manual watering time',
       'max': 86400,
       'min': 0.0,
@@ -38,6 +40,7 @@
 # name: test_bluetooth_error_unavailable.2
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'duration',
       'friendly_name': 'Mock Title Remaining open time',
       'max': 86400,
       'min': 0.0,
@@ -56,6 +59,7 @@
 # name: test_bluetooth_error_unavailable.3
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'duration',
       'friendly_name': 'Mock Title Manual watering time',
       'max': 86400,
       'min': 0.0,
@@ -110,6 +114,7 @@
 # name: test_setup[98bd0f13-0b0e-421a-84e5-ddbf75dc6de4-raw1-number.mock_title_remaining_open_time]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'duration',
       'friendly_name': 'Mock Title Remaining open time',
       'max': 86400,
       'min': 0.0,
@@ -128,6 +133,7 @@
 # name: test_setup[98bd0f13-0b0e-421a-84e5-ddbf75dc6de4-raw1-number.mock_title_remaining_open_time].1
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'duration',
       'friendly_name': 'Mock Title Remaining open time',
       'max': 86400,
       'min': 0.0,
@@ -146,6 +152,7 @@
 # name: test_setup[98bd0f13-0b0e-421a-84e5-ddbf75dc6de4-raw1-number.mock_title_remaining_open_time].2
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'duration',
       'friendly_name': 'Mock Title Remaining open time',
       'max': 86400,
       'min': 0.0,
@@ -164,6 +171,7 @@
 # name: test_setup[98bd0f13-0b0e-421a-84e5-ddbf75dc6de4-raw1-number.mock_title_remaining_open_time].3
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'duration',
       'friendly_name': 'Mock Title Remaining open time',
       'max': 86400,
       'min': 0.0,
@@ -182,6 +190,7 @@
 # name: test_setup[98bd0f13-0b0e-421a-84e5-ddbf75dc6de4-raw2-number.mock_title_open_for]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'duration',
       'friendly_name': 'Mock Title Open for',
       'max': 1440,
       'min': 0.0,
@@ -200,6 +209,7 @@
 # name: test_setup[98bd0f14-0b0e-421a-84e5-ddbf75dc6de4-raw0-number.mock_title_manual_watering_time]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'duration',
       'friendly_name': 'Mock Title Manual watering time',
       'max': 86400,
       'min': 0.0,
@@ -218,6 +228,7 @@
 # name: test_setup[98bd0f14-0b0e-421a-84e5-ddbf75dc6de4-raw0-number.mock_title_manual_watering_time].1
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'duration',
       'friendly_name': 'Mock Title Manual watering time',
       'max': 86400,
       'min': 0.0,

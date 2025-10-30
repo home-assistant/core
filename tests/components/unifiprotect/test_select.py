@@ -98,8 +98,8 @@ async def test_select_setup_light(
     expected_values = ("On Motion - When Dark", "Not Paired")
 
     for index, description in enumerate(LIGHT_SELECTS):
-        unique_id, entity_id = ids_from_device_description(
-            Platform.SELECT, light, description
+        unique_id, entity_id = await ids_from_device_description(
+            hass, Platform.SELECT, light, description
         )
 
         entity = entity_registry.async_get(entity_id)
@@ -127,8 +127,8 @@ async def test_select_setup_viewer(
 
     description = VIEWER_SELECTS[0]
 
-    unique_id, entity_id = ids_from_device_description(
-        Platform.SELECT, viewer, description
+    unique_id, entity_id = await ids_from_device_description(
+        hass, Platform.SELECT, viewer, description
     )
 
     entity = entity_registry.async_get(entity_id)
@@ -161,8 +161,8 @@ async def test_select_setup_camera_all(
     )
 
     for index, description in enumerate(CAMERA_SELECTS):
-        unique_id, entity_id = ids_from_device_description(
-            Platform.SELECT, doorbell, description
+        unique_id, entity_id = await ids_from_device_description(
+            hass, Platform.SELECT, doorbell, description
         )
 
         entity = entity_registry.async_get(entity_id)
@@ -192,8 +192,8 @@ async def test_select_setup_camera_none(
         if index == 2:
             return
 
-        unique_id, entity_id = ids_from_device_description(
-            Platform.SELECT, camera, description
+        unique_id, entity_id = await ids_from_device_description(
+            hass, Platform.SELECT, camera, description
         )
 
         entity = entity_registry.async_get(entity_id)
@@ -215,8 +215,8 @@ async def test_select_update_liveview(
     await init_entry(hass, ufp, [viewer])
     assert_entity_counts(hass, Platform.SELECT, 1, 1)
 
-    _, entity_id = ids_from_device_description(
-        Platform.SELECT, viewer, VIEWER_SELECTS[0]
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SELECT, viewer, VIEWER_SELECTS[0]
     )
 
     state = hass.states.get(entity_id)
@@ -252,8 +252,8 @@ async def test_select_update_doorbell_settings(
 
     expected_length = len(ufp.api.bootstrap.nvr.doorbell_settings.all_messages) + 1
 
-    _, entity_id = ids_from_device_description(
-        Platform.SELECT, doorbell, CAMERA_SELECTS[2]
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SELECT, doorbell, CAMERA_SELECTS[2]
     )
 
     state = hass.states.get(entity_id)
@@ -296,8 +296,8 @@ async def test_select_update_doorbell_message(
     await init_entry(hass, ufp, [doorbell])
     assert_entity_counts(hass, Platform.SELECT, 5, 5)
 
-    _, entity_id = ids_from_device_description(
-        Platform.SELECT, doorbell, CAMERA_SELECTS[2]
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SELECT, doorbell, CAMERA_SELECTS[2]
     )
 
     state = hass.states.get(entity_id)
@@ -330,7 +330,9 @@ async def test_select_set_option_light_motion(
     await init_entry(hass, ufp, [light])
     assert_entity_counts(hass, Platform.SELECT, 2, 2)
 
-    _, entity_id = ids_from_device_description(Platform.SELECT, light, LIGHT_SELECTS[0])
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SELECT, light, LIGHT_SELECTS[0]
+    )
 
     light.__pydantic_fields__["set_light_settings"] = Mock(final=False, frozen=False)
     light.set_light_settings = AsyncMock()
@@ -355,7 +357,9 @@ async def test_select_set_option_light_camera(
     await init_entry(hass, ufp, [light, camera])
     assert_entity_counts(hass, Platform.SELECT, 4, 4)
 
-    _, entity_id = ids_from_device_description(Platform.SELECT, light, LIGHT_SELECTS[1])
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SELECT, light, LIGHT_SELECTS[1]
+    )
 
     light.__pydantic_fields__["set_paired_camera"] = Mock(final=False, frozen=False)
     light.set_paired_camera = AsyncMock()
@@ -389,8 +393,8 @@ async def test_select_set_option_camera_recording(
     await init_entry(hass, ufp, [doorbell])
     assert_entity_counts(hass, Platform.SELECT, 5, 5)
 
-    _, entity_id = ids_from_device_description(
-        Platform.SELECT, doorbell, CAMERA_SELECTS[0]
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SELECT, doorbell, CAMERA_SELECTS[0]
     )
 
     doorbell.__pydantic_fields__["set_recording_mode"] = Mock(final=False, frozen=False)
@@ -414,8 +418,8 @@ async def test_select_set_option_camera_ir(
     await init_entry(hass, ufp, [doorbell])
     assert_entity_counts(hass, Platform.SELECT, 5, 5)
 
-    _, entity_id = ids_from_device_description(
-        Platform.SELECT, doorbell, CAMERA_SELECTS[1]
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SELECT, doorbell, CAMERA_SELECTS[1]
     )
 
     doorbell.__pydantic_fields__["set_ir_led_model"] = Mock(final=False, frozen=False)
@@ -439,8 +443,8 @@ async def test_select_set_option_camera_doorbell_custom(
     await init_entry(hass, ufp, [doorbell])
     assert_entity_counts(hass, Platform.SELECT, 5, 5)
 
-    _, entity_id = ids_from_device_description(
-        Platform.SELECT, doorbell, CAMERA_SELECTS[2]
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SELECT, doorbell, CAMERA_SELECTS[2]
     )
 
     doorbell.__pydantic_fields__["set_lcd_text"] = Mock(final=False, frozen=False)
@@ -466,8 +470,8 @@ async def test_select_set_option_camera_doorbell_unifi(
     await init_entry(hass, ufp, [doorbell])
     assert_entity_counts(hass, Platform.SELECT, 5, 5)
 
-    _, entity_id = ids_from_device_description(
-        Platform.SELECT, doorbell, CAMERA_SELECTS[2]
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SELECT, doorbell, CAMERA_SELECTS[2]
     )
 
     doorbell.__pydantic_fields__["set_lcd_text"] = Mock(final=False, frozen=False)
@@ -508,8 +512,8 @@ async def test_select_set_option_camera_doorbell_default(
     await init_entry(hass, ufp, [doorbell])
     assert_entity_counts(hass, Platform.SELECT, 5, 5)
 
-    _, entity_id = ids_from_device_description(
-        Platform.SELECT, doorbell, CAMERA_SELECTS[2]
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SELECT, doorbell, CAMERA_SELECTS[2]
     )
 
     doorbell.__pydantic_fields__["set_lcd_text"] = Mock(final=False, frozen=False)
@@ -537,8 +541,8 @@ async def test_select_set_option_viewer(
     await init_entry(hass, ufp, [viewer])
     assert_entity_counts(hass, Platform.SELECT, 1, 1)
 
-    _, entity_id = ids_from_device_description(
-        Platform.SELECT, viewer, VIEWER_SELECTS[0]
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SELECT, viewer, VIEWER_SELECTS[0]
     )
 
     viewer.__pydantic_fields__["set_liveview"] = Mock(final=False, frozen=False)

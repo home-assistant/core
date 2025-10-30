@@ -13,6 +13,7 @@ import struct
 from typing import Any, NamedTuple
 
 from aiohasupervisor import SupervisorError
+from aiohasupervisor.models import GreenOptions, YellowOptions  # noqa: F401
 import voluptuous as vol
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
@@ -73,6 +74,7 @@ from . import (  # noqa: F401
     config_flow,
     diagnostics,
     sensor,
+    switch,
     system_health,
     update,
 )
@@ -122,11 +124,6 @@ from .discovery import async_setup_discovery_view
 from .handler import (  # noqa: F401
     HassIO,
     HassioAPIError,
-    async_create_backup,
-    async_get_green_settings,
-    async_get_yellow_settings,
-    async_set_green_settings,
-    async_set_yellow_settings,
     async_update_diagnostics,
     get_supervisor_client,
 )
@@ -149,7 +146,7 @@ _DEPRECATED_HassioServiceInfo = DeprecatedConstant(
 # If new platforms are added, be sure to import them above
 # so we do not make other components that depend on hassio
 # wait for the import of the platforms
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.UPDATE]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH, Platform.UPDATE]
 
 CONF_FRONTEND_REPO = "development_repo"
 

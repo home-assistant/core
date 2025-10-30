@@ -6,6 +6,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from whirlpool.dryer import MachineState as DryerMachineState
+from whirlpool.oven import CavityState as OvenCavityState, CookMode
 from whirlpool.washer import MachineState as WasherMachineState
 
 from homeassistant.components.whirlpool.sensor import SCAN_INTERVAL
@@ -297,39 +298,6 @@ async def test_washer_running_states(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "mock_fixture"),
-    [
-        ("sensor.washer_state", "mock_washer_api"),
-        ("sensor.dryer_state", "mock_dryer_api"),
-    ],
-)
-async def test_washer_dryer_door_open_state(
-    hass: HomeAssistant,
-    entity_id: str,
-    mock_fixture: str,
-    request: pytest.FixtureRequest,
-) -> None:
-    """Test Washer/Dryer machine state when door is open."""
-    mock_instance = request.getfixturevalue(mock_fixture)
-    await init_integration(hass)
-
-    state = hass.states.get(entity_id)
-    assert state.state == "running_maincycle"
-
-    mock_instance.get_door_open.return_value = True
-
-    await trigger_attr_callback(hass, mock_instance)
-    state = hass.states.get(entity_id)
-    assert state.state == "door_open"
-
-    mock_instance.get_door_open.return_value = False
-
-    await trigger_attr_callback(hass, mock_instance)
-    state = hass.states.get(entity_id)
-    assert state.state == "running_maincycle"
-
-
-@pytest.mark.parametrize(
     ("entity_id", "mock_fixture", "mock_method_name", "values"),
     [
         (
@@ -343,6 +311,60 @@ async def test_washer_dryer_door_open_state(
                 (3, "50"),
                 (4, "100"),
                 (5, "active"),
+            ],
+        ),
+        (
+            "sensor.dual_cavity_oven_upper_oven_state",
+            "mock_oven_dual_cavity_api",
+            "get_cavity_state",
+            [
+                (OvenCavityState.Standby, "standby"),
+                (OvenCavityState.Preheating, "preheating"),
+                (OvenCavityState.Cooking, "cooking"),
+                (None, STATE_UNKNOWN),
+            ],
+        ),
+        (
+            "sensor.dual_cavity_oven_upper_oven_cook_mode",
+            "mock_oven_dual_cavity_api",
+            "get_cook_mode",
+            [
+                (CookMode.Standby, "standby"),
+                (CookMode.Bake, "bake"),
+                (CookMode.ConvectBake, "convection_bake"),
+                (CookMode.Broil, "broil"),
+                (CookMode.ConvectBroil, "convection_broil"),
+                (CookMode.ConvectRoast, "convection_roast"),
+                (CookMode.KeepWarm, "keep_warm"),
+                (CookMode.AirFry, "air_fry"),
+                (None, STATE_UNKNOWN),
+            ],
+        ),
+        (
+            "sensor.single_cavity_oven_state",
+            "mock_oven_single_cavity_api",
+            "get_cavity_state",
+            [
+                (OvenCavityState.Standby, "standby"),
+                (OvenCavityState.Preheating, "preheating"),
+                (OvenCavityState.Cooking, "cooking"),
+                (None, STATE_UNKNOWN),
+            ],
+        ),
+        (
+            "sensor.single_cavity_oven_cook_mode",
+            "mock_oven_single_cavity_api",
+            "get_cook_mode",
+            [
+                (CookMode.Standby, "standby"),
+                (CookMode.Bake, "bake"),
+                (CookMode.ConvectBake, "convection_bake"),
+                (CookMode.Broil, "broil"),
+                (CookMode.ConvectBroil, "convection_broil"),
+                (CookMode.ConvectRoast, "convection_roast"),
+                (CookMode.KeepWarm, "keep_warm"),
+                (CookMode.AirFry, "air_fry"),
+                (None, STATE_UNKNOWN),
             ],
         ),
     ],

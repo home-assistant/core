@@ -28,26 +28,32 @@ from homeassistant.const import (
     ATTR_ICON,
     CONF_ENTITY_ID,
     CONF_ICON,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
 from homeassistant.core import Context, HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .conftest import ConfigurationStyle
+from .conftest import ConfigurationStyle, async_get_flow_preview_state
 
 from tests.common import MockConfigEntry, assert_setup_component, async_capture_events
+from tests.conftest import WebSocketGenerator
 
 _TEST_OBJECT_ID = "template_select"
 _TEST_SELECT = f"select.{_TEST_OBJECT_ID}"
 # Represent for select's current_option
 _OPTION_INPUT_SELECT = "input_select.option"
 TEST_STATE_ENTITY_ID = "select.test_state"
-
+TEST_AVAILABILITY_ENTITY_ID = "binary_sensor.test_availability"
 TEST_STATE_TRIGGER = {
     "trigger": {
         "trigger": "state",
-        "entity_id": [_OPTION_INPUT_SELECT, TEST_STATE_ENTITY_ID],
+        "entity_id": [
+            _OPTION_INPUT_SELECT,
+            TEST_STATE_ENTITY_ID,
+            TEST_AVAILABILITY_ENTITY_ID,
+        ],
     },
     "variables": {"triggering_entity": "{{ trigger.entity_id }}"},
     "action": [
@@ -201,20 +207,6 @@ async def test_multiple_configs(hass: HomeAssistant) -> None:
 
 async def test_missing_required_keys(hass: HomeAssistant) -> None:
     """Test: missing required fields will fail."""
-    with assert_setup_component(0, "template"):
-        assert await setup.async_setup_component(
-            hass,
-            "template",
-            {
-                "template": {
-                    "select": {
-                        "select_option": {"service": "script.select_option"},
-                        "options": "{{ ['a', 'b'] }}",
-                    }
-                }
-            },
-        )
-
     with assert_setup_component(0, "select"):
         assert await setup.async_setup_component(
             hass,
@@ -559,3 +551,150 @@ async def test_empty_action_config(hass: HomeAssistant, setup_select) -> None:
 
     state = hass.states.get(_TEST_SELECT)
     assert state.state == "a"
+
+
+@pytest.mark.parametrize(
+    ("count", "select_config"),
+    [
+        (
+            1,
+            {
+                "options": "{{ ['test', 'yes', 'no'] }}",
+                "select_option": [],
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_select")
+async def test_optimistic(hass: HomeAssistant) -> None:
+    """Test configuration with optimistic state."""
+
+    state = hass.states.get(_TEST_SELECT)
+    assert state.state == STATE_UNKNOWN
+
+    # Ensure Trigger template entities update.
+    hass.states.async_set(TEST_STATE_ENTITY_ID, "anything")
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        select.DOMAIN,
+        select.SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: _TEST_SELECT, "option": "test"},
+        blocking=True,
+    )
+
+    state = hass.states.get(_TEST_SELECT)
+    assert state.state == "test"
+
+    await hass.services.async_call(
+        select.DOMAIN,
+        select.SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: _TEST_SELECT, "option": "yes"},
+        blocking=True,
+    )
+
+    state = hass.states.get(_TEST_SELECT)
+    assert state.state == "yes"
+
+
+@pytest.mark.parametrize(
+    ("count", "select_config"),
+    [
+        (
+            1,
+            {
+                "state": "{{ states('select.test_state') }}",
+                "optimistic": False,
+                "options": "{{ ['test', 'yes', 'no'] }}",
+                "select_option": [],
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_select")
+async def test_not_optimistic(hass: HomeAssistant) -> None:
+    """Test optimistic yaml option set to false."""
+    # Ensure Trigger template entities update the options list
+    hass.states.async_set(TEST_STATE_ENTITY_ID, "anything")
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        select.DOMAIN,
+        select.SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: _TEST_SELECT, "option": "test"},
+        blocking=True,
+    )
+
+    state = hass.states.get(_TEST_SELECT)
+    assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    ("count", "select_config"),
+    [
+        (
+            1,
+            {
+                "options": "{{ ['test', 'yes', 'no'] }}",
+                "select_option": [],
+                "state": "{{ states('select.test_state') }}",
+                "availability": "{{ is_state('binary_sensor.test_availability', 'on') }}",
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.usefixtures("setup_select")
+async def test_availability(hass: HomeAssistant) -> None:
+    """Test configuration with optimistic state."""
+
+    hass.states.async_set(TEST_AVAILABILITY_ENTITY_ID, "on")
+    hass.states.async_set(TEST_STATE_ENTITY_ID, "test")
+    await hass.async_block_till_done()
+
+    state = hass.states.get(_TEST_SELECT)
+    assert state.state == "test"
+
+    hass.states.async_set(TEST_AVAILABILITY_ENTITY_ID, "off")
+    await hass.async_block_till_done()
+
+    state = hass.states.get(_TEST_SELECT)
+    assert state.state == STATE_UNAVAILABLE
+
+    hass.states.async_set(TEST_STATE_ENTITY_ID, "yes")
+    await hass.async_block_till_done()
+
+    state = hass.states.get(_TEST_SELECT)
+    assert state.state == STATE_UNAVAILABLE
+
+    hass.states.async_set(TEST_AVAILABILITY_ENTITY_ID, "on")
+    await hass.async_block_till_done()
+
+    state = hass.states.get(_TEST_SELECT)
+    assert state.state == "yes"
+
+
+async def test_flow_preview(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the config flow preview."""
+
+    state = await async_get_flow_preview_state(
+        hass,
+        hass_ws_client,
+        select.DOMAIN,
+        {"name": "My template", **TEST_OPTIONS},
+    )
+
+    assert state["state"] == "test"

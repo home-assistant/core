@@ -32,7 +32,6 @@ from homeassistant.components.stream import (
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import (
     CONF_AUTHENTICATION,
-    CONF_NAME,
     CONF_PASSWORD,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
@@ -56,13 +55,14 @@ TESTDATA = {
     CONF_VERIFY_SSL: False,
 }
 
+TESTDATA_ONLYSTILL = TESTDATA.copy()
+TESTDATA_ONLYSTILL.pop(CONF_STREAM_SOURCE)
+
+TESTDATA_ONLYSTREAM = TESTDATA.copy()
+TESTDATA_ONLYSTREAM.pop(CONF_STILL_IMAGE_URL)
+
 TESTDATA_OPTIONS = {
     CONF_LIMIT_REFETCH_TO_URL_CHANGE: False,
-    **TESTDATA,
-}
-
-TESTDATA_YAML = {
-    CONF_NAME: "Yaml Defined Name",
     **TESTDATA,
 }
 
@@ -135,11 +135,9 @@ async def test_form_only_stillimage(
     mock_setup_entry: _patch[MagicMock],
 ) -> None:
     """Test we complete ok if the user wants still images only."""
-    data = TESTDATA.copy()
-    data.pop(CONF_STREAM_SOURCE)
     result1 = await hass.config_entries.flow.async_configure(
         user_flow["flow_id"],
-        data,
+        TESTDATA_ONLYSTILL,
     )
     await hass.async_block_till_done()
     assert result1["type"] is FlowResultType.FORM
@@ -235,11 +233,9 @@ async def test_form_only_stillimage_gif(
     mock_setup_entry: _patch[MagicMock],
 ) -> None:
     """Test we complete ok if the user wants a gif."""
-    data = TESTDATA.copy()
-    data.pop(CONF_STREAM_SOURCE)
     result1 = await hass.config_entries.flow.async_configure(
         user_flow["flow_id"],
-        data,
+        TESTDATA_ONLYSTILL,
     )
     assert result1["type"] is FlowResultType.FORM
     assert result1["step_id"] == "user_confirm"
@@ -262,11 +258,9 @@ async def test_form_only_svg_whitespace(
     """Test we complete ok if svg starts with whitespace, issue #68889."""
     fakeimgbytes_wspace_svg = bytes("  \n ", encoding="utf-8") + fakeimgbytes_svg
     respx.get("http://127.0.0.1/testurl/1").respond(stream=fakeimgbytes_wspace_svg)
-    data = TESTDATA.copy()
-    data.pop(CONF_STREAM_SOURCE)
     result1 = await hass.config_entries.flow.async_configure(
         user_flow["flow_id"],
-        data,
+        TESTDATA_ONLYSTILL,
     )
     assert result1["type"] is FlowResultType.FORM
     assert result1["step_id"] == "user_confirm"
@@ -296,11 +290,9 @@ async def test_form_only_still_sample(
     image_path = os.path.join(os.path.dirname(__file__), image_file)
     image_bytes = await hass.async_add_executor_job(Path(image_path).read_bytes)
     respx.get("http://127.0.0.1/testurl/1").respond(stream=image_bytes)
-    data = TESTDATA.copy()
-    data.pop(CONF_STREAM_SOURCE)
     result1 = await hass.config_entries.flow.async_configure(
         user_flow["flow_id"],
-        data,
+        TESTDATA_ONLYSTILL,
     )
     assert result1["type"] is FlowResultType.FORM
     assert result1["step_id"] == "user_confirm"
@@ -364,8 +356,7 @@ async def test_form_still_template(
         # There is no need to mock the request if its an
         # invalid url because we will never make the request
         respx.get(url).respond(stream=fakeimgbytes_png)
-    data = TESTDATA.copy()
-    data.pop(CONF_STREAM_SOURCE)
+    data = TESTDATA_ONLYSTILL.copy()
     data[CONF_STILL_IMAGE_URL] = template
     result2 = await hass.config_entries.flow.async_configure(
         user_flow["flow_id"],
@@ -417,8 +408,7 @@ async def test_form_only_stream(
     mock_create_stream: _patch[MagicMock],
 ) -> None:
     """Test we complete ok if the user wants stream only."""
-    data = TESTDATA.copy()
-    data.pop(CONF_STILL_IMAGE_URL)
+    data = TESTDATA_ONLYSTREAM.copy()
     data[CONF_STREAM_SOURCE] = "rtsp://user:pass@127.0.0.1/testurl/2"
     result1 = await hass.config_entries.flow.async_configure(
         user_flow["flow_id"],
@@ -516,6 +506,31 @@ async def test_form_image_http_exceptions(
 
 
 @respx.mock
+async def test_form_image_http_302(
+    hass: HomeAssistant,
+    user_flow: ConfigFlowResult,
+    mock_create_stream: _patch[MagicMock],
+    fakeimgbytes_png: bytes,
+) -> None:
+    """Test we handle image http 302 (temporary redirect)."""
+    respx.get("http://127.0.0.1/testurl/1").side_effect = [
+        httpx.Response(
+            status_code=302, headers={"Location": "http://127.0.0.1/testurl2/1"}
+        )
+    ]
+    respx.get("http://127.0.0.1/testurl2/1", name="fake_img2").respond(
+        stream=fakeimgbytes_png
+    )
+    result2 = await hass.config_entries.flow.async_configure(
+        user_flow["flow_id"],
+        TESTDATA,
+    )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "user_confirm"
+
+
+@respx.mock
 async def test_form_stream_invalidimage(
     hass: HomeAssistant,
     user_flow: ConfigFlowResult,
@@ -592,8 +607,6 @@ async def test_form_stream_timeout(
 @respx.mock
 async def test_form_stream_not_set_up(hass: HomeAssistant, user_flow) -> None:
     """Test we handle if stream has not been set up."""
-    TESTDATA_ONLY_STREAM = TESTDATA.copy()
-    TESTDATA_ONLY_STREAM.pop(CONF_STILL_IMAGE_URL)
 
     with patch(
         "homeassistant.components.generic.config_flow.create_stream",
@@ -601,7 +614,7 @@ async def test_form_stream_not_set_up(hass: HomeAssistant, user_flow) -> None:
     ):
         result1 = await hass.config_entries.flow.async_configure(
             user_flow["flow_id"],
-            TESTDATA_ONLY_STREAM,
+            TESTDATA_ONLYSTREAM,
         )
     await hass.async_block_till_done()
 
@@ -612,8 +625,6 @@ async def test_form_stream_not_set_up(hass: HomeAssistant, user_flow) -> None:
 @respx.mock
 async def test_form_stream_other_error(hass: HomeAssistant, user_flow) -> None:
     """Test the unknown error for streams."""
-    TESTDATA_ONLY_STREAM = TESTDATA.copy()
-    TESTDATA_ONLY_STREAM.pop(CONF_STILL_IMAGE_URL)
 
     with (
         patch(
@@ -624,7 +635,7 @@ async def test_form_stream_other_error(hass: HomeAssistant, user_flow) -> None:
     ):
         await hass.config_entries.flow.async_configure(
             user_flow["flow_id"],
-            TESTDATA_ONLY_STREAM,
+            TESTDATA_ONLYSTREAM,
         )
     await hass.async_block_till_done()
 
@@ -794,14 +805,12 @@ async def test_options_only_stream(
     mock_create_stream: _patch[MagicMock],
 ) -> None:
     """Test the options flow without a still_image_url."""
-    data = TESTDATA.copy()
-    data.pop(CONF_STILL_IMAGE_URL)
 
     mock_entry = MockConfigEntry(
         title="Test Camera",
         domain=DOMAIN,
         data={},
-        options=data,
+        options=TESTDATA_ONLYSTREAM,
     )
     mock_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_entry.entry_id)
@@ -813,7 +822,7 @@ async def test_options_only_stream(
     # try updating the config options
     result2 = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input=data,
+        user_input=TESTDATA_ONLYSTREAM,
     )
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user_confirm"
@@ -830,7 +839,8 @@ async def test_options_still_and_stream_not_provided(
     mock_setup_entry: _patch[MagicMock],
 ) -> None:
     """Test we show a suitable error if neither still or stream URL are provided."""
-    data = TESTDATA.copy()
+    data = TESTDATA_ONLYSTILL.copy()
+    data.pop(CONF_STILL_IMAGE_URL)
 
     mock_entry = MockConfigEntry(
         title="Test Camera",
@@ -845,8 +855,6 @@ async def test_options_still_and_stream_not_provided(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
-    data.pop(CONF_STILL_IMAGE_URL)
-    data.pop(CONF_STREAM_SOURCE)
     result2 = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input=data,

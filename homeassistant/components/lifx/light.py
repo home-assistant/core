@@ -10,6 +10,9 @@ import aiolifx_effects as aiolifx_effects_module
 import voluptuous as vol
 
 from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    ATTR_BRIGHTNESS_STEP,
+    ATTR_BRIGHTNESS_STEP_PCT,
     ATTR_EFFECT,
     ATTR_TRANSITION,
     LIGHT_TURN_ON_SCHEMA,
@@ -233,6 +236,20 @@ class LIFXLight(LIFXEntity, LightEntity):
             fade = int(kwargs[ATTR_TRANSITION] * 1000)
         else:
             fade = 0
+
+        if ATTR_BRIGHTNESS_STEP in kwargs or ATTR_BRIGHTNESS_STEP_PCT in kwargs:
+            brightness = self.brightness if self.is_on and self.brightness else 0
+
+            if ATTR_BRIGHTNESS_STEP in kwargs:
+                brightness += kwargs.pop(ATTR_BRIGHTNESS_STEP)
+
+            else:
+                brightness_pct = round(brightness / 255 * 100)
+                brightness = round(
+                    (brightness_pct + kwargs.pop(ATTR_BRIGHTNESS_STEP_PCT)) / 100 * 255
+                )
+
+            kwargs[ATTR_BRIGHTNESS] = max(0, min(255, brightness))
 
         # These are both False if ATTR_POWER is not set
         power_on = kwargs.get(ATTR_POWER, False)

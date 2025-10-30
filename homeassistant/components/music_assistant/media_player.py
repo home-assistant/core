@@ -14,6 +14,7 @@ from music_assistant_models.enums import (
     MediaType,
     PlayerFeature,
     PlayerState as MassPlayerState,
+    PlayerType,
     QueueOption,
     RepeatMode as MassRepeatMode,
 )
@@ -80,7 +81,7 @@ from .media_browser import async_browse_media, async_search_media
 from .schemas import QUEUE_DETAILS_SCHEMA, queue_item_dict_from_mass_item
 
 if TYPE_CHECKING:
-    from music_assistant_client import MusicAssistantClient
+    from music_assistant_client.client import MusicAssistantClient
     from music_assistant_models.player import Player
 
 SUPPORTED_FEATURES_BASE = (
@@ -248,10 +249,8 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         player = self.player
         active_queue = self.active_queue
         # update generic attributes
-        if player.powered and active_queue is not None:
-            self._attr_state = MediaPlayerState(active_queue.state.value)
-        if player.powered and player.state is not None:
-            self._attr_state = MediaPlayerState(player.state.value)
+        if player.powered and player.playback_state is not None:
+            self._attr_state = MediaPlayerState(player.playback_state.value)
         else:
             self._attr_state = MediaPlayerState(STATE_OFF)
         # active source and source list (translate to HA source names)
@@ -270,12 +269,12 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         self._attr_source = active_source_name
 
         group_members: list[str] = []
-        if player.group_childs:
-            group_members = player.group_childs
+        if player.group_members:
+            group_members = player.group_members
         elif player.synced_to and (parent := self.mass.players.get(player.synced_to)):
-            group_members = parent.group_childs
+            group_members = parent.group_members
 
-        # translate MA group_childs to HA group_members as entity id's
+        # translate MA group_members to HA group_members as entity id's
         entity_registry = er.async_get(self.hass)
         group_members_entity_ids: list[str] = [
             entity_id
@@ -288,9 +287,11 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         ]
 
         self._attr_group_members = group_members_entity_ids
-        self._attr_volume_level = (
-            player.volume_level / 100 if player.volume_level is not None else None
-        )
+        if player.type == PlayerType.GROUP:
+            volume: int | None = player.group_volume
+        else:
+            volume = player.volume_level
+        self._attr_volume_level = volume / 100 if volume is not None else None
         self._attr_is_volume_muted = player.volume_muted
         self._update_media_attributes(player, active_queue)
         self._update_media_image_url(player, active_queue)

@@ -39,7 +39,7 @@ async def async_setup_entry(
         if not coordinator.new_devices:
             return
 
-        if coordinator.api.smile_name == "Adam":
+        if coordinator.api.smile.name == "Adam":
             async_add_entities(
                 PlugwiseClimateEntity(coordinator, device_id)
                 for device_id in coordinator.new_devices
@@ -85,7 +85,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
         self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
         if (
             self.coordinator.api.cooling_present
-            and coordinator.api.smile_name != "Adam"
+            and coordinator.api.smile.name != "Adam"
         ):
             self._attr_supported_features = (
                 ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
@@ -165,7 +165,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
         if "regulation_modes" in self._gateway_data:
             hvac_modes.append(HVACMode.OFF)
 
-        if "available_schedules" in self.device:
+        if self.device.get("available_schedules"):
             hvac_modes.append(HVACMode.AUTO)
 
         if self.coordinator.api.cooling_present:
