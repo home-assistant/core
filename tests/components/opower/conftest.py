@@ -37,7 +37,7 @@ def mock_opower_api() -> Generator[AsyncMock]:
         "homeassistant.components.opower.coordinator.Opower", autospec=True
     ) as mock_api:
         api = mock_api.return_value
-        api.utility = PGE
+        api.utility = PGE()
 
         api.async_get_accounts.return_value = [
             Account(
