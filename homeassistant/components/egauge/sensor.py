@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from egauge_async.json.models import RegisterInfo, RegisterType
+from egauge_async.json.models import RegisterType
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -76,7 +76,7 @@ async def async_setup_entry(
 
         # Create sensor for each description
         sensors.extend(
-            EgaugeSensor(coordinator, register_name, register_info, description)
+            EgaugeSensor(coordinator, register_name, description)
             for description in descriptions
         )
 
@@ -92,11 +92,11 @@ class EgaugeSensor(EgaugeEntity, SensorEntity):
         self,
         coordinator: EgaugeDataCoordinator,
         register_name: str,
-        register_info: RegisterInfo,
         description: EgaugeSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, register_name, register_info)
+        super().__init__(coordinator)
+        self._register_name = register_name
         self.entity_description = description
         self._attr_unique_id = (
             f"{coordinator.serial_number}_{register_name}_{description.key}"

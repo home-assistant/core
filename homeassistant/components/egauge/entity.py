@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from egauge_async.json.models import RegisterInfo
-
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -19,12 +17,9 @@ class EgaugeEntity(CoordinatorEntity[EgaugeDataCoordinator]):
     def __init__(
         self,
         coordinator: EgaugeDataCoordinator,
-        register_name: str,
-        register_info: RegisterInfo,
     ) -> None:
         """Initialize the eGauge entity."""
         super().__init__(coordinator)
-        self._register_name = register_name
 
         # Device info using coordinator's cached data
         self._attr_device_info = DeviceInfo(
