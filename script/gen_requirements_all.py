@@ -27,7 +27,6 @@ EXCLUDED_REQUIREMENTS_ALL = {
     "bluepy",
     "evdev",
     "pybluez",
-    "pycups",
     "python-lirc",
     "pyuserinput",
 }
@@ -36,7 +35,6 @@ EXCLUDED_REQUIREMENTS_ALL = {
 # building integration wheels for all architectures.
 INCLUDED_REQUIREMENTS_WHEELS = {
     "evdev",
-    "pycups",
     "pyuserinput",
 }
 
