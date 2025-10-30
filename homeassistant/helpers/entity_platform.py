@@ -334,6 +334,14 @@ class EntityPlatform:
                 learn_more_url = (
                     f"https://www.home-assistant.io/integrations/{self.platform_name}/"
                 )
+                self.logger.warning(
+                    (
+                        "The %s platform module for the %s custom component does not support platform"
+                        " setup because it does not implement async_setup_platform or setup_platform."
+                    ),
+                    self.platform_name,
+                    self.domain,
+                )
             platform_key = f"platform: {self.platform_name}"
             yaml_example = f"```yaml\n{self.domain}:\n  - {platform_key}\n```"
             async_create_issue(
