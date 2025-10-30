@@ -18,7 +18,6 @@ from homeassistant.const import (
     CONF_METHOD,
     CONF_PASSWORD,
     CONF_PAYLOAD,
-    CONF_SKIP_URL_ENCODING,
     CONF_TIMEOUT,
     CONF_URL,
     CONF_USERNAME,
@@ -40,6 +39,8 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.ssl import SSLCipherList
+
+from .const import CONF_SKIP_URL_ENCODING
 
 DOMAIN = "rest_command"
 
