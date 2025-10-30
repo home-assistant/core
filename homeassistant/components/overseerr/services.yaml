@@ -1,4 +1,5 @@
 get_requests:
+  description: Get existing media requests from Overseerr
   fields:
     config_entry_id:
       required: true
@@ -30,6 +31,7 @@ get_requests:
           mode: box
 
 search_media:
+  description: Search for media in Overseerr
   fields:
     config_entry_id:
       required: true
@@ -40,16 +42,16 @@ search_media:
       required: true
       selector:
         text:
-      description: "The search query"
+      description: The search query to find media
     limit:
       selector:
         number:
           min: 1
           mode: box
-      description: "Maximum number of results to return"
+      description: Maximum number of results to return
 
 request_media:
-  description: "Request media"
+  description: Request media in Overseerr
   fields:
     config_entry_id:
       required: true
@@ -63,16 +65,33 @@ request_media:
           options:
             - movie
             - tv
-          translation_key: media_type
-      description: "The type of media to request (movie or tv)"
+      description: The type of media to request (movie or tv)
     tmdb_id:
       required: true
       selector:
         number:
           min: 1
           mode: box
-      description: "The TMDB ID of the media to request"
+      description: The TMDB ID of the media to request
     seasons:
       selector:
         text:
-      description: "For TV shows, the seasons to request. Can be a single season number (e.g. 2), a list of season numbers (e.g. 1,2), or 'all' for all seasons"
+      description: For TV shows, the seasons to request. Can be a single season number (e.g. 2), a list of season numbers (e.g. 1,2), or 'all' for all seasons
+
+search_and_request:
+  description: Search for media and automatically request the first result
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: overseerr
+    query:
+      required: true
+      selector:
+        text:
+      description: The search query to find the media to request
+    seasons:
+      selector:
+        text:
+      description: For TV shows, the seasons to request. Can be a single season number (e.g. 2), a list of season numbers (e.g. 1,2), or 'all' for all seasons. Ignored for movies.

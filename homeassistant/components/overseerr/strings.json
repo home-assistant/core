@@ -25,8 +25,8 @@
           "url": "[%key:common::config_flow::data::url%]"
         },
         "data_description": {
-          "api_key": "The API key of the Seerr instance.",
-          "url": "The URL of the Seerr instance."
+          "api_key": "The API key of the Overseerr instance.",
+          "url": "The URL of the Overseerr instance."
         }
       }
     }
@@ -115,6 +115,15 @@
     },
     "connection_error": {
       "message": "Error connecting to the Seerr instance: {error}"
+    },
+    "integration_not_found": {
+      "message": "Integration \"{target}\" not found in registry."
+    },
+    "no_results": {
+      "message": "The provided query \"{query}\" did not yield any results."
+    },
+    "not_loaded": {
+      "message": "{target} is not loaded."
     }
   },
   "selector": {
