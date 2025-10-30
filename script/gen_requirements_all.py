@@ -27,7 +27,6 @@ EXCLUDED_REQUIREMENTS_ALL = {
     "bluepy",
     "evdev",
     "pybluez",
-    "python-lirc",
 }
 
 # Requirements excluded by EXCLUDED_REQUIREMENTS_ALL which should be included when
