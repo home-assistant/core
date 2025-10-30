@@ -1,6 +1,6 @@
 """Tests for the eGauge config flow."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from egauge_async.json.client import EgaugeAuthenticationError
 from httpx import ConnectError
@@ -19,15 +19,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
-
-pytestmark = pytest.mark.usefixtures("mock_setup_entry")
-
-
-@pytest.fixture
-def mock_setup_entry():
-    """Mock setting up a config entry."""
-    with patch("homeassistant.components.egauge.async_setup_entry", return_value=True):
-        yield
 
 
 @pytest.mark.usefixtures("mock_egauge_client")
