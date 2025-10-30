@@ -2585,6 +2585,9 @@ python-telegram-bot[socks]==22.1
 # homeassistant.components.vlc
 python-vlc==3.0.18122
 
+# homeassistant.components.xbox
+python-xbox==0.1.0
+
 # homeassistant.components.egardia
 pythonegardia==1.0.52
 
@@ -3190,9 +3193,6 @@ wsdot==0.0.1
 
 # homeassistant.components.wyoming
 wyoming==1.7.2
-
-# homeassistant.components.xbox
-xbox-webapi==2.1.0
 
 # homeassistant.components.xiaomi_ble
 xiaomi-ble==1.2.0

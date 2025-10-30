@@ -6,9 +6,9 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import Any
 
-from xbox.webapi.api.provider.people.models import Person
-from xbox.webapi.api.provider.smartglass.models import ConsoleType, SmartglassConsole
-from xbox.webapi.api.provider.titlehub.models import Title
+from pythonxbox.api.provider.people.models import Person
+from pythonxbox.api.provider.smartglass.models import ConsoleType, SmartglassConsole
+from pythonxbox.api.provider.titlehub.models import Title
 from yarl import URL
 
 from homeassistant.components.automation import automations_with_entity
