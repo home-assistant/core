@@ -28,14 +28,12 @@ EXCLUDED_REQUIREMENTS_ALL = {
     "evdev",
     "pybluez",
     "python-lirc",
-    "pyuserinput",
 }
 
 # Requirements excluded by EXCLUDED_REQUIREMENTS_ALL which should be included when
 # building integration wheels for all architectures.
 INCLUDED_REQUIREMENTS_WHEELS = {
     "evdev",
-    "pyuserinput",
 }
 
 
