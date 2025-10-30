@@ -2643,6 +2643,71 @@ async def test_config_flow_port_no_multiprotocol(hass: HomeAssistant) -> None:
     assert ports == []
 
 
+async def test_list_serial_ports_ignored_devices(hass: HomeAssistant) -> None:
+    """Test that list_serial_ports filters out ignored non-Zigbee devices."""
+    mock_ports = [
+        ListPortInfo("/dev/ttyUSB0"),
+        ListPortInfo("/dev/ttyUSB1"),
+        ListPortInfo("/dev/ttyUSB2"),
+        ListPortInfo("/dev/ttyUSB3"),
+        ListPortInfo("/dev/ttyUSB4"),
+        ListPortInfo("/dev/ttyUSB5"),
+    ]
+
+    # ZWA-2, should be filtered
+    mock_ports[0].manufacturer = "Nabu Casa"
+    mock_ports[0].description = "ZWA-2"
+
+    # ZBT-2, should be shown
+    mock_ports[1].manufacturer = "Nabu Casa"
+    mock_ports[1].description = "ZBT-2"
+
+    # ZBT-1, should be shown
+    mock_ports[2].manufacturer = "Nabu Casa"
+    mock_ports[2].description = "Home Assistant Connect ZBT-1"
+
+    # SkyConnect, should be shown
+    mock_ports[3].manufacturer = "Nabu Casa"
+    mock_ports[3].description = "SkyConnect v1.0"
+
+    # unknown device with manufacturer/description, should be shown
+    mock_ports[4].manufacturer = "Another Manufacturer"
+    mock_ports[4].description = "Zigbee USB Adapter"
+
+    # unknown device with no manufacturer/description, should be shown
+    mock_ports[5].manufacturer = None
+    mock_ports[5].description = None
+
+    with (
+        patch("homeassistant.components.zha.config_flow.is_hassio", return_value=False),
+        patch("serial.tools.list_ports.comports", return_value=mock_ports),
+    ):
+        ports = await config_flow.list_serial_ports(hass)
+
+    # ZWA-2 should be filtered out, others should remain
+    assert len(ports) == 5
+
+    assert ports[0].device == "/dev/ttyUSB1"
+    assert ports[0].manufacturer == "Nabu Casa"
+    assert ports[0].description == "ZBT-2"
+
+    assert ports[1].device == "/dev/ttyUSB2"
+    assert ports[1].manufacturer == "Nabu Casa"
+    assert ports[1].description == "Home Assistant Connect ZBT-1"
+
+    assert ports[2].device == "/dev/ttyUSB3"
+    assert ports[2].manufacturer == "Nabu Casa"
+    assert ports[2].description == "SkyConnect v1.0"
+
+    assert ports[3].device == "/dev/ttyUSB4"
+    assert ports[3].manufacturer == "Another Manufacturer"
+    assert ports[3].description == "Zigbee USB Adapter"
+
+    assert ports[4].device == "/dev/ttyUSB5"
+    assert ports[4].manufacturer is None
+    assert ports[4].description is None
+
+
 @patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
 async def test_probe_wrong_firmware_installed(hass: HomeAssistant) -> None:
     """Test auto-probing failing because the wrong firmware is installed."""
