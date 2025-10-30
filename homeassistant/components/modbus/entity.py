@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from collections.abc import Callable
+import copy
 from datetime import datetime, timedelta
 import struct
 from typing import Any, cast
@@ -61,14 +62,13 @@ from .const import (
     CONF_VIRTUAL_COUNT,
     CONF_WRITE_TYPE,
     CONF_ZERO_SUPPRESS,
-    SIGNAL_START_ENTITY,
     SIGNAL_STOP_ENTITY,
     DataType,
 )
 from .modbus import ModbusHub
 
 
-class BasePlatform(Entity):
+class ModbusBaseEntity(Entity):
     """Base for readonly platforms."""
 
     _value: str | None = None
@@ -83,43 +83,36 @@ class BasePlatform(Entity):
 
         self._hub = hub
         if (conf_slave := entry.get(CONF_SLAVE)) is not None:
-            self._slave = conf_slave
+            self._device_address = conf_slave
         else:
-            self._slave = entry.get(CONF_DEVICE_ADDRESS, 1)
+            self._device_address = entry.get(CONF_DEVICE_ADDRESS, 1)
         self._address = int(entry[CONF_ADDRESS])
         self._input_type = entry[CONF_INPUT_TYPE]
         self._scan_interval = int(entry[CONF_SCAN_INTERVAL])
-        self._cancel_timer: Callable[[], None] | None = None
         self._cancel_call: Callable[[], None] | None = None
         self._attr_unique_id = entry.get(CONF_UNIQUE_ID)
         self._attr_name = entry[CONF_NAME]
         self._attr_device_class = entry.get(CONF_DEVICE_CLASS)
 
-        def get_optional_numeric_config(config_name: str) -> int | float | None:
-            if (val := entry.get(config_name)) is None:
-                return None
-            assert isinstance(val, (float, int)), (
-                f"Expected float or int but {config_name} was {type(val)}"
-            )
-            return val
-
-        self._min_value = get_optional_numeric_config(CONF_MIN_VALUE)
-        self._max_value = get_optional_numeric_config(CONF_MAX_VALUE)
+        self._min_value = entry.get(CONF_MIN_VALUE)
+        self._max_value = entry.get(CONF_MAX_VALUE)
         self._nan_value = entry.get(CONF_NAN_VALUE)
-        self._zero_suppress = get_optional_numeric_config(CONF_ZERO_SUPPRESS)
+        self._zero_suppress = entry.get(CONF_ZERO_SUPPRESS)
 
     @abstractmethod
     async def _async_update(self) -> None:
         """Virtual function to be overwritten."""
 
-    async def async_update(self) -> None:
+    async def async_update(self, now: datetime | None = None) -> None:
         """Update the entity state."""
-        if self._cancel_call:
-            self._cancel_call()
-        await self.async_local_update()
+        await self.async_local_update(cancel_pending_update=True)
 
-    async def async_local_update(self, now: datetime | None = None) -> None:
+    async def async_local_update(
+        self, now: datetime | None = None, cancel_pending_update: bool = False
+    ) -> None:
         """Update the entity state."""
+        if cancel_pending_update and self._cancel_call:
+            self._cancel_call()
         await self._async_update()
         self.async_write_ha_state()
         if self._scan_interval > 0:
@@ -129,63 +122,23 @@ class BasePlatform(Entity):
                 self.async_local_update,
             )
 
-    async def _async_update_write_state(self) -> None:
-        """Update the entity state and write it to the state machine."""
-        if self._cancel_call:
-            self._cancel_call()
-            self._cancel_call = None
-        await self.async_local_update()
-
-    async def _async_update_if_not_in_progress(
-        self, now: datetime | None = None
-    ) -> None:
-        """Update the entity state if not already in progress."""
-        await self._async_update_write_state()
+    async def async_will_remove_from_hass(self) -> None:
+        """Remove entity from hass."""
+        self.async_disable()
 
     @callback
-    def async_run(self) -> None:
-        """Remote start entity."""
-        self._async_cancel_update_polling()
-        self._async_schedule_future_update(0.1)
-        self._cancel_call = async_call_later(
-            self.hass, timedelta(seconds=0.1), self.async_local_update
-        )
-        self._attr_available = True
-        self.async_write_ha_state()
-
-    @callback
-    def _async_schedule_future_update(self, delay: float) -> None:
-        """Schedule an update in the future."""
-        self._async_cancel_future_pending_update()
-        self._cancel_call = async_call_later(
-            self.hass, delay, self._async_update_if_not_in_progress
-        )
-
-    @callback
-    def _async_cancel_future_pending_update(self) -> None:
-        """Cancel a future pending update."""
-        if self._cancel_call:
-            self._cancel_call()
-            self._cancel_call = None
-
-    def _async_cancel_update_polling(self) -> None:
-        """Cancel the polling."""
-        if self._cancel_timer:
-            self._cancel_timer()
-            self._cancel_timer = None
-
-    @callback
-    def async_hold(self) -> None:
+    def async_disable(self) -> None:
         """Remote stop entity."""
-        self._async_cancel_future_pending_update()
-        self._async_cancel_update_polling()
+        _LOGGER.info(f"hold entity {self._attr_name}")
+        if self._cancel_call:
+            self._cancel_call()
+            self._cancel_call = None
         self._attr_available = False
-        self.async_write_ha_state()
 
     async def async_await_connection(self, _now: Any) -> None:
         """Wait for first connect."""
         await self._hub.event_connected.wait()
-        self.async_run()
+        await self.async_local_update(cancel_pending_update=True)
 
     async def async_base_added_to_hass(self) -> None:
         """Handle entity which will be added."""
@@ -197,14 +150,11 @@ class BasePlatform(Entity):
             )
         )
         self.async_on_remove(
-            async_dispatcher_connect(self.hass, SIGNAL_STOP_ENTITY, self.async_hold)
-        )
-        self.async_on_remove(
-            async_dispatcher_connect(self.hass, SIGNAL_START_ENTITY, self.async_run)
+            async_dispatcher_connect(self.hass, SIGNAL_STOP_ENTITY, self.async_disable)
         )
 
 
-class BaseStructPlatform(BasePlatform, RestoreEntity):
+class ModbusStructEntity(ModbusBaseEntity, RestoreEntity):
     """Base class representing a sensor/climate."""
 
     def __init__(self, hass: HomeAssistant, hub: ModbusHub, config: dict) -> None:
@@ -258,7 +208,7 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
 
     def __process_raw_value(self, entry: float | str | bytes) -> str | None:
         """Process value from sensor with NaN handling, scaling, offset, min/max etc."""
-        if self._nan_value and entry in (self._nan_value, -self._nan_value):
+        if self._nan_value is not None and entry in (self._nan_value, -self._nan_value):
             return None
         if isinstance(entry, bytes):
             return entry.decode()
@@ -280,7 +230,9 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
         """Convert registers to proper result."""
 
         if self._swap:
-            registers = self._swap_registers(registers, self._slave_count)
+            registers = self._swap_registers(
+                copy.deepcopy(registers), self._slave_count
+            )
         byte_string = b"".join([x.to_bytes(2, byteorder="big") for x in registers])
         if self._data_type == DataType.STRING:
             return byte_string.decode()
@@ -309,7 +261,7 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
         return self.__process_raw_value(val[0])
 
 
-class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
+class ModbusToggleEntity(ModbusBaseEntity, ToggleEntity, RestoreEntity):
     """Base class representing a Modbus switch."""
 
     def __init__(self, hass: HomeAssistant, hub: ModbusHub, config: dict) -> None:
@@ -371,7 +323,7 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
     async def async_turn(self, command: int) -> None:
         """Evaluate switch result."""
         result = await self._hub.async_pb_call(
-            self._slave, self._address, command, self._write_type
+            self._device_address, self._address, command, self._write_type
         )
         if result is None:
             self._attr_available = False
@@ -385,10 +337,14 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
             return
 
         if self._verify_delay:
-            self._async_schedule_future_update(self._verify_delay)
+            if self._cancel_call:
+                self._cancel_call()
+                self._cancel_call = None
+            self._cancel_call = async_call_later(
+                self.hass, self._verify_delay, self.async_update
+            )
             return
-
-        await self._async_update_write_state()
+        await self.async_local_update(cancel_pending_update=True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Set switch off."""
@@ -402,7 +358,7 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
 
         # do not allow multiple active calls to the same platform
         result = await self._hub.async_pb_call(
-            self._slave, self._verify_address, 1, self._verify_type
+            self._device_address, self._verify_address, 1, self._verify_type
         )
         if result is None:
             self._attr_available = False
@@ -423,7 +379,7 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
                         "Unexpected response from modbus device slave %s register %s,"
                         " got 0x%2x"
                     ),
-                    self._slave,
+                    self._device_address,
                     self._verify_address,
                     value,
                 )

@@ -4,8 +4,15 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-from pyvlx import OpeningDevice, Position
-from pyvlx.opening_device import Awning, Blind, GarageDoor, Gate, RollerShutter, Window
+from pyvlx import (
+    Awning,
+    Blind,
+    GarageDoor,
+    Gate,
+    OpeningDevice,
+    Position,
+    RollerShutter,
+)
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -14,11 +21,10 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from . import VeluxConfigEntry
 from .entity import VeluxEntity
 
 PARALLEL_UPDATES = 1
@@ -26,14 +32,14 @@ PARALLEL_UPDATES = 1
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigEntry,
+    config: VeluxConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up cover(s) for Velux platform."""
-    module = hass.data[DOMAIN][config.entry_id]
+    pyvlx = config.runtime_data
     async_add_entities(
         VeluxCover(node, config.entry_id)
-        for node in module.pyvlx.nodes
+        for node in pyvlx.nodes
         if isinstance(node, OpeningDevice)
     )
 
@@ -44,9 +50,13 @@ class VeluxCover(VeluxEntity, CoverEntity):
     _is_blind = False
     node: OpeningDevice
 
+    # Do not name the "main" feature of the device (position control)
+    _attr_name = None
+
     def __init__(self, node: OpeningDevice, config_entry_id: str) -> None:
         """Initialize VeluxCover."""
         super().__init__(node, config_entry_id)
+        # Window is the default device class for covers
         self._attr_device_class = CoverDeviceClass.WINDOW
         if isinstance(node, Awning):
             self._attr_device_class = CoverDeviceClass.AWNING
@@ -59,8 +69,6 @@ class VeluxCover(VeluxEntity, CoverEntity):
             self._attr_device_class = CoverDeviceClass.GATE
         if isinstance(node, RollerShutter):
             self._attr_device_class = CoverDeviceClass.SHUTTER
-        if isinstance(node, Window):
-            self._attr_device_class = CoverDeviceClass.WINDOW
 
     @property
     def supported_features(self) -> CoverEntityFeature:
@@ -95,7 +103,10 @@ class VeluxCover(VeluxEntity, CoverEntity):
     @property
     def is_closed(self) -> bool:
         """Return if the cover is closed."""
-        return self.node.position.closed
+        # do not use the node's closed state but rely on cover position
+        # until https://github.com/Julius2342/pyvlx/pull/543 is merged.
+        # once merged this can again return self.node.position.closed
+        return self.current_cover_position == 0
 
     @property
     def is_opening(self) -> bool:

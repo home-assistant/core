@@ -6,6 +6,7 @@ from aiocomelit import CannotAuthenticate, CannotConnect
 from aiocomelit.const import BRIDGE, VEDO
 import pytest
 
+from homeassistant.components.comelit.config_flow import InvalidPin
 from homeassistant.components.comelit.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT, CONF_TYPE
@@ -13,6 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .const import (
+    BAD_PIN,
     BRIDGE_HOST,
     BRIDGE_PIN,
     BRIDGE_PORT,
@@ -96,6 +98,7 @@ async def test_flow_vedo(
         (CannotConnect, "cannot_connect"),
         (CannotAuthenticate, "invalid_auth"),
         (ConnectionResetError, "unknown"),
+        (InvalidPin, "invalid_pin"),
     ],
 )
 async def test_exception_connection(
@@ -180,6 +183,7 @@ async def test_reauth_successful(
         (CannotConnect, "cannot_connect"),
         (CannotAuthenticate, "invalid_auth"),
         (ConnectionResetError, "unknown"),
+        (InvalidPin, "invalid_pin"),
     ],
 )
 async def test_reauth_not_successful(
@@ -260,6 +264,7 @@ async def test_reconfigure_successful(
         (CannotConnect, "cannot_connect"),
         (CannotAuthenticate, "invalid_auth"),
         (ConnectionResetError, "unknown"),
+        (InvalidPin, "invalid_pin"),
     ],
 )
 async def test_reconfigure_fails(
@@ -310,3 +315,47 @@ async def test_reconfigure_fails(
         CONF_PIN: BRIDGE_PIN,
         CONF_TYPE: BRIDGE,
     }
+
+
+async def test_pin_format_serial_bridge(
+    hass: HomeAssistant,
+    mock_serial_bridge: AsyncMock,
+    mock_serial_bridge_config_entry: MockConfigEntry,
+) -> None:
+    """Test PIN is valid format."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: BRIDGE_HOST,
+            CONF_PORT: BRIDGE_PORT,
+            CONF_PIN: BAD_PIN,
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "invalid_pin"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: BRIDGE_HOST,
+            CONF_PORT: BRIDGE_PORT,
+            CONF_PIN: BRIDGE_PIN,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_HOST: BRIDGE_HOST,
+        CONF_PORT: BRIDGE_PORT,
+        CONF_PIN: BRIDGE_PIN,
+        CONF_TYPE: BRIDGE,
+    }
+    assert not result["result"].unique_id
+    await hass.async_block_till_done()

@@ -6,6 +6,7 @@ import abc
 from collections import deque
 from collections.abc import Callable, Container, Coroutine, Generator, Iterable
 from contextlib import contextmanager
+from dataclasses import dataclass
 from datetime import datetime, time as dt_time, timedelta
 import functools as ft
 import inspect
@@ -30,7 +31,10 @@ from homeassistant.const import (
     CONF_FOR,
     CONF_ID,
     CONF_MATCH,
+    CONF_OPTIONS,
+    CONF_SELECTOR,
     CONF_STATE,
+    CONF_TARGET,
     CONF_VALUE_TEMPLATE,
     CONF_WEEKDAY,
     ENTITY_MATCH_ALL,
@@ -59,9 +63,10 @@ from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.yaml import load_yaml_dict
 
-from . import config_validation as cv, entity_registry as er
+from . import config_validation as cv, entity_registry as er, selector
 from .automation import get_absolute_description_key, get_relative_description_key
 from .integration_platform import async_process_integration_platforms
+from .selector import TargetSelector
 from .template import Template, render_complex
 from .trace import (
     TraceElement,
@@ -109,14 +114,17 @@ CONDITIONS: HassKey[dict[str, str]] = HassKey("conditions")
 
 # Basic schemas to sanity check the condition descriptions,
 # full validation is done by hassfest.conditions
-_FIELD_SCHEMA = vol.Schema(
-    {},
+_FIELD_DESCRIPTION_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_SELECTOR): selector.validate_selector,
+    },
     extra=vol.ALLOW_EXTRA,
 )
 
-_CONDITION_SCHEMA = vol.Schema(
+_CONDITION_DESCRIPTION_SCHEMA = vol.Schema(
     {
-        vol.Optional("fields"): vol.Schema({str: _FIELD_SCHEMA}),
+        vol.Optional("target"): TargetSelector.CONFIG_SCHEMA,
+        vol.Optional("fields"): vol.Schema({str: _FIELD_DESCRIPTION_SCHEMA}),
     },
     extra=vol.ALLOW_EXTRA,
 )
@@ -129,10 +137,10 @@ def starts_with_dot(key: str) -> str:
     return key
 
 
-_CONDITIONS_SCHEMA = vol.Schema(
+_CONDITIONS_DESCRIPTION_SCHEMA = vol.Schema(
     {
         vol.Remove(vol.All(str, starts_with_dot)): object,
-        cv.underscore_slug: vol.Any(None, _CONDITION_SCHEMA),
+        cv.underscore_slug: vol.Any(None, _CONDITION_DESCRIPTION_SCHEMA),
     }
 )
 
@@ -194,11 +202,43 @@ async def _register_condition_platform(
             _LOGGER.exception("Error while notifying condition platform listener")
 
 
+_CONDITION_SCHEMA = vol.Schema(
+    {
+        **cv.CONDITION_BASE_SCHEMA,
+        vol.Required(CONF_CONDITION): str,
+        vol.Optional(CONF_OPTIONS): object,
+        vol.Optional(CONF_TARGET): cv.TARGET_FIELDS,
+    }
+)
+
+
 class Condition(abc.ABC):
     """Condition class."""
 
-    def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
-        """Initialize condition."""
+    @classmethod
+    async def async_validate_complete_config(
+        cls, hass: HomeAssistant, complete_config: ConfigType
+    ) -> ConfigType:
+        """Validate complete config.
+
+        The complete config includes fields that are generic to all conditions,
+        such as the alias.
+        This method should be overridden by conditions that need to migrate
+        from the old-style config.
+        """
+        complete_config = _CONDITION_SCHEMA(complete_config)
+
+        specific_config: ConfigType = {}
+        for key in (CONF_OPTIONS, CONF_TARGET):
+            if key in complete_config:
+                specific_config[key] = complete_config.pop(key)
+        specific_config = await cls.async_validate_config(hass, specific_config)
+
+        for key in (CONF_OPTIONS, CONF_TARGET):
+            if key in specific_config:
+                complete_config[key] = specific_config[key]
+
+        return complete_config
 
     @classmethod
     @abc.abstractmethod
@@ -206,6 +246,9 @@ class Condition(abc.ABC):
         cls, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
         """Validate config."""
+
+    def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
+        """Initialize condition."""
 
     @abc.abstractmethod
     async def async_get_checker(self) -> ConditionCheckerType:
@@ -219,6 +262,14 @@ class ConditionProtocol(Protocol):
         self, hass: HomeAssistant
     ) -> dict[str, type[Condition]]:
         """Return the conditions provided by this integration."""
+
+
+@dataclass(slots=True)
+class ConditionConfig:
+    """Condition config."""
+
+    options: dict[str, Any] | None = None
+    target: dict[str, Any] | None = None
 
 
 type ConditionCheckerType = Callable[[HomeAssistant, TemplateVarsType], bool | None]
@@ -350,8 +401,15 @@ async def async_from_config(
         relative_condition_key = get_relative_description_key(
             platform_domain, condition_key
         )
-        condition_instance = condition_descriptors[relative_condition_key](hass, config)
-        return await condition_instance.async_get_checker()
+        condition_cls = condition_descriptors[relative_condition_key]
+        condition = condition_cls(
+            hass,
+            ConditionConfig(
+                options=config.get(CONF_OPTIONS),
+                target=config.get(CONF_TARGET),
+            ),
+        )
+        return await condition.async_get_checker()
 
     for fmt in (ASYNC_FROM_CONFIG_FORMAT, FROM_CONFIG_FORMAT):
         factory = getattr(sys.modules[__name__], fmt.format(condition_key), None)
@@ -984,9 +1042,9 @@ async def async_validate_condition_config(
         )
         if not (condition_class := condition_descriptors.get(relative_condition_key)):
             raise vol.Invalid(f"Invalid condition '{condition_key}' specified")
-        return await condition_class.async_validate_config(hass, config)
+        return await condition_class.async_validate_complete_config(hass, config)
 
-    if platform is None and condition_key in ("numeric_state", "state"):
+    if condition_key in ("numeric_state", "state"):
         validator = cast(
             Callable[[HomeAssistant, ConfigType], ConfigType],
             getattr(
@@ -1106,7 +1164,7 @@ def _load_conditions_file(integration: Integration) -> dict[str, Any]:
     try:
         return cast(
             dict[str, Any],
-            _CONDITIONS_SCHEMA(
+            _CONDITIONS_DESCRIPTION_SCHEMA(
                 load_yaml_dict(str(integration.file_path / "conditions.yaml"))
             ),
         )

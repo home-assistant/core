@@ -190,7 +190,7 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
         return bool(
             self.pending_info_alerts_count
             or self.pending_warning_alerts_count
-            or self.pending_warning_alerts_count
+            or self.pending_critical_alerts_count
         )
 
     @property

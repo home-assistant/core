@@ -295,7 +295,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
     ) -> None:
         """Play a piece of media."""
         if heos_source.is_media_uri(media_id):
-            media, data = heos_source.from_media_uri(media_id)
+            media, _data = heos_source.from_media_uri(media_id)
             if not isinstance(media, MediaItem):
                 raise ValueError(f"Invalid media id '{media_id}'")
             await self._player.play_media(
@@ -610,7 +610,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
 
     async def _async_browse_heos_media(self, media_content_id: str) -> BrowseMedia:
         """Browse a HEOS media item."""
-        media, data = heos_source.from_media_uri(media_content_id)
+        media, _data = heos_source.from_media_uri(media_content_id)
         browse_media = _media_to_browse_media(media)
         try:
             browse_result = await self.coordinator.heos.browse_media(media)
