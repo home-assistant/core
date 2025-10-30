@@ -40,7 +40,9 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> bool:
         client = Firefly(
             api_url=data[CONF_URL],
             api_key=data[CONF_API_KEY],
-            session=async_get_clientsession(hass),
+            session=async_get_clientsession(
+                hass=hass, verify_ssl=data[CONF_VERIFY_SSL]
+            ),
         )
         await client.get_about()
     except FireflyAuthenticationError:
