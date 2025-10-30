@@ -59,6 +59,30 @@ SENSOR_DESCRIPTIONS: dict[RegisterType, list[EgaugeSensorEntityDescription]] = {
 }
 
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: EgaugeConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up eGauge sensor platform."""
+    coordinator = entry.runtime_data
+    sensors: list[SensorEntity] = []
+
+    for register_name, register_info in coordinator.data.register_info.items():
+        # Get sensor descriptions for this register type
+        descriptions = SENSOR_DESCRIPTIONS.get(register_info.type)
+        if not descriptions:
+            continue  # Skip unsupported types
+
+        # Create sensor for each description
+        sensors.extend(
+            EgaugeSensor(coordinator, register_name, register_info, description)
+            for description in descriptions
+        )
+
+    async_add_entities(sensors)
+
+
 class EgaugeSensor(EgaugeEntity, SensorEntity):
     """Generic sensor entity using entity description pattern."""
 
@@ -88,27 +112,3 @@ class EgaugeSensor(EgaugeEntity, SensorEntity):
         return self.entity_description.native_value_fn(
             self.coordinator.data, self._register_name
         )
-
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: EgaugeConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
-) -> None:
-    """Set up eGauge sensor platform."""
-    coordinator = entry.runtime_data
-    sensors: list[SensorEntity] = []
-
-    for register_name, register_info in coordinator.data.register_info.items():
-        # Get sensor descriptions for this register type
-        descriptions = SENSOR_DESCRIPTIONS.get(register_info.type)
-        if not descriptions:
-            continue  # Skip unsupported types
-
-        # Create sensor for each description
-        sensors.extend(
-            EgaugeSensor(coordinator, register_name, register_info, description)
-            for description in descriptions
-        )
-
-    async_add_entities(sensors)
