@@ -33,10 +33,7 @@ async def test_sensors(
     # Verify device created with hostname
     device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "ABC123456")})
     assert device_entry
-    assert device_entry.name == "egauge-home"
-    assert device_entry.serial_number == "ABC123456"
-    assert device_entry.manufacturer == "eGauge Systems"
-    assert device_entry.model == "eGauge Energy Monitor"
+    assert device_entry == snapshot
 
 
 async def test_power_sensor_values(hass: HomeAssistant) -> None:
