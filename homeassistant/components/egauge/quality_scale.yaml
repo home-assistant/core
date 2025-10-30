@@ -28,7 +28,7 @@ rules:
   # Silver
   action-exceptions:
     status: exempt
-    comment: Integration does not register custom actions
+    comment: Integration does not register actions
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
@@ -44,12 +44,8 @@ rules:
   # Gold
   devices: done
   diagnostics: todo
-  discovery:
-    status: exempt
-    comment: eGauge devices do not support automatic discovery protocols
-  discovery-update-info:
-    status: exempt
-    comment: eGauge devices do not support automatic discovery protocols
+  discovery: todo
+  discovery-update-info: todo
   docs-data-update: done
   docs-examples: todo
   docs-known-limitations: done
@@ -60,7 +56,9 @@ rules:
   dynamic-devices: todo
   entity-category: done
   entity-device-class: done
-  entity-disabled-by-default: todo
+  entity-disabled-by-default:
+    status: exempt
+    comment: Integration only has essential entities
   entity-translations: todo
   exception-translations: todo
   icon-translations:
