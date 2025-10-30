@@ -162,8 +162,6 @@ class OlarmBinarySensor(OlarmEntity, BinarySensorEntity):
         sensor_state: str,
         sensor_label: str,
         sensor_class: int | None = None,
-        link_id: int | None = None,
-        link_name: str | None = "",
     ) -> None:
         """Init the class."""
 
@@ -199,9 +197,6 @@ class OlarmBinarySensor(OlarmEntity, BinarySensorEntity):
         self.sensor_state = sensor_state
         self.sensor_label = sensor_label
         self.sensor_class = sensor_class
-        self.link_id = (
-            link_id  # only used for olarm LINKs to track which LINK as can have upto 8
-        )
 
         # initialize state via description
         self._attr_is_on = self.entity_description.value_fn(
