@@ -38,13 +38,6 @@ _DESCRIPTIONS: tuple[VolvoLockDescription, ...] = (
         unlock_command="unlock",
         required_command_key="LOCK",
     ),
-    VolvoLockDescription(
-        key="lock_reduced_guard",
-        api_field="centralLock",
-        lock_command="lock-reduced-guard",
-        unlock_command="unlock",
-        required_command_key="LOCK_REDUCED_GUARD",
-    ),
 )
 
 

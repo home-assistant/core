@@ -213,9 +213,6 @@
     "lock": {
       "lock": {
         "name": "Central lock"
-      },
-      "lock_reduced_guard": {
-        "name": "Reduced guard lock"
       }
     },
     "sensor": {
