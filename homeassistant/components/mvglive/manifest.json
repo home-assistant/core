@@ -5,5 +5,6 @@
   "documentation": "https://www.home-assistant.io/integrations/mvglive",
   "iot_class": "cloud_polling",
   "loggers": ["MVG"],
-  "requirements": ["mvg==1.4.0"]
+  "requirements": ["mvg==1.4.0"],
+  "quality_scale": "legacy"
 }
