@@ -98,7 +98,7 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
             self._attr_state_class = _STATE_CLASSES.from_esphome(state_class)
 
     @property
-    def native_value(self) -> datetime | int | float | None:
+    def native_value(self) -> datetime | int | float | str | None:
         """Return the state of the entity."""
         if not self._has_state or (state := self._state).missing_state:
             return None
