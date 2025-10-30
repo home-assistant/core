@@ -635,6 +635,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "backblaze_b2": {
+      "name": "Backblaze B2",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_push"
+    },
     "backup": {
       "name": "Backup",
       "integration_type": "service",
@@ -1156,12 +1162,6 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_push"
-    },
-    "cups": {
-      "name": "CUPS",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
     },
     "currencylayer": {
       "name": "currencylayer",
@@ -2047,12 +2047,6 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_push"
-    },
-    "flick_electric": {
-      "name": "Flick Electric",
-      "integration_type": "service",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
     },
     "flipr": {
       "name": "Flipr",
@@ -3267,12 +3261,6 @@
       "integration_type": "virtual",
       "supported_by": "opower"
     },
-    "keyboard": {
-      "name": "Keyboard",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_push"
-    },
     "keyboard_remote": {
       "name": "Keyboard Remote",
       "integration_type": "hub",
@@ -3586,12 +3574,6 @@
       "name": "Linx",
       "integration_type": "virtual",
       "supported_by": "motion_blinds"
-    },
-    "lirc": {
-      "name": "LIRC",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_push"
     },
     "litejet": {
       "name": "LiteJet",
