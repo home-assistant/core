@@ -20,7 +20,7 @@ def coerce_is_locked(state: Any) -> bool | None:
         lowered = state.lower()
         if lowered in ("locked", "lock", "secure"):
             return True
-        if lowered in ("unlocked", "unlock", "unsecure"):
+        if lowered in ("unlocked", "unlock", "insecure"):
             return False
         if lowered in ("locking", "unlocking"):
             return None

@@ -15,9 +15,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import (
-    DOMAIN,
-)
+from .const import DOMAIN
 from .coordinator import LevelLockDevice, LevelLocksCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,8 +30,7 @@ async def async_setup_entry(
     data = (hass.data.get(DOMAIN) or {}).get(entry.entry_id) or {}
     coordinator: LevelLocksCoordinator = data["coordinator"]
     entities: list[LevelLockEntity] = [
-        LevelLockEntity(coordinator, lock_id)
-        for lock_id in coordinator.data.keys()
+        LevelLockEntity(coordinator, lock_id) for lock_id in coordinator.data
     ]
     async_add_entities(entities)
 
@@ -48,6 +45,7 @@ class LevelLockEntity(CoordinatorEntity, LockEntity):
         coordinator: DataUpdateCoordinator[dict[str, LevelLockDevice]],
         lock_id: str,
     ) -> None:
+        """Initialize the Level Lock entity."""
         super().__init__(coordinator)
         self._lock_id = lock_id
         device = self._device
@@ -60,6 +58,7 @@ class LevelLockEntity(CoordinatorEntity, LockEntity):
 
     @property
     def available(self) -> bool:
+        """Return True if entity is available."""
         return (
             self.coordinator.last_update_success
             and self._lock_id in self.coordinator.data
@@ -67,6 +66,7 @@ class LevelLockEntity(CoordinatorEntity, LockEntity):
 
     @property
     def is_locked(self) -> bool | None:
+        """Return true if lock is locked."""
         return self._device.is_locked
 
     @property
@@ -87,6 +87,7 @@ class LevelLockEntity(CoordinatorEntity, LockEntity):
 
     @property
     def device_info(self) -> DeviceInfo:
+        """Return device information."""
         device = self._device
         return DeviceInfo(
             identifiers={(DOMAIN, device.lock_id)},
@@ -96,6 +97,7 @@ class LevelLockEntity(CoordinatorEntity, LockEntity):
         )
 
     async def async_lock(self, **kwargs: Any) -> None:  # type: ignore[override]
+        """Lock the lock."""
         # Prevent command if already in a transitional state
         if self.is_locking or self.is_unlocking:
             _LOGGER.debug(
@@ -116,6 +118,7 @@ class LevelLockEntity(CoordinatorEntity, LockEntity):
             raise
 
     async def async_unlock(self, **kwargs: Any) -> None:  # type: ignore[override]
+        """Unlock the lock."""
         # Prevent command if already in a transitional state
         if self.is_locking or self.is_unlocking:
             _LOGGER.debug(
@@ -137,9 +140,9 @@ class LevelLockEntity(CoordinatorEntity, LockEntity):
 
     def _set_optimistic_state(self, state: str) -> None:
         """Optimistically update the lock state before receiving confirmation.
-        
+
         This sets the transitional state ("locking" or "unlocking") immediately
-        for UI responsiveness. The actual final state will be received via 
+        for UI responsiveness. The actual final state will be received via
         WebSocket push updates.
         """
         if self._lock_id in self.coordinator.data:

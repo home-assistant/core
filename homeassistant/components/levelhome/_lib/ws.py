@@ -18,8 +18,9 @@ from typing import Any, Literal
 
 from aiohttp import ClientError, ClientSession, ClientWebSocketResponse, WSMsgType
 
-LOGGER = logging.getLogger(__name__)
 from .protocol import coerce_is_locked
+
+LOGGER = logging.getLogger(__name__)
 
 # Token provider callable type (async)
 TokenProvider = Callable[[], Awaitable[str]]
@@ -109,7 +110,7 @@ def _coerce_is_locked(state: Any) -> bool | None:
         lowered = state.lower()
         if lowered in ("locked", "lock", "secure"):
             return True
-        if lowered in ("unlocked", "unlock", "unsecure"):
+        if lowered in ("unlocked", "unlock", "insecure"):
             return False
     if isinstance(state, bool):
         return state
@@ -222,10 +223,8 @@ class LevelWebsocketManager:
                 break
             except ClientError as err:
                 LOGGER.warning("WebSocket error for lock %s: %s", lock_id, err)
-            except Exception as err:
-                LOGGER.exception(
-                    "Unexpected WebSocket error for lock %s: %s", lock_id, err
-                )
+            except Exception:
+                LOGGER.exception("Unexpected WebSocket error for lock %s: %s", lock_id)
             finally:
                 ws_ref = self._sockets.pop(lock_id, None)
                 if ws_ref is not None and not ws_ref.closed:

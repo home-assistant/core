@@ -8,15 +8,17 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 
 from . import auth as auth_mod
+from ._lib.level_ha import (
+    Client as LibClient,
+    WebsocketManager as LevelWebsocketManager,
+)
 from .const import (
     CONF_OAUTH2_BASE_URL,
     CONF_PARTNER_BASE_URL,
-    DEFAULT_OAUTH2_BASE_URL,
     DEFAULT_PARTNER_BASE_URL,
     DOMAIN,
 )
 from .coordinator import LevelLocksCoordinator
-from ._lib.level_ha import Client as LibClient, WebsocketManager as LevelWebsocketManager
 
 # For your initial PR, limit it to 1 platform.
 _PLATFORMS: list[Platform] = [Platform.LOCK]
