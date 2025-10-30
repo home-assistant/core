@@ -134,7 +134,7 @@ async def _async_remove_torrent(service: ServiceCall) -> None:
 
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
-    """Services for the Transmission integration."""
+    """Register services for the Transmission integration."""
 
     hass.services.async_register(
         DOMAIN,
