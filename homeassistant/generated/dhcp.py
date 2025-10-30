@@ -1363,6 +1363,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "registered_devices": True,
     },
     {
+        "domain": "xbox",
+        "hostname": "xbox*",
+    },
+    {
         "domain": "yale",
         "hostname": "yale-connect-plus",
         "macaddress": "00177A*",
