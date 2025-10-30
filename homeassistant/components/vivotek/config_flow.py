@@ -56,10 +56,6 @@ CONF_SCHEMA = vol.Schema(
 class VivotekConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Vivotek IP cameras."""
 
-    def __init__(self) -> None:
-        """Initialize the config flow."""
-        self._user_input: dict[str, Any] | None = None
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -67,10 +63,8 @@ class VivotekConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            self._user_input = user_input
-
             try:
-                await self._async_test_config()
+                await self._async_test_config(user_input)
             except VivotekCameraError:
                 errors["base"] = "cannot_connect"
             except Exception:
@@ -97,10 +91,8 @@ class VivotekConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            self._user_input = user_input
-
             try:
-                await self._async_test_config()
+                await self._async_test_config(user_input)
             except VivotekCameraError:
                 errors["base"] = "cannot_connect"
             except Exception:
@@ -128,34 +120,33 @@ class VivotekConfigFlow(ConfigFlow, domain=DOMAIN):
         self._async_abort_entries_match({CONF_IP_ADDRESS: import_data[CONF_IP_ADDRESS]})
 
         _LOGGER.debug("Importing Vivotek camera with data: %s", import_data)
-        self._user_input = {}
+        user_input = {}
         if "ip_address" in import_data:
-            self._user_input[CONF_IP_ADDRESS] = import_data["ip_address"]
+            user_input[CONF_IP_ADDRESS] = import_data["ip_address"]
         if "name" in import_data:
-            self._user_input[CONF_NAME] = import_data["name"]
+            user_input[CONF_NAME] = import_data["name"]
         if "username" in import_data:
-            self._user_input[CONF_USERNAME] = import_data["username"]
+            user_input[CONF_USERNAME] = import_data["username"]
         if "password" in import_data:
-            self._user_input[CONF_PASSWORD] = import_data["password"]
+            user_input[CONF_PASSWORD] = import_data["password"]
         if "authentication" in import_data:
-            self._user_input[CONF_AUTHENTICATION] = import_data["authentication"]
+            user_input[CONF_AUTHENTICATION] = import_data["authentication"]
         if "ssl" in import_data:
-            self._user_input[CONF_SSL] = import_data["ssl"]
+            user_input[CONF_SSL] = import_data["ssl"]
         if "verify_ssl" in import_data:
-            self._user_input[CONF_VERIFY_SSL] = import_data["verify_ssl"]
+            user_input[CONF_VERIFY_SSL] = import_data["verify_ssl"]
         if "framerate" in import_data:
-            self._user_input[CONF_FRAMERATE] = import_data["framerate"]
+            user_input[CONF_FRAMERATE] = import_data["framerate"]
         if "security_level" in import_data:
-            self._user_input[CONF_SECURITY_LEVEL] = import_data["security_level"]
+            user_input[CONF_SECURITY_LEVEL] = import_data["security_level"]
         if "stream_path" in import_data:
-            self._user_input[CONF_STREAM_PATH] = import_data["stream_path"]
+            user_input[CONF_STREAM_PATH] = import_data["stream_path"]
 
-        self._user_input[CONF_PORT] = (self._user_input[CONF_SSL] and 443) or 80
-        title = self._user_input.get(CONF_NAME, DOMAIN)
-        return self.async_create_entry(title=title, data=self._user_input)
+        user_input[CONF_PORT] = (user_input[CONF_SSL] and 443) or 80
+        title = user_input.get(CONF_NAME, DOMAIN)
+        return self.async_create_entry(title=title, data=user_input)
 
-    async def _async_test_config(self) -> None:
+    async def _async_test_config(self, user_input: dict[str, Any]) -> None:
         """Test if the provided configuration is valid."""
-        user_input = self._user_input
         assert user_input is not None
         await async_build_and_test_cam_client(self.hass, user_input)
