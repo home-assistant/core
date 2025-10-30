@@ -1345,7 +1345,7 @@ TARGET_SERVICE_FIELDS: VolDictType = {
     vol.Optional(ATTR_ENTITY_ID): comp_entity_ids_or_uuids,
 }
 
-TARGET_SERVICE_FIELDS_TEMPLATED: VolDictType = {
+_TARGET_SERVICE_FIELDS_TEMPLATED: VolDictType = {
     # Either accept static entity IDs, a single dynamic template or a mixed list
     # of static and dynamic templates. While this could be solved with a single
     # complex template, handling it like this, keeps config validation useful.
@@ -1504,7 +1504,7 @@ SERVICE_SCHEMA = vol.All(
             ),
             vol.Optional(CONF_ENTITY_ID): comp_entity_ids,
             vol.Optional(CONF_TARGET): vol.Any(
-                TARGET_SERVICE_FIELDS_TEMPLATED, dynamic_template
+                _TARGET_SERVICE_FIELDS_TEMPLATED, dynamic_template
             ),
             vol.Optional(CONF_RESPONSE_VARIABLE): str,
             # The frontend stores data here. Don't use in core.
