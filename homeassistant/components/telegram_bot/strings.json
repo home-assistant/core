@@ -93,6 +93,15 @@
         "user": "Add allowed chat ID"
       },
       "step": {
+        "reconfigure": {
+          "data": {
+            "user_id": "User"
+          },
+          "data_description": {
+            "user_id": "Home Assistant user that will be used for events from this chat."
+          },
+          "title": "Configure chat"
+        },
         "user": {
           "data": {
             "chat_id": "Chat ID",
@@ -103,15 +112,6 @@
             "user_id": "Home Assistant user that will be used for events from this chat."
           },
           "title": "Add chat"
-        },
-        "reconfigure": {
-          "data": {
-            "user_id": "User"
-          },
-          "data_description": {
-            "user_id": "Home Assistant user that will be used for events from this chat."
-          },
-          "title": "Configure chat"
         }
       }
     }
