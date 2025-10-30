@@ -301,6 +301,17 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except growattServer.GrowattV1ApiError as err:
             raise HomeAssistantError(f"API error updating time segment: {err}") from err
 
+        # Update coordinator's cached data without making an API call (avoids rate limit)
+        if self.data:
+            # Update the time segment data in the cache
+            self.data[f"forcedTimeStart{segment_id}"] = start_time.strftime("%H:%M")
+            self.data[f"forcedTimeStop{segment_id}"] = end_time.strftime("%H:%M")
+            self.data[f"forcedChargeBatMode{segment_id}"] = batt_mode
+            self.data[f"forcedChargeFlag{segment_id}"] = 1 if enabled else 0
+
+            # Notify entities of the updated data (no API call)
+            self.async_set_updated_data(self.data)
+
     async def read_time_segments(self) -> list[dict]:
         """Read time segments from an inverter.
 
