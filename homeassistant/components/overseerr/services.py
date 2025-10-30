@@ -2,6 +2,7 @@
 
 from dataclasses import asdict
 from typing import Any, cast
+from urllib.parse import quote
 
 from python_overseerr import OverseerrClient, OverseerrConnectionError
 import voluptuous as vol
@@ -21,7 +22,12 @@ from homeassistant.util.json import JsonValueType
 from .const import ATTR_REQUESTED_BY, ATTR_SORT_ORDER, ATTR_STATUS, DOMAIN, LOGGER
 from .coordinator import OverseerrConfigEntry
 
+ATTR_QUERY = "query"
+ATTR_LIMIT = "limit"
+
 SERVICE_GET_REQUESTS = "get_requests"
+SERVICE_SEARCH_MEDIA = "search_media"
+
 SERVICE_GET_REQUESTS_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_CONFIG_ENTRY_ID): str,
@@ -30,6 +36,14 @@ SERVICE_GET_REQUESTS_SCHEMA = vol.Schema(
         ),
         vol.Optional(ATTR_SORT_ORDER): vol.In(["added", "modified"]),
         vol.Optional(ATTR_REQUESTED_BY): int,
+    }
+)
+
+SERVICE_SEARCH_MEDIA_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_CONFIG_ENTRY_ID): str,
+        vol.Required(ATTR_QUERY): str,
+        vol.Optional(ATTR_LIMIT): vol.Coerce(int),
     }
 )
 
@@ -99,6 +113,30 @@ async def _async_get_requests(call: ServiceCall) -> ServiceResponse:
     return {"requests": cast(list[JsonValueType], result)}
 
 
+async def _async_search_media(call: ServiceCall) -> ServiceResponse:
+    """Search for media in Overseerr."""
+    entry = _async_get_entry(call.hass, call.data[ATTR_CONFIG_ENTRY_ID])
+    client = entry.runtime_data.client
+    query = call.data[ATTR_QUERY]
+    limit = call.data.get(ATTR_LIMIT)
+    try:
+        LOGGER.debug("Searching for '%s'", query)
+        # URL encode the query to handle spaces and special characters
+        search_results = await client.search(quote(query))
+    except OverseerrConnectionError as err:
+        LOGGER.error("Error searching for '%s': %s", query, str(err))
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="connection_error",
+            translation_placeholders={"error": str(err)},
+        ) from err
+
+    if limit is not None and limit > 0:
+        search_results = search_results[:limit]
+
+    return {"results": cast(list[JsonValueType], [asdict(result) for result in search_results])}
+
+
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the services for the Overseerr integration."""
@@ -108,5 +146,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_GET_REQUESTS,
         _async_get_requests,
         schema=SERVICE_GET_REQUESTS_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SEARCH_MEDIA,
+        _async_search_media,
+        schema=SERVICE_SEARCH_MEDIA_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )

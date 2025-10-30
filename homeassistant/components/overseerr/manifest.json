@@ -9,5 +9,6 @@
   "integration_type": "service",
   "iot_class": "local_push",
   "quality_scale": "platinum",
-  "requirements": ["python-overseerr==0.7.1"]
+  "requirements": ["python-overseerr==0.7.1"],
+  "version": "0.1"
 }

@@ -12,7 +12,11 @@ from homeassistant.components.overseerr.const import (
     ATTR_STATUS,
     DOMAIN,
 )
-from homeassistant.components.overseerr.services import SERVICE_GET_REQUESTS
+from homeassistant.components.overseerr.services import (
+    ATTR_QUERY,
+    SERVICE_GET_REQUESTS,
+    SERVICE_SEARCH_MEDIA,
+)
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -75,6 +79,49 @@ async def test_service_get_requests_no_meta(
         assert request["media"] == {}
 
 
+async def test_service_search_media(
+    hass: HomeAssistant,
+    mock_overseerr_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the search_media service."""
+    # Mock the search method
+    mock_overseerr_client.search.return_value = []
+
+    await setup_integration(hass, mock_config_entry)
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEARCH_MEDIA,
+        {
+            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            ATTR_QUERY: "test",
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {"results": []}
+    mock_overseerr_client.search.assert_called_once_with("test")
+
+    # Reset mock
+    mock_overseerr_client.search.reset_mock()
+
+    # Test with a query containing spaces
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEARCH_MEDIA,
+        {
+            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            ATTR_QUERY: "test query with spaces",
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {"results": []}
+    mock_overseerr_client.search.assert_called_once_with("test%20query%20with%20spaces")
+
+
 @pytest.mark.parametrize(
     ("service", "payload", "function", "exception", "raised_exception", "message"),
     [
@@ -82,6 +129,14 @@ async def test_service_get_requests_no_meta(
             SERVICE_GET_REQUESTS,
             {},
             "get_requests",
+            OverseerrConnectionError("Timeout"),
+            HomeAssistantError,
+            "Error connecting to the Overseerr instance: Timeout",
+        ),
+        (
+            SERVICE_SEARCH_MEDIA,
+            {ATTR_QUERY: "test"},
+            "search",
             OverseerrConnectionError("Timeout"),
             HomeAssistantError,
             "Error connecting to the Overseerr instance: Timeout",
@@ -119,6 +174,7 @@ async def test_services_connection_error(
     ("service", "payload"),
     [
         (SERVICE_GET_REQUESTS, {}),
+        (SERVICE_SEARCH_MEDIA, {ATTR_QUERY: "test"}),
     ],
 )
 async def test_service_entry_availability(

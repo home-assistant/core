@@ -28,3 +28,22 @@ get_requests:
         number:
           min: 0
           mode: box
+
+search_media:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: overseerr
+    query:
+      required: true
+      selector:
+        text:
+      description: "The search query"
+    limit:
+      selector:
+        number:
+          min: 1
+          mode: box
+      description: "Maximum number of results to return"
