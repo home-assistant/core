@@ -30,12 +30,12 @@ def mock_growatt_v1_api():
     - plant_energy_overview: Called by total coordinator during first refresh
 
     Methods mocked for MIN device coordinator refresh:
-    - min_detail: Provides device state (e.g., acChargeEnable for switches)
+    - min_detail: Provides device state (e.g., acChargeEnable, chargePowerCommand)
     - min_settings: Provides settings (e.g. TOU periods)
-    - min_energy: Provides energy data (empty for switch tests, sensors need real data)
+    - min_energy: Provides energy data (empty for switch/number tests, sensors need real data)
 
-    Methods mocked for switch operations:
-    - min_write_parameter: Called by switch entities to change settings
+    Methods mocked for switch and number operations:
+    - min_write_parameter: Called by switch/number entities to change settings
 
     Methods mocked for service operations:
     - min_write_time_segment: Called by time segment management services
@@ -57,11 +57,15 @@ def mock_growatt_v1_api():
         mock_v1_api.min_detail.return_value = {
             "deviceSn": "MIN123456",
             "acChargeEnable": 1,  # AC charge enabled - read by switch entity
+            "chargePowerCommand": 50,  # 50% charge power - read by number entity
+            "wchargeSOCLowLimit": 10,  # 10% charge stop SOC - read by number entity
+            "disChargePowerCommand": 80,  # 80% discharge power - read by number entity
+            "wdisChargeSOCLowLimit": 20,  # 20% discharge stop SOC - read by number entity
         }
 
         # Called by MIN device coordinator during refresh
         mock_v1_api.min_settings.return_value = {
-            # Segment 1 - enabled
+            # Forced charge time segments (not used by switch/number, but coordinator fetches it)
             "forcedTimeStart1": "06:00",
             "forcedTimeStop1": "08:00",
             "forcedChargeBatMode1": 1,
@@ -74,8 +78,19 @@ def mock_growatt_v1_api():
         }
 
         # Called by MIN device coordinator during refresh
-        # Empty dict is sufficient for switch tests (sensor tests would need real energy data)
-        mock_v1_api.min_energy.return_value = {}
+        # Provide realistic energy data for sensor tests
+        mock_v1_api.min_energy.return_value = {
+            "eChargeToday": 5.2,
+            "eChargeTotal": 125.8,
+            "eDischargeToday": 8.1,
+            "eDischargeTotal": 245.6,
+            "eSelfToday": 12.5,
+            "eSelfTotal": 320.4,
+            "eBatChargeToday": 6.3,
+            "eBatChargeTotal": 150.2,
+            "eBatDischargeToday": 7.8,
+            "eBatDischargeTotal": 180.5,
+        }
 
         # Called by total coordinator during refresh
         mock_v1_api.plant_energy_overview.return_value = {
@@ -84,7 +99,7 @@ def mock_growatt_v1_api():
             "current_power": 2500,
         }
 
-        # Called by switch entities during turn_on/turn_off
+        # Called by switch/number entities during turn_on/turn_off/set_value
         mock_v1_api.min_write_parameter.return_value = None
 
         # Called by time segment management services
