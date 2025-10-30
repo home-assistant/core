@@ -1122,7 +1122,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[haijai_switch][button.hjmt_6b_identify_1-entry]
+# name: test_buttons[haojai_switch][button.hjmt_6b_identify_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1157,7 +1157,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[haijai_switch][button.hjmt_6b_identify_1-state]
+# name: test_buttons[haojai_switch][button.hjmt_6b_identify_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'identify',
