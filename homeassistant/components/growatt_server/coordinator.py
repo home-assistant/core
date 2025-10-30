@@ -301,9 +301,6 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except growattServer.GrowattV1ApiError as err:
             raise HomeAssistantError(f"API error updating time segment: {err}") from err
 
-        # Trigger a refresh to update the data with the new values
-        await self.async_refresh()
-
     async def read_time_segments(self) -> list[dict]:
         """Read time segments from an inverter.
 
