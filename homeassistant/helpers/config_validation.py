@@ -1354,7 +1354,7 @@ TARGET_SERVICE_FIELDS_TEMPLATED: VolDictType = {
     # The schema supports templates as it is meant to be used in the initial validation
     # before templates are automatically rendered by the core logic.
     vol.Optional(ATTR_ENTITY_ID): vol.Any(
-        comp_entity_ids,
+        comp_entity_ids_or_uuids,
         dynamic_template,
         vol.All(list, template_complex),
     ),
@@ -1369,11 +1369,6 @@ TARGET_SERVICE_FIELDS_TEMPLATED: VolDictType = {
     ),
     vol.Optional(ATTR_LABEL_ID): vol.Any(
         ENTITY_MATCH_NONE, vol.All(ensure_list, [vol.Any(dynamic_template, str)])
-    ),
-    vol.Optional(ATTR_ENTITY_ID): vol.Any(
-        comp_entity_ids_or_uuids,
-        dynamic_template,
-        vol.All(list, template_complex),
     ),
 }
 
