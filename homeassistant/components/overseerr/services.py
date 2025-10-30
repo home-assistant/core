@@ -24,9 +24,13 @@ from .coordinator import OverseerrConfigEntry
 
 ATTR_QUERY = "query"
 ATTR_LIMIT = "limit"
+ATTR_MEDIA_TYPE = "media_type"
+ATTR_TMDB_ID = "tmdb_id"
+ATTR_SEASONS = "seasons"
 
 SERVICE_GET_REQUESTS = "get_requests"
 SERVICE_SEARCH_MEDIA = "search_media"
+SERVICE_REQUEST_MEDIA = "request_media"
 
 SERVICE_GET_REQUESTS_SCHEMA = vol.Schema(
     {
@@ -44,6 +48,19 @@ SERVICE_SEARCH_MEDIA_SCHEMA = vol.Schema(
         vol.Required(ATTR_CONFIG_ENTRY_ID): str,
         vol.Required(ATTR_QUERY): str,
         vol.Optional(ATTR_LIMIT): vol.Coerce(int),
+    }
+)
+
+SERVICE_REQUEST_MEDIA_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_CONFIG_ENTRY_ID): str,
+        vol.Required(ATTR_MEDIA_TYPE): vol.In(["movie", "tv"]),
+        vol.Required(ATTR_TMDB_ID): vol.Coerce(int),
+        vol.Optional(ATTR_SEASONS): vol.Any(
+            vol.Coerce(int),
+            [vol.Coerce(int)],
+            "all",
+        ),
     }
 )
 
@@ -137,6 +154,42 @@ async def _async_search_media(call: ServiceCall) -> ServiceResponse:
     return {"results": cast(list[JsonValueType], [asdict(result) for result in search_results])}
 
 
+async def _async_request_media(call: ServiceCall) -> ServiceResponse:
+    """Request media in Overseerr."""
+    entry = _async_get_entry(call.hass, call.data[ATTR_CONFIG_ENTRY_ID])
+    client = entry.runtime_data.client
+    media_type = call.data[ATTR_MEDIA_TYPE]
+    tmdb_id = call.data[ATTR_TMDB_ID]
+    seasons = call.data.get(ATTR_SEASONS)
+
+    # Convert single integer to list for seasons
+    if isinstance(seasons, int):
+        seasons = [seasons]
+
+    try:
+        LOGGER.debug(
+            "Requesting %s with TMDB ID %s (seasons: %s)",
+            media_type,
+            tmdb_id,
+            seasons if seasons else "none",
+        )
+        request = await client.create_request(media_type, tmdb_id, seasons)
+    except OverseerrConnectionError as err:
+        LOGGER.error(
+            "Error requesting %s with TMDB ID %s: %s",
+            media_type,
+            tmdb_id,
+            str(err),
+        )
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="connection_error",
+            translation_placeholders={"error": str(err)},
+        ) from err
+
+    return {"request": cast(JsonValueType, asdict(request))}
+
+
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the services for the Overseerr integration."""
@@ -154,5 +207,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_SEARCH_MEDIA,
         _async_search_media,
         schema=SERVICE_SEARCH_MEDIA_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_REQUEST_MEDIA,
+        _async_request_media,
+        schema=SERVICE_REQUEST_MEDIA_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )

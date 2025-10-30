@@ -47,3 +47,32 @@ search_media:
           min: 1
           mode: box
       description: "Maximum number of results to return"
+
+request_media:
+  description: "Request media"
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: overseerr
+    media_type:
+      required: true
+      selector:
+        select:
+          options:
+            - movie
+            - tv
+          translation_key: media_type
+      description: "The type of media to request (movie or tv)"
+    tmdb_id:
+      required: true
+      selector:
+        number:
+          min: 1
+          mode: box
+      description: "The TMDB ID of the media to request"
+    seasons:
+      selector:
+        text:
+      description: "For TV shows, the seasons to request. Can be a single season number (e.g. 2), a list of season numbers (e.g. 1,2), or 'all' for all seasons"
