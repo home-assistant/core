@@ -38,9 +38,7 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     client = Portainer(
         api_url=data[CONF_URL],
         api_key=data[CONF_API_TOKEN],
-        session=async_get_clientsession(
-            hass=hass, verify_ssl=data.get(CONF_VERIFY_SSL, True)
-        ),
+        session=async_get_clientsession(hass=hass, verify_ssl=data[CONF_VERIFY_SSL]),
     )
     try:
         await client.get_endpoints()
