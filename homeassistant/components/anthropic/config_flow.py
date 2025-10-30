@@ -5,6 +5,7 @@ from __future__ import annotations
 from functools import partial
 import json
 import logging
+import re
 from typing import Any
 
 import anthropic
@@ -283,7 +284,11 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
             vol.Optional(
                 CONF_CHAT_MODEL,
                 default=RECOMMENDED_CHAT_MODEL,
-            ): str,
+            ): SelectSelector(
+                SelectSelectorConfig(
+                    options=await self._get_model_list(), custom_value=True
+                )
+            ),
             vol.Optional(
                 CONF_MAX_TOKENS,
                 default=RECOMMENDED_MAX_TOKENS,
@@ -393,6 +398,36 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
             errors=errors or None,
             last_step=True,
         )
+
+    async def _get_model_list(self) -> list[SelectOptionDict]:
+        """Get list of available models."""
+        client = await self.hass.async_add_executor_job(
+            partial(
+                anthropic.AsyncAnthropic,
+                api_key=self._get_entry().data[CONF_API_KEY],
+            )
+        )
+        models = await client.models.list()
+        _LOGGER.debug("Available models: %s", models.data)
+        model_options: list[SelectOptionDict] = []
+        short_form = re.compile(r"[^\d]-\d$")
+        for model_info in models.data:
+            # Resolve alias from versioned model name:
+            model_alias = (
+                model_info.id[:-9]
+                if model_info.id
+                not in ("claude-3-haiku-20240307", "claude-3-opus-20240229")
+                else model_info.id
+            )
+            if short_form.search(model_alias):
+                model_alias += "-0"
+            model_options.append(
+                SelectOptionDict(
+                    label=model_info.display_name,
+                    value=model_alias,
+                )
+            )
+        return model_options
 
     async def _get_location_data(self) -> dict[str, str]:
         """Get approximate location data of the user."""

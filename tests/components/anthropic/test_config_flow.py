@@ -11,6 +11,7 @@ from anthropic import (
     InternalServerError,
     types,
 )
+from anthropic.pagination import AsyncPage
 from httpx import URL, Request, Response
 import pytest
 
@@ -248,8 +249,13 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
     assert result2["errors"] == {"base": error}
 
 
+@patch(
+    "anthropic.resources.models.AsyncModels.list",
+    new_callable=AsyncMock,
+    return_value=AsyncPage(data=[]),
+)
 async def test_subentry_web_search_user_location(
-    hass: HomeAssistant, mock_config_entry, mock_init_component
+    mock_model_list, hass: HomeAssistant, mock_config_entry, mock_init_component
 ) -> None:
     """Test fetching user location."""
     subentry = next(iter(mock_config_entry.subentries.values()))
@@ -518,7 +524,13 @@ async def test_subentry_web_search_user_location(
         ),
     ],
 )
+@patch(
+    "anthropic.resources.models.AsyncModels.list",
+    new_callable=AsyncMock,
+    return_value=AsyncPage(data=[]),
+)
 async def test_subentry_options_switching(
+    mock_model_list,
     hass: HomeAssistant,
     mock_config_entry,
     mock_init_component,
@@ -624,7 +636,13 @@ async def test_ai_task_subentry_not_loaded(
     assert result.get("reason") == "entry_not_loaded"
 
 
+@patch(
+    "anthropic.resources.models.AsyncModels.list",
+    new_callable=AsyncMock,
+    return_value=AsyncPage(data=[]),
+)
 async def test_creating_ai_task_subentry_advanced(
+    mock_model_list,
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_init_component,
