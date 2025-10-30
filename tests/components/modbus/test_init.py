@@ -87,6 +87,7 @@ from homeassistant.components.modbus.validators import (
     ensure_and_check_conflicting_scales_and_offsets,
     hvac_fixedsize_reglist_validator,
     nan_validator,
+    not_zero_value,
     register_int_list_validator,
     struct_validator,
 )
@@ -1624,3 +1625,10 @@ async def test_ensure_and_check_conflicting_scales_and_offsets(do_config) -> Non
 
     with pytest.raises(vol.Invalid):
         ensure_and_check_conflicting_scales_and_offsets(do_config[0])
+
+
+async def test_not_zero_value() -> None:
+    """Test not 0 validator validator."""
+
+    with pytest.raises(vol.Invalid):
+        not_zero_value(0, "Value cannot be zero.")

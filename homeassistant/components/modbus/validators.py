@@ -251,6 +251,13 @@ def duplicate_fan_mode_validator(config: dict[str, Any]) -> dict:
     return config
 
 
+def not_zero_value(val: float, errMsg: str) -> float:
+    """Check value is not zero."""
+    if val == 0:
+        raise vol.Invalid(errMsg)
+    return val
+
+
 def ensure_and_check_conflicting_scales_and_offsets(config: dict[str, Any]) -> dict:
     """Check for conflicts in scale/offset and ensure target/current temp scale/offset is set."""
     config_keys = [
@@ -276,9 +283,9 @@ def ensure_and_check_conflicting_scales_and_offsets(config: dict[str, Any]) -> d
             config[target_key] = value
             config[current_key] = value
 
-        if target_key not in config or config[target_key] == 0:
+        if target_key not in config:
             config[target_key] = default_value
-        if current_key not in config or config[current_key] == 0:
+        if current_key not in config:
             config[current_key] = default_value
 
     return config

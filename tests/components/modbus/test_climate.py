@@ -1768,7 +1768,7 @@ async def test_no_discovery_info_climate(
                         CONF_ADDRESS: 117,
                         CONF_SLAVE: 10,
                         CONF_SCAN_INTERVAL: 0,
-                        CONF_CURRENT_TEMP_SCALE: 0,
+                        CONF_CURRENT_TEMP_SCALE: 1,
                         CONF_CURRENT_TEMP_OFFSET: 10,
                     },
                 ]
@@ -1857,7 +1857,7 @@ async def test_update_current_temp_scale_and_offset(
                         CONF_ADDRESS: 117,
                         CONF_SLAVE: 10,
                         CONF_SCAN_INTERVAL: 0,
-                        CONF_SCALE: 0,
+                        CONF_SCALE: 1,
                         CONF_OFFSET: 2,
                     },
                 ]
@@ -1874,7 +1874,7 @@ async def test_update_current_temp_scale_and_offset(
                         CONF_ADDRESS: 117,
                         CONF_SLAVE: 10,
                         CONF_SCAN_INTERVAL: 0,
-                        CONF_TARGET_TEMP_SCALE: 0,
+                        CONF_TARGET_TEMP_SCALE: 1,
                         CONF_TARGET_TEMP_OFFSET: 2,
                     },
                 ]
@@ -1900,3 +1900,28 @@ async def test_update_target_temp_scale_and_offset(
 
     state = hass.states.get(ENTITY_ID)
     assert state.attributes.get("temperature") == result
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_CLIMATES: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_TARGET_TEMP: 120,
+                    CONF_ADDRESS: 117,
+                    CONF_SLAVE: 10,
+                    CONF_SCAN_INTERVAL: 0,
+                    CONF_TARGET_TEMP_SCALE: 0,
+                    CONF_TARGET_TEMP_OFFSET: 2,
+                }
+            ]
+        },
+    ],
+)
+async def test_err_config_climate(
+    hass: HomeAssistant, mock_modbus_to_test_errors_config
+) -> None:
+    """Run a wrong configuration test for climate."""
+    assert CLIMATE_DOMAIN not in hass.config.components
