@@ -21,7 +21,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.usefixtures("mock_egauge_client")
 async def test_user_flow(hass: HomeAssistant) -> None:
     """Test the full happy path user flow from start to finish."""
     result = await hass.config_entries.flow.async_init(
@@ -103,7 +102,6 @@ async def test_user_flow_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-@pytest.mark.usefixtures("mock_egauge_client")
 async def test_user_flow_already_configured(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:

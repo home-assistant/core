@@ -38,7 +38,7 @@ def mock_config_entry() -> MockConfigEntry:
     )
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def mock_egauge_client() -> Generator[MagicMock]:
     """Return a mocked eGauge client."""
     with (
