@@ -240,7 +240,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==42.4.0
+aioesphomeapi==42.5.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -1411,7 +1411,7 @@ openrgb-python==0.3.6
 openwebifpy==4.3.1
 
 # homeassistant.components.opower
-opower==0.15.8
+opower==0.15.9
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
