@@ -187,7 +187,7 @@ async def test_client_update_connection_error(
 
     type(mock_daikin).update_status.side_effect = ClientConnectionError
 
-    freezer.tick(timedelta(seconds=60))
+    freezer.tick(timedelta(seconds=120))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 

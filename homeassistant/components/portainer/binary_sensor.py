@@ -61,30 +61,53 @@ async def async_setup_entry(
 ) -> None:
     """Set up Portainer binary sensors."""
     coordinator = entry.runtime_data
-    entities: list[BinarySensorEntity] = []
 
-    for endpoint in coordinator.data.values():
-        entities.extend(
+    def _async_add_new_endpoints(endpoints: list[PortainerCoordinatorData]) -> None:
+        """Add new endpoint binary sensors."""
+        async_add_entities(
             PortainerEndpointSensor(
                 coordinator,
                 entity_description,
                 endpoint,
             )
             for entity_description in ENDPOINT_SENSORS
+            for endpoint in endpoints
+            if entity_description.state_fn(endpoint)
         )
 
-        entities.extend(
+    def _async_add_new_containers(
+        containers: list[tuple[PortainerCoordinatorData, DockerContainer]],
+    ) -> None:
+        """Add new container binary sensors."""
+        async_add_entities(
             PortainerContainerSensor(
                 coordinator,
                 entity_description,
                 container,
                 endpoint,
             )
-            for container in endpoint.containers.values()
+            for (endpoint, container) in containers
             for entity_description in CONTAINER_SENSORS
+            if entity_description.state_fn(container)
         )
 
-    async_add_entities(entities)
+    coordinator.new_endpoints_callbacks.append(_async_add_new_endpoints)
+    coordinator.new_containers_callbacks.append(_async_add_new_containers)
+
+    _async_add_new_endpoints(
+        [
+            endpoint
+            for endpoint in coordinator.data.values()
+            if endpoint.id in coordinator.known_endpoints
+        ]
+    )
+    _async_add_new_containers(
+        [
+            (endpoint, container)
+            for endpoint in coordinator.data.values()
+            for container in endpoint.containers.values()
+        ]
+    )
 
 
 class PortainerEndpointSensor(PortainerEndpointEntity, BinarySensorEntity):
@@ -131,15 +154,7 @@ class PortainerContainerSensor(PortainerContainerEntity, BinarySensorEntity):
         self.entity_description = entity_description
         super().__init__(device_info, coordinator, via_device)
 
-        # Container ID's are ephemeral, so use the container name for the unique ID
-        # The first one, should always be unique, it's fine if users have aliases
-        # According to Docker's API docs, the first name is unique
-        device_identifier = (
-            self._device_info.names[0].replace("/", " ").strip()
-            if self._device_info.names
-            else None
-        )
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{device_identifier}_{entity_description.key}"
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.device_name}_{entity_description.key}"
 
     @property
     def available(self) -> bool:
@@ -150,5 +165,5 @@ class PortainerContainerSensor(PortainerContainerEntity, BinarySensorEntity):
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self.entity_description.state_fn(
-            self.coordinator.data[self.endpoint_id].containers[self.device_id]
+            self.coordinator.data[self.endpoint_id].containers[self.device_name]
         )

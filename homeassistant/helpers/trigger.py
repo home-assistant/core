@@ -28,8 +28,10 @@ from homeassistant.core import (
     CALLBACK_TYPE,
     Context,
     HassJob,
+    HassJobType,
     HomeAssistant,
     callback,
+    get_hassjob_callable_job_type,
     is_callback,
 )
 from homeassistant.exceptions import HomeAssistantError, TemplateError
@@ -178,6 +180,8 @@ _TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
 class Trigger(abc.ABC):
     """Trigger class."""
 
+    _hass: HomeAssistant
+
     @classmethod
     async def async_validate_complete_config(
         cls, hass: HomeAssistant, complete_config: ConfigType
@@ -212,14 +216,33 @@ class Trigger(abc.ABC):
 
     def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
         """Initialize trigger."""
+        self._hass = hass
+
+    async def async_attach_action(
+        self,
+        action: TriggerAction,
+        action_payload_builder: TriggerActionPayloadBuilder,
+    ) -> CALLBACK_TYPE:
+        """Attach the trigger to an action."""
+
+        @callback
+        def run_action(
+            extra_trigger_payload: dict[str, Any],
+            description: str,
+            context: Context | None = None,
+        ) -> asyncio.Task[Any]:
+            """Run action with trigger variables."""
+
+            payload = action_payload_builder(extra_trigger_payload, description)
+            return self._hass.async_create_task(action(payload, context))
+
+        return await self.async_attach_runner(run_action)
 
     @abc.abstractmethod
-    async def async_attach(
-        self,
-        action: TriggerActionType,
-        trigger_info: TriggerInfo,
+    async def async_attach_runner(
+        self, run_action: TriggerActionRunner
     ) -> CALLBACK_TYPE:
-        """Attach the trigger."""
+        """Attach the trigger to an action runner."""
 
 
 class TriggerProtocol(Protocol):
@@ -257,14 +280,52 @@ class TriggerConfig:
     options: dict[str, Any] | None = None
 
 
-class TriggerActionType(Protocol):
+class TriggerActionRunner(Protocol):
+    """Protocol type for the trigger action runner helper callback."""
+
+    @callback
+    def __call__(
+        self,
+        extra_trigger_payload: dict[str, Any],
+        description: str,
+        context: Context | None = None,
+    ) -> asyncio.Task[Any]:
+        """Define trigger action runner type.
+
+        Returns:
+            A Task that allows awaiting for the action to finish.
+        """
+
+
+class TriggerActionPayloadBuilder(Protocol):
+    """Protocol type for the trigger action payload builder."""
+
+    def __call__(
+        self, extra_trigger_payload: dict[str, Any], description: str
+    ) -> dict[str, Any]:
+        """Define trigger action payload builder type."""
+
+
+class TriggerAction(Protocol):
     """Protocol type for trigger action callback."""
 
     async def __call__(
+        self, run_variables: dict[str, Any], context: Context | None = None
+    ) -> Any:
+        """Define action callback type."""
+
+
+class TriggerActionType(Protocol):
+    """Protocol type for trigger action callback.
+
+    Contrary to TriggerAction, this type supports both sync and async callables.
+    """
+
+    def __call__(
         self,
         run_variables: dict[str, Any],
         context: Context | None = None,
-    ) -> Any:
+    ) -> Coroutine[Any, Any, Any] | Any:
         """Define action callback type."""
 
 
@@ -294,7 +355,7 @@ class PluggableActionsEntry:
     actions: dict[
         object,
         tuple[
-            HassJob[[dict[str, Any], Context | None], Coroutine[Any, Any, None]],
+            HassJob[[dict[str, Any], Context | None], Coroutine[Any, Any, None] | Any],
             dict[str, Any],
         ],
     ] = field(default_factory=dict)
@@ -401,29 +462,6 @@ class PluggableAction:
                 await task
 
 
-def move_top_level_schema_fields_to_options(
-    config: ConfigType, options_schema_dict: dict[vol.Marker, Any]
-) -> ConfigType:
-    """Move top-level fields to options.
-
-    This function is used to help migrating old-style configs to new-style configs.
-    If options is already present, the config is returned as-is.
-    """
-    if CONF_OPTIONS in config:
-        return config
-
-    config = config.copy()
-    options = config.setdefault(CONF_OPTIONS, {})
-
-    # Move top-level fields to options
-    for key_marked in options_schema_dict:
-        key = key_marked.schema
-        if key in config:
-            options[key] = config.pop(key)
-
-    return config
-
-
 async def _async_get_trigger_platform(
     hass: HomeAssistant, trigger_key: str
 ) -> tuple[str, TriggerProtocol]:
@@ -500,7 +538,7 @@ def _trigger_action_wrapper(
     else:
 
         @functools.wraps(action)
-        async def with_vars(
+        def with_vars(
             run_variables: dict[str, Any], context: Context | None = None
         ) -> Any:
             """Wrap action with extra vars."""
@@ -514,6 +552,72 @@ def _trigger_action_wrapper(
         wrapper_func = with_vars
 
     return wrapper_func
+
+
+async def _async_attach_trigger_cls(
+    hass: HomeAssistant,
+    trigger_cls: type[Trigger],
+    trigger_key: str,
+    conf: ConfigType,
+    action: Callable,
+    trigger_info: TriggerInfo,
+) -> CALLBACK_TYPE:
+    """Initialize a new Trigger class and attach it."""
+
+    def action_payload_builder(
+        extra_trigger_payload: dict[str, Any], description: str
+    ) -> dict[str, Any]:
+        """Build action variables."""
+        payload = {
+            "trigger": {
+                **trigger_info["trigger_data"],
+                CONF_PLATFORM: trigger_key,
+                "description": description,
+                **extra_trigger_payload,
+            }
+        }
+        if CONF_VARIABLES in conf:
+            trigger_variables = conf[CONF_VARIABLES]
+            payload.update(trigger_variables.async_render(hass, payload))
+        return payload
+
+    # Wrap sync action so that it is always async.
+    # This simplifies the Trigger action runner interface by always returning a coroutine,
+    # removing the need for integrations to check for the return type when awaiting the action.
+    match get_hassjob_callable_job_type(action):
+        case HassJobType.Executor:
+            original_action = action
+
+            async def wrapped_executor_action(
+                run_variables: dict[str, Any], context: Context | None = None
+            ) -> Any:
+                """Wrap sync action to be called in executor."""
+                return await hass.async_add_executor_job(
+                    original_action, run_variables, context
+                )
+
+            action = wrapped_executor_action
+
+        case HassJobType.Callback:
+            original_action = action
+
+            async def wrapped_callback_action(
+                run_variables: dict[str, Any], context: Context | None = None
+            ) -> Any:
+                """Wrap callback action to be awaitable."""
+                return original_action(run_variables, context)
+
+            action = wrapped_callback_action
+
+    trigger = trigger_cls(
+        hass,
+        TriggerConfig(
+            key=trigger_key,
+            target=conf.get(CONF_TARGET),
+            options=conf.get(CONF_OPTIONS),
+        ),
+    )
+    return await trigger.async_attach_action(action, action_payload_builder)
 
 
 async def async_initialize_triggers(
@@ -555,23 +659,17 @@ async def async_initialize_triggers(
             trigger_data=trigger_data,
         )
 
-        action_wrapper = _trigger_action_wrapper(hass, action, conf)
         if hasattr(platform, "async_get_triggers"):
             trigger_descriptors = await platform.async_get_triggers(hass)
             relative_trigger_key = get_relative_description_key(
                 platform_domain, trigger_key
             )
             trigger_cls = trigger_descriptors[relative_trigger_key]
-            trigger = trigger_cls(
-                hass,
-                TriggerConfig(
-                    key=trigger_key,
-                    target=conf.get(CONF_TARGET),
-                    options=conf.get(CONF_OPTIONS),
-                ),
+            coro = _async_attach_trigger_cls(
+                hass, trigger_cls, trigger_key, conf, action, info
             )
-            coro = trigger.async_attach(action_wrapper, info)
         else:
+            action_wrapper = _trigger_action_wrapper(hass, action, conf)
             coro = platform.async_attach_trigger(hass, conf, action_wrapper, info)
 
         triggers.append(create_eager_task(coro))

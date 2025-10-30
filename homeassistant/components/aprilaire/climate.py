@@ -7,6 +7,8 @@ from typing import Any
 from pyaprilaire.const import Attribute
 
 from homeassistant.components.climate import (
+    ATTR_TARGET_TEMP_HIGH,
+    ATTR_TARGET_TEMP_LOW,
     FAN_AUTO,
     FAN_ON,
     PRESET_AWAY,
@@ -16,7 +18,12 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import PRECISION_HALVES, PRECISION_WHOLE, UnitOfTemperature
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    PRECISION_HALVES,
+    PRECISION_WHOLE,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -232,15 +239,15 @@ class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):
         cool_setpoint = 0
         heat_setpoint = 0
 
-        if temperature := kwargs.get("temperature"):
+        if temperature := kwargs.get(ATTR_TEMPERATURE):
             if self.coordinator.data.get(Attribute.MODE) == 3:
                 cool_setpoint = temperature
             else:
                 heat_setpoint = temperature
         else:
-            if target_temp_low := kwargs.get("target_temp_low"):
+            if target_temp_low := kwargs.get(ATTR_TARGET_TEMP_LOW):
                 heat_setpoint = target_temp_low
-            if target_temp_high := kwargs.get("target_temp_high"):
+            if target_temp_high := kwargs.get(ATTR_TARGET_TEMP_HIGH):
                 cool_setpoint = target_temp_high
 
         if cool_setpoint == 0 and heat_setpoint == 0:

@@ -17,9 +17,14 @@ from homeassistant.helpers.template.render_info import (
 )
 
 
-def test_render_info_initialization(hass: HomeAssistant) -> None:
+@pytest.fixture
+def template_obj(hass: HomeAssistant) -> template.Template:
+    """Template object for test_render_info."""
+    return template.Template("{{ 1 + 1 }}", hass)
+
+
+def test_render_info_initialization(template_obj: template.Template) -> None:
     """Test RenderInfo initialization."""
-    template_obj = template.Template("{{ 1 + 1 }}", hass)
     info = RenderInfo(template_obj)
 
     assert info.template is template_obj
@@ -37,9 +42,8 @@ def test_render_info_initialization(hass: HomeAssistant) -> None:
     assert info.filter is _true
 
 
-def test_render_info_repr(hass: HomeAssistant) -> None:
+def test_render_info_repr(template_obj: template.Template) -> None:
     """Test RenderInfo representation."""
-    template_obj = template.Template("{{ 1 + 1 }}", hass)
     info = RenderInfo(template_obj)
     info.domains.add("sensor")
     info.entities.add("sensor.test")
@@ -50,9 +54,8 @@ def test_render_info_repr(hass: HomeAssistant) -> None:
     assert "entities={'sensor.test'}" in repr_str
 
 
-def test_render_info_result(hass: HomeAssistant) -> None:
+def test_render_info_result(template_obj: template.Template) -> None:
     """Test RenderInfo result property."""
-    template_obj = template.Template("{{ 1 + 1 }}", hass)
     info = RenderInfo(template_obj)
 
     # Test with no result set - should return None cast as str
@@ -68,9 +71,10 @@ def test_render_info_result(hass: HomeAssistant) -> None:
         info.result()
 
 
-def test_render_info_filter_domains_and_entities(hass: HomeAssistant) -> None:
+def test_render_info_filter_domains_and_entities(
+    template_obj: template.Template,
+) -> None:
     """Test RenderInfo entity and domain filtering."""
-    template_obj = template.Template("{{ 1 + 1 }}", hass)
     info = RenderInfo(template_obj)
 
     # Add domain and entity
@@ -85,9 +89,8 @@ def test_render_info_filter_domains_and_entities(hass: HomeAssistant) -> None:
     assert info._filter_domains_and_entities("switch.kitchen") is False
 
 
-def test_render_info_filter_entities(hass: HomeAssistant) -> None:
+def test_render_info_filter_entities(template_obj: template.Template) -> None:
     """Test RenderInfo entity-only filtering."""
-    template_obj = template.Template("{{ 1 + 1 }}", hass)
     info = RenderInfo(template_obj)
 
     info.entities.add("sensor.test")
@@ -96,9 +99,8 @@ def test_render_info_filter_entities(hass: HomeAssistant) -> None:
     assert info._filter_entities("sensor.other") is False
 
 
-def test_render_info_filter_lifecycle_domains(hass: HomeAssistant) -> None:
+def test_render_info_filter_lifecycle_domains(template_obj: template.Template) -> None:
     """Test RenderInfo domain lifecycle filtering."""
-    template_obj = template.Template("{{ 1 + 1 }}", hass)
     info = RenderInfo(template_obj)
 
     info.domains_lifecycle.add("sensor")
@@ -107,9 +109,8 @@ def test_render_info_filter_lifecycle_domains(hass: HomeAssistant) -> None:
     assert info._filter_lifecycle_domains("light.test") is False
 
 
-def test_render_info_freeze_static(hass: HomeAssistant) -> None:
+def test_render_info_freeze_static(template_obj: template.Template) -> None:
     """Test RenderInfo static freezing."""
-    template_obj = template.Template("{{ 1 + 1 }}", hass)
     info = RenderInfo(template_obj)
 
     info.domains.add("sensor")
@@ -124,9 +125,8 @@ def test_render_info_freeze_static(hass: HomeAssistant) -> None:
     assert isinstance(info.entities, frozenset)
 
 
-def test_render_info_freeze(hass: HomeAssistant) -> None:
+def test_render_info_freeze(template_obj: template.Template) -> None:
     """Test RenderInfo freezing with rate limits."""
-    template_obj = template.Template("{{ 1 + 1 }}", hass)
     info = RenderInfo(template_obj)
 
     # Test all_states rate limit
@@ -147,9 +147,8 @@ def test_render_info_freeze(hass: HomeAssistant) -> None:
     assert info.rate_limit == ALL_STATES_RATE_LIMIT
 
 
-def test_render_info_freeze_filters(hass: HomeAssistant) -> None:
+def test_render_info_freeze_filters(template_obj: template.Template) -> None:
     """Test RenderInfo filter assignment during freeze."""
-    template_obj = template.Template("{{ 1 + 1 }}", hass)
 
     # Test lifecycle filter assignment
     info = RenderInfo(template_obj)
@@ -180,13 +179,12 @@ def test_render_info_freeze_filters(hass: HomeAssistant) -> None:
     assert info.filter is _false
 
 
-def test_render_info_context_var(hass: HomeAssistant) -> None:
+def test_render_info_context_var(template_obj: template.Template) -> None:
     """Test render_info_cv context variable."""
     # Should start as None
     assert render_info_cv.get() is None
 
     # Test setting and getting
-    template_obj = template.Template("{{ 1 + 1 }}", hass)
     info = RenderInfo(template_obj)
     render_info_cv.set(info)
     assert render_info_cv.get() is info

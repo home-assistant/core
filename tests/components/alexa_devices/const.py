@@ -1,6 +1,13 @@
 """Alexa Devices tests const."""
 
-from aioamazondevices.api import AmazonDevice, AmazonDeviceSensor
+from datetime import UTC, datetime
+
+from aioamazondevices.api import AmazonDevice, AmazonDeviceSensor, AmazonSchedule
+from aioamazondevices.const import (
+    NOTIFICATION_ALARM,
+    NOTIFICATION_REMINDER,
+    NOTIFICATION_TIMER,
+)
 
 TEST_CODE = "023123"
 TEST_PASSWORD = "fake_password"
@@ -13,20 +20,51 @@ TEST_DEVICE_1 = AmazonDevice(
     capabilities=["AUDIO_PLAYER", "MICROPHONE"],
     device_family="mine",
     device_type="echo",
+    household_device=False,
     device_owner_customer_id="amazon_ower_id",
     device_cluster_members=[TEST_DEVICE_1_SN],
     online=True,
     serial_number=TEST_DEVICE_1_SN,
     software_version="echo_test_software_version",
-    do_not_disturb=False,
-    response_style=None,
-    bluetooth_state=True,
     entity_id="11111111-2222-3333-4444-555555555555",
-    appliance_id="G1234567890123456789012345678A",
+    endpoint_id="G1234567890123456789012345678A",
     sensors={
+        "dnd": AmazonDeviceSensor(
+            name="dnd",
+            value=False,
+            error=False,
+            error_msg=None,
+            error_type=None,
+            scale=None,
+        ),
         "temperature": AmazonDeviceSensor(
-            name="temperature", value="22.5", scale="CELSIUS"
-        )
+            name="temperature",
+            value="22.5",
+            error=False,
+            error_msg=None,
+            error_type=None,
+            scale="CELSIUS",
+        ),
+    },
+    notifications={
+        NOTIFICATION_ALARM: AmazonSchedule(
+            type=NOTIFICATION_ALARM,
+            status="ON",
+            label="Morning Alarm",
+            next_occurrence=datetime(2023, 10, 1, 7, 0, 0, tzinfo=UTC),
+        ),
+        NOTIFICATION_REMINDER: AmazonSchedule(
+            type=NOTIFICATION_REMINDER,
+            status="ON",
+            label="Take out the trash",
+            next_occurrence=None,
+        ),
+        NOTIFICATION_TIMER: AmazonSchedule(
+            type=NOTIFICATION_TIMER,
+            status="OFF",
+            label="",
+            next_occurrence=None,
+        ),
     },
 )
 
@@ -37,19 +75,23 @@ TEST_DEVICE_2 = AmazonDevice(
     capabilities=["AUDIO_PLAYER", "MICROPHONE"],
     device_family="mine",
     device_type="echo",
+    household_device=True,
     device_owner_customer_id="amazon_ower_id",
     device_cluster_members=[TEST_DEVICE_2_SN],
     online=True,
     serial_number=TEST_DEVICE_2_SN,
     software_version="echo_test_2_software_version",
-    do_not_disturb=False,
-    response_style=None,
-    bluetooth_state=True,
     entity_id="11111111-2222-3333-4444-555555555555",
-    appliance_id="G1234567890123456789012345678A",
+    endpoint_id="G1234567890123456789012345678A",
     sensors={
         "temperature": AmazonDeviceSensor(
-            name="temperature", value="22.5", scale="CELSIUS"
+            name="temperature",
+            value="22.5",
+            error=False,
+            error_msg=None,
+            error_type=None,
+            scale="CELSIUS",
         )
     },
+    notifications={},
 )

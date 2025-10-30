@@ -41,7 +41,10 @@ rules:
   docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
-  log-when-unavailable: todo
+  log-when-unavailable:
+    status: done
+    comment: |
+      Logging handled by library when (un)available once (push) or coordinator (pull).
   parallel-updates: done
   reauthentication-flow: done
   test-coverage: done

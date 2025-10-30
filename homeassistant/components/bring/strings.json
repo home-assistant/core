@@ -3,10 +3,44 @@
     "shopping_list_items": "items"
   },
   "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "The login details correspond to a different account. Please re-authenticate to the previously configured account."
+    },
+    "error": {
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "email": "[%key:component::bring::config::step::user::data_description::email%]",
+          "password": "[%key:component::bring::config::step::user::data_description::password%]"
+        },
+        "description": "The Bring! integration needs to re-authenticate your account",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "reconfigure": {
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "email": "[%key:component::bring::config::step::user::data_description::email%]",
+          "password": "[%key:component::bring::config::step::user::data_description::password%]"
+        },
+        "description": "Update your credentials if you have changed your Bring! account email or password.",
+        "title": "Bring! configuration"
+      },
       "user": {
-        "title": "Bring! Grocery shopping list",
-        "description": "Connect your Bring! account to sync your shopping lists with Home Assistant.\n\nDon't have a Bring! account? Download the app on [Google Play for Android]({google_play}) or the [App Store for iOS]({app_store}) to sign up.",
         "data": {
           "email": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
@@ -14,44 +48,10 @@
         "data_description": {
           "email": "The email address associated with your Bring! account.",
           "password": "The password to log in to your Bring! account."
-        }
-      },
-      "reauth_confirm": {
-        "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "The Bring! integration needs to re-authenticate your account",
-        "data": {
-          "email": "[%key:common::config_flow::data::email%]",
-          "password": "[%key:common::config_flow::data::password%]"
         },
-        "data_description": {
-          "email": "[%key:component::bring::config::step::user::data_description::email%]",
-          "password": "[%key:component::bring::config::step::user::data_description::password%]"
-        }
-      },
-      "reconfigure": {
-        "title": "Bring! configuration",
-        "description": "Update your credentials if you have changed your Bring! account email or password.",
-        "data": {
-          "email": "[%key:common::config_flow::data::email%]",
-          "password": "[%key:common::config_flow::data::password%]"
-        },
-        "data_description": {
-          "email": "[%key:component::bring::config::step::user::data_description::email%]",
-          "password": "[%key:component::bring::config::step::user::data_description::password%]"
-        }
+        "description": "Connect your Bring! account to sync your shopping lists with Home Assistant.\n\nDon't have a Bring! account? Download the app on [Google Play for Android]({google_play}) or the [App Store for iOS]({app_store}) to sign up.",
+        "title": "Bring! Grocery shopping list"
       }
-    },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]"
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "unique_id_mismatch": "The login details correspond to a different account. Please re-authenticate to the previously configured account.",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
   "entity": {
@@ -70,10 +70,6 @@
       }
     },
     "sensor": {
-      "urgent": {
-        "name": "Urgent",
-        "unit_of_measurement": "[%key:component::bring::common::shopping_list_items%]"
-      },
       "convenient": {
         "name": "On occasion",
         "unit_of_measurement": "[%key:component::bring::common::shopping_list_items%]"
@@ -81,6 +77,14 @@
       "discounted": {
         "name": "Discount only",
         "unit_of_measurement": "[%key:component::bring::common::shopping_list_items%]"
+      },
+      "list_access": {
+        "name": "List access",
+        "state": {
+          "invitation": "Invitation pending",
+          "registered": "Private",
+          "shared": "Shared"
+        }
       },
       "list_language": {
         "name": "Region & language",
@@ -107,37 +111,22 @@
           "tr-tr": "Türkiye"
         }
       },
-      "list_access": {
-        "name": "List access",
-        "state": {
-          "registered": "Private",
-          "shared": "Shared",
-          "invitation": "Invitation pending"
-        }
+      "urgent": {
+        "name": "Urgent",
+        "unit_of_measurement": "[%key:component::bring::common::shopping_list_items%]"
       }
     }
   },
   "exceptions": {
-    "todo_save_item_failed": {
-      "message": "Failed to save item {name} to Bring! list"
+    "activity_not_found": {
+      "message": "Failed to send reaction for Bring! — No recent activity found"
     },
-    "todo_update_item_failed": {
-      "message": "Failed to update item {name} to Bring! list"
+    "entity_not_found": {
+      "message": "Failed to send reaction for Bring! — Unknown entity {entity_id}"
     },
-    "todo_rename_item_failed": {
-      "message": "Failed to rename item {name} to Bring! list"
-    },
-    "todo_delete_item_failed": {
-      "message": "Failed to delete {count} item(s) from Bring! list"
-    },
-    "setup_request_exception": {
-      "message": "Failed to connect to server, try again later"
-    },
-    "setup_parse_exception": {
-      "message": "Failed to parse server response, try again later"
-    },
-    "setup_authentication_exception": {
-      "message": "Authentication failed for {email}, check your email and password"
+
+    "entry_not_loaded": {
+      "message": "The account associated with this Bring! list is either not loaded or disabled in Home Assistant."
     },
     "notify_missing_argument": {
       "message": "This action requires field {field}, please enter a valid value for {field}"
@@ -148,55 +137,66 @@
     "reaction_request_failed": {
       "message": "Failed to send reaction for Bring! due to a connection error, try again later"
     },
-    "activity_not_found": {
-      "message": "Failed to send reaction for Bring! — No recent activity found"
+    "setup_authentication_exception": {
+      "message": "Authentication failed for {email}, check your email and password"
     },
-    "entity_not_found": {
-      "message": "Failed to send reaction for Bring! — Unknown entity {entity_id}"
+    "setup_parse_exception": {
+      "message": "Failed to parse server response, try again later"
     },
-
-    "entry_not_loaded": {
-      "message": "The account associated with this Bring! list is either not loaded or disabled in Home Assistant."
-    }
-  },
-  "services": {
-    "send_message": {
-      "name": "[%key:component::notify::services::notify::name%]",
-      "description": "Sends a mobile push notification to members of a shared Bring! list.",
-      "fields": {
-        "message": {
-          "name": "Notification type",
-          "description": "Type of push notification to send to list members."
-        },
-        "item": {
-          "name": "Item (Required if notification type 'Urgent message' is selected)",
-          "description": "Item name(s) to include in an urgent message e.g. 'Attention! Attention! - We still urgently need: [Items]'"
-        }
-      }
+    "setup_request_exception": {
+      "message": "Failed to connect to server, try again later"
     },
-    "send_reaction": {
-      "name": "Send reaction",
-      "description": "Sends a reaction to a recent activity on a Bring! list by a member of the shared list.",
-      "fields": {
-        "entity_id": {
-          "name": "Activities",
-          "description": "Select the Bring! activities event entity for reacting to its most recent event"
-        },
-        "reaction": {
-          "name": "Reaction",
-          "description": "Type of reaction to send in response."
-        }
-      }
+    "todo_delete_item_failed": {
+      "message": "Failed to delete {count} item(s) from Bring! list"
+    },
+    "todo_rename_item_failed": {
+      "message": "Failed to rename item {name} to Bring! list"
+    },
+    "todo_save_item_failed": {
+      "message": "Failed to save item {name} to Bring! list"
+    },
+    "todo_update_item_failed": {
+      "message": "Failed to update item {name} to Bring! list"
     }
   },
   "selector": {
     "notification_type_selector": {
       "options": {
-        "going_shopping": "I'm going shopping! - Last chance for adjustments",
         "changed_list": "I changed the list! - Take a look at the items",
+        "going_shopping": "I'm going shopping! - Last chance for adjustments",
         "shopping_done": "The shopping is done - Our fridge is well stocked",
         "urgent_message": "Attention! Attention! - We still urgently need: [Items]"
       }
+    }
+  },
+  "services": {
+    "send_message": {
+      "description": "Sends a mobile push notification to members of a shared Bring! list.",
+      "fields": {
+        "item": {
+          "description": "Item name(s) to include in an urgent message e.g. 'Attention! Attention! - We still urgently need: [Items]'",
+          "name": "Item (Required if notification type 'Urgent message' is selected)"
+        },
+        "message": {
+          "description": "Type of push notification to send to list members.",
+          "name": "Notification type"
+        }
+      },
+      "name": "[%key:component::notify::services::notify::name%]"
+    },
+    "send_reaction": {
+      "description": "Sends a reaction to a recent activity on a Bring! list by a member of the shared list.",
+      "fields": {
+        "entity_id": {
+          "description": "Select the Bring! activities event entity for reacting to its most recent event",
+          "name": "Activities"
+        },
+        "reaction": {
+          "description": "Type of reaction to send in response.",
+          "name": "Reaction"
+        }
+      },
+      "name": "Send reaction"
     }
   }
 }
