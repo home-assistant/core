@@ -138,7 +138,7 @@ def new_device_listener(
     data_type: str,
 ) -> Callable[[], None]:
     """Subscribe to coordinator updates to check for new devices."""
-    known_devices: set[int] = set()
+    known_devices: dict[str, list[int]] = {}
 
     def _check_devices() -> None:
         """Check for new devices and call callback with any new monitors."""
@@ -147,8 +147,8 @@ def new_device_listener(
 
         new_devices: list[DeviceType] = []
         for _id in coordinator.data[data_type]:
-            if _id not in known_devices:
-                known_devices.add(_id)
+            if _id not in (id_list := known_devices.get(data_type, [])):
+                known_devices.update({data_type: [*id_list, _id]})
                 new_devices.append(coordinator.data[data_type][_id])
 
         if new_devices:

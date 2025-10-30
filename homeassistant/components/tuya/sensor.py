@@ -44,6 +44,7 @@ from .const import (
 )
 from .entity import TuyaEntity
 from .models import ComplexValue, ElectricityValue, EnumTypeData, IntegerTypeData
+from .util import get_dptype
 
 _WIND_DIRECTIONS = {
     "north": 0.0,
@@ -758,6 +759,15 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="cat_weight",
             device_class=SensorDeviceClass.WEIGHT,
             state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.EXCRETION_TIME_DAY,
+            translation_key="excretion_time_day",
+            device_class=SensorDeviceClass.DURATION,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.EXCRETION_TIMES_DAY,
+            translation_key="excretion_times_day",
         ),
     ),
     DeviceCategory.MZJ: (
@@ -1689,7 +1699,7 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             self._type_data = enum_type
             self._type = DPType.ENUM
         else:
-            self._type = self.get_dptype(DPCode(description.key))
+            self._type = get_dptype(self.device, DPCode(description.key))
 
         # Logic to ensure the set device class and API received Unit Of Measurement
         # match Home Assistants requirements.

@@ -23,20 +23,13 @@ EXCLUDED_REQUIREMENTS_ALL = {
     "atenpdu",  # depends on pysnmp which is not maintained at this time
     "avea",  # depends on bluepy
     "avion",
-    "beacontools",
     "beewi-smartclim",  # depends on bluepy
     "bluepy",
-    "decora",
     "evdev",
-    "face-recognition",
     "pybluez",
-    "pycocotools",
     "pycups",
-    "python-gammu",
     "python-lirc",
     "pyuserinput",
-    "tensorflow",
-    "tf-models-official",
 }
 
 # Requirements excluded by EXCLUDED_REQUIREMENTS_ALL which should be included when
@@ -44,7 +37,6 @@ EXCLUDED_REQUIREMENTS_ALL = {
 INCLUDED_REQUIREMENTS_WHEELS = {
     "evdev",
     "pycups",
-    "python-gammu",
     "pyuserinput",
 }
 
@@ -58,7 +50,7 @@ INCLUDED_REQUIREMENTS_WHEELS = {
 OVERRIDDEN_REQUIREMENTS_ACTIONS = {
     "pytest": {
         "exclude": set(),
-        "include": {"python-gammu"},
+        "include": set(),
         "markers": {},
     },
     "wheels_aarch64": {
@@ -155,10 +147,10 @@ multidict>=6.0.2
 backoff>=2.0
 
 # ensure pydantic version does not float since it might have breaking changes
-pydantic==2.12.0
+pydantic==2.12.2
 
-# Required for Python 3.12.4 compatibility (#119223).
-mashumaro>=3.13.1
+# Required for Python 3.14.0 compatibility (#119223).
+mashumaro>=3.17.0
 
 # Breaks asyncio
 # https://github.com/pubnub/python/issues/130

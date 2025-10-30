@@ -1,6 +1,6 @@
 """Testing the Prowl initialisation."""
 
-from unittest.mock import Mock
+from unittest.mock import AsyncMock
 
 import prowlpy
 import pytest
@@ -18,7 +18,7 @@ from tests.common import MockConfigEntry
 async def test_load_reload_unload_config_entry(
     hass: HomeAssistant,
     mock_prowlpy_config_entry: MockConfigEntry,
-    mock_prowlpy: Mock,
+    mock_prowlpy: AsyncMock,
 ) -> None:
     """Test the Prowl configuration entry loading/reloading/unloading."""
     mock_prowlpy_config_entry.add_to_hass(hass)
@@ -57,7 +57,7 @@ async def test_load_reload_unload_config_entry(
 async def test_config_entry_failures(
     hass: HomeAssistant,
     mock_prowlpy_config_entry: MockConfigEntry,
-    mock_prowlpy: Mock,
+    mock_prowlpy: AsyncMock,
     prowlpy_side_effect,
     expected_config_state: ConfigEntryState,
 ) -> None:
