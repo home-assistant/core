@@ -127,13 +127,12 @@ def setup_platform(
 class VivotekCam(Camera):
     """A Vivotek IP camera."""
 
-    _attr_available = False
+    # Overrides from Camera
     _attr_brand = DEFAULT_CAMERA_BRAND
-    _attr_configuration_url: str | None = None
-    _attr_model: str | None = None
-    _attr_serial: str | None = None
     _attr_supported_features = CameraEntityFeature.STREAM
-    _attr_unique_id = ""
+
+    _attr_configuration_url: str | None = None
+    _attr_serial: str | None = None
 
     def __init__(
         self,
@@ -182,38 +181,11 @@ class VivotekCam(Camera):
         await self.hass.async_add_executor_job(self.update)
 
     @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._attr_available
-
-    @property
-    def brand(self) -> str | None:
-        """Return the camera brand."""
-        return self._attr_brand
-
-    @property
-    def configuration_url(self) -> str | None:
-        """Return the configuration URL for the camera."""
-        return self._attr_configuration_url
-
-    @property
-    def model(self) -> str | None:
-        """Return the camera model."""
-        if self._attr_model is None:
-            self._attr_model = self._cam_client.model_name
-        return self._attr_model
-
-    @property
-    def name(self) -> str | None:
-        """Return the name of this device."""
-        return self._attr_name
-
-    @property
     def device_info(self) -> DeviceInfo | None:
         """Return the device info."""
         return DeviceInfo(
             configuration_url=self._attr_configuration_url,
-            identifiers={(DOMAIN, self._attr_unique_id)},
+            identifiers={(DOMAIN, self._attr_unique_id or "")},
             manufacturer=MANUFACTURER,
             model=self._attr_model,
             name=self._attr_name,

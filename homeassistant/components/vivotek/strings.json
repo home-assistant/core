@@ -11,14 +11,14 @@
     "step": {
       "reconfigure": {
         "data": {
-          "authentication": "Authentication",
-          "framerate": "Framerate (Hz)",
+          "authentication": "[%key:component::vivotek::config::step::user::data::authentication%]",
+          "framerate": "[%key:component::vivotek::config::step::user::data::framerate%]",
           "ip_address": "[%key:common::config_flow::data::ip%]",
           "name": "[%key:common::config_flow::data::name%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "security_level": "Security level",
+          "security_level": "[%key:component::vivotek::config::step::user::data::security_level%]",
           "ssl": "[%key:common::config_flow::data::ssl%]",
-          "stream_path": "Stream path",
+          "stream_path": "[%key:component::vivotek::config::step::user::data::stream_path%]",
           "username": "[%key:common::config_flow::data::username%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },

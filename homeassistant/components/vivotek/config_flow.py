@@ -76,10 +76,11 @@ class VivotekConfigFlow(ConfigFlow, domain=DOMAIN):
                     data=user_input,
                 )
 
-        data_schema = self.add_suggested_values_to_schema(CONF_SCHEMA, user_input or {})
         return self.async_show_form(
             step_id="user",
-            data_schema=data_schema,
+            data_schema=self.add_suggested_values_to_schema(
+                CONF_SCHEMA, user_input or {}
+            ),
             errors=errors,
             description_placeholders=DESCRIPTION_PLACEHOLDERS,
         )
@@ -104,11 +105,11 @@ class VivotekConfigFlow(ConfigFlow, domain=DOMAIN):
                     data_updates=user_input,
                 )
 
-        data = user_input or self._get_reconfigure_entry().data
-        data_schema = self.add_suggested_values_to_schema(CONF_SCHEMA, data or {})
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=data_schema,
+            data_schema=self.add_suggested_values_to_schema(
+                CONF_SCHEMA, self._get_reconfigure_entry().data
+            ),
             errors=errors,
             description_placeholders=DESCRIPTION_PLACEHOLDERS,
         )
