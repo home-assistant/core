@@ -188,7 +188,10 @@ class EcobeeCompressorMinTemp(EcobeeBaseEntity, NumberEntity):
                     "difference",
                     new_aux_value,
                 )
-                self.aux_entity.set_native_value(new_aux_value)
+                self.data.ecobee.set_aux_maxtemp_threshold(
+                    self.thermostat_index, int(new_aux_value)
+                )
+                self.aux_entity.update_without_throttle = True
 
         self.data.ecobee.set_aux_cutover_threshold(self.thermostat_index, int(value))
         self.update_without_throttle = True
@@ -239,6 +242,7 @@ class EcobeeAuxMaxOutdoorTemp(EcobeeBaseEntity, NumberEntity):
         """Set new auxiliary maximum outdoor temperature."""
         # We need to ensure there is at least a difference of 5 degrees between
         # the auxiliary max outdoor temp and the compressor min temp.
+
         difference = (
             value - self._compressor_entity.native_value
             if self._compressor_entity.native_value is not None
@@ -254,7 +258,10 @@ class EcobeeAuxMaxOutdoorTemp(EcobeeBaseEntity, NumberEntity):
                 "difference",
                 new_compressor_value,
             )
-            self._compressor_entity.set_native_value(new_compressor_value)
+            self.data.ecobee.set_aux_cutover_threshold(
+                self.thermostat_index, int(new_compressor_value)
+            )
+            self._compressor_entity.update_without_throttle = True
 
         self.data.ecobee.set_aux_maxtemp_threshold(self.thermostat_index, int(value))
         self.update_without_throttle = True
