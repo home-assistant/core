@@ -49,6 +49,28 @@ from .utils import (
 PARALLEL_UPDATES = 0
 
 
+def get_entity_translation_attributes(
+    channel_name: str | None,
+    translation_key: str | None,
+    device_class: str | None,
+    default_to_device_class_name: bool,
+) -> tuple[dict[str, str] | None, str | None]:
+    """Translation attributes for entity with channel name."""
+    return (
+        (
+            {"channel_name": channel_name},
+            f"{key}_with_channel_name"
+            if (
+                key := translation_key
+                or (device_class if default_to_device_class_name else None)
+            )
+            else None,
+        )
+        if channel_name is not None
+        else (None, None)
+    )
+
+
 @dataclass(frozen=True, kw_only=True)
 class BlockBinarySensorDescription(
     BlockEntityDescription, BinarySensorEntityDescription
@@ -86,16 +108,19 @@ class RpcBinarySensor(ShellyRpcAttributeEntity, BinarySensorEntity):
                 delattr(self, "_attr_name")
 
         if not description.role:
-            if (
-                channel_name := get_rpc_channel_name(coordinator.device, key)
-            ) is not None:
-                self._attr_translation_placeholders = {"channel_name": channel_name}
-                if translation_key := description.translation_key or (
-                    description.device_class
-                    if self._default_to_device_class_name()
-                    else None
-                ):
-                    self._attr_translation_key = f"{translation_key}_with_channel_name"
+            translation_placeholders, translation_key = (
+                get_entity_translation_attributes(
+                    get_rpc_channel_name(coordinator.device, key),
+                    description.translation_key,
+                    description.device_class,
+                    self._default_to_device_class_name(),
+                )
+            )
+
+            if translation_placeholders:
+                self._attr_translation_placeholders = translation_placeholders
+                if translation_key:
+                    self._attr_translation_key = translation_key
 
     @property
     def is_on(self) -> bool:
@@ -447,16 +472,17 @@ class BlockBinarySensor(ShellyBlockAttributeEntity, BinarySensorEntity):
         if hasattr(self, "_attr_name"):
             delattr(self, "_attr_name")
 
-        if (
-            channel_name := get_block_channel_name(coordinator.device, self.block)
-        ) is not None:
-            self._attr_translation_placeholders = {"channel_name": channel_name}
-            if translation_key := description.translation_key or (
-                description.device_class
-                if self._default_to_device_class_name()
-                else None
-            ):
-                self._attr_translation_key = f"{translation_key}_with_channel_name"
+        translation_placeholders, translation_key = get_entity_translation_attributes(
+            get_block_channel_name(coordinator.device, self.block),
+            description.translation_key,
+            description.device_class,
+            self._default_to_device_class_name(),
+        )
+
+        if translation_placeholders:
+            self._attr_translation_placeholders = translation_placeholders
+            if translation_key:
+                self._attr_translation_key = translation_key
 
     @property
     def is_on(self) -> bool:
@@ -481,16 +507,17 @@ class RestBinarySensor(ShellyRestAttributeEntity, BinarySensorEntity):
         if hasattr(self, "_attr_name"):
             delattr(self, "_attr_name")
 
-        if (
-            channel_name := get_block_channel_name(coordinator.device, None)
-        ) is not None:
-            self._attr_translation_placeholders = {"channel_name": channel_name}
-            if translation_key := description.translation_key or (
-                description.device_class
-                if self._default_to_device_class_name()
-                else None
-            ):
-                self._attr_translation_key = f"{translation_key}_with_channel_name"
+        translation_placeholders, translation_key = get_entity_translation_attributes(
+            get_block_channel_name(coordinator.device, None),
+            description.translation_key,
+            description.device_class,
+            self._default_to_device_class_name(),
+        )
+
+        if translation_placeholders:
+            self._attr_translation_placeholders = translation_placeholders
+            if translation_key:
+                self._attr_translation_key = translation_key
 
     @property
     def is_on(self) -> bool:
@@ -519,16 +546,20 @@ class BlockSleepingBinarySensor(
         if block is not None:
             if hasattr(self, "_attr_name"):
                 delattr(self, "_attr_name")
-            if (
-                channel_name := get_block_channel_name(coordinator.device, block)
-            ) is not None:
-                self._attr_translation_placeholders = {"channel_name": channel_name}
-                if translation_key := description.translation_key or (
-                    description.device_class
-                    if self._default_to_device_class_name()
-                    else None
-                ):
-                    self._attr_translation_key = f"{translation_key}_with_channel_name"
+
+            translation_placeholders, translation_key = (
+                get_entity_translation_attributes(
+                    get_block_channel_name(coordinator.device, block),
+                    description.translation_key,
+                    description.device_class,
+                    self._default_to_device_class_name(),
+                )
+            )
+
+            if translation_placeholders:
+                self._attr_translation_placeholders = translation_placeholders
+                if translation_key:
+                    self._attr_translation_key = translation_key
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
@@ -570,18 +601,19 @@ class RpcSleepingBinarySensor(
                 if hasattr(self, "_attr_name"):
                     delattr(self, "_attr_name")
             if not description.role:
-                if (
-                    channel_name := get_rpc_channel_name(coordinator.device, key)
-                ) is not None:
-                    self._attr_translation_placeholders = {"channel_name": channel_name}
-                    if translation_key := description.translation_key or (
-                        description.device_class
-                        if self._default_to_device_class_name()
-                        else None
-                    ):
-                        self._attr_translation_key = (
-                            f"{translation_key}_with_channel_name"
-                        )
+                translation_placeholders, translation_key = (
+                    get_entity_translation_attributes(
+                        get_rpc_channel_name(coordinator.device, key),
+                        description.translation_key,
+                        description.device_class,
+                        self._default_to_device_class_name(),
+                    )
+                )
+
+                if translation_placeholders:
+                    self._attr_translation_placeholders = translation_placeholders
+                    if translation_key:
+                        self._attr_translation_key = translation_key
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
