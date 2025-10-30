@@ -399,7 +399,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charger_state',
-    'unique_id': '123456789ABC-number:200-number_work_state',
+    'unique_id': '123456789ABC-enum:200-enum_work_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -507,9 +507,6 @@
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
@@ -537,6 +534,65 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '5.0',
+  })
+# ---
+# name: test_rpc_switch_energy_sensors[sensor.test_name_test_switch_0_energy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_name_test_switch_0_energy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'test switch_0 energy',
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '123456789ABC-switch:0-energy',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_rpc_switch_energy_sensors[sensor.test_name_test_switch_0_energy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Test name test switch_0 energy',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_name_test_switch_0_energy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1234.56789',
   })
 # ---
 # name: test_rpc_switch_energy_sensors[sensor.test_name_test_switch_0_energy_consumed-entry]
@@ -657,14 +713,12 @@
     'state': '98.76543',
   })
 # ---
-# name: test_rpc_switch_energy_sensors[sensor.test_name_test_switch_0_energy-entry]
+# name: test_shelly_irrigation_weather_sensors[sensor.test_name_average_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -672,7 +726,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_name_test_switch_0_energy',
+    'entity_id': 'sensor.test_name_average_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -682,37 +736,86 @@
     'name': None,
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+        'suggested_display_precision': 1,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'test switch_0 energy',
+    'original_name': 'Average Temperature',
     'platform': 'shelly',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '123456789ABC-switch:0-energy',
-    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    'unique_id': '123456789ABC-number:200-number_average_temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_rpc_switch_energy_sensors[sensor.test_name_test_switch_0_energy-state]
+# name: test_shelly_irrigation_weather_sensors[sensor.test_name_average_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Test name test switch_0 energy',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      'device_class': 'temperature',
+      'friendly_name': 'Test name Average Temperature',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_name_test_switch_0_energy',
+    'entity_id': 'sensor.test_name_average_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1234.56789',
+    'state': '0',
+  })
+# ---
+# name: test_shelly_irrigation_weather_sensors[sensor.test_name_rainfall_last_24h-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_name_rainfall_last_24h',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
+    'original_icon': None,
+    'original_name': 'Rainfall last 24h',
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '123456789ABC-number:201-number_last_precipitation',
+    'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+  })
+# ---
+# name: test_shelly_irrigation_weather_sensors[sensor.test_name_rainfall_last_24h-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'precipitation',
+      'friendly_name': 'Test name Rainfall last 24h',
+      'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_name_rainfall_last_24h',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
   })
 # ---

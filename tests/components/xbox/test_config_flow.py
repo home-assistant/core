@@ -29,7 +29,11 @@ async def test_abort_if_existing_entry(hass: HomeAssistant) -> None:
     assert result["reason"] == "single_instance_allowed"
 
 
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures(
+    "current_request_with_host",
+    "xbox_live_client",
+    "authentication_manager",
+)
 async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -68,13 +72,57 @@ async def test_full_flow(
             "access_token": "mock-access-token",
             "type": "Bearer",
             "expires_in": 60,
+            "scope": "XboxLive.signin XboxLive.offline_access",
+            "service": "xbox",
+            "token_type": "bearer",
+            "user_id": "AAAAAAAAAAAAAAAAAAAAA",
         },
     )
 
     with patch(
         "homeassistant.components.xbox.async_setup_entry", return_value=True
     ) as mock_setup:
-        await hass.config_entries.flow.async_configure(result["flow_id"])
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
+    assert result["result"].unique_id == "271958441785640"
+    assert result["result"].title == "GSR Ae"
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("xbox_live_client")
+async def test_unique_id_migration(
+    hass: HomeAssistant,
+) -> None:
+    """Test config entry unique_id migration."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Home Assistant Cloud",
+        data={
+            "auth_implementation": "cloud",
+            "token": {
+                "access_token": "1234567890",
+                "expires_at": 1760697327.7298331,
+                "expires_in": 3600,
+                "refresh_token": "0987654321",
+                "scope": "XboxLive.signin XboxLive.offline_access",
+                "service": "xbox",
+                "token_type": "bearer",
+                "user_id": "AAAAAAAAAAAAAAAAAAAAA",
+            },
+        },
+        unique_id=DOMAIN,
+        version=1,
+        minor_version=1,
+    )
+
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is config_entries.ConfigEntryState.LOADED
+    assert config_entry.version == 1
+    assert config_entry.minor_version == 2
+    assert config_entry.unique_id == "271958441785640"
+    assert config_entry.title == "GSR Ae"

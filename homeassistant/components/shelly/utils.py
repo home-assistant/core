@@ -66,6 +66,7 @@ from .const import (
     GEN2_RELEASE_URL,
     LOGGER,
     MAX_SCRIPT_SIZE,
+    ROLE_GENERIC,
     RPC_INPUTS_EVENTS_TYPES,
     SHAIR_MAX_WORK_HOURS,
     SHBTN_INPUTS_EVENTS_TYPES,
@@ -416,6 +417,11 @@ def get_rpc_sub_device_name(
     """Get name based on device and channel name."""
     if key in device.config and key != "em:0":
         # workaround for Pro 3EM, we don't want to get name for em:0
+        if (zone_id := get_irrigation_zone_id(device.config, key)) is not None:
+            # workaround for Irrigation controller, name stored in "service:0"
+            if zone_name := device.config["service:0"]["zones"][zone_id]["name"]:
+                return cast(str, zone_name)
+
         if entity_name := device.config[key].get("name"):
             return cast(str, entity_name)
 
@@ -436,13 +442,15 @@ def get_rpc_sub_device_name(
 
 
 def get_rpc_entity_name(
-    device: RpcDevice, key: str, description: str | None = None
+    device: RpcDevice, key: str, name: str | None = None, role: str | None = None
 ) -> str | None:
     """Naming for RPC based switch and sensors."""
     channel_name = get_rpc_channel_name(device, key)
 
-    if description:
-        return f"{channel_name} {description.lower()}" if channel_name else description
+    if name:
+        if role and role != ROLE_GENERIC:
+            return name
+        return f"{channel_name} {name.lower()}" if channel_name else name
 
     return channel_name
 
@@ -483,7 +491,7 @@ def get_rpc_key_by_role(keys_dict: dict[str, Any], role: str) -> str | None:
 
 def get_rpc_role_by_key(keys_dict: dict[str, Any], key: str) -> str:
     """Return role by key for RPC device from a dict."""
-    return cast(str, keys_dict[key].get("role", "generic"))
+    return cast(str, keys_dict[key].get("role", ROLE_GENERIC))
 
 
 def id_from_key(key: str) -> int:
@@ -784,6 +792,13 @@ async def get_rpc_scripts_event_types(
     return script_events
 
 
+def get_irrigation_zone_id(config: dict[str, Any], key: str) -> int | None:
+    """Return the zone id if the component is an irrigation zone."""
+    if key in config and (zone := get_rpc_role_by_key(config, key)).startswith("zone"):
+        return int(zone[4:])
+    return None
+
+
 def get_rpc_device_info(
     device: RpcDevice,
     mac: str,
@@ -820,7 +835,10 @@ def get_rpc_device_info(
         )
 
     if (
-        component not in (*All_LIGHT_TYPES, "cover", "em1", "switch")
+        (
+            component not in (*All_LIGHT_TYPES, "cover", "em1", "switch")
+            and get_irrigation_zone_id(device.config, key) is None
+        )
         or idx is None
         or len(get_rpc_key_instances(device.status, component, all_lights=True)) < 2
     ):
