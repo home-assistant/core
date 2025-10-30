@@ -93,6 +93,30 @@ async def test_retry_with_more_than_max_errors(
         assert debugs == MAX_RETRIES - 1
 
 
+async def test_retry_with_empty_status(
+    hass: HomeAssistant,
+    config_entry_with_empty_status: ConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test empty status response."""
+
+    caplog.set_level(logging.DEBUG, logger="homeassistant.components.coolmaster")
+
+    with patch(
+        "tests.components.coolmaster.conftest.CoolMasterNetEmptyStatusMock.status",
+        wraps=config_entry_with_empty_status.runtime_data._coolmaster.status,
+    ) as mock_status:
+        await async_update_entity(hass, "sensor.l1_101_error_code")
+        await hass.async_block_till_done()
+
+        assert (
+            mock_status.call_count == MAX_RETRIES
+        )  # The retries are capped at MAX_RETRIES
+        debugs, errors = count_logs(caplog.records)
+        assert errors == 1
+        assert debugs == MAX_RETRIES
+
+
 def count_logs(log_records: list[logging.LogRecord]) -> tuple[int, int]:
     """Count the number of log records."""
     debug_logs = [
