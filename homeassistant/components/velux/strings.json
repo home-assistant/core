@@ -34,11 +34,21 @@
       "rain_sensor": {
         "name": "Rain sensor"
       }
+    },
+    "button": {
+      "reboot_gateway": {
+        "name": "Reboot gateway"
+      }
+    }
+  },
+  "exceptions": {
+    "reboot_failed": {
+      "message": "Failed to reboot gateway. Try again in a few moments or power cycle the device manually"
     }
   },
   "services": {
     "reboot_gateway": {
-      "description": "Reboots the KLF200 Gateway.",
+      "description": "Reboots the KLF200 Gateway",
       "name": "Reboot gateway"
     }
   }
