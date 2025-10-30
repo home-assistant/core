@@ -202,7 +202,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class PTDevicesSensor(CoordinatorEntity[PTDevicesCoordinator], SensorEntity):
+class PTDevicesSensor(SensorEntity, CoordinatorEntity[PTDevicesCoordinator]):
     """Sensor entity for PTDevices Integration."""
 
     _attr_has_entity_name = True
@@ -214,7 +214,7 @@ class PTDevicesSensor(CoordinatorEntity[PTDevicesCoordinator], SensorEntity):
         super().__init__(coordinator=coordinator, context=description.key.upper())
 
         # Get the mac address for use in the device id
-        mac: str = self.coordinator.data["body"]["device_id"]
+        mac: str = self.coordinator.data.get("body", {}).get("device_id", "")
 
         self.entity_description = description
         self._attr_device_info = coordinator.device_info
@@ -222,6 +222,13 @@ class PTDevicesSensor(CoordinatorEntity[PTDevicesCoordinator], SensorEntity):
 
         # Initial Update
         self._update_attrs()
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return super().available and self.entity_description.key in _format_dict(
+            self.coordinator.data.get("body", {})
+        )
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -231,16 +238,28 @@ class PTDevicesSensor(CoordinatorEntity[PTDevicesCoordinator], SensorEntity):
 
     def _update_attrs(self) -> None:
         """Update sensor attributes based on coordinator data."""
-        data = _format_dict(self.coordinator.data["body"])
+        data = _format_dict(self.coordinator.data.get("body", {}))
         key = self.entity_description.key
 
+        # If the key was not found, set the entity to unavailable and exit, else, continue
+        if key not in data:
+            self._attr_available = False
+            return
+
+        self._attr_available = True
+
+        value = data.get(key)
+
         if self.device_class is SensorDeviceClass.WATER:
-            if data["units"] == "Metric":
+            if data.get("units") == "Metric":
                 self._attr_native_unit_of_measurement = UnitOfVolume.LITERS
-            elif data["units"] == "British Imperial" or data["units"] == "US Imperial":
+            elif (
+                data.get("units") == "British Imperial"
+                or data.get("units") == "US Imperial"
+            ):
                 self._attr_native_unit_of_measurement = UnitOfVolume.GALLONS
 
-        if self.native_unit_of_measurement is not None and isinstance(data[key], str):
-            self._attr_native_value = float(data[key].strip(ascii_letters + "%"))
+        if self.native_unit_of_measurement is not None and isinstance(value, str):
+            self._attr_native_value = float(value.strip(ascii_letters + "%"))
         else:
-            self._attr_native_value = data[key]
+            self._attr_native_value = value
