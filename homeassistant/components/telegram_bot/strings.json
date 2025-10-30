@@ -84,7 +84,7 @@
     "allowed_chat_ids": {
       "abort": {
         "already_configured": "Chat already configured",
-        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]","reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
       },
       "error": {
         "chat_not_found": "Chat not found"
