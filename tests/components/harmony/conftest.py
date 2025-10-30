@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from collections.abc import Generator
-import sys
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
+from aioharmony.const import ClientCallbackType
 import pytest
 
 from homeassistant.components.harmony.const import ACTIVITY_POWER_OFF, DOMAIN
@@ -19,13 +19,6 @@ from .const import (
 )
 
 from tests.common import MockConfigEntry
-
-if sys.version_info < (3, 14):
-    from aioharmony.const import ClientCallbackType
-
-if sys.version_info >= (3, 14):
-    collect_ignore_glob = ["test_*.py"]
-
 
 ACTIVITIES_TO_IDS = {
     ACTIVITY_POWER_OFF: -1,

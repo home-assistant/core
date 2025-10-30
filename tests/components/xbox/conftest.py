@@ -1,3 +1,4 @@
+# type: ignore[reportArgumentType] # ignore JsonValueType assignment to pydantic model
 """Common fixtures for the Xbox tests."""
 
 from collections.abc import Generator
@@ -10,6 +11,7 @@ from xbox.webapi.api.provider.smartglass.models import (
     SmartglassConsoleList,
     SmartglassConsoleStatus,
 )
+from xbox.webapi.api.provider.titlehub.models import TitleHubResponse
 
 from homeassistant.components.application_credentials import (
     ClientCredential,
@@ -38,7 +40,7 @@ async def setup_credentials(hass: HomeAssistant) -> None:
 def mock_oauth2_implementation() -> Generator[AsyncMock]:
     """Mock config entry oauth2 implementation."""
     with patch(
-        "homeassistant.components.xbox.config_entry_oauth2_flow.async_get_config_entry_implementation",
+        "homeassistant.components.xbox.coordinator.config_entry_oauth2_flow.async_get_config_entry_implementation",
         return_value=AsyncMock(),
     ) as mock_client:
         client = mock_client.return_value
@@ -89,7 +91,7 @@ def mock_signed_session() -> Generator[AsyncMock]:
 
     with (
         patch(
-            "homeassistant.components.xbox.SignedSession", autospec=True
+            "homeassistant.components.xbox.coordinator.SignedSession", autospec=True
         ) as mock_client,
         patch(
             "homeassistant.components.xbox.config_flow.SignedSession", new=mock_client
@@ -106,7 +108,7 @@ def mock_xbox_live_client(signed_session) -> Generator[AsyncMock]:
 
     with (
         patch(
-            "homeassistant.components.xbox.XboxLiveClient", autospec=True
+            "homeassistant.components.xbox.coordinator.XboxLiveClient", autospec=True
         ) as mock_client,
         patch(
             "homeassistant.components.xbox.config_flow.XboxLiveClient", new=mock_client
@@ -133,6 +135,11 @@ def mock_xbox_live_client(signed_session) -> Generator[AsyncMock]:
         )
         client.people.get_friends_own.return_value = PeopleResponse(
             **load_json_object_fixture("people_friends_own.json", DOMAIN)
+        )
+
+        client.titlehub = AsyncMock()
+        client.titlehub.get_title_info.return_value = TitleHubResponse(
+            **load_json_object_fixture("titlehub_titleinfo.json", DOMAIN)
         )
 
         client.xuid = "271958441785640"
