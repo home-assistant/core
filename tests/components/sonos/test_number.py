@@ -12,7 +12,7 @@ from homeassistant.components.sonos.const import (
     SONOS_SPEAKER_ACTIVITY,
     SONOS_STATE_UPDATED,
 )
-from homeassistant.components.sonos.number import GV_REFRESH_DELAY
+from homeassistant.components.sonos.number import GROUP_VOLUME_REFRESH_DELAY
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -180,7 +180,7 @@ async def test_group_volume_sets_backend_and_updates_state(
     async_dispatcher_send(hass, SONOS_SPEAKER_ACTIVITY, "test")
     await hass.async_block_till_done()
     async_fire_time_changed(
-        hass, dt_util.utcnow() + timedelta(seconds=GV_REFRESH_DELAY + 0.1)
+        hass, dt_util.utcnow() + timedelta(seconds=GROUP_VOLUME_REFRESH_DELAY + 0.1)
     )
     await hass.async_block_till_done()
 
@@ -320,7 +320,7 @@ async def test_group_fanout_unsubscribe_and_resubscribe_on_group_change(
     async_dispatcher_send(hass, f"{SONOS_STATE_UPDATED}-{soco.uid}")
     await hass.async_block_till_done()
     async_fire_time_changed(
-        hass, dt_util.utcnow() + timedelta(seconds=GV_REFRESH_DELAY + 0.1)
+        hass, dt_util.utcnow() + timedelta(seconds=GROUP_VOLUME_REFRESH_DELAY + 0.1)
     )
     await hass.async_block_till_done()
 
@@ -328,7 +328,7 @@ async def test_group_fanout_unsubscribe_and_resubscribe_on_group_change(
     async_dispatcher_send(hass, SONOS_SPEAKER_ACTIVITY, "topology-change")
     await hass.async_block_till_done()
     async_fire_time_changed(
-        hass, dt_util.utcnow() + timedelta(seconds=GV_REFRESH_DELAY + 0.1)
+        hass, dt_util.utcnow() + timedelta(seconds=GROUP_VOLUME_REFRESH_DELAY + 0.1)
     )
     await hass.async_block_till_done()
 
@@ -390,7 +390,7 @@ async def test_group_volume_rebinds_on_topology_change(
     async_dispatcher_send(hass, f"{SONOS_STATE_UPDATED}-{soco.uid}")
     await hass.async_block_till_done()
     async_fire_time_changed(
-        hass, dt_util.utcnow() + timedelta(seconds=GV_REFRESH_DELAY + 0.1)
+        hass, dt_util.utcnow() + timedelta(seconds=GROUP_VOLUME_REFRESH_DELAY + 0.1)
     )
     await hass.async_block_till_done()
 

@@ -44,19 +44,15 @@ LEVEL_TYPES = {
     "music_surround_level": (-15, 15),
 }
 
-GV_REFRESH_DELAY = 0.5  # seconds to coalesce group-volume refresh after events
+# seconds to coalesce group-volume refresh after events
+GROUP_VOLUME_REFRESH_DELAY = 0.5
 
 type SocoFeatures = list[tuple[str, tuple[int, int]]]
 
 _LOGGER = logging.getLogger(__name__)
 
-
-def _gv_signal(group_uid: str) -> str:
-    return f"{SONOS_GROUP_VOLUME_REFRESHED}-{group_uid}"
-
-
-def _gv_req_signal(group_uid: str) -> str:
-    return f"{SONOS_GROUP_VOLUME_REQUEST}-{group_uid}"
+_GROUP_VOLUME_SIGNAL = "{SONOS_GROUP_VOLUME_REFRESHED}-{group_uid}"
+_GROUP_VOLUME_REQ_SIGNAL = "{SONOS_GROUP_VOLUME_REQUEST}-{group_uid}"
 
 
 def _balance_to_number(state: tuple[int, int]) -> float:
@@ -226,7 +222,9 @@ class SonosGroupVolumeEntity(SonosEntity, NumberEntity):
     def _is_coordinator(self) -> bool:
         return (self.speaker.coordinator or self.speaker).uid == self.speaker.uid
 
-    def _schedule_delayed_refresh(self, seconds: float = GV_REFRESH_DELAY) -> None:
+    def _schedule_delayed_refresh(
+        self, seconds: float = GROUP_VOLUME_REFRESH_DELAY
+    ) -> None:
         """Schedule a short delayed refresh on the HA loop (thread-safe)."""
 
         def _schedule() -> None:
@@ -268,7 +266,7 @@ class SonosGroupVolumeEntity(SonosEntity, NumberEntity):
         """One-time populate before the coordinator fans out values."""
         if self._is_grouped():
             # Read the coordinator's group volume directly
-            def _get_group() -> int | None:
+            def _get_group_volume() -> int | None:
                 try:
                     return int(self._coordinator_soco().group.volume)
                 except (SoCoException, OSError) as err:
@@ -306,7 +304,9 @@ class SonosGroupVolumeEntity(SonosEntity, NumberEntity):
             self._unsubscribe_gv_signal = None
         if group_uid:
             self._unsubscribe_gv_signal = async_dispatcher_connect(
-                self.hass, _gv_signal(group_uid), self._on_group_volume_fanned
+                self.hass,
+                _GROUP_VOLUME_SIGNAL.format(group_uid=group_uid),
+                self._on_group_volume_fanned,
             )
             self.async_on_remove(self._unsubscribe_gv_signal)
 
@@ -317,7 +317,9 @@ class SonosGroupVolumeEntity(SonosEntity, NumberEntity):
             self._unsubscribe_gv_req = None
         if group_uid and self._is_grouped() and self._is_coordinator():
             self._unsubscribe_gv_req = async_dispatcher_connect(
-                self.hass, _gv_req_signal(group_uid), self._on_group_volume_request
+                self.hass,
+                _GROUP_VOLUME_REQ_SIGNAL.format(group_uid=group_uid),
+                self._on_group_volume_request,
             )
             self.async_on_remove(self._unsubscribe_gv_req)
 
@@ -338,7 +340,7 @@ class SonosGroupVolumeEntity(SonosEntity, NumberEntity):
         if no_change:
             return
         # Coalesce true topology changes (prevent rapid unsubscribe/resubscribe churn).
-        if (now - self._last_rebind_time) < (GV_REFRESH_DELAY * 2):
+        if (now - self._last_rebind_time) < (GROUP_VOLUME_REFRESH_DELAY * 2):
             return
 
         # Always ensure we listen to our own member state
@@ -362,16 +364,16 @@ class SonosGroupVolumeEntity(SonosEntity, NumberEntity):
 
         if self._is_grouped():
             if self._is_coordinator():
-                self._schedule_delayed_refresh(GV_REFRESH_DELAY)
+                self._schedule_delayed_refresh(GROUP_VOLUME_REFRESH_DELAY)
             elif new_group_uid:
                 # Post request on the HA loop from any thread safely
                 self.hass.loop.call_soon_threadsafe(
                     async_dispatcher_send,
                     self.hass,
-                    _gv_req_signal(new_group_uid),
+                    _GROUP_VOLUME_REQ_SIGNAL(group_uid=new_group_uid),
                     None,
                 )
-                self._schedule_delayed_refresh(GV_REFRESH_DELAY)
+                self._schedule_delayed_refresh(GROUP_VOLUME_REFRESH_DELAY)
         else:
             # Ungrouped: drop group listeners and mirror the player’s own volume
             if self._unsubscribe_gv_req is not None:
@@ -402,10 +404,10 @@ class SonosGroupVolumeEntity(SonosEntity, NumberEntity):
                 self.hass.loop.call_soon_threadsafe(
                     async_dispatcher_send,
                     self.hass,
-                    _gv_req_signal(group_uid),
+                    _GROUP_VOLUME_REQ_SIGNAL(group_uid=group_uid),
                     None,
                 )
-                self._schedule_delayed_refresh(GV_REFRESH_DELAY)
+                self._schedule_delayed_refresh(GROUP_VOLUME_REFRESH_DELAY)
         else:
             self.soco.volume = level
 
@@ -443,7 +445,7 @@ class SonosGroupVolumeEntity(SonosEntity, NumberEntity):
                     self.hass.loop.call_soon_threadsafe(
                         async_dispatcher_send,
                         self.hass,
-                        _gv_signal(group_uid_actual),
+                        _GROUP_VOLUME_SIGNAL.format(group_uid=group_uid_actual),
                         (group_uid_actual, vol),
                     )
             return
@@ -481,7 +483,7 @@ class SonosGroupVolumeEntity(SonosEntity, NumberEntity):
 
         # Bootstrap: populate initial value, then schedule a delayed settle refresh
         await self._async_initial_populate()
-        self._schedule_delayed_refresh(GV_REFRESH_DELAY)
+        self._schedule_delayed_refresh(GROUP_VOLUME_REFRESH_DELAY)
 
     async def async_will_remove_from_hass(self) -> None:
         """Cleanup on removal (dispatcher unsubs handled elsewhere; cancel pending timer)."""
@@ -497,7 +499,7 @@ class SonosGroupVolumeEntity(SonosEntity, NumberEntity):
         """Coordinator-only: handle a member’s request to refresh group volume."""
         if not (self._is_grouped() and self._is_coordinator()):
             return
-        self._schedule_delayed_refresh(GV_REFRESH_DELAY)
+        self._schedule_delayed_refresh(GROUP_VOLUME_REFRESH_DELAY)
 
     @callback
     def _on_coord_state_updated(self, *_: object) -> None:
