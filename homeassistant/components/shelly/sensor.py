@@ -74,15 +74,6 @@ from .utils import (
 PARALLEL_UPDATES = 0
 
 
-def get_entity_translation_key(
-    translation_key: str | None,
-    device_class: str | None,
-    default_to_device_class_name: bool,
-) -> str | None:
-    """Translation key for entity."""
-    return translation_key or (device_class if default_to_device_class_name else None)
-
-
 def get_entity_translation_attributes(
     channel_name: str | None,
     translation_key: str | None,
@@ -95,9 +86,8 @@ def get_entity_translation_attributes(
             {"channel_name": channel_name},
             f"{key}_with_channel_name"
             if (
-                key := get_entity_translation_key(
-                    translation_key, device_class, default_to_device_class_name
-                )
+                key := translation_key
+                or (device_class if default_to_device_class_name else None)
             )
             else None,
         )
@@ -155,14 +145,6 @@ class RpcSensor(ShellyRpcAttributeEntity, SensorEntity):
                 self._attr_translation_placeholders = translation_placeholders
                 if translation_key:
                     self._attr_translation_key = translation_key
-            elif "phase_name" in self.translation_placeholders and (
-                translation_key := get_entity_translation_key(
-                    description.translation_key,
-                    description.device_class,
-                    self._default_to_device_class_name(),
-                )
-            ):
-                self._attr_translation_key = f"{translation_key}_with_phase_name"
 
         if self.option_map:
             if description.role == ROLE_GENERIC:
@@ -1625,6 +1607,7 @@ RPC_SENSORS: Final = {
     "object_phase_a_voltage": RpcSensorDescription(
         key="object",
         sub_key="value",
+        translation_key="voltage_with_phase_name",
         translation_placeholders={"phase_name": "A"},
         value=lambda status, _: float(status["phase_a"]["voltage"]),
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
@@ -1636,6 +1619,7 @@ RPC_SENSORS: Final = {
     "object_phase_b_voltage": RpcSensorDescription(
         key="object",
         sub_key="value",
+        translation_key="voltage_with_phase_name",
         translation_placeholders={"phase_name": "B"},
         value=lambda status, _: float(status["phase_b"]["voltage"]),
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
@@ -1647,6 +1631,7 @@ RPC_SENSORS: Final = {
     "object_phase_c_voltage": RpcSensorDescription(
         key="object",
         sub_key="value",
+        translation_key="voltage_with_phase_name",
         translation_placeholders={"phase_name": "C"},
         value=lambda status, _: float(status["phase_c"]["voltage"]),
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
@@ -1941,14 +1926,6 @@ class RpcSleepingSensor(ShellySleepingRpcAttributeEntity, RestoreSensor):
                     self._attr_translation_placeholders = translation_placeholders
                     if translation_key:
                         self._attr_translation_key = translation_key
-                elif "phase_name" in self.translation_placeholders and (
-                    translation_key := get_entity_translation_key(
-                        description.translation_key,
-                        description.device_class,
-                        self._default_to_device_class_name(),
-                    )
-                ):
-                    self._attr_translation_key = f"{translation_key}_with_phase_name"
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
