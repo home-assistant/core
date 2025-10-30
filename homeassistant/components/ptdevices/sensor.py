@@ -149,7 +149,7 @@ RESOURCES: dict[str, SensorEntityDescription] = {
     ),
     "tx_signal": SensorEntityDescription(
         key="tx_signal",
-        translation_key="tx_signal",
+        translation_key="device_tx_signal",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         entity_category=EntityCategory.DIAGNOSTIC,

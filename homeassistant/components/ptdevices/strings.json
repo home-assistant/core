@@ -90,7 +90,7 @@
       "device_wifi_signal": {
         "name": "WiFi Signal Strength"
       },
-      "tx_signal": {
+      "device_tx_signal": {
         "name": "LoRa Siganl Strength"
       },
       "level_percent": {
