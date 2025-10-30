@@ -35,7 +35,6 @@
         "description": "Use the following form to reconfigure your Firefly III instance.",
         "title": "Reconfigure Firefly III Integration"
       },
-
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
