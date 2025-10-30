@@ -318,8 +318,6 @@ build.json @home-assistant/supervisor
 /tests/components/cpuspeed/ @fabaff
 /homeassistant/components/crownstone/ @Crownstone @RicArch97
 /tests/components/crownstone/ @Crownstone @RicArch97
-/homeassistant/components/cups/ @fabaff
-/tests/components/cups/ @fabaff
 /homeassistant/components/cync/ @Kinachi249
 /tests/components/cync/ @Kinachi249
 /homeassistant/components/daikin/ @fredrike
@@ -512,8 +510,6 @@ build.json @home-assistant/supervisor
 /tests/components/fjaraskupan/ @elupus
 /homeassistant/components/flexit_bacnet/ @lellky @piotrbulinski
 /tests/components/flexit_bacnet/ @lellky @piotrbulinski
-/homeassistant/components/flick_electric/ @ZephireNZ
-/tests/components/flick_electric/ @ZephireNZ
 /homeassistant/components/flipr/ @cnico
 /tests/components/flipr/ @cnico
 /homeassistant/components/flo/ @dmulcahey
