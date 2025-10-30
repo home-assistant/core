@@ -511,6 +511,26 @@ async def test_service_call(hass: HomeAssistant) -> None:
         "entity_id": ["light.static"],
     }
 
+    config = {
+        "action": "{{ 'test_domain.test_service' }}",
+        "target": {
+            "area_id": "{{ ['area-42', 'area-51'] }}",
+            "device_id": "{{ ['abcdef', 'fedcba'] }}",
+            "entity_id": "{{ ['light.static', 'light.dynamic'] }}",
+            "floor_id": "{{ ['floor-first', 'floor-second'] }}",
+        },
+    }
+
+    await service.async_call_from_config(hass, config)
+    await hass.async_block_till_done()
+
+    assert dict(calls[3].data) == {
+        "area_id": ["area-42", "area-51"],
+        "device_id": ["abcdef", "fedcba"],
+        "entity_id": ["light.static", "light.dynamic"],
+        "floor_id": ["floor-first", "floor-second"],
+    }
+
 
 async def test_service_template_service_call(hass: HomeAssistant) -> None:
     """Test legacy service_template call with templating."""
