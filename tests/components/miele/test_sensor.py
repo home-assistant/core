@@ -10,13 +10,15 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.miele.const import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.core import HomeAssistant
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
     async_load_json_object_fixture,
+    mock_restore_cache_with_extra_data,
     snapshot_platform,
 )
 
@@ -583,6 +585,7 @@ async def test_laundry_dry_scenario(
     check_sensor_state(hass, "sensor.tumble_dryer_elapsed_time", "20", step)
 
 
+@pytest.mark.parametrize("restore_state", ["45", STATE_UNKNOWN, STATE_UNAVAILABLE])
 @pytest.mark.parametrize("load_device_file", ["laundry.json"])
 @pytest.mark.parametrize("platforms", [(SENSOR_DOMAIN,)])
 async def test_elapsed_time_sensor_restored(
@@ -592,6 +595,7 @@ async def test_elapsed_time_sensor_restored(
     setup_platform: None,
     device_fixture: MieleDevices,
     freezer: FrozenDateTimeFactory,
+    restore_state,
 ) -> None:
     """Test that elapsed time returns the restored value when program ended."""
 
@@ -647,6 +651,26 @@ async def test_elapsed_time_sensor_restored(
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == "unavailable"
+
+    # simulate restore with state different from native value
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State(
+                    entity_id,
+                    restore_state,
+                    {
+                        "unit_of_measurement": "min",
+                    },
+                ),
+                {
+                    "native_value": "12",
+                    "native_unit_of_measurement": "min",
+                },
+            ),
+        ],
+    )
 
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
