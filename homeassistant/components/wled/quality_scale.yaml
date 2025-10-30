@@ -1,0 +1,82 @@
+rules:
+  # Bronze
+  action-setup: done
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: This integration does not have custom service actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: This integration does not have custom service actions.
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: todo
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: |
+      This integration does not require authentication.
+  test-coverage: done
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery-update-info: done
+  discovery: done
+  docs-data-update: todo
+  docs-examples: done
+  docs-known-limitations:
+    status: todo
+    comment: |
+      Analog RGBCCT Strip are poor supported by HA.
+      See: https://github.com/home-assistant/core/issues/123614
+  docs-supported-devices: todo
+  docs-supported-functions: done
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices:
+    status: exempt
+    comment: |
+      This integration has a fixed single device.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations: todo
+  icon-translations: done
+  reconfiguration-flow: todo
+  repair-issues:
+    status: todo
+    comment: |
+      I see two problems:
+      - Unsupported WLED version.
+      - MAC address mismatch e.g. we connect to the device, but
+        it turns out that it has a different MAC address than before.
+  stale-devices:
+    status: exempt
+    comment: |
+      This integration has a fixed single device.
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done
