@@ -1,7 +1,6 @@
 """Config flow for Vivotek IP cameras integration."""
 
 import logging
-from types import MappingProxyType
 from typing import Any
 
 from libpyvivotek.vivotek import VivotekCameraError
@@ -28,20 +27,30 @@ from .const import CONF_FRAMERATE, CONF_SECURITY_LEVEL, CONF_STREAM_PATH, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_DEFAULTS = {
-    CONF_NAME: DEFAULT_NAME,
-    CONF_PORT: 80,
-    CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
-    CONF_SSL: False,
-    CONF_VERIFY_SSL: True,
-    CONF_FRAMERATE: 2,
-    CONF_SECURITY_LEVEL: DEFAULT_SECURITY_LEVEL,
-    CONF_STREAM_PATH: DEFAULT_STREAM_SOURCE,
-}
-
 DESCRIPTION_PLACEHOLDERS = {
     "doc_url": "https://www.home-assistant.io/integrations/vivotek/"
 }
+
+CONF_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Required(CONF_IP_ADDRESS): cv.string,
+        vol.Required(CONF_PORT, default=80): cv.port,
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Required(CONF_AUTHENTICATION, default=HTTP_BASIC_AUTHENTICATION): vol.In(
+            [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
+        ),
+        vol.Required(CONF_SSL, default=False): cv.boolean,
+        vol.Required(CONF_VERIFY_SSL, default=True): cv.boolean,
+        vol.Required(CONF_FRAMERATE, default=2): cv.positive_int,
+        vol.Required(CONF_SECURITY_LEVEL, DEFAULT_SECURITY_LEVEL): cv.string,
+        vol.Required(
+            CONF_STREAM_PATH,
+            default=DEFAULT_STREAM_SOURCE,
+        ): cv.string,
+    }
+)
 
 
 class VivotekConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -73,9 +82,10 @@ class VivotekConfigFlow(ConfigFlow, domain=DOMAIN):
                     data=user_input,
                 )
 
+        data_schema = self.add_suggested_values_to_schema(CONF_SCHEMA, user_input or {})
         return self.async_show_form(
             step_id="user",
-            data_schema=self._user_input_schema(user_input),
+            data_schema=data_schema,
             errors=errors,
             description_placeholders=DESCRIPTION_PLACEHOLDERS,
         )
@@ -103,63 +113,12 @@ class VivotekConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         data = user_input or self._get_reconfigure_entry().data
+        data_schema = self.add_suggested_values_to_schema(CONF_SCHEMA, data or {})
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=self._user_input_schema(data),
+            data_schema=data_schema,
             errors=errors,
             description_placeholders=DESCRIPTION_PLACEHOLDERS,
-        )
-
-    def _user_input_schema(
-        self, user_input: dict[str, Any] | MappingProxyType[str, Any] | None
-    ) -> vol.Schema:
-        """Return the input schema with defaults from existing user input."""
-        data = user_input or {}
-        return vol.Schema(
-            {
-                vol.Required(
-                    CONF_NAME, default=data.get(CONF_NAME, CONF_DEFAULTS[CONF_NAME])
-                ): cv.string,
-                vol.Required(
-                    CONF_IP_ADDRESS, default=data.get(CONF_IP_ADDRESS, "")
-                ): cv.string,
-                vol.Required(
-                    CONF_PORT, default=data.get(CONF_PORT, CONF_DEFAULTS[CONF_PORT])
-                ): cv.port,
-                vol.Required(
-                    CONF_USERNAME, default=data.get(CONF_USERNAME, "")
-                ): cv.string,
-                vol.Required(
-                    CONF_PASSWORD, default=data.get(CONF_PASSWORD, "")
-                ): cv.string,
-                vol.Required(
-                    CONF_AUTHENTICATION,
-                    default=data.get(
-                        CONF_AUTHENTICATION, CONF_DEFAULTS[CONF_AUTHENTICATION]
-                    ),
-                ): vol.In([HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]),
-                vol.Required(
-                    CONF_SSL, default=data.get(CONF_SSL, CONF_DEFAULTS[CONF_SSL])
-                ): cv.boolean,
-                vol.Required(
-                    CONF_VERIFY_SSL,
-                    default=data.get(CONF_VERIFY_SSL, CONF_DEFAULTS[CONF_VERIFY_SSL]),
-                ): cv.boolean,
-                vol.Required(
-                    CONF_FRAMERATE,
-                    default=data.get(CONF_FRAMERATE, CONF_DEFAULTS[CONF_FRAMERATE]),
-                ): cv.positive_int,
-                vol.Required(
-                    CONF_SECURITY_LEVEL,
-                    default=data.get(
-                        CONF_SECURITY_LEVEL, CONF_DEFAULTS[CONF_SECURITY_LEVEL]
-                    ),
-                ): cv.string,
-                vol.Required(
-                    CONF_STREAM_PATH,
-                    default=data.get(CONF_STREAM_PATH, CONF_DEFAULTS[CONF_STREAM_PATH]),
-                ): cv.string,
-            }
         )
 
     async def async_step_import(

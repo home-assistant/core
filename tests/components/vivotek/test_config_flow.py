@@ -42,8 +42,8 @@ TEST_DATA = {
 def mock_test_config():
     """Mock testing the config."""
     with patch(
-        "homeassistant.components.vivotek.config_flow.async_test_config",
-        return_value=True,
+        "libpyvivotek.VivotekCamera.get_mac",
+        return_value="11:22:33:44:55:66",
     ) as mock_test:
         yield mock_test
 
@@ -54,15 +54,15 @@ async def test_show_form(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {}
+    assert result.get("type") == FlowResultType.FORM
+    assert result.get("step_id") == "user"
+    assert result.get("errors") == {}
 
 
 async def test_step_user_connection_error(hass: HomeAssistant) -> None:
     """Test we handle connection error."""
     with patch(
-        "homeassistant.components.vivotek.config_flow.async_test_config",
+        "libpyvivotek.VivotekCamera.get_mac",
         side_effect=VivotekCameraError,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -71,15 +71,15 @@ async def test_step_user_connection_error(hass: HomeAssistant) -> None:
             data=TEST_DATA,
         )
 
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result.get("type") == FlowResultType.FORM
+    assert result.get("step_id") == "user"
+    assert result.get("errors") == {"base": "cannot_connect"}
 
 
 async def test_step_user_unexpected_error(hass: HomeAssistant) -> None:
     """Test we handle unexpected error."""
     with patch(
-        "homeassistant.components.vivotek.config_flow.async_test_config",
+        "libpyvivotek.VivotekCamera.get_mac",
         side_effect=Exception,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -88,9 +88,9 @@ async def test_step_user_unexpected_error(hass: HomeAssistant) -> None:
             data=TEST_DATA,
         )
 
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "unknown"}
+    assert result.get("type") == FlowResultType.FORM
+    assert result.get("step_id") == "user"
+    assert result.get("errors") == {"base": "unknown"}
 
 
 async def test_step_user_success(hass: HomeAssistant) -> None:
@@ -101,9 +101,9 @@ async def test_step_user_success(hass: HomeAssistant) -> None:
         data=TEST_DATA,
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == TEST_DATA[CONF_NAME]
-    assert result["data"] == TEST_DATA
+    assert result.get("type") == FlowResultType.CREATE_ENTRY
+    assert result.get("title") == TEST_DATA[CONF_NAME]
+    assert result.get("data") == TEST_DATA
 
 
 @pytest.fixture
@@ -125,13 +125,13 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 async def test_step_reconfigure_connection_error(
-    hass: HomeAssistant, mock_config_entry: config_entries.ConfigEntry, mock_setup_entry
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_setup_entry
 ) -> None:
     """Test we handle connection error during reconfigure."""
     mock_config_entry.add_to_hass(hass)  # This is the key change
 
     with patch(
-        "homeassistant.components.vivotek.config_flow.async_test_config",
+        "libpyvivotek.VivotekCamera.get_mac",
         side_effect=VivotekCameraError,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -143,19 +143,19 @@ async def test_step_reconfigure_connection_error(
             data=TEST_DATA,
         )
 
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result.get("type") == FlowResultType.FORM
+    assert result.get("step_id") == "reconfigure"
+    assert result.get("errors") == {"base": "cannot_connect"}
 
 
 async def test_step_reconfigure_unexpected_error(
-    hass: HomeAssistant, mock_config_entry: config_entries.ConfigEntry, mock_setup_entry
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_setup_entry
 ) -> None:
     """Test we handle unexpected error during reconfigure."""
     mock_config_entry.add_to_hass(hass)  # Add this line
 
     with patch(
-        "homeassistant.components.vivotek.config_flow.async_test_config",
+        "libpyvivotek.VivotekCamera.get_mac",
         side_effect=Exception,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -167,13 +167,13 @@ async def test_step_reconfigure_unexpected_error(
             data=TEST_DATA,
         )
 
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
-    assert result["errors"] == {"base": "unknown"}
+    assert result.get("type") == FlowResultType.FORM
+    assert result.get("step_id") == "reconfigure"
+    assert result.get("errors") == {"base": "unknown"}
 
 
 async def test_step_reconfigure_success(
-    hass: HomeAssistant, mock_config_entry: config_entries.ConfigEntry, mock_setup_entry
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_setup_entry
 ) -> None:
     """Test reconfiguration flow success."""
     mock_config_entry.add_to_hass(hass)
@@ -193,6 +193,6 @@ async def test_step_reconfigure_success(
         data=new_data,
     )
 
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "reconfigure_successful"
+    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("reason") == "reconfigure_successful"
     assert mock_config_entry.data == new_data
