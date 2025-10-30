@@ -23,6 +23,9 @@ from .coordinator import FritzboxConfigEntry, FritzboxDataUpdateCoordinator
 from .entity import FritzBoxDeviceEntity
 from .sensor import value_scheduled_preset
 
+# Coordinator handles data updates, so we can allow unlimited parallel updates
+PARALLEL_UPDATES = 0
+
 HVAC_MODES = [HVACMode.HEAT, HVACMode.OFF]
 PRESET_HOLIDAY = "holiday"
 PRESET_SUMMER = "summer"

@@ -28,7 +28,6 @@ APPLICATION_CREDENTIALS = [
     "miele",
     "monzo",
     "myuplink",
-    "neato",
     "nest",
     "netatmo",
     "ondilo_ico",
