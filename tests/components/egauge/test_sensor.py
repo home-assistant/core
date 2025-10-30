@@ -16,8 +16,10 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
+pytestmark = pytest.mark.usefixtures("init_integration")
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensors(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -48,7 +50,6 @@ async def test_sensors(
     assert len(entity_entries) == 4
 
 
-@pytest.mark.usefixtures("init_integration")
 async def test_power_sensor_values(hass: HomeAssistant) -> None:
     """Test power sensor values are correct."""
     # Test Grid power sensor
@@ -67,7 +68,6 @@ async def test_power_sensor_values(hass: HomeAssistant) -> None:
     assert state.attributes["device_class"] == "power"
 
 
-@pytest.mark.usefixtures("init_integration")
 async def test_energy_sensor_values(hass: HomeAssistant) -> None:
     """Test energy sensor values and Ws to kWh conversion."""
     # Test Grid energy sensor - 450000000 Ws / 3600000 = 125 kWh
@@ -86,7 +86,6 @@ async def test_energy_sensor_values(hass: HomeAssistant) -> None:
     assert state.attributes["device_class"] == "energy"
 
 
-@pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
     "exception", [EgaugeAuthenticationError, ConnectError("Connection failed")]
 )
