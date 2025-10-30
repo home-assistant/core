@@ -11,7 +11,6 @@ from olarmflowclient import MqttConnectError, MqttTimeoutError, OlarmFlowClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow, issue_registry as ir
 
 from .const import DOMAIN
@@ -116,19 +115,9 @@ class OlarmFlowClientMQTT:
             )
             _LOGGER.debug("Successfully connected to Olarm MQTT Service")
 
-        except MqttTimeoutError as e:
-            _LOGGER.error("Timeout connecting to Olarm MQTT Service: %s", e)
-            raise ConfigEntryNotReady("Timeout connecting to Olarm MQTT Service") from e
-        except MqttConnectError as e:
+        except (MqttTimeoutError, MqttConnectError) as e:
             _LOGGER.error("Failed to connect to Olarm MQTT Service: %s", e)
-            raise ConfigEntryNotReady(
-                f"Failed to connect to Olarm MQTT Service: {e}"
-            ) from e
-        except Exception as e:
-            _LOGGER.error("Failed to connect to Olarm MQTT Service: %s", e)
-            raise ConfigEntryNotReady(
-                f"Failed to connect to Olarm MQTT Service: {e}"
-            ) from e
+            raise
 
     def mqtt_message_callback(self, topic: str, payload: dict[str, Any]) -> None:
         """Handle incoming MQTT messages from the Olarm device."""

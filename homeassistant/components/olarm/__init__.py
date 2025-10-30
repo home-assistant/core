@@ -6,7 +6,7 @@ from dataclasses import dataclass
 import logging
 
 from aiohttp import ClientError, ClientResponseError
-from olarmflowclient import OlarmFlowClient
+from olarmflowclient import MqttConnectError, MqttTimeoutError, OlarmFlowClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -81,7 +81,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: OlarmConfigEntry) -> boo
         olarm_client,
         coordinator,
     )
-    await mqtt_client.init_mqtt()
+    try:
+        await mqtt_client.init_mqtt()
+    except (MqttTimeoutError, MqttConnectError) as err:
+        raise ConfigEntryNotReady(f"Failed to connect to Olarm MQTT: {err}") from err
 
     # Set runtime data
     entry.runtime_data = OlarmData(
@@ -99,7 +102,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: OlarmConfigEntry) -> bo
     """Unload a config entry."""
     mqtt_client = entry.runtime_data.mqtt_client
 
-    # stop mqtt
-    await mqtt_client.async_stop()
+    # Stop mqtt - be defensive to ensure unload completes
+    try:
+        await mqtt_client.async_stop()
+    except Exception:
+        _LOGGER.exception("Error stopping MQTT client during unload")
 
     return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
