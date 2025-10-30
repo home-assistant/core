@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable, Callable
+from contextlib import suppress
 from dataclasses import dataclass
 import json
 import logging
@@ -154,10 +155,8 @@ class LevelWebsocketManager:
         self._stop_event.set()
         # Close sockets first to unblock receivers
         for ws in list(self._sockets.values()):
-            try:
+            with suppress(Exception):
                 await ws.close()
-            except Exception:  # noqa: BLE001
-                pass
         self._sockets.clear()
         # Cancel tasks
         for task in list(self._tasks.values()):
@@ -217,21 +216,19 @@ class LevelWebsocketManager:
                     elif msg.type == WSMsgType.BINARY:
                         # Not expected; ignore
                         continue
-                    elif msg.type == WSMsgType.CLOSED or msg.type == WSMsgType.ERROR:
+                    elif msg.type in (WSMsgType.CLOSED, WSMsgType.ERROR):
                         break
             except asyncio.CancelledError:
                 break
             except ClientError as err:
                 LOGGER.warning("WebSocket error for lock %s: %s", lock_id, err)
             except Exception:
-                LOGGER.exception("Unexpected WebSocket error for lock %s: %s", lock_id)
+                LOGGER.exception("Unexpected WebSocket error for lock %s", lock_id)
             finally:
                 ws_ref = self._sockets.pop(lock_id, None)
                 if ws_ref is not None and not ws_ref.closed:
-                    try:
+                    with suppress(Exception):
                         await ws_ref.close()
-                    except Exception:  # noqa: BLE001
-                        pass
 
             # Reconnect with backoff
             if self._stop_event.is_set():
