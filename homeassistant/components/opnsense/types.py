@@ -1,6 +1,6 @@
 """Types for OPNsense integration."""
 
-from typing import NewType, TypedDict
+from typing import TypedDict
 
 
 class APIData(TypedDict):
@@ -12,4 +12,4 @@ class APIData(TypedDict):
     verify_cert: bool
 
 
-Interfaces = NewType("Interfaces", list[str])
+type Interfaces = list[str]
