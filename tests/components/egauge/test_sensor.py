@@ -36,42 +36,6 @@ async def test_sensors(
     assert device_entry == snapshot
 
 
-async def test_power_sensor_values(hass: HomeAssistant) -> None:
-    """Test power sensor values are correct."""
-    # Test Grid power sensor
-    state = hass.states.get("sensor.egauge_home_grid")
-    assert state
-    assert state.state == "1500.0"
-    assert state.attributes["unit_of_measurement"] == "W"
-    assert state.attributes["device_class"] == "power"
-    assert state.attributes["state_class"] == "measurement"
-
-    # Test Solar power sensor (negative indicates generation)
-    state = hass.states.get("sensor.egauge_home_solar")
-    assert state
-    assert state.state == "-2500.0"
-    assert state.attributes["unit_of_measurement"] == "W"
-    assert state.attributes["device_class"] == "power"
-
-
-async def test_energy_sensor_values(hass: HomeAssistant) -> None:
-    """Test energy sensor values and Ws to kWh conversion."""
-    # Test Grid energy sensor - 450000000 Ws / 3600000 = 125 kWh
-    state = hass.states.get("sensor.egauge_home_grid_energy")
-    assert state
-    assert state.state == "125.0"
-    assert state.attributes["unit_of_measurement"] == "kWh"
-    assert state.attributes["device_class"] == "energy"
-    assert state.attributes["state_class"] == "total_increasing"
-
-    # Test Solar energy sensor - 315000000 Ws / 3600000 = 87.5 kWh
-    state = hass.states.get("sensor.egauge_home_solar_energy")
-    assert state
-    assert state.state == "87.5"
-    assert state.attributes["unit_of_measurement"] == "kWh"
-    assert state.attributes["device_class"] == "energy"
-
-
 @pytest.mark.parametrize(
     "exception", [EgaugeAuthenticationError, ConnectError("Connection failed")]
 )
