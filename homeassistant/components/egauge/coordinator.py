@@ -21,7 +21,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -70,7 +70,7 @@ class EgaugeDataCoordinator(DataUpdateCoordinator[EgaugeData]):
             self.hostname = await self.client.get_hostname()
             self._register_info = await self.client.get_register_info()
         except EgaugeAuthenticationError as err:
-            raise ConfigEntryAuthFailed from err
+            raise ConfigEntryError from err
         except (ConnectError, EgaugeParsingException) as err:
             raise ConfigEntryError from err
 
@@ -80,7 +80,7 @@ class EgaugeDataCoordinator(DataUpdateCoordinator[EgaugeData]):
             measurements = await self.client.get_current_measurements()
             counters = await self.client.get_current_counters()
         except EgaugeAuthenticationError as err:
-            raise ConfigEntryAuthFailed from err
+            raise ConfigEntryError from err
         except (ConnectError, EgaugeParsingException) as err:
             raise UpdateFailed(f"Error fetching device info: {err}") from err
 
