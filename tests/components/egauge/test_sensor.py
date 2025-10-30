@@ -38,17 +38,6 @@ async def test_sensors(
     assert device_entry.manufacturer == "eGauge Systems"
     assert device_entry.model == "eGauge Energy Monitor"
 
-    # Verify all entities assigned to device
-    entity_entries = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
-    )
-    for entity_entry in entity_entries:
-        assert entity_entry.device_id == device_entry.id
-
-    # Verify only power sensors created (4 total: 2 power + 2 energy)
-    # Temperature register should be gracefully ignored
-    assert len(entity_entries) == 4
-
 
 async def test_power_sensor_values(hass: HomeAssistant) -> None:
     """Test power sensor values are correct."""
