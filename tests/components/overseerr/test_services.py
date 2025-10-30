@@ -140,7 +140,7 @@ async def test_service_search_media(
             OverseerrConnectionError("Timeout"),
             HomeAssistantError,
             "Error connecting to the Overseerr instance: Timeout",
-        )
+        ),
     ],
 )
 async def test_services_connection_error(

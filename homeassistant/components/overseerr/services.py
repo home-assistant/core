@@ -1,10 +1,10 @@
 """Define services for the Overseerr integration."""
 
 from dataclasses import asdict
-from typing import Any, cast
+from typing import Any, Literal, cast
 from urllib.parse import quote
 
-from python_overseerr import OverseerrClient, OverseerrConnectionError
+from python_overseerr import MediaType, OverseerrClient, OverseerrConnectionError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState
@@ -31,6 +31,7 @@ ATTR_SEASONS = "seasons"
 SERVICE_GET_REQUESTS = "get_requests"
 SERVICE_SEARCH_MEDIA = "search_media"
 SERVICE_REQUEST_MEDIA = "request_media"
+SERVICE_SEARCH_AND_REQUEST = "search_and_request"
 
 SERVICE_GET_REQUESTS_SCHEMA = vol.Schema(
     {
@@ -56,6 +57,18 @@ SERVICE_REQUEST_MEDIA_SCHEMA = vol.Schema(
         vol.Required(ATTR_CONFIG_ENTRY_ID): str,
         vol.Required(ATTR_MEDIA_TYPE): vol.In(["movie", "tv"]),
         vol.Required(ATTR_TMDB_ID): vol.Coerce(int),
+        vol.Optional(ATTR_SEASONS): vol.Any(
+            vol.Coerce(int),
+            [vol.Coerce(int)],
+            "all",
+        ),
+    }
+)
+
+SERVICE_SEARCH_AND_REQUEST_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_CONFIG_ENTRY_ID): str,
+        vol.Required(ATTR_QUERY): str,
         vol.Optional(ATTR_SEASONS): vol.Any(
             vol.Coerce(int),
             [vol.Coerce(int)],
@@ -130,12 +143,10 @@ async def _async_get_requests(call: ServiceCall) -> ServiceResponse:
     return {"requests": cast(list[JsonValueType], result)}
 
 
-async def _async_search_media(call: ServiceCall) -> ServiceResponse:
+async def __search_media(
+    client: OverseerrClient, query: str, limit: int | None = None
+) -> list[Any]:
     """Search for media in Overseerr."""
-    entry = _async_get_entry(call.hass, call.data[ATTR_CONFIG_ENTRY_ID])
-    client = entry.runtime_data.client
-    query = call.data[ATTR_QUERY]
-    limit = call.data.get(ATTR_LIMIT)
     try:
         LOGGER.debug("Searching for '%s'", query)
         # URL encode the query to handle spaces and special characters
@@ -151,17 +162,32 @@ async def _async_search_media(call: ServiceCall) -> ServiceResponse:
     if limit is not None and limit > 0:
         search_results = search_results[:limit]
 
-    return {"results": cast(list[JsonValueType], [asdict(result) for result in search_results])}
+    return search_results
 
 
-async def _async_request_media(call: ServiceCall) -> ServiceResponse:
-    """Request media in Overseerr."""
+async def _async_search_media(call: ServiceCall) -> ServiceResponse:
+    """Search for media in Overseerr."""
     entry = _async_get_entry(call.hass, call.data[ATTR_CONFIG_ENTRY_ID])
     client = entry.runtime_data.client
-    media_type = call.data[ATTR_MEDIA_TYPE]
-    tmdb_id = call.data[ATTR_TMDB_ID]
-    seasons = call.data.get(ATTR_SEASONS)
+    query = call.data[ATTR_QUERY]
+    limit = call.data.get(ATTR_LIMIT)
 
+    search_results = await __search_media(client, query, limit)
+
+    return {
+        "results": cast(
+            list[JsonValueType], [asdict(result) for result in search_results]
+        )
+    }
+
+
+async def __request_media(
+    client: OverseerrClient,
+    media_type: MediaType,
+    tmdb_id: int,
+    seasons: int | list[int] | Literal['all'] | None = None,
+) -> Any:
+    """Request media in Overseerr."""
     # Convert single integer to list for seasons
     if isinstance(seasons, int):
         seasons = [seasons]
@@ -187,13 +213,66 @@ async def _async_request_media(call: ServiceCall) -> ServiceResponse:
             translation_placeholders={"error": str(err)},
         ) from err
 
+    return request
+
+
+async def _async_request_media(call: ServiceCall) -> ServiceResponse:
+    """Request media in Overseerr."""
+    entry = _async_get_entry(call.hass, call.data[ATTR_CONFIG_ENTRY_ID])
+    client = entry.runtime_data.client
+    media_type = MediaType(call.data[ATTR_MEDIA_TYPE])
+    tmdb_id = call.data[ATTR_TMDB_ID]
+    seasons = call.data.get(ATTR_SEASONS)
+
+    request = await __request_media(client, media_type, tmdb_id, seasons)
+
     return {"request": cast(JsonValueType, asdict(request))}
+
+
+async def _async_search_and_request(call: ServiceCall) -> ServiceResponse:
+    """Search for media and request the first result in Overseerr."""
+    entry = _async_get_entry(call.hass, call.data[ATTR_CONFIG_ENTRY_ID])
+    client = entry.runtime_data.client
+    query = call.data[ATTR_QUERY]
+    seasons = call.data.get(ATTR_SEASONS)
+
+    search_results = await __search_media(client, query)
+
+    if not search_results:
+        LOGGER.error("No results found for query '%s'", query)
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="no_results",
+            translation_placeholders={"query": query},
+        )
+
+    first_result = search_results[0]
+
+    media_type = first_result.media_type
+    tmdb_id = first_result.id
+
+    # Only use seasons parameter if it's a TV show
+    request_seasons = None
+    if media_type == "tv" and seasons:
+        request_seasons = seasons
+
+    request = await __request_media(client, media_type, tmdb_id, request_seasons)
+
+    return {
+        "request": cast(JsonValueType, asdict(request)),
+        "media": {
+            "type": media_type,
+            "id": tmdb_id,
+            "title": getattr(
+                first_result, "title", getattr(first_result, "name", "Unknown")
+            ),
+        },
+    }
 
 
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the services for the Overseerr integration."""
-
     hass.services.async_register(
         DOMAIN,
         SERVICE_GET_REQUESTS,
@@ -215,5 +294,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_REQUEST_MEDIA,
         _async_request_media,
         schema=SERVICE_REQUEST_MEDIA_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SEARCH_AND_REQUEST,
+        _async_search_and_request,
+        schema=SERVICE_SEARCH_AND_REQUEST_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )

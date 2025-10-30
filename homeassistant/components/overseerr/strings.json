@@ -83,6 +83,9 @@
     "integration_not_found": {
       "message": "Integration \"{target}\" not found in registry."
     },
+    "no_results": {
+      "message": "The provided query \"{query}\" did not yield any results."
+    },
     "not_loaded": {
       "message": "{target} is not loaded."
     }
