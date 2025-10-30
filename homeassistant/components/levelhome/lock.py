@@ -10,39 +10,38 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import LevelLockDevice, LevelLocksCoordinator
+
+type LevelLockConfigEntry = ConfigEntry[LevelLocksCoordinator]
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: LevelLockConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Level Lock entities from a config entry."""
-    data = (hass.data.get(DOMAIN) or {}).get(entry.entry_id) or {}
-    coordinator: LevelLocksCoordinator = data["coordinator"]
+    coordinator = entry.runtime_data
     entities: list[LevelLockEntity] = [
         LevelLockEntity(coordinator, lock_id) for lock_id in coordinator.data
     ]
     async_add_entities(entities)
 
 
-class LevelLockEntity(CoordinatorEntity, LockEntity):
+class LevelLockEntity(CoordinatorEntity[LevelLocksCoordinator], LockEntity):
     """Representation of a Level Lock device as a lock entity."""
 
     _attr_has_entity_name = True
+    coordinator: LevelLocksCoordinator
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[dict[str, LevelLockDevice]],
+        coordinator: LevelLocksCoordinator,
         lock_id: str,
     ) -> None:
         """Initialize the Level Lock entity."""
@@ -96,7 +95,7 @@ class LevelLockEntity(CoordinatorEntity, LockEntity):
             model="Lock",
         )
 
-    async def async_lock(self, **kwargs: Any) -> None:  # type: ignore[override]
+    async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
         # Prevent command if already in a transitional state
         if self.is_locking or self.is_unlocking:
@@ -117,7 +116,7 @@ class LevelLockEntity(CoordinatorEntity, LockEntity):
             await self.coordinator.async_request_refresh()
             raise
 
-    async def async_unlock(self, **kwargs: Any) -> None:  # type: ignore[override]
+    async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
         # Prevent command if already in a transitional state
         if self.is_locking or self.is_unlocking:
