@@ -167,8 +167,13 @@ class SupervisorJobs:
             if sub.matches(job):
                 sub.event_callback(job)
 
+        # If the job is done, pop it from our cache if present after processing is done
+        if job.done and job.uuid in self._jobs:
+            del self._jobs[job.uuid]
+
     @callback
     def unload(self) -> None:
         """Unregister with dispatcher on config entry unload."""
         if self._dispatcher_disconnect:
             self._dispatcher_disconnect()
+            self._dispatcher_disconnect = None
