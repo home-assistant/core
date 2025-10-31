@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Final, cast
 
-from aiocomelit import ComelitSerialBridgeObject, ComelitVedoZoneObject
+from aiocomelit.api import ComelitSerialBridgeObject, ComelitVedoZoneObject
 from aiocomelit.const import BRIDGE, OTHER, AlarmZoneState
 
 from homeassistant.components.sensor import (
@@ -20,6 +20,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import ComelitConfigEntry, ComelitSerialBridge, ComelitVedoSystem
 from .entity import ComelitBridgeBaseEntity
+from .utils import DeviceType, new_device_listener
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -65,15 +66,22 @@ async def async_setup_bridge_entry(
 
     coordinator = cast(ComelitSerialBridge, config_entry.runtime_data)
 
-    entities: list[ComelitBridgeSensorEntity] = []
-    for device in coordinator.data[OTHER].values():
-        entities.extend(
+    def _add_new_entities(new_devices: list[DeviceType], dev_type: str) -> None:
+        """Add entities for new monitors."""
+        entities = [
             ComelitBridgeSensorEntity(
                 coordinator, device, config_entry.entry_id, sensor_desc
             )
             for sensor_desc in SENSOR_BRIDGE_TYPES
-        )
-    async_add_entities(entities)
+            for device in coordinator.data[dev_type].values()
+            if device in new_devices
+        ]
+        if entities:
+            async_add_entities(entities)
+
+    config_entry.async_on_unload(
+        new_device_listener(coordinator, _add_new_entities, OTHER)
+    )
 
 
 async def async_setup_vedo_entry(
@@ -85,15 +93,22 @@ async def async_setup_vedo_entry(
 
     coordinator = cast(ComelitVedoSystem, config_entry.runtime_data)
 
-    entities: list[ComelitVedoSensorEntity] = []
-    for device in coordinator.data["alarm_zones"].values():
-        entities.extend(
+    def _add_new_entities(new_devices: list[DeviceType], dev_type: str) -> None:
+        """Add entities for new monitors."""
+        entities = [
             ComelitVedoSensorEntity(
                 coordinator, device, config_entry.entry_id, sensor_desc
             )
             for sensor_desc in SENSOR_VEDO_TYPES
-        )
-    async_add_entities(entities)
+            for device in coordinator.data["alarm_zones"].values()
+            if device in new_devices
+        ]
+        if entities:
+            async_add_entities(entities)
+
+    config_entry.async_on_unload(
+        new_device_listener(coordinator, _add_new_entities, "alarm_zones")
+    )
 
 
 class ComelitBridgeSensorEntity(ComelitBridgeBaseEntity, SensorEntity):

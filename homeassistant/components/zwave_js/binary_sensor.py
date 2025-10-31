@@ -122,6 +122,13 @@ class NewNotificationZWaveJSEntityDescription(BinarySensorEntityDescription):
 # - Replace water filter
 # - Sump pump failure
 
+
+# This set can be removed once all notification sensors have been migrated
+# to use the new discovery schema and we've removed the old discovery code.
+MIGRATED_NOTIFICATION_TYPES = {
+    NotificationType.SMOKE_ALARM,
+}
+
 NOTIFICATION_SENSOR_MAPPINGS: tuple[NotificationZWaveJSEntityDescription, ...] = (
     NotificationZWaveJSEntityDescription(
         # NotificationType 2: Carbon Monoxide - State Id's 1 and 2
@@ -402,6 +409,12 @@ async def async_setup_entry(
             # ensure the notification CC Value is valid as binary sensor
             if not is_valid_notification_binary_sensor(info):
                 return
+            if (
+                notification_type := info.primary_value.metadata.cc_specific[
+                    CC_SPECIFIC_NOTIFICATION_TYPE
+                ]
+            ) in MIGRATED_NOTIFICATION_TYPES:
+                return
             # Get all sensors from Notification CC states
             for state_key in info.primary_value.metadata.states:
                 if TYPE_CHECKING:
@@ -414,12 +427,7 @@ async def async_setup_entry(
                     NotificationZWaveJSEntityDescription | None
                 ) = None
                 for description in NOTIFICATION_SENSOR_MAPPINGS:
-                    if (
-                        int(description.key)
-                        == info.primary_value.metadata.cc_specific[
-                            CC_SPECIFIC_NOTIFICATION_TYPE
-                        ]
-                    ) and (
+                    if (int(description.key) == notification_type) and (
                         not description.states or int(state_key) in description.states
                     ):
                         notification_description = description

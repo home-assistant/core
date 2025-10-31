@@ -1,0 +1,210 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Temperature and humidity sensor",
+  "category": "wsdcg",
+  "product_id": "qrztc3ev",
+  "product_name": "Temperature and humidity sensor",
+  "online": true,
+  "sub": true,
+  "time_zone": "+02:00",
+  "active_time": "2025-03-29T14:26:44+00:00",
+  "create_time": "2025-03-29T14:26:44+00:00",
+  "update_time": "2025-03-29T14:26:44+00:00",
+  "function": {
+    "temp_unit_convert": {
+      "type": "Enum",
+      "value": {
+        "range": ["c", "f"]
+      }
+    },
+    "maxtemp_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": -200,
+        "max": 600,
+        "scale": 1,
+        "step": 10
+      }
+    },
+    "minitemp_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": -200,
+        "max": 600,
+        "scale": 1,
+        "step": 10
+      }
+    },
+    "maxhum_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "minihum_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "temp_sensitivity": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": 3,
+        "max": 50,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "hum_sensitivity": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 3,
+        "max": 10,
+        "scale": 0,
+        "step": 1
+      }
+    }
+  },
+  "status_range": {
+    "va_temperature": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": -200,
+        "max": 600,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "va_humidity": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "battery_percentage": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "temp_unit_convert": {
+      "type": "Enum",
+      "value": {
+        "range": ["c", "f"]
+      }
+    },
+    "maxtemp_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": -200,
+        "max": 600,
+        "scale": 1,
+        "step": 10
+      }
+    },
+    "minitemp_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": -200,
+        "max": 600,
+        "scale": 1,
+        "step": 10
+      }
+    },
+    "maxhum_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "minihum_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "temp_alarm": {
+      "type": "Enum",
+      "value": {
+        "range": ["cancel", "loweralarm", "upperalarm"]
+      }
+    },
+    "hum_alarm": {
+      "type": "Enum",
+      "value": {
+        "range": ["cancel", "loweralarm", "upperalarm"]
+      }
+    },
+    "temp_sensitivity": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": 3,
+        "max": 50,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "hum_sensitivity": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 3,
+        "max": 10,
+        "scale": 0,
+        "step": 1
+      }
+    }
+  },
+  "status": {
+    "va_temperature": 200,
+    "va_humidity": 59,
+    "battery_percentage": 8,
+    "temp_unit_convert": "c",
+    "maxtemp_set": 600,
+    "minitemp_set": -100,
+    "maxhum_set": 70,
+    "minihum_set": 40,
+    "temp_alarm": "cancel",
+    "hum_alarm": "cancel",
+    "temp_sensitivity": 6,
+    "hum_sensitivity": 4
+  },
+  "set_up": true,
+  "support_local": true
+}

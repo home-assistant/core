@@ -37,6 +37,7 @@ from .messages import message_to_json_bytes
 from .util import describe_request
 
 CLOSE_MSG_TYPES = {WSMsgType.CLOSE, WSMsgType.CLOSED, WSMsgType.CLOSING}
+AUTH_MESSAGE_TIMEOUT = 10  # seconds
 
 if TYPE_CHECKING:
     from .connection import ActiveConnection
@@ -389,9 +390,11 @@ class WebSocketHandler:
 
         # Auth Phase
         try:
-            msg = await self._wsock.receive(10)
+            msg = await self._wsock.receive(AUTH_MESSAGE_TIMEOUT)
         except TimeoutError as err:
-            raise Disconnect("Did not receive auth message within 10 seconds") from err
+            raise Disconnect(
+                f"Did not receive auth message within {AUTH_MESSAGE_TIMEOUT} seconds"
+            ) from err
 
         if msg.type in (WSMsgType.CLOSE, WSMsgType.CLOSED, WSMsgType.CLOSING):
             raise Disconnect("Received close message during auth phase")
@@ -538,6 +541,14 @@ class WebSocketHandler:
             finally:
                 if disconnect_warn is None:
                     logger.debug("%s: Disconnected", self.description)
+                elif connection is None:
+                    # Auth phase disconnects (connection is None) should be logged at debug level
+                    # as they can be from random port scanners or non-legitimate connections
+                    logger.debug(
+                        "%s: Disconnected during auth phase: %s",
+                        self.description,
+                        disconnect_warn,
+                    )
                 else:
                     logger.warning(
                         "%s: Disconnected: %s", self.description, disconnect_warn

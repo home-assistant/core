@@ -62,7 +62,7 @@ async def async_setup_entry(
     matter.register_platform_handler(Platform.SELECT, async_add_entities)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class MatterSelectEntityDescription(SelectEntityDescription, MatterEntityDescription):
     """Describe Matter select entities."""
 
@@ -525,6 +525,6 @@ DISCOVERY_SCHEMAS = [
             clusters.BooleanStateConfiguration.Attributes.CurrentSensitivityLevel,
         ),
         vendor_id=(4447,),
-        product_name=("Aqara Door and Window Sensor P2",),
+        product_id=(8194,),
     ),
 ]
