@@ -1,66 +1,54 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "title": "OSO Energy auth",
-        "description": "Enter the 'Subscription key' for your account generated at {portal_url}",
-        "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]"
-        }
-      },
-      "reauth": {
-        "title": "OSO Energy auth",
-        "description": "Enter a new 'Subscription key' for your account generated at {portal_url}",
-        "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]"
-        }
-      }
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    "step": {
+      "reauth": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "description": "Enter a new 'Subscription key' for your account generated at {portal_url}",
+        "title": "OSO Energy auth"
+      },
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "description": "Enter the 'Subscription key' for your account generated at {portal_url}",
+        "title": "OSO Energy auth"
+      }
     }
   },
   "entity": {
     "binary_sensor": {
-      "power_save": {
-        "name": "Power save"
-      },
       "extra_energy": {
         "name": "Extra energy"
       },
       "heating": {
         "name": "Heating"
+      },
+      "power_save": {
+        "name": "Power save"
       }
     },
     "sensor": {
-      "tapping_capacity": {
-        "name": "Tapping capacity"
-      },
       "capacity_mixed_water_40": {
         "name": "Capacity mixed water 40°C"
-      },
-      "v40_min": {
-        "name": "Mixed water at 40°C"
-      },
-      "v40_level_min": {
-        "name": "Minimum level of mixed water at 40°C"
-      },
-      "v40_level_max": {
-        "name": "Maximum level of mixed water at 40°C"
       },
       "heater_mode": {
         "name": "Heater mode",
         "state": {
-          "off": "[%key:common::state::off%]",
           "auto": "[%key:common::state::auto%]",
-          "manual": "[%key:common::state::manual%]",
           "extraenergy": "Extra energy",
           "ffr": "Fast frequency reserve",
           "legionella": "Legionella",
+          "manual": "[%key:common::state::manual%]",
+          "off": "[%key:common::state::off%]",
           "powersave": "Power save",
           "voltage": "Voltage"
         }
@@ -78,166 +66,178 @@
       "profile": {
         "name": "Profile local"
       },
-      "temperature_top": {
-        "name": "Temperature top"
-      },
-      "temperature_mid": {
-        "name": "Temperature middle"
+      "tapping_capacity": {
+        "name": "Tapping capacity"
       },
       "temperature_low": {
         "name": "Temperature bottom"
       },
+      "temperature_mid": {
+        "name": "Temperature middle"
+      },
       "temperature_one": {
         "name": "Temperature one"
+      },
+      "temperature_top": {
+        "name": "Temperature top"
+      },
+      "v40_level_max": {
+        "name": "Maximum level of mixed water at 40°C"
+      },
+      "v40_level_min": {
+        "name": "Minimum level of mixed water at 40°C"
+      },
+      "v40_min": {
+        "name": "Mixed water at 40°C"
       }
     }
   },
   "services": {
     "get_profile": {
-      "name": "Get heater profile",
-      "description": "Gets the temperature profile for water heater"
+      "description": "Gets the temperature profile for water heater",
+      "name": "Get heater profile"
     },
     "set_profile": {
-      "name": "Set heater profile",
       "description": "Sets the temperature profile for water heater",
       "fields": {
         "hour_00": {
-          "name": "00:00",
-          "description": "00:00 hour"
+          "description": "00:00 hour",
+          "name": "00:00"
         },
         "hour_01": {
-          "name": "01:00",
-          "description": "01:00 hour"
+          "description": "01:00 hour",
+          "name": "01:00"
         },
         "hour_02": {
-          "name": "02:00",
-          "description": "02:00 hour"
+          "description": "02:00 hour",
+          "name": "02:00"
         },
         "hour_03": {
-          "name": "03:00",
-          "description": "03:00 hour"
+          "description": "03:00 hour",
+          "name": "03:00"
         },
         "hour_04": {
-          "name": "04:00",
-          "description": "04:00 hour"
+          "description": "04:00 hour",
+          "name": "04:00"
         },
         "hour_05": {
-          "name": "05:00",
-          "description": "05:00 hour"
+          "description": "05:00 hour",
+          "name": "05:00"
         },
         "hour_06": {
-          "name": "06:00",
-          "description": "06:00 hour"
+          "description": "06:00 hour",
+          "name": "06:00"
         },
         "hour_07": {
-          "name": "07:00",
-          "description": "07:00 hour"
+          "description": "07:00 hour",
+          "name": "07:00"
         },
         "hour_08": {
-          "name": "08:00",
-          "description": "08:00 hour"
+          "description": "08:00 hour",
+          "name": "08:00"
         },
         "hour_09": {
-          "name": "09:00",
-          "description": "09:00 hour"
+          "description": "09:00 hour",
+          "name": "09:00"
         },
         "hour_10": {
-          "name": "10:00",
-          "description": "10:00 hour"
+          "description": "10:00 hour",
+          "name": "10:00"
         },
         "hour_11": {
-          "name": "11:00",
-          "description": "11:00 hour"
+          "description": "11:00 hour",
+          "name": "11:00"
         },
         "hour_12": {
-          "name": "12:00",
-          "description": "12:00 hour"
+          "description": "12:00 hour",
+          "name": "12:00"
         },
         "hour_13": {
-          "name": "13:00",
-          "description": "13:00 hour"
+          "description": "13:00 hour",
+          "name": "13:00"
         },
         "hour_14": {
-          "name": "14:00",
-          "description": "14:00 hour"
+          "description": "14:00 hour",
+          "name": "14:00"
         },
         "hour_15": {
-          "name": "15:00",
-          "description": "15:00 hour"
+          "description": "15:00 hour",
+          "name": "15:00"
         },
         "hour_16": {
-          "name": "16:00",
-          "description": "16:00 hour"
+          "description": "16:00 hour",
+          "name": "16:00"
         },
         "hour_17": {
-          "name": "17:00",
-          "description": "17:00 hour"
+          "description": "17:00 hour",
+          "name": "17:00"
         },
         "hour_18": {
-          "name": "18:00",
-          "description": "18:00 hour"
+          "description": "18:00 hour",
+          "name": "18:00"
         },
         "hour_19": {
-          "name": "19:00",
-          "description": "19:00 hour"
+          "description": "19:00 hour",
+          "name": "19:00"
         },
         "hour_20": {
-          "name": "20:00",
-          "description": "20:00 hour"
+          "description": "20:00 hour",
+          "name": "20:00"
         },
         "hour_21": {
-          "name": "21:00",
-          "description": "21:00 hour"
+          "description": "21:00 hour",
+          "name": "21:00"
         },
         "hour_22": {
-          "name": "22:00",
-          "description": "22:00 hour"
+          "description": "22:00 hour",
+          "name": "22:00"
         },
         "hour_23": {
-          "name": "23:00",
-          "description": "23:00 hour"
+          "description": "23:00 hour",
+          "name": "23:00"
         }
-      }
+      },
+      "name": "Set heater profile"
     },
     "set_v40_min": {
-      "name": "Set v40 min",
       "description": "Sets the minimum quantity of water at 40°C for a heater",
       "fields": {
         "v40_min": {
-          "name": "V40 Min",
-          "description": "Minimum quantity of water at 40°C (200-350 for SAGA S200, 300-550 for SAGA S300)"
+          "description": "Minimum quantity of water at 40°C (200-350 for SAGA S200, 300-550 for SAGA S300)",
+          "name": "V40 Min"
         }
-      }
+      },
+      "name": "Set v40 min"
     },
     "turn_away_mode_on": {
-      "name": "Set away mode",
       "description": "Turns on away mode for the water heater",
       "fields": {
         "duration_days": {
-          "name": "Duration in days",
-          "description": "Number of days to keep away mode active (1-365)"
+          "description": "Number of days to keep away mode active (1-365)",
+          "name": "Duration in days"
         }
-      }
+      },
+      "name": "Set away mode"
     },
     "turn_off": {
-      "name": "Turn off heating",
       "description": "Turns off heating for one hour or until min temperature is reached",
       "fields": {
         "until_temp_limit": {
-          "name": "Until temperature limit",
-          "description": "Whether heating should be off until the minimum temperature is reached instead of for one hour."
+          "description": "Whether heating should be off until the minimum temperature is reached instead of for one hour.",
+          "name": "Until temperature limit"
         }
-      }
+      },
+      "name": "Turn off heating"
     },
     "turn_on": {
-      "name": "Turn on heating",
       "description": "Turns on heating for one hour or until max temperature is reached",
       "fields": {
         "until_temp_limit": {
-          "name": "Until temperature limit",
-          "description": "Whether heating should be on until the maximum temperature is reached instead of for one hour."
+          "description": "Whether heating should be on until the maximum temperature is reached instead of for one hour.",
+          "name": "Until temperature limit"
         }
-      }
+      },
+      "name": "Turn on heating"
     }
   }
 }
