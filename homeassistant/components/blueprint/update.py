@@ -9,10 +9,10 @@ from datetime import timedelta
 from typing import Any, Final
 
 from homeassistant.components import automation, script
-from homeassistant.components.blueprint import importer, models
+from . import importer, models
 from homeassistant.components.update import UpdateEntity, UpdateEntityFeature
-from homeassistant.const import CONF_SOURCE_URL, EVENT_HOMEASSISTANT_STARTED
-from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
+from homeassistant.const import CONF_SOURCE_URL
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import event as event_helper
 from homeassistant.helpers.entity import EntityCategory
@@ -71,7 +71,6 @@ class BlueprintUpdateManager:
         self._entities: dict[tuple[str, str], BlueprintUpdateEntity] = {}
         self._lock = asyncio.Lock()
         self._refresh_cancel: CALLBACK_TYPE | None = None
-        self._unsubscribers: list[CALLBACK_TYPE] = []
         self._started = False
         self._interval_unsub: CALLBACK_TYPE | None = None
 
@@ -81,7 +80,6 @@ class BlueprintUpdateManager:
             return
         self._started = True
 
-        self._register_listeners()
         self._interval_unsub = event_helper.async_track_time_interval(
             self.hass, self._handle_time_interval, REFRESH_INTERVAL
         )
@@ -101,35 +99,6 @@ class BlueprintUpdateManager:
             await entity.async_remove()
 
         await self.async_refresh_entities()
-
-    def _register_listeners(self) -> None:
-        """Register listeners for detecting blueprint usage changes."""
-
-        self._unsubscribers.append(
-            event_helper.async_track_state_added_domain(
-                self.hass, (automation.DOMAIN, script.DOMAIN), self._handle_state_change
-            )
-        )
-        self._unsubscribers.append(
-            event_helper.async_track_state_removed_domain(
-                self.hass, (automation.DOMAIN, script.DOMAIN), self._handle_state_change
-            )
-        )
-        self._unsubscribers.append(
-            self.hass.bus.async_listen(
-                automation.EVENT_AUTOMATION_RELOADED, self._handle_event
-            )
-        )
-        self._unsubscribers.append(
-            self.hass.bus.async_listen(
-                script.EVENT_SCRIPT_RELOADED, self._handle_event
-            )
-        )
-        self._unsubscribers.append(
-            self.hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_STARTED, self._handle_started
-            )
-        )
 
     async def async_refresh_entities(self) -> None:
         """Refresh update entities based on current blueprint usage."""
@@ -174,21 +143,6 @@ class BlueprintUpdateManager:
         self.hass.async_create_task(self.async_refresh_entities())
 
     @callback
-    def _handle_state_change(self, _event: Event) -> None:
-        """Handle entity additions or removals."""
-        self.async_schedule_refresh()
-
-    @callback
-    def _handle_event(self, _event: Event) -> None:
-        """Handle domain-specific reload events."""
-        self.async_schedule_refresh()
-
-    @callback
-    def _handle_started(self, _event: Event) -> None:
-        """Refresh once Home Assistant has started."""
-        self.async_schedule_refresh()
-
-    @callback
     def _handle_time_interval(self, _now: Any) -> None:
         """Handle scheduled interval refresh."""
         self.async_schedule_refresh()
@@ -221,7 +175,7 @@ class BlueprintUpdateManager:
             if domain_blueprints is None:
                 continue
 
-            if not domain_blueprints.blueprint_in_use(path):
+            if not domain_blueprints.blueprint_in_use(self.hass, path):
                 continue
 
             try:
@@ -269,20 +223,11 @@ class BlueprintUpdateEntity(UpdateEntity):
         self._entities_in_use = usage.entities
         self._source_url = usage.blueprint.metadata.get(CONF_SOURCE_URL)
         self._attr_unique_id = f"{self._domain}:{self._path}"
-        self._attr_in_progress: bool | None = False
+        self._attr_in_progress = False
 
         self.update_usage(usage)
 
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return extra state attributes."""
-        return {
-            "blueprint_path": self._path,
-            "domain": self._domain,
-            "entities": sorted(self._entities_in_use),
-            "source_url": self._source_url,
-        }
-
+    @callback
     def update_usage(self, usage: BlueprintUsage) -> None:
         """Update the entity with latest usage information."""
         self._domain_blueprints = usage.domain_blueprints

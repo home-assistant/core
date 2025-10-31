@@ -77,7 +77,7 @@ async def test_automation_blueprint_update_entity_reloads(hass) -> None:
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state == "on"
-        assert state.attributes.get("source_url") == source_url
+        assert state.attributes.get("release_url") == source_url
 
         updated_yaml = (
             "blueprint:\n"
@@ -172,7 +172,7 @@ async def test_script_blueprint_update_entity_reloads(hass) -> None:
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state == "on"
-        assert state.attributes.get("source_url") == source_url
+        assert state.attributes.get("release_url") == source_url
 
         updated_yaml = (
             "blueprint:\n"

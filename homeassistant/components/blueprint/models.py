@@ -204,8 +204,8 @@ class DomainBlueprints:
         self.hass = hass
         self.domain = domain
         self.logger = logger
-        self._blueprint_in_use = blueprint_in_use
-        self._reload_blueprint_consumers = reload_blueprint_consumers
+        self.blueprint_in_use = blueprint_in_use
+        self.reload_blueprint_consumers = reload_blueprint_consumers
         self._blueprints: dict[str, Blueprint | None] = {}
         self._load_lock = asyncio.Lock()
         self._blueprint_schema = blueprint_schema
@@ -221,15 +221,6 @@ class DomainBlueprints:
         """Reset the blueprint cache."""
         async with self._load_lock:
             self._blueprints = {}
-
-    @callback
-    def blueprint_in_use(self, blueprint_path: str) -> bool:
-        """Return True if the blueprint is currently referenced."""
-        return self._blueprint_in_use(self.hass, blueprint_path)
-
-    async def async_reload_blueprint_consumers(self, blueprint_path: str) -> None:
-        """Reload entities that rely on the blueprint."""
-        await self._reload_blueprint_consumers(self.hass, blueprint_path)
 
     def _load_blueprint(self, blueprint_path: str) -> Blueprint:
         """Load a blueprint."""
@@ -334,7 +325,7 @@ class DomainBlueprints:
 
     async def async_remove_blueprint(self, blueprint_path: str) -> None:
         """Remove a blueprint file."""
-        if self._blueprint_in_use(self.hass, blueprint_path):
+        if self.blueprint_in_use(self.hass, blueprint_path):
             raise BlueprintInUse(self.domain, blueprint_path)
         path = self.blueprint_folder / blueprint_path
         await self.hass.async_add_executor_job(path.unlink)
@@ -371,7 +362,7 @@ class DomainBlueprints:
         self._blueprints[blueprint_path] = blueprint
 
         if overrides_existing:
-            await self._reload_blueprint_consumers(self.hass, blueprint_path)
+            await self.reload_blueprint_consumers(self.hass, blueprint_path)
 
         return overrides_existing
 
