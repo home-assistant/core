@@ -563,3 +563,8 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
                     self.async_set_updated_data(data)
         except SupervisorError as err:
             _LOGGER.warning("Could not refresh info for %s: %s", addon_slug, err)
+
+    @callback
+    def unload(self) -> None:
+        """Clean up when config entry unloaded."""
+        self.jobs.unload()
