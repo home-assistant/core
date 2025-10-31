@@ -57,6 +57,10 @@ TARGET_VALIDATORS = {
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
 }
 
+API_PLACEHOLDERS = {
+    "api_method": "https://zwave-js.github.io/node-zwave-js/#/api/CCs/index",
+    "api_parameters": "https://zwave-js.github.io/node-zwave-js/#/api/CCs/index",
+    }
 
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
@@ -452,10 +456,6 @@ class ZWaveServices:
                     has_at_least_one_node,
                 ),
             ),
-            description_placeholders={
-                "api_method": "https://zwave-js.github.io/node-zwave-js/#/api/CCs/index",
-                "api_parameters": "https://zwave-js.github.io/node-zwave-js/#/api/CCs/index"
-            },
         )
 
         self._hass.services.async_register(
