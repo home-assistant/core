@@ -111,6 +111,10 @@
         "description": "A backup was created earlier and your old adapter is being reset as part of the migration.",
         "title": "Resetting old adapter"
       },
+      "plug_in_new_radio": {
+        "description": "Your new adapter at `{device_path}` was not found.\nPlease plug it in and click Submit to continue.",
+        "title": "New adapter not found"
+      },
       "plug_in_old_radio": {
         "description": "Your old adapter at `{device_path}` was not found. You can retry after plugging it back in, or skip resetting the old adapter.\n\nIf you skip resetting the old adapter, please make sure it is permanently unavailable, as plugging it back in later will cause network issues.",
         "menu_option_descriptions": {
@@ -1956,6 +1960,10 @@
         },
         "description": "[%key:component::zha::config::step::maybe_confirm_ezsp_restore::description%]",
         "title": "[%key:component::zha::config::step::maybe_confirm_ezsp_restore::title%]"
+      },
+      "plug_in_new_radio": {
+        "description": "[%key:component::zha::config::step::plug_in_new_radio::description%]",
+        "title": "[%key:component::zha::config::step::plug_in_new_radio::title%]"
       },
       "plug_in_old_radio": {
         "description": "[%key:component::zha::config::step::plug_in_old_radio::description%]",
