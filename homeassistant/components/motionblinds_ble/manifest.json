@@ -3,8 +3,8 @@
   "name": "Motionblinds Bluetooth",
   "bluetooth": [
     {
-      "local_name": "MOTION_*",
-      "connectable": true
+      "connectable": true,
+      "local_name": "MOTION_*"
     }
   ],
   "codeowners": ["@LennP", "@jerrybboy"],
