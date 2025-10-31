@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass
 import logging
+from datetime import timedelta
 from typing import Any, Final
 
 from homeassistant.components import automation, script
@@ -25,6 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 
 _LATEST_VERSION_PLACEHOLDER: Final = "remote"
 DATA_UPDATE_MANAGER: Final = "update_manager"
+REFRESH_INTERVAL: Final = timedelta(days=1)
 
 
 @dataclass(slots=True)
@@ -71,6 +73,7 @@ class BlueprintUpdateManager:
         self._refresh_cancel: CALLBACK_TYPE | None = None
         self._unsubscribers: list[CALLBACK_TYPE] = []
         self._started = False
+        self._interval_unsub: CALLBACK_TYPE | None = None
 
     async def async_start(self) -> None:
         """Start tracking blueprint usage."""
@@ -79,6 +82,9 @@ class BlueprintUpdateManager:
         self._started = True
 
         self._register_listeners()
+        self._interval_unsub = event_helper.async_track_time_interval(
+            self.hass, self._handle_time_interval, REFRESH_INTERVAL
+        )
         await self.async_refresh_entities()
 
     def replace_add_entities(self, async_add_entities: AddEntitiesCallback) -> None:
@@ -182,6 +188,11 @@ class BlueprintUpdateManager:
         """Refresh once Home Assistant has started."""
         self.async_schedule_refresh()
 
+    @callback
+    def _handle_time_interval(self, _now: Any) -> None:
+        """Handle scheduled interval refresh."""
+        self.async_schedule_refresh()
+
     async def _async_collect_in_use_blueprints(self) -> dict[tuple[str, str], BlueprintUsage]:
         """Collect blueprint usage information for automations and scripts."""
 
@@ -216,6 +227,10 @@ class BlueprintUpdateManager:
             try:
                 blueprint = await domain_blueprints.async_get_blueprint(path)
             except BlueprintException:
+                continue
+
+            source_url = blueprint.metadata.get(CONF_SOURCE_URL)
+            if not source_url:
                 continue
 
             if domain == automation.DOMAIN:

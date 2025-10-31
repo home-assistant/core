@@ -210,3 +210,48 @@ async def test_script_blueprint_update_entity_reloads(hass) -> None:
         mock_fetch.assert_awaited_once_with(hass, source_url)
         mock_reload.assert_awaited_once_with(hass, blueprint_rel_path)
         assert "updated_event" in blueprint_file.read_text(encoding="utf-8")
+
+
+async def test_blueprint_without_source_has_no_update_entity(hass) -> None:
+    """Ensure blueprints without a source URL do not expose update entities."""
+    blueprint_rel_path = "test_namespace/without_source.yaml"
+    blueprint_file = Path(
+        hass.config.path("blueprints", automation.DOMAIN, blueprint_rel_path)
+    )
+    blueprint_file.parent.mkdir(parents=True, exist_ok=True)
+
+    yaml_without_source = (
+        "blueprint:\n"
+        "  name: No source blueprint\n"
+        "  description: No source\n"
+        "  domain: automation\n"
+        "  input: {}\n"
+        "trigger:\n"
+        "  - platform: event\n"
+        "    event_type: test_event\n"
+        "action:\n"
+        "  - service: test.service\n"
+    )
+    blueprint_file.write_text(yaml_without_source, encoding="utf-8")
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "use_blueprint": {
+                    "path": blueprint_rel_path,
+                    "input": {},
+                }
+            }
+        },
+    )
+
+    await hass.async_block_till_done()
+
+    entity_registry = er.async_get(hass)
+    unique_id = f"{automation.DOMAIN}:{blueprint_rel_path}"
+    assert (
+        entity_registry.async_get_entity_id(UPDATE_DOMAIN, BLUEPRINT_DOMAIN, unique_id)
+        is None
+    )
