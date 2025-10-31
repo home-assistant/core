@@ -112,7 +112,15 @@
         "title": "Resetting old adapter"
       },
       "plug_in_old_radio": {
-        "description": "Your old adapter at `{device_path}` was not found. Please plug it back in and click Submit to continue.\n\nOnce plugged in, your old adapter will be reset as part of the migration.",
+        "description": "Your old adapter at `{device_path}` was not found. You can retry after plugging it back in, or skip resetting the old adapter.\n\nIf you skip resetting the old adapter, please make sure it is permanently unavailable, as plugging it back in later will cause network issues.",
+        "menu_option_descriptions": {
+          "retry": "Retry connecting to the old adapter to reset it as part of the migration.",
+          "skip_reset": "Skip resetting the old adapter and continue with the migration."
+        },
+        "menu_options": {
+          "retry": "Retry",
+          "skip_reset": "Skip reset"
+        },
         "title": "Old adapter not found"
       },
       "upload_manual_backup": {
@@ -1951,6 +1959,14 @@
       },
       "plug_in_old_radio": {
         "description": "[%key:component::zha::config::step::plug_in_old_radio::description%]",
+        "menu_option_descriptions": {
+          "retry": "[%key:component::zha::config::step::plug_in_old_radio::menu_option_descriptions::retry%]",
+          "skip_reset": "[%key:component::zha::config::step::plug_in_old_radio::menu_option_descriptions::skip_reset%]"
+        },
+        "menu_options": {
+          "retry": "[%key:component::zha::config::step::plug_in_old_radio::menu_options::retry%]",
+          "skip_reset": "[%key:component::zha::config::step::plug_in_old_radio::menu_options::skip_reset%]"
+        },
         "title": "[%key:component::zha::config::step::plug_in_old_radio::title%]"
       },
       "prompt_migrate_or_reconfigure": {

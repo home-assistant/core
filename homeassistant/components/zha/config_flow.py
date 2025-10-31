@@ -496,14 +496,23 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         config_entry = config_entries[0]
         old_device_path = config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
 
-        # user confirmed, try again
-        if user_input is not None:
-            return await self.async_step_maybe_reset_old_radio()
-
-        return self.async_show_form(
+        return self.async_show_menu(
             step_id="plug_in_old_radio",
+            menu_options=["retry", "skip_reset"],
             description_placeholders={"device_path": old_device_path},
         )
+
+    async def async_step_retry(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Retry connecting to the old radio."""
+        return await self.async_step_maybe_reset_old_radio()
+
+    async def async_step_skip_reset(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Skip resetting the old radio and continue with migration."""
+        return await self.async_step_maybe_confirm_ezsp_restore()
 
     async def async_step_migration_strategy_advanced(
         self, user_input: dict[str, Any] | None = None
