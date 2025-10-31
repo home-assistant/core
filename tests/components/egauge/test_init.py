@@ -2,8 +2,13 @@
 
 from unittest.mock import MagicMock
 
-from egauge_async.json.client import EgaugeAuthenticationError
+from egauge_async.exceptions import (
+    EgaugeAuthenticationError,
+    EgaugeParsingException,
+    EgaugePermissionError,
+)
 from httpx import ConnectError
+import pytest
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -28,34 +33,30 @@ async def test_setup_success(
     assert mock_egauge_client.get_register_info.called
 
 
-async def test_setup_connection_error(
+@pytest.mark.parametrize(
+    ("exception", "expected"),
+    [
+        (ConnectError, ConfigEntryState.SETUP_RETRY),
+        (EgaugeAuthenticationError, ConfigEntryState.SETUP_ERROR),
+        (EgaugePermissionError, ConfigEntryState.SETUP_ERROR),
+        (EgaugeParsingException, ConfigEntryState.SETUP_ERROR),
+    ],
+)
+async def test_setup_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_egauge_client: MagicMock,
+    exception: Exception,
+    expected: ConfigEntryState,
 ) -> None:
     """Test setup with connection error."""
     mock_config_entry.add_to_hass(hass)
-    mock_egauge_client.get_device_serial_number.side_effect = ConnectError
+    mock_egauge_client.get_device_serial_number.side_effect = exception
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_setup_auth_error(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_egauge_client: MagicMock,
-) -> None:
-    """Test setup with authentication error."""
-    mock_config_entry.add_to_hass(hass)
-    mock_egauge_client.get_device_serial_number.side_effect = EgaugeAuthenticationError
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.state is expected
 
 
 async def test_unload_entry(

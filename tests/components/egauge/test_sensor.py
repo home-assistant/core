@@ -3,7 +3,7 @@
 from datetime import timedelta
 from unittest.mock import MagicMock
 
-from egauge_async.json.client import EgaugeAuthenticationError
+from egauge_async.exceptions import EgaugeAuthenticationError
 from freezegun.api import FrozenDateTimeFactory
 from httpx import ConnectError
 import pytest

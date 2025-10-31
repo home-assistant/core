@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from egauge_async.json.client import EgaugeAuthenticationError, EgaugeJsonClient
+from egauge_async.exceptions import EgaugeAuthenticationError, EgaugePermissionError
+from egauge_async.json.client import EgaugeJsonClient
 from httpx import ConnectError
 import voluptuous as vol
 
@@ -45,6 +46,8 @@ class EgaugeFlowHandler(ConfigFlow, domain=DOMAIN):
                 hostname = await client.get_hostname()
             except EgaugeAuthenticationError:
                 errors["base"] = "invalid_auth"
+            except EgaugePermissionError:
+                errors["base"] = "missing_permission"
             except ConnectError:
                 errors["base"] = "cannot_connect"
             except Exception:  # noqa: BLE001

@@ -4,11 +4,12 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from egauge_async.json.client import (
+from egauge_async.exceptions import (
     EgaugeAuthenticationError,
-    EgaugeJsonClient,
-    EgaugeParsingException,
+    EgaugeException,
+    EgaugePermissionError,
 )
+from egauge_async.json.client import EgaugeJsonClient
 from egauge_async.json.models import RegisterInfo
 from httpx import ConnectError
 
@@ -67,9 +68,10 @@ class EgaugeDataCoordinator(DataUpdateCoordinator[EgaugeData]):
             self.serial_number = await self.client.get_device_serial_number()
             self.hostname = await self.client.get_hostname()
             self._register_info = await self.client.get_register_info()
-        except EgaugeAuthenticationError as err:
+        except (EgaugeAuthenticationError, EgaugePermissionError) as err:
+            # will raise ConfigEntryAuthFailed once reauth is implemented
             raise ConfigEntryError from err
-        except (ConnectError, EgaugeParsingException) as err:
+        except (ConnectError, EgaugeException) as err:
             raise ConfigEntryError from err
 
     async def _async_update_data(self) -> EgaugeData:
@@ -77,9 +79,10 @@ class EgaugeDataCoordinator(DataUpdateCoordinator[EgaugeData]):
         try:
             measurements = await self.client.get_current_measurements()
             counters = await self.client.get_current_counters()
-        except EgaugeAuthenticationError as err:
+        except (EgaugeAuthenticationError, EgaugePermissionError) as err:
+            # will raise ConfigEntryAuthFailed once reauth is implemented
             raise ConfigEntryError from err
-        except (ConnectError, EgaugeParsingException) as err:
+        except (ConnectError, EgaugeException) as err:
             raise UpdateFailed(f"Error fetching device info: {err}") from err
 
         return EgaugeData(
