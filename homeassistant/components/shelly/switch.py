@@ -294,6 +294,7 @@ RPC_SWITCHES = {
         key="cury",
         sub_key="away_mode",
         name="Away mode",
+        translation_key="cury_away_mode",
         is_on=lambda status: status["away_mode"],
         method_on="cury_set_away_mode",
         method_off="cury_set_away_mode",
