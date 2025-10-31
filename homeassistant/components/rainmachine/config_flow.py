@@ -29,6 +29,9 @@ from .const import (
     DOMAIN,
 )
 
+API_URL_PLACEHOLDERS = {
+    "api_url": "https://rainmachine.docs.apiary.io/#reference/weather-services/parserdata/post",
+            }
 
 @callback
 def get_client_controller(client: Client) -> Controller:
@@ -164,15 +167,11 @@ class RainMachineFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=self._async_generate_schema(), errors=errors
         )
 
-
 class RainMachineOptionsFlowHandler(OptionsFlow):
     """Handle a RainMachine options flow."""
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-        description_placeholders={
-                "api_url": "https://rainmachine.docs.apiary.io/#reference/weather-services/parserdata/post"
-            }
     ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
