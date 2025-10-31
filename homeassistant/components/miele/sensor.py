@@ -21,7 +21,6 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     PERCENTAGE,
     REVOLUTIONS_PER_MINUTE,
-    STATE_UNKNOWN,
     EntityCategory,
     UnitOfEnergy,
     UnitOfTemperature,
@@ -57,6 +56,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_PLATE_COUNT = 4
 
 PLATE_COUNT = {
+    "KM7575": 6,
     "KM7678": 6,
     "KM7697": 6,
     "KM7878": 6,
@@ -861,35 +861,35 @@ class MieleSensor(MieleEntity, SensorEntity):
 class MieleRestorableSensor(MieleSensor, RestoreSensor):
     """Representation of a Sensor whose internal state can be restored."""
 
+    _attr_native_value: StateType
+
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
 
         # recover last value from cache when adding entity
-        last_value = await self.async_get_last_state()
         last_data = await self.async_get_last_sensor_data()
-        if last_value and last_data and last_value.state != STATE_UNKNOWN:
-            self._restore_last_value(last_data.native_value)
-
-    def _restore_last_value(
-        self, native_value: StateType | date | datetime | Decimal
-    ) -> None:
-        """Restore the last value from cache."""
-        self._attr_native_value = native_value
+        if last_data:
+            self._attr_native_value = last_data.native_value  # type: ignore[assignment]
 
     @property
-    def native_value(self) -> StateType | date | datetime | Decimal:
-        """Return the state of the sensor."""
+    def native_value(self) -> StateType:
+        """Return the state of the sensor.
+
+        It is necessary to override `native_value` to fall back to the default
+        attribute-based implementation, instead of the function-based
+        implementation in `MieleSensor`.
+        """
         return self._attr_native_value
 
-    def _update_last_value(self) -> None:
-        """Update the last value of the sensor."""
+    def _update_native_value(self) -> None:
+        """Update the native value attribute of the sensor."""
         self._attr_native_value = self.entity_description.value_fn(self.device)
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._update_last_value()
+        self._update_native_value()
         super()._handle_coordinator_update()
 
 
@@ -1006,7 +1006,7 @@ class MieleProgramIdSensor(MieleSensor):
 class MieleTimeSensor(MieleRestorableSensor):
     """Representation of time sensors keeping state from cache."""
 
-    def _update_last_value(self) -> None:
+    def _update_native_value(self) -> None:
         """Update the last value of the sensor."""
 
         current_value = self.entity_description.value_fn(self.device)
@@ -1039,7 +1039,7 @@ class MieleAbsoluteTimeSensor(MieleRestorableSensor):
 
     _previous_value: StateType | date | datetime | Decimal = None
 
-    def _update_last_value(self) -> None:
+    def _update_native_value(self) -> None:
         """Update the last value of the sensor."""
         current_value = self.entity_description.value_fn(self.device)
         current_status = StateStatus(self.device.state_status)
@@ -1073,14 +1073,13 @@ class MieleConsumptionSensor(MieleRestorableSensor):
 
     _is_reporting: bool = False
 
-    def _update_last_value(self) -> None:
+    def _update_native_value(self) -> None:
         """Update the last value of the sensor."""
         current_value = self.entity_description.value_fn(self.device)
         current_status = StateStatus(self.device.state_status)
         last_value = (
             float(cast(str, self._attr_native_value))
             if self._attr_native_value is not None
-            and self._attr_native_value != STATE_UNKNOWN
             else 0
         )
 

@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import cast
 
-from pylamarzocco.const import BackFlushStatus, ModelName, WidgetType
+from pylamarzocco.const import BackFlushStatus, MachineState, ModelName, WidgetType
 from pylamarzocco.models import (
     BackFlush,
     BaseWidgetOutput,
@@ -97,7 +97,14 @@ ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
             ).brewing_start_time
         ),
         entity_category=EntityCategory.DIAGNOSTIC,
-        available_fn=(lambda coordinator: not coordinator.websocket_terminated),
+        available_fn=(
+            lambda coordinator: not coordinator.websocket_terminated
+            and cast(
+                MachineStatus,
+                coordinator.device.dashboard.config[WidgetType.CM_MACHINE_STATUS],
+            ).status
+            is MachineState.BREWING
+        ),
     ),
     LaMarzoccoSensorEntityDescription(
         key="steam_boiler_ready_time",

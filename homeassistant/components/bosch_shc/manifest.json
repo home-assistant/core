@@ -10,8 +10,8 @@
   "requirements": ["boschshcpy==0.2.107"],
   "zeroconf": [
     {
-      "type": "_http._tcp.local.",
-      "name": "bosch shc*"
+      "name": "bosch shc*",
+      "type": "_http._tcp.local."
     }
   ]
 }

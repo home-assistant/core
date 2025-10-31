@@ -18,7 +18,7 @@ from homeassistant.util.percentage import (
     percentage_to_ordered_list_item,
 )
 
-from .common import is_fan, is_purifier
+from .common import is_fan, is_purifier, rgetattr
 from .const import (
     DOMAIN,
     VS_COORDINATOR,
@@ -90,17 +90,35 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
     _attr_name = None
     _attr_translation_key = "vesync"
 
+    def __init__(
+        self,
+        device: VeSyncBaseDevice,
+        coordinator: VeSyncDataCoordinator,
+    ) -> None:
+        """Initialize the fan."""
+        super().__init__(device, coordinator)
+        if rgetattr(device, "state.oscillation_status") is not None:
+            self._attr_supported_features |= FanEntityFeature.OSCILLATE
+
     @property
     def is_on(self) -> bool:
         """Return True if device is on."""
         return self.device.state.device_status == "on"
 
     @property
+    def oscillating(self) -> bool:
+        """Return True if device is oscillating."""
+        return rgetattr(self.device, "state.oscillation_status") == "on"
+
+    @property
     def percentage(self) -> int | None:
         """Return the currently set speed."""
 
         current_level = self.device.state.fan_level
-        if self.device.state.mode == VS_FAN_MODE_MANUAL and current_level is not None:
+        if (
+            self.device.state.mode in (VS_FAN_MODE_MANUAL, VS_FAN_MODE_NORMAL)
+            and current_level is not None
+        ):
             if current_level == 0:
                 return 0
             return ordered_list_item_to_percentage(
@@ -141,17 +159,27 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
         if hasattr(self.device.state, "active_time"):
             attr["active_time"] = self.device.state.active_time
 
-        if hasattr(self.device.state, "display_status"):
+        if (
+            hasattr(self.device.state, "display_status")
+            and self.device.state.display_status is not None
+        ):
             attr["display_status"] = getattr(
                 self.device.state.display_status, "value", None
             )
 
-        if hasattr(self.device.state, "child_lock"):
+        if (
+            hasattr(self.device.state, "child_lock")
+            and self.device.state.child_lock is not None
+        ):
             attr["child_lock"] = self.device.state.child_lock
 
-        if hasattr(self.device.state, "nightlight_status"):
-            attr["night_light"] = self.device.state.nightlight_status
-
+        if (
+            hasattr(self.device.state, "nightlight_status")
+            and self.device.state.nightlight_status is not None
+        ):
+            attr["night_light"] = getattr(
+                self.device.state.nightlight_status, "value", None
+            )
         if hasattr(self.device.state, "mode"):
             attr["mode"] = self.device.state.mode
 
@@ -182,7 +210,7 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
                 )
 
         # Switch to manual mode if not already set
-        if self.device.state.mode != VS_FAN_MODE_MANUAL:
+        if self.device.state.mode not in (VS_FAN_MODE_MANUAL, VS_FAN_MODE_NORMAL):
             if not await self.device.set_manual_mode():
                 raise HomeAssistantError(
                     "An error occurred while setting manual mode."
@@ -212,17 +240,17 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
             await self.device.turn_on()
 
         if preset_mode == VS_FAN_MODE_AUTO:
-            success = await self.device.auto_mode()
+            success = await self.device.set_auto_mode()
         elif preset_mode == VS_FAN_MODE_SLEEP:
-            success = await self.device.sleep_mode()
+            success = await self.device.set_sleep_mode()
         elif preset_mode == VS_FAN_MODE_ADVANCED_SLEEP:
-            success = await self.device.advanced_sleep_mode()
+            success = await self.device.set_advanced_sleep_mode()
         elif preset_mode == VS_FAN_MODE_PET:
-            success = await self.device.pet_mode()
+            success = await self.device.set_pet_mode()
         elif preset_mode == VS_FAN_MODE_TURBO:
-            success = await self.device.turbo_mode()
+            success = await self.device.set_turbo_mode()
         elif preset_mode == VS_FAN_MODE_NORMAL:
-            success = await self.device.normal_mode()
+            success = await self.device.set_normal_mode()
         if not success:
             raise HomeAssistantError(self.device.last_response.message)
 
@@ -245,6 +273,13 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         success = await self.device.turn_off()
+        if not success:
+            raise HomeAssistantError(self.device.last_response.message)
+        self.schedule_update_ha_state()
+
+    async def async_oscillate(self, oscillating: bool) -> None:
+        """Set oscillation."""
+        success = await self.device.toggle_oscillation(oscillating)
         if not success:
             raise HomeAssistantError(self.device.last_response.message)
         self.schedule_update_ha_state()

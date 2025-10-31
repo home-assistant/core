@@ -331,7 +331,7 @@ async def test_rpc_device_virtual_number(
     assert state.attributes.get(ATTR_MODE) is mode
 
     assert (entry := entity_registry.async_get(entity_id))
-    assert entry.unique_id == "123456789ABC-number:203-number"
+    assert entry.unique_id == "123456789ABC-number:203-number_generic"
 
     monkeypatch.setitem(mock_rpc_device.status["number:203"], "value", 78.9)
     mock_rpc_device.mock_update()
@@ -380,7 +380,7 @@ async def test_rpc_remove_virtual_number_when_mode_label(
         hass,
         NUMBER_DOMAIN,
         "test_name_number_200",
-        "number:200-number",
+        "number:200-number_generic",
         config_entry,
         device_id=device_entry.id,
     )
@@ -404,7 +404,7 @@ async def test_rpc_remove_virtual_number_when_orphaned(
         hass,
         NUMBER_DOMAIN,
         "test_name_number_200",
-        "number:200-number",
+        "number:200-number_generic",
         config_entry,
         device_id=device_entry.id,
     )
@@ -568,3 +568,50 @@ async def test_blu_trv_number_reauth_error(
     assert "context" in flow
     assert flow["context"].get("source") == SOURCE_REAUTH
     assert flow["context"].get("entry_id") == entry.entry_id
+
+
+async def test_cury_number_entity(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+    snapshot: SnapshotAssertion,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test number entities for cury component."""
+    status = {
+        "cury:0": {
+            "id": 0,
+            "slots": {
+                "left": {
+                    "intensity": 70,
+                    "on": True,
+                    "vial": {"level": 27, "name": "Forest Dream"},
+                },
+                "right": {
+                    "intensity": 70,
+                    "on": False,
+                    "vial": {"level": 84, "name": "Velvet Rose"},
+                },
+            },
+        }
+    }
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+    await init_integration(hass, 3)
+
+    for entity in ("left_slot_intensity", "right_slot_intensity"):
+        entity_id = f"{NUMBER_DOMAIN}.test_name_{entity}"
+
+        state = hass.states.get(entity_id)
+        assert state == snapshot(name=f"{entity_id}-state")
+
+        entry = entity_registry.async_get(entity_id)
+        assert entry == snapshot(name=f"{entity_id}-entry")
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: "number.test_name_left_slot_intensity", ATTR_VALUE: 80.0},
+        blocking=True,
+    )
+    mock_rpc_device.mock_update()
+    mock_rpc_device.cury_set.assert_called_once_with(0, slot="left", intensity=80)

@@ -3,135 +3,135 @@
   "name": "Govee Bluetooth",
   "bluetooth": [
     {
-      "local_name": "Govee*",
-      "connectable": false
+      "connectable": false,
+      "local_name": "Govee*"
     },
     {
-      "local_name": "GVH5*",
-      "connectable": false
+      "connectable": false,
+      "local_name": "GVH5*"
     },
     {
-      "local_name": "B5178*",
-      "connectable": false
+      "connectable": false,
+      "local_name": "B5178*"
     },
     {
-      "local_name": "GV5121*",
-      "connectable": false
+      "connectable": false,
+      "local_name": "GV5121*"
     },
     {
-      "local_name": "GV5122*",
-      "connectable": false
+      "connectable": false,
+      "local_name": "GV5122*"
     },
     {
-      "local_name": "GV5123*",
-      "connectable": false
+      "connectable": false,
+      "local_name": "GV5123*"
     },
     {
-      "local_name": "GV5124*",
-      "connectable": false
+      "connectable": false,
+      "local_name": "GV5124*"
     },
     {
-      "local_name": "GV5125*",
-      "connectable": false
+      "connectable": false,
+      "local_name": "GV5125*"
     },
     {
-      "local_name": "GV5126*",
-      "connectable": false
+      "connectable": false,
+      "local_name": "GV5126*"
     },
     {
-      "local_name": "GV5179*",
-      "connectable": false
+      "connectable": false,
+      "local_name": "GV5179*"
     },
     {
-      "local_name": "GVH5127*",
-      "connectable": false
+      "connectable": false,
+      "local_name": "GVH5127*"
     },
     {
-      "local_name": "GVH5130*",
-      "connectable": false
+      "connectable": false,
+      "local_name": "GVH5130*"
     },
     {
-      "local_name": "GVH5110*",
-      "connectable": false
+      "connectable": false,
+      "local_name": "GVH5110*"
     },
     {
+      "connectable": false,
       "manufacturer_id": 1,
-      "service_uuid": "0000ec88-0000-1000-8000-00805f9b34fb",
-      "connectable": false
+      "service_uuid": "0000ec88-0000-1000-8000-00805f9b34fb"
     },
     {
+      "connectable": false,
       "manufacturer_id": 6966,
-      "service_uuid": "00008451-0000-1000-8000-00805f9b34fb",
-      "connectable": false
+      "service_uuid": "00008451-0000-1000-8000-00805f9b34fb"
     },
     {
+      "connectable": false,
       "manufacturer_id": 63391,
-      "service_uuid": "00008351-0000-1000-8000-00805f9b34fb",
-      "connectable": false
+      "service_uuid": "00008351-0000-1000-8000-00805f9b34fb"
     },
     {
+      "connectable": false,
       "manufacturer_id": 26589,
-      "service_uuid": "00008351-0000-1000-8000-00805f9b34fb",
-      "connectable": false
+      "service_uuid": "00008351-0000-1000-8000-00805f9b34fb"
     },
     {
+      "connectable": false,
       "manufacturer_id": 57391,
-      "service_uuid": "00008351-0000-1000-8000-00805f9b34fb",
-      "connectable": false
+      "service_uuid": "00008351-0000-1000-8000-00805f9b34fb"
     },
     {
+      "connectable": false,
       "manufacturer_id": 18994,
-      "service_uuid": "00008551-0000-1000-8000-00805f9b34fb",
-      "connectable": false
+      "service_uuid": "00008551-0000-1000-8000-00805f9b34fb"
     },
     {
+      "connectable": false,
       "manufacturer_id": 818,
-      "service_uuid": "00008551-0000-1000-8000-00805f9b34fb",
-      "connectable": false
+      "service_uuid": "00008551-0000-1000-8000-00805f9b34fb"
     },
     {
+      "connectable": false,
       "manufacturer_id": 53579,
-      "service_uuid": "00008151-0000-1000-8000-00805f9b34fb",
-      "connectable": false
+      "service_uuid": "00008151-0000-1000-8000-00805f9b34fb"
     },
     {
+      "connectable": false,
       "manufacturer_id": 43682,
-      "service_uuid": "00008151-0000-1000-8000-00805f9b34fb",
-      "connectable": false
+      "service_uuid": "00008151-0000-1000-8000-00805f9b34fb"
     },
     {
+      "connectable": false,
       "manufacturer_id": 59970,
-      "service_uuid": "00008151-0000-1000-8000-00805f9b34fb",
-      "connectable": false
+      "service_uuid": "00008151-0000-1000-8000-00805f9b34fb"
     },
     {
+      "connectable": false,
       "manufacturer_id": 63585,
-      "service_uuid": "00008151-0000-1000-8000-00805f9b34fb",
-      "connectable": false
+      "service_uuid": "00008151-0000-1000-8000-00805f9b34fb"
     },
     {
+      "connectable": false,
       "manufacturer_id": 14474,
-      "service_uuid": "00008151-0000-1000-8000-00805f9b34fb",
-      "connectable": false
+      "service_uuid": "00008151-0000-1000-8000-00805f9b34fb"
     },
     {
+      "connectable": false,
       "manufacturer_id": 10032,
-      "service_uuid": "00008251-0000-1000-8000-00805f9b34fb",
-      "connectable": false
+      "service_uuid": "00008251-0000-1000-8000-00805f9b34fb"
     },
     {
+      "connectable": false,
       "manufacturer_id": 19506,
-      "service_uuid": "00001801-0000-1000-8000-00805f9b34fb",
-      "connectable": false
+      "service_uuid": "00001801-0000-1000-8000-00805f9b34fb"
     },
     {
-      "manufacturer_id": 61320,
-      "connectable": false
+      "connectable": false,
+      "manufacturer_id": 61320
     },
     {
-      "manufacturer_id": 34819,
+      "connectable": false,
       "manufacturer_data_start": [236, 0, 0, 1],
-      "connectable": false
+      "manufacturer_id": 34819
     }
   ],
   "codeowners": ["@bdraco"],

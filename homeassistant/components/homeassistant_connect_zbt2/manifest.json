@@ -9,10 +9,16 @@
   "quality_scale": "bronze",
   "usb": [
     {
-      "vid": "303A",
-      "pid": "4001",
       "description": "*zbt-2*",
-      "known_devices": ["ZBT-2"]
+      "known_devices": ["ZBT-2"],
+      "pid": "4001",
+      "vid": "303A"
+    },
+    {
+      "description": "*zbt-2*",
+      "known_devices": ["ZBT-2"],
+      "pid": "831A",
+      "vid": "303A"
     }
   ]
 }
