@@ -19,7 +19,6 @@ from homeassistant.const import (
 from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import _LOGGER, DOMAIN
-from .util import _build_client_url
 
 
 class EgaugeFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -33,12 +32,13 @@ class EgaugeFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             client = EgaugeJsonClient(
-                base_url=_build_client_url(user_input[CONF_HOST], user_input[CONF_SSL]),
+                host=user_input[CONF_HOST],
                 username=user_input[CONF_USERNAME],
                 password=user_input[CONF_PASSWORD],
                 client=get_async_client(
                     self.hass, verify_ssl=user_input[CONF_VERIFY_SSL]
                 ),
+                use_ssl=user_input[CONF_SSL],
             )
             try:
                 serial_number = await client.get_device_serial_number()

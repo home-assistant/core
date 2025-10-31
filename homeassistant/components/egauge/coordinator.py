@@ -27,7 +27,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import _LOGGER, DOMAIN
 from .models import EgaugeData
-from .util import _build_client_url
 
 type EgaugeConfigEntry = ConfigEntry[EgaugeDataCoordinator]
 
@@ -52,14 +51,13 @@ class EgaugeDataCoordinator(DataUpdateCoordinator[EgaugeData]):
             config_entry=config_entry,
         )
         self.client = EgaugeJsonClient(
-            base_url=_build_client_url(
-                config_entry.data[CONF_HOST], config_entry.data[CONF_SSL]
-            ),
+            host=config_entry.data[CONF_HOST],
             username=config_entry.data[CONF_USERNAME],
             password=config_entry.data[CONF_PASSWORD],
             client=get_async_client(
                 hass, verify_ssl=config_entry.data[CONF_VERIFY_SSL]
             ),
+            use_ssl=config_entry.data[CONF_SSL],
         )
         # Populated in _async_setup
         self._register_info: dict[str, RegisterInfo] = {}
