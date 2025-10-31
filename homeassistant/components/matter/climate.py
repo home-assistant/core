@@ -291,17 +291,12 @@ class MatterClimate(MatterEntity, ClimateEntity):
         """Update from device."""
         self._calculate_features()
 
-        # self.matter_presets_types = PresetTypeList
         self.matter_presets_types = self.get_matter_attribute_value(
             clusters.Thermostat.Attributes.PresetTypes
         )
         self.matter_presets = self.get_matter_attribute_value(
             clusters.Thermostat.Attributes.Presets
         )
-
-        # Decode presets
-        # Value type: Optional[List[Thermostat.Structs.PresetStruct]]
-
         presets = []
         # Decode presets
         i = 1
@@ -313,7 +308,6 @@ class MatterClimate(MatterEntity, ClimateEntity):
                     name = "Preset" + str(i)
                 presets.append(name)
                 i += 1
-        # self.matter_presets = presets_value
         self._attr_preset_modes = presets
 
         self._attr_current_temperature = self._get_temperature_in_degrees(
