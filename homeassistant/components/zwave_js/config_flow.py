@@ -713,6 +713,11 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="rf_region",
             data_schema=schema,
+            errors=errors,
+            description_placeholders = {
+                "api_method": "https://zwave-js.github.io/node-zwave-js/#/api/CCs/index",
+                "api_parameters": "https://zwave-js.github.io/node-zwave-js/#/api/CCs/index",
+            },
         )
 
     async def async_step_on_supervisor(
@@ -929,7 +934,13 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_show_form(
-            step_id="configure_security_keys", data_schema=data_schema
+            step_id="configure_security_keys",
+            data_schema=data_schema,
+            error=errors,
+            description_placeholders= {
+                "api_method": "https://zwave-js.github.io/node-zwave-js/#/api/CCs/index",
+                "api_parameters": "https://zwave-js.github.io/node-zwave-js/#/api/CCs/index",
+            },
         )
 
     async def async_step_finish_addon_setup_user(
