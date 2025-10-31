@@ -133,7 +133,7 @@ ENDPOINT_SENSORS: tuple[PortainerEndpointSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfInformation.BYTES,
-        suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
+        suggested_unit_of_measurement=UnitOfInformation.MEBIBYTES,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
