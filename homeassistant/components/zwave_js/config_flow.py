@@ -133,7 +133,6 @@ IGNORED_USB_DEVICES = {
 }
 
 API_PLACEHOLDERS = {
-    "api_method": "https://zwave-js.github.io/node-zwave-js/#/api/CCs/index",
     "api_parameters": "https://zwave-js.github.io/node-zwave-js/#/api/CCs/index",
     }
 
@@ -932,7 +931,8 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="configure_security_keys",
             data_schema=data_schema,
-            description_placeholders=API_PLACEHOLDERS,
+            description_placeholders={
+                "api_method": "https://zwave-js.github.io/node-zwave-js/#/api/CCs/index",
             },
         )
 
