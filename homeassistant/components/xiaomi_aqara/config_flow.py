@@ -74,9 +74,7 @@ class XiaomiAqaraFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=schema,
             errors=errors,
-            description_placeholders={
-                "invalid_host_url": "https://www.home-assistant.io/integrations/xiaomi_aqara/#connection-problem",
-            }
+            description_placeholders=ERROR_STEP_PLACEHOLDERS,
         )
 
     async def async_step_user(
@@ -163,9 +161,7 @@ class XiaomiAqaraFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="select",
             data_schema=select_schema,
             errors=errors,
-            description_placholders={
-                "invalid_host_url": "https://www.home-assistant.io/integrations/xiaomi_aqara/#connection-problem",
-            },
+            description_placholders=ERROR_STEP_PLACEHOLDERS,
         )
 
     async def async_step_zeroconf(
