@@ -290,76 +290,35 @@ class MatterClimate(MatterEntity, ClimateEntity):
     def _update_from_device(self) -> None:
         """Update from device."""
         self._calculate_features()
+
+        # self.matter_presets_types = PresetTypeList
+        self.matter_presets_types = self.get_matter_attribute_value(
+            clusters.Thermostat.Attributes.PresetTypes
+        )
+        self.matter_presets = self.get_matter_attribute_value(
+            clusters.Thermostat.Attributes.Presets
+        )
+
         # Decode presets
         # Value type: Optional[List[Thermostat.Structs.PresetStruct]]
-        # [{"0":"AQ==","1":1,"3":2500,"4":2100,"5":true},{"0":"Ag==","1":2,"3":2600,"4":2000,"5":true}]
-        presets_value = [
-            clusters.Thermostat.Structs.PresetStruct(
-                presetHandle=b"\x01",
-                presetScenario=(clusters.Thermostat.Enums.PresetScenarioEnum.kOccupied),
-                name=None,
-                coolingSetpoint=2500,
-                heatingSetpoint=2100,
-                builtIn=True,
-            ),
-            clusters.Thermostat.Structs.PresetStruct(
-                presetHandle=b"\x02",
-                presetScenario=(
-                    clusters.Thermostat.Enums.PresetScenarioEnum.kUnoccupied
-                ),
-                name=None,
-                coolingSetpoint=2600,
-                heatingSetpoint=2000,
-                builtIn=True,
-            ),
-        ]
+
         presets = []
         # Decode presets
         i = 1
-        if presets_value:
-            for preset in presets_value:
+        if self.matter_presets:
+            for preset in self.matter_presets:
                 name = preset.name
                 if not name:
                     # fallback to scenario name if no name is set
                     name = "Preset" + str(i)
                 presets.append(name)
                 i += 1
-        self.matter_presets = presets_value
+        # self.matter_presets = presets_value
         self._attr_preset_modes = presets
 
-        PresetTypeList = [
-            clusters.Thermostat.Structs.PresetTypeStruct(
-                presetScenario=clusters.Thermostat.Enums.PresetScenarioEnum.kOccupied,
-                numberOfPresets=1,
-                presetTypeFeatures=1,
-            ),
-            clusters.Thermostat.Structs.PresetTypeStruct(
-                presetScenario=clusters.Thermostat.Enums.PresetScenarioEnum.kUnoccupied,
-                numberOfPresets=1,
-                presetTypeFeatures=1,
-            ),
-            clusters.Thermostat.Structs.PresetTypeStruct(
-                presetScenario=clusters.Thermostat.Enums.PresetScenarioEnum.kSleep,
-                numberOfPresets=1,
-                presetTypeFeatures=2,
-            ),
-            clusters.Thermostat.Structs.PresetTypeStruct(
-                presetScenario=clusters.Thermostat.Enums.PresetScenarioEnum.kWake,
-                numberOfPresets=1,
-                presetTypeFeatures=2,
-            ),
-            clusters.Thermostat.Structs.PresetTypeStruct(
-                presetScenario=clusters.Thermostat.Enums.PresetScenarioEnum.kVacation,
-                numberOfPresets=1,
-                presetTypeFeatures=2,
-            ),
-            clusters.Thermostat.Structs.PresetTypeStruct(
-                presetScenario=clusters.Thermostat.Enums.PresetScenarioEnum.kUserDefined,
-                numberOfPresets=1,
-                presetTypeFeatures=2,
-            ),
-        ]
-        self.matter_presets_types = PresetTypeList
+        self._attr_current_temperature = self._get_temperature_in_degrees(
+            clusters.Thermostat.Attributes.LocalTemperature
+        )
 
         self._attr_current_temperature = self._get_temperature_in_degrees(
             clusters.Thermostat.Attributes.LocalTemperature
@@ -529,8 +488,8 @@ DISCOVERY_SCHEMAS = [
             clusters.Thermostat.Attributes.Occupancy,
             clusters.Thermostat.Attributes.OccupiedCoolingSetpoint,
             clusters.Thermostat.Attributes.OccupiedHeatingSetpoint,
-            # clusters.Thermostat.Attributes.PresetTypes,
             clusters.Thermostat.Attributes.Presets,
+            clusters.Thermostat.Attributes.PresetTypes,
             clusters.Thermostat.Attributes.SystemMode,
             clusters.Thermostat.Attributes.ThermostatRunningMode,
             clusters.Thermostat.Attributes.ThermostatRunningState,
