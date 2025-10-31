@@ -59,9 +59,13 @@ rules:
   entity-disabled-by-default:
     status: exempt
     comment: Entities are not noisy and are expected to be enabled by default
-  entity-translations: todo
+  entity-translations:
+    status: exempt
+    comment: Entity properties are user controlled, so can't be translated
   exception-translations: todo
-  icon-translations: todo
+  icon-translations:
+    status: exempt
+    comment: Entities don't use icons
   reconfiguration-flow: todo
   repair-issues: todo
   stale-devices: done
