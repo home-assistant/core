@@ -163,6 +163,9 @@
       "advanced_mode": {
         "default": "mdi:tune"
       },
+      "border_spin": {
+        "default": "mdi:rotate-right"
+      },
       "border_switch": {
         "default": "mdi:land-fields"
       },
