@@ -7,6 +7,7 @@ from typing import Any, final, override
 
 from eheimdigital.classic_vario import EheimDigitalClassicVario
 from eheimdigital.device import EheimDigitalDevice
+from eheimdigital.filter import EheimDigitalFilter
 from eheimdigital.heater import EheimDigitalHeater
 
 from homeassistant.components.time import TimeEntity, TimeEntityDescription
@@ -27,6 +28,23 @@ class EheimDigitalTimeDescription[_DeviceT: EheimDigitalDevice](TimeEntityDescri
     value_fn: Callable[[_DeviceT], time | None]
     set_value_fn: Callable[[_DeviceT, time], Awaitable[None]]
 
+
+FILTER_DESCRIPTIONS: tuple[EheimDigitalTimeDescription[EheimDigitalFilter], ...] = (
+    EheimDigitalTimeDescription[EheimDigitalFilter](
+        key="day_start_time",
+        translation_key="day_start_time",
+        entity_category=EntityCategory.CONFIG,
+        value_fn=lambda device: device.day_start_time,
+        set_value_fn=lambda device, value: device.set_day_start_time(value),
+    ),
+    EheimDigitalTimeDescription[EheimDigitalFilter](
+        key="night_start_time",
+        translation_key="night_start_time",
+        entity_category=EntityCategory.CONFIG,
+        value_fn=lambda device: device.night_start_time,
+        set_value_fn=lambda device, value: device.set_night_start_time(value),
+    ),
+)
 
 CLASSICVARIO_DESCRIPTIONS: tuple[
     EheimDigitalTimeDescription[EheimDigitalClassicVario], ...
@@ -79,6 +97,13 @@ async def async_setup_entry(
         """Set up the time entities for one or multiple devices."""
         entities: list[EheimDigitalTime[Any]] = []
         for device in device_address.values():
+            if isinstance(device, EheimDigitalFilter):
+                entities.extend(
+                    EheimDigitalTime[EheimDigitalFilter](
+                        coordinator, device, description
+                    )
+                    for description in FILTER_DESCRIPTIONS
+                )
             if isinstance(device, EheimDigitalClassicVario):
                 entities.extend(
                     EheimDigitalTime[EheimDigitalClassicVario](
