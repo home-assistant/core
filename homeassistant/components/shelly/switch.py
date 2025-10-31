@@ -290,6 +290,15 @@ RPC_SWITCHES = {
         available=lambda status: (right := status["right"]) is not None
         and right.get("vial", {}).get("level", -1) != -1,
     ),
+    "cury_away_mode": RpcSwitchDescription(
+        key="cury",
+        sub_key="away_mode",
+        name="Away mode",
+        is_on=lambda status: status["away_mode"],
+        method_on="cury_set_away_mode",
+        method_off="cury_set_away_mode",
+        method_params_fn=lambda id, value: (id, value),
+    ),
 }
 
 
