@@ -149,6 +149,13 @@
       }
     },
     "sensor": {
+      "auto_empty": {
+        "name": "Auto-empty frequency",
+        "state": {
+          "auto": "Auto",
+          "smart": "Smart"
+        }
+      },
       "error": {
         "name": "Error",
         "state_attributes": {
