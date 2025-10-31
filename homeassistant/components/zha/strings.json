@@ -118,12 +118,12 @@
       "plug_in_old_radio": {
         "description": "Your old adapter at `{device_path}` was not found. You can retry after plugging it back in, or skip resetting the old adapter.\n\nIf you skip resetting the old adapter, please make sure it is permanently unavailable, as plugging it back in later will cause network issues.",
         "menu_option_descriptions": {
-          "retry": "Retry connecting to the old adapter to reset it as part of the migration.",
-          "skip_reset": "Skip resetting the old adapter and continue with the migration."
+          "retry_old_radio": "Retry connecting to the old adapter to reset it as part of the migration.",
+          "skip_reset_old_radio": "Skip resetting the old adapter and continue with the migration."
         },
         "menu_options": {
-          "retry": "Retry",
-          "skip_reset": "Skip reset"
+          "retry_old_radio": "Retry",
+          "skip_reset_old_radio": "Skip reset"
         },
         "title": "Old adapter not found"
       },
@@ -1968,12 +1968,12 @@
       "plug_in_old_radio": {
         "description": "[%key:component::zha::config::step::plug_in_old_radio::description%]",
         "menu_option_descriptions": {
-          "retry": "[%key:component::zha::config::step::plug_in_old_radio::menu_option_descriptions::retry%]",
-          "skip_reset": "[%key:component::zha::config::step::plug_in_old_radio::menu_option_descriptions::skip_reset%]"
+          "retry_old_radio": "[%key:component::zha::config::step::plug_in_old_radio::menu_option_descriptions::retry_old_radio%]",
+          "skip_reset_old_radio": "[%key:component::zha::config::step::plug_in_old_radio::menu_option_descriptions::skip_reset_old_radio%]"
         },
         "menu_options": {
-          "retry": "[%key:component::zha::config::step::plug_in_old_radio::menu_options::retry%]",
-          "skip_reset": "[%key:component::zha::config::step::plug_in_old_radio::menu_options::skip_reset%]"
+          "retry_old_radio": "[%key:component::zha::config::step::plug_in_old_radio::menu_options::retry_old_radio%]",
+          "skip_reset_old_radio": "[%key:component::zha::config::step::plug_in_old_radio::menu_options::skip_reset_old_radio%]"
         },
         "title": "[%key:component::zha::config::step::plug_in_old_radio::title%]"
       },

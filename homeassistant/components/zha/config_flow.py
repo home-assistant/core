@@ -498,17 +498,17 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
 
         return self.async_show_menu(
             step_id="plug_in_old_radio",
-            menu_options=["retry", "skip_reset"],
+            menu_options=["retry_old_radio", "skip_reset_old_radio"],
             description_placeholders={"device_path": old_device_path},
         )
 
-    async def async_step_retry(
+    async def async_step_retry_old_radio(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Retry connecting to the old radio."""
         return await self.async_step_maybe_reset_old_radio()
 
-    async def async_step_skip_reset(
+    async def async_step_skip_reset_old_radio(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Skip resetting the old radio and continue with migration."""
