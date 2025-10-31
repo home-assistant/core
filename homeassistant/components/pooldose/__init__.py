@@ -3,13 +3,15 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from pooldose.client import PooldoseClient
 from pooldose.request_status import RequestStatus
 
 from homeassistant.const import CONF_HOST, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import entity_registry as er
 
 from .coordinator import PooldoseConfigEntry, PooldoseCoordinator
 
@@ -18,8 +20,47 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
+async def _async_migrate_entries(
+    hass: HomeAssistant, config_entry: PooldoseConfigEntry
+) -> None:
+    """Migrate entity unique IDs to new format.
+
+    This migration changes:
+    - ofa_orp_value -> ofa_orp_time
+    - ofa_ph_value -> ofa_ph_time
+    """
+
+    @callback
+    def migrate_unique_id(entity_entry: er.RegistryEntry) -> dict[str, Any] | None:
+        """Migrate entity unique IDs for pooldose sensors."""
+        new_unique_id = entity_entry.unique_id
+
+        # Check if this entry needs migration
+        if "_ofa_orp_value" in new_unique_id:
+            new_unique_id = new_unique_id.replace("_ofa_orp_value", "_ofa_orp_time")
+        elif "_ofa_ph_value" in new_unique_id:
+            new_unique_id = new_unique_id.replace("_ofa_ph_value", "_ofa_ph_time")
+        else:
+            # No migration needed
+            return None
+
+        _LOGGER.debug(
+            "Migrating entity '%s' unique_id from '%s' to '%s'",
+            entity_entry.entity_id,
+            entity_entry.unique_id,
+            new_unique_id,
+        )
+
+        return {"new_unique_id": new_unique_id}
+
+    await er.async_migrate_entries(hass, config_entry.entry_id, migrate_unique_id)
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: PooldoseConfigEntry) -> bool:
     """Set up Seko PoolDose from a config entry."""
+    # Migrate entity unique IDs to new format
+    await _async_migrate_entries(hass, entry)
+
     # Get host from config entry data (connection-critical configuration)
     host = entry.data[CONF_HOST]
 
