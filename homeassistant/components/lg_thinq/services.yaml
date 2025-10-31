@@ -1,4 +1,4 @@
-service_get_energy_usage:
+get_energy_usage:
   fields:
     device_id:
       required: true

@@ -1141,12 +1141,12 @@
     }
   },
   "services": {
-    "service_get_energy_usage": {
+    "get_energy_usage": {
       "name": "Get energy usage",
       "description": "Fetch energy usage by period. Retry after the next hour if rate-limited.",
       "fields": {
         "device_id": {
-          "name": "Device",
+          "name": "[%key:common::config_flow::data::device%]",
           "description": "Select a device"
         },
         "period": {
@@ -1154,11 +1154,11 @@
           "description": "Select a daily or monthly options"
         },
         "start_date": {
-          "name": "Start date",
+          "name": "[%key:common::action::start%]",
           "description": "Maximum of 31 days (daily basis) and 6 months (monthly basis)"
         },
         "end_date": {
-          "name": "End date",
+          "name": "End",
           "description": "Maximum of 31 days (daily basis) and 6 months (monthly basis)"
         }
       }

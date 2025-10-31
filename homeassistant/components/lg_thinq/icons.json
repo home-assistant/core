@@ -468,7 +468,7 @@
     }
   },
   "services": {
-    "service_get_energy_usage": {
+    "get_energy_usage": {
       "service": "mdi:chart-bar"
     }
   }

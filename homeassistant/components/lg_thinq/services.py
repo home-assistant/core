@@ -30,7 +30,7 @@ ATTR_PERIOD: Final = "period"
 ATTR_START: Final = "start_date"
 ATTR_END: Final = "end_date"
 
-ENERGY_SERVICE_NAME: Final = "service_get_energy_usage"
+ENERGY_SERVICE_NAME: Final = "get_energy_usage"
 
 ENERGY_SCHEMA: Final = vol.Schema(
     {

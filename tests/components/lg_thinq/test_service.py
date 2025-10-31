@@ -1,14 +1,14 @@
 """Tests for the LG Thinq service."""
 
-from datetime import date, datetime
-from unittest.mock import AsyncMock, MagicMock
+from datetime import date
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant.components.lg_thinq import services
 from homeassistant.components.lg_thinq.const import DOMAIN
 from homeassistant.components.lg_thinq.services import ENERGY_SERVICE_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
 
@@ -27,41 +27,42 @@ async def test_has_services(
 @pytest.mark.parametrize(
     ("start_date", "end_date", "reponse_total"),
     [
-        (date(2024, 10, 1), date(2024, 10, 5), 150),
         (date(2024, 10, 1), date(2024, 10, 10), 550),
-        (date(2024, 10, 10), date(2024, 10, 10), 100),
+        (date(2024, 10, 1), date(2024, 10, 31), 4960),
     ],
 )
+@pytest.mark.parametrize("device_fixture", ["air_conditioner"])
 async def test_energy_service(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    devices: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    mock_thinq_api: AsyncMock,
+    device_fixture: str,
     start_date: date,
     end_date: date,
     reponse_total: int,
 ) -> None:
     """Test service energy usage."""
-    await setup_integration(hass, mock_config_entry)
+    with patch(
+        "homeassistant.components.lg_thinq.ThinQMQTT.async_connect",
+        return_value=True,
+    ):
+        await setup_integration(hass, mock_config_entry)
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, "MW2-2E247F93-B570-46A6-B827-920E9E10F966")}
+    )
+    assert device_entry
     data = {
-        "device_id": "test_device",
+        "device_id": device_entry.id,
         "period": "daily",
         "start_date": start_date,
         "end_date": end_date,
     }
-    mock_coordinator = MagicMock()
-    mock_coordinator.device_name = "test_device"
-    mock_coordinator.unique_id = "test_unique_id"
-    load_list = (
-        await async_load_json_object_fixture(hass, "energy_service.json", DOMAIN)
-    )["result"]["dataList"]
-    target_list = []
-    for data_usage in load_list:
-        date = datetime.strptime(data_usage["usedDate"], "%Y%m%d").date()
-        if start_date <= date <= end_date:
-            target_list.append(data_usage)
-
-    mock_coordinator.api.async_get_energy_usage = AsyncMock(return_value=target_list)
-    # coordinator mocking
-    services.__get_coordinator = MagicMock(return_value=mock_coordinator)
+    load_data = f"{device_fixture}/energy_{start_date.strftime('%Y%m%d')}_{end_date.strftime('%Y%m%d')}.json"
+    mock_thinq_api.async_get_device_energy_usage.return_value = (
+        await async_load_json_object_fixture(hass, load_data, DOMAIN)
+    )
     service_response = await hass.services.async_call(
         DOMAIN,
         ENERGY_SERVICE_NAME,

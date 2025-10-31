@@ -1,0 +1,39 @@
+{
+  "resultCode": "0000",
+  "result": {
+    "dataList": [
+      { "energyUsage": 10.0, "usedDate": "20241001" },
+      { "energyUsage": 20.0, "usedDate": "20241002" },
+      { "energyUsage": 30.0, "usedDate": "20241003" },
+      { "energyUsage": 40.0, "usedDate": "20241004" },
+      { "energyUsage": 50.0, "usedDate": "20241005" },
+      { "energyUsage": 60.0, "usedDate": "20241006" },
+      { "energyUsage": 70.0, "usedDate": "20241007" },
+      { "energyUsage": 80.0, "usedDate": "20241008" },
+      { "energyUsage": 90.0, "usedDate": "20241009" },
+      { "energyUsage": 100.0, "usedDate": "20241010" },
+      { "energyUsage": 110.0, "usedDate": "20241011" },
+      { "energyUsage": 120.0, "usedDate": "20241012" },
+      { "energyUsage": 130.0, "usedDate": "20241013" },
+      { "energyUsage": 140.0, "usedDate": "20241014" },
+      { "energyUsage": 150.0, "usedDate": "20241015" },
+      { "energyUsage": 160.0, "usedDate": "20241016" },
+      { "energyUsage": 170.0, "usedDate": "20241017" },
+      { "energyUsage": 180.0, "usedDate": "20241018" },
+      { "energyUsage": 190.0, "usedDate": "20241019" },
+      { "energyUsage": 200.0, "usedDate": "20241020" },
+      { "energyUsage": 210.0, "usedDate": "20241021" },
+      { "energyUsage": 220.0, "usedDate": "20241022" },
+      { "energyUsage": 230.0, "usedDate": "20241023" },
+      { "energyUsage": 240.0, "usedDate": "20241024" },
+      { "energyUsage": 250.0, "usedDate": "20241025" },
+      { "energyUsage": 260.0, "usedDate": "20241026" },
+      { "energyUsage": 270.0, "usedDate": "20241027" },
+      { "energyUsage": 280.0, "usedDate": "20241028" },
+      { "energyUsage": 290.0, "usedDate": "20241029" },
+      { "energyUsage": 300.0, "usedDate": "20241030" },
+      { "energyUsage": 310.0, "usedDate": "20241031" }
+    ],
+    "property": ["energyUsage"]
+  }
+}
