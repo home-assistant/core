@@ -361,6 +361,9 @@
         "name": "Tamper detection"
       }
     },
+      "temperature_offset": {
+        "name": "Temperature offset"
+      },
     "vacuum": {
       "vacuum": {
         "state_attributes": {
