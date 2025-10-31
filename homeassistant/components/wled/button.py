@@ -12,6 +12,9 @@ from .coordinator import WLEDDataUpdateCoordinator
 from .entity import WLEDEntity
 from .helpers import wled_exception_handler
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
