@@ -473,9 +473,37 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
             temp_radio_mgr.device_settings = config_entry.data[CONF_DEVICE]
             temp_radio_mgr.radio_type = RadioType[config_entry.data[CONF_RADIO_TYPE]]
 
-            await temp_radio_mgr.async_reset_adapter()
+            try:
+                await temp_radio_mgr.async_reset_adapter()
+            except HomeAssistantError:
+                # Old adapter not found or cannot connect, show prompt to plug back in
+                return await self.async_step_plug_in_old_radio()
 
         return await self.async_step_maybe_confirm_ezsp_restore()
+
+    async def async_step_plug_in_old_radio(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Prompt user to plug in the old radio if connection fails."""
+        config_entries = self.hass.config_entries.async_entries(
+            DOMAIN, include_ignore=False
+        )
+
+        # config entry should always exist here, skip if not
+        if not config_entries:
+            return await self.async_step_maybe_confirm_ezsp_restore()
+
+        config_entry = config_entries[0]
+        old_device_path = config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
+
+        # user confirmed, try again
+        if user_input is not None:
+            return await self.async_step_maybe_reset_old_radio()
+
+        return self.async_show_form(
+            step_id="plug_in_old_radio",
+            description_placeholders={"device_path": old_device_path},
+        )
 
     async def async_step_migration_strategy_advanced(
         self, user_input: dict[str, Any] | None = None
