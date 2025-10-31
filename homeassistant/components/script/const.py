@@ -17,5 +17,6 @@ CONF_TRACE = "trace"
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 EVENT_SCRIPT_STARTED = "script_started"
+EVENT_SCRIPT_RELOADED = "script_reloaded"
 
 LOGGER = logging.getLogger(__package__)

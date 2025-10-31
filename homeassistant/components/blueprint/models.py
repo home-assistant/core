@@ -222,6 +222,15 @@ class DomainBlueprints:
         async with self._load_lock:
             self._blueprints = {}
 
+    @callback
+    def blueprint_in_use(self, blueprint_path: str) -> bool:
+        """Return True if the blueprint is currently referenced."""
+        return self._blueprint_in_use(self.hass, blueprint_path)
+
+    async def async_reload_blueprint_consumers(self, blueprint_path: str) -> None:
+        """Reload entities that rely on the blueprint."""
+        await self._reload_blueprint_consumers(self.hass, blueprint_path)
+
     def _load_blueprint(self, blueprint_path: str) -> Blueprint:
         """Load a blueprint."""
         try:
