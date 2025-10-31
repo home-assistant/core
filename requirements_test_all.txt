@@ -740,7 +740,7 @@ eagle100==0.1.1
 easyenergy==2.1.2
 
 # homeassistant.components.eheimdigital
-eheimdigital==1.3.0
+eheimdigital==1.4.0
 
 # homeassistant.components.ekeybionyx
 ekey-bionyxpy==1.0.0
