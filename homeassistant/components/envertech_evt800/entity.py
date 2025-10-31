@@ -28,9 +28,7 @@ class EnvertechEVT800Entity(CoordinatorEntity[EnvertechEVT800Coordinator]):
         """Initialize Envertech EVT800 entity."""
         super().__init__(coordinator)
         self.evt800 = evt800
-        self._attr_unique_id = (
-            f"{DOMAIN}-{entry.data[CONF_IP_ADDRESS]}-{entry.data[CONF_PORT]}"
-        )
+        self._attr_unique_id = entry.entry_id
         self._attr_entry = entry
         self._attr_device_info = DeviceInfo(
             identifiers={

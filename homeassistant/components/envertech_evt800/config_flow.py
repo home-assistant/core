@@ -46,12 +46,6 @@ class EnvertechFlowHandler(ConfigFlow, domain=DOMAIN):
             self._data[CONF_TYPE] = user_input[CONF_TYPE]
 
             if not errors:
-                await self.async_set_unique_id(
-                    "evt800-"
-                    + self._data[CONF_IP_ADDRESS]
-                    + str(self._data[CONF_PORT]),
-                    raise_on_progress=False,
-                )
                 self._abort_if_unique_id_configured(updates=self._data)
 
                 return self.async_create_entry(
