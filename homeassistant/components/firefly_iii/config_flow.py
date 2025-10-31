@@ -135,11 +135,6 @@ class FireflyConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle reconfiguration of the integration."""
         errors: dict[str, str] = {}
         reconf_entry = self._get_reconfigure_entry()
-        suggested_values = {
-            CONF_URL: reconf_entry.data[CONF_URL],
-            CONF_API_KEY: reconf_entry.data[CONF_API_KEY],
-            CONF_VERIFY_SSL: reconf_entry.data[CONF_VERIFY_SSL],
-        }
 
         if user_input:
             try:
@@ -160,6 +155,7 @@ class FireflyConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
                 return self.async_update_reload_and_abort(
                     reconf_entry,
                     data_updates={
@@ -173,7 +169,7 @@ class FireflyConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
                 data_schema=STEP_USER_DATA_SCHEMA,
-                suggested_values=user_input or suggested_values,
+                suggested_values=user_input or reconf_entry.data.copy(),
             ),
             errors=errors,
         )
