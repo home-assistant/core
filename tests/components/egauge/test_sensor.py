@@ -57,7 +57,7 @@ async def test_sensor_error(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     # Test Grid power sensor
-    state = hass.states.get("sensor.egauge_home_grid")
+    state = hass.states.get("sensor.egauge_home_grid_power")
     assert state
     assert state.state == STATE_UNAVAILABLE
 
@@ -75,7 +75,7 @@ async def test_sensor_error(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     # Test Grid power sensor is available
-    state = hass.states.get("sensor.egauge_home_grid")
+    state = hass.states.get("sensor.egauge_home_grid_power")
     assert state
     assert state.state == "1500.0"
 

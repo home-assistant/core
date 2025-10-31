@@ -27,20 +27,20 @@ class EgaugeSensorEntityDescription(SensorEntityDescription):
     """Extended sensor description for eGauge sensors."""
 
     native_value_fn: Callable[[EgaugeData, str], float | None]
-    name_suffix: str | None = None
 
 
 POWER_SENSOR = EgaugeSensorEntityDescription(
     key="power",
+    translation_key="power",
     device_class=SensorDeviceClass.POWER,
     state_class=SensorStateClass.MEASUREMENT,
     native_unit_of_measurement=UnitOfPower.WATT,
     native_value_fn=lambda data, register: data.measurements.get(register),
-    name_suffix=None,
 )
 
 ENERGY_SENSOR = EgaugeSensorEntityDescription(
     key="energy",
+    translation_key="energy",
     device_class=SensorDeviceClass.ENERGY,
     state_class=SensorStateClass.TOTAL_INCREASING,
     native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -49,7 +49,6 @@ ENERGY_SENSOR = EgaugeSensorEntityDescription(
         if data.counters.get(register) is not None
         else None
     ),
-    name_suffix="energy",
 )
 
 
@@ -101,10 +100,7 @@ class EgaugeSensor(EgaugeEntity, SensorEntity):
         self._attr_unique_id = (
             f"{coordinator.serial_number}_{register_name}_{description.key}"
         )
-        if description.name_suffix:
-            self._attr_name = f"{register_name} {description.name_suffix}"
-        else:
-            self._attr_name = register_name
+        self._attr_translation_placeholders = {"register_name": register_name}
 
     @property
     def native_value(self) -> float | None:

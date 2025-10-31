@@ -38,5 +38,15 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "energy": {
+        "name": "{register_name} Energy"
+      },
+      "power": {
+        "name": "{register_name} Power"
+      }
+    }
   }
 }
