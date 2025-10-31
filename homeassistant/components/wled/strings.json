@@ -131,7 +131,7 @@
           "keep_master_light": "Add 'Main' control even with single LED segment"
         },
         "data_description": {
-          "keep_master_light": "This ensures the master light is always there, in case you are automating segments to appear and remove dynamically."
+          "keep_master_light": "Ensures the main light control is always available when you are dynamically adding and removing segments through automation."
         }
       }
     }
