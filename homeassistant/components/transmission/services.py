@@ -7,7 +7,7 @@ from typing import cast
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_CONFIG_ENTRY_ID, CONF_ID
+from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, selector
@@ -71,7 +71,7 @@ def _get_coordinator_from_service_data(
     call: ServiceCall,
 ) -> TransmissionDataUpdateCoordinator:
     """Return coordinator for entry id."""
-    config_entry_id: str = call.data[ATTR_CONFIG_ENTRY_ID]
+    config_entry_id: str = call.data[CONF_ENTRY_ID]
     if not (entry := call.hass.config_entries.async_get_entry(config_entry_id)):
         raise ServiceValidationError(
             translation_domain=DOMAIN,
@@ -92,25 +92,23 @@ async def _async_add_torrent(service: ServiceCall) -> None:
     coordinator = _get_coordinator_from_service_data(service)
     torrent: str = service.data[ATTR_TORRENT]
     download_path: str | None = service.data.get(ATTR_DOWNLOAD_PATH)
-    if torrent.startswith(
-        ("http", "ftp:", "magnet:")
-    ) or service.hass.config.is_allowed_path(torrent):
-        if download_path:
-            await service.hass.async_add_executor_job(
-                partial(
-                    coordinator.api.add_torrent, torrent, download_dir=download_path
-                )
-            )
-        else:
-            await service.hass.async_add_executor_job(
-                coordinator.api.add_torrent, torrent
-            )
-        await coordinator.async_request_refresh()
-    else:
+
+    if not (
+        torrent.startswith(("http", "ftp:", "magnet:"))
+        or service.hass.config.is_allowed_path(torrent)
+    ):
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="could_not_add_torrent",
         )
+
+    if download_path:
+        await service.hass.async_add_executor_job(
+            partial(coordinator.api.add_torrent, torrent, download_dir=download_path)
+        )
+    else:
+        await service.hass.async_add_executor_job(coordinator.api.add_torrent, torrent)
+    await coordinator.async_request_refresh()
 
 
 async def _async_start_torrent(service: ServiceCall) -> None:
