@@ -51,8 +51,8 @@ type SocoFeatures = list[tuple[str, tuple[int, int]]]
 
 _LOGGER = logging.getLogger(__name__)
 
-_GROUP_VOLUME_SIGNAL = "{SONOS_GROUP_VOLUME_REFRESHED}-{group_uid}"
-_GROUP_VOLUME_REQ_SIGNAL = "{SONOS_GROUP_VOLUME_REQUEST}-{group_uid}"
+_GROUP_VOLUME_SIGNAL = f"{SONOS_GROUP_VOLUME_REFRESHED}-{{group_uid}}"
+_GROUP_VOLUME_REQ_SIGNAL = f"{SONOS_GROUP_VOLUME_REQUEST}-{{group_uid}}"
 
 
 def _balance_to_number(state: tuple[int, int]) -> float:
@@ -192,7 +192,6 @@ class SonosGroupVolumeEntity(SonosEntity, NumberEntity):
         self._coord_uid: str | None = None
         self._group_uid: str | None = None
 
-        self._unsubscribe_coord: Callable[[], None] | None = None
         self._unsubscribe_member: Callable[[], None] | None = None
         self._unsubscribe_activity: Callable[[], None] | None = None
         self._unsubscribe_gv_signal: Callable[[], None] | None = None
@@ -200,8 +199,7 @@ class SonosGroupVolumeEntity(SonosEntity, NumberEntity):
         self._delay_unsubscribe: Callable[[], None] | None = None
 
         self._value: int | None = None
-        self._last_rebind_time: float = 0.0
-        self._bootstrap: bool = True  # startup settling window
+        self._last_rebind_ts: float = 0.0
 
     def _coordinator_soco(self) -> SoCo:
         """Return the coordinator SoCo for this speaker."""
@@ -240,9 +238,7 @@ class SonosGroupVolumeEntity(SonosEntity, NumberEntity):
             async def _delayed_refresh(_now: datetime) -> None:
                 self._delay_unsubscribe = None
                 self._rebind_for_topology_change()
-
                 await self._async_refresh_from_device()
-                self._bootstrap = False
 
             self._delay_unsubscribe = async_call_later(
                 self.hass, seconds, _delayed_refresh
@@ -262,37 +258,28 @@ class SonosGroupVolumeEntity(SonosEntity, NumberEntity):
             # Ensure scheduling runs on the HA loop thread (not an executor)
             self.hass.loop.call_soon_threadsafe(_schedule)
 
+    def _get_volume_safe(self, use_group: bool) -> int | None:
+        """Return current group or player volume, handling SoCo/OSError exceptions."""
+        try:
+            if use_group:
+                return int(self._coordinator_soco().group.volume)
+            return int(self.soco.volume)
+        except (SoCoException, OSError) as err:
+            _LOGGER.debug(
+                "Failed to read %s volume for %s: %s",
+                "group" if use_group else "player",
+                self.speaker.zone_name,
+                err,
+            )
+            return None
+
     async def _async_initial_populate(self) -> None:
         """One-time populate before the coordinator fans out values."""
-        if self._is_grouped():
-            # Read the coordinator's group volume directly
-            def _get_group_volume() -> int | None:
-                try:
-                    return int(self._coordinator_soco().group.volume)
-                except (SoCoException, OSError) as err:
-                    _LOGGER.debug(
-                        "Initial populate: failed group volume for %s: %s",
-                        self.speaker.zone_name,
-                        err,
-                    )
-                    return None
-
-            vol = await self.hass.async_add_executor_job(_get_group)
-        else:
-
-            def _get_player() -> int | None:
-                try:
-                    return int(self.soco.volume)
-                except (SoCoException, OSError) as err:
-                    _LOGGER.debug(
-                        "Initial populate: failed player volume for %s: %s",
-                        self.speaker.zone_name,
-                        err,
-                    )
-                    return None
-
-            vol = await self.hass.async_add_executor_job(_get_player)
-
+        # Determine which volume source to read (group or player)
+        use_group = self._is_grouped()
+        # Safely read the volume in an executor thread
+        vol = await self.hass.async_add_executor_job(self._get_volume_safe, use_group)
+        # Apply new value if successful
         if vol is not None and self._value != vol:
             self._value = vol
             self.async_write_ha_state()
@@ -308,7 +295,6 @@ class SonosGroupVolumeEntity(SonosEntity, NumberEntity):
                 _GROUP_VOLUME_SIGNAL.format(group_uid=group_uid),
                 self._on_group_volume_fanned,
             )
-            self.async_on_remove(self._unsubscribe_gv_signal)
 
     def _subscribe_group_requests_if_coord(self, group_uid: str | None) -> None:
         """If coordinator, subscribe for group refresh requests."""
@@ -321,7 +307,6 @@ class SonosGroupVolumeEntity(SonosEntity, NumberEntity):
                 _GROUP_VOLUME_REQ_SIGNAL.format(group_uid=group_uid),
                 self._on_group_volume_request,
             )
-            self.async_on_remove(self._unsubscribe_gv_req)
 
     def _rebind_for_topology_change(self) -> None:
         """Re-evaluate coordinator/group, rebind signals, and refresh as needed."""
@@ -340,7 +325,7 @@ class SonosGroupVolumeEntity(SonosEntity, NumberEntity):
         if no_change:
             return
         # Coalesce true topology changes (prevent rapid unsubscribe/resubscribe churn).
-        if (now - self._last_rebind_time) < (GROUP_VOLUME_REFRESH_DELAY * 2):
+        if (now - self._last_rebind_ts) < (GROUP_VOLUME_REFRESH_DELAY * 2):
             return
 
         # Always ensure we listen to our own member state
@@ -360,7 +345,7 @@ class SonosGroupVolumeEntity(SonosEntity, NumberEntity):
         # (Re)bind coordinator-request listener if we are coordinator
         self._subscribe_group_requests_if_coord(new_group_uid)
 
-        self._last_rebind_time = time.monotonic()
+        self._last_rebind_ts = time.monotonic()
 
         if self._is_grouped():
             if self._is_coordinator():
@@ -370,7 +355,7 @@ class SonosGroupVolumeEntity(SonosEntity, NumberEntity):
                 self.hass.loop.call_soon_threadsafe(
                     async_dispatcher_send,
                     self.hass,
-                    _GROUP_VOLUME_REQ_SIGNAL(group_uid=new_group_uid),
+                    _GROUP_VOLUME_REQ_SIGNAL.format(group_uid=new_group_uid),
                     None,
                 )
                 self._schedule_delayed_refresh(GROUP_VOLUME_REFRESH_DELAY)
@@ -404,7 +389,7 @@ class SonosGroupVolumeEntity(SonosEntity, NumberEntity):
                 self.hass.loop.call_soon_threadsafe(
                     async_dispatcher_send,
                     self.hass,
-                    _GROUP_VOLUME_REQ_SIGNAL(group_uid=group_uid),
+                    _GROUP_VOLUME_REQ_SIGNAL.format(group_uid=group_uid),
                     None,
                 )
                 self._schedule_delayed_refresh(GROUP_VOLUME_REFRESH_DELAY)
@@ -421,27 +406,19 @@ class SonosGroupVolumeEntity(SonosEntity, NumberEntity):
 
         if self._is_grouped():
             if not self._is_coordinator():
-                return  # coordinator is authoritative and will fan-out
+                return  # Coordinator is authoritative and will fan-out
 
-            def _get_group() -> int | None:
-                try:
-                    return int(self._coordinator_soco().group.volume)
-                except (SoCoException, OSError) as err:
-                    _LOGGER.debug(
-                        "Failed to read group volume for %s: %s",
-                        self.speaker.zone_name,
-                        err,
-                    )
-                    return None
-
-            if (vol := await self.hass.async_add_executor_job(_get_group)) is None:
+            # Safely read coordinator's group volume
+            vol = await self.hass.async_add_executor_job(self._get_volume_safe, True)
+            if vol is None:
                 return
 
             if self._value != vol:
                 self._value = vol
                 self.async_write_ha_state()
+
+                # Fan-out to group members (thread-safe via dispatcher)
                 if group_uid_actual:
-                    # Fan-out to members (thread-safe via dispatcher)
                     self.hass.loop.call_soon_threadsafe(
                         async_dispatcher_send,
                         self.hass,
@@ -450,18 +427,9 @@ class SonosGroupVolumeEntity(SonosEntity, NumberEntity):
                     )
             return
 
-        def _get_player() -> int | None:
-            try:
-                return int(self.soco.volume)
-            except (SoCoException, OSError) as err:
-                _LOGGER.debug(
-                    "Failed to read player volume for %s: %s",
-                    self.speaker.zone_name,
-                    err,
-                )
-                return None
-
-        if (vol := await self.hass.async_add_executor_job(_get_player)) is None:
+        # Handle ungrouped players
+        vol = await self.hass.async_add_executor_job(self._get_volume_safe, False)
+        if vol is None:
             return
 
         if self._value != vol:
@@ -486,10 +454,20 @@ class SonosGroupVolumeEntity(SonosEntity, NumberEntity):
         self._schedule_delayed_refresh(GROUP_VOLUME_REFRESH_DELAY)
 
     async def async_will_remove_from_hass(self) -> None:
-        """Cleanup on removal (dispatcher unsubs handled elsewhere; cancel pending timer)."""
+        """Cleanup on removal (dispatcher unsubs handled here; cancel pending timer)."""
         await super().async_will_remove_from_hass()
 
-        # Let async_on_remove(...) handle dispatcher unsubs; just cancel timer
+        # Explicitly unsubscribe all dispatcher listeners
+        for unsub in (
+            self._unsubscribe_member,
+            self._unsubscribe_activity,
+            self._unsubscribe_gv_signal,
+            self._unsubscribe_gv_req,
+        ):
+            if unsub is not None:
+                unsub()
+
+        # Cancel any pending delayed refresh
         if self._delay_unsubscribe is not None:
             self._delay_unsubscribe()
             self._delay_unsubscribe = None
