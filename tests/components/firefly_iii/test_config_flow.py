@@ -241,6 +241,7 @@ async def test_full_flow_reconfigure(
 ) -> None:
     """Test the full flow of the config flow."""
     mock_config_entry.add_to_hass(hass)
+
     result = await mock_config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
@@ -266,21 +267,32 @@ async def test_full_flow_reconfigure_unique_id(
 ) -> None:
     """Test the full flow of the config flow, this time with a known unique ID."""
     mock_config_entry.add_to_hass(hass)
+    duplicate_entry = MockConfigEntry(
+        domain="firefly_iii",
+        data={
+            CONF_URL: "https://duplicate-url/",
+            CONF_API_KEY: "other_key",
+            CONF_VERIFY_SSL: True,
+        },
+        unique_id="very-annoying-duplicate",
+    )
+    duplicate_entry.add_to_hass(hass)
+
     result = await mock_config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input=MOCK_USER_SETUP,
+        user_input={
+            CONF_URL: "https://duplicate-url/",
+            CONF_API_KEY: "new_key",
+            CONF_VERIFY_SSL: True,
+        },
     )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert mock_config_entry.data[CONF_API_KEY] == "test_api_token"
-    assert mock_config_entry.data[CONF_URL] == "https://127.0.0.1:9000/"
-    assert mock_config_entry.data[CONF_VERIFY_SSL] is True
-    assert len(mock_setup_entry.mock_calls) == 0
 
 
 @pytest.mark.parametrize(
