@@ -252,7 +252,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==42.4.0
+aioesphomeapi==42.5.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -849,7 +849,7 @@ ebusdpy==0.0.17
 ecoaliface==0.4.0
 
 # homeassistant.components.eheimdigital
-eheimdigital==1.3.0
+eheimdigital==1.4.0
 
 # homeassistant.components.ekeybionyx
 ekey-bionyxpy==1.0.0
@@ -1652,7 +1652,7 @@ openwrt-luci-rpc==1.1.17
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.15.8
+opower==0.15.9
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -2598,7 +2598,7 @@ pyvera==0.3.16
 pyversasense==0.0.6
 
 # homeassistant.components.vesync
-pyvesync==3.1.2
+pyvesync==3.1.4
 
 # homeassistant.components.vizio
 pyvizio==0.1.61
