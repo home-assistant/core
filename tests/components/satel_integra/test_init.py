@@ -47,7 +47,7 @@ async def test_config_flow_migration_version_1_2(
     original: ConfigSubentry,
     number_property: str,
 ) -> None:
-    """Test that the unique ID is migrated to the new format."""
+    """Test that the configured number is added to the subentry title."""
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -72,6 +72,8 @@ async def test_config_flow_migration_version_1_2(
     assert subentry is not None
     assert subentry.title == f"{original.title} ({original.data[number_property]})"
 
+    assert subentry == snapshot
+
 
 @pytest.mark.parametrize(
     ("platform", "old_id", "new_id"),
@@ -84,13 +86,14 @@ async def test_config_flow_migration_version_1_2(
 )
 async def test_unique_id_migration_from_single_config(
     hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
     mock_satel: AsyncMock,
     entity_registry: EntityRegistry,
     platform: str,
     old_id: str,
     new_id: str,
 ) -> None:
-    """Test that the unique ID is migrated to the new format."""
+    """Test that the unique ID is migrated to use the config entry id."""
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -117,3 +120,5 @@ async def test_unique_id_migration_from_single_config(
 
     assert entity is not None
     assert entity.unique_id == new_id
+
+    assert entity == snapshot

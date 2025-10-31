@@ -22,7 +22,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
 from homeassistant.helpers.typing import ConfigType
 
-from .config_flow import SatelConfigFlow
 from .const import (
     CONF_ARM_HOME_MODE,
     CONF_DEVICE_PARTITIONS,
@@ -259,7 +258,7 @@ async def async_migrate_entry(
         config_entry.minor_version,
     )
 
-    if config_entry.version > SatelConfigFlow.VERSION:
+    if config_entry.version > 2:
         # This means the user has downgraded from a future version
         return False
 
