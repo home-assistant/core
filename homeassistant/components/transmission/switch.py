@@ -58,15 +58,6 @@ class TransmissionSwitch(TransmissionEntity, SwitchEntity):
 
     entity_description: TransmissionSwitchEntityDescription
 
-    def __init__(
-        self,
-        coordinator: TransmissionDataUpdateCoordinator,
-        entity_description: TransmissionSwitchEntityDescription,
-    ) -> None:
-        """Initialize the Transmission switch."""
-        super().__init__(coordinator, entity_description.key)
-        self.entity_description = entity_description
-
     @property
     def is_on(self) -> bool:
         """Return true if device is on."""

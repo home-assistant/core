@@ -143,15 +143,6 @@ class TransmissionSensor(TransmissionEntity, SensorEntity):
 
     entity_description: TransmissionSensorEntityDescription
 
-    def __init__(
-        self,
-        coordinator: TransmissionDataUpdateCoordinator,
-        entity_description: TransmissionSensorEntityDescription,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator, entity_description.key)
-        self.entity_description = entity_description
-
     @property
     def native_value(self) -> StateType:
         """Return the value of the sensor."""

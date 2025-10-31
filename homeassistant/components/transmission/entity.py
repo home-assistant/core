@@ -1,6 +1,7 @@
 """Base class for Transmission entities."""
 
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -13,11 +14,16 @@ class TransmissionEntity(CoordinatorEntity[TransmissionDataUpdateCoordinator]):
     _attr_has_entity_name = True
 
     def __init__(
-        self, coordinator: TransmissionDataUpdateCoordinator, key: str
+        self,
+        coordinator: TransmissionDataUpdateCoordinator,
+        entity_description: EntityDescription,
     ) -> None:
         """Initialize Transmission entity."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}-{key}"
+        self.entity_description = entity_description
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}-{entity_description.key}"
+        )
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
             manufacturer="Transmission",
