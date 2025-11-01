@@ -11,7 +11,6 @@ from py_rejseplan.exceptions import api_error, connection_error, http_error
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -68,7 +67,6 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard | No
         """Coordinator-level diagnostics for the status entity."""
         return {
             "last_update_time": self.last_update_success_time,
-            "registered_stop_ids": sorted(self._stop_ids),
             "update_interval": (
                 int(self.update_interval.total_seconds())
                 if self.update_interval
@@ -175,14 +173,3 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard | No
             len(filtered_data),
         )
         return filtered_data[idx:]
-
-
-class NoStopsRegisteredError(HomeAssistantError):
-    """Error to indicate that no stop IDs are registered in the coordinator."""
-
-    def __init__(
-        self, message: str = "No stop IDs registered in the coordinator."
-    ) -> None:
-        """Initialize the error with a message."""
-        super().__init__(message)
-        self.message = message
