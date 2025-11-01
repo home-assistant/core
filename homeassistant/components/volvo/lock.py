@@ -107,11 +107,12 @@ class VolvoLock(VolvoEntity, LockEntity):
             self.coordinator.get_api_field(self.entity_description.api_field),
         )
 
+        self._attr_is_locking = False
+        self._attr_is_unlocking = False
+
         if locked:
-            self._attr_is_locking = False
             api_field.value = self.entity_description.api_lock_value
         else:
-            self._attr_is_unlocking = False
             api_field.value = self.entity_description.api_unlock_value
 
         self._attr_is_locked = locked
