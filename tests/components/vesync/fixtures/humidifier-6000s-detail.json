@@ -1,11 +1,11 @@
 {
-  "traceId": "1762006109",
+  "traceId": "0",
   "code": 0,
   "msg": "request success",
   "module": null,
   "stacktrace": null,
   "result": {
-    "traceId": "1762006109",
+    "traceId": "0",
     "code": 0,
     "result": {
       "powerSwitch": 1,
