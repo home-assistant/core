@@ -200,7 +200,7 @@
         "type": "wifi-air",
         "uuid": "00000000-1111-2222-3333-444444444444",
         "configModule": "VS_WFON_AHM_LEH-S601S-WUS_US",
-        "macID": "30:30:f9:fc:aa:28",
+        "macID": "00:10:f0:aa:bb:cc",
         "mode": null,
         "speed": null,
         "currentFirmVersion": null,
