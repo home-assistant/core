@@ -44,7 +44,7 @@
         "data_description": {
           "url": "[%key:component::music_assistant::config::step::init::data_description::url%]"
         }
-      },
+      }
   },
   "entity": {
     "button": {
