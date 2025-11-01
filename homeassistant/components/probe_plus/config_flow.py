@@ -99,7 +99,7 @@ class ProbeConfigFlow(ConfigFlow, domain=DOMAIN):
                 data={**user_input, CONF_MODEL: discovery.discovery_info.name},
             )
 
-        current_addresses = self._async_current_ids()
+        current_addresses = self._async_current_ids(include_ignore=False)
         for discovery_info in async_discovered_service_info(self.hass):
             address = discovery_info.address
             if address in current_addresses or address in self._discovered_devices:
