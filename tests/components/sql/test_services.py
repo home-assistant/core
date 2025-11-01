@@ -124,7 +124,7 @@ async def test_query_service_rollback_on_error(
             return_response=True,
         )
 
-    assert mock_session_rollback.call_count == 1
+    mock_session_rollback.assert_called_once()
 
 
 async def test_query_service_data_conversion(
