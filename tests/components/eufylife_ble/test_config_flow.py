@@ -203,3 +203,35 @@ async def test_async_step_user_takes_precedence_over_discovery(
 
     # Verify the original one was aborted
     assert not hass.config_entries.flow.async_progress(DOMAIN)
+
+
+async def test_async_step_user_replaces_ignored(hass: HomeAssistant) -> None:
+    """Test setup from service info cache replaces an ignored entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="11:22:33:44:55:66",
+        source=config_entries.SOURCE_IGNORE,
+    )
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.eufylife_ble.config_flow.async_discovered_service_info",
+        return_value=[T9146_SERVICE_INFO],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    with patch(
+        "homeassistant.components.eufylife_ble.async_setup_entry", return_value=True
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"address": "11:22:33:44:55:66"},
+        )
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "Smart Scale C1"
+    assert result2["data"] == {"model": "eufy T9146"}
+    assert result2["result"].unique_id == "11:22:33:44:55:66"
