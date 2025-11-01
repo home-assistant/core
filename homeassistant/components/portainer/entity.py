@@ -8,16 +8,24 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DEFAULT_NAME, DOMAIN
-from .coordinator import PortainerCoordinator, PortainerCoordinatorData
+from .coordinator import (
+    ContainerBeaconData,
+    PortainerBeaconCoordinator,
+    PortainerBeaconData,
+    PortainerCoordinator,
+    PortainerCoordinatorData,
+)
 
 
-class PortainerCoordinatorEntity(CoordinatorEntity[PortainerCoordinator]):
+class PortainerBaseClass:
     """Base class for Portainer entities."""
 
     _attr_has_entity_name = True
 
 
-class PortainerEndpointEntity(PortainerCoordinatorEntity):
+class PortainerEndpointEntity(
+    PortainerBaseClass, CoordinatorEntity[PortainerCoordinator]
+):
     """Base implementation for Portainer endpoint."""
 
     def __init__(
@@ -42,7 +50,9 @@ class PortainerEndpointEntity(PortainerCoordinatorEntity):
         )
 
 
-class PortainerContainerEntity(PortainerCoordinatorEntity):
+class PortainerContainerEntity(
+    PortainerBaseClass, CoordinatorEntity[PortainerCoordinator]
+):
     """Base implementation for Portainer container."""
 
     def __init__(
@@ -79,3 +89,21 @@ class PortainerContainerEntity(PortainerCoordinatorEntity):
             ),
             translation_key=None if self.device_name else "unknown_container",
         )
+
+
+class PortainerContainerUpdateEntity(
+    PortainerBaseClass, CoordinatorEntity[PortainerBeaconCoordinator]
+):
+    """Describes a Portainer update entity."""
+
+    def __init__(
+        self,
+        coordinator: PortainerBeaconCoordinator,
+        endpoint: PortainerBeaconData,
+        container: ContainerBeaconData,
+    ) -> None:
+        """Initialize entity."""
+        super().__init__(coordinator)
+        self.endpoint = endpoint
+        self.container = container
+        self.device_name = self.container.core.names[0].replace("/", " ").strip()
