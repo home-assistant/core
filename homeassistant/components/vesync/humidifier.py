@@ -95,6 +95,8 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
 
     _attr_supported_features = HumidifierEntityFeature.MODES
 
+    _attr_translation_key = "vesync"
+
     def __init__(
         self,
         device: VeSyncBaseDevice,
