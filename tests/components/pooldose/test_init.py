@@ -128,6 +128,11 @@ async def test_migrate_entity_unique_ids(
     # Add config entry first
     mock_config_entry.add_to_hass(hass)
 
+    # Set config entry to version 0 to force migration
+    hass.config_entries.async_update_entry(
+        mock_config_entry, version=1, minor_version=0
+    )
+
     # Create entities with old unique ID format
     entity_registry.async_get_or_create(
         "sensor",
@@ -149,11 +154,13 @@ async def test_migrate_entity_unique_ids(
         config_entry=mock_config_entry,
     )
 
-    mock_config_entry.add_to_hass(hass)
-
     # Setup the integration - this will trigger migration
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
+
+    # Verify the config entry version was updated
+    assert mock_config_entry.version == 1
+    assert mock_config_entry.minor_version == 1
 
     # Verify the entities have been migrated
     assert entity_registry.async_get_entity_id(
