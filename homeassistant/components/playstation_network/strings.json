@@ -39,7 +39,7 @@
           "npsso": "NPSSO token"
         },
         "data_description": {
-          "npsso": "The NPSSO token is generated upon successful login of your PlayStation Network account and is used to authenticate your requests within Home Assistant."
+          "npsso": "The NPSSO token is generated during successful login of your PlayStation Network account and is used to authenticate your requests from with Home Assistant."
         },
         "description": "To obtain your NPSSO token, log in to your [PlayStation account]({psn_link}) first. Then [click here]({npsso_link}) to retrieve the token."
       }

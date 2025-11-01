@@ -169,7 +169,7 @@ async def test_parse_npsso_token_failures(
     mock_psnawp_npsso: MagicMock,
 ) -> None:
     """Test parse_npsso_token raises the correct exceptions during config flow."""
-    mock_psnawp_npsso.side_effect = PSNAWPInvalidTokenError
+    mock_psnawp_npsso.parse_npsso_token.side_effect = PSNAWPInvalidTokenError
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
@@ -177,7 +177,7 @@ async def test_parse_npsso_token_failures(
     )
     assert result["errors"] == {"base": "invalid_account"}
 
-    mock_psnawp_npsso.side_effect = lambda token: token
+    mock_psnawp_npsso.parse_npsso_token.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_NPSSO: NPSSO_TOKEN},

@@ -196,9 +196,12 @@ def mock_psnawp_npsso(mock_user: MagicMock) -> Generator[MagicMock]:
     """Mock psnawp_api."""
 
     with patch(
-        "homeassistant.components.playstation_network.config_flow.parse_npsso_token",
-        side_effect=lambda token: token,
-    ) as npsso:
+        "psnawp_api.utils.misc.parse_npsso_token",
+        autospec=True,
+    ) as mock_parse_npsso_token:
+        npsso = mock_parse_npsso_token.return_value
+        npsso.parse_npsso_token.return_value = NPSSO_TOKEN
+
         yield npsso
 
 
