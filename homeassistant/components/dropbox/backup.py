@@ -9,8 +9,12 @@ from python_dropbox_api import (
     DropboxUnknownException,
 )
 
-from homeassistant.components.backup import AgentBackup, BackupAgent, BackupNotFound
-from homeassistant.components.backup.models import BackupAgentError
+from homeassistant.components.backup import (
+    AgentBackup,
+    BackupAgent,
+    BackupAgentError,
+    BackupNotFound,
+)
 from homeassistant.core import HomeAssistant, callback
 
 from . import DropboxConfigEntry
@@ -58,6 +62,7 @@ class DropboxBackupAgent(BackupAgent):
         """Initialize the backup agent."""
         super().__init__()
         self.name = entry.title
+        assert entry.unique_id
         self.unique_id = entry.unique_id
         self._client = entry.runtime_data
 
