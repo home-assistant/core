@@ -89,6 +89,9 @@
       },
       "filter_life": {
         "name": "Filter lifetime"
+      },
+      "temperature": {
+        "name": "Temperature"
       }
     },
     "switch": {
