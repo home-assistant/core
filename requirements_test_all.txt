@@ -672,6 +672,9 @@ datadog==0.52.0
 # homeassistant.components.metoffice
 datapoint==0.12.1
 
+# homeassistant.components.daybetter_services
+daybetter-services-python==1.0.3
+
 # homeassistant.components.bluetooth
 dbus-fast==2.44.3
 

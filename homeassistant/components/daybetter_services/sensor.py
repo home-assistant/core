@@ -38,7 +38,7 @@ async def async_setup_entry(
         group = (
             str(device.get("deviceGroupName", device_name)).lower().replace(" ", "_")
         )
-        
+
         if "temp" in device:
             entities.append(
                 DayBetterTemperatureSensor(coordinator, device, device_id, group)
@@ -201,8 +201,7 @@ class DayBetterBatterySensor(DayBetterSensorBase):
         if not device:
             return None
 
-        # Support both spellings for compatibility
-        battery = device.get("bettery") or device.get("battery")
+        battery = device.get("battery")
         if battery is None:
             return None
 

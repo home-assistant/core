@@ -1,7 +1,9 @@
 {
   "recommendations": [
-    "charliermarsh.ruff",
+    "ms-python.python",
+    "ms-python.vscode-pylance",
     "esbenp.prettier-vscode",
-    "ms-python.python"
+    "redhat.vscode-yaml",
+    "eamodio.gitlens"
   ]
 }

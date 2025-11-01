@@ -2,6 +2,41 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "🚀 DayBetter: 安装依赖",
+      "type": "shell",
+      "command": "python3.12 -m pip install daybetter-services-python==1.0.3 && echo '✅ DayBetter Services 依赖已安装'",
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "echo": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "🧪 DayBetter: 运行测试",
+      "type": "shell",
+      "command": "python3.12 -m pytest tests/components/daybetter_services/ -vv",
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "focus": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "📋 DayBetter: 复制到 custom_components",
+      "type": "shell",
+      "command": "mkdir -p config/custom_components/daybetter_services && cp -r homeassistant/components/daybetter_services/* config/custom_components/daybetter_services/ && echo '✅ 已复制到 custom_components'",
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
       "label": "Run Home Assistant Core",
       "type": "shell",
       "command": "${command:python.interpreterPath} -m homeassistant -c ./config",

@@ -5,6 +5,24 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "🔥 DayBetter Services (调试模式)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "homeassistant",
+      "justMyCode": false,
+      "args": [
+        "--debug",
+        "-c",
+        "config",
+        "--skip-pip"
+      ],
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+      },
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
       "name": "Home Assistant",
       "type": "debugpy",
       "request": "launch",
@@ -48,6 +66,21 @@
       "module": "pytest",
       "console": "integratedTerminal",
       "args": ["-vv", "${file}"]
+    },
+    {
+      "name": "🧪 DayBetter Services Tests",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "console": "integratedTerminal",
+      "args": [
+        "-vv",
+        "-s",
+        "tests/components/daybetter_services/"
+      ],
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+      }
     },
     {
       // Debug by attaching to local Home Assistant server using Remote Python Debugger.

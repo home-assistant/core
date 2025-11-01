@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from daybetter_python import DayBetterClient
+from daybetter_python import APIError, AuthenticationError, DayBetterClient
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -51,6 +51,7 @@ class DayBetterServicesConfigFlow(ConfigFlow, domain=DOMAIN):
                     client_with_token = DayBetterClient(token=token)
 
                     try:
+                        # Basic validation that token works with the API
                         await client_with_token.fetch_devices()
                         await client_with_token.fetch_pids()
 
@@ -61,12 +62,18 @@ class DayBetterServicesConfigFlow(ConfigFlow, domain=DOMAIN):
                                 CONF_TOKEN: token,
                             },
                         )
+                    except (AuthenticationError, APIError):
+                        errors["base"] = "cannot_connect"
                     except Exception:  # noqa: BLE001
+                        # Any error while validating the token should be treated
+                        # as connection/validation failure for the user.
                         errors["base"] = "cannot_connect"
                     finally:
                         if client_with_token is not None:
                             await client_with_token.close()
 
+            except (AuthenticationError, APIError):
+                errors["base"] = "cannot_connect"
             except InvalidCode:
                 errors["base"] = "invalid_code"
             except CannotConnect:
