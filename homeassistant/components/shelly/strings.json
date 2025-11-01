@@ -162,6 +162,18 @@
         }
       }
     },
+    "select": {
+      "cury_mode": {
+        "state": {
+          "bedroom": "Bedroom",
+          "hall": "Hall",
+          "lavatory_room": "Lavatory room",
+          "living_room": "Living room",
+          "reception": "Reception",
+          "workplace": "Workplace"
+        }
+      }
+    },
     "sensor": {
       "adc": {
         "name": "ADC"
