@@ -115,7 +115,7 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
         self._attr_min_humidity = min(device.target_minmax)
 
         # Populate maps once.
-        for vs_mode in self.device.mist_modes:
+        for vs_mode in self.device.mist_modes.values():
             ha_mode = _get_ha_mode(vs_mode)
             if ha_mode:
                 self._available_modes.append(ha_mode)
@@ -164,15 +164,7 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
         if not await self.device.set_humidity_mode(self._get_vs_mode(mode)):
             raise HomeAssistantError(self.device.last_response.message)
 
-        if mode == MODE_SLEEP:
-            # We successfully changed the mode. Consider it a success even if display operation fails.
-            await self.device.toggle_display(False)
-
-        # Changing mode while humidifier is off actually turns it on, as per the app. But
-        # the library does not seem to update the device_status. It is also possible that
-        # other attributes get updated. Scheduling a forced refresh to get device status.
-        # updated.
-        self.schedule_update_ha_state(force_refresh=True)
+        self.schedule_update_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
