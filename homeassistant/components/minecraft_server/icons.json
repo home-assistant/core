@@ -4,8 +4,8 @@
       "status": {
         "default": "mdi:lan",
         "state": {
-          "on": "mdi:lan-connect",
-          "off": "mdi:lan-disconnect"
+          "off": "mdi:lan-disconnect",
+          "on": "mdi:lan-connect"
         }
       }
     },
@@ -19,6 +19,12 @@
       "latency": {
         "default": "mdi:signal"
       },
+      "map_name": {
+        "default": "mdi:map"
+      },
+      "motd": {
+        "default": "mdi:minecraft"
+      },
       "players_max": {
         "default": "mdi:account-multiple"
       },
@@ -30,12 +36,6 @@
       },
       "version": {
         "default": "mdi:numeric"
-      },
-      "motd": {
-        "default": "mdi:minecraft"
-      },
-      "map_name": {
-        "default": "mdi:map"
       }
     }
   }

@@ -4,8 +4,10 @@ from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
 from typing import Any, Concatenate
 
+from aioamazondevices.const import SPEAKER_GROUP_FAMILY
 from aioamazondevices.exceptions import CannotConnect, CannotRetrieveData
 
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.entity_registry as er
@@ -61,3 +63,21 @@ async def async_update_unique_id(
 
             # Update the registry with the new unique_id
             entity_registry.async_update_entity(entity_id, new_unique_id=new_unique_id)
+
+
+async def async_remove_dnd_from_virtual_group(
+    hass: HomeAssistant,
+    coordinator: AmazonDevicesCoordinator,
+) -> None:
+    """Remove entity DND from virtual group."""
+    entity_registry = er.async_get(hass)
+
+    for serial_num in coordinator.data:
+        unique_id = f"{serial_num}-do_not_disturb"
+        entity_id = entity_registry.async_get_entity_id(
+            DOMAIN, SWITCH_DOMAIN, unique_id
+        )
+        is_group = coordinator.data[serial_num].device_family == SPEAKER_GROUP_FAMILY
+        if entity_id and is_group:
+            entity_registry.async_remove(entity_id)
+            _LOGGER.debug("Removed DND switch from virtual group %s", entity_id)

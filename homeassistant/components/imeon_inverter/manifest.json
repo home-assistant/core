@@ -10,8 +10,8 @@
   "requirements": ["imeon_inverter_api==0.4.0"],
   "ssdp": [
     {
-      "manufacturer": "IMEON",
       "deviceType": "urn:schemas-upnp-org:device:Basic:1",
+      "manufacturer": "IMEON",
       "st": "upnp:rootdevice"
     }
   ]
