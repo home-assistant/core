@@ -67,7 +67,7 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
 
     def _async_add_new_containers(
-        containers: list[tuple[PortainerCoordinatorData, DockerContainer]],
+        containers: list[tuple[PortainerCoordinatorData, PortainerContainerData]],
     ) -> None:
         """Add new container button sensors."""
         async_add_entities(

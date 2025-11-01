@@ -88,21 +88,23 @@ CONTAINER_SENSORS: tuple[PortainerContainerSensorEntityDescription, ...] = (
         key="cpu_usage_total",
         translation_key="cpu_usage_total",
         value_fn=lambda data: (
-            (
-                (
-                    data.stats.cpu_stats.cpu_usage.total_usage
-                    - data.stats_pre.cpu_stats.cpu_usage.total_usage
-                )
-                / (
+            (total_delta / system_delta) * data.stats.cpu_stats.online_cpus * 100.0
+            if (prev := data.stats_pre) is not None
+            and (
+                system_delta := (
                     data.stats.cpu_stats.system_cpu_usage
-                    - data.stats_pre.cpu_stats.system_cpu_usage
+                    - prev.cpu_stats.system_cpu_usage
                 )
             )
-            * data.stats.cpu_stats.online_cpus
-            * 100.0
-            if data.stats_pre  # Previous stats need to be available, else no CPU can be calculated
-            and data.stats_pre.cpu_stats.system_cpu_usage > 0
-            and data.stats.cpu_stats.system_cpu_usage > 0
+            > 0
+            and (
+                total_delta := (
+                    data.stats.cpu_stats.cpu_usage.total_usage
+                    - prev.cpu_stats.cpu_usage.total_usage
+                )
+            )
+            >= 0
+            and data.stats.cpu_stats.online_cpus > 0
             else 0.0
         ),
         native_unit_of_measurement=PERCENTAGE,
@@ -237,7 +239,7 @@ async def async_setup_entry(
         )
 
     def _async_add_new_containers(
-        containers: list[tuple[PortainerCoordinatorData, DockerContainer]],
+        containers: list[tuple[PortainerCoordinatorData, PortainerContainerData]],
     ) -> None:
         """Add new container sensors."""
         async_add_entities(
@@ -249,7 +251,7 @@ async def async_setup_entry(
             )
             for (endpoint, container) in containers
             for entity_description in CONTAINER_SENSORS
-            if entity_description.value_fn(container)
+            if entity_description.value_fn(container) is not None
         )
 
     coordinator.new_endpoints_callbacks.append(_async_add_new_endpoints)

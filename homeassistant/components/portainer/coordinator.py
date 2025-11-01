@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
@@ -81,7 +82,9 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
             Callable[[list[PortainerCoordinatorData]], None]
         ] = []
         self.new_containers_callbacks: list[
-            Callable[[list[tuple[PortainerCoordinatorData, DockerContainer]]], None]
+            Callable[
+                [list[tuple[PortainerCoordinatorData, PortainerContainerData]]], None
+            ]
         ] = []
 
     async def _async_setup(self) -> None:
@@ -224,7 +227,7 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
 
         # Surprise, we also handle containers here :)
         current_containers = {
-            (endpoint.id, container.id)
+            (endpoint.id, container.container.id)
             for endpoint in mapped_endpoints.values()
             for container in endpoint.containers.values()
         }
