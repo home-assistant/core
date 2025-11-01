@@ -49,7 +49,7 @@ async def test_config_entry_auth_failed(
 ) -> None:
     """Test config entry auth failed setup error."""
 
-    mock_psnawpapi.user.side_effect = PSNAWPAuthenticationError
+    mock_psnawpapi.user.side_effect = PSNAWPAuthenticationError("error msg")
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -95,7 +95,7 @@ async def test_coordinator_update_auth_failed(
     """Test coordinator update auth failed setup error."""
 
     mock_psnawpapi.user.return_value.get_presence.side_effect = (
-        PSNAWPAuthenticationError
+        PSNAWPAuthenticationError("error msg")
     )
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -152,7 +152,7 @@ async def test_trophy_title_coordinator_auth_failed(
     assert config_entry.state is ConfigEntryState.LOADED
 
     mock_psnawpapi.user.return_value.trophy_titles.side_effect = (
-        PSNAWPAuthenticationError
+        PSNAWPAuthenticationError("error msg")
     )
 
     freezer.tick(timedelta(days=1))
@@ -300,10 +300,10 @@ async def test_friends_coordinator_update_data_failed(
 @pytest.mark.parametrize(
     ("exception", "state"),
     [
-        (PSNAWPNotFoundError, ConfigEntryState.SETUP_ERROR),
-        (PSNAWPAuthenticationError, ConfigEntryState.SETUP_ERROR),
-        (PSNAWPServerError, ConfigEntryState.SETUP_RETRY),
-        (PSNAWPClientError, ConfigEntryState.SETUP_RETRY),
+        (PSNAWPNotFoundError("error msg"), ConfigEntryState.SETUP_ERROR),
+        (PSNAWPAuthenticationError("error msg"), ConfigEntryState.SETUP_ERROR),
+        (PSNAWPServerError("error msg"), ConfigEntryState.SETUP_RETRY),
+        (PSNAWPClientError("error msg"), ConfigEntryState.SETUP_RETRY),
     ],
 )
 async def test_friends_coordinator_setup_failed(
@@ -332,7 +332,7 @@ async def test_friends_coordinator_auth_failed(
     """Test friends coordinator starts reauth on authentication error."""
 
     mock = mock_psnawpapi.user.return_value.friends_list.return_value[0]
-    mock.profile.side_effect = PSNAWPAuthenticationError
+    mock.profile.side_effect = PSNAWPAuthenticationError("error msg")
 
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)

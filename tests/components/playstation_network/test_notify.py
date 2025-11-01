@@ -101,7 +101,12 @@ async def test_send_message(
 
 @pytest.mark.parametrize(
     "exception",
-    [PSNAWPClientError, PSNAWPForbiddenError, PSNAWPNotFoundError, PSNAWPServerError],
+    [
+        PSNAWPClientError("error msg"),
+        PSNAWPForbiddenError("error msg"),
+        PSNAWPNotFoundError("error msg"),
+        PSNAWPServerError("error msg"),
+    ],
 )
 async def test_send_message_exceptions(
     hass: HomeAssistant,

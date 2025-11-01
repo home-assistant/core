@@ -5,7 +5,6 @@ from __future__ import annotations
 from abc import abstractmethod
 from dataclasses import dataclass
 from datetime import timedelta
-import json
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -175,10 +174,6 @@ class PlaystationNetworkGroupsUpdateCoordinator(
                 }
             )
         except PSNAWPForbiddenError as e:
-            try:
-                error = json.loads(e.args[0])
-            except json.JSONDecodeError as err:
-                raise PSNAWPServerError from err
             ir.async_create_issue(
                 self.hass,
                 DOMAIN,
@@ -189,7 +184,7 @@ class PlaystationNetworkGroupsUpdateCoordinator(
                 translation_key="group_chat_forbidden",
                 translation_placeholders={
                     CONF_NAME: self.config_entry.title,
-                    "error_message": error["error"]["message"],
+                    "error_message": e.message or "",
                 },
             )
             await self.async_shutdown()
