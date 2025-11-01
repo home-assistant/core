@@ -91,7 +91,7 @@ class RabbitAirConfigFlow(ConfigFlow, domain=DOMAIN):
             errors, info = await self._validate_and_map_errors(user_input)
             if not errors:
                 if info is None:
-                    _LOGGER.exception("Validation returned no info")
+                    _LOGGER.error("Validation returned no info")
                     errors["base"] = "unknown"
                 else:
                     user_input[CONF_MAC] = info["mac"]
