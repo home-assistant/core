@@ -634,8 +634,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'MSI MAG B650M MORTAR WIFI (MS-7D76) System Fan #1 Fan',
-      'max_value': '-',
-      'min_value': '-',
+      'max_value': None,
+      'min_value': None,
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -1458,8 +1458,8 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'MSI MAG B650M MORTAR WIFI (MS-7D76) System Fan #1 Fan',
-        'max_value': '-',
-        'min_value': '-',
+        'max_value': None,
+        'min_value': None,
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
       'context': <ANY>,
@@ -1836,8 +1836,8 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'MSI MAG B650M MORTAR WIFI (MS-7D76) System Fan #1 Fan',
-        'max_value': '-',
-        'min_value': '-',
+        'max_value': None,
+        'min_value': None,
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
       'context': <ANY>,
