@@ -48,7 +48,6 @@ class OAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
         await self.async_set_unique_id(account_info.account_id)
         if self.source == SOURCE_REAUTH:
-            # TODO: test this
             self._abort_if_unique_id_mismatch(reason="wrong_account")
             return self.async_update_reload_and_abort(
                 self._get_reauth_entry(), data=data

@@ -2,7 +2,7 @@
 
 from collections.abc import AsyncIterator, Callable, Coroutine
 import json
-from typing import Any
+from typing import Any, cast
 
 from aiohttp import ClientSession
 from python_dropbox_api import (
@@ -16,8 +16,12 @@ from python_dropbox_api import (
     PropertyTemplate,
 )
 
-from homeassistant.components.backup.models import AgentBackup, BackupNotFound
-from homeassistant.components.backup.util import suggested_filename
+from homeassistant.components.backup import (
+    AgentBackup,
+    BackupNotFound,
+    suggested_filename,
+)
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_entry_oauth2_flow
 
 
@@ -37,7 +41,7 @@ class AsyncConfigEntryAuth(Auth):
         """Return a valid access token."""
         await self._oauth_session.async_ensure_token_valid()
 
-        return self._oauth_session.token["access_token"]
+        return cast(str, self._oauth_session.token["access_token"])
 
 
 class AsyncConfigFlowAuth(Auth):
@@ -119,8 +123,7 @@ class DropboxClient:
             return
 
         if not metadata.is_folder:
-            # TODO: throw correct error
-            raise ValueError("Home Assistant exists as a file, not a folder")
+            raise HomeAssistantError("Home Assistant exists as a file, not a folder")
 
     async def async_list_backups(self) -> list[AgentBackup]:
         """List backups."""
