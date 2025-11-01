@@ -75,7 +75,9 @@ class StarlinkLastRestartSensor(StarlinkSensorEntity):
         new_value = super().native_value
         if TYPE_CHECKING:
             assert isinstance(new_value, datetime)
-        if not self._attr_native_value or self._attr_native_value < new_value:
+        if not self._attr_native_value or (
+            self._attr_native_value + timedelta(minutes=1) < new_value
+        ):
             self._attr_native_value = new_value
         return self._attr_native_value
 
@@ -166,9 +168,7 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
         translation_key="last_boot_time",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda data: (
-            now() - timedelta(seconds=data.status["uptime"], milliseconds=-500)
-        ).replace(microsecond=0),
+        value_fn=lambda data: now() - timedelta(seconds=data.status["uptime"]),
         entity_class=StarlinkLastRestartSensor,
     ),
     StarlinkSensorEntityDescription(
