@@ -16,7 +16,7 @@
         },
         "data_description": {
           "name": "Config entry name, by default, this is the name of your Home Assistant instance.",
-          "station_id": "Select the measuring station where the environmental data is collected."
+          "station_id": "The name of the measuring station where the environmental data is collected."
         },
         "title": "GIO\u015a (Polish Chief Inspectorate Of Environmental Protection)"
       }
