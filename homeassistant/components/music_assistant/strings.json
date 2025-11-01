@@ -45,10 +45,6 @@
           "url": "[%key:component::music_assistant::config::step::init::data_description::url%]"
         }
       },
-      "discovery_confirm": {
-        "description": "Do you want to add the Music Assistant server `{url}` to Home Assistant?",
-        "title": "Discovered Music Assistant server"
-      }
   },
   "entity": {
     "button": {
