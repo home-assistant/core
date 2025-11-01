@@ -25,6 +25,14 @@
           "url": "URL of the Music Assistant server"
         }
       },
+      "user": {
+        "data": {
+          "url": "[%key:component::music_assistant::config::step::init::data::url%]"
+        },
+        "data_description": {
+          "url": "[%key:component::music_assistant::config::step::init::data_description::url%]"
+        }
+      },
       "manual": {
         "data": {
           "url": "URL of the Music Assistant server"
