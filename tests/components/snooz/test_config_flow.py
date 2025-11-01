@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 from homeassistant import config_entries
 from homeassistant.components.snooz import DOMAIN
+from homeassistant.config_entries import SOURCE_IGNORE
 from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -263,6 +264,34 @@ async def test_async_step_user_takes_precedence_over_discovery(
 
     # Verify the original one was aborted
     assert not hass.config_entries.flow.async_progress()
+
+
+async def test_user_setup_replaces_ignored_device(hass: HomeAssistant) -> None:
+    """Test the user initiated form can replace an ignored device."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_ADDRESS,
+        source=SOURCE_IGNORE,
+        data={},
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.snooz.config_flow.async_discovered_service_info",
+        return_value=[SNOOZ_SERVICE_INFO_PAIRING],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    # Verify the ignored device is in the dropdown
+    assert result["data_schema"].schema["name"].container == [TEST_SNOOZ_DISPLAY_NAME]
+
+    await _test_setup_entry(
+        hass, result["flow_id"], {CONF_NAME: TEST_SNOOZ_DISPLAY_NAME}
+    )
 
 
 async def _test_pairs(
