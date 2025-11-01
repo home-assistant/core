@@ -65,16 +65,12 @@ class RabbitAirConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             info = await validate_input(self.hass, user_input)
         except CannotConnect:
-            _LOGGER.debug("Cannot connect to host")
             errors["base"] = "cannot_connect"
         except InvalidAccessToken:
-            _LOGGER.debug("Invalid access token during validation")
             errors["base"] = "invalid_access_token"
         except InvalidHost:
-            _LOGGER.debug("Invalid host")
             errors["base"] = "invalid_host"
         except TimeoutConnect:
-            _LOGGER.debug("Timeout connecting to host")
             errors["base"] = "timeout_connect"
         except Exception:
             _LOGGER.exception("Unexpected exception")
