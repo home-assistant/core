@@ -128,7 +128,12 @@ class RabbitAirConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Update only the host when setup fails."""
+        """Handle reconfiguration of the integration to update the host address.
+
+        This step allows the user to update the host address for an existing
+        Rabbit Air config entry when setup fails. It validates the new host
+        address and, if valid, updates the config entry with the new host.
+        """
         entry = getattr(self, "reconfigure_entry", None)
         if entry is None:
             entry_id = self.context.get("entry_id")
