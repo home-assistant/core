@@ -753,8 +753,10 @@ construct==2.10.68
 cookidoo-api==0.14.0
 
 # homeassistant.components.backup
-# homeassistant.components.utility_meter
 cronsim==2.6
+
+# homeassistant.components.utility_meter
+cronsim==2.7
 
 # homeassistant.components.crownstone
 crownstone-cloud==1.4.11
