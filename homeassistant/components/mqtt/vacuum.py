@@ -43,6 +43,7 @@ STATE_ERROR = "error"
 STATE_PAUSED = "paused"
 STATE_RETURNING = "returning"
 STATE_CLEANING = "cleaning"
+STATE_MOPPING = "moppoing"
 
 POSSIBLE_STATES: dict[str, VacuumActivity] = {
     STATE_IDLE: VacuumActivity.IDLE,
@@ -51,6 +52,7 @@ POSSIBLE_STATES: dict[str, VacuumActivity] = {
     STATE_PAUSED: VacuumActivity.PAUSED,
     STATE_RETURNING: VacuumActivity.RETURNING,
     STATE_CLEANING: VacuumActivity.CLEANING,
+    STATE_MOPPING: VacuumActivitiy.CLEANING,
 }
 
 CONF_SUPPORTED_FEATURES = ATTR_SUPPORTED_FEATURES
