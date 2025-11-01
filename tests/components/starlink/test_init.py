@@ -128,7 +128,7 @@ async def test_last_restart_state(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         data={CONF_IP_ADDRESS: "1.2.3.4:0000"},
     )
-    entity_id = "sensor.starlink_last_boot_time"
+    entity_id = "sensor.starlink_last_restart"
 
     with (
         LOCATION_DATA_SUCCESS_PATCHER,
