@@ -280,7 +280,7 @@ async def test_binary_sensor_device_class_motion(
     mock_client: APIClient,
     mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
-    """Test a motion binary sensor (like mm wave sensor)."""
+    """Test a binary sensor with motion device class."""
     entity_info = [
         BinarySensorInfo(
             object_id="motion_sensor",
