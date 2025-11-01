@@ -7,13 +7,13 @@ import sqlite3
 from unittest.mock import patch
 
 import pytest
-from sqlalchemy.exc import SQLAlchemyError
 import voluptuous as vol
 from voluptuous import MultipleInvalid
 
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.sql.const import DOMAIN
 from homeassistant.components.sql.services import SERVICE_QUERY
+from homeassistant.components.sql.util import generate_lambda_stmt
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
@@ -109,7 +109,7 @@ async def test_query_service_rollback_on_error(
     with (
         patch(
             "homeassistant.components.sql.services.generate_lambda_stmt",
-            side_effect=SQLAlchemyError("Error executing query"),
+            return_value=generate_lambda_stmt("Faulty syntax create operational issue"),
         ),
         pytest.raises(
             ServiceValidationError, match="An error occurred when executing the query"
