@@ -49,6 +49,18 @@
         }
       }
     },
+    "humidifier": {
+      "vesync": {
+        "state_attributes": {
+          "mode": {
+            "state": {
+              "autopro": "Auto Pro",
+              "humidity": "Humidity"
+            }
+          }
+        }
+      }
+    },
     "number": {
       "mist_level": {
         "name": "Mist level"
@@ -94,18 +106,6 @@
     "switch": {
       "display": {
         "name": "Display"
-      }
-    },
-    "humidifier": {
-      "vesync": {
-        "state_attributes": {
-          "mode": {
-            "state": {
-              "autopro": "Auto Pro",
-              "humidity": "Humidity"
-            }
-          }
-        }
       }
     }
   },
