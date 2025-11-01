@@ -24,26 +24,26 @@ _LOGGER = logging.getLogger(__name__)
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user input allows us to connect."""
     try:
-        try:
-            zeroconf_instance = await zeroconf.async_get_async_instance(hass)
-            with UdpClient(
-                data[CONF_HOST], data[CONF_ACCESS_TOKEN], zeroconf=zeroconf_instance
-            ) as client:
-                info = await client.get_info()
-        except Exception as err:
-            _LOGGER.debug("Connection attempt failed: %s", err)
-            raise
+        zeroconf_instance = await zeroconf.async_get_async_instance(hass)
+        with UdpClient(
+            data[CONF_HOST], data[CONF_ACCESS_TOKEN], zeroconf=zeroconf_instance
+        ) as client:
+            info = await client.get_info()
     except ValueError as err:
-        # Most likely caused by the invalid access token.
+        # Most likely caused by an invalid access token.
+        _LOGGER.debug("Invalid access token during validation")
         raise InvalidAccessToken from err
     except TimeoutError as err:
-        # Either the host doesn't respond or the auth failed.
+        # Either the host didn't respond or the auth failed.
+        _LOGGER.debug("Timeout connecting to host")
         raise TimeoutConnect from err
     except OSError as err:
-        # Most likely caused by the invalid host.
+        # Most likely caused by an invalid host.
+        _LOGGER.debug("OS error connecting to host")
         raise InvalidHost from err
     except Exception as err:
         # Other possible errors.
+        _LOGGER.exception("Connection attempt failed")
         raise CannotConnect from err
 
     # Return info to store in the config entry.
@@ -54,34 +54,50 @@ class RabbitAirConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Rabbit Air."""
 
     VERSION = 1
-
     _discovered_host: str | None = None
+
+    async def _validate_and_map_errors(
+        self, user_input: dict[str, Any]
+    ) -> tuple[dict[str, str], dict[str, Any] | None]:
+        """Validate input and map errors for config flow steps."""
+        errors: dict[str, str] = {}
+        info: dict[str, Any] | None = None
+        try:
+            info = await validate_input(self.hass, user_input)
+        except CannotConnect:
+            _LOGGER.debug("Cannot connect to host")
+            errors["base"] = "cannot_connect"
+        except InvalidAccessToken:
+            _LOGGER.debug("Invalid access token during validation")
+            errors["base"] = "invalid_access_token"
+        except InvalidHost:
+            _LOGGER.debug("Invalid host")
+            errors["base"] = "invalid_host"
+        except TimeoutConnect:
+            _LOGGER.debug("Timeout connecting to host")
+            errors["base"] = "timeout_connect"
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            errors["base"] = "unknown"
+        return errors, info
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
-            try:
-                info = await validate_input(self.hass, user_input)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAccessToken:
-                errors["base"] = "invalid_access_token"
-            except InvalidHost:
-                errors["base"] = "invalid_host"
-            except TimeoutConnect:
-                errors["base"] = "timeout_connect"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
-                user_input[CONF_MAC] = info["mac"]
-                await self.async_set_unique_id(dr.format_mac(info["mac"]))
-                self._abort_if_unique_id_configured(updates=user_input)
-                return self.async_create_entry(title="Rabbit Air", data=user_input)
+            errors, info = await self._validate_and_map_errors(user_input)
+            if not errors:
+                if info is None:
+                    _LOGGER.exception("Validation returned no info")
+                    errors["base"] = "unknown"
+                else:
+                    user_input[CONF_MAC] = info["mac"]
+                    await self.async_set_unique_id(dr.format_mac(info["mac"]))
+                    self._abort_if_unique_id_configured(updates=user_input)
+                    return self.async_create_entry(title="Rabbit Air", data=user_input)
 
         user_input = user_input or {}
         host = user_input.get(CONF_HOST, self._discovered_host)
@@ -108,6 +124,43 @@ class RabbitAirConfigFlow(ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
         self._discovered_host = discovery_info.hostname.rstrip(".")
         return await self.async_step_user()
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Update only the host when setup fails."""
+        entry = getattr(self, "reconfigure_entry", None)
+        if entry is None:
+            entry_id = self.context.get("entry_id")
+            entry = (
+                self.hass.config_entries.async_get_entry(entry_id)
+                if entry_id is not None
+                else None
+            )
+        if entry is None:
+            return self.async_abort(reason="unknown")
+
+        errors: dict[str, str] = {}
+        current_host = entry.data.get(CONF_HOST, "")
+
+        if user_input is not None:
+            validate_input_dict = {
+                CONF_HOST: user_input[CONF_HOST],
+                CONF_ACCESS_TOKEN: entry.data[CONF_ACCESS_TOKEN],
+            }
+            errors, _ = await self._validate_and_map_errors(validate_input_dict)
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    entry, data={**entry.data, CONF_HOST: user_input[CONF_HOST]}
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=vol.Schema(
+                {vol.Required(CONF_HOST, default=current_host): str}
+            ),
+            errors=errors,
+        )
 
 
 class CannotConnect(HomeAssistantError):
