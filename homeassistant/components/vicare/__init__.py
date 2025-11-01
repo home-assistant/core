@@ -170,3 +170,10 @@ def get_supported_devices(
         for device_config in devices
         if device_config.getModel() not in UNSUPPORTED_DEVICES
     ]
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ViCareConfigEntry, device_entry: dr.DeviceEntry
+) -> bool:
+    """Remove a config entry from a device."""
+    return True
