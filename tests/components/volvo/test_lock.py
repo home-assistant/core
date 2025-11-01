@@ -69,7 +69,7 @@ async def test_unlock_lock(
     )
     await hass.async_block_till_done()
 
-    assert len(mock_api.async_execute_command.mock_calls) == 1
+    mock_api.async_execute_command.assert_called_once_with(action)
 
 
 @pytest.mark.usefixtures("full_model")
