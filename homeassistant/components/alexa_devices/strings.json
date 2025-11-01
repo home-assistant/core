@@ -1,47 +1,12 @@
 {
   "common": {
     "data_code": "One-time password (OTP code)",
-    "data_description_username": "The email address of your Amazon account.",
-    "data_description_password": "The password of your Amazon account.",
     "data_description_code": "The one-time password to log in to your account. Currently, only tokens from OTP applications are supported.",
+    "data_description_password": "The password of your Amazon account.",
+    "data_description_username": "The email address of your Amazon account.",
     "device_id_description": "The ID of the device to send the command to."
   },
   "config": {
-    "flow_title": "{username}",
-    "step": {
-      "user": {
-        "data": {
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]",
-          "code": "[%key:component::alexa_devices::common::data_code%]"
-        },
-        "data_description": {
-          "username": "[%key:component::alexa_devices::common::data_description_username%]",
-          "password": "[%key:component::alexa_devices::common::data_description_password%]",
-          "code": "[%key:component::alexa_devices::common::data_description_code%]"
-        }
-      },
-      "reauth_confirm": {
-        "data": {
-          "password": "[%key:common::config_flow::data::password%]",
-          "code": "[%key:component::alexa_devices::common::data_code%]"
-        },
-        "data_description": {
-          "password": "[%key:component::alexa_devices::common::data_description_password%]",
-          "code": "[%key:component::alexa_devices::common::data_description_code%]"
-        }
-      },
-      "reconfigure": {
-        "data": {
-          "password": "[%key:common::config_flow::data::password%]",
-          "code": "[%key:component::alexa_devices::common::data_code%]"
-        },
-        "data_description": {
-          "password": "[%key:component::alexa_devices::common::data_description_password%]",
-          "code": "[%key:component::alexa_devices::common::data_description_code%]"
-        }
-      }
-    },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -55,15 +20,61 @@
       "cannot_retrieve_data": "Unable to retrieve data from Amazon. Please try again later.",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "flow_title": "{username}",
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "code": "[%key:component::alexa_devices::common::data_code%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "code": "[%key:component::alexa_devices::common::data_description_code%]",
+          "password": "[%key:component::alexa_devices::common::data_description_password%]"
+        }
+      },
+      "reconfigure": {
+        "data": {
+          "code": "[%key:component::alexa_devices::common::data_code%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "code": "[%key:component::alexa_devices::common::data_description_code%]",
+          "password": "[%key:component::alexa_devices::common::data_description_password%]"
+        }
+      },
+      "user": {
+        "data": {
+          "code": "[%key:component::alexa_devices::common::data_code%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "code": "[%key:component::alexa_devices::common::data_description_code%]",
+          "password": "[%key:component::alexa_devices::common::data_description_password%]",
+          "username": "[%key:component::alexa_devices::common::data_description_username%]"
+        }
+      }
     }
   },
   "entity": {
     "notify": {
-      "speak": {
-        "name": "Speak"
-      },
       "announce": {
         "name": "Announce"
+      },
+      "speak": {
+        "name": "Speak"
+      }
+    },
+    "sensor": {
+      "alarm": {
+        "name": "Next alarm"
+      },
+      "reminder": {
+        "name": "Next reminder"
+      },
+      "timer": {
+        "name": "Next timer"
       }
     },
     "switch": {
@@ -72,34 +83,24 @@
       }
     }
   },
-  "services": {
-    "send_sound": {
-      "name": "Send sound",
-      "description": "Sends a sound to a device",
-      "fields": {
-        "device_id": {
-          "name": "Device",
-          "description": "[%key:component::alexa_devices::common::device_id_description%]"
-        },
-        "sound": {
-          "name": "Alexa Skill sound file",
-          "description": "The sound file to play."
-        }
-      }
+  "exceptions": {
+    "cannot_connect_with_error": {
+      "message": "Error connecting: {error}"
     },
-    "send_text_command": {
-      "name": "Send text command",
-      "description": "Sends a text command to a device",
-      "fields": {
-        "text_command": {
-          "name": "Alexa text command",
-          "description": "The text command to send."
-        },
-        "device_id": {
-          "name": "Device",
-          "description": "[%key:component::alexa_devices::common::device_id_description%]"
-        }
-      }
+    "cannot_retrieve_data_with_error": {
+      "message": "Error retrieving data: {error}"
+    },
+    "device_serial_number_missing": {
+      "message": "Device serial number missing: {device_id}"
+    },
+    "entry_not_loaded": {
+      "message": "Entry not loaded: {entry}"
+    },
+    "invalid_device_id": {
+      "message": "Invalid device ID specified: {device_id}"
+    },
+    "invalid_sound_value": {
+      "message": "Invalid sound {sound} specified"
     }
   },
   "selector": {
@@ -149,24 +150,34 @@
       }
     }
   },
-  "exceptions": {
-    "cannot_connect_with_error": {
-      "message": "Error connecting: {error}"
+  "services": {
+    "send_sound": {
+      "description": "Sends a sound to a device",
+      "fields": {
+        "device_id": {
+          "description": "[%key:component::alexa_devices::common::device_id_description%]",
+          "name": "Device"
+        },
+        "sound": {
+          "description": "The sound file to play.",
+          "name": "Alexa Skill sound file"
+        }
+      },
+      "name": "Send sound"
     },
-    "cannot_retrieve_data_with_error": {
-      "message": "Error retrieving data: {error}"
-    },
-    "device_serial_number_missing": {
-      "message": "Device serial number missing: {device_id}"
-    },
-    "invalid_device_id": {
-      "message": "Invalid device ID specified: {device_id}"
-    },
-    "invalid_sound_value": {
-      "message": "Invalid sound {sound} specified"
-    },
-    "entry_not_loaded": {
-      "message": "Entry not loaded: {entry}"
+    "send_text_command": {
+      "description": "Sends a text command to a device",
+      "fields": {
+        "device_id": {
+          "description": "[%key:component::alexa_devices::common::device_id_description%]",
+          "name": "Device"
+        },
+        "text_command": {
+          "description": "The text command to send.",
+          "name": "Alexa text command"
+        }
+      },
+      "name": "Send text command"
     }
   }
 }
