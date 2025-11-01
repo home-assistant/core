@@ -76,6 +76,7 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         title="Portainer test",
         data=MOCK_TEST_CONFIG,
+        unique_id=MOCK_TEST_CONFIG[CONF_API_TOKEN],
         entry_id="portainer_test_entry_123",
         version=2,
     )

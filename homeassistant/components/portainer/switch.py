@@ -84,19 +84,30 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Portainer switch sensors."""
-
     coordinator = entry.runtime_data
 
-    async_add_entities(
-        PortainerContainerSwitch(
-            coordinator=coordinator,
-            entity_description=entity_description,
-            device_info=container,
-            via_device=endpoint,
+    def _async_add_new_containers(
+        containers: list[tuple[PortainerCoordinatorData, DockerContainer]],
+    ) -> None:
+        """Add new container switch sensors."""
+        async_add_entities(
+            PortainerContainerSwitch(
+                coordinator,
+                entity_description,
+                container,
+                endpoint,
+            )
+            for (endpoint, container) in containers
+            for entity_description in SWITCHES
         )
-        for endpoint in coordinator.data.values()
-        for container in endpoint.containers.values()
-        for entity_description in SWITCHES
+
+    coordinator.new_containers_callbacks.append(_async_add_new_containers)
+    _async_add_new_containers(
+        [
+            (endpoint, container)
+            for endpoint in coordinator.data.values()
+            for container in endpoint.containers.values()
+        ]
     )
 
 

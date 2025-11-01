@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-import logging
 from typing import Any
 
 from pyportainer import Portainer
@@ -32,8 +31,6 @@ from .coordinator import (
     PortainerCoordinatorData,
 )
 from .entity import PortainerContainerEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -67,18 +64,30 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Portainer buttons."""
-    coordinator: PortainerCoordinator = entry.runtime_data
+    coordinator = entry.runtime_data
 
-    async_add_entities(
-        PortainerButton(
-            coordinator=coordinator,
-            entity_description=entity_description,
-            device_info=container,
-            via_device=endpoint,
+    def _async_add_new_containers(
+        containers: list[tuple[PortainerCoordinatorData, DockerContainer]],
+    ) -> None:
+        """Add new container button sensors."""
+        async_add_entities(
+            PortainerButton(
+                coordinator,
+                entity_description,
+                container,
+                endpoint,
+            )
+            for (endpoint, container) in containers
+            for entity_description in BUTTONS
         )
-        for endpoint in coordinator.data.values()
-        for container in endpoint.containers.values()
-        for entity_description in BUTTONS
+
+    coordinator.new_containers_callbacks.append(_async_add_new_containers)
+    _async_add_new_containers(
+        [
+            (endpoint, container)
+            for endpoint in coordinator.data.values()
+            for container in endpoint.containers.values()
+        ]
     )
 
 
