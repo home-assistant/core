@@ -310,6 +310,12 @@
       "motion_sensitivity": {
         "default": "mdi:motion-sensor"
       },
+      "noise_reduction": {
+        "default": "mdi:volume-vibrate",
+        "state": {
+          "0": "mdi:volume-variant-off"
+        }
+      },
       "pir_sensitivity": {
         "default": "mdi:motion-sensor"
       },
