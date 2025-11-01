@@ -598,6 +598,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         translation_key="monthly_power_peak_w",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
         has_fn=lambda data: data.measurement.monthly_power_peak_w is not None,
         value_fn=lambda data: data.measurement.monthly_power_peak_w,
     ),
