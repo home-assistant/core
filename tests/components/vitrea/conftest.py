@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from vitreaclient import VitreaResponse
 from vitreaclient.constants import DeviceStatus
 
 from homeassistant.components.vitrea.const import DOMAIN
@@ -30,44 +31,48 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture
 def mock_vitrea_client() -> Generator[MagicMock]:
     """Return a mocked VitreaClient."""
-    with patch("homeassistant.components.vitrea.VitreaClient") as client_mock:
-        client = client_mock.return_value
-        client.connect = AsyncMock()
-        client.disconnect = AsyncMock()
-        client.start_read_task = AsyncMock()
+    client = MagicMock()
+    client.connect = AsyncMock()
+    client.disconnect = AsyncMock()
+    client.start_read_task = AsyncMock()
 
-        # Store the callback for entity discovery simulation
-        client._status_callback = None
+    # Store the callback for entity discovery simulation
+    client._status_callback = None
 
-        def mock_on(event_type, callback):
-            """Mock the on method to store the callback."""
-            if event_type == "STATUS":  # VitreaResponse.STATUS
-                client._status_callback = callback
+    def mock_on(event_type, callback):
+        """Mock the on method to store the callback."""
 
-        def mock_off(event_type, callback):
-            """Mock the off method."""
-            if event_type == "STATUS":
-                client._status_callback = None
+        if event_type == VitreaResponse.STATUS:  # Compare with enum value
+            client._status_callback = callback
+        return MagicMock()  # Return a mock unsubscribe function
 
-        async def mock_status_request():
-            """Mock status request that triggers entity discovery."""
-            if client._status_callback:
-                # Simulate discovering a cover entity immediately
-                mock_event = MagicMock()
-                mock_event.node = "01"
-                mock_event.key = "01"
-                mock_event.status = DeviceStatus.BLIND
-                mock_event.data = "050"  # 50% position
-                client._status_callback(mock_event)
+    def mock_off(event_type, callback):
+        """Mock the off method."""
 
-        client.on = mock_on
-        client.off = mock_off
-        client.status_request = mock_status_request
-        client.blind_open = AsyncMock()
-        client.blind_close = AsyncMock()
-        client.blind_stop = AsyncMock()
-        client.blind_percent = AsyncMock()
-        yield client
+        if event_type == VitreaResponse.STATUS:
+            client._status_callback = None
+
+    async def mock_status_request():
+        """Mock status request that triggers entity discovery."""
+        if client._status_callback:
+            # Simulate discovering a cover entity
+            mock_event = MagicMock()
+            mock_event.node = "01"
+            mock_event.key = "01"
+            mock_event.status = DeviceStatus.BLIND
+            mock_event.data = "050"  # 50% position
+            client._status_callback(mock_event)
+
+    client.on = mock_on
+    client.off = mock_off
+    # Use AsyncMock but set side_effect to call our custom mock function
+    client.status_request = AsyncMock(side_effect=mock_status_request)
+    client.blind_open = AsyncMock()
+    client.blind_close = AsyncMock()
+    client.blind_stop = AsyncMock()
+    client.blind_percent = AsyncMock()
+
+    return client
 
 
 @pytest.fixture
@@ -83,6 +88,8 @@ async def init_integration(
         "homeassistant.components.vitrea.VitreaClient", return_value=mock_vitrea_client
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+        # Wait again to ensure entity discovery callbacks are processed
         await hass.async_block_till_done()
 
     return mock_config_entry

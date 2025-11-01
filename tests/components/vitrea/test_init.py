@@ -17,14 +17,21 @@ async def test_setup_entry(
 ) -> None:
     """Test successful setup of config entry."""
     mock_config_entry.add_to_hass(hass)
-    with (
-        patch("vitreaclient.client.VitreaClient", return_value=mock_vitrea_client),
-        patch("homeassistant.components.vitrea.SLEEP_INTERVAL", 0),
+
+    with patch(
+        "homeassistant.components.vitrea.VitreaClient", return_value=mock_vitrea_client
     ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
+
     assert mock_config_entry.state is ConfigEntryState.LOADED
     mock_vitrea_client.connect.assert_called_once()
+
+    # Verify runtime data is set up correctly
+    assert hasattr(mock_config_entry, "runtime_data")
+    assert mock_config_entry.runtime_data.client == mock_vitrea_client
+    assert mock_config_entry.runtime_data.coordinator is not None
+
     # Verify only cover platform is loaded (simplified integration)
     assert len(hass.config_entries.async_entries("vitrea")) == 1
 
@@ -47,7 +54,9 @@ async def test_setup_entry_connection_failed(
     """Test setup fails when connection fails."""
     mock_config_entry.add_to_hass(hass)
     mock_vitrea_client.connect.side_effect = side_effect
-    with patch("vitreaclient.client.VitreaClient", return_value=mock_vitrea_client):
+    with patch(
+        "homeassistant.components.vitrea.VitreaClient", return_value=mock_vitrea_client
+    ):
         assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
     assert mock_config_entry.state is expected_exception
@@ -67,13 +76,19 @@ async def test_unload_entry(
 async def test_reload_entry(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
+    mock_vitrea_client: MagicMock,
 ) -> None:
     """Test successful reloading of config entry."""
-    with patch("homeassistant.components.vitrea.SLEEP_INTERVAL", 0):
-        assert init_integration.state is ConfigEntryState.LOADED
+    assert init_integration.state is ConfigEntryState.LOADED
+
+    # Keep the mock active during reload
+    with patch(
+        "homeassistant.components.vitrea.VitreaClient", return_value=mock_vitrea_client
+    ):
         assert await hass.config_entries.async_reload(init_integration.entry_id)
         await hass.async_block_till_done()
-        assert init_integration.state is ConfigEntryState.LOADED
+
+    assert init_integration.state is ConfigEntryState.LOADED
 
 
 @pytest.mark.parametrize(
