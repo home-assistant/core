@@ -130,16 +130,7 @@ class RabbitAirConfigFlow(ConfigFlow, domain=DOMAIN):
         Rabbit Air config entry when setup fails. It validates the new host
         address and, if valid, updates the config entry with the new host.
         """
-        entry = getattr(self, "reconfigure_entry", None)
-        if entry is None:
-            entry_id = self.context.get("entry_id")
-            entry = (
-                self.hass.config_entries.async_get_entry(entry_id)
-                if entry_id is not None
-                else None
-            )
-        if entry is None:
-            return self.async_abort(reason="unknown")
+        entry = self._get_reconfigure_entry()
 
         errors: dict[str, str] = {}
         current_host = entry.data.get(CONF_HOST, "")
