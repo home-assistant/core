@@ -273,3 +273,133 @@ async def test_binary_sensor_main_and_sub_device_same_key(
     # Sub device sensor should remain unchanged
     sub_state = hass.states.get("binary_sensor.sub_device_sub_sensor")
     assert sub_state.state == STATE_OFF
+
+
+async def test_binary_sensor_device_class_motion(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
+) -> None:
+    """Test a motion binary sensor (like mm wave sensor)."""
+    entity_info = [
+        BinarySensorInfo(
+            object_id="motion_sensor",
+            key=1,
+            name="Motion Detection",
+            device_class="motion",
+        )
+    ]
+    states = [BinarySensorState(key=1, state=True)]
+    user_service = []
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=user_service,
+        states=states,
+    )
+    state = hass.states.get("binary_sensor.test_motion_detection")
+    assert state is not None
+    assert state.state == STATE_ON
+    assert state.attributes.get("device_class") == "motion"
+
+
+async def test_binary_sensor_device_class_occupancy(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
+) -> None:
+    """Test an occupancy binary sensor (like mm wave sensor room occupancy)."""
+    entity_info = [
+        BinarySensorInfo(
+            object_id="occupancy_sensor",
+            key=1,
+            name="Room Occupancy",
+            device_class="occupancy",
+        )
+    ]
+    states = [BinarySensorState(key=1, state=False)]
+    user_service = []
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=user_service,
+        states=states,
+    )
+    state = hass.states.get("binary_sensor.test_room_occupancy")
+    assert state is not None
+    assert state.state == STATE_OFF
+    assert state.attributes.get("device_class") == "occupancy"
+
+
+async def test_status_binary_sensor_available_when_entry_data_available(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
+) -> None:
+    """Test status binary sensor availability based on entry data (connectivity status)."""
+    entity_info = [
+        BinarySensorInfo(
+            object_id="status_sensor",
+            key=1,
+            name="Device Status",
+            is_status_binary_sensor=True,
+        )
+    ]
+    # Status sensors don't use normal state
+    states = []
+    user_service = []
+
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=user_service,
+        states=states,
+    )
+
+    state = hass.states.get("binary_sensor.test_device_status")
+    assert state is not None
+
+    # For status sensors, the state reflects device connectivity
+    # When device is available, status sensor shows as connected (ON)
+    assert state.state == STATE_ON
+
+    # The status sensor should always be available regardless of connection state
+    assert state.attributes.get("available") is None  # Not explicitly unavailable
+
+
+async def test_status_binary_sensor_state_reflects_connectivity(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test that status binary sensor state reflects device connectivity."""
+    entity_info = [
+        BinarySensorInfo(
+            object_id="connectivity",
+            key=1,
+            name="ESPHome Status",
+            is_status_binary_sensor=True,
+        )
+    ]
+    states = []
+    user_service = []
+
+    mock_device = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=user_service,
+        states=states,
+    )
+
+    # Initially available, so status sensor should be ON
+    state = hass.states.get("binary_sensor.test_esphome_status")
+    assert state is not None
+    assert state.state == STATE_ON
+
+    # When device becomes unavailable, status sensor reflects this
+    await mock_device.mock_disconnect(True)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test_esphome_status")
+    assert state is not None
+    assert state.state == STATE_OFF
