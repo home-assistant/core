@@ -308,7 +308,7 @@ async def test_binary_sensor_device_class_occupancy(
     mock_client: APIClient,
     mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
-    """Test an occupancy binary sensor (like mm wave sensor room occupancy)."""
+    """Test a binary sensor with occupancy device class."""
     entity_info = [
         BinarySensorInfo(
             object_id="occupancy_sensor",
