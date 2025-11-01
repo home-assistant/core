@@ -1463,7 +1463,8 @@ class TargetSelector(Selector[TargetSelectorConfig]):
         }
     )
 
-    TARGET_SELECTION_SCHEMA = vol.Schema(cv.TARGET_SERVICE_FIELDS)
+    # We want to transition to not including templates in the target selector.
+    TARGET_SELECTION_SCHEMA = vol.Schema(cv._TARGET_SERVICE_FIELDS_TEMPLATED)  # noqa: SLF001
 
     def __init__(self, config: TargetSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
