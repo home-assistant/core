@@ -233,7 +233,7 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle a flow initiated by the user."""
 
         # if there's one entry without unique ID, we abort config flow
-        for unique_id in self._async_current_ids():
+        for unique_id in self._async_current_ids(include_ignore=False):
             if unique_id is None:
                 return self.async_abort(reason="no_unique_id")
 

@@ -21,7 +21,7 @@ from homeassistant.components.asuswrt.const import (
     PROTOCOL_TELNET,
 )
 from homeassistant.components.device_tracker import CONF_CONSIDER_HOME
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_USER
 from homeassistant.const import (
     CONF_BASE,
     CONF_HOST,
@@ -432,3 +432,30 @@ async def test_options_flow_http(hass: HomeAssistant, patch_setup_entry) -> None
         CONF_CONSIDER_HOME: 20,
         CONF_TRACK_UNKNOWN: True,
     }
+
+
+async def test_user_setup_replaces_ignored_device(
+    hass: HomeAssistant, connect_http, patch_setup_entry
+) -> None:
+    """Test the user flow can replace an ignored device."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=ROUTER_MAC_ADDR,
+        source=SOURCE_IGNORE,
+        data={},
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER, "show_advanced_options": True},
+        data=CONFIG_DATA_HTTP,
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == HOST
+    assert result["data"] == CONFIG_DATA_HTTP
+    assert result["result"].unique_id == ROUTER_MAC_ADDR
+
+    assert len(patch_setup_entry.mock_calls) == 1
