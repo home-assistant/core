@@ -25,7 +25,7 @@ HATasmota==0.10.1
 Mastodon.py==2.1.2
 
 # homeassistant.components.playstation_network
-PSNAWP==3.0.0
+PSNAWP==3.0.1
 
 # homeassistant.components.doods
 # homeassistant.components.generic
@@ -1317,7 +1317,7 @@ kiwiki-client==0.1.1
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2025.10.26.81530
+knx-frontend==2025.10.31.195356
 
 # homeassistant.components.konnected
 konnected==1.2.0
