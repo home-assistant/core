@@ -11,6 +11,7 @@ from deebot_client.events import (
     NetworkInfoEvent,
     StatsEvent,
     TotalStatsEvent,
+    auto_empty,
     station,
 )
 import pytest
@@ -47,6 +48,7 @@ async def notify_events(hass: HomeAssistant, event_bus: EventBus):
     event_bus.notify(LifeSpanEvent(LifeSpan.SIDE_BRUSH, 40, 20 * 60))
     event_bus.notify(ErrorEvent(0, "NoError: Robot is operational"))
     event_bus.notify(station.StationEvent(station.State.EMPTYING_DUSTBIN))
+    event_bus.notify(auto_empty.AutoEmptyEvent(True, auto_empty.Frequency.AUTO))
     await block_till_done(hass, event_bus)
 
 
@@ -102,11 +104,12 @@ async def notify_events(hass: HomeAssistant, event_bus: EventBus):
                 "sensor.dusty_wi_fi_rssi",
                 "sensor.dusty_wi_fi_ssid",
                 "sensor.dusty_station_state",
+                "sensor.dusty_auto_empty_frequency",
                 "sensor.dusty_main_brush_lifespan",
                 "sensor.dusty_filter_lifespan",
+                "sensor.dusty_round_mop_lifespan",
                 "sensor.dusty_side_brush_lifespan",
                 "sensor.dusty_unit_care_lifespan",
-                "sensor.dusty_round_mop_lifespan",
                 "sensor.dusty_error",
             ],
         ),
