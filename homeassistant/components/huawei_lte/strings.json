@@ -158,6 +158,12 @@
       "lte_uplink_frequency": {
         "name": "LTE uplink frequency"
       },
+      "max_download_rate": {
+        "name": "Maximum download rate"
+      },
+      "max_upload_rate": {
+        "name": "Maximum upload rate"
+      },
       "mode": {
         "name": "Mode"
       },
@@ -296,6 +302,9 @@
       },
       "sms_messages_sim": {
         "name": "SMS messages (SIM)"
+      },
+      "sms_new": {
+        "name": "SMS new"
       },
       "sms_outbox_device": {
         "name": "SMS outbox (device)"

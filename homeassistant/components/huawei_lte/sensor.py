@@ -628,6 +628,20 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 device_class=SensorDeviceClass.DATA_RATE,
                 state_class=SensorStateClass.MEASUREMENT,
             ),
+            "MaxDownloadRate": HuaweiSensorEntityDescription(
+                key="MaxDownloadRate",
+                translation_key="max_download_rate",
+                native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
+                device_class=SensorDeviceClass.DATA_RATE,
+                state_class=SensorStateClass.MEASUREMENT,
+            ),
+            "MaxUploadRate": HuaweiSensorEntityDescription(
+                key="MaxUploadRate",
+                translation_key="max_upload_rate",
+                native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
+                device_class=SensorDeviceClass.DATA_RATE,
+                state_class=SensorStateClass.MEASUREMENT,
+            ),
             "TotalConnectTime": HuaweiSensorEntityDescription(
                 key="TotalConnectTime",
                 translation_key="total_connected_duration",
@@ -712,6 +726,10 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
             "LocalUnread": HuaweiSensorEntityDescription(
                 key="LocalUnread",
                 translation_key="sms_unread_device",
+            ),
+            "NewMsg": HuaweiSensorEntityDescription(
+                key="NewMsg",
+                translation_key="sms_new",
             ),
             "SimDraft": HuaweiSensorEntityDescription(
                 key="SimDraft",
