@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_migrate_from_version_1_to_1_2[device_registry]
+# name: test_migrate_from_version_1_to_2[device_registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -30,7 +30,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_migrate_from_version_1_to_1_2[entity_registry]
+# name: test_migrate_from_version_1_to_2[entity_registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -65,7 +65,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_migrate_from_version_1_to_1_2[post_migration_config_entry]
+# name: test_migrate_from_version_1_to_2[post_migration_config_entry]
   ConfigEntrySnapshot({
     'data': dict({
     }),
@@ -87,14 +87,6 @@
       }),
       'method': 'GET',
       'resource': 'http://www.home-assistant.io',
-      'sensor': list([
-        dict({
-          'index': 0,
-          'select': '.release-date',
-          'unique_id': 'a0bde946-5c96-11f0-b55f-0242ac110002',
-          'value_template': '{{ value }}',
-        }),
-      ]),
     }),
     'pref_disable_new_entities': False,
     'pref_disable_polling': False,
@@ -119,7 +111,7 @@
     'version': 2,
   })
 # ---
-# name: test_migrate_from_version_1_to_1_2[pre_migration_config_entry]
+# name: test_migrate_from_version_1_to_2[pre_migration_config_entry]
   ConfigEntrySnapshot({
     'data': dict({
     }),

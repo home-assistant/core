@@ -128,6 +128,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ScrapeConfigEntry) -> bo
     """Set up Scrape from a config entry."""
 
     config: dict[str, Any] = dict(entry.options)
+    # Config flow uses sections but the COMBINED SCHEMA does not
+    # so we need to flatten the config here
     config.update(config.pop(CONF_ADVANCED, {}))
     config.update(config.pop(CONF_AUTH, {}))
 
@@ -260,6 +262,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ScrapeConfigEntry) -> 
         new_config_entry_data = dict(entry.options)
         new_config_entry_data[CONF_AUTH] = {}
         new_config_entry_data[CONF_ADVANCED] = {}
+        new_config_entry_data.pop(SENSOR_DOMAIN, None)
         for resource_advanced_key in (
             CONF_HEADERS,
             CONF_VERIFY_SSL,

@@ -227,14 +227,14 @@ async def test_migrate_from_future(
     assert config_entry.state is ConfigEntryState.MIGRATION_ERROR
 
 
-async def test_migrate_from_version_1_to_1_2(
+async def test_migrate_from_version_1_to_2(
     hass: HomeAssistant,
     get_data: MockRestData,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test migration to config subentries."""
+    """Test migration from version 1.1 to 2.1 with config subentries."""
 
     @dataclass(frozen=True, kw_only=True)
     class MockConfigSubentry(ConfigSubentry):
