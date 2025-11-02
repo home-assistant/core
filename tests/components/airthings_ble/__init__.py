@@ -265,6 +265,24 @@ WAVE_ENHANCE_DEVICE_INFO = AirthingsDevice(
     address="cc:cc:cc:cc:cc:cc",
 )
 
+CORENTIUM_HOME_2_DEVICE_INFO = AirthingsDevice(
+    manufacturer="Airthings AS",
+    hw_version="REV X",
+    sw_version="R-SUB-1.3.4-master+0",
+    model=AirthingsDeviceType.CORENTIUM_HOME_2,
+    name="Airthings Corentium Home 2",
+    identifier="123456",
+    sensors={
+        "connectivity_mode": "Bluetooth",
+        "battery": 90,
+        "temperature": 20.0,
+        "humidity": 55.0,
+        "radon_1day_avg": 45,
+        "radon_1day_level": "low",
+    },
+    address="cc:cc:cc:cc:cc:cc",
+)
+
 TEMPERATURE_V1 = MockEntity(
     unique_id="Airthings Wave Plus 123456_temperature",
     name="Airthings Wave Plus 123456 Temperature",
