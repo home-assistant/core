@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import Any
 from unittest.mock import patch
 
 import aiohttp
 from freezegun.api import FrozenDateTimeFactory
 from pynordpool import (
+    API,
     NordPoolAuthenticationError,
     NordPoolClient,
     NordPoolEmptyResponseError,
@@ -21,14 +23,16 @@ from homeassistant.components.homeassistant import (
     SERVICE_UPDATE_ENTITY,
 )
 from homeassistant.components.nordpool.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER, ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from . import ENTRY_CONFIG
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.mark.freeze_time("2025-10-01T10:00:00+00:00")
@@ -223,3 +227,117 @@ async def test_coordinator(
         state = hass.states.get("sensor.nord_pool_se3_current_price")
         assert state.state == STATE_UNAVAILABLE
         assert "Data for current day is missing" in caplog.text
+
+
+@pytest.mark.freeze_time("2025-10-01T10:00:00+00:00")
+async def test_coordinator_updating_for_final_prices(
+    hass: HomeAssistant,
+    load_int: ConfigEntry,
+    load_json: list[dict[str, Any]],
+    get_client: NordPoolClient,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the Nord Pool coordinator with errors."""
+    responses = list(load_json)
+
+    state = hass.states.get("sensor.nord_pool_se3_current_price")
+    assert state.state == "0.67405"
+
+    with (
+        patch(
+            "homeassistant.components.nordpool.coordinator.NordPoolClient.async_get_delivery_period",
+            wraps=get_client.async_get_delivery_period,
+        ) as mock_data,
+    ):
+        freezer.tick(timedelta(hours=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert mock_data.call_count == 3
+
+        state = hass.states.get("sensor.nord_pool_se3_current_price")
+        assert state.state == "0.63736"
+
+        freezer.tick(timedelta(hours=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert mock_data.call_count == 6
+
+        state = hass.states.get("sensor.nord_pool_se3_current_price")
+        assert state.state == "0.62233"
+
+        todays_response = responses[0]
+        todays_response["areaStates"][0]["state"] = "Final"
+
+        aioclient_mock.clear_requests()
+        aioclient_mock.request(
+            "GET",
+            url=API + "/DayAheadPrices",
+            params={
+                "date": "2025-09-30",
+                "market": "DayAhead",
+                "deliveryArea": "SE3,SE4",
+                "currency": "SEK",
+            },
+            json=responses[1],
+        )
+        aioclient_mock.request(
+            "GET",
+            url=API + "/DayAheadPrices",
+            params={
+                "date": "2025-10-01",
+                "market": "DayAhead",
+                "deliveryArea": "SE3,SE4",
+                "currency": "SEK",
+            },
+            json=responses[0],
+        )
+        aioclient_mock.request(
+            "GET",
+            url=API + "/DayAheadPrices",
+            params={
+                "date": "2025-10-02",
+                "market": "DayAhead",
+                "deliveryArea": "SE3,SE4",
+                "currency": "SEK",
+            },
+            json=responses[2],
+        )
+
+        freezer.tick(timedelta(hours=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert mock_data.call_count == 9
+
+        state = hass.states.get("sensor.nord_pool_se3_current_price")
+        assert state.state == "0.6294"
+
+        freezer.tick(timedelta(hours=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert mock_data.call_count == 9
+
+        state = hass.states.get("sensor.nord_pool_se3_current_price")
+        assert state.state == "0.61526"
+
+        freezer.tick(timedelta(hours=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert mock_data.call_count == 9
+
+        state = hass.states.get("sensor.nord_pool_se3_current_price")
+        assert state.state == "0.98052"
+
+        freezer.move_to(dt_util.utcnow().replace(hour=22))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert mock_data.call_count == 12
+
+        freezer.tick(timedelta(hours=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert mock_data.call_count == 15
+
+        state = hass.states.get("sensor.nord_pool_se3_current_price")
+        assert state.state == "0.83513"
