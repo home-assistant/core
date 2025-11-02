@@ -86,14 +86,15 @@ def is_installed(requirement_str: str) -> bool:
                 "Installed version for %s resolved to None", req.name
             )
             return False
-        if req.url:
-            if (origin := Distribution.from_name(req.name).origin) is not None:
-                # If hash matches the installed vcs commit id
-                # then it is the latest version
-                return origin.vcs_info.commit_id[:7] in req.url
+        if not req.url:
+            return req.specifier.contains(installed_version, prereleases=True)
 
-            return False
-        return req.specifier.contains(installed_version, prereleases=True)
+        if (origin := Distribution.from_name(req.name).origin) is not None:
+            # If hash matches the installed vcs commit id
+            # then it is the latest version
+            return origin.vcs_info.commit_id[:7] in req.url
+
+        return False
     except PackageNotFoundError:
         return False
 
