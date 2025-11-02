@@ -120,7 +120,7 @@ def parse_pressure_file(file_path: str) -> dict[str, dict[str, float | int]] | N
               or None if the file cannot be read or parsed.
     """
     try:
-        with open(file_path) as f:
+        with open(file_path, encoding="utf-8") as f:
             content = f.read()
     except OSError:
         return None
