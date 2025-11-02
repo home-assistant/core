@@ -259,3 +259,14 @@ class MieleSabbathSwitch(MieleSwitch):
             MieleMode.SABBATH not in self.action.modes
             and MieleMode.NORMAL in self.action.modes
         )
+
+    async def async_turn_switch(self, mode: dict[str, str | int | bool]) -> None:
+        """Set switch state to mode."""
+
+        await super().async_turn_switch(mode)
+        newmode = (
+            MieleMode.NORMAL if mode[MODES] == MieleMode.SABBATH else MieleMode.SABBATH
+        )
+        self.action.modes = [newmode]
+        _LOGGER.debug("Newmode: %s, is_on: %s", self.action.modes, self.is_on)
+        self.async_write_ha_state()
