@@ -6,6 +6,7 @@ import logging
 import time
 
 from webio_api import Zone as NASwebZone
+from webio_api.const import STATE_ZONE_ALARM, STATE_ZONE_ARMED, STATE_ZONE_DISARMED
 
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as DOMAIN_ALARM_CONTROL_PANEL,
@@ -29,6 +30,12 @@ from .const import DOMAIN, STATUS_UPDATE_MAX_TIME_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 ALARM_CONTROL_PANEL_TRANSLATION_KEY = "zone"
+
+NASWEB_STATE_TO_HA_STATE = {
+    STATE_ZONE_ALARM: AlarmControlPanelState.TRIGGERED,
+    STATE_ZONE_ARMED: AlarmControlPanelState.ARMED_AWAY,
+    STATE_ZONE_DISARMED: AlarmControlPanelState.DISARMED,
+}
 
 
 async def async_setup_entry(
@@ -114,7 +121,7 @@ class ZoneEntity(AlarmControlPanelEntity, BaseCoordinatorEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._attr_alarm_state = AlarmControlPanelState(self._zone.state)
+        self._attr_alarm_state = NASWEB_STATE_TO_HA_STATE[self._zone.state]
         if self._zone.pass_type == 0:
             self._attr_code_format = CodeFormat.TEXT
         elif self._zone.pass_type == 1:
