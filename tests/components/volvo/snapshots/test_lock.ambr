@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_lock[ex30_2024][lock.volvo_ex30_central_lock-entry]
+# name: test_lock[ex30_2024][lock.volvo_ex30_lock-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,7 +12,7 @@
     'disabled_by': None,
     'domain': 'lock',
     'entity_category': None,
-    'entity_id': 'lock.volvo_ex30_central_lock',
+    'entity_id': 'lock.volvo_ex30_lock',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -24,7 +24,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Central lock',
+    'original_name': 'Lock',
     'platform': 'volvo',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -34,21 +34,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_lock[ex30_2024][lock.volvo_ex30_central_lock-state]
+# name: test_lock[ex30_2024][lock.volvo_ex30_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Volvo EX30 Central lock',
+      'friendly_name': 'Volvo EX30 Lock',
       'supported_features': <LockEntityFeature: 0>,
     }),
     'context': <ANY>,
-    'entity_id': 'lock.volvo_ex30_central_lock',
+    'entity_id': 'lock.volvo_ex30_lock',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'locked',
   })
 # ---
-# name: test_lock[s90_diesel_2018][lock.volvo_s90_central_lock-entry]
+# name: test_lock[s90_diesel_2018][lock.volvo_s90_lock-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -61,7 +61,7 @@
     'disabled_by': None,
     'domain': 'lock',
     'entity_category': None,
-    'entity_id': 'lock.volvo_s90_central_lock',
+    'entity_id': 'lock.volvo_s90_lock',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -73,7 +73,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Central lock',
+    'original_name': 'Lock',
     'platform': 'volvo',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -83,21 +83,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_lock[s90_diesel_2018][lock.volvo_s90_central_lock-state]
+# name: test_lock[s90_diesel_2018][lock.volvo_s90_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Volvo S90 Central lock',
+      'friendly_name': 'Volvo S90 Lock',
       'supported_features': <LockEntityFeature: 0>,
     }),
     'context': <ANY>,
-    'entity_id': 'lock.volvo_s90_central_lock',
+    'entity_id': 'lock.volvo_s90_lock',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'locked',
   })
 # ---
-# name: test_lock[xc40_electric_2024][lock.volvo_xc40_central_lock-entry]
+# name: test_lock[xc40_electric_2024][lock.volvo_xc40_lock-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -110,7 +110,7 @@
     'disabled_by': None,
     'domain': 'lock',
     'entity_category': None,
-    'entity_id': 'lock.volvo_xc40_central_lock',
+    'entity_id': 'lock.volvo_xc40_lock',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -122,7 +122,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Central lock',
+    'original_name': 'Lock',
     'platform': 'volvo',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -132,21 +132,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_lock[xc40_electric_2024][lock.volvo_xc40_central_lock-state]
+# name: test_lock[xc40_electric_2024][lock.volvo_xc40_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Volvo XC40 Central lock',
+      'friendly_name': 'Volvo XC40 Lock',
       'supported_features': <LockEntityFeature: 0>,
     }),
     'context': <ANY>,
-    'entity_id': 'lock.volvo_xc40_central_lock',
+    'entity_id': 'lock.volvo_xc40_lock',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'locked',
   })
 # ---
-# name: test_lock[xc90_petrol_2019][lock.volvo_xc90_central_lock-entry]
+# name: test_lock[xc90_petrol_2019][lock.volvo_xc90_lock-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -159,7 +159,7 @@
     'disabled_by': None,
     'domain': 'lock',
     'entity_category': None,
-    'entity_id': 'lock.volvo_xc90_central_lock',
+    'entity_id': 'lock.volvo_xc90_lock',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -171,7 +171,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Central lock',
+    'original_name': 'Lock',
     'platform': 'volvo',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -181,14 +181,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_lock[xc90_petrol_2019][lock.volvo_xc90_central_lock-state]
+# name: test_lock[xc90_petrol_2019][lock.volvo_xc90_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Volvo XC90 Central lock',
+      'friendly_name': 'Volvo XC90 Lock',
       'supported_features': <LockEntityFeature: 0>,
     }),
     'context': <ANY>,
-    'entity_id': 'lock.volvo_xc90_central_lock',
+    'entity_id': 'lock.volvo_xc90_lock',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

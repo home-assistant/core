@@ -212,7 +212,7 @@
     },
     "lock": {
       "lock": {
-        "name": "Central lock"
+        "name": "[%key:component::lock::title%]"
       }
     },
     "sensor": {

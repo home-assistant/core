@@ -64,7 +64,7 @@ async def test_unlock_lock(
     await hass.services.async_call(
         LOCK_DOMAIN,
         action,
-        {ATTR_ENTITY_ID: "lock.volvo_xc40_central_lock"},
+        {ATTR_ENTITY_ID: "lock.volvo_xc40_lock"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -90,7 +90,7 @@ async def test_unlock_lock_error(
 
     configure_mock(mock_api.async_execute_command, side_effect=VolvoApiException)
 
-    entity_id = "lock.volvo_xc40_central_lock"
+    entity_id = "lock.volvo_xc40_lock"
     assert hass.states.get(entity_id).state == LockState.LOCKED
 
     with pytest.raises(HomeAssistantError):
@@ -122,7 +122,7 @@ async def test_unlock_failure(
         ),
     )
 
-    entity_id = "lock.volvo_xc40_central_lock"
+    entity_id = "lock.volvo_xc40_lock"
     assert hass.states.get(entity_id).state == LockState.LOCKED
 
     with pytest.raises(HomeAssistantError):
