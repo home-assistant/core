@@ -4,8 +4,8 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     },
     "error": {
-      "resource_error": "Could not update rest data. Verify your configuration",
-      "no_data": "Rest data is empty. Verify your configuration"
+      "no_data": "Rest data is empty. Verify your configuration",
+      "resource_error": "Could not update rest data. Verify your configuration"
     },
     "step": {
       "user": {
@@ -19,21 +19,7 @@
           "resource": "The URL to the website that contains the value."
         },
         "sections": {
-          "auth": {
-            "name": "Authentication settings",
-            "description": "Provide authentication details to access the resource.",
-            "data": {
-              "authentication": "Select authentication method",
-              "password": "[%key:common::config_flow::data::password%]",
-              "username": "[%key:common::config_flow::data::username%]"
-            },
-            "data_description": {
-              "authentication": "Type of the HTTP authentication. Either basic or digest."
-            }
-          },
           "advanced": {
-            "name": "Advanced settings",
-            "description": "Provide additional advanced settings for the resource.",
             "data": {
               "encoding": "Character encoding",
               "headers": "Headers",
@@ -45,7 +31,21 @@
               "headers": "Headers to use for the web request.",
               "timeout": "Timeout for connection to website.",
               "verify_ssl": "Enables/disables verification of SSL/TLS certificate, for example if it is self-signed."
-            }
+            },
+            "description": "Provide additional advanced settings for the resource.",
+            "name": "Advanced settings"
+          },
+          "auth": {
+            "data": {
+              "authentication": "Select authentication method",
+              "password": "[%key:common::config_flow::data::password%]",
+              "username": "[%key:common::config_flow::data::username%]"
+            },
+            "data_description": {
+              "authentication": "Type of the HTTP authentication. Either basic or digest."
+            },
+            "description": "Provide authentication details to access the resource.",
+            "name": "Authentication settings"
           }
         }
       }
@@ -65,8 +65,6 @@
           },
           "sections": {
             "advanced": {
-              "name": "Advanced settings",
-              "description": "Provide additional advanced settings for the sensor.",
               "data": {
                 "attribute": "Attribute",
                 "availability": "Availability template",
@@ -82,7 +80,9 @@
                 "state_class": "The state_class of the sensor.",
                 "unit_of_measurement": "Choose unit of measurement or create your own.",
                 "value_template": "Defines a template to get the state of the sensor."
-              }
+              },
+              "description": "Provide additional advanced settings for the sensor.",
+              "name": "Advanced settings"
             }
           }
         }
@@ -91,8 +91,8 @@
   },
   "options": {
     "error": {
-      "resource_error": "[%key:component::scrape::config::error::resource_error%]",
-      "no_data": "[%key:component::scrape::config::error::no_data%]"
+      "no_data": "[%key:component::scrape::config::error::no_data%]",
+      "resource_error": "[%key:component::scrape::config::error::resource_error%]"
     },
     "step": {
       "init": {
@@ -106,21 +106,7 @@
           "resource": "[%key:component::scrape::config::step::user::data_description::resource%]"
         },
         "sections": {
-          "auth": {
-            "name": "[%key:component::scrape::config::step::user::sections::auth::name%]",
-            "description": "[%key:component::scrape::config::step::user::sections::auth::description%]",
-            "data": {
-              "authentication": "[%key:component::scrape::config::step::user::sections::auth::data::authentication%]",
-              "password": "[%key:common::config_flow::data::password%]",
-              "username": "[%key:common::config_flow::data::username%]"
-            },
-            "data_description": {
-              "authentication": "[%key:component::scrape::config::step::user::sections::auth::data_description::authentication%]"
-            }
-          },
           "advanced": {
-            "name": "[%key:component::scrape::config::step::user::sections::advanced::name%]",
-            "description": "[%key:component::scrape::config::step::user::sections::advanced::description%]",
             "data": {
               "encoding": "[%key:component::scrape::config::step::user::sections::advanced::data::encoding%]",
               "headers": "[%key:component::scrape::config::step::user::sections::advanced::data::headers%]",
@@ -132,7 +118,21 @@
               "headers": "[%key:component::scrape::config::step::user::sections::advanced::data_description::headers%]",
               "timeout": "[%key:component::scrape::config::step::user::sections::advanced::data_description::timeout%]",
               "verify_ssl": "[%key:component::scrape::config::step::user::sections::advanced::data_description::verify_ssl%]"
-            }
+            },
+            "description": "[%key:component::scrape::config::step::user::sections::advanced::description%]",
+            "name": "[%key:component::scrape::config::step::user::sections::advanced::name%]"
+          },
+          "auth": {
+            "data": {
+              "authentication": "[%key:component::scrape::config::step::user::sections::auth::data::authentication%]",
+              "password": "[%key:common::config_flow::data::password%]",
+              "username": "[%key:common::config_flow::data::username%]"
+            },
+            "data_description": {
+              "authentication": "[%key:component::scrape::config::step::user::sections::auth::data_description::authentication%]"
+            },
+            "description": "[%key:component::scrape::config::step::user::sections::auth::description%]",
+            "name": "[%key:component::scrape::config::step::user::sections::auth::name%]"
           }
         }
       }
