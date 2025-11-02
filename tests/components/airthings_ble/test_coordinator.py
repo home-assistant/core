@@ -15,7 +15,7 @@ from homeassistant.components.airthings_ble.coordinator import (
 )
 from homeassistant.core import HomeAssistant
 
-from . import CORENTIUM_HOME_2_DEVICE_INFO, WAVE_DEVICE_INFO
+from . import CORENTIUM_HOME_2_DEVICE_INFO, WAVE_DEVICE_INFO, WAVE_ENHANCE_DEVICE_INFO
 
 from tests.components.bluetooth import MockConfigEntry, generate_ble_device
 
@@ -25,6 +25,7 @@ from tests.components.bluetooth import MockConfigEntry, generate_ble_device
     [
         (CORENTIUM_HOME_2_DEVICE_INFO, RADON_SCAN_INTERVAL),
         (WAVE_DEVICE_INFO, DEFAULT_SCAN_INTERVAL),
+        (WAVE_ENHANCE_DEVICE_INFO, DEFAULT_SCAN_INTERVAL),
     ],
 )
 async def test_scan_interval_adjustment(
