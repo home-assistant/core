@@ -6,6 +6,7 @@ from aioshelly.const import (
     MODEL_2PM_G3,
     MODEL_BLU_GATEWAY_G3,
     MODEL_CURY_G4,
+    MODEL_DUO_BULB_G3,
     MODEL_POWER_STRIP_G4,
     MODEL_PRESENCE_G4,
     MODEL_PRO_EM3,
@@ -697,6 +698,32 @@ async def test_cury_gen4(
     await force_uptime_value(hass, freezer)
 
     config_entry = await init_integration(hass, gen=4, model=MODEL_CURY_G4)
+
+    await snapshot_device_entities(
+        hass, entity_registry, snapshot, config_entry.entry_id
+    )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_duo_bulb_gen3(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+    snapshot: SnapshotAssertion,
+    monkeypatch: pytest.MonkeyPatch,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test Duo Bulb Gen3."""
+    device_fixture = await async_load_json_object_fixture(
+        hass, "duo_bulb_gen3.json", DOMAIN
+    )
+    monkeypatch.setattr(mock_rpc_device, "shelly", device_fixture["shelly"])
+    monkeypatch.setattr(mock_rpc_device, "status", device_fixture["status"])
+    monkeypatch.setattr(mock_rpc_device, "config", device_fixture["config"])
+
+    await force_uptime_value(hass, freezer)
+
+    config_entry = await init_integration(hass, gen=3, model=MODEL_DUO_BULB_G3)
 
     await snapshot_device_entities(
         hass, entity_registry, snapshot, config_entry.entry_id
