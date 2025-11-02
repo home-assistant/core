@@ -26,6 +26,9 @@
       "detected_objects": {
         "default": "mdi:account-group"
       },
+      "detected_objects_with_channel_name": {
+        "default": "mdi:account-group"
+      },
       "gas_concentration": {
         "default": "mdi:gauge"
       },
