@@ -19,7 +19,7 @@ from homeassistant.helpers.update_coordinator import TimestampDataUpdateCoordina
 from homeassistant.util import dt as dt_util
 
 from .const import CONF_PROCESS, PROCESS_ERRORS
-from .psi_parser import get_all_pressure_info
+from .util import get_all_pressure_info
 
 if TYPE_CHECKING:
     from . import SystemMonitorConfigEntry
