@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
@@ -28,7 +29,7 @@ async def async_register_services(hass: HomeAssistant) -> None:
         min_coordinators: dict[str, GrowattCoordinator] = {}
 
         for entry in hass.config_entries.async_entries(DOMAIN):
-            if not entry.runtime_data:
+            if entry.state != ConfigEntryState.LOADED:
                 continue
 
             # Add MIN coordinators from this entry
@@ -38,14 +39,8 @@ async def async_register_services(hass: HomeAssistant) -> None:
 
         return min_coordinators
 
-    # Services will be registered even if no MIN devices currently exist,
-    # but will check for available coordinators when called
-    if hass.services.has_service(DOMAIN, "update_time_segment"):
-        # Services already registered
-        return
-
-    def get_coordinator(device_id: str | None = None) -> GrowattCoordinator:
-        """Get coordinator by device_id with consistent behavior.
+    def get_coordinator(device_id: str) -> GrowattCoordinator:
+        """Get coordinator by device_id.
 
         Args:
             device_id: Device registry ID (not serial number)
@@ -59,24 +54,15 @@ async def async_register_services(hass: HomeAssistant) -> None:
                 "Services require MIN devices with V1 API access."
             )
 
-        if device_id is None:
-            if len(min_coordinators) == 1:
-                # Only one device - return it
-                return next(iter(min_coordinators.values()))
-            # Multiple devices - require explicit selection
-            raise ServiceValidationError(
-                "Multiple MIN devices available. Please specify a device."
-            )
-
         # Device registry ID provided - map to serial number
-        device_registry: dr.DeviceRegistry = dr.async_get(hass)
-        device_entry: dr.DeviceEntry | None = device_registry.async_get(device_id)
+        device_registry = dr.async_get(hass)
+        device_entry = device_registry.async_get(device_id)
 
         if not device_entry:
             raise ServiceValidationError(f"Device '{device_id}' not found")
 
         # Extract serial number from device identifiers
-        serial_number: str | None = None
+        serial_number = None
         for identifier in device_entry.identifiers:
             if identifier[0] == DOMAIN:
                 serial_number = identifier[1]
@@ -102,7 +88,7 @@ async def async_register_services(hass: HomeAssistant) -> None:
         start_time_str: str = call.data["start_time"]
         end_time_str: str = call.data["end_time"]
         enabled: bool = call.data["enabled"]
-        device_id: str | None = call.data.get("device_id")
+        device_id: str = call.data["device_id"]
 
         # Validate segment_id range
         if not 1 <= segment_id <= 9:
@@ -157,8 +143,10 @@ async def async_register_services(hass: HomeAssistant) -> None:
 
     async def handle_read_time_segments(call: ServiceCall) -> dict[str, Any]:
         """Handle read_time_segments service call."""
+        device_id: str = call.data["device_id"]
+
         # Get the appropriate MIN coordinator
-        coordinator: GrowattCoordinator = get_coordinator(call.data.get("device_id"))
+        coordinator: GrowattCoordinator = get_coordinator(device_id)
 
         time_segments: list[dict[str, Any]] = await coordinator.read_time_segments()
 

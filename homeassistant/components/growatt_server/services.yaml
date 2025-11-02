@@ -36,7 +36,7 @@ update_time_segment:
       selector:
         boolean:
     device_id:
-      required: false
+      required: true
       selector:
         device:
           integration: growatt_server
@@ -44,7 +44,7 @@ update_time_segment:
 read_time_segments:
   fields:
     device_id:
-      required: false
+      required: true
       selector:
         device:
           integration: growatt_server

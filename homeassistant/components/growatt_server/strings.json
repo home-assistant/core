@@ -534,25 +534,25 @@
   },
   "services": {
     "read_time_segments": {
-      "description": "Read all time-of-use (TOU) segments from a supported inverter.",
+      "description": "Read all time segments from a supported inverter.",
       "fields": {
         "device_id": {
-          "description": "Device ID (only required when multiple devices exist).",
-          "name": "Device ID"
+          "description": "The Growatt device to read time segments from.",
+          "name": "Device"
         }
       },
       "name": "Read time segments"
     },
     "update_time_segment": {
-      "description": "Update a time-of-use (TOU) segment for supported inverters.",
+      "description": "Update a time segment for supported inverters.",
       "fields": {
         "batt_mode": {
           "description": "Battery operation mode for this time segment.",
           "name": "Battery mode"
         },
         "device_id": {
-          "description": "Device ID (only required when multiple devices exist).",
-          "name": "Device ID"
+          "description": "[%key:component::growatt_server::services::read_time_segments::fields::device_id::description%]",
+          "name": "[%key:component::growatt_server::services::read_time_segments::fields::device_id::name%]"
         },
         "enabled": {
           "description": "Whether this time segment is active.",
