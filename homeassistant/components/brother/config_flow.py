@@ -33,7 +33,7 @@ DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_TYPE, default=PRINTER_TYPE_LASER): SelectSelector(
             SelectSelectorConfig(
                 options=PRINTER_TYPES,
-                translation_key=CONF_TYPE,
+                translation_key="printer_type",
             )
         ),
         vol.Required(SECTION_ADVANCED_SETTINGS): section(
@@ -52,7 +52,7 @@ ZEROCONF_SCHEMA = vol.Schema(
         vol.Required(CONF_TYPE, default=PRINTER_TYPE_LASER): SelectSelector(
             SelectSelectorConfig(
                 options=PRINTER_TYPES,
-                translation_key=CONF_TYPE,
+                translation_key="printer_type",
             )
         ),
         vol.Required(SECTION_ADVANCED_SETTINGS): section(
