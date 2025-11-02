@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
+from freezegun import freeze_time
 import pytest
 from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
@@ -405,6 +406,7 @@ async def test_extra_systen_prompt(
     assert chat_log.content[0].content.endswith(extra_system_prompt2)
 
 
+@freeze_time("2025-10-31 18:00:00")
 @pytest.mark.parametrize(
     "prerun_tool_tasks",
     [
@@ -491,6 +493,7 @@ async def test_tool_call(
             )
 
 
+@freeze_time("2025-10-31 12:00:00")
 async def test_tool_call_exception(
     hass: HomeAssistant,
     mock_conversation_input: ConversationInput,
@@ -543,6 +546,7 @@ async def test_tool_call_exception(
     )
 
 
+@freeze_time("2025-10-31 12:00:00")
 @pytest.mark.parametrize(
     "deltas",
     [
@@ -850,6 +854,7 @@ async def test_chat_log_continue_conversation(
         assert chat_log.continue_conversation is True
 
 
+@freeze_time("2025-10-31 12:00:00")
 async def test_chat_log_subscription(
     hass: HomeAssistant,
     mock_conversation_input: ConversationInput,
@@ -859,9 +864,11 @@ async def test_chat_log_subscription(
     # Track all events received
     received_events = []
 
-    def event_callback(event_type: ChatLogEventType, data: dict[str, Any]) -> None:
+    def event_callback(
+        conversation_id: str, event_type: ChatLogEventType, data: dict[str, Any]
+    ) -> None:
         """Track received events."""
-        received_events.append((event_type, data))
+        received_events.append((conversation_id, event_type, data))
 
     # Subscribe to chat log events
     unsubscribe = async_subscribe_chat_logs(hass, event_callback)
@@ -886,8 +893,8 @@ async def test_chat_log_subscription(
             )
         )
         # Check user content with attachments event
-        assert received_events[-1][0] == ChatLogEventType.CONTENT_ADDED
-        user_event = received_events[-1][1]["content"]
+        assert received_events[-1][1] == ChatLogEventType.CONTENT_ADDED
+        user_event = received_events[-1][2]["content"]
         assert user_event["content"] == "Check this image"
         assert len(user_event["attachments"]) == 1
         assert user_event["attachments"][0]["mime_type"] == "image/jpeg"
@@ -898,8 +905,8 @@ async def test_chat_log_subscription(
             )
         )
         # Check basic assistant content event
-        assert received_events[-1][0] == ChatLogEventType.CONTENT_ADDED
-        basic_event = received_events[-1][1]["content"]
+        assert received_events[-1][1] == ChatLogEventType.CONTENT_ADDED
+        basic_event = received_events[-1][2]["content"]
         assert basic_event["content"] == "Hello! How can I help you?"
         assert basic_event["agent_id"] == "test-agent"
 
@@ -911,8 +918,8 @@ async def test_chat_log_subscription(
             )
         )
         # Check assistant content with thinking event
-        assert received_events[-1][0] == ChatLogEventType.CONTENT_ADDED
-        thinking_event = received_events[-1][1]["content"]
+        assert received_events[-1][1] == ChatLogEventType.CONTENT_ADDED
+        thinking_event = received_events[-1][2]["content"]
         assert (
             thinking_event["thinking_content"]
             == "I need to analyze the user's request carefully."
@@ -926,8 +933,8 @@ async def test_chat_log_subscription(
             )
         )
         # Check assistant content with native event
-        assert received_events[-1][0] == ChatLogEventType.CONTENT_ADDED
-        native_event = received_events[-1][1]["content"]
+        assert received_events[-1][1] == ChatLogEventType.CONTENT_ADDED
+        native_event = received_events[-1][2]["content"]
         assert native_event["content"] == "Here's some data:"
         assert native_event["agent_id"] == "test-agent"
 
@@ -940,8 +947,8 @@ async def test_chat_log_subscription(
             )
         )
         # Check tool result content event
-        assert received_events[-1][0] == ChatLogEventType.CONTENT_ADDED
-        tool_result_event = received_events[-1][1]["content"]
+        assert received_events[-1][1] == ChatLogEventType.CONTENT_ADDED
+        tool_result_event = received_events[-1][2]["content"]
         assert tool_result_event["tool_name"] == "test_tool"
         assert (
             tool_result_event["tool_result"] == "Tool execution completed successfully"
@@ -962,8 +969,8 @@ async def test_chat_log_subscription(
             )
         )
         # Check external tool call event
-        assert received_events[-1][0] == ChatLogEventType.CONTENT_ADDED
-        external_tool_event = received_events[-1][1]["content"]
+        assert received_events[-1][1] == ChatLogEventType.CONTENT_ADDED
+        external_tool_event = received_events[-1][2]["content"]
         assert len(external_tool_event["tool_calls"]) == 1
         assert external_tool_event["tool_calls"][0].tool_name == "external_api_call"
 
@@ -972,12 +979,12 @@ async def test_chat_log_subscription(
     assert len(received_events) == 8
 
     # Check the first event is CREATED
-    assert received_events[0][0] == ChatLogEventType.CREATED
-    assert received_events[0][1]["chat_log"]["conversation_id"] == conversation_id
+    assert received_events[0][1] == ChatLogEventType.CREATED
+    assert received_events[0][2]["chat_log"]["conversation_id"] == conversation_id
 
     # Check the second event is CONTENT_ADDED (from mock_conversation_input)
-    assert received_events[1][0] == ChatLogEventType.CONTENT_ADDED
-    assert received_events[1][1]["conversation_id"] == conversation_id
+    assert received_events[1][1] == ChatLogEventType.CONTENT_ADDED
+    assert received_events[1][0] == conversation_id
 
     # Test cleanup functionality
     assert conversation_id in hass.data[chat_session.DATA_CHAT_SESSION]
@@ -993,8 +1000,8 @@ async def test_chat_log_subscription(
     )
 
     # Check that DELETED event was sent
-    assert received_events[-1][0] == ChatLogEventType.DELETED
-    assert received_events[-1][1]["conversation_id"] == conversation_id
+    assert received_events[-1][1] == ChatLogEventType.DELETED
+    assert received_events[-1][0] == conversation_id
 
     # Test that unsubscribing stops receiving events
     events_before_unsubscribe = len(received_events)
