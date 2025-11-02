@@ -138,12 +138,15 @@ def parse_pressure_file(file_path: str) -> dict[str, dict[str, float | int]] | N
             line_type, values_str = match.groups()
             values: dict[str, float | int] = {}
             for item in values_str.split():
-                key, value = item.split("=")
-                # Convert values to float, except for 'total' which is an integer
-                if key == "total":
-                    values[key] = int(value)
-                else:
-                    values[key] = float(value)
+                try:
+                    key, value = item.split("=")
+                    # Convert values to float, except for 'total' which is an integer
+                    if key == "total":
+                        values[key] = int(value)
+                    else:
+                        values[key] = float(value)
+                except ValueError:
+                    continue
             data[line_type] = values
 
     return data
