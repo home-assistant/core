@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
@@ -13,7 +14,12 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import EntityCategory, UnitOfPressure, UnitOfTemperature
+from homeassistant.const import (
+    SIGNAL_STRENGTH_DECIBELS,
+    EntityCategory,
+    UnitOfPressure,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -31,6 +37,7 @@ class IncomfortSensorEntityDescription(SensorEntityDescription):
     value_key: str
     extra_key: str | None = None
     entity_category = EntityCategory.DIAGNOSTIC
+    value_fn: Callable[[float], float] | None = None
 
 
 SENSOR_TYPES: tuple[IncomfortSensorEntityDescription, ...] = (
@@ -59,6 +66,19 @@ SENSOR_TYPES: tuple[IncomfortSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         extra_key="is_tapping",
         value_key="tap_temp",
+        entity_registry_enabled_default=False,
+    ),
+    # https://onlinedocs.microchip.com/oxy/GUID-04F68A6F-ABC7-4210-8B16-0AEE59C530AF-en-US-1/GUID-D9118600-8ED5-4DA3-8689-056D54CFF
+    # A lower RSSI value is better
+    # An RSSI value of 28 calculates to -78 dB
+    IncomfortSensorEntityDescription(
+        key="rf_message_rssi",
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
+        value_key="rf_message_rssi",
+        extra_key="rfstatus_cntr",
+        value_fn=lambda value: -50 - value,
         entity_registry_enabled_default=False,
     ),
 )
@@ -98,6 +118,10 @@ class IncomfortSensor(IncomfortBoilerEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
+        if self.entity_description.value_fn is not None:
+            return self.entity_description.value_fn(
+                self._heater.status[self.entity_description.value_key]
+            )
         return self._heater.status[self.entity_description.value_key]  # type: ignore [no-any-return]
 
     @property
