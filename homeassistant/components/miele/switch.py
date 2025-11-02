@@ -253,6 +253,8 @@ class MieleSabbathSwitch(MieleSwitch):
     @property
     def is_on(self) -> bool | None:
         """Return the state of the switch."""
+        # As the API does not report proper state for modes,
+        # we have to infer from actions available.
         return (
             MieleMode.SABBATH not in self.action.modes
             and MieleMode.NORMAL in self.action.modes
