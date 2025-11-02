@@ -1,23 +1,18 @@
 {
   "config": {
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    },
     "step": {
       "user": {
         "description": "Receive Voice over IP calls to interact with Assist."
       }
-    },
-    "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }
   },
   "entity": {
     "binary_sensor": {
       "call_in_progress": {
         "name": "Call in progress"
-      }
-    },
-    "switch": {
-      "allow_call": {
-        "name": "Allow calls"
       }
     },
     "select": {
@@ -30,23 +25,33 @@
       "vad_sensitivity": {
         "name": "[%key:component::assist_pipeline::entity::select::vad_sensitivity::name%]",
         "state": {
-          "default": "[%key:component::assist_pipeline::entity::select::vad_sensitivity::state::default%]",
           "aggressive": "[%key:component::assist_pipeline::entity::select::vad_sensitivity::state::aggressive%]",
+          "default": "[%key:component::assist_pipeline::entity::select::vad_sensitivity::state::default%]",
           "relaxed": "[%key:component::assist_pipeline::entity::select::vad_sensitivity::state::relaxed%]"
         }
       }
+    },
+    "switch": {
+      "allow_call": {
+        "name": "Allow calls"
+      }
+    }
+  },
+  "exceptions": {
+    "non_tts_announcement": {
+      "message": "VoIP does not currently support non-TTS announcements"
     }
   },
   "issues": {
     "assist_in_progress_deprecated": {
-      "title": "[%key:component::assist_pipeline::issues::assist_in_progress_deprecated::title%]",
       "fix_flow": {
         "step": {
           "confirm_disable_entity": {
             "description": "[%key:component::assist_pipeline::issues::assist_in_progress_deprecated::fix_flow::step::confirm_disable_entity::description%]"
           }
         }
-      }
+      },
+      "title": "[%key:component::assist_pipeline::issues::assist_in_progress_deprecated::title%]"
     }
   },
   "options": {
@@ -57,11 +62,6 @@
           "sip_user": "SIP user"
         }
       }
-    }
-  },
-  "exceptions": {
-    "non_tts_announcement": {
-      "message": "VoIP does not currently support non-TTS announcements"
     }
   }
 }

@@ -2,16 +2,13 @@
 
 from airtouch4pyapi import AirTouch
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .coordinator import AirtouchDataUpdateCoordinator
+from .coordinator import AirTouch4ConfigEntry, AirtouchDataUpdateCoordinator
 
 PLATFORMS = [Platform.CLIMATE]
-
-type AirTouch4ConfigEntry = ConfigEntry[AirtouchDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AirTouch4ConfigEntry) -> bool:
@@ -22,7 +19,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirTouch4ConfigEntry) ->
     info = airtouch.GetAcs()
     if not info:
         raise ConfigEntryNotReady
-    coordinator = AirtouchDataUpdateCoordinator(hass, airtouch)
+    coordinator = AirtouchDataUpdateCoordinator(hass, entry, airtouch)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 

@@ -10,6 +10,8 @@ from homeassistant.components.ai_task import (
     AITaskEntityFeature,
     GenDataTask,
     GenDataTaskResult,
+    GenImageTask,
+    GenImageTaskResult,
 )
 from homeassistant.components.conversation import AssistantContent, ChatLog
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
@@ -36,13 +38,16 @@ class MockAITaskEntity(AITaskEntity):
 
     _attr_name = "Test Task Entity"
     _attr_supported_features = (
-        AITaskEntityFeature.GENERATE_DATA | AITaskEntityFeature.SUPPORT_ATTACHMENTS
+        AITaskEntityFeature.GENERATE_DATA
+        | AITaskEntityFeature.SUPPORT_ATTACHMENTS
+        | AITaskEntityFeature.GENERATE_IMAGE
     )
 
     def __init__(self) -> None:
         """Initialize the mock entity."""
         super().__init__()
         self.mock_generate_data_tasks = []
+        self.mock_generate_image_tasks = []
 
     async def _async_generate_data(
         self, task: GenDataTask, chat_log: ChatLog
@@ -61,6 +66,24 @@ class MockAITaskEntity(AITaskEntity):
         return GenDataTaskResult(
             conversation_id=chat_log.conversation_id,
             data=data,
+        )
+
+    async def _async_generate_image(
+        self, task: GenImageTask, chat_log: ChatLog
+    ) -> GenImageTaskResult:
+        """Mock handling of generate image task."""
+        self.mock_generate_image_tasks.append(task)
+        chat_log.async_add_assistant_content_without_tools(
+            AssistantContent(self.entity_id, "")
+        )
+        return GenImageTaskResult(
+            conversation_id=chat_log.conversation_id,
+            image_data=b"mock_image_data",
+            mime_type="image/png",
+            width=1536,
+            height=1024,
+            model="mock_model",
+            revised_prompt="mock_revised_prompt",
         )
 
 
@@ -134,4 +157,4 @@ async def init_components(
 
     with mock_config_flow(TEST_DOMAIN, ConfigFlow):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)

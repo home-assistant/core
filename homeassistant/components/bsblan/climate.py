@@ -71,21 +71,25 @@ class BSBLANClimate(BSBLanEntity, ClimateEntity):
         data: BSBLanData,
     ) -> None:
         """Initialize BSBLAN climate device."""
-        super().__init__(data.coordinator, data)
+        super().__init__(data.fast_coordinator, data)
         self._attr_unique_id = f"{format_mac(data.device.MAC)}-climate"
 
         self._attr_min_temp = data.static.min_temp.value
         self._attr_max_temp = data.static.max_temp.value
-        self._attr_temperature_unit = data.coordinator.client.get_temperature_unit
+        self._attr_temperature_unit = data.fast_coordinator.client.get_temperature_unit
 
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
+        if self.coordinator.data.state.current_temperature is None:
+            return None
         return self.coordinator.data.state.current_temperature.value
 
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
+        if self.coordinator.data.state.target_temperature is None:
+            return None
         return self.coordinator.data.state.target_temperature.value
 
     @property
