@@ -401,6 +401,19 @@ def test_get_is_installed() -> None:
     assert not package.is_installed(f"{installed_package}<{installed_version}")
 
 
+def test_vcs_is_installed() -> None:
+    """Test is_installed can parse VCS requirements."""
+    assert package.is_installed(
+        "homeassistant@git+https://github.com/home-assistant/core@2025.12.0"
+    )
+    assert package.is_installed(
+        "homeassistant@git+https://github.com/home-assistant/core@dev"
+    )
+    assert package.is_installed(
+        "homeassistant@git+https://github.com/home-assistant/core@60b8392"
+    )
+
+
 def test_check_package_previous_failed_install() -> None:
     """Test for when a previously install package failed and left cruft behind."""
     pkg = metadata("homeassistant")

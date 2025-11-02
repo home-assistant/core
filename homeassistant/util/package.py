@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from functools import cache
-from importlib.metadata import PackageNotFoundError, version
+from importlib.metadata import Distribution, PackageNotFoundError, version
 import logging
 import os
 from pathlib import Path
@@ -85,6 +85,13 @@ def is_installed(requirement_str: str) -> bool:
             _LOGGER.error(  # type: ignore[unreachable]
                 "Installed version for %s resolved to None", req.name
             )
+            return False
+        if req.url:
+            if (origin := Distribution.from_name(req.name).origin) is not None:
+                # If hash matches the installed vcs commit id
+                # then it is the latest version
+                return origin.vcs_info.commit_id[:7] in req.url
+
             return False
         return req.specifier.contains(installed_version, prereleases=True)
     except PackageNotFoundError:
