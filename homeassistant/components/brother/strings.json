@@ -211,8 +211,8 @@
       "message": "An error occurred while retrieving data from the {device} printer: {error}"
     }
   },
-  "selectors": {
-    "printer_type": {
+  "selector": {
+    "type": {
       "options": {
         "ink": "ink",
         "laser": "laser"
