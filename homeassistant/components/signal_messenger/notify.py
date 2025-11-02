@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from pysignalclirestapi import SignalCliRestApi, SignalCliRestApiError
+from pysignalclirestapi import SignalCliRestApi, SignalCliRestApiHTTPBasicAuth, SignalCliRestApiError
 import requests
 import voluptuous as vol
 
@@ -25,6 +25,9 @@ CONF_SENDER_NR = "number"
 CONF_RECP_NR = "recipients"
 CONF_SIGNAL_CLI_REST_API = "url"
 CONF_MAX_ALLOWED_DOWNLOAD_SIZE_BYTES = 52428800
+CONF_BASIC_AUTH = "auth"
+CONF_BASIC_AUTH_USER = "user"
+CONF_BASIC_AUTH_PW = "password"
 ATTR_FILENAMES = "attachments"
 ATTR_URLS = "urls"
 ATTR_VERIFY_SSL = "verify_ssl"
@@ -58,14 +61,21 @@ DATA_SCHEMA = vol.Any(
     DATA_URLS_SCHEMA,
 )
 
+AUTH_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_BASIC_AUTH_USER): cv.string,
+        vol.Required(CONF_BASIC_AUTH_PW): cv.string,
+    }
+)
+
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_SENDER_NR): cv.string,
         vol.Required(CONF_SIGNAL_CLI_REST_API): cv.string,
         vol.Required(CONF_RECP_NR): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_BASIC_AUTH): AUTH_SCHEMA
     }
 )
-
 
 def get_service(
     hass: HomeAssistant,
@@ -78,7 +88,14 @@ def get_service(
     recp_nrs = config[CONF_RECP_NR]
     signal_cli_rest_api_url = config[CONF_SIGNAL_CLI_REST_API]
 
+    basic_auth = config.get(CONF_BASIC_AUTH)
+
     signal_cli_rest_api = SignalCliRestApi(signal_cli_rest_api_url, sender_nr)
+
+    if basic_auth:
+        user = basic_auth.get(CONF_BASIC_AUTH_USER)
+        password = basic_auth.get(CONF_BASIC_AUTH_PW)
+        signal_cli_rest_api._auth = SignalCliRestApiHTTPBasicAuth(user, password)
 
     return SignalNotificationService(hass, recp_nrs, signal_cli_rest_api)
 
