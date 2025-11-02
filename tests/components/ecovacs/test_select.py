@@ -124,6 +124,13 @@ async def test_selects(
             "low",
             SetWaterInfo(WaterAmount.LOW),
         ),
+        (
+            "9eamof",
+            "select.t80_omni_auto_empty",
+            "auto",
+            "smart",
+            SetAutoEmpty(1, Frequency.SMART),
+        ),
     ],
 )
 async def test_selects_change(
