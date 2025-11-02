@@ -27,6 +27,9 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
 from .coordinator import BrotherConfigEntry, BrotherDataUpdateCoordinator
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 ATTR_COUNTER = "counter"
 ATTR_REMAINING_PAGES = "remaining_pages"
 
