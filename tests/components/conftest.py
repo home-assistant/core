@@ -14,10 +14,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohasupervisor.models import (
     Discovery,
+    GreenInfo,
+    JobsInfo,
     Repository,
     ResolutionInfo,
     StoreAddon,
     StoreInfo,
+    YellowInfo,
 )
 import pytest
 import voluptuous as vol
@@ -429,11 +432,9 @@ def uninstall_addon_fixture(supervisor_client: AsyncMock) -> AsyncMock:
 
 
 @pytest.fixture(name="create_backup")
-def create_backup_fixture() -> Generator[AsyncMock]:
+def create_backup_fixture(supervisor_client: AsyncMock) -> AsyncMock:
     """Mock create backup."""
-    from .hassio.common import mock_create_backup  # noqa: PLC0415
-
-    yield from mock_create_backup()
+    return supervisor_client.backups.partial_backup
 
 
 @pytest.fixture(name="update_addon")
@@ -509,6 +510,31 @@ def resolution_suggestions_for_issue_fixture(supervisor_client: AsyncMock) -> As
     return supervisor_client.resolution.suggestions_for_issue
 
 
+@pytest.fixture(name="jobs_info")
+def jobs_info_fixture(supervisor_client: AsyncMock) -> AsyncMock:
+    """Mock jobs info from supervisor."""
+    supervisor_client.jobs.info.return_value = JobsInfo(ignore_conditions=[], jobs=[])
+    return supervisor_client.jobs.info
+
+
+@pytest.fixture(name="os_yellow_info")
+def os_yellow_info_fixture(supervisor_client: AsyncMock) -> AsyncMock:
+    """Mock yellow info API from supervisor OS."""
+    supervisor_client.os.yellow_info.return_value = YellowInfo(
+        disk_led=True, heartbeat_led=True, power_led=True
+    )
+    return supervisor_client.os.yellow_info
+
+
+@pytest.fixture(name="os_green_info")
+def os_green_info_fixture(supervisor_client: AsyncMock) -> AsyncMock:
+    """Mock green info API from supervisor OS."""
+    supervisor_client.os.green_info.return_value = GreenInfo(
+        activity_led=True, power_led=True, system_health_led=True
+    )
+    return supervisor_client.os.green_info
+
+
 @pytest.fixture(name="supervisor_client")
 def supervisor_client() -> Generator[AsyncMock]:
     """Mock the supervisor client."""
@@ -552,6 +578,10 @@ def supervisor_client() -> Generator[AsyncMock]:
         ),
         patch(
             "homeassistant.components.hassio.issues.get_supervisor_client",
+            return_value=supervisor_client,
+        ),
+        patch(
+            "homeassistant.components.hassio.jobs.get_supervisor_client",
             return_value=supervisor_client,
         ),
         patch(

@@ -62,6 +62,7 @@ class VolvoBaseEntity(Entity):
             identifiers={(DOMAIN, vehicle.vin)},
             manufacturer=MANUFACTURER,
             model=model,
+            model_id=f"{vehicle.description.model} ({vehicle.model_year})",
             name=f"{MANUFACTURER} {vehicle.description.model}",
             serial_number=vehicle.vin,
         )
