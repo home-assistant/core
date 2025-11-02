@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 import logging
 from typing import Any
@@ -228,12 +228,12 @@ def generate_lambda_stmt(query: str) -> StatementLambdaElement:
     return lambda_stmt(lambda: text, lambda_cache=_SQL_LAMBDA_CACHE)
 
 
-def ensure_serializable(value: Any) -> Any:
-    """Ensure value is serializable."""
+def convert_value(value: Any) -> Any:
+    """Convert value."""
     match value:
         case Decimal():
             return float(value)
-        case date():
+        case date() | datetime():
             return value.isoformat()
         case bytes() | bytearray():
             return f"0x{value.hex()}"
