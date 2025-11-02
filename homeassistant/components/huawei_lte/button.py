@@ -87,7 +87,6 @@ class RestartButton(BaseButton):
 
     entity_description = ButtonEntityDescription(
         key=BUTTON_KEY_RESTART,
-        translation_key="restart",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
     )
