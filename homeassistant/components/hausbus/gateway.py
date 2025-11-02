@@ -24,7 +24,6 @@ from pyhausbus.HausBusUtils import HOMESERVER_DEVICE_ID
 from pyhausbus.HomeServer import HomeServer
 from pyhausbus.IBusDataListener import IBusDataListener
 from pyhausbus.ObjectId import ObjectId
-from pyhausbus.Templates import Templates
 
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.config_entries import ConfigEntry
@@ -71,10 +70,10 @@ class HausbusGateway(IBusDataListener):
             self.devices[device_id] = HausbusDevice(
                 device_id,
                 module.getFirmwareId().getTemplateId()
-                + " "
-                + str(module.getMajorRelease())
-                + "."
-                + str(module.getMinorRelease()),
+                +" "
+                +str(module.getMajorRelease())
+                +"."
+                +str(module.getMinorRelease()),
                 module.getName(),
                 module.getFirmwareId(),
             )
@@ -139,24 +138,12 @@ class HausbusGateway(IBusDataListener):
         object_id = ObjectId(busDataMessage.getSenderObjectId())
         data = busDataMessage.getData()
         deviceId = object_id.getDeviceId()
-        templates = Templates.get_instance()
 
         # ignore messages sent from this module
         if deviceId in {HOMESERVER_DEVICE_ID, 9999, 12222}:
             return
 
         LOGGER.debug("busDataReceived with data = %s from %s", data, object_id)
-
-        controller = Controller(object_id.getValue())
-
-        # ModuleId -> getConfiguration
-        if isinstance(data, ModuleId):
-            LOGGER.debug(
-                "got moduleId of %s with data: %s", object_id.getDeviceId(), data
-            )
-            self.add_device(str(object_id.getDeviceId()), data)
-            controller.getConfiguration()
-            return
 
         # Bei unbekanntem Gerät -> ModuleId abfragen
         device = self.get_device(object_id)
@@ -168,7 +155,7 @@ class HausbusGateway(IBusDataListener):
             )
             if not self.was_automatic_get_module_id_already_sent(deviceId):
                 LOGGER.debug("-> calling getModuleId")
-                controller.getModuleId(EIndex.RUNNING)
+                Controller(object_id.getValue()).getModuleId(EIndex.RUNNING)
             return
 
         # Configuration -> getRemoteObjects
@@ -186,76 +173,29 @@ class HausbusGateway(IBusDataListener):
                     self.async_create_device_registry(device), self.hass.loop
                 ).result()
 
-                controller.getRemoteObjects()
                 return
 
         # RemoteObjects -> Channel anlegen
         if isinstance(data, RemoteObjects):
             LOGGER.debug(
-                "got remoteObjects of %s with data: %s", object_id.getDeviceId(), data
-            )
+                "got remoteObjects of %s with data: %s", object_id.getDeviceId(), data)
 
-            device = self.get_device(object_id)
-            if device is not None:
-                instances: list[ABusFeature] = self.home_server.getDeviceInstances(
-                    object_id.getValue(), data
-                )
+            instances: list[ABusFeature] = self.home_server.getHomeassistantChannels(object_id.getValue(), data, device.firmware_id, device.fcke)
 
-                for instance in instances:
-                    instanceObjectId = ObjectId(instance.getObjectId())
-                    name = templates.get_feature_name_from_template(
-                        device.firmware_id,
-                        device.fcke,
-                        instanceObjectId.getClassId(),
-                        instanceObjectId.getInstanceId(),
-                    )
+            for instance in instances:
+                LOGGER.debug("adding channel for device %s: %s", object_id.getDeviceId(), instance.getName())
+                self.add_channel(instance)
 
-                    LOGGER.debug(
-                        "name for firmwareId %s, fcke: %s, classId %s, instanceId %s is %s",
-                        device.firmware_id,
-                        device.fcke,
-                        instanceObjectId.getClassId(),
-                        instanceObjectId.getInstanceId(),
-                        name,
-                    )
+            return
 
-                    if deviceId in (29725, 22784):
-                        className = ProxyFactory.getBusClassNameForClass(
-                            instanceObjectId.getClassId()
-                        ).rsplit(".", 1)[-1]
-                        name = f"{className} {instanceObjectId.getInstanceId()}"
-                        LOGGER.debug("specialName %s", name)
+        # all channel events
+        channel = self.get_channel(object_id)
 
-                    if name is None:
-                        className = ProxyFactory.getBusClassNameForClass(
-                            instanceObjectId.getClassId()
-                        ).rsplit(".", 1)[-1]
-
-                        name = {
-                            "Temperatursensor": f"Temperatursensor {instanceObjectId.getInstanceId()}",
-                            "Feuchtesensor": f"Feuchtesensor {instanceObjectId.getInstanceId()}",
-                            "Helligkeitssensor": f"Helligkeitssensor {instanceObjectId.getInstanceId()}",
-                            "RFIDReader": f"RFIDReader {instanceObjectId.getInstanceId()}",
-                            "Drucksensor": f"Drucksensor {instanceObjectId.getInstanceId()}",
-                            "PT1000": f"PT1000 {instanceObjectId.getInstanceId()}",
-                        }.get(className)
-
-                    if name is not None:
-                        instance.setName(name)
-                        self.add_channel(instance)
-
-                return
-
-        if device is not None:
-            # Alles andere wird an die jeweiligen Channel weitergeleitet
-            channel = self.get_channel(object_id)
-
-            # all channel events
-            if isinstance(channel, HausbusEntity):
-                LOGGER.debug("handle_event %s %s", channel, data)
-                channel.handle_event(data)
-            else:
-                LOGGER.debug("kein zugehöriger channel")
+        if isinstance(channel, HausbusEntity):
+            LOGGER.debug("handle_event %s %s", channel, data)
+            channel.handle_event(data)
+        else:
+            LOGGER.debug("no valid channel")
 
     def register_platform_add_channel_callback(
         self,
@@ -315,37 +255,5 @@ class HausbusGateway(IBusDataListener):
 
         self.automatic_get_module_id_time[device_id] = now
         return False
-
-    async def removeDevice(self, device_id: str):
-        """Removes a device from the integration."""
-        LOGGER.debug("delete device %s", device_id)
-        for hausBusDevice in self.devices.values():
-            if hausBusDevice.device_id == device_id:
-                LOGGER.debug("found delete device %s", hausBusDevice)
-                del self.devices[device_id]
-                del self.channels[device_id]
-                if self.events:
-                  to_delete = [
-                    objectIdInt
-                    for objectIdInt, hausBusEntity in self.events.items()
-                    if str(ObjectId(objectIdInt).getDeviceId()) == device_id
-                  ]
-                  for key in to_delete:
-                    del self.events[key]
-                return True
-        return True
-
-    def resetDevice(self, device_id: str):
-        """Resets a Device."""
-        LOGGER.debug("reset device %s", device_id)
-
-        for hausBusDevice in self.devices.values():
-            if hausBusDevice.hass_device_entry_id == device_id:
-                device_id_int = int(hausBusDevice.device_id)
-                LOGGER.debug("resetting device %s", device_id_int)
-                Controller.create(device_id_int, 1).reset()
-                return True
-        return False
-
 
 # pre-commit: skip=codespell

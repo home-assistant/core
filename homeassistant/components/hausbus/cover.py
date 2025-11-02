@@ -49,22 +49,6 @@ async def async_setup_entry(
     gateway = config_entry.runtime_data
     platform = entity_platform.async_get_current_platform()
 
-    platform.async_register_entity_service(
-        "cover_set_configuration",
-        {
-            vol.Required("close_time", default=30): vol.All(
-                vol.Coerce(int), vol.Range(min=1, max=255)
-            ),
-            vol.Required("open_time", default=30): vol.All(
-                vol.Coerce(int), vol.Range(min=1, max=255)
-            ),
-            vol.Optional("invert_direction", default="FALSE"): vol.All(
-                vol.Coerce(bool)
-            ),
-        },
-        "async_cover_set_configuration",
-    )
-
     async def async_add_cover(channel: HausbusEntity) -> None:
         """Add cover entity."""
         if isinstance(channel, HausbusCover):
@@ -172,29 +156,3 @@ class HausbusCover(HausbusEntity, CoverEntity):
             self.schedule_update_ha_state()
         elif isinstance(data, Configuration):
             self._configuration = data
-            self._attr_extra_state_attributes["close_time"] = data.getCloseTime()
-            self._attr_extra_state_attributes["open_time"] = data.getOpenTime()
-            self._attr_extra_state_attributes["invert_direction"] = (
-                data.getOptions().isInvertDirection()
-            )
-
-    async def async_cover_set_configuration(
-        self, close_time: int, open_time: int, invert_direction: bool
-    ):
-        """Set cover configuration."""
-        LOGGER.debug(
-            "async_cover_set_configuration close_time %s, open_time %s, invert_direction %s",
-            close_time,
-            open_time,
-            invert_direction,
-        )
-
-        if not await self.ensure_configuration():
-            raise HomeAssistantError(
-                "Configuration could not be read. Please repeat command."
-            )
-
-        options = self._configuration.getOptions()
-        options.setInvertDirection(invert_direction)
-        self._channel.setConfiguration(close_time, open_time, options)
-        self._channel.getConfiguration()
