@@ -7608,14 +7608,8 @@
       "iot_class": "local_polling"
     },
     "yale": {
-      "name": "Yale",
+      "name": "Yale (non-US/Canada)",
       "integrations": {
-        "august": {
-          "integration_type": "hub",
-          "config_flow": true,
-          "iot_class": "cloud_push",
-          "name": "August"
-        },
         "yale_smart_alarm": {
           "integration_type": "hub",
           "config_flow": true,
@@ -7639,6 +7633,23 @@
           "config_flow": true,
           "iot_class": "cloud_push",
           "name": "Yale"
+        }
+      }
+    },
+    "yale_us_ca": {
+      "name": "Yale (US/Canada)",
+      "integrations": {
+        "august": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_push",
+          "name": "August"
+        },
+        "yalexs_ble": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_push",
+          "name": "Yale Access Bluetooth"
         }
       }
     },
