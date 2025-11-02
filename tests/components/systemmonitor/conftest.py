@@ -25,7 +25,6 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
-
 MOCK_PRESSURE_INFO = {
     "cpu": {"some": {"avg10": 1.1, "avg60": 2.2, "avg300": 3.3, "total": 12345}},
     "memory": {
@@ -146,11 +145,14 @@ def mock_process() -> list[MockProcess]:
 @pytest.fixture
 def mock_psutil(mock_process: list[MockProcess]) -> Generator:
     """Mock psutil."""
-    with patch(
-        "homeassistant.components.systemmonitor.ha_psutil.PsutilWrapper",
-    ) as psutil_wrapper, patch(
-        "homeassistant.components.systemmonitor.coordinator.get_all_pressure_info",
-        return_value=MOCK_PRESSURE_INFO,
+    with (
+        patch(
+            "homeassistant.components.systemmonitor.ha_psutil.PsutilWrapper",
+        ) as psutil_wrapper,
+        patch(
+            "homeassistant.components.systemmonitor.coordinator.get_all_pressure_info",
+            return_value=MOCK_PRESSURE_INFO,
+        ),
     ):
         _wrapper = psutil_wrapper.return_value
         _wrapper.psutil = NonCallableMock()
