@@ -970,6 +970,7 @@
           "sedan": "Sedan",
           "suv": "SUV",
           "pickup_truck": "Pickup truck",
+          "bus": "Bus",
           "motorcycle": "Motorcycle"
         }
       },
