@@ -38,6 +38,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.json import json_bytes
 from homeassistant.util import dt as dt_util, json as json_util
+from homeassistant.util.async_iterator import AsyncIteratorReader
 
 from . import util as backup_util
 from .agent import (
@@ -72,7 +73,6 @@ from .models import (
 )
 from .store import BackupStore
 from .util import (
-    AsyncIteratorReader,
     DecryptedBackupStreamer,
     EncryptedBackupStreamer,
     make_backup_dir,
@@ -1525,7 +1525,7 @@ class BackupManager:
             reader = await self.hass.async_add_executor_job(open, path.as_posix(), "rb")
         else:
             backup_stream = await agent.async_download_backup(backup_id)
-            reader = cast(IO[bytes], AsyncIteratorReader(self.hass, backup_stream))
+            reader = cast(IO[bytes], AsyncIteratorReader(self.hass.loop, backup_stream))
         try:
             await self.hass.async_add_executor_job(
                 validate_password_stream, reader, password

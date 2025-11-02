@@ -300,9 +300,10 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
             self._current_state is not None
             and (current_state := self.device.status.get(self._current_state))
             is not None
+            and current_state != "stop"
         ):
             return self.entity_description.current_state_inverse is not (
-                current_state in (True, "fully_close")
+                current_state in (True, "close", "fully_close")
             )
 
         return None

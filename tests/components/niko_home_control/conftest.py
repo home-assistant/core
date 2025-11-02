@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 from nhc.cover import NHCCover
 from nhc.light import NHCLight
+from nhc.scene import NHCScene
 import pytest
 
 from homeassistant.components.niko_home_control.const import DOMAIN
@@ -45,7 +46,7 @@ def dimmable_light() -> NHCLight:
     mock.is_dimmable = True
     mock.name = "dimmable light"
     mock.suggested_area = "room"
-    mock.state = 255
+    mock.state = 100
     return mock
 
 
@@ -62,8 +63,20 @@ def cover() -> NHCCover:
 
 
 @pytest.fixture
+def scene() -> NHCScene:
+    """Return a scene mock."""
+    mock = AsyncMock(spec=NHCScene)
+    mock.id = 4
+    mock.type = 0
+    mock.name = "scene"
+    mock.suggested_area = "room"
+    mock.state = 0
+    return mock
+
+
+@pytest.fixture
 def mock_niko_home_control_connection(
-    light: NHCLight, dimmable_light: NHCLight, cover: NHCCover
+    light: NHCLight, dimmable_light: NHCLight, cover: NHCCover, scene: NHCScene
 ) -> Generator[AsyncMock]:
     """Mock a NHC client."""
     with (
@@ -79,6 +92,7 @@ def mock_niko_home_control_connection(
         client = mock_client.return_value
         client.lights = [light, dimmable_light]
         client.covers = [cover]
+        client.scenes = [scene]
         client.connect = AsyncMock(return_value=True)
         yield client
 

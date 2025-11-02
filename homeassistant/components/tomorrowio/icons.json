@@ -1,8 +1,8 @@
 {
   "entity": {
     "sensor": {
-      "dew_point": {
-        "default": "mdi:thermometer-water"
+      "china_mep_health_concern": {
+        "default": "mdi:hospital"
       },
       "cloud_base": {
         "default": "mdi:cloud-arrow-down"
@@ -13,35 +13,35 @@
       "cloud_cover": {
         "default": "mdi:cloud-percent"
       },
-      "wind_gust": {
-        "default": "mdi:weather-windy"
+      "dew_point": {
+        "default": "mdi:thermometer-water"
       },
-      "precipitation_type": {
-        "default": "mdi:weather-snowy-rainy"
+      "fire_index": {
+        "default": "mdi:fire"
+      },
+      "grass_pollen_index": {
+        "default": "mdi:grass"
       },
       "health_concern": {
-        "default": "mdi:hospital"
-      },
-      "china_mep_health_concern": {
         "default": "mdi:hospital"
       },
       "pollen_index": {
         "default": "mdi:tree"
       },
-      "weed_pollen_index": {
-        "default": "mdi:flower-pollen"
-      },
-      "grass_pollen_index": {
-        "default": "mdi:grass"
-      },
-      "fire_index": {
-        "default": "mdi:fire"
+      "precipitation_type": {
+        "default": "mdi:weather-snowy-rainy"
       },
       "uv_index": {
         "default": "mdi:sun-wireless"
       },
       "uv_radiation_health_concern": {
         "default": "mdi:weather-sunny-alert"
+      },
+      "weed_pollen_index": {
+        "default": "mdi:flower-pollen"
+      },
+      "wind_gust": {
+        "default": "mdi:weather-windy"
       }
     }
   }
