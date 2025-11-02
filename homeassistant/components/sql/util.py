@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date
 from decimal import Decimal
 import logging
 from typing import Any
@@ -233,7 +233,7 @@ def convert_value(value: Any) -> Any:
     match value:
         case Decimal():
             return float(value)
-        case date() | datetime():
+        case date():
             return value.isoformat()
         case bytes() | bytearray():
             return f"0x{value.hex()}"
