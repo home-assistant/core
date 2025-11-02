@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_device_tracker[ex30_2024][device_tracker.volvo_ex30_location-entry]
+# name: test_lock[ex30_2024][lock.volvo_ex30_lock-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -10,9 +10,9 @@
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
-    'domain': 'device_tracker',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'device_tracker.volvo_ex30_location',
+    'domain': 'lock',
+    'entity_category': None,
+    'entity_id': 'lock.volvo_ex30_lock',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -24,34 +24,31 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Location',
+    'original_name': 'Lock',
     'platform': 'volvo',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'location',
-    'unique_id': 'yv1abcdefg1234567_location',
+    'translation_key': 'lock',
+    'unique_id': 'yv1abcdefg1234567_lock',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_device_tracker[ex30_2024][device_tracker.volvo_ex30_location-state]
+# name: test_lock[ex30_2024][lock.volvo_ex30_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Volvo EX30 Location',
-      'gps_accuracy': 0,
-      'latitude': 57.72537482589284,
-      'longitude': 11.849843629550225,
-      'source_type': <SourceType.GPS: 'gps'>,
+      'friendly_name': 'Volvo EX30 Lock',
+      'supported_features': <LockEntityFeature: 0>,
     }),
     'context': <ANY>,
-    'entity_id': 'device_tracker.volvo_ex30_location',
+    'entity_id': 'lock.volvo_ex30_lock',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'not_home',
+    'state': 'locked',
   })
 # ---
-# name: test_device_tracker[s90_diesel_2018][device_tracker.volvo_s90_location-entry]
+# name: test_lock[s90_diesel_2018][lock.volvo_s90_lock-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -62,9 +59,9 @@
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
-    'domain': 'device_tracker',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'device_tracker.volvo_s90_location',
+    'domain': 'lock',
+    'entity_category': None,
+    'entity_id': 'lock.volvo_s90_lock',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -76,34 +73,31 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Location',
+    'original_name': 'Lock',
     'platform': 'volvo',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'location',
-    'unique_id': 'yv1abcdefg1234567_location',
+    'translation_key': 'lock',
+    'unique_id': 'yv1abcdefg1234567_lock',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_device_tracker[s90_diesel_2018][device_tracker.volvo_s90_location-state]
+# name: test_lock[s90_diesel_2018][lock.volvo_s90_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Volvo S90 Location',
-      'gps_accuracy': 0,
-      'latitude': 57.72537482589284,
-      'longitude': 11.849843629550225,
-      'source_type': <SourceType.GPS: 'gps'>,
+      'friendly_name': 'Volvo S90 Lock',
+      'supported_features': <LockEntityFeature: 0>,
     }),
     'context': <ANY>,
-    'entity_id': 'device_tracker.volvo_s90_location',
+    'entity_id': 'lock.volvo_s90_lock',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'not_home',
+    'state': 'locked',
   })
 # ---
-# name: test_device_tracker[xc40_electric_2024][device_tracker.volvo_xc40_location-entry]
+# name: test_lock[xc40_electric_2024][lock.volvo_xc40_lock-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -114,9 +108,9 @@
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
-    'domain': 'device_tracker',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'device_tracker.volvo_xc40_location',
+    'domain': 'lock',
+    'entity_category': None,
+    'entity_id': 'lock.volvo_xc40_lock',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -128,34 +122,31 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Location',
+    'original_name': 'Lock',
     'platform': 'volvo',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'location',
-    'unique_id': 'yv1abcdefg1234567_location',
+    'translation_key': 'lock',
+    'unique_id': 'yv1abcdefg1234567_lock',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_device_tracker[xc40_electric_2024][device_tracker.volvo_xc40_location-state]
+# name: test_lock[xc40_electric_2024][lock.volvo_xc40_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Volvo XC40 Location',
-      'gps_accuracy': 0,
-      'latitude': 57.72537482589284,
-      'longitude': 11.849843629550225,
-      'source_type': <SourceType.GPS: 'gps'>,
+      'friendly_name': 'Volvo XC40 Lock',
+      'supported_features': <LockEntityFeature: 0>,
     }),
     'context': <ANY>,
-    'entity_id': 'device_tracker.volvo_xc40_location',
+    'entity_id': 'lock.volvo_xc40_lock',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'not_home',
+    'state': 'locked',
   })
 # ---
-# name: test_device_tracker[xc90_petrol_2019][device_tracker.volvo_xc90_location-entry]
+# name: test_lock[xc90_petrol_2019][lock.volvo_xc90_lock-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -166,9 +157,9 @@
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
-    'domain': 'device_tracker',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'device_tracker.volvo_xc90_location',
+    'domain': 'lock',
+    'entity_category': None,
+    'entity_id': 'lock.volvo_xc90_lock',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -180,30 +171,27 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Location',
+    'original_name': 'Lock',
     'platform': 'volvo',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'location',
-    'unique_id': 'yv1abcdefg1234567_location',
+    'translation_key': 'lock',
+    'unique_id': 'yv1abcdefg1234567_lock',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_device_tracker[xc90_petrol_2019][device_tracker.volvo_xc90_location-state]
+# name: test_lock[xc90_petrol_2019][lock.volvo_xc90_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Volvo XC90 Location',
-      'gps_accuracy': 0,
-      'latitude': 57.72537482589284,
-      'longitude': 11.849843629550225,
-      'source_type': <SourceType.GPS: 'gps'>,
+      'friendly_name': 'Volvo XC90 Lock',
+      'supported_features': <LockEntityFeature: 0>,
     }),
     'context': <ANY>,
-    'entity_id': 'device_tracker.volvo_xc90_location',
+    'entity_id': 'lock.volvo_xc90_lock',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'not_home',
+    'state': 'locked',
   })
 # ---
