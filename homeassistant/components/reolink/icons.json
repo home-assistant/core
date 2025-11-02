@@ -363,6 +363,9 @@
       "day_night_mode": {
         "default": "mdi:theme-light-dark"
       },
+      "exposure": {
+        "default": "mdi:image-edit"
+      },
       "floodlight_event_mode": {
         "default": "mdi:spotlight-beam"
       },

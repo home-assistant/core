@@ -601,6 +601,15 @@
           "stayoff": "Stay off"
         }
       },
+      "exposure": {
+        "name": "Image exposure mode",
+        "state": {
+          "antismearing": "Anti-smearing",
+          "auto": "[%key:common::state::auto%]",
+          "lownoise": "Low noise",
+          "manual": "Manual"
+        }
+      },
       "floodlight_event_mode": {
         "name": "Floodlight event mode",
         "state": {
