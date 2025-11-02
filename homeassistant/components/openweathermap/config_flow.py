@@ -27,7 +27,6 @@ from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
-    SelectSelectorMode,
 )
 
 from .const import (
@@ -55,7 +54,6 @@ USER_SCHEMA = vol.Schema(
                 options=[
                     SelectOptionDict(value=k, label=v) for k, v in OWM_MODES.items()
                 ],
-                mode=SelectSelectorMode.DROPDOWN,
             )
         ),
     }
