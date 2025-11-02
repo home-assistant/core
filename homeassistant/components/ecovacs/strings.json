@@ -146,6 +146,17 @@
           "vacuum": "Vacuum",
           "vacuum_and_mop": "Vacuum & mop"
         }
+      },
+      "auto_empty": {
+        "name": "Auto empty frequency",
+        "state": {
+          "10": "10min",
+          "15": "15min",
+          "25": "25min",
+          "auto": "Auto",
+          "smart": "Smart",
+          "manual": "Manual"
+        }
       }
     },
     "sensor": {
