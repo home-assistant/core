@@ -89,8 +89,16 @@ class AndroidTVFlowHandler(ConfigFlow, domain=DOMAIN):
         data_schema = vol.Schema(
             {
                 vol.Required(CONF_HOST, default=host): str,
-                vol.Required(CONF_DEVICE_CLASS, default=DEFAULT_DEVICE_CLASS): vol.In(
-                    DEVICE_CLASSES
+                vol.Required(
+                    CONF_DEVICE_CLASS, default=DEFAULT_DEVICE_CLASS
+                ): SelectSelector(
+                    SelectSelectorConfig(
+                        options=[
+                            SelectOptionDict(value=k, label=v)
+                            for k, v in DEVICE_CLASSES.items()
+                        ],
+                        translation_key="device_class",
+                    )
                 ),
                 vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
             },
