@@ -2,12 +2,7 @@
 
 from unittest.mock import Mock
 
-from aioshelly.const import (
-    MODEL_2PM_G3,
-    MODEL_BLU_GATEWAY_G3,
-    MODEL_PRO_EM3,
-    MODEL_WALL_DISPLAY_XL,
-)
+from aioshelly.const import MODEL_2PM_G3, MODEL_BLU_GATEWAY_G3, MODEL_PRO_EM3
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -596,26 +591,40 @@ async def test_blu_trv_device_info(
     assert device_entry.sw_version == "v1.2.10"
 
 
+@pytest.mark.parametrize(
+    "fixture",
+    [
+        "cury_gen4",
+        "duo_bulb_gen3",
+        "power_strip_gen4",
+        "presence_gen4",
+        "wall_display_xl",
+    ],
+)
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_wall_display_xl(
+async def test_device(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
     entity_registry: EntityRegistry,
     snapshot: SnapshotAssertion,
     monkeypatch: pytest.MonkeyPatch,
     freezer: FrozenDateTimeFactory,
+    fixture: str,
 ) -> None:
-    """Test Wall Display XL."""
+    """Test device."""
     device_fixture = await async_load_json_object_fixture(
-        hass, "wall_display_xl.json", DOMAIN
+        hass, f"{fixture}.json", DOMAIN
     )
     monkeypatch.setattr(mock_rpc_device, "shelly", device_fixture["shelly"])
     monkeypatch.setattr(mock_rpc_device, "status", device_fixture["status"])
     monkeypatch.setattr(mock_rpc_device, "config", device_fixture["config"])
 
+    model = device_fixture["shelly"]["model"]
+    gen = device_fixture["shelly"]["gen"]
+
     await force_uptime_value(hass, freezer)
 
-    config_entry = await init_integration(hass, gen=2, model=MODEL_WALL_DISPLAY_XL)
+    config_entry = await init_integration(hass, gen=gen, model=model)
 
     await snapshot_device_entities(
         hass, entity_registry, snapshot, config_entry.entry_id
