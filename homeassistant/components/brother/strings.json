@@ -38,11 +38,11 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "type": "Type"
+          "type": "Printer type"
         },
         "data_description": {
           "host": "The hostname or IP address of the Brother printer to control.",
-          "type": "The type of the printer."
+          "type": "The type of the Brother printer."
         },
         "sections": {
           "advanced_settings": {
