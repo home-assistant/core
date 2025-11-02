@@ -403,14 +403,23 @@ def test_get_is_installed() -> None:
 
 def test_vcs_is_installed() -> None:
     """Test is_installed can parse VCS requirements."""
-    assert package.is_installed(
-        "homeassistant@git+https://github.com/home-assistant/core@2025.12.0"
+    assert (
+        package.is_installed(
+            "homeassistant@git+https://github.com/home-assistant/core@2025.5.0"
+        )
+        is False
     )
-    assert package.is_installed(
-        "homeassistant@git+https://github.com/home-assistant/core@dev"
+    assert (
+        package.is_installed(
+            "homeassistant@git+https://github.com/home-assistant/core@dev"
+        )
+        is False
     )
-    assert package.is_installed(
-        "homeassistant@git+https://github.com/home-assistant/core@60b8392"
+    assert (
+        package.is_installed(
+            "homeassistant@git+https://github.com/home-assistant/core@60b8392"
+        )
+        is False
     )
 
 
