@@ -210,6 +210,11 @@
         "name": "Honk & flash"
       }
     },
+    "device_tracker": {
+      "location": {
+        "name": "Location"
+      }
+    },
     "sensor": {
       "availability": {
         "name": "Car connection",
