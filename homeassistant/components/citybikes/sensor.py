@@ -51,6 +51,7 @@ ATTR_LATITUDE = "latitude"
 ATTR_LONGITUDE = "longitude"
 ATTR_EMPTY_SLOTS = "empty_slots"
 ATTR_TIMESTAMP = "timestamp"
+ATTR_EBIKE = "ebike"
 
 CONF_NETWORK = "network"
 CONF_STATIONS_LIST = "stations"
@@ -239,4 +240,5 @@ class CityBikesStation(SensorEntity):
             ATTR_LONGITUDE: station.longitude,
             ATTR_EMPTY_SLOTS: station.empty_slots,
             ATTR_TIMESTAMP: station.timestamp,
+            ATTR_EBIKE: station.extra.get(ATTR_EBIKE),
         }
