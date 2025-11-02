@@ -12,9 +12,11 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_DELAY, CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import (
@@ -61,33 +63,37 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the departure sensor (YAML configuration - backward compatibility)."""
-    planner = vasttrafik.JournyPlanner(config.get(CONF_KEY), config.get(CONF_SECRET))
+    """Set up the departure sensor from YAML configuration."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=config,
+    )
 
-    # Create departure sensors - no device, entities appear under service directly
-    sensors = []
-    for i, departure in enumerate(config[CONF_DEPARTURES]):
-        sensors.append(
-            VasttrafikDepartureSensor(
-                planner,
-                departure.get(CONF_NAME),
-                departure.get(CONF_FROM),
-                departure.get(CONF_HEADING),
-                departure.get(CONF_LINES),
-                departure.get(CONF_TRACKS, []),
-                departure.get(CONF_DELAY),
-                "yaml_vasttrafik",
-                f"yaml_{i}",  # Unique suffix for YAML sensors
-            )
+    if (
+        result.get("type") is FlowResultType.ABORT
+        and result.get("reason") != "already_configured"
+    ):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_{result.get('reason')}",
+            breaks_in_ha_version="2026.4.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=f"deprecated_yaml_import_issue_{result.get('reason')}",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Västtrafik",
+            },
         )
-
-    add_entities(sensors, True)
 
 
 async def async_setup_entry(
@@ -104,39 +110,20 @@ async def async_setup_entry(
                 [
                     VasttrafikDepartureSensor(
                         planner,
-                        subentry.data.get(CONF_NAME),
-                        subentry.data.get(CONF_FROM),
-                        subentry.data.get(CONF_HEADING),
-                        subentry.data.get(CONF_LINES, []),
-                        subentry.data.get(CONF_TRACKS, []),
-                        subentry.data.get(CONF_DELAY, DEFAULT_DELAY),
+                        subentry.data[CONF_NAME],
+                        subentry.data[CONF_FROM],
+                        subentry.data.get(CONF_HEADING, ""),
+                        subentry.data[CONF_LINES],
+                        subentry.data[CONF_TRACKS],
+                        subentry.data[CONF_DELAY],
                         entry.entry_id,
                         subentry.subentry_id,
                         subentry.subentry_id,
                     )
                 ],
-                config_subentry_id=subentry.subentry_id,  # Associate with subentry
+                update_before_add=True,
+                config_subentry_id=subentry.subentry_id,
             )
-
-    # Add departure sensors from options (for backward compatibility)
-    departures = entry.options.get(CONF_DEPARTURES, [])
-    if departures:
-        sensors = []
-        for i, departure in enumerate(departures):
-            sensors.append(
-                VasttrafikDepartureSensor(
-                    planner,
-                    departure.get(CONF_NAME),
-                    departure.get(CONF_FROM),
-                    departure.get(CONF_HEADING),
-                    departure.get(CONF_LINES, []),
-                    departure.get(CONF_TRACKS, []),
-                    departure.get(CONF_DELAY, DEFAULT_DELAY),
-                    entry.entry_id,
-                    f"option_{i}",  # Unique ID for option-based sensors
-                )
-            )
-        async_add_entities(sensors, True)
 
 
 class VasttrafikDepartureSensor(SensorEntity):

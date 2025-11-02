@@ -9,8 +9,10 @@ import vasttrafik
 import voluptuous as vol
 
 from homeassistant.config_entries import (
+    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
+    ConfigSubentryData,
     ConfigSubentryFlow,
     OptionsFlow,
 )
@@ -19,6 +21,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import (
+    CONF_DEPARTURES,
     CONF_FROM,
     CONF_HEADING,
     CONF_KEY,
@@ -185,6 +188,48 @@ class VasttrafikConfigFlow(ConfigFlow, domain=DOMAIN):
                 STEP_USER_DATA_SCHEMA, suggested_values
             ),
             errors=errors,
+        )
+
+    async def async_step_import(
+        self, import_data: dict[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle import from YAML configuration."""
+        self._async_abort_entries_match(
+            {CONF_KEY: import_data[CONF_KEY], CONF_SECRET: import_data[CONF_SECRET]}
+        )
+
+        try:
+            await validate_input(self.hass, import_data)
+        except CannotConnect:
+            return self.async_abort(reason="cannot_connect")
+        except InvalidAuth:
+            return self.async_abort(reason="invalid_auth")
+        except Exception:
+            _LOGGER.exception("Unexpected exception during YAML import")
+            return self.async_abort(reason="unknown")
+
+        subentries: list[ConfigSubentryData] = []
+        for departure in import_data.get(CONF_DEPARTURES, []):
+            subentries.append(
+                ConfigSubentryData(
+                    title=departure.get(CONF_NAME, departure[CONF_FROM]),
+                    subentry_type="departure_board",
+                    data={
+                        CONF_FROM: departure[CONF_FROM],
+                        CONF_NAME: departure.get(CONF_NAME, departure[CONF_FROM]),
+                        CONF_HEADING: departure.get(CONF_HEADING, ""),
+                        CONF_LINES: departure.get(CONF_LINES, []),
+                        CONF_TRACKS: departure.get(CONF_TRACKS, []),
+                        CONF_DELAY: departure.get(CONF_DELAY, DEFAULT_DELAY),
+                    },
+                    unique_id=None,
+                )
+            )
+
+        return self.async_create_entry(
+            title="Västtrafik",
+            data={CONF_KEY: import_data[CONF_KEY], CONF_SECRET: import_data[CONF_SECRET]},
+            subentries=subentries,
         )
 
 
