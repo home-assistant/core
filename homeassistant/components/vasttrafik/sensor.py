@@ -148,7 +148,11 @@ class VasttrafikDepartureSensor(SensorEntity):
     ):
         """Initialize the sensor."""
         self._planner = planner
-        self._attr_name = name or f"{departure} Departures"
+        if name:
+            self._attr_name = name
+        else:
+            self._attr_translation_key = "departures"
+            self._attr_translation_placeholders = {"station": departure}
         self._departure_name = departure
         self._heading_name = heading
         self._departure = None  # Will be resolved on first update

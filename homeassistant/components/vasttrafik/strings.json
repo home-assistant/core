@@ -126,6 +126,13 @@
       "not_configurable": "The main integration is not configurable via options"
     }
   },
+  "entity": {
+    "sensor": {
+      "departures": {
+        "name": "{station} departures"
+      }
+    }
+  },
   "issues": {
     "deprecated_yaml_import_issue_invalid_auth": {
       "title": "Västtrafik YAML configuration deprecated",
