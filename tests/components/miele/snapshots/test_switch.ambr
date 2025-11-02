@@ -1,4 +1,52 @@
 # serializer version: 1
+# name: test_switch_states[platforms0][switch.freezer_sabbath-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.freezer_sabbath',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sabbath',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sabbath',
+    'unique_id': 'Dummy_Appliance_1-sabbath',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_states[platforms0][switch.freezer_sabbath-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Freezer Sabbath',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.freezer_sabbath',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_switch_states[platforms0][switch.freezer_superfreezing-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -143,6 +191,54 @@
     'state': 'off',
   })
 # ---
+# name: test_switch_states[platforms0][switch.refrigerator_sabbath-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.refrigerator_sabbath',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sabbath',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sabbath',
+    'unique_id': 'Dummy_Appliance_2-sabbath',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_states[platforms0][switch.refrigerator_sabbath-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Refrigerator Sabbath',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.refrigerator_sabbath',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_switch_states[platforms0][switch.refrigerator_supercooling-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -233,6 +329,54 @@
     }),
     'context': <ANY>,
     'entity_id': 'switch.washing_machine_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switch_states_api_push[platforms0][switch.freezer_sabbath-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.freezer_sabbath',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sabbath',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sabbath',
+    'unique_id': 'Dummy_Appliance_1-sabbath',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_states_api_push[platforms0][switch.freezer_sabbath-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Freezer Sabbath',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.freezer_sabbath',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -381,6 +525,54 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
+  })
+# ---
+# name: test_switch_states_api_push[platforms0][switch.refrigerator_sabbath-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.refrigerator_sabbath',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sabbath',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sabbath',
+    'unique_id': 'Dummy_Appliance_2-sabbath',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_states_api_push[platforms0][switch.refrigerator_sabbath-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Refrigerator Sabbath',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.refrigerator_sabbath',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
   })
 # ---
 # name: test_switch_states_api_push[platforms0][switch.refrigerator_supercooling-entry]

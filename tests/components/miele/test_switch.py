@@ -20,6 +20,7 @@ pytestmark = pytest.mark.parametrize("platforms", [(TEST_PLATFORM,)])
 ENTITY_ID = "switch.freezer_superfreezing"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_switch_states(
     hass: HomeAssistant,
     mock_miele_client: MagicMock,
@@ -46,11 +47,13 @@ async def test_switch_states_api_push(
     await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     ("entity"),
     [
         (ENTITY_ID),
         ("switch.refrigerator_supercooling"),
+        ("switch.refrigerator_sabbath"),
         ("switch.washing_machine_power"),
     ],
 )
@@ -76,11 +79,13 @@ async def test_switching(
     mock_miele_client.send_action.assert_called_once()
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     ("entity"),
     [
         (ENTITY_ID),
         ("switch.refrigerator_supercooling"),
+        ("switch.refrigerator_sabbath"),
         ("switch.washing_machine_power"),
     ],
 )
