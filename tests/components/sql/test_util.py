@@ -85,9 +85,9 @@ async def test_invalid_sql_queries(
         (69, 69),
     ],
 )
-async def test_data_conversion(
+async def test_value_conversion(
     input: Decimal | date | datetime | bytes | str | float,
     expected_output: str | float,
 ) -> None:
-    """Test data conversion to serializable type."""
+    """Test value conversion."""
     assert convert_value(input) == expected_output
