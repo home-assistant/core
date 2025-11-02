@@ -22,7 +22,6 @@ from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import Throttle
 from homeassistant.util.dt import now
 
 from . import VasttrafikConfigEntry
@@ -40,7 +39,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
+SCAN_INTERVAL = timedelta(seconds=60)
 
 # Platform schema for YAML configuration (backward compatibility)
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
@@ -233,7 +232,6 @@ class VasttrafikDepartureSensor(SensorEntity):
         """Return the next departure time."""
         return self._state
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self) -> None:
         """Get the departure board."""
         # Resolve station IDs on first update (deferred from __init__ to avoid blocking calls)
