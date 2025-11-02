@@ -68,7 +68,7 @@
   "selector": {
     "device_class": {
       "options": {
-        "auto": "[%key:common::state::auto%]"
+        "auto": "Auto-detect device type"
       }
     }
   },
