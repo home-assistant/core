@@ -1,16 +1,22 @@
 """Test the Västtrafik sensor platform."""
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 from unittest.mock import MagicMock, patch
-import pytest
 
+import pytest
 import vasttrafik
 
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.vasttrafik.const import DOMAIN
 from homeassistant.config_entries import ConfigSubentryData
-from homeassistant.const import CONF_DELAY, CONF_NAME
+from homeassistant.const import CONF_PLATFORM
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
+from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import now
 
 from tests.common import MockConfigEntry
@@ -459,3 +465,45 @@ async def test_departure_sensor_api_error(
     # Test that the sensor was created correctly for error scenarios
     assert sensor_entity_id.startswith("sensor.departure_")
     assert "error_test" in sensor_entity_id.lower()
+
+
+async def test_yaml_platform_import(hass: HomeAssistant) -> None:
+    """Test YAML sensor platform triggers import flow and creates repair issue."""
+    issue_registry = ir.async_get(hass)
+
+    with (
+        patch(
+            "homeassistant.components.vasttrafik.config_flow.validate_input",
+            side_effect=Exception("Test error"),
+        ),
+        patch(
+            "homeassistant.components.vasttrafik.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        await async_setup_component(
+            hass,
+            SENSOR_DOMAIN,
+            {
+                SENSOR_DOMAIN: [
+                    {
+                        CONF_PLATFORM: DOMAIN,
+                        "key": "test-key",
+                        "secret": "test-secret",
+                        "departures": [
+                            {
+                                "from": "Centralstationen",
+                                "name": "Central Departures",
+                                "lines": ["1", "2"],
+                                "delay": 5,
+                            }
+                        ],
+                    }
+                ]
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert len(issue_registry.issues) == 1
+    assert (DOMAIN, "deprecated_yaml_import_issue_unknown") in issue_registry.issues
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 0

@@ -345,3 +345,141 @@ async def test_subentry_reconfigure(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reconfigure_successful"
+
+
+async def test_import_success_no_departures(
+    hass: HomeAssistant, mock_setup_entry
+) -> None:
+    """Test successful import flow from YAML with no departures."""
+    with patch(
+        "homeassistant.components.vasttrafik.config_flow.validate_input",
+        return_value={"title": "Västtrafik"},
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={"key": "test-key", "secret": "test-secret"},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Västtrafik"
+    assert result["data"] == {"key": "test-key", "secret": "test-secret"}
+    assert not result["result"].subentries
+
+
+async def test_import_with_departures(hass: HomeAssistant, mock_setup_entry) -> None:
+    """Test import flow with departures from YAML configuration."""
+    with patch(
+        "homeassistant.components.vasttrafik.config_flow.validate_input",
+        return_value={"title": "Västtrafik"},
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={
+                "key": "test-key",
+                "secret": "test-secret",
+                "departures": [
+                    {
+                        "from": "Centralstationen",
+                        "name": "Central Departures",
+                        "heading": "Angered",
+                        "lines": ["1", "2"],
+                        "delay": 5,
+                    },
+                    {
+                        "from": "Götaplatsen",
+                        "name": "Götaplatsen to City",
+                        "tracks": ["A", "B"],
+                        "delay": 0,
+                    },
+                ],
+            },
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Västtrafik"
+    assert result["data"] == {"key": "test-key", "secret": "test-secret"}
+    assert len(result["result"].subentries) == 2
+
+    subentries = list(result["result"].subentries.values())
+
+    assert subentries[0].title == "Central Departures"
+    assert subentries[0].subentry_type == "departure_board"
+    assert subentries[0].data == {
+        "from": "Centralstationen",
+        "name": "Central Departures",
+        "heading": "Angered",
+        "lines": ["1", "2"],
+        "tracks": [],
+        "delay": 5,
+    }
+
+    assert subentries[1].title == "Götaplatsen to City"
+    assert subentries[1].subentry_type == "departure_board"
+    assert subentries[1].data == {
+        "from": "Götaplatsen",
+        "name": "Götaplatsen to City",
+        "heading": "",
+        "lines": [],
+        "tracks": ["A", "B"],
+        "delay": 0,
+    }
+
+
+async def test_import_already_configured(hass: HomeAssistant) -> None:
+    """Test import flow when integration is already configured."""
+    main_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"key": "test-key", "secret": "test-secret"},
+    )
+    main_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.vasttrafik.config_flow.validate_input",
+        return_value={"title": "Västtrafik"},
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={"key": "test-key", "secret": "test-secret"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "single_instance_allowed"
+
+
+@pytest.mark.parametrize(
+    ("exception", "expected_reason"),
+    [
+        ("InvalidAuth", "invalid_auth"),
+        ("CannotConnect", "cannot_connect"),
+        (Exception("Unexpected error"), "unknown"),
+    ],
+)
+async def test_import_exceptions(
+    hass: HomeAssistant, exception, expected_reason: str
+) -> None:
+    """Test import flow handling different exceptions."""
+    from homeassistant.components.vasttrafik.config_flow import (
+        CannotConnect,
+        InvalidAuth,
+    )
+
+    if exception == "InvalidAuth":
+        exception = InvalidAuth
+    elif exception == "CannotConnect":
+        exception = CannotConnect
+
+    with patch(
+        "homeassistant.components.vasttrafik.config_flow.validate_input",
+        side_effect=exception,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={"key": "test-key", "secret": "test-secret"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == expected_reason
