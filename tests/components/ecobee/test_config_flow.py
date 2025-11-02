@@ -2,10 +2,12 @@
 
 from unittest.mock import patch
 
+from pyecobee import ECOBEE_PASSWORD, ECOBEE_USERNAME
+
 from homeassistant.components.ecobee import config_flow
 from homeassistant.components.ecobee.const import CONF_REFRESH_TOKEN, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -114,3 +116,82 @@ async def test_token_request_fails(hass: HomeAssistant) -> None:
             "pin": "test-pin",
             "auth_url": "https://www.ecobee.com/consumerportal/index.html",
         }
+
+
+async def test_password_login_succeeds(hass: HomeAssistant) -> None:
+    """Test credential authentication succeeds."""
+    flow = config_flow.EcobeeFlowHandler()
+    flow.hass = hass
+
+    with patch("homeassistant.components.ecobee.config_flow.Ecobee") as mock_ecobee:
+        instance = mock_ecobee.return_value
+        instance.refresh_tokens.return_value = True
+        instance.refresh_token = "test-token"
+
+        result = await flow.async_step_user(
+            {
+                CONF_USERNAME: "test-username@example.com",
+                CONF_PASSWORD: "test-password",
+            }
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == DOMAIN
+    assert result["data"] == {
+        CONF_USERNAME: "test-username@example.com",
+        CONF_PASSWORD: "test-password",
+        CONF_REFRESH_TOKEN: "test-token",
+    }
+    mock_ecobee.assert_called_once_with(
+        config={
+            ECOBEE_USERNAME: "test-username@example.com",
+            ECOBEE_PASSWORD: "test-password",
+        }
+    )
+    instance.refresh_tokens.assert_called_once_with()
+
+
+async def test_password_login_fails(hass: HomeAssistant) -> None:
+    """Test credential authentication failure keeps user on form."""
+    flow = config_flow.EcobeeFlowHandler()
+    flow.hass = hass
+
+    with patch("homeassistant.components.ecobee.config_flow.Ecobee") as mock_ecobee:
+        instance = mock_ecobee.return_value
+        instance.refresh_tokens.return_value = False
+
+        result = await flow.async_step_user(
+            {
+                CONF_USERNAME: "test-username@example.com",
+                CONF_PASSWORD: "test-password",
+            }
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"]["base"] == "login_failed"
+    mock_ecobee.assert_called_once_with(
+        config={
+            ECOBEE_USERNAME: "test-username@example.com",
+            ECOBEE_PASSWORD: "test-password",
+        }
+    )
+    instance.refresh_tokens.assert_called_once_with()
+
+
+async def test_password_login_invalid_auth(hass: HomeAssistant) -> None:
+    """Test invalid credential combinations raise invalid auth."""
+    flow = config_flow.EcobeeFlowHandler()
+    flow.hass = hass
+
+    result = await flow.async_step_user(
+        {
+            CONF_API_KEY: "test-api-key",
+            CONF_USERNAME: "test-username@example.com",
+            CONF_PASSWORD: "test-password",
+        }
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"]["base"] == "invalid_auth"
