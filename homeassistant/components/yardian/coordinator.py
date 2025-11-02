@@ -6,6 +6,7 @@ import asyncio
 from dataclasses import dataclass
 import datetime
 import logging
+
 from pyyardian import AsyncYardianClient, NetworkException, NotAuthorizedException
 from pyyardian.typing import OperationInfo
 
@@ -85,7 +86,7 @@ class YardianUpdateCoordinator(DataUpdateCoordinator[YardianCoordinatorData]):
                 _LOGGER.debug(
                     "Fetching Yardian device state for %s (controller=%s)",
                     self._name,
-                    self.controller,
+                    type(self.controller).__name__,
                 )
                 # Fetch device state and operation info; specific exceptions are
                 # handled by the outer block to avoid double-logging.
@@ -99,8 +100,11 @@ class YardianUpdateCoordinator(DataUpdateCoordinator[YardianCoordinatorData]):
             raise ConfigEntryAuthFailed("Invalid access token") from e
         except NetworkException as e:
             raise UpdateFailed("Failed to communicate with device") from e
+        except Exception as e:  # safety net for tests to surface failure reason
+            _LOGGER.exception("Unexpected error while fetching Yardian data")
+            raise UpdateFailed(f"Unexpected error: {type(e).__name__}: {e}") from e
 
-        oper_keys = list(oper_info.keys())
+        oper_keys = list(oper_info.keys()) if hasattr(oper_info, "keys") else []
         _LOGGER.debug(
             "Fetched Yardian data: zones=%s active=%s oper_keys=%s",
             len(getattr(dev_state, "zones", [])),
