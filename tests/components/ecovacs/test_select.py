@@ -6,6 +6,7 @@ from deebot_client.event_bus import EventBus
 from deebot_client.events.map import CachedMapInfoEvent, MajorMapEvent, Map
 from deebot_client.events.water_info import WaterAmount, WaterAmountEvent
 from deebot_client.events.work_mode import WorkMode, WorkModeEvent
+from deebot_client.rs.map import RotationAngle  # pylint: disable=no-name-in-module
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -40,8 +41,16 @@ async def notify_events(hass: HomeAssistant, event_bus: EventBus):
     event_bus.notify(
         CachedMapInfoEvent(
             {
-                Map(id="1", name="", using=False, built=False),
-                Map(id="2", name="Map 2", using=True, built=True),
+                Map(
+                    id="1", name="", using=False, built=False, angle=RotationAngle.DEG_0
+                ),
+                Map(
+                    id="2",
+                    name="Map 2",
+                    using=True,
+                    built=True,
+                    angle=RotationAngle.DEG_0,
+                ),
             }
         )
     )
