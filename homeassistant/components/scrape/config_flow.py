@@ -240,7 +240,11 @@ class ScrapeConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(data={}, options=user_input, title=title)
 
         return self.async_show_form(
-            step_id="user", data_schema=RESOURCE_SETUP, errors=errors
+            step_id="user",
+            data_schema=self.add_suggested_values_to_schema(
+                RESOURCE_SETUP, user_input or {}
+            ),
+            errors=errors,
         )
 
 
@@ -261,7 +265,7 @@ class ScrapeOptionFlow(OptionsFlow):
             step_id="init",
             data_schema=self.add_suggested_values_to_schema(
                 RESOURCE_SETUP,
-                self.config_entry.options,
+                user_input or self.config_entry.options,
             ),
             errors=errors,
         )
@@ -278,4 +282,9 @@ class ScrapeSubentryFlowHandler(ConfigSubentryFlow):
             title = user_input.pop("name")
             return self.async_create_entry(data=user_input, title=title)
 
-        return self.async_show_form(step_id="user", data_schema=SENSOR_SETUP)
+        return self.async_show_form(
+            step_id="user",
+            data_schema=self.add_suggested_values_to_schema(
+                SENSOR_SETUP, user_input or {}
+            ),
+        )
