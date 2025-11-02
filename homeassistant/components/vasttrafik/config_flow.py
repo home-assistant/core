@@ -50,13 +50,10 @@ async def search_stations(
         return [], None
 
     try:
-        # Use the existing planner - it handles token refresh automatically
         planner = config_entry.runtime_data
 
-        # Search for stations - the library handles token refresh automatically
         results = await hass.async_add_executor_job(planner.location_name, query)
 
-        # Format results for dropdown
         stations = []
         for result in results[:10]:  # Limit to 10 results
             name = result.get("name", "")
@@ -81,12 +78,10 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    # Create planner in the executor since constructor makes blocking HTTP calls
     planner = await hass.async_add_executor_job(
         vasttrafik.JournyPlanner, data[CONF_KEY], data[CONF_SECRET]
     )
 
-    # Test the connection by making a simple API call
     try:
         await hass.async_add_executor_job(planner.location_name, "Centralstationen")
     except vasttrafik.Error as err:
@@ -129,14 +124,13 @@ class VasttrafikConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        # Check if we already have a Västtrafik integration configured
+
         existing_entries = self._async_current_entries(include_ignore=False)
         if existing_entries:
             return self.async_abort(reason="single_instance_allowed")
 
         errors: dict[str, str] = {}
         if user_input is not None:
-            # Set unique ID for main integration
             await self.async_set_unique_id(DOMAIN)
             self._abort_if_unique_id_configured()
 
@@ -180,7 +174,6 @@ class VasttrafikConfigFlow(ConfigFlow, domain=DOMAIN):
                     reload_even_if_entry_is_unchanged=False,
                 )
 
-        # Pre-fill form with current credentials
         suggested_values = user_input or {
             CONF_KEY: entry.data.get(CONF_KEY, ""),
             CONF_SECRET: entry.data.get(CONF_SECRET, ""),
@@ -217,12 +210,10 @@ class VasttrafikSubentryFlow(ConfigSubentryFlow):
             elif len(search_query) < 2:
                 errors = {"base": "search_too_short"}
             else:
-                # Get parent entry for API access
                 parent_entry = self._get_entry()
                 if not parent_entry:
                     return self.async_abort(reason="parent_entry_not_found")
 
-                # Search for stations
                 stations, error_code = await search_stations(
                     self.hass, parent_entry, search_query
                 )
@@ -231,7 +222,6 @@ class VasttrafikSubentryFlow(ConfigSubentryFlow):
                 elif not stations:
                     errors = {"base": "no_stations_found"}
                 else:
-                    # Store search results and proceed to station selection
                     self._search_results = stations
                     return await self.async_step_select_station()
         else:
@@ -346,7 +336,6 @@ class VasttrafikSubentryFlow(ConfigSubentryFlow):
         subentry = self._get_reconfigure_subentry()
 
         if user_input is not None:
-            # Process lines input (convert comma-separated string to list)
             lines = []
             if user_input.get(CONF_LINES):
                 lines = [
@@ -355,7 +344,6 @@ class VasttrafikSubentryFlow(ConfigSubentryFlow):
                     if line.strip()
                 ]
 
-            # Process tracks input (convert comma-separated string to list)
             tracks = []
             if user_input.get(CONF_TRACKS):
                 tracks = [
@@ -364,7 +352,6 @@ class VasttrafikSubentryFlow(ConfigSubentryFlow):
                     if track.strip()
                 ]
 
-            # Update subentry data with new settings
             new_data = {
                 CONF_FROM: subentry.data.get(CONF_FROM),  # Keep original station
                 CONF_NAME: user_input.get(CONF_NAME, subentry.data.get(CONF_NAME)),
@@ -381,12 +368,10 @@ class VasttrafikSubentryFlow(ConfigSubentryFlow):
                 title=f"Departure: {new_data[CONF_NAME]}",
             )
 
-        # Get current settings
         current_data = subentry.data
         current_lines = current_data.get(CONF_LINES, [])
         current_tracks = current_data.get(CONF_TRACKS, [])
 
-        # Convert lists back to comma-separated strings for the form
         lines_str = ", ".join(current_lines) if current_lines else ""
         tracks_str = ", ".join(current_tracks) if current_tracks else ""
 
@@ -426,6 +411,4 @@ class VasttrafikOptionsFlow(OptionsFlow):
 
     async def async_step_init(self, user_input=None):
         """Manage the options for the main integration."""
-        # The main integration doesn't have configurable options currently
-        # All configuration is done via subentries
         return self.async_abort(reason="not_configurable")
