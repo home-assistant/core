@@ -86,6 +86,9 @@
       },
       "work_mode": {
         "default": "mdi:cog"
+      },
+      "auto_empty": {
+        "default": "mdi:delete-clock"
       }
     },
     "sensor": {
