@@ -1612,6 +1612,7 @@ omnilogic==0.4.5
 ondilo==0.5.0
 
 # homeassistant.components.onedrive
+# homeassistant.components.onedrive_for_business
 onedrive-personal-sdk==0.0.15
 
 # homeassistant.components.onvif

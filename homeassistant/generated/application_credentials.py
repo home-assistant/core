@@ -31,6 +31,7 @@ APPLICATION_CREDENTIALS = [
     "netatmo",
     "ondilo_ico",
     "onedrive",
+    "onedrive_for_business",
     "point",
     "senz",
     "smartthings",
