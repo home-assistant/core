@@ -52,7 +52,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: PooldoseConfigEntry) -
 
         await er.async_migrate_entries(hass, entry.entry_id, migrate_unique_id)
 
-        hass.config_entries.async_update_entry(entry, version=1, minor_version=1)
+        hass.config_entries.async_update_entry(entry, version=1, minor_version=2)
 
     return True
 
