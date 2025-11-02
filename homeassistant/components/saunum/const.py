@@ -12,7 +12,3 @@ PLATFORMS: list[Platform] = [
 ]
 
 DEFAULT_SCAN_INTERVAL: Final = 5
-
-# Value ranges - Fahrenheit (for display)
-MIN_TEMPERATURE_F: Final = 104  # 40°C
-MAX_TEMPERATURE_F: Final = 212  # 100°C

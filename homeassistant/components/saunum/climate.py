@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from pysaunum import MIN_TEMPERATURE
+from pysaunum import MAX_TEMPERATURE, MIN_TEMPERATURE
 
 from homeassistant.components.climate import (
     ClimateEntity,
@@ -19,11 +19,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import LeilSaunaConfigEntry, LeilSaunaCoordinator
 from .entity import LeilSaunaEntity
-from .helpers import (
-    convert_temperature,
-    get_temperature_range_for_unit,
-    get_temperature_unit,
-)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,17 +41,13 @@ class LeilSaunaClimate(LeilSaunaEntity, ClimateEntity):
     _attr_name = None
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_min_temp = MIN_TEMPERATURE
+    _attr_max_temp = MAX_TEMPERATURE
 
     def __init__(self, coordinator: LeilSaunaCoordinator) -> None:
         """Initialize the climate entity."""
         super().__init__(coordinator, "climate")
-
-        # Set temperature unit and range
-        temp_unit = get_temperature_unit(coordinator.hass)
-        self._attr_temperature_unit = temp_unit
-        min_temp, max_temp = get_temperature_range_for_unit(temp_unit)
-        self._attr_min_temp = min_temp
-        self._attr_max_temp = max_temp
 
     @property
     def available(self) -> bool:
@@ -65,21 +56,16 @@ class LeilSaunaClimate(LeilSaunaEntity, ClimateEntity):
 
     @property
     def current_temperature(self) -> float | None:
-        """Return the current temperature."""
-        temp_c = self.coordinator.data.current_temperature
-        if temp_c is None:
-            return None
-        temp_unit = get_temperature_unit(self.hass)
-        return convert_temperature(temp_c, UnitOfTemperature.CELSIUS, temp_unit)
+        """Return the current temperature in Celsius."""
+        return self.coordinator.data.current_temperature
 
     @property
     def target_temperature(self) -> float | None:
-        """Return the target temperature."""
+        """Return the target temperature in Celsius."""
         temp_c = self.coordinator.data.target_temperature
         if temp_c is None or temp_c < MIN_TEMPERATURE:
             return None
-        temp_unit = get_temperature_unit(self.hass)
-        return convert_temperature(temp_c, UnitOfTemperature.CELSIUS, temp_unit)
+        return temp_c
 
     @property
     def hvac_mode(self) -> HVACMode:
@@ -115,11 +101,5 @@ class LeilSaunaClimate(LeilSaunaEntity, ClimateEntity):
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
 
-        # Convert temperature to Celsius if needed
-        temp_unit = get_temperature_unit(self.hass)
-        temp_c = (
-            convert_temperature(temperature, temp_unit, UnitOfTemperature.CELSIUS)
-            or temperature
-        )
-
-        await self.coordinator.async_set_target_temperature(int(temp_c))
+        # Home Assistant handles conversion from user's preferred unit
+        await self.coordinator.async_set_target_temperature(int(temperature))
