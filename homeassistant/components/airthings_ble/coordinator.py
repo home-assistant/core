@@ -5,7 +5,11 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from airthings_ble import AirthingsBluetoothDeviceData, AirthingsDevice
+from airthings_ble import (
+    AirthingsBluetoothDeviceData,
+    AirthingsDevice,
+    AirthingsDeviceType,
+)
 from bleak.backends.device import BLEDevice
 from bleak_retry_connector import close_stale_connections_by_address
 
@@ -16,7 +20,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, RADON_SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,5 +68,11 @@ class AirthingsBLEDataUpdateCoordinator(DataUpdateCoordinator[AirthingsDevice]):
             data = await self.airthings.update_device(self.ble_device)
         except Exception as err:
             raise UpdateFailed(f"Unable to fetch data: {err}") from err
+
+        if (
+            self.update_interval == timedelta(seconds=DEFAULT_SCAN_INTERVAL)
+            and data.model == AirthingsDeviceType.CORENTIUM_HOME_2
+        ):
+            self.update_interval = timedelta(seconds=RADON_SCAN_INTERVAL)
 
         return data
