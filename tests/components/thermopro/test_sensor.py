@@ -2,7 +2,11 @@
 
 from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.components.thermopro.const import DOMAIN
-from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT
+from homeassistant.const import (
+    ATTR_FRIENDLY_NAME,
+    ATTR_UNIT_OF_MEASUREMENT,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 
 from . import TP357_SERVICE_INFO, TP962R_SERVICE_INFO, TP962R_SERVICE_INFO_2
@@ -122,6 +126,76 @@ async def test_sensors(hass: HomeAssistant) -> None:
     assert battery_sensor_attributes[ATTR_FRIENDLY_NAME] == "TP357 (2142) Battery"
     assert battery_sensor_attributes[ATTR_UNIT_OF_MEASUREMENT] == "%"
     assert battery_sensor_attributes[ATTR_STATE_CLASS] == "measurement"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_device_unavailable_then_recovers(hass: HomeAssistant) -> None:
+    """Test that entities become unavailable and then recover when device reappears.
+
+    This test verifies the self-healing behavior of the ThermoPro integration:
+    1. Device is initially discovered and entities are created
+    2. Device goes offline (becomes unavailable)
+    3. Device comes back online - entities should automatically recover
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="4125DDBA-2774-4851-9889-6AADDD4CAC3D",
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Initially no entities - device hasn't been seen
+    assert len(hass.states.async_all()) == 0
+
+    # Device broadcasts and entities are created
+    inject_bluetooth_service_info(hass, TP357_SERVICE_INFO)
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 3
+
+    # Verify entities have data
+    temp_sensor = hass.states.get("sensor.tp357_2142_temperature")
+    assert temp_sensor is not None
+    assert temp_sensor.state == "24.1"
+
+    battery_sensor = hass.states.get("sensor.tp357_2142_battery")
+    assert battery_sensor is not None
+    assert battery_sensor.state == "100"
+
+    # Simulate device becoming unavailable by calling the unavailable callback
+    # In reality, this happens when the bluetooth manager doesn't see the device
+    # for the configured timeout period. The PassiveBluetoothProcessorCoordinator
+    # handles this automatically.
+    coordinator = entry.runtime_data
+    # Directly call the unavailable handler to simulate device going offline
+    coordinator._async_handle_unavailable(TP357_SERVICE_INFO)
+    await hass.async_block_till_done()
+
+    # Entities should now be unavailable
+    temp_sensor = hass.states.get("sensor.tp357_2142_temperature")
+    assert temp_sensor.state == STATE_UNAVAILABLE
+
+    battery_sensor = hass.states.get("sensor.tp357_2142_battery")
+    assert battery_sensor.state == STATE_UNAVAILABLE
+
+    # Device reappears - send another broadcast
+    # The coordinator automatically handles this and marks entities as available again
+    inject_bluetooth_service_info(hass, TP357_SERVICE_INFO)
+    await hass.async_block_till_done()
+
+    # Entities should be available again with updated data (self-healing!)
+    temp_sensor = hass.states.get("sensor.tp357_2142_temperature")
+    assert temp_sensor is not None
+    assert temp_sensor.state == "24.1"
+    assert temp_sensor.state != STATE_UNAVAILABLE
+
+    battery_sensor = hass.states.get("sensor.tp357_2142_battery")
+    assert battery_sensor is not None
+    assert battery_sensor.state == "100"
+    assert battery_sensor.state != STATE_UNAVAILABLE
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
