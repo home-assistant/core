@@ -359,7 +359,7 @@ MODULES: dict[str, ModuleType] = {
     PLATFORM_WEBHOOKS: webhooks,
 }
 
-PLATFORMS: list[Platform] = [Platform.NOTIFY]
+PLATFORMS: list[Platform] = [Platform.EVENT, Platform.NOTIFY]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
