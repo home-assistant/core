@@ -7,7 +7,13 @@ from typing import Final
 
 DOMAIN: Final = "brother"
 
-PRINTER_TYPES: Final = ["laser", "ink"]
+PRINTER_TYPE_LASER = "laser"
+PRINTER_TYPE_INK = "ink"
+
+PRINTER_TYPES: Final = {
+    PRINTER_TYPE_LASER: "laser",
+    PRINTER_TYPE_INK: "ink",
+}
 
 UPDATE_INTERVAL = timedelta(seconds=30)
 
