@@ -175,8 +175,8 @@ class VasttrafikConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         suggested_values = user_input or {
-            CONF_KEY: entry.data.get(CONF_KEY, ""),
-            CONF_SECRET: entry.data.get(CONF_SECRET, ""),
+            CONF_KEY: entry.data[CONF_KEY],
+            CONF_SECRET: entry.data[CONF_SECRET],
         }
 
         return self.async_show_form(
@@ -353,8 +353,8 @@ class VasttrafikSubentryFlow(ConfigSubentryFlow):
                 ]
 
             new_data = {
-                CONF_FROM: subentry.data.get(CONF_FROM),  # Keep original station
-                CONF_NAME: user_input.get(CONF_NAME, subentry.data.get(CONF_NAME)),
+                CONF_FROM: subentry.data[CONF_FROM],  # Keep original station
+                CONF_NAME: user_input.get(CONF_NAME, subentry.data[CONF_NAME]),
                 CONF_HEADING: user_input.get(CONF_HEADING, ""),
                 CONF_LINES: lines,
                 CONF_TRACKS: tracks,
