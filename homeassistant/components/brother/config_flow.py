@@ -13,11 +13,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import section
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.selector import (
-    SelectOptionDict,
-    SelectSelector,
-    SelectSelectorConfig,
-)
+from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.util.network import is_host_valid
 
@@ -36,9 +32,7 @@ DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_TYPE, default=PRINTER_TYPE_LASER): SelectSelector(
             SelectSelectorConfig(
-                options=[
-                    SelectOptionDict(value=k, label=v) for k, v in PRINTER_TYPES.items()
-                ],
+                options=PRINTER_TYPES,
                 translation_key=CONF_TYPE,
             )
         ),
@@ -57,9 +51,7 @@ ZEROCONF_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_TYPE, default=PRINTER_TYPE_LASER): SelectSelector(
             SelectSelectorConfig(
-                options=[
-                    SelectOptionDict(value=k, label=v) for k, v in PRINTER_TYPES.items()
-                ],
+                options=PRINTER_TYPES,
                 translation_key=CONF_TYPE,
             )
         ),

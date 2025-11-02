@@ -212,7 +212,7 @@
     }
   },
   "selectors": {
-    "type": {
+    "printer_type": {
       "options": {
         "ink": "ink",
         "laser": "laser"
