@@ -138,6 +138,11 @@ async def test_device_unavailable_then_recovers(hass: HomeAssistant) -> None:
     1. Device is initially discovered and entities are created
     2. Device goes offline (becomes unavailable)
     3. Device comes back online - entities should automatically recover
+
+    Note: Entity data is persisted to storage via PassiveBluetoothProcessorCoordinator.
+    On restart, entities will be restored with their last known values even if the
+    device hasn't broadcast yet. This prevents entities from appearing unavailable
+    after restart until the device broadcasts again.
     """
     entry = MockConfigEntry(
         domain=DOMAIN,
