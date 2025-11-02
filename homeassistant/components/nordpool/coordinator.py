@@ -49,6 +49,12 @@ class NordPoolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodsData]):
 
     def get_next_data_interval(self, now: datetime) -> datetime:
         """Compute next time an update should occur."""
+        if self.is_prices_final():
+            # Prices are final for the current day, update next day
+            LOGGER.debug("Prices are final for the current day")
+            if tomorrow_starts_at := self.tomorrow_starts_at():
+                LOGGER.debug("Next data update at %s", tomorrow_starts_at)
+                return tomorrow_starts_at
         next_hour = dt_util.utcnow() + timedelta(hours=1)
         next_run = datetime(
             next_hour.year,
@@ -92,17 +98,22 @@ class NordPoolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodsData]):
 
     async def fetch_data(self, now: datetime, initial: bool = False) -> None:
         """Fetch data from Nord Pool."""
-        self.data_unsub = async_track_point_in_utc_time(
-            self.hass, self.fetch_data, self.get_next_data_interval(dt_util.utcnow())
-        )
         if self.config_entry.pref_disable_polling and not initial:
+            self.data_unsub = async_track_point_in_utc_time(
+                self.hass,
+                self.fetch_data,
+                self.get_next_data_interval(dt_util.utcnow()),
+            )
             return
         try:
             data = await self.handle_data(initial)
         except UpdateFailed as err:
             self.async_set_update_error(err)
-            return
-        self.async_set_updated_data(data)
+        else:
+            self.async_set_updated_data(data)
+        self.data_unsub = async_track_point_in_utc_time(
+            self.hass, self.fetch_data, self.get_next_data_interval(dt_util.utcnow())
+        )
 
     async def handle_data(self, initial: bool = False) -> DeliveryPeriodsData:
         """Fetch data from Nord Pool."""
@@ -171,3 +182,25 @@ class NordPoolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodsData]):
                 delivery_period = del_period
                 break
         return delivery_period
+
+    def is_prices_final(self) -> bool:
+        """Return True if prices for the current day are final."""
+        current_day = dt_util.utcnow().strftime("%Y-%m-%d")
+        if not self.data:
+            return False
+        for del_period in self.data.entries:
+            if del_period.requested_date == current_day and del_period.prices_final:
+                return True
+        return False
+
+    def tomorrow_starts_at(self) -> datetime | None:
+        """Return tomorrow's starting time."""
+        # What if tomorrow file not exist?
+
+        tomorrow = dt_util.utcnow() + timedelta(days=1)
+        tomorrow_day = tomorrow.strftime("%Y-%m-%d")
+        for del_period in self.data.entries:
+            if del_period.requested_date == tomorrow_day:
+                sorted_tomorrow = sorted(del_period.entries, key=lambda x: x.start)
+                return sorted_tomorrow[0].start
+        return None
