@@ -40,8 +40,8 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 
 async def search_stations(
-    hass: HomeAssistant, config_entry, query: str
-) -> tuple[list[dict], str | None]:
+    hass: HomeAssistant, config_entry: ConfigEntry, query: str
+) -> tuple[list[dict[str, str]], str | None]:
     """Search for stations using the Västtrafik API.
 
     Returns (stations_list, error_code).
@@ -119,7 +119,9 @@ class VasttrafikConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @classmethod
     @callback
-    def async_get_supported_subentry_types(cls, config_entry):
+    def async_get_supported_subentry_types(
+        cls, config_entry: ConfigEntry
+    ) -> dict[str, type[ConfigSubentryFlow]]:
         """Get supported subentry types."""
         return {"departure_board": VasttrafikSubentryFlow}
 
