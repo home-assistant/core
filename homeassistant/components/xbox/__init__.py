@@ -9,7 +9,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN
-from .coordinator import XboxConfigEntry, XboxUpdateCoordinator
+from .coordinator import (
+    XboxConfigEntry,
+    XboxConsolesCoordinator,
+    XboxCoordinators,
+    XboxUpdateCoordinator,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +35,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: XboxConfigEntry) -> bool
     coordinator = XboxUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
 
-    entry.runtime_data = coordinator
+    consoles = XboxConsolesCoordinator(hass, entry, coordinator)
+
+    entry.runtime_data = XboxCoordinators(coordinator, consoles)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -55,10 +62,10 @@ async def async_migrate_unique_id(hass: HomeAssistant, entry: XboxConfigEntry) -
         # change generic entry name to user's gamertag
         return hass.config_entries.async_update_entry(
             entry,
-            unique_id=entry.runtime_data.client.xuid,
+            unique_id=entry.runtime_data.status.client.xuid,
             title=(
-                entry.runtime_data.data.presence[
-                    entry.runtime_data.client.xuid
+                entry.runtime_data.status.data.presence[
+                    entry.runtime_data.status.client.xuid
                 ].gamertag
                 if entry.title == "Home Assistant Cloud"
                 else entry.title
