@@ -122,59 +122,59 @@ async def test_setup_entry_timeout_error(
 async def test_migrate_entity_unique_ids(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_config_entry: MockConfigEntry,
+    mock_migration_config_entry: MockConfigEntry,
 ) -> None:
     """Test migration of entity unique IDs."""
-    # Add config entry first
-    mock_config_entry.add_to_hass(hass)
-
-    # Set config entry to version 0 to force migration
-    hass.config_entries.async_update_entry(
-        mock_config_entry, version=1, minor_version=0
-    )
+    mock_migration_config_entry.add_to_hass(hass)
 
     # Create entities with old unique ID format
     entity_registry.async_get_or_create(
         "sensor",
         DOMAIN,
         "TEST123456789_ofa_orp_value",
-        config_entry=mock_config_entry,
+        config_entry=mock_migration_config_entry,
     )
     entity_registry.async_get_or_create(
         "sensor",
         DOMAIN,
         "TEST123456789_ofa_ph_value",
-        config_entry=mock_config_entry,
+        config_entry=mock_migration_config_entry,
     )
     # Create entity with correct unique ID that should not be changed
     unchanged_entity = entity_registry.async_get_or_create(
         "sensor",
         DOMAIN,
         "TEST123456789_orp",
-        config_entry=mock_config_entry,
+        config_entry=mock_migration_config_entry,
     )
 
+    # Store original version for comparison
+    original_version = mock_migration_config_entry.version
+    original_minor_version = mock_migration_config_entry.minor_version
+
     # Setup the integration - this will trigger migration
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.config_entries.async_setup(mock_migration_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Verify the config entry version was updated
-    assert mock_config_entry.version == 1
-    assert mock_config_entry.minor_version == 1
+    # Verify the config entry version was updated from 1.1 to 1.2
+    assert (
+        original_version == 1
+        and original_minor_version == 1
+        and mock_migration_config_entry.version == 1
+        and mock_migration_config_entry.minor_version == 2
+    )
 
     # Verify the entities have been migrated
     assert entity_registry.async_get_entity_id(
         "sensor", DOMAIN, "TEST123456789_ofa_orp_time"
-    )
-    assert entity_registry.async_get_entity_id(
+    ) and entity_registry.async_get_entity_id(
         "sensor", DOMAIN, "TEST123456789_ofa_ph_time"
     )
 
     # Verify old unique IDs no longer exist
     assert not entity_registry.async_get_entity_id(
         "sensor", DOMAIN, "TEST123456789_ofa_orp_value"
-    )
-    assert not entity_registry.async_get_entity_id(
+    ) and not entity_registry.async_get_entity_id(
         "sensor", DOMAIN, "TEST123456789_ofa_ph_value"
     )
 
