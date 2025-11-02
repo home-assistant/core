@@ -501,8 +501,12 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
     #
     KEY_MONITORING_CHECK_NOTIFICATIONS: HuaweiSensorGroup(
         exclude=re.compile(
-            r"^(onlineupdatestatus|smsstoragefull)$",
-            re.IGNORECASE,
+            r"""^(
+                OnlineUpdateStatus |  # Could be useful, but what are the values?
+                SimOperEvent |        # Unknown
+                SmsStorageFull        # Handled by binary sensor
+            )$""",
+            re.IGNORECASE | re.VERBOSE,
         ),
         descriptions={
             "UnreadMessage": HuaweiSensorEntityDescription(
