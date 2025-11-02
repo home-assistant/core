@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
+from typing import Any, cast
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -37,8 +38,10 @@ def _zone_enabled_value(
         return None
     if isinstance(zone, YardianZone):
         return zone.is_enabled
-    if isinstance(zone, (tuple, list)) and len(zone) > 1:
-        return zone[1] == 1
+    if isinstance(zone, (tuple, list)):
+        zone_seq = cast(Sequence[Any], zone)
+        if len(zone_seq) > 1:
+            return zone_seq[1] == 1
     return None
 
 
