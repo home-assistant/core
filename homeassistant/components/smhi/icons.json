@@ -1,17 +1,20 @@
 {
   "entity": {
     "sensor": {
-      "bui": {
+      "build_up_index": {
         "default": "mdi:grass"
       },
-      "dc": {
+      "drought_code": {
         "default": "mdi:grass"
       },
-      "dmc": {
+      "duff_moisture_code": {
         "default": "mdi:grass"
       },
-      "ffmc": {
+      "fine_fuel_moisture_code": {
         "default": "mdi:grass"
+      },
+      "fire_weather_index": {
+        "default": "mdi:pine-tree-fire"
       },
       "forestdry": {
         "default": "mdi:forest"
@@ -31,7 +34,7 @@
       "high_cloud": {
         "default": "mdi:cloud-arrow-up"
       },
-      "isi": {
+      "initial_spread_index": {
         "default": "mdi:grass"
       },
       "low_cloud": {
@@ -42,24 +45,6 @@
       },
       "precipitation_category": {
         "default": "mdi:weather-pouring"
-      },
-      "fire_weather_index": {
-        "default": "mdi:pine-tree-fire"
-      },
-      "initial_spread_index": {
-        "default": "mdi:grass"
-      },
-      "build_up_index": {
-        "default": "mdi:grass"
-      },
-      "fine_fuel_moisture_code": {
-        "default": "mdi:grass"
-      },
-      "duff_moisture_code": {
-        "default": "mdi:grass"
-      },
-      "drought_code": {
-        "default": "mdi:grass"
       },
       "rate_of_spread": {
         "default": "mdi:grass"

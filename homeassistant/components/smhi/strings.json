@@ -26,17 +26,20 @@
   },
   "entity": {
     "sensor": {
-      "bui": {
+      "build_up_index": {
         "name": "Build Up Index"
       },
-      "dc": {
+      "drought_code": {
         "name": "Drought Code"
       },
-      "dmc": {
+      "duff_moisture_code": {
         "name": "Duff Moisture Code"
       },
-      "ffmc": {
+      "fine_fuel_moisture_code": {
         "name": "Fine Fuel Moisture Code"
+      },
+      "fire_weather_index": {
+        "name": "Fire Weather Index"
       },
       "forestdry": {
         "name": "Fuel drying",
@@ -80,7 +83,7 @@
       "high_cloud": {
         "name": "High cloud coverage"
       },
-      "isi": {
+      "initial_spread_index": {
         "name": "Initial Spread Index"
       },
       "low_cloud": {
@@ -101,7 +104,7 @@
           "6": "Freezing drizzle"
         }
       },
-      "rn": {
+      "rate_of_spread": {
         "name": "Potential rate of spread"
       },
       "thunder": {
@@ -109,27 +112,6 @@
       },
       "total_cloud": {
         "name": "Total cloud coverage"
-      },
-      "fire_weather_index": {
-        "name": "Fire Weather Index"
-      },
-      "initial_spread_index": {
-        "name": "Initial Spread Index"
-      },
-      "build_up_index": {
-        "name": "Build Up Index"
-      },
-      "fine_fuel_moisture_code": {
-        "name": "Fine Fuel Moisture Code"
-      },
-      "duff_moisture_code": {
-        "name": "Duff Moisture Code"
-      },
-      "drought_code": {
-        "name": "Drought Code"
-      },
-      "rate_of_spread": {
-        "name": "Potential rate of spread"
       }
     }
   }
