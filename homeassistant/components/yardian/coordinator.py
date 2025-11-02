@@ -115,7 +115,7 @@ class YardianUpdateCoordinator(DataUpdateCoordinator[YardianCoordinatorData]):
         for index, zone_info in enumerate(dev_state.zones):
             # Zone info comes from the proprietary API as a positional list.
             name = str(zone_info[0]) if zone_info else f"Zone {index + 1}"
-            is_enabled = bool(zone_info[1]) if len(zone_info) > 1 else True
+            is_enabled = (zone_info[1] == 1) if len(zone_info) > 1 else True
             zones.append(
                 YardianZone(
                     name=name,
