@@ -122,8 +122,6 @@ def parse_pressure_file(file_path: str) -> dict[str, dict[str, float | int]] | N
     try:
         with open(file_path) as f:
             content = f.read()
-    except FileNotFoundError:
-        return None
     except OSError:
         return None
 
