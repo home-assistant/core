@@ -17,7 +17,8 @@ from homeassistant.core import HomeAssistant
 
 from . import CORENTIUM_HOME_2_DEVICE_INFO, WAVE_DEVICE_INFO, WAVE_ENHANCE_DEVICE_INFO
 
-from tests.components.bluetooth import MockConfigEntry, generate_ble_device
+from tests.common import MockConfigEntry
+from tests.components.bluetooth import generate_ble_device
 
 
 @pytest.mark.parametrize(
