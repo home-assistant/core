@@ -53,10 +53,10 @@
   "entity": {
     "binary_sensor": {
       "5ghz_wifi_status": {
-        "name": "5GHz Wi-Fi status"
+        "name": "Wi-Fi status (5GHz)"
       },
       "24ghz_wifi_status": {
-        "name": "2.4GHz Wi-Fi status"
+        "name": "Wi-Fi status (2.4GHz)"
       },
       "mobile_connection": {
         "name": "Mobile connection"
