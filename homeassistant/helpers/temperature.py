@@ -4,7 +4,10 @@ from numbers import Number
 
 from homeassistant.const import PRECISION_HALVES, PRECISION_TENTHS
 from homeassistant.core import HomeAssistant
-from homeassistant.util.unit_conversion import TemperatureConverter
+from homeassistant.util.unit_conversion import (
+    TemperatureConverter,
+    TemperatureDeltaConverter,
+)
 
 
 def display_temp(
@@ -45,7 +48,7 @@ def display_temp_interval(
     ha_unit = hass.config.units.temperature_unit
 
     if unit != ha_unit:
-        interval = TemperatureConverter.convert_interval(interval, unit, ha_unit)
+        interval = TemperatureDeltaConverter.convert(interval, unit, ha_unit)
 
     # IEEE rounding would produce round(0.5) == 0 that seems unnatural.
     # Ensure 0.5 -> 1 while rounding to int
