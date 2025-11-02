@@ -10,6 +10,7 @@ from deebot_client.events import WorkModeEvent
 from deebot_client.events.base import Event
 from deebot_client.events.map import CachedMapInfoEvent, MajorMapEvent
 from deebot_client.events.water_info import WaterAmountEvent
+from deebot_client.events.auto_empty import AutoEmptyEvent
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
@@ -34,6 +35,7 @@ class EcovacsSelectEntityDescription[EventT: Event](
 
     current_option_fn: Callable[[EventT], str | None]
     options_fn: Callable[[CapabilitySetTypes], list[str]]
+    key: str
 
 
 ENTITY_DESCRIPTIONS: tuple[EcovacsSelectEntityDescription, ...] = (
@@ -55,6 +57,15 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSelectEntityDescription, ...] = (
         options_fn=lambda cap: [get_name_key(mode) for mode in cap.types],
         key="work_mode",
         translation_key="work_mode",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    EcovacsSelectEntityDescription[AutoEmptyEvent](
+        capability_fn=lambda caps: caps.station.auto_empty,
+        current_option_fn=lambda e: get_name_key(e.frequency),
+        options_fn=lambda cap: [get_name_key(mode) for mode in cap.types],
+        key="auto_empty",
+        translation_key="auto_empty",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.CONFIG,
     ),
@@ -89,6 +100,14 @@ class EcovacsSelectEntity[EventT: Event](
 
     _attr_current_option: str | None = None
     entity_description: EcovacsSelectEntityDescription
+    
+    """Dictionary converters for specific keys"""
+    _option_to_dict = {
+        "auto_empty": lambda option: {
+            "enable": 0 if option == "manual" else 1,
+            "frequency": option
+        },
+    }
 
     def __init__(
         self,
@@ -100,6 +119,7 @@ class EcovacsSelectEntity[EventT: Event](
         """Initialize entity."""
         super().__init__(device, capability, entity_description, **kwargs)
         self._attr_options = entity_description.options_fn(capability)
+        self._key = entity_description.key
 
     async def async_added_to_hass(self) -> None:
         """Set up the event listeners now that hass is ready."""
@@ -113,7 +133,11 @@ class EcovacsSelectEntity[EventT: Event](
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        await self._device.execute_command(self._capability.set(option))
+        if self._key in self._option_to_dict:
+            dict_option = self._option_to_dict[self._key](option)
+            await self._device.execute_command(self._capability.set(**dict_option))
+        else:
+            await self._device.execute_command(self._capability.set(option))
 
 
 class EcovacsActiveMapSelectEntity(
