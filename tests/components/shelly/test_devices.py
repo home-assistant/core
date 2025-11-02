@@ -5,6 +5,7 @@ from unittest.mock import Mock
 from aioshelly.const import (
     MODEL_2PM_G3,
     MODEL_BLU_GATEWAY_G3,
+    MODEL_POWER_STRIP_G4,
     MODEL_PRO_EM3,
     MODEL_WALL_DISPLAY_XL,
 )
@@ -616,6 +617,32 @@ async def test_wall_display_xl(
     await force_uptime_value(hass, freezer)
 
     config_entry = await init_integration(hass, gen=2, model=MODEL_WALL_DISPLAY_XL)
+
+    await snapshot_device_entities(
+        hass, entity_registry, snapshot, config_entry.entry_id
+    )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_power_strip_gen4(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+    snapshot: SnapshotAssertion,
+    monkeypatch: pytest.MonkeyPatch,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test Power Strip Gen4."""
+    device_fixture = await async_load_json_object_fixture(
+        hass, "power_strip_gen4.json", DOMAIN
+    )
+    monkeypatch.setattr(mock_rpc_device, "shelly", device_fixture["shelly"])
+    monkeypatch.setattr(mock_rpc_device, "status", device_fixture["status"])
+    monkeypatch.setattr(mock_rpc_device, "config", device_fixture["config"])
+
+    await force_uptime_value(hass, freezer)
+
+    config_entry = await init_integration(hass, gen=4, model=MODEL_POWER_STRIP_G4)
 
     await snapshot_device_entities(
         hass, entity_registry, snapshot, config_entry.entry_id
