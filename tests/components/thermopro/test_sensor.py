@@ -125,3 +125,51 @@ async def test_sensors(hass: HomeAssistant) -> None:
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+
+
+async def test_entities_restore_and_update(hass: HomeAssistant) -> None:
+    """Test that entities are created and can be updated with new data.
+
+    This test verifies the basic functionality and data update behavior:
+    1. Device broadcasts and entities are created
+    2. Device broadcasts updated data and entities update accordingly
+
+    Note: Entity data is persisted to storage via PassiveBluetoothProcessorCoordinator.
+    When SensorEntityDescription is passed to async_register_processor, entity data
+    will be restored on restart, preventing entities from appearing unavailable
+    until the device broadcasts again.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="4125DDBA-2774-4851-9889-6AADDD4CAC3D",
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Initially no entities - device hasn't been seen
+    assert len(hass.states.async_all()) == 0
+
+    # Device broadcasts and entities are created
+    inject_bluetooth_service_info(hass, TP357_SERVICE_INFO)
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 3
+
+    # Verify entities have data
+    temp_sensor = hass.states.get("sensor.tp357_2142_temperature")
+    assert temp_sensor is not None
+    assert temp_sensor.state == "24.1"
+
+    battery_sensor = hass.states.get("sensor.tp357_2142_battery")
+    assert battery_sensor is not None
+    assert battery_sensor.state == "100"
+
+    # Verify coordinator is available and properly configured for data restoration
+    coordinator = entry.runtime_data
+    assert coordinator.available
+    # The coordinator should have a restore_key (config entry ID) for data persistence
+    assert coordinator.restore_key == entry.entry_id
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()

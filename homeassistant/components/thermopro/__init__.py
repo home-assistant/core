@@ -28,6 +28,8 @@ PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
+type ThermoProConfigEntry = ConfigEntry[PassiveBluetoothProcessorCoordinator]
+
 
 def process_service_info(
     hass: HomeAssistant,
@@ -43,29 +45,31 @@ def process_service_info(
     return update
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ThermoProConfigEntry) -> bool:
     """Set up ThermoPro BLE device from a config entry."""
     address = entry.unique_id
     assert address is not None
     data = ThermoProBluetoothDeviceData()
-    coordinator = hass.data.setdefault(DOMAIN, {})[entry.entry_id] = (
-        PassiveBluetoothProcessorCoordinator(
-            hass,
-            _LOGGER,
-            address=address,
-            mode=BluetoothScanningMode.ACTIVE,
-            update_method=partial(process_service_info, hass, entry, data),
-        )
+    coordinator = entry.runtime_data = PassiveBluetoothProcessorCoordinator(
+        hass,
+        _LOGGER,
+        address=address,
+        mode=BluetoothScanningMode.ACTIVE,
+        update_method=partial(process_service_info, hass, entry, data),
+        connectable=False,
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    # only start after all platforms have had a chance to subscribe
+    # The coordinator automatically handles device availability changes.
+    # When a device becomes unavailable, entities will reflect that state.
+    # When the device reappears and broadcasts again, the coordinator will
+    # automatically start receiving updates and mark entities as available.
+    # Entity data is persisted to storage and restored on restart, so entities
+    # will show their last known values even if the device hasn't broadcast yet.
+    # This self-healing behavior is built into PassiveBluetoothProcessorCoordinator.
     entry.async_on_unload(coordinator.async_start())
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ThermoProConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
