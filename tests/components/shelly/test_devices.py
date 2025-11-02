@@ -2,16 +2,7 @@
 
 from unittest.mock import Mock
 
-from aioshelly.const import (
-    MODEL_2PM_G3,
-    MODEL_BLU_GATEWAY_G3,
-    MODEL_CURY_G4,
-    MODEL_DUO_BULB_G3,
-    MODEL_POWER_STRIP_G4,
-    MODEL_PRESENCE_G4,
-    MODEL_PRO_EM3,
-    MODEL_WALL_DISPLAY_XL,
-)
+from aioshelly.const import MODEL_2PM_G3, MODEL_BLU_GATEWAY_G3, MODEL_PRO_EM3
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -600,130 +591,40 @@ async def test_blu_trv_device_info(
     assert device_entry.sw_version == "v1.2.10"
 
 
+@pytest.mark.parametrize(
+    "fixture",
+    [
+        "duo_bulb_gen3",
+        "cury_gen4",
+        "presence_gen4",
+        "power_strip_gen4",
+        "wall_display_xl",
+    ],
+)
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_wall_display_xl(
+async def test_device(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
     entity_registry: EntityRegistry,
     snapshot: SnapshotAssertion,
     monkeypatch: pytest.MonkeyPatch,
     freezer: FrozenDateTimeFactory,
+    fixture: str,
 ) -> None:
-    """Test Wall Display XL."""
+    """Test device."""
     device_fixture = await async_load_json_object_fixture(
-        hass, "wall_display_xl.json", DOMAIN
+        hass, f"{fixture}.json", DOMAIN
     )
     monkeypatch.setattr(mock_rpc_device, "shelly", device_fixture["shelly"])
     monkeypatch.setattr(mock_rpc_device, "status", device_fixture["status"])
     monkeypatch.setattr(mock_rpc_device, "config", device_fixture["config"])
 
-    await force_uptime_value(hass, freezer)
-
-    config_entry = await init_integration(hass, gen=2, model=MODEL_WALL_DISPLAY_XL)
-
-    await snapshot_device_entities(
-        hass, entity_registry, snapshot, config_entry.entry_id
-    )
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_power_strip_gen4(
-    hass: HomeAssistant,
-    mock_rpc_device: Mock,
-    entity_registry: EntityRegistry,
-    snapshot: SnapshotAssertion,
-    monkeypatch: pytest.MonkeyPatch,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test Power Strip Gen4."""
-    device_fixture = await async_load_json_object_fixture(
-        hass, "power_strip_gen4.json", DOMAIN
-    )
-    monkeypatch.setattr(mock_rpc_device, "shelly", device_fixture["shelly"])
-    monkeypatch.setattr(mock_rpc_device, "status", device_fixture["status"])
-    monkeypatch.setattr(mock_rpc_device, "config", device_fixture["config"])
+    model = device_fixture["shelly"]["model"]
+    gen = device_fixture["shelly"]["gen"]
 
     await force_uptime_value(hass, freezer)
 
-    config_entry = await init_integration(hass, gen=4, model=MODEL_POWER_STRIP_G4)
-
-    await snapshot_device_entities(
-        hass, entity_registry, snapshot, config_entry.entry_id
-    )
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_presence_gen4(
-    hass: HomeAssistant,
-    mock_rpc_device: Mock,
-    entity_registry: EntityRegistry,
-    snapshot: SnapshotAssertion,
-    monkeypatch: pytest.MonkeyPatch,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test Presence Gen4."""
-    device_fixture = await async_load_json_object_fixture(
-        hass, "presence_gen4.json", DOMAIN
-    )
-    monkeypatch.setattr(mock_rpc_device, "shelly", device_fixture["shelly"])
-    monkeypatch.setattr(mock_rpc_device, "status", device_fixture["status"])
-    monkeypatch.setattr(mock_rpc_device, "config", device_fixture["config"])
-
-    await force_uptime_value(hass, freezer)
-
-    config_entry = await init_integration(hass, gen=4, model=MODEL_PRESENCE_G4)
-
-    await snapshot_device_entities(
-        hass, entity_registry, snapshot, config_entry.entry_id
-    )
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_cury_gen4(
-    hass: HomeAssistant,
-    mock_rpc_device: Mock,
-    entity_registry: EntityRegistry,
-    snapshot: SnapshotAssertion,
-    monkeypatch: pytest.MonkeyPatch,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test Cury Gen4."""
-    device_fixture = await async_load_json_object_fixture(
-        hass, "cury_gen4.json", DOMAIN
-    )
-    monkeypatch.setattr(mock_rpc_device, "shelly", device_fixture["shelly"])
-    monkeypatch.setattr(mock_rpc_device, "status", device_fixture["status"])
-    monkeypatch.setattr(mock_rpc_device, "config", device_fixture["config"])
-
-    await force_uptime_value(hass, freezer)
-
-    config_entry = await init_integration(hass, gen=4, model=MODEL_CURY_G4)
-
-    await snapshot_device_entities(
-        hass, entity_registry, snapshot, config_entry.entry_id
-    )
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_duo_bulb_gen3(
-    hass: HomeAssistant,
-    mock_rpc_device: Mock,
-    entity_registry: EntityRegistry,
-    snapshot: SnapshotAssertion,
-    monkeypatch: pytest.MonkeyPatch,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test Duo Bulb Gen3."""
-    device_fixture = await async_load_json_object_fixture(
-        hass, "duo_bulb_gen3.json", DOMAIN
-    )
-    monkeypatch.setattr(mock_rpc_device, "shelly", device_fixture["shelly"])
-    monkeypatch.setattr(mock_rpc_device, "status", device_fixture["status"])
-    monkeypatch.setattr(mock_rpc_device, "config", device_fixture["config"])
-
-    await force_uptime_value(hass, freezer)
-
-    config_entry = await init_integration(hass, gen=3, model=MODEL_DUO_BULB_G3)
+    config_entry = await init_integration(hass, gen=gen, model=model)
 
     await snapshot_device_entities(
         hass, entity_registry, snapshot, config_entry.entry_id

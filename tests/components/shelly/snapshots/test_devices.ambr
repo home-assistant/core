@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_cury_gen4[binary_sensor.test_name_cloud-entry]
+# name: test_device[cury_gen4][binary_sensor.test_name_cloud-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -34,7 +34,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_cury_gen4[binary_sensor.test_name_cloud-state]
+# name: test_device[cury_gen4][binary_sensor.test_name_cloud-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'connectivity',
@@ -48,7 +48,7 @@
     'state': 'off',
   })
 # ---
-# name: test_cury_gen4[binary_sensor.test_name_restart_required-entry]
+# name: test_device[cury_gen4][binary_sensor.test_name_restart_required-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -83,7 +83,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_cury_gen4[binary_sensor.test_name_restart_required-state]
+# name: test_device[cury_gen4][binary_sensor.test_name_restart_required-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -97,7 +97,7 @@
     'state': 'off',
   })
 # ---
-# name: test_cury_gen4[button.test_name_restart-entry]
+# name: test_device[cury_gen4][button.test_name_restart-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -132,7 +132,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_cury_gen4[button.test_name_restart-state]
+# name: test_device[cury_gen4][button.test_name_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'restart',
@@ -146,7 +146,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_cury_gen4[number.test_name_left_slot_intensity-entry]
+# name: test_device[cury_gen4][number.test_name_left_slot_intensity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -186,7 +186,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_cury_gen4[number.test_name_left_slot_intensity-state]
+# name: test_device[cury_gen4][number.test_name_left_slot_intensity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test name Left slot intensity',
@@ -204,7 +204,7 @@
     'state': '70',
   })
 # ---
-# name: test_cury_gen4[number.test_name_right_slot_intensity-entry]
+# name: test_device[cury_gen4][number.test_name_right_slot_intensity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -244,7 +244,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_cury_gen4[number.test_name_right_slot_intensity-state]
+# name: test_device[cury_gen4][number.test_name_right_slot_intensity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test name Right slot intensity',
@@ -262,7 +262,7 @@
     'state': '45',
   })
 # ---
-# name: test_cury_gen4[sensor.test_name_last_restart-entry]
+# name: test_device[cury_gen4][sensor.test_name_last_restart-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -297,7 +297,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_cury_gen4[sensor.test_name_last_restart-state]
+# name: test_device[cury_gen4][sensor.test_name_last_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
@@ -311,7 +311,7 @@
     'state': '2025-05-26T12:31:05+00:00',
   })
 # ---
-# name: test_cury_gen4[sensor.test_name_left_slot_level-entry]
+# name: test_device[cury_gen4][sensor.test_name_left_slot_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -348,7 +348,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_cury_gen4[sensor.test_name_left_slot_level-state]
+# name: test_device[cury_gen4][sensor.test_name_left_slot_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test name Left slot level',
@@ -363,7 +363,7 @@
     'state': '100',
   })
 # ---
-# name: test_cury_gen4[sensor.test_name_left_slot_vial-entry]
+# name: test_device[cury_gen4][sensor.test_name_left_slot_vial-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -398,7 +398,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_cury_gen4[sensor.test_name_left_slot_vial-state]
+# name: test_device[cury_gen4][sensor.test_name_left_slot_vial-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test name Left slot vial',
@@ -411,7 +411,7 @@
     'state': 'Shelly',
   })
 # ---
-# name: test_cury_gen4[sensor.test_name_right_slot_level-entry]
+# name: test_device[cury_gen4][sensor.test_name_right_slot_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -448,7 +448,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_cury_gen4[sensor.test_name_right_slot_level-state]
+# name: test_device[cury_gen4][sensor.test_name_right_slot_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test name Right slot level',
@@ -463,7 +463,7 @@
     'state': '93',
   })
 # ---
-# name: test_cury_gen4[sensor.test_name_right_slot_vial-entry]
+# name: test_device[cury_gen4][sensor.test_name_right_slot_vial-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -498,7 +498,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_cury_gen4[sensor.test_name_right_slot_vial-state]
+# name: test_device[cury_gen4][sensor.test_name_right_slot_vial-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test name Right slot vial',
@@ -511,7 +511,7 @@
     'state': 'Aqua Noire',
   })
 # ---
-# name: test_cury_gen4[sensor.test_name_signal_strength-entry]
+# name: test_device[cury_gen4][sensor.test_name_signal_strength-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -548,7 +548,7 @@
     'unit_of_measurement': 'dBm',
   })
 # ---
-# name: test_cury_gen4[sensor.test_name_signal_strength-state]
+# name: test_device[cury_gen4][sensor.test_name_signal_strength-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
@@ -564,7 +564,7 @@
     'state': '-49',
   })
 # ---
-# name: test_cury_gen4[switch.test_name_left_slot-entry]
+# name: test_device[cury_gen4][switch.test_name_left_slot-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -599,7 +599,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_cury_gen4[switch.test_name_left_slot-state]
+# name: test_device[cury_gen4][switch.test_name_left_slot-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test name Left slot',
@@ -612,7 +612,7 @@
     'state': 'off',
   })
 # ---
-# name: test_cury_gen4[switch.test_name_left_slot_boost-entry]
+# name: test_device[cury_gen4][switch.test_name_left_slot_boost-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -647,7 +647,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_cury_gen4[switch.test_name_left_slot_boost-state]
+# name: test_device[cury_gen4][switch.test_name_left_slot_boost-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test name Left slot boost',
@@ -660,7 +660,7 @@
     'state': 'off',
   })
 # ---
-# name: test_cury_gen4[switch.test_name_right_slot-entry]
+# name: test_device[cury_gen4][switch.test_name_right_slot-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -695,7 +695,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_cury_gen4[switch.test_name_right_slot-state]
+# name: test_device[cury_gen4][switch.test_name_right_slot-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test name Right slot',
@@ -708,7 +708,7 @@
     'state': 'on',
   })
 # ---
-# name: test_cury_gen4[switch.test_name_right_slot_boost-entry]
+# name: test_device[cury_gen4][switch.test_name_right_slot_boost-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -743,7 +743,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_cury_gen4[switch.test_name_right_slot_boost-state]
+# name: test_device[cury_gen4][switch.test_name_right_slot_boost-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test name Right slot boost',
@@ -756,7 +756,7 @@
     'state': 'off',
   })
 # ---
-# name: test_cury_gen4[update.test_name_beta_firmware-entry]
+# name: test_device[cury_gen4][update.test_name_beta_firmware-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -791,7 +791,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_cury_gen4[update.test_name_beta_firmware-state]
+# name: test_device[cury_gen4][update.test_name_beta_firmware-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'auto_update': False,
@@ -817,7 +817,7 @@
     'state': 'off',
   })
 # ---
-# name: test_cury_gen4[update.test_name_firmware-entry]
+# name: test_device[cury_gen4][update.test_name_firmware-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -852,7 +852,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_cury_gen4[update.test_name_firmware-state]
+# name: test_device[cury_gen4][update.test_name_firmware-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'auto_update': False,
@@ -878,7 +878,7 @@
     'state': 'off',
   })
 # ---
-# name: test_duo_bulb_gen3[binary_sensor.test_name_cloud-entry]
+# name: test_device[duo_bulb_gen3][binary_sensor.test_name_cloud-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -913,7 +913,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_duo_bulb_gen3[binary_sensor.test_name_cloud-state]
+# name: test_device[duo_bulb_gen3][binary_sensor.test_name_cloud-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'connectivity',
@@ -927,7 +927,7 @@
     'state': 'off',
   })
 # ---
-# name: test_duo_bulb_gen3[binary_sensor.test_name_restart_required-entry]
+# name: test_device[duo_bulb_gen3][binary_sensor.test_name_restart_required-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -962,7 +962,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_duo_bulb_gen3[binary_sensor.test_name_restart_required-state]
+# name: test_device[duo_bulb_gen3][binary_sensor.test_name_restart_required-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -976,7 +976,7 @@
     'state': 'off',
   })
 # ---
-# name: test_duo_bulb_gen3[button.test_name_restart-entry]
+# name: test_device[duo_bulb_gen3][button.test_name_restart-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1011,7 +1011,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_duo_bulb_gen3[button.test_name_restart-state]
+# name: test_device[duo_bulb_gen3][button.test_name_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'restart',
@@ -1025,7 +1025,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_duo_bulb_gen3[light.test_name_living_room_lamp-entry]
+# name: test_device[duo_bulb_gen3][light.test_name_living_room_lamp-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1068,7 +1068,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_duo_bulb_gen3[light.test_name_living_room_lamp-state]
+# name: test_device[duo_bulb_gen3][light.test_name_living_room_lamp-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'brightness': None,
@@ -1096,7 +1096,7 @@
     'state': 'off',
   })
 # ---
-# name: test_duo_bulb_gen3[sensor.test_name_last_restart-entry]
+# name: test_device[duo_bulb_gen3][sensor.test_name_last_restart-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1131,7 +1131,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_duo_bulb_gen3[sensor.test_name_last_restart-state]
+# name: test_device[duo_bulb_gen3][sensor.test_name_last_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
@@ -1145,7 +1145,7 @@
     'state': '2025-05-24T02:30:09+00:00',
   })
 # ---
-# name: test_duo_bulb_gen3[sensor.test_name_living_room_lamp_energy-entry]
+# name: test_device[duo_bulb_gen3][sensor.test_name_living_room_lamp_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1188,7 +1188,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_duo_bulb_gen3[sensor.test_name_living_room_lamp_energy-state]
+# name: test_device[duo_bulb_gen3][sensor.test_name_living_room_lamp_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -1204,7 +1204,7 @@
     'state': '0.200589',
   })
 # ---
-# name: test_duo_bulb_gen3[sensor.test_name_living_room_lamp_power-entry]
+# name: test_device[duo_bulb_gen3][sensor.test_name_living_room_lamp_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1244,7 +1244,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_duo_bulb_gen3[sensor.test_name_living_room_lamp_power-state]
+# name: test_device[duo_bulb_gen3][sensor.test_name_living_room_lamp_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -1260,7 +1260,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_duo_bulb_gen3[sensor.test_name_signal_strength-entry]
+# name: test_device[duo_bulb_gen3][sensor.test_name_signal_strength-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1297,7 +1297,7 @@
     'unit_of_measurement': 'dBm',
   })
 # ---
-# name: test_duo_bulb_gen3[sensor.test_name_signal_strength-state]
+# name: test_device[duo_bulb_gen3][sensor.test_name_signal_strength-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
@@ -1313,7 +1313,7 @@
     'state': '-50',
   })
 # ---
-# name: test_duo_bulb_gen3[update.test_name_beta_firmware-entry]
+# name: test_device[duo_bulb_gen3][update.test_name_beta_firmware-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1348,7 +1348,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_duo_bulb_gen3[update.test_name_beta_firmware-state]
+# name: test_device[duo_bulb_gen3][update.test_name_beta_firmware-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'auto_update': False,
@@ -1374,7 +1374,7 @@
     'state': 'off',
   })
 # ---
-# name: test_duo_bulb_gen3[update.test_name_firmware-entry]
+# name: test_device[duo_bulb_gen3][update.test_name_firmware-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1409,7 +1409,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_duo_bulb_gen3[update.test_name_firmware-state]
+# name: test_device[duo_bulb_gen3][update.test_name_firmware-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'auto_update': False,
@@ -1435,7 +1435,7 @@
     'state': 'off',
   })
 # ---
-# name: test_power_strip_gen4[binary_sensor.switch_1_name_overcurrent-entry]
+# name: test_device[power_strip_gen4][binary_sensor.switch_1_name_overcurrent-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1470,7 +1470,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_power_strip_gen4[binary_sensor.switch_1_name_overcurrent-state]
+# name: test_device[power_strip_gen4][binary_sensor.switch_1_name_overcurrent-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -1484,7 +1484,7 @@
     'state': 'off',
   })
 # ---
-# name: test_power_strip_gen4[binary_sensor.switch_1_name_overheating-entry]
+# name: test_device[power_strip_gen4][binary_sensor.switch_1_name_overheating-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1519,7 +1519,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_power_strip_gen4[binary_sensor.switch_1_name_overheating-state]
+# name: test_device[power_strip_gen4][binary_sensor.switch_1_name_overheating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -1533,7 +1533,7 @@
     'state': 'off',
   })
 # ---
-# name: test_power_strip_gen4[binary_sensor.switch_1_name_overpowering-entry]
+# name: test_device[power_strip_gen4][binary_sensor.switch_1_name_overpowering-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1568,7 +1568,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_power_strip_gen4[binary_sensor.switch_1_name_overpowering-state]
+# name: test_device[power_strip_gen4][binary_sensor.switch_1_name_overpowering-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -1582,7 +1582,7 @@
     'state': 'off',
   })
 # ---
-# name: test_power_strip_gen4[binary_sensor.switch_1_name_overvoltage-entry]
+# name: test_device[power_strip_gen4][binary_sensor.switch_1_name_overvoltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1617,7 +1617,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_power_strip_gen4[binary_sensor.switch_1_name_overvoltage-state]
+# name: test_device[power_strip_gen4][binary_sensor.switch_1_name_overvoltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -1631,7 +1631,7 @@
     'state': 'off',
   })
 # ---
-# name: test_power_strip_gen4[binary_sensor.switch_3_name_overcurrent-entry]
+# name: test_device[power_strip_gen4][binary_sensor.switch_3_name_overcurrent-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1666,7 +1666,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_power_strip_gen4[binary_sensor.switch_3_name_overcurrent-state]
+# name: test_device[power_strip_gen4][binary_sensor.switch_3_name_overcurrent-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -1680,7 +1680,7 @@
     'state': 'off',
   })
 # ---
-# name: test_power_strip_gen4[binary_sensor.switch_3_name_overheating-entry]
+# name: test_device[power_strip_gen4][binary_sensor.switch_3_name_overheating-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1715,7 +1715,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_power_strip_gen4[binary_sensor.switch_3_name_overheating-state]
+# name: test_device[power_strip_gen4][binary_sensor.switch_3_name_overheating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -1729,7 +1729,7 @@
     'state': 'off',
   })
 # ---
-# name: test_power_strip_gen4[binary_sensor.switch_3_name_overpowering-entry]
+# name: test_device[power_strip_gen4][binary_sensor.switch_3_name_overpowering-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1764,7 +1764,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_power_strip_gen4[binary_sensor.switch_3_name_overpowering-state]
+# name: test_device[power_strip_gen4][binary_sensor.switch_3_name_overpowering-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -1778,7 +1778,7 @@
     'state': 'off',
   })
 # ---
-# name: test_power_strip_gen4[binary_sensor.switch_3_name_overvoltage-entry]
+# name: test_device[power_strip_gen4][binary_sensor.switch_3_name_overvoltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1813,7 +1813,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_power_strip_gen4[binary_sensor.switch_3_name_overvoltage-state]
+# name: test_device[power_strip_gen4][binary_sensor.switch_3_name_overvoltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -1827,7 +1827,7 @@
     'state': 'off',
   })
 # ---
-# name: test_power_strip_gen4[binary_sensor.test_name_cloud-entry]
+# name: test_device[power_strip_gen4][binary_sensor.test_name_cloud-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1862,7 +1862,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_power_strip_gen4[binary_sensor.test_name_cloud-state]
+# name: test_device[power_strip_gen4][binary_sensor.test_name_cloud-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'connectivity',
@@ -1876,7 +1876,7 @@
     'state': 'off',
   })
 # ---
-# name: test_power_strip_gen4[binary_sensor.test_name_restart_required-entry]
+# name: test_device[power_strip_gen4][binary_sensor.test_name_restart_required-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1911,7 +1911,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_power_strip_gen4[binary_sensor.test_name_restart_required-state]
+# name: test_device[power_strip_gen4][binary_sensor.test_name_restart_required-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -1925,7 +1925,7 @@
     'state': 'off',
   })
 # ---
-# name: test_power_strip_gen4[binary_sensor.test_name_switch_0_overcurrent-entry]
+# name: test_device[power_strip_gen4][binary_sensor.test_name_switch_0_overcurrent-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1960,7 +1960,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_power_strip_gen4[binary_sensor.test_name_switch_0_overcurrent-state]
+# name: test_device[power_strip_gen4][binary_sensor.test_name_switch_0_overcurrent-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -1974,7 +1974,7 @@
     'state': 'off',
   })
 # ---
-# name: test_power_strip_gen4[binary_sensor.test_name_switch_0_overheating-entry]
+# name: test_device[power_strip_gen4][binary_sensor.test_name_switch_0_overheating-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2009,7 +2009,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_power_strip_gen4[binary_sensor.test_name_switch_0_overheating-state]
+# name: test_device[power_strip_gen4][binary_sensor.test_name_switch_0_overheating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -2023,7 +2023,7 @@
     'state': 'off',
   })
 # ---
-# name: test_power_strip_gen4[binary_sensor.test_name_switch_0_overpowering-entry]
+# name: test_device[power_strip_gen4][binary_sensor.test_name_switch_0_overpowering-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2058,7 +2058,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_power_strip_gen4[binary_sensor.test_name_switch_0_overpowering-state]
+# name: test_device[power_strip_gen4][binary_sensor.test_name_switch_0_overpowering-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -2072,7 +2072,7 @@
     'state': 'off',
   })
 # ---
-# name: test_power_strip_gen4[binary_sensor.test_name_switch_0_overvoltage-entry]
+# name: test_device[power_strip_gen4][binary_sensor.test_name_switch_0_overvoltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2107,7 +2107,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_power_strip_gen4[binary_sensor.test_name_switch_0_overvoltage-state]
+# name: test_device[power_strip_gen4][binary_sensor.test_name_switch_0_overvoltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -2121,7 +2121,7 @@
     'state': 'off',
   })
 # ---
-# name: test_power_strip_gen4[binary_sensor.test_name_switch_2_overcurrent-entry]
+# name: test_device[power_strip_gen4][binary_sensor.test_name_switch_2_overcurrent-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2156,7 +2156,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_power_strip_gen4[binary_sensor.test_name_switch_2_overcurrent-state]
+# name: test_device[power_strip_gen4][binary_sensor.test_name_switch_2_overcurrent-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -2170,7 +2170,7 @@
     'state': 'off',
   })
 # ---
-# name: test_power_strip_gen4[binary_sensor.test_name_switch_2_overheating-entry]
+# name: test_device[power_strip_gen4][binary_sensor.test_name_switch_2_overheating-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2205,7 +2205,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_power_strip_gen4[binary_sensor.test_name_switch_2_overheating-state]
+# name: test_device[power_strip_gen4][binary_sensor.test_name_switch_2_overheating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -2219,7 +2219,7 @@
     'state': 'off',
   })
 # ---
-# name: test_power_strip_gen4[binary_sensor.test_name_switch_2_overpowering-entry]
+# name: test_device[power_strip_gen4][binary_sensor.test_name_switch_2_overpowering-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2254,7 +2254,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_power_strip_gen4[binary_sensor.test_name_switch_2_overpowering-state]
+# name: test_device[power_strip_gen4][binary_sensor.test_name_switch_2_overpowering-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -2268,7 +2268,7 @@
     'state': 'off',
   })
 # ---
-# name: test_power_strip_gen4[binary_sensor.test_name_switch_2_overvoltage-entry]
+# name: test_device[power_strip_gen4][binary_sensor.test_name_switch_2_overvoltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2303,7 +2303,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_power_strip_gen4[binary_sensor.test_name_switch_2_overvoltage-state]
+# name: test_device[power_strip_gen4][binary_sensor.test_name_switch_2_overvoltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -2317,7 +2317,7 @@
     'state': 'off',
   })
 # ---
-# name: test_power_strip_gen4[button.test_name_restart-entry]
+# name: test_device[power_strip_gen4][button.test_name_restart-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2352,7 +2352,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_power_strip_gen4[button.test_name_restart-state]
+# name: test_device[power_strip_gen4][button.test_name_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'restart',
@@ -2366,7 +2366,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_power_strip_gen4[light.test_name_switch_2-entry]
+# name: test_device[power_strip_gen4][light.test_name_switch_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2405,7 +2405,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_power_strip_gen4[light.test_name_switch_2-state]
+# name: test_device[power_strip_gen4][light.test_name_switch_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'color_mode': None,
@@ -2423,7 +2423,7 @@
     'state': 'off',
   })
 # ---
-# name: test_power_strip_gen4[sensor.switch_1_name_current-entry]
+# name: test_device[power_strip_gen4][sensor.switch_1_name_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2463,7 +2463,7 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_power_strip_gen4[sensor.switch_1_name_current-state]
+# name: test_device[power_strip_gen4][sensor.switch_1_name_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
@@ -2479,7 +2479,7 @@
     'state': '0.017',
   })
 # ---
-# name: test_power_strip_gen4[sensor.switch_1_name_energy-entry]
+# name: test_device[power_strip_gen4][sensor.switch_1_name_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2522,7 +2522,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_power_strip_gen4[sensor.switch_1_name_energy-state]
+# name: test_device[power_strip_gen4][sensor.switch_1_name_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -2538,7 +2538,7 @@
     'state': '4.22756',
   })
 # ---
-# name: test_power_strip_gen4[sensor.switch_1_name_energy_consumed-entry]
+# name: test_device[power_strip_gen4][sensor.switch_1_name_energy_consumed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2581,7 +2581,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_power_strip_gen4[sensor.switch_1_name_energy_consumed-state]
+# name: test_device[power_strip_gen4][sensor.switch_1_name_energy_consumed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -2597,7 +2597,7 @@
     'state': '4.22756',
   })
 # ---
-# name: test_power_strip_gen4[sensor.switch_1_name_energy_returned-entry]
+# name: test_device[power_strip_gen4][sensor.switch_1_name_energy_returned-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2640,7 +2640,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_power_strip_gen4[sensor.switch_1_name_energy_returned-state]
+# name: test_device[power_strip_gen4][sensor.switch_1_name_energy_returned-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -2656,7 +2656,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_power_strip_gen4[sensor.switch_1_name_frequency-entry]
+# name: test_device[power_strip_gen4][sensor.switch_1_name_frequency-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2696,7 +2696,7 @@
     'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
   })
 # ---
-# name: test_power_strip_gen4[sensor.switch_1_name_frequency-state]
+# name: test_device[power_strip_gen4][sensor.switch_1_name_frequency-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'frequency',
@@ -2712,7 +2712,7 @@
     'state': '50.0',
   })
 # ---
-# name: test_power_strip_gen4[sensor.switch_1_name_power-entry]
+# name: test_device[power_strip_gen4][sensor.switch_1_name_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2752,7 +2752,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_power_strip_gen4[sensor.switch_1_name_power-state]
+# name: test_device[power_strip_gen4][sensor.switch_1_name_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -2768,7 +2768,7 @@
     'state': '1.7',
   })
 # ---
-# name: test_power_strip_gen4[sensor.switch_1_name_voltage-entry]
+# name: test_device[power_strip_gen4][sensor.switch_1_name_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2808,7 +2808,7 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_power_strip_gen4[sensor.switch_1_name_voltage-state]
+# name: test_device[power_strip_gen4][sensor.switch_1_name_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
@@ -2824,7 +2824,7 @@
     'state': '232.6',
   })
 # ---
-# name: test_power_strip_gen4[sensor.switch_3_name_current-entry]
+# name: test_device[power_strip_gen4][sensor.switch_3_name_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2864,7 +2864,7 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_power_strip_gen4[sensor.switch_3_name_current-state]
+# name: test_device[power_strip_gen4][sensor.switch_3_name_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
@@ -2880,7 +2880,7 @@
     'state': '0.169',
   })
 # ---
-# name: test_power_strip_gen4[sensor.switch_3_name_energy-entry]
+# name: test_device[power_strip_gen4][sensor.switch_3_name_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2923,7 +2923,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_power_strip_gen4[sensor.switch_3_name_energy-state]
+# name: test_device[power_strip_gen4][sensor.switch_3_name_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -2939,7 +2939,7 @@
     'state': '18.440297',
   })
 # ---
-# name: test_power_strip_gen4[sensor.switch_3_name_energy_consumed-entry]
+# name: test_device[power_strip_gen4][sensor.switch_3_name_energy_consumed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2982,7 +2982,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_power_strip_gen4[sensor.switch_3_name_energy_consumed-state]
+# name: test_device[power_strip_gen4][sensor.switch_3_name_energy_consumed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -2998,7 +2998,7 @@
     'state': '18.440297',
   })
 # ---
-# name: test_power_strip_gen4[sensor.switch_3_name_energy_returned-entry]
+# name: test_device[power_strip_gen4][sensor.switch_3_name_energy_returned-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3041,7 +3041,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_power_strip_gen4[sensor.switch_3_name_energy_returned-state]
+# name: test_device[power_strip_gen4][sensor.switch_3_name_energy_returned-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -3057,7 +3057,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_power_strip_gen4[sensor.switch_3_name_frequency-entry]
+# name: test_device[power_strip_gen4][sensor.switch_3_name_frequency-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3097,7 +3097,7 @@
     'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
   })
 # ---
-# name: test_power_strip_gen4[sensor.switch_3_name_frequency-state]
+# name: test_device[power_strip_gen4][sensor.switch_3_name_frequency-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'frequency',
@@ -3113,7 +3113,7 @@
     'state': '50.0',
   })
 # ---
-# name: test_power_strip_gen4[sensor.switch_3_name_power-entry]
+# name: test_device[power_strip_gen4][sensor.switch_3_name_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3153,7 +3153,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_power_strip_gen4[sensor.switch_3_name_power-state]
+# name: test_device[power_strip_gen4][sensor.switch_3_name_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -3169,7 +3169,7 @@
     'state': '15.4',
   })
 # ---
-# name: test_power_strip_gen4[sensor.switch_3_name_voltage-entry]
+# name: test_device[power_strip_gen4][sensor.switch_3_name_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3209,7 +3209,7 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_power_strip_gen4[sensor.switch_3_name_voltage-state]
+# name: test_device[power_strip_gen4][sensor.switch_3_name_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
@@ -3225,7 +3225,7 @@
     'state': '231.2',
   })
 # ---
-# name: test_power_strip_gen4[sensor.test_name_last_restart-entry]
+# name: test_device[power_strip_gen4][sensor.test_name_last_restart-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3260,7 +3260,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_power_strip_gen4[sensor.test_name_last_restart-state]
+# name: test_device[power_strip_gen4][sensor.test_name_last_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
@@ -3274,7 +3274,7 @@
     'state': '2025-04-02T18:10:04+00:00',
   })
 # ---
-# name: test_power_strip_gen4[sensor.test_name_signal_strength-entry]
+# name: test_device[power_strip_gen4][sensor.test_name_signal_strength-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3311,7 +3311,7 @@
     'unit_of_measurement': 'dBm',
   })
 # ---
-# name: test_power_strip_gen4[sensor.test_name_signal_strength-state]
+# name: test_device[power_strip_gen4][sensor.test_name_signal_strength-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
@@ -3327,7 +3327,7 @@
     'state': '-68',
   })
 # ---
-# name: test_power_strip_gen4[sensor.test_name_switch_0_current-entry]
+# name: test_device[power_strip_gen4][sensor.test_name_switch_0_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3367,7 +3367,7 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_power_strip_gen4[sensor.test_name_switch_0_current-state]
+# name: test_device[power_strip_gen4][sensor.test_name_switch_0_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
@@ -3383,7 +3383,7 @@
     'state': '0.017',
   })
 # ---
-# name: test_power_strip_gen4[sensor.test_name_switch_0_energy-entry]
+# name: test_device[power_strip_gen4][sensor.test_name_switch_0_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3426,7 +3426,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_power_strip_gen4[sensor.test_name_switch_0_energy-state]
+# name: test_device[power_strip_gen4][sensor.test_name_switch_0_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -3442,7 +3442,7 @@
     'state': '6.468282',
   })
 # ---
-# name: test_power_strip_gen4[sensor.test_name_switch_0_energy_consumed-entry]
+# name: test_device[power_strip_gen4][sensor.test_name_switch_0_energy_consumed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3485,7 +3485,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_power_strip_gen4[sensor.test_name_switch_0_energy_consumed-state]
+# name: test_device[power_strip_gen4][sensor.test_name_switch_0_energy_consumed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -3501,7 +3501,7 @@
     'state': '6.468282',
   })
 # ---
-# name: test_power_strip_gen4[sensor.test_name_switch_0_energy_returned-entry]
+# name: test_device[power_strip_gen4][sensor.test_name_switch_0_energy_returned-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3544,7 +3544,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_power_strip_gen4[sensor.test_name_switch_0_energy_returned-state]
+# name: test_device[power_strip_gen4][sensor.test_name_switch_0_energy_returned-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -3560,7 +3560,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_power_strip_gen4[sensor.test_name_switch_0_frequency-entry]
+# name: test_device[power_strip_gen4][sensor.test_name_switch_0_frequency-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3600,7 +3600,7 @@
     'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
   })
 # ---
-# name: test_power_strip_gen4[sensor.test_name_switch_0_frequency-state]
+# name: test_device[power_strip_gen4][sensor.test_name_switch_0_frequency-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'frequency',
@@ -3616,7 +3616,7 @@
     'state': '50.0',
   })
 # ---
-# name: test_power_strip_gen4[sensor.test_name_switch_0_power-entry]
+# name: test_device[power_strip_gen4][sensor.test_name_switch_0_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3656,7 +3656,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_power_strip_gen4[sensor.test_name_switch_0_power-state]
+# name: test_device[power_strip_gen4][sensor.test_name_switch_0_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -3672,7 +3672,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_power_strip_gen4[sensor.test_name_switch_0_voltage-entry]
+# name: test_device[power_strip_gen4][sensor.test_name_switch_0_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3712,7 +3712,7 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_power_strip_gen4[sensor.test_name_switch_0_voltage-state]
+# name: test_device[power_strip_gen4][sensor.test_name_switch_0_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
@@ -3728,7 +3728,7 @@
     'state': '232.5',
   })
 # ---
-# name: test_power_strip_gen4[sensor.test_name_switch_2_current-entry]
+# name: test_device[power_strip_gen4][sensor.test_name_switch_2_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3768,7 +3768,7 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_power_strip_gen4[sensor.test_name_switch_2_current-state]
+# name: test_device[power_strip_gen4][sensor.test_name_switch_2_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
@@ -3784,7 +3784,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_power_strip_gen4[sensor.test_name_switch_2_energy-entry]
+# name: test_device[power_strip_gen4][sensor.test_name_switch_2_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3827,7 +3827,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_power_strip_gen4[sensor.test_name_switch_2_energy-state]
+# name: test_device[power_strip_gen4][sensor.test_name_switch_2_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -3843,7 +3843,7 @@
     'state': '0.33676',
   })
 # ---
-# name: test_power_strip_gen4[sensor.test_name_switch_2_energy_consumed-entry]
+# name: test_device[power_strip_gen4][sensor.test_name_switch_2_energy_consumed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3886,7 +3886,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_power_strip_gen4[sensor.test_name_switch_2_energy_consumed-state]
+# name: test_device[power_strip_gen4][sensor.test_name_switch_2_energy_consumed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -3902,7 +3902,7 @@
     'state': '0.33676',
   })
 # ---
-# name: test_power_strip_gen4[sensor.test_name_switch_2_energy_returned-entry]
+# name: test_device[power_strip_gen4][sensor.test_name_switch_2_energy_returned-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3945,7 +3945,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_power_strip_gen4[sensor.test_name_switch_2_energy_returned-state]
+# name: test_device[power_strip_gen4][sensor.test_name_switch_2_energy_returned-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -3961,7 +3961,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_power_strip_gen4[sensor.test_name_switch_2_frequency-entry]
+# name: test_device[power_strip_gen4][sensor.test_name_switch_2_frequency-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4001,7 +4001,7 @@
     'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
   })
 # ---
-# name: test_power_strip_gen4[sensor.test_name_switch_2_frequency-state]
+# name: test_device[power_strip_gen4][sensor.test_name_switch_2_frequency-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'frequency',
@@ -4017,7 +4017,7 @@
     'state': '50.0',
   })
 # ---
-# name: test_power_strip_gen4[sensor.test_name_switch_2_power-entry]
+# name: test_device[power_strip_gen4][sensor.test_name_switch_2_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4057,7 +4057,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_power_strip_gen4[sensor.test_name_switch_2_power-state]
+# name: test_device[power_strip_gen4][sensor.test_name_switch_2_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -4073,7 +4073,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_power_strip_gen4[sensor.test_name_switch_2_voltage-entry]
+# name: test_device[power_strip_gen4][sensor.test_name_switch_2_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4113,7 +4113,7 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_power_strip_gen4[sensor.test_name_switch_2_voltage-state]
+# name: test_device[power_strip_gen4][sensor.test_name_switch_2_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
@@ -4129,7 +4129,7 @@
     'state': '231.2',
   })
 # ---
-# name: test_power_strip_gen4[switch.switch_1_name-entry]
+# name: test_device[power_strip_gen4][switch.switch_1_name-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4164,7 +4164,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_power_strip_gen4[switch.switch_1_name-state]
+# name: test_device[power_strip_gen4][switch.switch_1_name-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Switch 1 name',
@@ -4177,7 +4177,7 @@
     'state': 'on',
   })
 # ---
-# name: test_power_strip_gen4[switch.switch_3_name-entry]
+# name: test_device[power_strip_gen4][switch.switch_3_name-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4212,7 +4212,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_power_strip_gen4[switch.switch_3_name-state]
+# name: test_device[power_strip_gen4][switch.switch_3_name-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Switch 3 name',
@@ -4225,7 +4225,7 @@
     'state': 'on',
   })
 # ---
-# name: test_power_strip_gen4[switch.test_name_switch_0-entry]
+# name: test_device[power_strip_gen4][switch.test_name_switch_0-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4260,7 +4260,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_power_strip_gen4[switch.test_name_switch_0-state]
+# name: test_device[power_strip_gen4][switch.test_name_switch_0-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test name Switch 0',
@@ -4273,7 +4273,7 @@
     'state': 'on',
   })
 # ---
-# name: test_power_strip_gen4[update.test_name_beta_firmware-entry]
+# name: test_device[power_strip_gen4][update.test_name_beta_firmware-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4308,7 +4308,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_power_strip_gen4[update.test_name_beta_firmware-state]
+# name: test_device[power_strip_gen4][update.test_name_beta_firmware-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'auto_update': False,
@@ -4334,7 +4334,7 @@
     'state': 'off',
   })
 # ---
-# name: test_power_strip_gen4[update.test_name_firmware-entry]
+# name: test_device[power_strip_gen4][update.test_name_firmware-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4369,7 +4369,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_power_strip_gen4[update.test_name_firmware-state]
+# name: test_device[power_strip_gen4][update.test_name_firmware-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'auto_update': False,
@@ -4395,7 +4395,7 @@
     'state': 'off',
   })
 # ---
-# name: test_presence_gen4[binary_sensor.test_name_cloud-entry]
+# name: test_device[presence_gen4][binary_sensor.test_name_cloud-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4430,7 +4430,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_presence_gen4[binary_sensor.test_name_cloud-state]
+# name: test_device[presence_gen4][binary_sensor.test_name_cloud-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'connectivity',
@@ -4444,7 +4444,7 @@
     'state': 'off',
   })
 # ---
-# name: test_presence_gen4[binary_sensor.test_name_my_zone_occupancy-entry]
+# name: test_device[presence_gen4][binary_sensor.test_name_my_zone_occupancy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4479,7 +4479,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_presence_gen4[binary_sensor.test_name_my_zone_occupancy-state]
+# name: test_device[presence_gen4][binary_sensor.test_name_my_zone_occupancy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'occupancy',
@@ -4493,7 +4493,7 @@
     'state': 'on',
   })
 # ---
-# name: test_presence_gen4[binary_sensor.test_name_new_zone_occupancy-entry]
+# name: test_device[presence_gen4][binary_sensor.test_name_new_zone_occupancy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4528,7 +4528,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_presence_gen4[binary_sensor.test_name_new_zone_occupancy-state]
+# name: test_device[presence_gen4][binary_sensor.test_name_new_zone_occupancy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'occupancy',
@@ -4542,7 +4542,7 @@
     'state': 'off',
   })
 # ---
-# name: test_presence_gen4[binary_sensor.test_name_restart_required-entry]
+# name: test_device[presence_gen4][binary_sensor.test_name_restart_required-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4577,7 +4577,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_presence_gen4[binary_sensor.test_name_restart_required-state]
+# name: test_device[presence_gen4][binary_sensor.test_name_restart_required-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -4591,7 +4591,7 @@
     'state': 'off',
   })
 # ---
-# name: test_presence_gen4[binary_sensor.test_name_room_occupancy-entry]
+# name: test_device[presence_gen4][binary_sensor.test_name_room_occupancy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4626,7 +4626,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_presence_gen4[binary_sensor.test_name_room_occupancy-state]
+# name: test_device[presence_gen4][binary_sensor.test_name_room_occupancy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'occupancy',
@@ -4640,7 +4640,7 @@
     'state': 'on',
   })
 # ---
-# name: test_presence_gen4[button.test_name_restart-entry]
+# name: test_device[presence_gen4][button.test_name_restart-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4675,7 +4675,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_presence_gen4[button.test_name_restart-state]
+# name: test_device[presence_gen4][button.test_name_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'restart',
@@ -4689,7 +4689,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_presence_gen4[sensor.test_name_illuminance_level-entry]
+# name: test_device[presence_gen4][sensor.test_name_illuminance_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4730,7 +4730,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_presence_gen4[sensor.test_name_illuminance_level-state]
+# name: test_device[presence_gen4][sensor.test_name_illuminance_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -4749,7 +4749,7 @@
     'state': 'twilight',
   })
 # ---
-# name: test_presence_gen4[sensor.test_name_last_restart-entry]
+# name: test_device[presence_gen4][sensor.test_name_last_restart-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4784,7 +4784,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_presence_gen4[sensor.test_name_last_restart-state]
+# name: test_device[presence_gen4][sensor.test_name_last_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
@@ -4798,7 +4798,7 @@
     'state': '2025-05-26T15:55:14+00:00',
   })
 # ---
-# name: test_presence_gen4[sensor.test_name_my_zone_detected_objects-entry]
+# name: test_device[presence_gen4][sensor.test_name_my_zone_detected_objects-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4835,7 +4835,7 @@
     'unit_of_measurement': 'objects',
   })
 # ---
-# name: test_presence_gen4[sensor.test_name_my_zone_detected_objects-state]
+# name: test_device[presence_gen4][sensor.test_name_my_zone_detected_objects-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test name My zone detected objects',
@@ -4850,7 +4850,7 @@
     'state': '1',
   })
 # ---
-# name: test_presence_gen4[sensor.test_name_new_zone_detected_objects-entry]
+# name: test_device[presence_gen4][sensor.test_name_new_zone_detected_objects-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4887,7 +4887,7 @@
     'unit_of_measurement': 'objects',
   })
 # ---
-# name: test_presence_gen4[sensor.test_name_new_zone_detected_objects-state]
+# name: test_device[presence_gen4][sensor.test_name_new_zone_detected_objects-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test name New zone detected objects',
@@ -4902,7 +4902,7 @@
     'state': '0',
   })
 # ---
-# name: test_presence_gen4[sensor.test_name_room_detected_objects-entry]
+# name: test_device[presence_gen4][sensor.test_name_room_detected_objects-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4939,7 +4939,7 @@
     'unit_of_measurement': 'objects',
   })
 # ---
-# name: test_presence_gen4[sensor.test_name_room_detected_objects-state]
+# name: test_device[presence_gen4][sensor.test_name_room_detected_objects-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test name Room detected objects',
@@ -4954,7 +4954,7 @@
     'state': '1',
   })
 # ---
-# name: test_presence_gen4[sensor.test_name_signal_strength-entry]
+# name: test_device[presence_gen4][sensor.test_name_signal_strength-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4991,7 +4991,7 @@
     'unit_of_measurement': 'dBm',
   })
 # ---
-# name: test_presence_gen4[sensor.test_name_signal_strength-state]
+# name: test_device[presence_gen4][sensor.test_name_signal_strength-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
@@ -5007,7 +5007,7 @@
     'state': '-60',
   })
 # ---
-# name: test_presence_gen4[update.test_name_beta_firmware-entry]
+# name: test_device[presence_gen4][update.test_name_beta_firmware-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5042,7 +5042,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_presence_gen4[update.test_name_beta_firmware-state]
+# name: test_device[presence_gen4][update.test_name_beta_firmware-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'auto_update': False,
@@ -5068,7 +5068,7 @@
     'state': 'off',
   })
 # ---
-# name: test_presence_gen4[update.test_name_firmware-entry]
+# name: test_device[presence_gen4][update.test_name_firmware-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5103,7 +5103,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_presence_gen4[update.test_name_firmware-state]
+# name: test_device[presence_gen4][update.test_name_firmware-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'auto_update': False,
@@ -5116,6 +5116,925 @@
       'latest_version': '1.8.99',
       'release_summary': None,
       'release_url': 'https://shelly-api-docs.shelly.cloud/gen2/changelog/',
+      'skipped_version': None,
+      'supported_features': <UpdateEntityFeature: 5>,
+      'title': None,
+      'update_percentage': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'update.test_name_firmware',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_device[wall_display_xl][binary_sensor.test_name_cloud-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.test_name_cloud',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
+    'original_icon': None,
+    'original_name': 'Cloud',
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '123456789ABC-cloud-cloud',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_device[wall_display_xl][binary_sensor.test_name_cloud-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'friendly_name': 'Test name Cloud',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_name_cloud',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_device[wall_display_xl][binary_sensor.test_name_external_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.test_name_external_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'External power',
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '123456789ABC-devicepower:0-external_power',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_device[wall_display_xl][binary_sensor.test_name_external_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Test name External power',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_name_external_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_device[wall_display_xl][binary_sensor.test_name_input_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.test_name_input_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Input 2',
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '123456789ABC-input:2-input',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_device[wall_display_xl][binary_sensor.test_name_input_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Test name Input 2',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_name_input_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_device[wall_display_xl][binary_sensor.test_name_restart_required-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.test_name_restart_required',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Restart required',
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '123456789ABC-sys-restart',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_device[wall_display_xl][binary_sensor.test_name_restart_required-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Test name Restart required',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_name_restart_required',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_device[wall_display_xl][button.test_name_restart-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.test_name_restart',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
+    'original_icon': None,
+    'original_name': 'Restart',
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '123456789ABC-reboot',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_device[wall_display_xl][button.test_name_restart-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'restart',
+      'friendly_name': 'Test name Restart',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_name_restart',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_device[wall_display_xl][event.test_name_input_0-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.test_name_input_0',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
+    'original_icon': None,
+    'original_name': 'Input 0',
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'input',
+    'unique_id': '123456789ABC-input:0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_device[wall_display_xl][event.test_name_input_0-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'button',
+      'event_type': None,
+      'event_types': list([
+        'btn_down',
+        'btn_up',
+        'double_push',
+        'long_push',
+        'single_push',
+        'triple_push',
+      ]),
+      'friendly_name': 'Test name Input 0',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.test_name_input_0',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_device[wall_display_xl][event.test_name_input_3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.test_name_input_3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
+    'original_icon': None,
+    'original_name': 'Input 3',
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'input',
+    'unique_id': '123456789ABC-input:3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_device[wall_display_xl][event.test_name_input_3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'button',
+      'event_type': None,
+      'event_types': list([
+        'btn_down',
+        'btn_up',
+        'double_push',
+        'long_push',
+        'single_push',
+        'triple_push',
+      ]),
+      'friendly_name': 'Test name Input 3',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.test_name_input_3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_device[wall_display_xl][event.test_name_input_4-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.test_name_input_4',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
+    'original_icon': None,
+    'original_name': 'Input 4',
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'input',
+    'unique_id': '123456789ABC-input:4',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_device[wall_display_xl][event.test_name_input_4-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'button',
+      'event_type': None,
+      'event_types': list([
+        'btn_down',
+        'btn_up',
+        'double_push',
+        'long_push',
+        'single_push',
+        'triple_push',
+      ]),
+      'friendly_name': 'Test name Input 4',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.test_name_input_4',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_device[wall_display_xl][sensor.test_name_humidity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_name_humidity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
+    'original_icon': None,
+    'original_name': 'Humidity',
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '123456789ABC-humidity:0-humidity_0',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_device[wall_display_xl][sensor.test_name_humidity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'humidity',
+      'friendly_name': 'Test name Humidity',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_name_humidity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-2',
+  })
+# ---
+# name: test_device[wall_display_xl][sensor.test_name_illuminance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_name_illuminance',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
+    'original_icon': None,
+    'original_name': 'Illuminance',
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '123456789ABC-illuminance:0-illuminance',
+    'unit_of_measurement': 'lx',
+  })
+# ---
+# name: test_device[wall_display_xl][sensor.test_name_illuminance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'illuminance',
+      'friendly_name': 'Test name Illuminance',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'lx',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_name_illuminance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '120',
+  })
+# ---
+# name: test_device[wall_display_xl][sensor.test_name_illuminance_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'dark',
+        'twilight',
+        'bright',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_name_illuminance_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Illuminance level',
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'illuminance_level',
+    'unique_id': '123456789ABC-illuminance:0-illuminance_illumination',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_device[wall_display_xl][sensor.test_name_illuminance_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Test name Illuminance level',
+      'options': list([
+        'dark',
+        'twilight',
+        'bright',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_name_illuminance_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'twilight',
+  })
+# ---
+# name: test_device[wall_display_xl][sensor.test_name_last_restart-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.test_name_last_restart',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last restart',
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '123456789ABC-sys-uptime',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_device[wall_display_xl][sensor.test_name_last_restart-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Test name Last restart',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_name_last_restart',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-05-15T21:33:41+00:00',
+  })
+# ---
+# name: test_device[wall_display_xl][sensor.test_name_signal_strength-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.test_name_signal_strength',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
+    'original_icon': None,
+    'original_name': 'Signal strength',
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '123456789ABC-wifi-rssi',
+    'unit_of_measurement': 'dBm',
+  })
+# ---
+# name: test_device[wall_display_xl][sensor.test_name_signal_strength-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'signal_strength',
+      'friendly_name': 'Test name Signal strength',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'dBm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_name_signal_strength',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-48',
+  })
+# ---
+# name: test_device[wall_display_xl][sensor.test_name_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_name_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature',
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '123456789ABC-temperature:0-temperature_0',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_device[wall_display_xl][sensor.test_name_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Test name Temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_name_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-275.149993896484',
+  })
+# ---
+# name: test_device[wall_display_xl][switch.test_name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.test_name',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '123456789ABC-switch:0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_device[wall_display_xl][switch.test_name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test name',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.test_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_device[wall_display_xl][update.test_name_beta_firmware-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'update',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'update.test_name_beta_firmware',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
+    'original_icon': None,
+    'original_name': 'Beta firmware',
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <UpdateEntityFeature: 5>,
+    'translation_key': None,
+    'unique_id': '123456789ABC-sys-fwupdate_beta',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_device[wall_display_xl][update.test_name_beta_firmware-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'auto_update': False,
+      'device_class': 'firmware',
+      'display_precision': 0,
+      'entity_picture': 'https://brands.home-assistant.io/_/shelly/icon.png',
+      'friendly_name': 'Test name Beta firmware',
+      'in_progress': False,
+      'installed_version': '2.4.4',
+      'latest_version': '2.4.4',
+      'release_summary': None,
+      'release_url': None,
+      'skipped_version': None,
+      'supported_features': <UpdateEntityFeature: 5>,
+      'title': None,
+      'update_percentage': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'update.test_name_beta_firmware',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_device[wall_display_xl][update.test_name_firmware-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'update',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'update.test_name_firmware',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
+    'original_icon': None,
+    'original_name': 'Firmware',
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <UpdateEntityFeature: 5>,
+    'translation_key': None,
+    'unique_id': '123456789ABC-sys-fwupdate',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_device[wall_display_xl][update.test_name_firmware-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'auto_update': False,
+      'device_class': 'firmware',
+      'display_precision': 0,
+      'entity_picture': 'https://brands.home-assistant.io/_/shelly/icon.png',
+      'friendly_name': 'Test name Firmware',
+      'in_progress': False,
+      'installed_version': '2.4.4',
+      'latest_version': '2.4.4',
+      'release_summary': None,
+      'release_url': None,
       'skipped_version': None,
       'supported_features': <UpdateEntityFeature: 5>,
       'title': None,
@@ -10160,925 +11079,6 @@
       'latest_version': '1.6.1',
       'release_summary': None,
       'release_url': 'https://shelly-api-docs.shelly.cloud/gen2/changelog/',
-      'skipped_version': None,
-      'supported_features': <UpdateEntityFeature: 5>,
-      'title': None,
-      'update_percentage': None,
-    }),
-    'context': <ANY>,
-    'entity_id': 'update.test_name_firmware',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_wall_display_xl[binary_sensor.test_name_cloud-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.test_name_cloud',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
-    'original_icon': None,
-    'original_name': 'Cloud',
-    'platform': 'shelly',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '123456789ABC-cloud-cloud',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_wall_display_xl[binary_sensor.test_name_cloud-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Test name Cloud',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.test_name_cloud',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_wall_display_xl[binary_sensor.test_name_external_power-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.test_name_external_power',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
-    'original_icon': None,
-    'original_name': 'External power',
-    'platform': 'shelly',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '123456789ABC-devicepower:0-external_power',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_wall_display_xl[binary_sensor.test_name_external_power-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Test name External power',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.test_name_external_power',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_wall_display_xl[binary_sensor.test_name_input_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.test_name_input_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
-    'original_icon': None,
-    'original_name': 'Input 2',
-    'platform': 'shelly',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '123456789ABC-input:2-input',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_wall_display_xl[binary_sensor.test_name_input_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Test name Input 2',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.test_name_input_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_wall_display_xl[binary_sensor.test_name_restart_required-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.test_name_restart_required',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-    'original_icon': None,
-    'original_name': 'Restart required',
-    'platform': 'shelly',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '123456789ABC-sys-restart',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_wall_display_xl[binary_sensor.test_name_restart_required-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test name Restart required',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.test_name_restart_required',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_wall_display_xl[button.test_name_restart-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'button',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.test_name_restart',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
-    'original_icon': None,
-    'original_name': 'Restart',
-    'platform': 'shelly',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '123456789ABC-reboot',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_wall_display_xl[button.test_name_restart-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'restart',
-      'friendly_name': 'Test name Restart',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.test_name_restart',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_wall_display_xl[event.test_name_input_0-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'event',
-    'entity_category': None,
-    'entity_id': 'event.test_name_input_0',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
-    'original_icon': None,
-    'original_name': 'Input 0',
-    'platform': 'shelly',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'input',
-    'unique_id': '123456789ABC-input:0',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_wall_display_xl[event.test_name_input_0-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
-        'btn_down',
-        'btn_up',
-        'double_push',
-        'long_push',
-        'single_push',
-        'triple_push',
-      ]),
-      'friendly_name': 'Test name Input 0',
-    }),
-    'context': <ANY>,
-    'entity_id': 'event.test_name_input_0',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_wall_display_xl[event.test_name_input_3-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'event',
-    'entity_category': None,
-    'entity_id': 'event.test_name_input_3',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
-    'original_icon': None,
-    'original_name': 'Input 3',
-    'platform': 'shelly',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'input',
-    'unique_id': '123456789ABC-input:3',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_wall_display_xl[event.test_name_input_3-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
-        'btn_down',
-        'btn_up',
-        'double_push',
-        'long_push',
-        'single_push',
-        'triple_push',
-      ]),
-      'friendly_name': 'Test name Input 3',
-    }),
-    'context': <ANY>,
-    'entity_id': 'event.test_name_input_3',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_wall_display_xl[event.test_name_input_4-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'event',
-    'entity_category': None,
-    'entity_id': 'event.test_name_input_4',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
-    'original_icon': None,
-    'original_name': 'Input 4',
-    'platform': 'shelly',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'input',
-    'unique_id': '123456789ABC-input:4',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_wall_display_xl[event.test_name_input_4-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
-        'btn_down',
-        'btn_up',
-        'double_push',
-        'long_push',
-        'single_push',
-        'triple_push',
-      ]),
-      'friendly_name': 'Test name Input 4',
-    }),
-    'context': <ANY>,
-    'entity_id': 'event.test_name_input_4',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_wall_display_xl[sensor.test_name_humidity-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.test_name_humidity',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
-    'original_icon': None,
-    'original_name': 'Humidity',
-    'platform': 'shelly',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '123456789ABC-humidity:0-humidity_0',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_wall_display_xl[sensor.test_name_humidity-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'humidity',
-      'friendly_name': 'Test name Humidity',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.test_name_humidity',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '-2',
-  })
-# ---
-# name: test_wall_display_xl[sensor.test_name_illuminance-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.test_name_illuminance',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
-    'original_icon': None,
-    'original_name': 'Illuminance',
-    'platform': 'shelly',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '123456789ABC-illuminance:0-illuminance',
-    'unit_of_measurement': 'lx',
-  })
-# ---
-# name: test_wall_display_xl[sensor.test_name_illuminance-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'illuminance',
-      'friendly_name': 'Test name Illuminance',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'lx',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.test_name_illuminance',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '120',
-  })
-# ---
-# name: test_wall_display_xl[sensor.test_name_illuminance_level-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'dark',
-        'twilight',
-        'bright',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.test_name_illuminance_level',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': 'Illuminance level',
-    'platform': 'shelly',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'illuminance_level',
-    'unique_id': '123456789ABC-illuminance:0-illuminance_illumination',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_wall_display_xl[sensor.test_name_illuminance_level-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Test name Illuminance level',
-      'options': list([
-        'dark',
-        'twilight',
-        'bright',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.test_name_illuminance_level',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'twilight',
-  })
-# ---
-# name: test_wall_display_xl[sensor.test_name_last_restart-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.test_name_last_restart',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': None,
-    'original_name': 'Last restart',
-    'platform': 'shelly',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '123456789ABC-sys-uptime',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_wall_display_xl[sensor.test_name_last_restart-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Test name Last restart',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.test_name_last_restart',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2025-05-15T21:33:41+00:00',
-  })
-# ---
-# name: test_wall_display_xl[sensor.test_name_signal_strength-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.test_name_signal_strength',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
-    'original_icon': None,
-    'original_name': 'Signal strength',
-    'platform': 'shelly',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '123456789ABC-wifi-rssi',
-    'unit_of_measurement': 'dBm',
-  })
-# ---
-# name: test_wall_display_xl[sensor.test_name_signal_strength-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Test name Signal strength',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dBm',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.test_name_signal_strength',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '-48',
-  })
-# ---
-# name: test_wall_display_xl[sensor.test_name_temperature-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.test_name_temperature',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Temperature',
-    'platform': 'shelly',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '123456789ABC-temperature:0-temperature_0',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_wall_display_xl[sensor.test_name_temperature-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Test name Temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.test_name_temperature',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '-275.149993896484',
-  })
-# ---
-# name: test_wall_display_xl[switch.test_name-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': None,
-    'entity_id': 'switch.test_name',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'shelly',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '123456789ABC-switch:0',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_wall_display_xl[switch.test_name-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Test name',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.test_name',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_wall_display_xl[update.test_name_beta_firmware-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'update',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'update.test_name_beta_firmware',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
-    'original_icon': None,
-    'original_name': 'Beta firmware',
-    'platform': 'shelly',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': <UpdateEntityFeature: 5>,
-    'translation_key': None,
-    'unique_id': '123456789ABC-sys-fwupdate_beta',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_wall_display_xl[update.test_name_beta_firmware-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'auto_update': False,
-      'device_class': 'firmware',
-      'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/shelly/icon.png',
-      'friendly_name': 'Test name Beta firmware',
-      'in_progress': False,
-      'installed_version': '2.4.4',
-      'latest_version': '2.4.4',
-      'release_summary': None,
-      'release_url': None,
-      'skipped_version': None,
-      'supported_features': <UpdateEntityFeature: 5>,
-      'title': None,
-      'update_percentage': None,
-    }),
-    'context': <ANY>,
-    'entity_id': 'update.test_name_beta_firmware',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_wall_display_xl[update.test_name_firmware-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'update',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'update.test_name_firmware',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
-    'original_icon': None,
-    'original_name': 'Firmware',
-    'platform': 'shelly',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': <UpdateEntityFeature: 5>,
-    'translation_key': None,
-    'unique_id': '123456789ABC-sys-fwupdate',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_wall_display_xl[update.test_name_firmware-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'auto_update': False,
-      'device_class': 'firmware',
-      'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/shelly/icon.png',
-      'friendly_name': 'Test name Firmware',
-      'in_progress': False,
-      'installed_version': '2.4.4',
-      'latest_version': '2.4.4',
-      'release_summary': None,
-      'release_url': None,
       'skipped_version': None,
       'supported_features': <UpdateEntityFeature: 5>,
       'title': None,
