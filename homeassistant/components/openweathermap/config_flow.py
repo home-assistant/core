@@ -24,6 +24,10 @@ from homeassistant.helpers.selector import (
     LanguageSelectorConfig,
     LocationSelector,
     LocationSelectorConfig,
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
 )
 
 from .const import (
@@ -46,7 +50,14 @@ USER_SCHEMA = vol.Schema(
             LanguageSelectorConfig(languages=LANGUAGES, native_name=True)
         ),
         vol.Required(CONF_API_KEY): str,
-        vol.Optional(CONF_MODE, default=DEFAULT_OWM_MODE): vol.In(OWM_MODES),
+        vol.Optional(CONF_MODE, default=DEFAULT_OWM_MODE): SelectSelector(
+            SelectSelectorConfig(
+                options=[
+                    SelectOptionDict(value=k, label=v) for k, v in OWM_MODES.items()
+                ],
+                mode=SelectSelectorMode.DROPDOWN,
+            )
+        ),
     }
 )
 
