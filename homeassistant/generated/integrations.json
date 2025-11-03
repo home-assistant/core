@@ -589,11 +589,6 @@
         }
       }
     },
-    "august_ble": {
-      "name": "August Bluetooth",
-      "integration_type": "virtual",
-      "supported_by": "yalexs_ble"
-    },
     "aurora": {
       "integration_type": "hub",
       "config_flow": true,
@@ -7631,7 +7626,7 @@
       }
     },
     "yale_us_ca": {
-      "name": "Yale (US/Canada)",
+      "name": "Yale August (US/Canada)",
       "integrations": {
         "august": {
           "integration_type": "hub",
@@ -7639,11 +7634,11 @@
           "iot_class": "cloud_push",
           "name": "August"
         },
-        "yalexs_ble": {
-          "integration_type": "hub",
-          "config_flow": true,
-          "iot_class": "local_push",
-          "name": "Yale Access Bluetooth"
+        "august_ble": {
+          "integration_type": "virtual",
+          "config_flow": false,
+          "supported_by": "yalexs_ble",
+          "name": "August Bluetooth"
         }
       }
     },
