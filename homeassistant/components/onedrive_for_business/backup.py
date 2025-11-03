@@ -78,7 +78,7 @@ def handle_backup_errors[_R, **P](
             return await func(self, *args, **kwargs)
         except OneDriveException as err:
             _LOGGER.error(
-                "Error during backup in %s:, message %s",
+                "Error during backup in %s: message %s",
                 func.__name__,
                 err,
             )
