@@ -38,8 +38,8 @@ class EmbyConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle intitial step."""
-        errors = {}
+        """Handle initial step."""
+        errors: dict[str, str] = {}
         if user_input is not None:
             await self.async_set_unique_id(
                 unique_id=f"{user_input[CONF_HOST]}:{int(user_input[CONF_PORT])}"

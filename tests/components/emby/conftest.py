@@ -8,7 +8,7 @@ from homeassistant.components.emby.const import DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, CONF_SSL
 from homeassistant.core import HomeAssistant
 
-from .const import TEST_HOST_VALUE, TEST_API_KEY_VALUE, TEST_PORT_VALUE, TEST_SSL_VALUE
+from .const import TEST_API_KEY_VALUE, TEST_HOST_VALUE, TEST_PORT_VALUE, TEST_SSL_VALUE
 
 from tests.common import MockConfigEntry
 
