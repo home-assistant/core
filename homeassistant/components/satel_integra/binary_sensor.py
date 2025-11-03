@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from satel_integra.satel_integra import AsyncSatel
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -40,9 +42,9 @@ async def async_setup_entry(
     )
 
     for subentry in zone_subentries:
-        zone_num = subentry.data[CONF_ZONE_NUMBER]
-        zone_type = subentry.data[CONF_ZONE_TYPE]
-        zone_name = subentry.data[CONF_NAME]
+        zone_num: int = subentry.data[CONF_ZONE_NUMBER]
+        zone_type: BinarySensorDeviceClass = subentry.data[CONF_ZONE_TYPE]
+        zone_name: str = subentry.data[CONF_NAME]
 
         async_add_entities(
             [
@@ -65,9 +67,9 @@ async def async_setup_entry(
     )
 
     for subentry in output_subentries:
-        output_num = subentry.data[CONF_OUTPUT_NUMBER]
-        ouput_type = subentry.data[CONF_ZONE_TYPE]
-        output_name = subentry.data[CONF_NAME]
+        output_num: int = subentry.data[CONF_OUTPUT_NUMBER]
+        ouput_type: BinarySensorDeviceClass = subentry.data[CONF_ZONE_TYPE]
+        output_name: str = subentry.data[CONF_NAME]
 
         async_add_entities(
             [
@@ -92,14 +94,14 @@ class SatelIntegraBinarySensor(BinarySensorEntity):
 
     def __init__(
         self,
-        controller,
-        device_number,
-        device_name,
-        zone_type,
-        sensor_type,
-        react_to_signal,
-        config_entry_id,
-    ):
+        controller: AsyncSatel,
+        device_number: int,
+        device_name: str,
+        zone_type: BinarySensorDeviceClass,
+        sensor_type: str,
+        react_to_signal: str,
+        config_entry_id: str,
+    ) -> None:
         """Initialize the binary_sensor."""
         self._device_number = device_number
         self._attr_unique_id = f"{config_entry_id}_{sensor_type}_{device_number}"
@@ -127,7 +129,7 @@ class SatelIntegraBinarySensor(BinarySensorEntity):
         )
 
     @property
-    def name(self):
+    def name(self) -> str | None:
         """Return the name of the entity."""
         return self._name
 
@@ -139,12 +141,12 @@ class SatelIntegraBinarySensor(BinarySensorEntity):
         return None
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return true if sensor is on."""
         return self._state == 1
 
     @property
-    def device_class(self):
+    def device_class(self) -> BinarySensorDeviceClass | None:
         """Return the class of this sensor, from DEVICE_CLASSES."""
         return self._zone_type
 
