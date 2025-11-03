@@ -76,7 +76,7 @@ def mock_config_entry(device_info: dict[str, Any]) -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_migration_config_entry(device_info: dict[str, Any]) -> MockConfigEntry:
+def mock_config_entry_v1_1(device_info: dict[str, Any]) -> MockConfigEntry:
     """Return a mocked config entry for migration testing with version 1.1."""
     return MockConfigEntry(
         title="Pool Device",
