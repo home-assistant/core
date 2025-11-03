@@ -8,7 +8,7 @@ from .coordinator import BrotherDataUpdateCoordinator
 
 
 class BrotherPrinterEntity(CoordinatorEntity[BrotherDataUpdateCoordinator]):
-    """Define an Brother Printer entity."""
+    """Define a Brother Printer entity."""
 
     _attr_has_entity_name = True
 
