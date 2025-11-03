@@ -38,11 +38,11 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "type": "Type of the printer"
+          "type": "Printer type"
         },
         "data_description": {
           "host": "The hostname or IP address of the Brother printer to control.",
-          "type": "Brother printer type: ink or laser."
+          "type": "The type of the Brother printer."
         },
         "sections": {
           "advanced_settings": {
@@ -209,6 +209,14 @@
     },
     "update_error": {
       "message": "An error occurred while retrieving data from the {device} printer: {error}"
+    }
+  },
+  "selector": {
+    "printer_type": {
+      "options": {
+        "ink": "ink",
+        "laser": "laser"
+      }
     }
   }
 }
