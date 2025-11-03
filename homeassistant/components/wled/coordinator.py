@@ -26,18 +26,20 @@ from .const import (
     SCAN_INTERVAL,
 )
 
+type WLEDConfigEntry = ConfigEntry[WLEDDataUpdateCoordinator]
+
 
 class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
     """Class to manage fetching WLED data from single endpoint."""
 
     keep_main_light: bool
-    config_entry: ConfigEntry
+    config_entry: WLEDConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
         *,
-        entry: ConfigEntry,
+        entry: WLEDConfigEntry,
     ) -> None:
         """Initialize global WLED data updater."""
         self.keep_main_light = entry.options.get(
