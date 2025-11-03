@@ -42,7 +42,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from .const import CONF_ADVANCED_OPTIONS, CONF_COLUMN_NAME, CONF_QUERY, DOMAIN
 from .util import (
     async_create_sessionmaker,
-    ensure_serializable,
+    convert_value,
     generate_lambda_stmt,
     redact_credentials,
     resolve_db_url,
@@ -252,7 +252,7 @@ class SQLSensor(ManualTriggerSensorEntity):
             _LOGGER.debug("Query %s result in %s", self._query, row_items)
             data = row[self._column_name]
             for key, value in row_items:
-                self._attr_extra_state_attributes[key] = ensure_serializable(value)
+                self._attr_extra_state_attributes[key] = convert_value(value)
 
         if data is not None and isinstance(data, (bytes, bytearray)):
             data = f"0x{data.hex()}"

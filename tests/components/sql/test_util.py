@@ -1,6 +1,6 @@
 """Test the sql utils."""
 
-from datetime import date
+from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
@@ -8,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant.components.recorder import Recorder, get_instance
 from homeassistant.components.sql.util import (
-    ensure_serializable,
+    convert_value,
     resolve_db_url,
     validate_sql_select,
 )
@@ -78,15 +78,16 @@ async def test_invalid_sql_queries(
     [
         (Decimal("199.99"), 199.99),
         (date(2023, 1, 15), "2023-01-15"),
+        (datetime(2023, 1, 15, 12, 30, 45, tzinfo=UTC), "2023-01-15T12:30:45+00:00"),
         (b"\xde\xad\xbe\xef", "0xdeadbeef"),
         ("deadbeef", "deadbeef"),
         (199.99, 199.99),
         (69, 69),
     ],
 )
-async def test_data_conversion(
-    input: Decimal | date | bytes | str | float,
+async def test_value_conversion(
+    input: Decimal | date | datetime | bytes | str | float,
     expected_output: str | float,
 ) -> None:
-    """Test data conversion to serializable type."""
-    assert ensure_serializable(input) == expected_output
+    """Test value conversion."""
+    assert convert_value(input) == expected_output

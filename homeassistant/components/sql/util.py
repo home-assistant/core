@@ -259,8 +259,8 @@ def generate_lambda_stmt(query: str) -> StatementLambdaElement:
     return lambda_stmt(lambda: text, lambda_cache=_SQL_LAMBDA_CACHE)
 
 
-def ensure_serializable(value: Any) -> Any:
-    """Ensure value is serializable."""
+def convert_value(value: Any) -> Any:
+    """Convert value."""
     match value:
         case Decimal():
             return float(value)
