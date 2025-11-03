@@ -8,22 +8,23 @@ from http import HTTPStatus
 import logging
 
 from httpx import HTTPStatusError, RequestError, TimeoutException
-from xbox.webapi.api.client import XboxLiveClient
-from xbox.webapi.api.provider.catalog.const import SYSTEM_PFN_ID_MAP
-from xbox.webapi.api.provider.catalog.models import AlternateIdType, Product
-from xbox.webapi.api.provider.people.models import Person
-from xbox.webapi.api.provider.smartglass.models import (
+from pythonxbox.api.client import XboxLiveClient
+from pythonxbox.api.provider.catalog.const import SYSTEM_PFN_ID_MAP
+from pythonxbox.api.provider.catalog.models import AlternateIdType, Product
+from pythonxbox.api.provider.people.models import Person
+from pythonxbox.api.provider.smartglass.models import (
     SmartglassConsoleList,
     SmartglassConsoleStatus,
 )
-from xbox.webapi.api.provider.titlehub.models import Title
-from xbox.webapi.common.signed_session import SignedSession
+from pythonxbox.api.provider.titlehub.models import Title
+from pythonxbox.common.signed_session import SignedSession
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow, device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util.ssl import get_default_context
 
 from . import api
 from .const import DOMAIN
@@ -90,7 +91,7 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
         session = config_entry_oauth2_flow.OAuth2Session(
             self.hass, self.config_entry, implementation
         )
-        signed_session = await self.hass.async_add_executor_job(SignedSession)
+        signed_session = SignedSession(ssl_context=get_default_context())
         auth = api.AsyncConfigEntryAuth(signed_session, session)
         self.client = XboxLiveClient(auth)
 
@@ -183,7 +184,7 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
 
         # Update user presence
         try:
-            batch = await self.client.people.get_friends_own_batch([self.client.xuid])
+            batch = await self.client.people.get_friends_by_xuid(self.client.xuid)
             friends = await self.client.people.get_friends_own()
         except TimeoutException as e:
             raise UpdateFailed(
