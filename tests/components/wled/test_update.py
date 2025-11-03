@@ -151,7 +151,7 @@ async def test_update_error(
 
     assert (state := hass.states.get("update.wled_rgb_light_firmware"))
     assert state.state == STATE_UNAVAILABLE
-    assert "Invalid response from API" in caplog.text
+    assert "Invalid response from WLED API" in caplog.text
 
 
 async def test_update_stay_stable(

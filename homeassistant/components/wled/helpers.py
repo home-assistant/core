@@ -9,6 +9,7 @@ from wled import WLEDConnectionError, WLEDError
 
 from homeassistant.exceptions import HomeAssistantError
 
+from .const import DOMAIN
 from .entity import WLEDEntity
 
 
@@ -29,10 +30,17 @@ def wled_exception_handler[_WLEDEntityT: WLEDEntity, **_P](
         except WLEDConnectionError as error:
             self.coordinator.last_update_success = False
             self.coordinator.async_update_listeners()
-            raise HomeAssistantError("Error communicating with WLED API") from error
-
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="connection_error",
+                translation_placeholders={"error": str(error)},
+            ) from error
         except WLEDError as error:
-            raise HomeAssistantError("Invalid response from WLED API") from error
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_response_wled_error",
+                translation_placeholders={"error": str(error)},
+            ) from error
 
     return handler
 
