@@ -1,0 +1,5 @@
+{
+  "domain": "nintendo",
+  "name": "Nintendo",
+  "integrations": ["nintendo_parental_controls"]
+}
