@@ -19,13 +19,12 @@ from homeassistant.components.sensor import (
 from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import BrotherConfigEntry, BrotherDataUpdateCoordinator
+from .entity import BrotherPrinterEntity
 
 ATTR_COUNTER = "counter"
 ATTR_REMAINING_PAGES = "remaining_pages"
@@ -330,12 +329,9 @@ async def async_setup_entry(
     )
 
 
-class BrotherPrinterSensor(
-    CoordinatorEntity[BrotherDataUpdateCoordinator], SensorEntity
-):
+class BrotherPrinterSensor(BrotherPrinterEntity, SensorEntity):
     """Define an Brother Printer sensor."""
 
-    _attr_has_entity_name = True
     entity_description: BrotherSensorEntityDescription
 
     def __init__(
@@ -345,16 +341,7 @@ class BrotherPrinterSensor(
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
-        self._attr_device_info = DeviceInfo(
-            configuration_url=f"http://{coordinator.brother.host}/",
-            identifiers={(DOMAIN, coordinator.brother.serial)},
-            connections={(CONNECTION_NETWORK_MAC, coordinator.brother.mac)},
-            serial_number=coordinator.brother.serial,
-            manufacturer="Brother",
-            model=coordinator.brother.model,
-            name=coordinator.brother.model,
-            sw_version=coordinator.brother.firmware,
-        )
+
         self._attr_native_value = description.value(coordinator.data)
         self._attr_unique_id = f"{coordinator.brother.serial.lower()}_{description.key}"
         self.entity_description = description
