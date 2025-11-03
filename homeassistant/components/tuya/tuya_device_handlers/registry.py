@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Self
 from tuya_sharing import CustomerDevice
 
 if TYPE_CHECKING:
-    from .device_quirk import TuyaDeviceQuirk
+    from .base_quirk import TuyaDeviceQuirk
 
 _LOGGER = logging.getLogger(__name__)
 

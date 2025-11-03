@@ -8,15 +8,13 @@ import pytest
 
 from homeassistant.components.cover import CoverDeviceClass
 from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.components.tuya.xternal_tuya_device_quirks import (
-    register_tuya_quirks,
-)
-from homeassistant.components.tuya.xternal_tuya_quirks import (
+from homeassistant.components.tuya.tuya_device_handlers import (
     TUYA_QUIRKS_REGISTRY,
     QuirksRegistry,
     TuyaDeviceQuirk,
+    register_tuya_quirks,
 )
-from homeassistant.components.tuya.xternal_tuya_quirks.device_quirk import (
+from homeassistant.components.tuya.tuya_device_handlers.base_quirk import (
     BaseTuyaDefinition,
 )
 from homeassistant.const import EntityCategory, Platform

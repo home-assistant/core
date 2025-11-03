@@ -3,24 +3,18 @@
 from __future__ import annotations
 
 import base64
-from collections.abc import Callable
 from dataclasses import dataclass
 import json
 import struct
-from typing import Any, Self
-
-from tuya_sharing import CustomerDevice
+from typing import Self
 
 from .const import DPCode
+from .tuya_device_handlers.conversion import TuyaIntegerDefinition
 from .util import remap_value
-
-type StateConversionFunction = Callable[
-    [CustomerDevice, EnumTypeData | IntegerTypeData | None, Any], Any
-]
 
 
 @dataclass
-class IntegerTypeData:
+class IntegerTypeData(TuyaIntegerDefinition):
     """Integer Type Data."""
 
     dpcode: DPCode

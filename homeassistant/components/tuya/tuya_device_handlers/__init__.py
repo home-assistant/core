@@ -1,4 +1,4 @@
-"""Quirks for Tuya."""
+"""Tuya device handler."""
 
 from __future__ import annotations
 
@@ -8,28 +8,53 @@ import pathlib
 import pkgutil
 import sys
 
-from ..xternal_tuya_quirks import TUYA_QUIRKS_REGISTRY
+from .base_quirk import (
+    TuyaClimateDefinition,
+    TuyaCoverDefinition,
+    TuyaDeviceQuirk,
+    TuyaSelectDefinition,
+    TuyaSensorDefinition,
+    TuyaSwitchDefinition,
+)
+from .registry import QuirksRegistry
+from .utils import parse_enum
 
 _LOGGER = logging.getLogger(__name__)
 
+__all__ = [
+    "TUYA_QUIRKS_REGISTRY",
+    "QuirksRegistry",
+    "TuyaClimateDefinition",
+    "TuyaCoverDefinition",
+    "TuyaDeviceQuirk",
+    "TuyaSelectDefinition",
+    "TuyaSensorDefinition",
+    "TuyaSwitchDefinition",
+    "parse_enum",
+]
+
+TUYA_QUIRKS_REGISTRY = QuirksRegistry()
+
 
 def register_tuya_quirks(custom_quirks_path: str | None = None) -> None:
-    """Register all quirks with xternal_tuya_quirks.
+    """Register all available quirks.
 
     - remove custom quirks from `custom_quirks_path`
-    - add quirks from `xternal_tuya_device_quirks`
+    - add quirks from `devices` subfolder
     - add custom quirks from `custom_quirks_path`
     """
 
     if custom_quirks_path is not None:
         TUYA_QUIRKS_REGISTRY.purge_custom_quirks(custom_quirks_path)
 
-    # Import all quirks in the `xternal_tuya_device_quirks` package first
+    # Import all quirks in the `tuya_device_handlers` package first
+    from . import devices  # noqa: PLC0415
+
     for _importer, modname, _ispkg in pkgutil.walk_packages(
-        path=__path__,
-        prefix=__name__ + ".",
+        path=devices.__path__,
+        prefix=devices.__name__ + ".",
     ):
-        _LOGGER.debug("Loading quirks module %r", modname)
+        _LOGGER.warning("Loading quirks module %r", modname)
         importlib.import_module(modname)
 
     if custom_quirks_path is None:

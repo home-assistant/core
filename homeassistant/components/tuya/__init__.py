@@ -31,7 +31,7 @@ from .const import (
     TUYA_DISCOVERY_NEW,
     TUYA_HA_SIGNAL_UPDATE_ENTITY,
 )
-from .xternal_tuya_device_quirks import register_tuya_quirks
+from .tuya_device_handlers import register_tuya_quirks
 
 # Suppress logs from the library, it logs unneeded on error
 logging.getLogger("tuya_sharing").setLevel(logging.CRITICAL)

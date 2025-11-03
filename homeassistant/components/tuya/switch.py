@@ -27,7 +27,7 @@ from homeassistant.helpers.issue_registry import (
 from . import TuyaConfigEntry
 from .const import DOMAIN, TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
-from .xternal_tuya_quirks import TUYA_QUIRKS_REGISTRY, TuyaSwitchDefinition, parse_enum
+from .tuya_device_handlers import TUYA_QUIRKS_REGISTRY, TuyaSwitchDefinition, parse_enum
 
 
 @dataclass(frozen=True, kw_only=True)

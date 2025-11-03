@@ -1,4 +1,4 @@
-"""Quirks registry."""
+"""Base quirk definition."""
 
 from __future__ import annotations
 
@@ -7,8 +7,8 @@ import inspect
 import pathlib
 from typing import TYPE_CHECKING, Self
 
-from ..const import DPCode
-from ..models import StateConversionFunction
+from .const import TuyaDeviceCategory, TuyaDPCode
+from .conversion import TuyaIntegerConversionFunction
 from .homeassistant import (
     TuyaClimateHVACMode,
     TuyaCoverDeviceClass,
@@ -38,9 +38,9 @@ class TuyaClimateDefinition(BaseTuyaDefinition):
 
     switch_only_hvac_mode: TuyaClimateHVACMode
 
-    current_temperature_state_conversion: StateConversionFunction | None = None
-    target_temperature_state_conversion: StateConversionFunction | None = None
-    target_temperature_command_conversion: StateConversionFunction | None = None
+    current_temperature_state_conversion: TuyaIntegerConversionFunction | None = None
+    target_temperature_state_conversion: TuyaIntegerConversionFunction | None = None
+    target_temperature_command_conversion: TuyaIntegerConversionFunction | None = None
 
 
 @dataclass(kw_only=True)
@@ -77,8 +77,8 @@ class TuyaDeviceQuirk:
     def __init__(self) -> None:
         """Initialize the quirk."""
         self._applies_to: list[tuple[str, str]] = []
-        self.cover_definitions: list[TuyaCoverDefinition] = []
         self.climate_definitions: list[TuyaClimateDefinition] = []
+        self.cover_definitions: list[TuyaCoverDefinition] = []
         self.select_definitions: list[TuyaSelectDefinition] = []
         self.sensor_definitions: list[TuyaSensorDefinition] = []
         self.switch_definitions: list[TuyaSwitchDefinition] = []
@@ -92,7 +92,7 @@ class TuyaDeviceQuirk:
         self.quirk_file = pathlib.Path(caller.f_code.co_filename)
         self.quirk_file_line = caller.f_lineno
 
-    def applies_to(self, *, category: str, product_id: str) -> Self:
+    def applies_to(self, *, category: TuyaDeviceCategory, product_id: str) -> Self:
         """Set the device type the quirk applies to."""
         self._applies_to.append((category, product_id))
         return self
@@ -108,9 +108,12 @@ class TuyaDeviceQuirk:
         key: str,
         # Climate specific
         switch_only_hvac_mode: TuyaClimateHVACMode,
-        current_temperature_state_conversion: StateConversionFunction | None = None,
-        target_temperature_state_conversion: StateConversionFunction | None = None,
-        target_temperature_command_conversion: StateConversionFunction | None = None,
+        current_temperature_state_conversion: TuyaIntegerConversionFunction
+        | None = None,
+        target_temperature_state_conversion: TuyaIntegerConversionFunction
+        | None = None,
+        target_temperature_command_conversion: TuyaIntegerConversionFunction
+        | None = None,
     ) -> Self:
         """Add climate definition."""
         self.climate_definitions.append(
@@ -127,14 +130,14 @@ class TuyaDeviceQuirk:
     def add_cover(
         self,
         *,
-        key: DPCode,
+        key: TuyaDPCode,
         translation_key: str,
         translation_string: str,
         device_class: TuyaCoverDeviceClass | None = None,
         # Cover specific
-        current_state_dp_code: str | None = None,
-        current_position_dp_code: str | None = None,
-        set_position_dp_code: str | None = None,
+        current_state_dp_code: TuyaDPCode | None = None,
+        current_position_dp_code: TuyaDPCode | None = None,
+        set_position_dp_code: TuyaDPCode | None = None,
     ) -> Self:
         """Add cover definition."""
         self.cover_definitions.append(
@@ -153,7 +156,7 @@ class TuyaDeviceQuirk:
     def add_select(
         self,
         *,
-        key: DPCode,
+        key: TuyaDPCode,
         translation_key: str,
         translation_string: str,
         entity_category: TuyaEntityCategory | None = None,
@@ -175,7 +178,7 @@ class TuyaDeviceQuirk:
     def add_sensor(
         self,
         *,
-        key: DPCode,
+        key: TuyaDPCode,
         translation_key: str,
         translation_string: str,
         device_class: TuyaSensorDeviceClass | None = None,
@@ -197,7 +200,7 @@ class TuyaDeviceQuirk:
     def add_switch(
         self,
         *,
-        key: DPCode,
+        key: TuyaDPCode,
         translation_key: str,
         translation_string: str,
         entity_category: TuyaEntityCategory | None = None,

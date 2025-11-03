@@ -26,9 +26,10 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, DPType
 from .entity import TuyaEntity
-from .models import IntegerTypeData, StateConversionFunction
+from .models import IntegerTypeData
+from .tuya_device_handlers import TUYA_QUIRKS_REGISTRY, TuyaClimateDefinition
+from .tuya_device_handlers.conversion import TuyaIntegerConversionFunction
 from .util import get_dpcode
-from .xternal_tuya_quirks import TUYA_QUIRKS_REGISTRY, TuyaClimateDefinition
 
 TUYA_HVAC_TO_HA = {
     "auto": HVACMode.HEAT_COOL,
@@ -47,9 +48,9 @@ class TuyaClimateEntityDescription(ClimateEntityDescription):
     """Describe an Tuya climate entity."""
 
     switch_only_hvac_mode: HVACMode
-    current_temperature_state_conversion: StateConversionFunction | None = None
-    target_temperature_state_conversion: StateConversionFunction | None = None
-    target_temperature_command_conversion: StateConversionFunction | None = None
+    current_temperature_state_conversion: TuyaIntegerConversionFunction | None = None
+    target_temperature_state_conversion: TuyaIntegerConversionFunction | None = None
+    target_temperature_command_conversion: TuyaIntegerConversionFunction | None = None
 
 
 CLIMATE_DESCRIPTIONS: dict[DeviceCategory, TuyaClimateEntityDescription] = {
@@ -383,7 +384,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
 
         if convert := self.entity_description.target_temperature_command_conversion:
             value = convert(
-                self.device, self._current_temperature, kwargs[ATTR_TEMPERATURE]
+                self.device, self._set_temperature, kwargs[ATTR_TEMPERATURE]
             )
         else:
             value = round(
