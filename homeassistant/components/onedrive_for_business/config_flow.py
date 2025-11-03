@@ -38,6 +38,11 @@ class OneDriveForBusinessConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         """Extra data that needs to be appended to the authorize url."""
         return {"scope": " ".join(OAUTH_SCOPES)}
 
+    def __init__(self) -> None:
+        """Initialize the OneDrive config flow."""
+        super().__init__()
+        self.step_data: dict[str, Any] = {}  # will contain "auth_implementation"
+
     async def async_oauth_create_entry(
         self,
         data: dict[str, Any],
@@ -52,7 +57,7 @@ class OneDriveForBusinessConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         )
 
         try:
-            approot = await self.client.get_approot()
+            self.approot = await self.client.get_approot()
         except OneDriveException:
             self.logger.exception("Failed to connect to OneDrive")
             return self.async_abort(reason="connection_error")
@@ -60,8 +65,10 @@ class OneDriveForBusinessConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             self.logger.exception("Unknown error")
             return self.async_abort(reason="unknown")
 
-        await self.async_set_unique_id(approot.parent_reference.drive_id)
+        await self.async_set_unique_id(self.approot.parent_reference.drive_id)
         self._abort_if_unique_id_configured()
+
+        self.step_data = data
 
         return await self.async_step_select_folder()
 
@@ -89,13 +96,14 @@ class OneDriveForBusinessConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 return self.async_create_entry(
                     title=title,
                     data={
+                        **self.step_data,
                         CONF_FOLDER_ID: folder.id,
                         CONF_FOLDER_PATH: user_input[CONF_FOLDER_PATH],
                     },
                 )
 
         return self.async_show_form(
-            step_id="folder_name",
+            step_id="select_folder",
             data_schema=FOLDER_NAME_SCHEMA,
             errors=errors,
         )

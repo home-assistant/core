@@ -1,4 +1,4 @@
-"""Support for OneDrive backup."""
+"""Support for OneDrive for Business backup."""
 
 from __future__ import annotations
 

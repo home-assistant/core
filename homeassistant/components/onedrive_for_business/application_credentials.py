@@ -1,4 +1,4 @@
-"""Application credentials platform for the OneDrive integration."""
+"""Application credentials platform for the OneDrive for Business integration."""
 
 from homeassistant.components.application_credentials import AuthorizationServer
 from homeassistant.core import HomeAssistant
