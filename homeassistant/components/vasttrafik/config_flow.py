@@ -363,8 +363,6 @@ class VasttrafikSubentryFlow(ConfigSubentryFlow):
             errors=errors,
             description_placeholders={
                 "station_name": self._selected_station,
-                "lines_help": "Enter line numbers separated by commas (e.g. 1, 2, 55)",
-                "tracks_help": "Enter track/platform numbers separated by commas (e.g. A, B, 1, 2)",
             },
         )
 
