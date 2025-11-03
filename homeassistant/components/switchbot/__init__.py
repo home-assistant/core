@@ -164,9 +164,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) ->
     connectable = switchbot_model in CONNECTABLE_SUPPORTED_MODEL_TYPES
     address: str = entry.data[CONF_ADDRESS]
 
-    updated_options = dict(entry.options)
-    if CONF_RETRY_COUNT not in updated_options:
-        updated_options[CONF_RETRY_COUNT] = DEFAULT_RETRY_COUNT
+    updated_options = {CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT, **entry.options}
     if (
         sensor_type == SupportedModels.CURTAIN
         and CONF_CURTAIN_SLOW_MODE not in updated_options

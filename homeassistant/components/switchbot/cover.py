@@ -70,6 +70,7 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         super().__init__(coordinator)
         self._attr_is_closed = None
 
+    @callback
     def _use_slow_mode(self) -> bool:
         """Return if the curtain should operate in slow mode."""
         return self.coordinator.config_entry.options.get(
