@@ -18,8 +18,8 @@ from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from . import WLEDConfigEntry
 from .const import CONF_KEEP_MAIN_LIGHT, DEFAULT_KEEP_MAIN_LIGHT, DOMAIN
+from .coordinator import WLEDConfigEntry
 
 
 class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
