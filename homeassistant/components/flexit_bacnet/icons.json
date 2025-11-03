@@ -1,5 +1,19 @@
 {
   "entity": {
+    "climate": {
+      "flexit_bacnet": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "away": "mdi:home-export-outline",
+              "fireplace": "mdi:fireplace",
+              "high": "mdi:fan-speed-3",
+              "home": "mdi:home"
+            }
+          }
+        }
+      }
+    },
     "number": {
       "away_extract_fan_setpoint": {
         "default": "mdi:fan-minus"
@@ -46,12 +60,6 @@
         "default": "mdi:radiator",
         "state": {
           "off": "mdi:radiator-off"
-        }
-      },
-      "fireplace_mode": {
-        "default": "mdi:fireplace",
-        "state": {
-          "off": "mdi:fireplace-off"
         }
       }
     }

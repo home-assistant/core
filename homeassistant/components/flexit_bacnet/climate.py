@@ -4,6 +4,7 @@ import asyncio.exceptions
 from typing import Any
 
 from flexit_bacnet import (
+    OPERATION_MODE_OFF,
     VENTILATION_MODE_AWAY,
     VENTILATION_MODE_HOME,
     VENTILATION_MODE_STOP,
@@ -12,7 +13,6 @@ from flexit_bacnet.bacnet import DecodingError
 
 from homeassistant.components.climate import (
     PRESET_AWAY,
-    PRESET_BOOST,
     PRESET_HOME,
     ClimateEntity,
     ClimateEntityFeature,
@@ -28,8 +28,10 @@ from .const import (
     DOMAIN,
     MAX_TEMP,
     MIN_TEMP,
+    OPERATION_TO_PRESET_MODE_MAP,
+    PRESET_FIREPLACE,
+    PRESET_HIGH,
     PRESET_TO_VENTILATION_MODE_MAP,
-    VENTILATION_TO_PRESET_MODE_MAP,
 )
 from .coordinator import FlexitConfigEntry, FlexitCoordinator
 from .entity import FlexitEntity
@@ -51,6 +53,7 @@ class FlexitClimateEntity(FlexitEntity, ClimateEntity):
     """Flexit air handling unit."""
 
     _attr_name = None
+    _attr_translation_key = "flexit_bacnet"
 
     _attr_hvac_modes = [
         HVACMode.OFF,
@@ -60,7 +63,8 @@ class FlexitClimateEntity(FlexitEntity, ClimateEntity):
     _attr_preset_modes = [
         PRESET_AWAY,
         PRESET_HOME,
-        PRESET_BOOST,
+        PRESET_HIGH,
+        PRESET_FIREPLACE,
     ]
 
     _attr_supported_features = (
@@ -127,20 +131,24 @@ class FlexitClimateEntity(FlexitEntity, ClimateEntity):
 
         Requires ClimateEntityFeature.PRESET_MODE.
         """
-        return VENTILATION_TO_PRESET_MODE_MAP[self.device.ventilation_mode]
+        return OPERATION_TO_PRESET_MODE_MAP.get(self.device.operation_mode, PRESET_HOME)
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        ventilation_mode = PRESET_TO_VENTILATION_MODE_MAP[preset_mode]
-
         try:
-            await self.device.set_ventilation_mode(ventilation_mode)
+            if preset_mode == PRESET_FIREPLACE:
+                # Use trigger method for fireplace mode
+                await self.device.trigger_fireplace_mode()
+            else:
+                # Use ventilation mode for standard modes
+                ventilation_mode = PRESET_TO_VENTILATION_MODE_MAP[preset_mode]
+                await self.device.set_ventilation_mode(ventilation_mode)
         except (asyncio.exceptions.TimeoutError, ConnectionError, DecodingError) as exc:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="set_preset_mode",
                 translation_placeholders={
-                    "preset": str(ventilation_mode),
+                    "preset": preset_mode,
                 },
             ) from exc
         finally:
@@ -149,7 +157,7 @@ class FlexitClimateEntity(FlexitEntity, ClimateEntity):
     @property
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
-        if self.device.ventilation_mode == VENTILATION_MODE_STOP:
+        if self.device.operation_mode == OPERATION_MODE_OFF:
             return HVACMode.OFF
 
         return HVACMode.FAN_ONLY

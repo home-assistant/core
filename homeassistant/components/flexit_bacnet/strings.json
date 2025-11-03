@@ -26,6 +26,20 @@
         "name": "Air filter polluted"
       }
     },
+    "climate": {
+      "flexit_bacnet": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "away": "Away",
+              "fireplace": "Fireplace",
+              "high": "High",
+              "home": "Home"
+            }
+          }
+        }
+      }
+    },
     "number": {
       "away_extract_fan_setpoint": {
         "name": "Away extract fan setpoint"
@@ -114,9 +128,6 @@
       },
       "electric_heater": {
         "name": "Electric heater"
-      },
-      "fireplace_mode": {
-        "name": "Fireplace mode"
       }
     }
   },

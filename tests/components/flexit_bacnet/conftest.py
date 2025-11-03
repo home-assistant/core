@@ -49,6 +49,7 @@ def mock_flexit_bacnet() -> Generator[AsyncMock]:
         flexit_bacnet.air_temp_setpoint_away = 18.0
         flexit_bacnet.air_temp_setpoint_home = 22.0
         flexit_bacnet.ventilation_mode = 4
+        flexit_bacnet.operation_mode = 4  # HIGH mode
         flexit_bacnet.air_filter_operating_time = 8000
         flexit_bacnet.outside_air_temperature = -8.6
         flexit_bacnet.supply_air_temperature = 19.1
