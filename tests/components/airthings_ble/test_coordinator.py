@@ -40,16 +40,42 @@ async def test_scan_interval_adjustment(
         entry=MockConfigEntry(
             domain=DOMAIN,
             unique_id="cc:cc:cc:cc:cc:cc",
+            data={"device_model": device_info.model.value},
         ),
     )
     coordinator.ble_device = generate_ble_device("cc:cc:cc:cc:cc:cc", device_info.name)
 
+    assert coordinator.update_interval == timedelta(seconds=expected_interval)
+
+
+async def test_migration_existing_entry(
+    hass: HomeAssistant,
+) -> None:
+    """Test migration of existing config entry without device_model."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="cc:cc:cc:cc:cc:cc",
+        data={},
+    )
+    entry.add_to_hass(hass)
+
+    coordinator = AirthingsBLEDataUpdateCoordinator(
+        hass=hass,
+        entry=entry,
+    )
+    coordinator.ble_device = generate_ble_device(
+        "cc:cc:cc:cc:cc:cc", CORENTIUM_HOME_2_DEVICE_INFO.name
+    )
+
     assert coordinator.update_interval == timedelta(seconds=DEFAULT_SCAN_INTERVAL)
+    assert "device_model" not in entry.data
 
     with patch(
         "homeassistant.components.airthings_ble.coordinator.AirthingsBluetoothDeviceData.update_device",
-        return_value=device_info,
+        return_value=CORENTIUM_HOME_2_DEVICE_INFO,
     ):
         await coordinator.async_refresh()
 
-    assert coordinator.update_interval == timedelta(seconds=expected_interval)
+    assert "device_model" in entry.data
+    assert entry.data["device_model"] == CORENTIUM_HOME_2_DEVICE_INFO.model.value
+    assert coordinator.update_interval == timedelta(seconds=RADON_SCAN_INTERVAL)

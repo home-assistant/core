@@ -135,7 +135,9 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
             ):
                 return self.async_abort(reason="firmware_upgrade_required")
 
-            assert self._discovered_device is not None
+            if self._discovered_device is None:
+                return self.async_abort(reason="no_devices_found")
+
             return self.async_create_entry(
                 title=self.context["title_placeholders"]["name"],
                 data={"device_model": self._discovered_device.device.model.value},
