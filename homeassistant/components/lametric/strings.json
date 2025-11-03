@@ -1,30 +1,31 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+      "invalid_discovery_info": "Invalid discovery information received",
+      "link_local_address": "Link local addresses are not supported",
+      "missing_configuration": "The LaMetric integration is not configured. Please follow the documentation.",
+      "no_devices": "The authorized user has no LaMetric devices",
+      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "reauth_device_not_found": "The device you are trying to re-authenticate is not found in this LaMetric account",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
     "step": {
       "choice_enter_manual_or_fetch_cloud": {
         "description": "A LaMetric device can be set up in Home Assistant in two different ways.\n\nYou can enter all device information and API tokens yourself, or Home Assistant can import them from your LaMetric.com account.",
         "menu_options": {
-          "pick_implementation": "Import from LaMetric.com (recommended)",
-          "manual_entry": "Enter manually"
-        }
-      },
-      "pick_implementation": {
-        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]",
-        "data": {
-          "implementation": "[%key:common::config_flow::data::implementation%]"
-        },
-        "data_description": {
-          "implementation": "[%key:common::config_flow::description::implementation%]"
-        }
-      },
-      "manual_entry": {
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "api_key": "[%key:common::config_flow::data::api_key%]"
-        },
-        "data_description": {
-          "host": "The IP address or hostname of your LaMetric TIME on your network.",
-          "api_key": "You can find this API key in the [devices page in your LaMetric developer account]({devices_url})."
+          "manual_entry": "Enter manually",
+          "pick_implementation": "Import from LaMetric.com (recommended)"
         }
       },
       "cloud_select_device": {
@@ -34,27 +35,26 @@
         "data_description": {
           "device": "Select the LaMetric device to add"
         }
+      },
+      "manual_entry": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "api_key": "You can find this API key in the [devices page in your LaMetric developer account]({devices_url}).",
+          "host": "The IP address or hostname of your LaMetric TIME on your network."
+        }
+      },
+      "pick_implementation": {
+        "data": {
+          "implementation": "[%key:common::config_flow::data::implementation%]"
+        },
+        "data_description": {
+          "implementation": "[%key:common::config_flow::description::implementation%]"
+        },
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
       }
-    },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
-      "invalid_discovery_info": "Invalid discovery information received",
-      "link_local_address": "Link local addresses are not supported",
-      "missing_configuration": "The LaMetric integration is not configured. Please follow the documentation.",
-      "no_devices": "The authorized user has no LaMetric devices",
-      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
-      "reauth_device_not_found": "The device you are trying to re-authenticate is not found in this LaMetric account",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]",
-      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
-      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
-      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
-      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]"
     }
   },
   "entity": {
@@ -65,11 +65,11 @@
       "app_previous": {
         "name": "Previous app"
       },
-      "dismiss_current": {
-        "name": "Dismiss current notification"
-      },
       "dismiss_all": {
         "name": "Dismiss all notifications"
+      },
+      "dismiss_current": {
+        "name": "Dismiss current notification"
       }
     },
     "number": {
@@ -78,11 +78,6 @@
       },
       "volume": {
         "name": "Volume"
-      }
-    },
-    "sensor": {
-      "rssi": {
-        "name": "Wi-Fi signal"
       }
     },
     "select": {
@@ -94,82 +89,39 @@
         }
       }
     },
+    "sensor": {
+      "rssi": {
+        "name": "Wi-Fi signal"
+      }
+    },
     "switch": {
       "bluetooth": {
         "name": "Bluetooth"
       }
     }
   },
-  "services": {
-    "chart": {
-      "name": "Display a chart",
-      "description": "Displays a chart on a LaMetric device.",
-      "fields": {
-        "device_id": {
-          "name": "[%key:common::config_flow::data::device%]",
-          "description": "The LaMetric device to display the chart on."
-        },
-        "data": {
-          "name": "Data",
-          "description": "The list of data points in the chart."
-        },
-        "sound": {
-          "name": "Sound",
-          "description": "The notification sound to play."
-        },
-        "cycles": {
-          "name": "Cycles",
-          "description": "The number of times to display the message. When set to 0, the message will be displayed until dismissed."
-        },
-        "icon_type": {
-          "name": "Icon type",
-          "description": "The type of icon to display, indicating the nature of the notification."
-        },
-        "priority": {
-          "name": "Priority",
-          "description": "The priority of the notification. When the device is running in screensaver or kiosk mode, only critical priority notifications will be accepted."
-        }
+  "selector": {
+    "icon_type": {
+      "options": {
+        "alert": "Alert",
+        "info": "Info",
+        "none": "None"
       }
     },
-    "message": {
-      "name": "Display a message",
-      "description": "Displays a message with an optional icon on a LaMetric device.",
-      "fields": {
-        "device_id": {
-          "name": "[%key:common::config_flow::data::device%]",
-          "description": "The LaMetric device to display the message on."
-        },
-        "message": {
-          "name": "Message",
-          "description": "The message to display."
-        },
-        "icon": {
-          "name": "Icon ID",
-          "description": "The ID number of the icon or animation to display. List of all icons and their IDs can be found at: https://developer.lametric.com/icons."
-        },
-        "sound": {
-          "name": "[%key:component::lametric::services::chart::fields::sound::name%]",
-          "description": "[%key:component::lametric::services::chart::fields::sound::description%]"
-        },
-        "cycles": {
-          "name": "[%key:component::lametric::services::chart::fields::cycles::name%]",
-          "description": "[%key:component::lametric::services::chart::fields::cycles::description%]"
-        },
-        "icon_type": {
-          "name": "[%key:component::lametric::services::chart::fields::icon_type::name%]",
-          "description": "[%key:component::lametric::services::chart::fields::icon_type::description%]"
-        },
-        "priority": {
-          "name": "[%key:component::lametric::services::chart::fields::priority::name%]",
-          "description": "[%key:component::lametric::services::chart::fields::priority::description%]"
-        }
+    "priority": {
+      "options": {
+        "critical": "Critical",
+        "info": "[%key:component::lametric::selector::icon_type::options::info%]",
+        "warning": "Warning"
       }
-    }
-  },
-  "selector": {
+    },
     "sound": {
       "options": {
         "alarm1": "Alarm 1",
+        "alarm10": "Alarm 10",
+        "alarm11": "Alarm 11",
+        "alarm12": "Alarm 12",
+        "alarm13": "Alarm 13",
         "alarm2": "Alarm 2",
         "alarm3": "Alarm 3",
         "alarm4": "Alarm 4",
@@ -178,10 +130,6 @@
         "alarm7": "Alarm 7",
         "alarm8": "Alarm 8",
         "alarm9": "Alarm 9",
-        "alarm10": "Alarm 10",
-        "alarm11": "Alarm 11",
-        "alarm12": "Alarm 12",
-        "alarm13": "Alarm 13",
         "bicycle": "Bicycle",
         "car": "Car",
         "cash": "Cash",
@@ -218,20 +166,72 @@
         "wind": "Wind",
         "wind_short": "Wind short"
       }
+    }
+  },
+  "services": {
+    "chart": {
+      "description": "Displays a chart on a LaMetric device.",
+      "fields": {
+        "cycles": {
+          "description": "The number of times to display the message. When set to 0, the message will be displayed until dismissed.",
+          "name": "Cycles"
+        },
+        "data": {
+          "description": "The list of data points in the chart.",
+          "name": "Data"
+        },
+        "device_id": {
+          "description": "The LaMetric device to display the chart on.",
+          "name": "[%key:common::config_flow::data::device%]"
+        },
+        "icon_type": {
+          "description": "The type of icon to display, indicating the nature of the notification.",
+          "name": "Icon type"
+        },
+        "priority": {
+          "description": "The priority of the notification. When the device is running in screensaver or kiosk mode, only critical priority notifications will be accepted.",
+          "name": "Priority"
+        },
+        "sound": {
+          "description": "The notification sound to play.",
+          "name": "Sound"
+        }
+      },
+      "name": "Display a chart"
     },
-    "icon_type": {
-      "options": {
-        "none": "None",
-        "info": "Info",
-        "alert": "Alert"
-      }
-    },
-    "priority": {
-      "options": {
-        "info": "[%key:component::lametric::selector::icon_type::options::info%]",
-        "warning": "Warning",
-        "critical": "Critical"
-      }
+    "message": {
+      "description": "Displays a message with an optional icon on a LaMetric device.",
+      "fields": {
+        "cycles": {
+          "description": "[%key:component::lametric::services::chart::fields::cycles::description%]",
+          "name": "[%key:component::lametric::services::chart::fields::cycles::name%]"
+        },
+        "device_id": {
+          "description": "The LaMetric device to display the message on.",
+          "name": "[%key:common::config_flow::data::device%]"
+        },
+        "icon": {
+          "description": "The ID number of the icon or animation to display. List of all icons and their IDs can be found at: https://developer.lametric.com/icons.",
+          "name": "Icon ID"
+        },
+        "icon_type": {
+          "description": "[%key:component::lametric::services::chart::fields::icon_type::description%]",
+          "name": "[%key:component::lametric::services::chart::fields::icon_type::name%]"
+        },
+        "message": {
+          "description": "The message to display.",
+          "name": "Message"
+        },
+        "priority": {
+          "description": "[%key:component::lametric::services::chart::fields::priority::description%]",
+          "name": "[%key:component::lametric::services::chart::fields::priority::name%]"
+        },
+        "sound": {
+          "description": "[%key:component::lametric::services::chart::fields::sound::description%]",
+          "name": "[%key:component::lametric::services::chart::fields::sound::name%]"
+        }
+      },
+      "name": "Display a message"
     }
   }
 }
