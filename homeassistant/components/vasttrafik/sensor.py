@@ -320,11 +320,9 @@ class VasttrafikDepartureSensor(SensorEntity):
                         "line_text_color": line.get("foregroundColor"),
                     }
 
-                    # Add to departures list (limit to first 5 departures)
-                    if len(departures_list) < 5:
-                        departures_list.append(
-                            {k: v for k, v in departure_info.items() if v is not None}
-                        )
+                    departures_list.append(
+                        {k: v for k, v in departure_info.items() if v is not None}
+                    )
 
             # Set sensor state to next departure time
             self._state = next_departure
