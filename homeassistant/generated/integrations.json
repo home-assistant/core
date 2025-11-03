@@ -7610,11 +7610,11 @@
     "yale": {
       "name": "Yale (non-US/Canada)",
       "integrations": {
-        "yale_smart_alarm": {
+        "yale": {
           "integration_type": "hub",
           "config_flow": true,
-          "iot_class": "cloud_polling",
-          "name": "Yale Smart Living"
+          "iot_class": "cloud_push",
+          "name": "Yale Home"
         },
         "yalexs_ble": {
           "integration_type": "hub",
@@ -7622,17 +7622,11 @@
           "iot_class": "local_push",
           "name": "Yale Access Bluetooth"
         },
-        "yale_home": {
-          "integration_type": "virtual",
-          "config_flow": false,
-          "supported_by": "yale",
-          "name": "Yale Home"
-        },
-        "yale": {
+        "yale_smart_alarm": {
           "integration_type": "hub",
           "config_flow": true,
-          "iot_class": "cloud_push",
-          "name": "Yale"
+          "iot_class": "cloud_polling",
+          "name": "Yale Smart Living"
         }
       }
     },

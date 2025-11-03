@@ -1,5 +1,5 @@
 {
   "domain": "yale",
   "name": "Yale (non-US/Canada)",
-  "integrations": ["yale_smart_alarm", "yalexs_ble", "yale_home", "yale"]
+  "integrations": ["yale", "yalexs_ble", "yale_smart_alarm"]
 }
