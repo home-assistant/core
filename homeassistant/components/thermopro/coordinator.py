@@ -6,6 +6,7 @@ from logging import Logger
 
 from thermopro_ble import SensorUpdate, ThermoProBluetoothDeviceData
 
+from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
     BluetoothScanningMode,
     BluetoothServiceInfoBleak,
@@ -40,6 +41,7 @@ class ThermoProBluetoothProcessorCoordinator(
         """Initialize the coordinator."""
         self.device_data = device_data
         self.entry = entry
+        self._rediscovery_pending = False
         super().__init__(
             hass,
             logger,
@@ -53,6 +55,7 @@ class ThermoProBluetoothProcessorCoordinator(
         self, service_info: BluetoothServiceInfoBleak
     ) -> SensorUpdate:
         """Process an incoming Bluetooth advertisement."""
+        self._rediscovery_pending = False
         update = self.device_data.update(service_info)
         async_dispatcher_send(
             self.hass,
@@ -62,3 +65,23 @@ class ThermoProBluetoothProcessorCoordinator(
             update,
         )
         return update
+
+    def restore_service_info(self, service_info: BluetoothServiceInfoBleak) -> None:
+        """Restore state from the last received Bluetooth advertisement."""
+        self.async_set_updated_data(self._process_service_info(service_info))
+
+    def _process_update(
+        self, update: SensorUpdate, was_available: bool | None = None
+    ) -> None:
+        """Process data update and clear rediscovery state."""
+        self._rediscovery_pending = False
+        super()._process_update(update, was_available)
+
+    def _async_handle_unavailable(
+        self, service_info: BluetoothServiceInfoBleak
+    ) -> None:
+        """Handle device unavailable events."""
+        super()._async_handle_unavailable(service_info)
+        if not self._rediscovery_pending:
+            self._rediscovery_pending = True
+            bluetooth.async_rediscover_address(self.hass, self.address)

@@ -7,7 +7,10 @@ import logging
 from thermopro_ble import ThermoProBluetoothDeviceData
 
 from homeassistant.components import bluetooth
-from homeassistant.components.bluetooth import BluetoothScanningMode
+from homeassistant.components.bluetooth import (
+    BluetoothScanningMode,
+    async_last_service_info,
+)
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -42,6 +45,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ThermoProConfigEntry) ->
         entry=entry,
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    service_info = async_last_service_info(hass, address, connectable=False) or (
+        async_last_service_info(hass, address, connectable=True)
+    )
+    if service_info:
+        coordinator.restore_service_info(service_info)
     # The coordinator automatically handles device availability changes.
     # When a device becomes unavailable, entities will reflect that state.
     # When the device reappears and broadcasts again, the coordinator will
