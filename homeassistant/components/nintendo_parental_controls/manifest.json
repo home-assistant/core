@@ -1,6 +1,6 @@
 {
   "domain": "nintendo_parental_controls",
-  "name": "Nintendo Switch parental controls",
+  "name": "Nintendo Switch Parental Controls",
   "codeowners": ["@pantherale0"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/nintendo_parental_controls",
