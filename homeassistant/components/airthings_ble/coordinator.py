@@ -77,13 +77,12 @@ class AirthingsBLEDataUpdateCoordinator(DataUpdateCoordinator[AirthingsDevice]):
         except Exception as err:
             raise UpdateFailed(f"Unable to fetch data: {err}") from err
 
-        # Migration: Store device_model for existing entries
+        # Migrate existing config entries to include device_model
         if "device_model" not in self.config_entry.data:
             self.hass.config_entries.async_update_entry(
                 self.config_entry,
                 data={**self.config_entry.data, "device_model": data.model.value},
             )
-            # Update interval now that we have the device model
             if data.model == AirthingsDeviceType.CORENTIUM_HOME_2:
                 self.update_interval = timedelta(seconds=RADON_SCAN_INTERVAL)
 
