@@ -173,7 +173,7 @@ async def test_last_restart_state(hass: HomeAssistant) -> None:
 
         assert hass.states.get(entity_id).state == "2025-10-13T06:09:11+00:00"
 
-        status_data[0]["uptime"] = 100
+        status_data[0]["uptime"] = 804134
 
         with (
             patch(
@@ -187,9 +187,30 @@ async def test_last_restart_state(hass: HomeAssistant) -> None:
         ):
             await entry.runtime_data.async_refresh()
 
+            assert entry.runtime_data.data.status["uptime"] == 804134
+
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        assert hass.states.get(entity_id).state == "2025-10-13T06:09:11+00:00"
+
+        status_data[0]["uptime"] = 100
+
+        with (
+            patch(
+                "homeassistant.components.starlink.coordinator.status_data",
+                return_value=status_data,
+            ),
+            patch(
+                "homeassistant.components.starlink.sensor.now",
+                return_value=datetime.fromisoformat("2025-10-22T13:31:44+00:00"),
+            ),
+        ):
+            await entry.runtime_data.async_refresh()
+
             assert entry.runtime_data.data.status["uptime"] == 100
 
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
         await hass.async_block_till_done(wait_background_tasks=True)
 
-        assert hass.states.get(entity_id).state == "2025-10-22T13:29:59+00:00"
+        assert hass.states.get(entity_id).state == "2025-10-22T13:30:04+00:00"
