@@ -109,12 +109,6 @@ class VasttrafikConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 1
 
-    @staticmethod
-    @callback
-    def async_get_options_flow(config_entry):
-        """Create the options flow."""
-        return VasttrafikOptionsFlow()
-
     @classmethod
     @callback
     def async_get_supported_subentry_types(
@@ -443,11 +437,3 @@ class CannotConnect(HomeAssistantError):
 
 class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""
-
-
-class VasttrafikOptionsFlow(OptionsFlow):
-    """Handle options flow for Västtrafik main integration."""
-
-    async def async_step_init(self, user_input=None):
-        """Manage the options for the main integration."""
-        return self.async_abort(reason="not_configurable")
