@@ -310,6 +310,9 @@
       "motion_sensitivity": {
         "default": "mdi:motion-sensor"
       },
+      "pir_interval": {
+        "default": "mdi:motion-sensor"
+      },
       "pir_sensitivity": {
         "default": "mdi:motion-sensor"
       },
