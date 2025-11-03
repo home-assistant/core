@@ -17,10 +17,9 @@
     },
     "flow_title": "{name}",
     "progress": {
-      "form_new_network": "Forming Zigbee network",
-      "maybe_reset_old_radio": "Resetting old adapter",
-      "restore_backup": "Writing backup to adapter",
-      "try_restore_backup": "Restoring network backup"
+      "form_new_network": "Forming a new Zigbee network.\nWe scan for a clear network channel as part of this process, this can take a minute.",
+      "maybe_reset_old_radio": "Resetting old adapter.\nYour old adapter has been backed up and is being factory reset.",
+      "restore_backup": "Restoring network settings to new adapter.\nThis will take a minute."
     },
     "step": {
       "choose_automatic_backup": {
@@ -112,13 +111,6 @@
         },
         "description": "ZHA was not able to automatically detect serial port settings for your adapter. This usually is an issue with the firmware or permissions.\n\nIf you are using firmware with nonstandard settings, enter the serial port settings",
         "title": "Serial port settings"
-      },
-      "maybe_confirm_ezsp_restore": {
-        "data": {
-          "overwrite_coordinator_ieee": "Permanently replace the adapter IEEE address"
-        },
-        "description": "Your backup has a different IEEE address than your adapter. For your network to function properly, the IEEE address of your adapter should also be changed.\n\nThis is a permanent operation.",
-        "title": "Overwrite adapter IEEE address"
       },
       "maybe_reset_old_radio": {
         "description": "A backup was created earlier and your old adapter is being reset as part of the migration.",

@@ -180,6 +180,7 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
     """Mixin for common ZHA flow steps and forms."""
 
     _flow_strategy: ZigbeeFlowStrategy | None = None
+    _overwrite_ieee_during_restore: bool = False
     _hass: HomeAssistant
     _title: str
 
@@ -496,7 +497,7 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
                 # Old adapter not found or cannot connect, show prompt to plug back in
                 return await self.async_step_plug_in_old_radio()
 
-        return await self.async_step_maybe_confirm_ezsp_restore()
+        return await self.async_step_restore_backup()
 
     async def async_step_plug_in_old_radio(
         self, user_input: dict[str, Any] | None = None
@@ -695,20 +696,21 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
             ),
         )
 
-    async def async_step_maybe_confirm_ezsp_restore(
+    async def async_step_restore_backup(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Confirm restore for EZSP radios that require permanent IEEE writes."""
-
+        """Restore network backup to new radio."""
         if self._restore_backup_task is None:
             self._restore_backup_task = self.hass.async_create_task(
-                self._radio_mgr.restore_backup()
+                self._radio_mgr.restore_backup(
+                    overwrite_ieee=self._overwrite_ieee_during_restore
+                )
             )
 
         if not self._restore_backup_task.done():
             return self.async_show_progress(
-                step_id="maybe_confirm_ezsp_restore",
-                progress_action="try_restore_backup",
+                step_id="restore_backup",
+                progress_action="restore_backup",
                 progress_task=self._restore_backup_task,
             )
 
@@ -750,22 +752,8 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         if not user_input[OVERWRITE_COORDINATOR_IEEE]:
             return self.async_abort(reason="cannot_restore_backup_no_ieee_confirm")
 
+        self._overwrite_ieee_during_restore = True
         return await self.async_step_restore_backup()
-
-    @progress_step()
-    async def async_step_restore_backup(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Restore backup to adapter."""
-        try:
-            await self._radio_mgr.restore_backup(overwrite_ieee=True)
-        except CannotWriteNetworkSettings as exc:
-            raise AbortFlow(
-                reason="cannot_restore_backup",
-                description_placeholders={"error": str(exc)},
-            ) from exc
-
-        return await self._async_create_radio_entry()
 
     async def async_step_create_entry(
         self, user_input: dict[str, Any] | None = None
@@ -1127,7 +1115,7 @@ class ZhaOptionsFlowHandler(BaseZhaFlow, OptionsFlow):
 
         # If we are reconfiguring, the old radio will not be available
         if self._migration_intent is OptionsMigrationIntent.RECONFIGURE:
-            return await self.async_step_maybe_confirm_ezsp_restore()
+            return await self.async_step_restore_backup()
 
         return await super().async_step_maybe_reset_old_radio(user_input)
 
