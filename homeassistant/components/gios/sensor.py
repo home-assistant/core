@@ -184,7 +184,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add a GIOS entities from a config_entry."""
-    name = entry.data[CONF_NAME]
+    name = entry.data.get(CONF_NAME)
 
     coordinator = entry.runtime_data.coordinator
     # Due to the change of the attribute name of one sensor, it is necessary to migrate
@@ -222,19 +222,32 @@ class GiosSensor(CoordinatorEntity[GiosDataUpdateCoordinator], SensorEntity):
 
     def __init__(
         self,
-        name: str,
+        name: str | None,
         coordinator: GiosDataUpdateCoordinator,
         description: GiosSensorEntityDescription,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
-        self._attr_device_info = DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, str(coordinator.gios.station_id))},
-            manufacturer=MANUFACTURER,
-            name=name,
-            configuration_url=URL.format(station_id=coordinator.gios.station_id),
-        )
+        station_id = coordinator.gios.station_id
+        assert station_id is not None
+        station_name = coordinator.gios.measurement_stations[station_id].name
+        if name:
+            self._attr_device_info = DeviceInfo(
+                entry_type=DeviceEntryType.SERVICE,
+                identifiers={(DOMAIN, str(station_id))},
+                manufacturer=MANUFACTURER,
+                configuration_url=URL.format(station_id=station_id),
+                name=name,
+            )
+        else:
+            self._attr_device_info = DeviceInfo(
+                entry_type=DeviceEntryType.SERVICE,
+                identifiers={(DOMAIN, str(station_id))},
+                manufacturer=MANUFACTURER,
+                configuration_url=URL.format(station_id=station_id),
+                translation_key="station",
+                translation_placeholders={"station_name": station_name},
+            )
         if description.subkey:
             self._attr_unique_id = (
                 f"{coordinator.gios.station_id}-{description.key}-{description.subkey}"

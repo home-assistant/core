@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensor[sensor.home_air_quality_index-entry]
+# name: test_sensor[sensor.station_test_name_1_air_quality_index-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -21,7 +21,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.home_air_quality_index',
+    'entity_id': 'sensor.station_test_name_1_air_quality_index',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -43,12 +43,12 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.home_air_quality_index-state]
+# name: test_sensor[sensor.station_test_name_1_air_quality_index-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by GIOŚ',
       'device_class': 'enum',
-      'friendly_name': 'Home Air quality index',
+      'friendly_name': 'Station Test Name 1 Air quality index',
       'options': list([
         'very_bad',
         'bad',
@@ -59,14 +59,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.home_air_quality_index',
+    'entity_id': 'sensor.station_test_name_1_air_quality_index',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'good',
   })
 # ---
-# name: test_sensor[sensor.home_benzene-entry]
+# name: test_sensor[sensor.station_test_name_1_benzene-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -81,7 +81,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.home_benzene',
+    'entity_id': 'sensor.station_test_name_1_benzene',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -106,23 +106,23 @@
     'unit_of_measurement': 'μg/m³',
   })
 # ---
-# name: test_sensor[sensor.home_benzene-state]
+# name: test_sensor[sensor.station_test_name_1_benzene-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by GIOŚ',
-      'friendly_name': 'Home Benzene',
+      'friendly_name': 'Station Test Name 1 Benzene',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.home_benzene',
+    'entity_id': 'sensor.station_test_name_1_benzene',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.23789',
   })
 # ---
-# name: test_sensor[sensor.home_carbon_monoxide-entry]
+# name: test_sensor[sensor.station_test_name_1_carbon_monoxide-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -137,7 +137,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.home_carbon_monoxide',
+    'entity_id': 'sensor.station_test_name_1_carbon_monoxide',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -162,23 +162,23 @@
     'unit_of_measurement': 'μg/m³',
   })
 # ---
-# name: test_sensor[sensor.home_carbon_monoxide-state]
+# name: test_sensor[sensor.station_test_name_1_carbon_monoxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by GIOŚ',
-      'friendly_name': 'Home Carbon monoxide',
+      'friendly_name': 'Station Test Name 1 Carbon monoxide',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.home_carbon_monoxide',
+    'entity_id': 'sensor.station_test_name_1_carbon_monoxide',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '251.874',
   })
 # ---
-# name: test_sensor[sensor.home_nitrogen_dioxide-entry]
+# name: test_sensor[sensor.station_test_name_1_nitrogen_dioxide-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -193,7 +193,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.home_nitrogen_dioxide',
+    'entity_id': 'sensor.station_test_name_1_nitrogen_dioxide',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -218,24 +218,24 @@
     'unit_of_measurement': 'μg/m³',
   })
 # ---
-# name: test_sensor[sensor.home_nitrogen_dioxide-state]
+# name: test_sensor[sensor.station_test_name_1_nitrogen_dioxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by GIOŚ',
       'device_class': 'nitrogen_dioxide',
-      'friendly_name': 'Home Nitrogen dioxide',
+      'friendly_name': 'Station Test Name 1 Nitrogen dioxide',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.home_nitrogen_dioxide',
+    'entity_id': 'sensor.station_test_name_1_nitrogen_dioxide',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '7.13411',
   })
 # ---
-# name: test_sensor[sensor.home_nitrogen_dioxide_index-entry]
+# name: test_sensor[sensor.station_test_name_1_nitrogen_dioxide_index-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -257,7 +257,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.home_nitrogen_dioxide_index',
+    'entity_id': 'sensor.station_test_name_1_nitrogen_dioxide_index',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -279,12 +279,12 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.home_nitrogen_dioxide_index-state]
+# name: test_sensor[sensor.station_test_name_1_nitrogen_dioxide_index-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by GIOŚ',
       'device_class': 'enum',
-      'friendly_name': 'Home Nitrogen dioxide index',
+      'friendly_name': 'Station Test Name 1 Nitrogen dioxide index',
       'options': list([
         'very_bad',
         'bad',
@@ -295,14 +295,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.home_nitrogen_dioxide_index',
+    'entity_id': 'sensor.station_test_name_1_nitrogen_dioxide_index',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'good',
   })
 # ---
-# name: test_sensor[sensor.home_nitrogen_monoxide-entry]
+# name: test_sensor[sensor.station_test_name_1_nitrogen_monoxide-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -317,7 +317,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.home_nitrogen_monoxide',
+    'entity_id': 'sensor.station_test_name_1_nitrogen_monoxide',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -342,24 +342,24 @@
     'unit_of_measurement': 'μg/m³',
   })
 # ---
-# name: test_sensor[sensor.home_nitrogen_monoxide-state]
+# name: test_sensor[sensor.station_test_name_1_nitrogen_monoxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by GIOŚ',
       'device_class': 'nitrogen_monoxide',
-      'friendly_name': 'Home Nitrogen monoxide',
+      'friendly_name': 'Station Test Name 1 Nitrogen monoxide',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.home_nitrogen_monoxide',
+    'entity_id': 'sensor.station_test_name_1_nitrogen_monoxide',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '5.1',
   })
 # ---
-# name: test_sensor[sensor.home_nitrogen_oxides-entry]
+# name: test_sensor[sensor.station_test_name_1_nitrogen_oxides-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -374,7 +374,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.home_nitrogen_oxides',
+    'entity_id': 'sensor.station_test_name_1_nitrogen_oxides',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -399,23 +399,23 @@
     'unit_of_measurement': 'μg/m³',
   })
 # ---
-# name: test_sensor[sensor.home_nitrogen_oxides-state]
+# name: test_sensor[sensor.station_test_name_1_nitrogen_oxides-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by GIOŚ',
-      'friendly_name': 'Home Nitrogen oxides',
+      'friendly_name': 'Station Test Name 1 Nitrogen oxides',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.home_nitrogen_oxides',
+    'entity_id': 'sensor.station_test_name_1_nitrogen_oxides',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '5.5',
   })
 # ---
-# name: test_sensor[sensor.home_ozone-entry]
+# name: test_sensor[sensor.station_test_name_1_ozone-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -430,7 +430,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.home_ozone',
+    'entity_id': 'sensor.station_test_name_1_ozone',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -455,24 +455,24 @@
     'unit_of_measurement': 'μg/m³',
   })
 # ---
-# name: test_sensor[sensor.home_ozone-state]
+# name: test_sensor[sensor.station_test_name_1_ozone-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by GIOŚ',
       'device_class': 'ozone',
-      'friendly_name': 'Home Ozone',
+      'friendly_name': 'Station Test Name 1 Ozone',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.home_ozone',
+    'entity_id': 'sensor.station_test_name_1_ozone',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '95.7768',
   })
 # ---
-# name: test_sensor[sensor.home_ozone_index-entry]
+# name: test_sensor[sensor.station_test_name_1_ozone_index-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -494,7 +494,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.home_ozone_index',
+    'entity_id': 'sensor.station_test_name_1_ozone_index',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -516,12 +516,12 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.home_ozone_index-state]
+# name: test_sensor[sensor.station_test_name_1_ozone_index-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by GIOŚ',
       'device_class': 'enum',
-      'friendly_name': 'Home Ozone index',
+      'friendly_name': 'Station Test Name 1 Ozone index',
       'options': list([
         'very_bad',
         'bad',
@@ -532,14 +532,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.home_ozone_index',
+    'entity_id': 'sensor.station_test_name_1_ozone_index',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'good',
   })
 # ---
-# name: test_sensor[sensor.home_pm10-entry]
+# name: test_sensor[sensor.station_test_name_1_pm10-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -554,7 +554,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.home_pm10',
+    'entity_id': 'sensor.station_test_name_1_pm10',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -579,24 +579,24 @@
     'unit_of_measurement': 'μg/m³',
   })
 # ---
-# name: test_sensor[sensor.home_pm10-state]
+# name: test_sensor[sensor.station_test_name_1_pm10-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by GIOŚ',
       'device_class': 'pm10',
-      'friendly_name': 'Home PM10',
+      'friendly_name': 'Station Test Name 1 PM10',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.home_pm10',
+    'entity_id': 'sensor.station_test_name_1_pm10',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '16.8344',
   })
 # ---
-# name: test_sensor[sensor.home_pm10_index-entry]
+# name: test_sensor[sensor.station_test_name_1_pm10_index-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -618,7 +618,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.home_pm10_index',
+    'entity_id': 'sensor.station_test_name_1_pm10_index',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -640,12 +640,12 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.home_pm10_index-state]
+# name: test_sensor[sensor.station_test_name_1_pm10_index-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by GIOŚ',
       'device_class': 'enum',
-      'friendly_name': 'Home PM10 index',
+      'friendly_name': 'Station Test Name 1 PM10 index',
       'options': list([
         'very_bad',
         'bad',
@@ -656,14 +656,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.home_pm10_index',
+    'entity_id': 'sensor.station_test_name_1_pm10_index',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'good',
   })
 # ---
-# name: test_sensor[sensor.home_pm2_5-entry]
+# name: test_sensor[sensor.station_test_name_1_pm2_5-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -678,7 +678,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.home_pm2_5',
+    'entity_id': 'sensor.station_test_name_1_pm2_5',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -703,24 +703,24 @@
     'unit_of_measurement': 'μg/m³',
   })
 # ---
-# name: test_sensor[sensor.home_pm2_5-state]
+# name: test_sensor[sensor.station_test_name_1_pm2_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by GIOŚ',
       'device_class': 'pm25',
-      'friendly_name': 'Home PM2.5',
+      'friendly_name': 'Station Test Name 1 PM2.5',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.home_pm2_5',
+    'entity_id': 'sensor.station_test_name_1_pm2_5',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '4',
   })
 # ---
-# name: test_sensor[sensor.home_pm2_5_index-entry]
+# name: test_sensor[sensor.station_test_name_1_pm2_5_index-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -742,7 +742,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.home_pm2_5_index',
+    'entity_id': 'sensor.station_test_name_1_pm2_5_index',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -764,12 +764,12 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.home_pm2_5_index-state]
+# name: test_sensor[sensor.station_test_name_1_pm2_5_index-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by GIOŚ',
       'device_class': 'enum',
-      'friendly_name': 'Home PM2.5 index',
+      'friendly_name': 'Station Test Name 1 PM2.5 index',
       'options': list([
         'very_bad',
         'bad',
@@ -780,14 +780,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.home_pm2_5_index',
+    'entity_id': 'sensor.station_test_name_1_pm2_5_index',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'good',
   })
 # ---
-# name: test_sensor[sensor.home_sulphur_dioxide-entry]
+# name: test_sensor[sensor.station_test_name_1_sulphur_dioxide-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -802,7 +802,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.home_sulphur_dioxide',
+    'entity_id': 'sensor.station_test_name_1_sulphur_dioxide',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -827,24 +827,24 @@
     'unit_of_measurement': 'μg/m³',
   })
 # ---
-# name: test_sensor[sensor.home_sulphur_dioxide-state]
+# name: test_sensor[sensor.station_test_name_1_sulphur_dioxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by GIOŚ',
       'device_class': 'sulphur_dioxide',
-      'friendly_name': 'Home Sulphur dioxide',
+      'friendly_name': 'Station Test Name 1 Sulphur dioxide',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.home_sulphur_dioxide',
+    'entity_id': 'sensor.station_test_name_1_sulphur_dioxide',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '4.35478',
   })
 # ---
-# name: test_sensor[sensor.home_sulphur_dioxide_index-entry]
+# name: test_sensor[sensor.station_test_name_1_sulphur_dioxide_index-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -866,7 +866,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.home_sulphur_dioxide_index',
+    'entity_id': 'sensor.station_test_name_1_sulphur_dioxide_index',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -888,12 +888,12 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.home_sulphur_dioxide_index-state]
+# name: test_sensor[sensor.station_test_name_1_sulphur_dioxide_index-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by GIOŚ',
       'device_class': 'enum',
-      'friendly_name': 'Home Sulphur dioxide index',
+      'friendly_name': 'Station Test Name 1 Sulphur dioxide index',
       'options': list([
         'very_bad',
         'bad',
@@ -904,7 +904,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.home_sulphur_dioxide_index',
+    'entity_id': 'sensor.station_test_name_1_sulphur_dioxide_index',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

@@ -3,7 +3,6 @@
   dict({
     'config_entry': dict({
       'data': dict({
-        'name': 'Home',
         'station_id': 123,
       }),
       'disabled_by': None,
