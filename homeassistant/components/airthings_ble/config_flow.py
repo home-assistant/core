@@ -135,8 +135,10 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
             ):
                 return self.async_abort(reason="firmware_upgrade_required")
 
+            assert self._discovered_device is not None
             return self.async_create_entry(
-                title=self.context["title_placeholders"]["name"], data={}
+                title=self.context["title_placeholders"]["name"],
+                data={"device_model": self._discovered_device.device.model.value},
             )
 
         self._set_confirm_only()
@@ -164,7 +166,10 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
 
             self._discovered_device = discovery
 
-            return self.async_create_entry(title=discovery.name, data={})
+            return self.async_create_entry(
+                title=discovery.name,
+                data={"device_model": discovery.device.model.value},
+            )
 
         current_addresses = self._async_current_ids(include_ignore=False)
         devices: list[BluetoothServiceInfoBleak] = []
