@@ -1541,6 +1541,9 @@ pyDuotecno==2024.10.1
 # homeassistant.components.electrasmart
 pyElectra==1.2.4
 
+# homeassistant.components.emby
+pyEmby==1.10
+
 # homeassistant.components.homee
 pyHomee==1.3.8
 

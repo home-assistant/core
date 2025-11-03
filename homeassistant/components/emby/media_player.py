@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 import logging
 
-from pyemby import EmbyServer
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
@@ -14,29 +14,29 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
     CONF_PORT,
     CONF_SSL,
     DEVICE_DEFAULT_NAME,
-    EVENT_HOMEASSISTANT_START,
-    EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
+
+from . import EmbyConfigEntry
+from .const import DEFAULT_HOST, DEFAULT_SSL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 MEDIA_TYPE_TRAILER = "trailer"
-
-DEFAULT_HOST = "localhost"
-DEFAULT_PORT = 8096
-DEFAULT_SSL_PORT = 8920
-DEFAULT_SSL = False
 
 SUPPORT_EMBY = (
     MediaPlayerEntityFeature.PAUSE
@@ -64,70 +64,34 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Emby platform."""
+    await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+    )
 
-    host = config.get(CONF_HOST)
-    key = config.get(CONF_API_KEY)
-    port = config.get(CONF_PORT)
-    ssl = config[CONF_SSL]
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        "deprecated_yaml",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "Emby",
+        },
+    )
 
-    if port is None:
-        port = DEFAULT_SSL_PORT if ssl else DEFAULT_PORT
 
-    _LOGGER.debug("Setting up Emby server at: %s:%s", host, port)
-
-    emby = EmbyServer(host, key, port, ssl, hass.loop)
-
-    active_emby_devices: dict[str, EmbyDevice] = {}
-    inactive_emby_devices: dict[str, EmbyDevice] = {}
-
-    @callback
-    def device_update_callback(data):
-        """Handle devices which are added to Emby."""
-        new_devices = []
-        active_devices = []
-        for dev_id, dev in emby.devices.items():
-            active_devices.append(dev_id)
-            if (
-                dev_id not in active_emby_devices
-                and dev_id not in inactive_emby_devices
-            ):
-                new = EmbyDevice(emby, dev_id)
-                active_emby_devices[dev_id] = new
-                new_devices.append(new)
-
-            elif dev_id in inactive_emby_devices and dev.state != "Off":
-                add = inactive_emby_devices.pop(dev_id)
-                active_emby_devices[dev_id] = add
-                _LOGGER.debug("Showing %s, item: %s", dev_id, add)
-                add.set_available(True)
-
-        if new_devices:
-            _LOGGER.debug("Adding new devices: %s", new_devices)
-            async_add_entities(new_devices, True)
-
-    @callback
-    def device_removal_callback(data):
-        """Handle the removal of devices from Emby."""
-        if data in active_emby_devices:
-            rem = active_emby_devices.pop(data)
-            inactive_emby_devices[data] = rem
-            _LOGGER.debug("Inactive %s, item: %s", data, rem)
-            rem.set_available(False)
-
-    @callback
-    def start_emby(event):
-        """Start Emby connection."""
-        emby.start()
-
-    async def stop_emby(event):
-        """Stop Emby connection."""
-        await emby.stop()
-
-    emby.add_new_devices_callback(device_update_callback)
-    emby.add_stale_devices_callback(device_removal_callback)
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_emby)
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_emby)
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: EmbyConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the media_player platform from the Emby config entry."""
+    async_add_entities(
+        EmbyDevice(entry, device_id) for device_id in entry.runtime_data.devices
+    )
 
 
 class EmbyDevice(MediaPlayerEntity):
@@ -135,10 +99,10 @@ class EmbyDevice(MediaPlayerEntity):
 
     _attr_should_poll = False
 
-    def __init__(self, emby, device_id):
+    def __init__(self, entry: EmbyConfigEntry, device_id: str) -> None:
         """Initialize the Emby device."""
         _LOGGER.debug("New Emby Device initialized with ID: %s", device_id)
-        self.emby = emby
+        self.emby = entry.runtime_data
         self.device_id = device_id
         self.device = self.emby.devices[self.device_id]
 
@@ -176,7 +140,7 @@ class EmbyDevice(MediaPlayerEntity):
         return self.device.supports_remote_control
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the device."""
         return f"Emby {self.device.name}" or DEVICE_DEFAULT_NAME
 
@@ -195,13 +159,13 @@ class EmbyDevice(MediaPlayerEntity):
         return None
 
     @property
-    def app_name(self):
+    def app_name(self) -> str | None:
         """Return current user as app_name."""
         # Ideally the media_player object would have a user property.
         return self.device.username
 
     @property
-    def media_content_id(self):
+    def media_content_id(self) -> str | None:
         """Content ID of current playing media."""
         return self.device.media_id
 
@@ -226,17 +190,17 @@ class EmbyDevice(MediaPlayerEntity):
         return None
 
     @property
-    def media_duration(self):
+    def media_duration(self) -> int | None:
         """Return the duration of current playing media in seconds."""
         return self.device.media_runtime
 
     @property
-    def media_position(self):
+    def media_position(self) -> int | None:
         """Return the position of current playing media in seconds."""
         return self.media_status_last_position
 
     @property
-    def media_position_updated_at(self):
+    def media_position_updated_at(self) -> datetime | None:
         """When was the position of the current playing media valid.
 
         Returns value from homeassistant.util.dt.utcnow().
@@ -244,42 +208,42 @@ class EmbyDevice(MediaPlayerEntity):
         return self.media_status_received
 
     @property
-    def media_image_url(self):
+    def media_image_url(self) -> str | None:
         """Return the image URL of current playing media."""
         return self.device.media_image_url
 
     @property
-    def media_title(self):
+    def media_title(self) -> str | None:
         """Return the title of current playing media."""
         return self.device.media_title
 
     @property
-    def media_season(self):
+    def media_season(self) -> str | None:
         """Season of current playing media (TV Show only)."""
         return self.device.media_season
 
     @property
-    def media_series_title(self):
+    def media_series_title(self) -> str | None:
         """Return the title of the series of current playing media (TV)."""
         return self.device.media_series_title
 
     @property
-    def media_episode(self):
+    def media_episode(self) -> str | None:
         """Return the episode of current playing media (TV only)."""
         return self.device.media_episode
 
     @property
-    def media_album_name(self):
+    def media_album_name(self) -> str | None:
         """Return the album name of current playing media (Music only)."""
         return self.device.media_album_name
 
     @property
-    def media_artist(self):
+    def media_artist(self) -> str | None:
         """Return the artist of current playing media (Music track only)."""
         return self.device.media_artist
 
     @property
-    def media_album_artist(self):
+    def media_album_artist(self) -> str | None:
         """Return the album artist of current playing media (Music only)."""
         return self.device.media_album_artist
 

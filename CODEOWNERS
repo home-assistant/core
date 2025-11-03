@@ -432,6 +432,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/elvia/ @ludeeus
 /tests/components/elvia/ @ludeeus
 /homeassistant/components/emby/ @mezz64
+/tests/components/emby/ @mezz64
 /homeassistant/components/emoncms/ @borpin @alexandrecuer
 /tests/components/emoncms/ @borpin @alexandrecuer
 /homeassistant/components/emoncms_history/ @alexandrecuer
