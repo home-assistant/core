@@ -76,8 +76,14 @@ rules:
     status: exempt
     comment: |
       This integration does not create entities.
-  docs-examples: done
-  docs-known-limitations: done
+  docs-examples:
+    status: exempt
+    comment: |
+      This integration does not create entities or services.
+  docs-known-limitations:
+    status: exempt
+    comment: |
+      No known limitations.
   docs-supported-devices:
     status: exempt
     comment: |
