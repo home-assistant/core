@@ -151,15 +151,10 @@ class VasttrafikConfigFlow(ConfigFlow, domain=DOMAIN):
                     reload_even_if_entry_is_unchanged=False,
                 )
 
-        suggested_values = user_input or {
-            CONF_KEY: entry.data[CONF_KEY],
-            CONF_SECRET: entry.data[CONF_SECRET],
-        }
-
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                STEP_USER_DATA_SCHEMA, suggested_values
+                STEP_USER_DATA_SCHEMA, user_input or entry.data
             ),
             errors=errors,
         )
