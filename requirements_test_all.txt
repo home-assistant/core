@@ -2184,7 +2184,7 @@ pytrafikverket==1.1.1
 pytrydan==0.8.0
 
 # homeassistant.components.uptimerobot
-pyuptimerobot==22.4.1
+pyuptimerobot==24.0.1
 
 # homeassistant.components.keyboard
 # pyuserinput==0.1.11
