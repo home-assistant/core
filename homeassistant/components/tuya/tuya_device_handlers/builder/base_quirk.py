@@ -8,7 +8,7 @@ import inspect
 import pathlib
 from typing import TYPE_CHECKING, Any, Self
 
-from ..helpers import (
+from tuya_device_handlers.helpers import (
     TuyaClimateHVACMode,
     TuyaCoverDeviceClass,
     TuyaDeviceCategory,
@@ -18,10 +18,15 @@ from ..helpers import (
 )
 
 if TYPE_CHECKING:
+    from tuya_sharing import CustomerDevice
+
+    from ..helpers import TuyaIntegerTypeDefinition
     from ..registry import QuirksRegistry
 
 
-type TuyaIntegerConversionFunction = Callable[[Any, Any, Any], float]
+type TuyaIntegerConversionFunction = Callable[
+    [CustomerDevice, TuyaIntegerTypeDefinition, Any], Any
+]
 """Start conversion function:
 
     Args:
