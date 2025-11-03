@@ -89,9 +89,6 @@ class PTDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "invalid_auth"
         except MalformedResponse:
             errors["base"] = "malformed_response"
-        except Exception:
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
         else:
             # Connection Successful
             return self.async_create_entry(title=device_title, data=user_input)
@@ -138,9 +135,6 @@ class PTDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "invalid_auth"
         except MalformedResponse:
             errors["base"] = "malformed_response"
-        except Exception:
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
         else:
             # Connection Successful
             return self.async_update_reload_and_abort(reauth_entry, data=reauth_data)
