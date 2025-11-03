@@ -76,10 +76,12 @@ async def search_stations(
 
 async def validate_api_credentials(
     hass: HomeAssistant, data: dict[str, Any]
-) -> dict[str, Any]:
+) -> dict[str, str] | None:
     """Validate that the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
+
+    Returns errors if any
     """
     planner = await hass.async_add_executor_job(
         vasttrafik.JournyPlanner, data[CONF_KEY], data[CONF_SECRET]
@@ -94,13 +96,13 @@ async def validate_api_credentials(
             and err.response
             and err.response.status_code in (401, 403)
         ):
-            raise InvalidAuth from err
-        raise CannotConnect from err
+            return {"base": "invalid_auth"}
+        return {"base": "cannot_connect"}
     except Exception as err:
         _LOGGER.error("Unexpected error validating Västtrafik credentials: %s", err)
-        raise CannotConnect from err
+        return {"base": "unknown"}
 
-    return {"title": "Västtrafik"}
+    return None
 
 
 class VasttrafikConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -127,16 +129,7 @@ class VasttrafikConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(DOMAIN)
             self._abort_if_unique_id_configured()
 
-            try:
-                await validate_api_credentials(self.hass, user_input)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
+            if not (errors := await validate_api_credentials(self.hass, user_input)):
                 return self.async_create_entry(title="Västtrafik", data=user_input)
 
         return self.async_show_form(
@@ -151,16 +144,7 @@ class VasttrafikConfigFlow(ConfigFlow, domain=DOMAIN):
 
         errors: dict[str, str] = {}
         if user_input is not None:
-            try:
-                await validate_api_credentials(self.hass, user_input)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            except Exception:
-                _LOGGER.exception("Unexpected exception during reconfiguration")
-                errors["base"] = "unknown"
-            else:
+            if not (errors := await validate_api_credentials(self.hass, user_input)):
                 return self.async_update_reload_and_abort(
                     entry,
                     data=user_input,
@@ -180,23 +164,14 @@ class VasttrafikConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(
-        self, import_data: dict[str, Any]
-    ) -> ConfigFlowResult:
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle import from YAML configuration."""
         self._async_abort_entries_match(
             {CONF_KEY: import_data[CONF_KEY], CONF_SECRET: import_data[CONF_SECRET]}
         )
 
-        try:
-            await validate_api_credentials(self.hass, import_data)
-        except CannotConnect:
-            return self.async_abort(reason="cannot_connect")
-        except InvalidAuth:
-            return self.async_abort(reason="invalid_auth")
-        except Exception:
-            _LOGGER.exception("Unexpected exception during YAML import")
-            return self.async_abort(reason="unknown")
+        if errors := await validate_api_credentials(self.hass, import_data):
+            return self.async_abort(reason=errors["base"])
 
         subentries: list[ConfigSubentryData] = []
         for departure in import_data.get(CONF_DEPARTURES, []):
@@ -425,11 +400,3 @@ class VasttrafikSubentryFlow(ConfigSubentryFlow):
                 "station_name": current_data.get(CONF_FROM, "Unknown"),
             },
         )
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""
