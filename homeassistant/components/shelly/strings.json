@@ -214,6 +214,9 @@
           }
         }
       },
+      "humidity_with_channel_name": {
+        "name": "{channel_name} humidity"
+      },
       "illuminance_level": {
         "name": "Illuminance level",
         "state": {
