@@ -57,17 +57,15 @@ class TariffPeriod:
 class TeslemetryTariffSchedule(TeslemetryEnergyInfoEntity, CalendarEntity):
     """Energy Site Tariff Schedule Calendar."""
 
-    seasons: dict[str, dict[str, Any]] = {}
-    charges: dict[str, dict[str, Any]] = {}
-    key_base: str
-
     def __init__(
         self,
         data: Any,
         key_base: str,
     ) -> None:
         """Initialize the tariff schedule calendar."""
-        self.key_base = key_base
+        self.key_base: str = key_base
+        self.seasons: dict[str, dict[str, Any]] = {}
+        self.charges: dict[str, dict[str, Any]] = {}
         super().__init__(data, key_base)
 
     @property
@@ -79,8 +77,8 @@ class TeslemetryTariffSchedule(TeslemetryEnergyInfoEntity, CalendarEntity):
         if not current_season_name or not self.seasons.get(current_season_name):
             return None
 
-        season_data = self.seasons[current_season_name]
-        tou_periods = season_data.get("tou_periods", {})
+        # Get the time of use periods for the current season
+        tou_periods = self.seasons[current_season_name].get("tou_periods", {})
 
         for period_name, period_group in tou_periods.items():
             for period_def in period_group.get("periods", []):
@@ -155,8 +153,8 @@ class TeslemetryTariffSchedule(TeslemetryEnergyInfoEntity, CalendarEntity):
                 current_day += timedelta(days=1)
                 continue
 
-            season_data = self.seasons[season_name]
-            tou_periods = season_data.get("tou_periods", {})
+            # Get the time of use periods for the season
+            tou_periods = self.seasons[season_name].get("tou_periods", {})
             day_of_week = current_day.weekday()
 
             for period_name, period_group in tou_periods.items():
