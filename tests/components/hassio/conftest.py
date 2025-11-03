@@ -79,6 +79,7 @@ def all_setup_requests(
     store_info: AsyncMock,
     addon_changelog: AsyncMock,
     addon_stats: AsyncMock,
+    jobs_info: AsyncMock,
 ) -> None:
     """Mock all setup requests."""
     include_addons = hasattr(request, "param") and request.param.get(
@@ -260,4 +261,9 @@ def all_setup_requests(
                 "supervisor_internet": True,
             },
         },
+    )
+
+    aioclient_mock.get(
+        "http://127.0.0.1/jobs/info",
+        json={"result": "ok", "data": {"ignore_conditions": [], "jobs": []}},
     )

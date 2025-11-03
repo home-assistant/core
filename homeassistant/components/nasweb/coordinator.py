@@ -23,6 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 
 KEY_INPUTS = "inputs"
 KEY_OUTPUTS = "outputs"
+KEY_ZONES = "zones"
 
 
 class NotificationCoordinator:
@@ -103,6 +104,7 @@ class NASwebCoordinator(BaseDataUpdateCoordinatorProtocol):
             KEY_OUTPUTS: self.webio_api.outputs,
             KEY_INPUTS: self.webio_api.inputs,
             KEY_TEMP_SENSOR: self.webio_api.temp_sensor,
+            KEY_ZONES: self.webio_api.zones,
         }
         self.async_set_updated_data(data)
 
@@ -197,5 +199,6 @@ class NASwebCoordinator(BaseDataUpdateCoordinatorProtocol):
             KEY_OUTPUTS: self.webio_api.outputs,
             KEY_INPUTS: self.webio_api.inputs,
             KEY_TEMP_SENSOR: self.webio_api.temp_sensor,
+            KEY_ZONES: self.webio_api.zones,
         }
         self.async_set_updated_data(new_data)

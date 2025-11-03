@@ -12,6 +12,10 @@ from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 from zigpy.device import Device
 from zigpy.exceptions import TransientConnectionError
 
+from homeassistant.components.homeassistant_hardware.helpers import (
+    async_is_firmware_update_in_progress,
+    async_register_firmware_update_in_progress,
+)
 from homeassistant.components.zha.const import (
     CONF_BAUDRATE,
     CONF_FLOW_CONTROL,
@@ -20,6 +24,7 @@ from homeassistant.components.zha.const import (
     DOMAIN,
 )
 from homeassistant.components.zha.helpers import get_zha_data, get_zha_gateway
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     MAJOR_VERSION,
@@ -68,7 +73,7 @@ async def test_migration_from_v1_no_baudrate(
     assert CONF_DEVICE in config_entry_v1.data
     assert config_entry_v1.data[CONF_DEVICE][CONF_DEVICE_PATH] == DATA_PORT_PATH
     assert CONF_USB_PATH not in config_entry_v1.data
-    assert config_entry_v1.version == 4
+    assert config_entry_v1.version == 5
 
 
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
@@ -85,7 +90,7 @@ async def test_migration_from_v1_with_baudrate(
     assert CONF_USB_PATH not in config_entry_v1.data
     assert CONF_BAUDRATE in config_entry_v1.data[CONF_DEVICE]
     assert config_entry_v1.data[CONF_DEVICE][CONF_BAUDRATE] == 115200
-    assert config_entry_v1.version == 4
+    assert config_entry_v1.version == 5
 
 
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
@@ -100,7 +105,7 @@ async def test_migration_from_v1_wrong_baudrate(
     assert CONF_DEVICE in config_entry_v1.data
     assert config_entry_v1.data[CONF_DEVICE][CONF_DEVICE_PATH] == DATA_PORT_PATH
     assert CONF_USB_PATH not in config_entry_v1.data
-    assert config_entry_v1.version == 4
+    assert config_entry_v1.version == 5
 
 
 @pytest.mark.skipif(
@@ -162,7 +167,7 @@ async def test_setup_with_v3_cleaning_uri(
                 CONF_FLOW_CONTROL: None,
             },
         },
-        version=4,
+        version=5,
     )
     config_entry_v4.add_to_hass(hass)
 
@@ -172,7 +177,7 @@ async def test_setup_with_v3_cleaning_uri(
 
     assert config_entry_v4.data[CONF_RADIO_TYPE] == DATA_RADIO_TYPE
     assert config_entry_v4.data[CONF_DEVICE][CONF_DEVICE_PATH] == cleaned_path
-    assert config_entry_v4.version == 4
+    assert config_entry_v4.version == 5
 
 
 @pytest.mark.parametrize(
@@ -311,3 +316,68 @@ async def test_timezone_update(
 
     assert hass.config.time_zone == "America/New_York"
     assert gateway.config.local_timezone == zoneinfo.ZoneInfo("America/New_York")
+
+
+async def test_setup_no_firmware_update_in_progress(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_zigpy_connect: ControllerApplication,
+) -> None:
+    """Test that ZHA setup proceeds normally when no firmware update is in progress."""
+    await async_setup_component(hass, "homeassistant_hardware", {})
+
+    config_entry.add_to_hass(hass)
+    device_path = config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
+
+    assert not async_is_firmware_update_in_progress(hass, device_path)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_setup_firmware_update_in_progress(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test that ZHA setup is blocked when firmware update is in progress."""
+    await async_setup_component(hass, "homeassistant_hardware", {})
+
+    config_entry.add_to_hass(hass)
+    device_path = config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
+
+    async_register_firmware_update_in_progress(hass, device_path, "skyconnect")
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_firmware_update_in_progress_prevents_silabs_warning(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_zigpy_connect: ControllerApplication,
+) -> None:
+    """Test firmware update in progress prevents silabs firmware warning on setup failure."""
+    await async_setup_component(hass, "homeassistant_hardware", {})
+
+    config_entry.add_to_hass(hass)
+    device_path = config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
+
+    async_register_firmware_update_in_progress(hass, device_path, "skyconnect")
+
+    # Make ZHA setup fail
+    with (
+        patch.object(
+            mock_zigpy_connect,
+            "startup",
+            side_effect=Exception("Setup failed"),
+        ),
+        patch(
+            "homeassistant.components.zha.repairs.wrong_silabs_firmware.warn_on_wrong_silabs_firmware"
+        ) as mock_check_firmware,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+
+    # ZHA will try to reload again
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+    # But it did not try to check if the wrong firmware is installed
+    assert mock_check_firmware.call_count == 0

@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 from aioasuswrt.asuswrt import Device as LegacyDevice
+from asusrouter.modules.client import ConnectionState
 
 from homeassistant.components.asuswrt.const import (
     CONF_SSH_KEY,
@@ -71,6 +72,7 @@ def make_client(mac, ip, name, node):
     client = MagicMock()
     client.connection = connection
     client.description = description
+    client.state = ConnectionState.CONNECTED
     return client
 
 

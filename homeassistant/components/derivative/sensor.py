@@ -196,7 +196,7 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
 
         self._attr_name = name if name is not None else f"{source_entity} derivative"
         self._attr_extra_state_attributes = {ATTR_SOURCE_ID: source_entity}
-
+        self._unit_template: str | None = None
         if unit_of_measurement is None:
             final_unit_prefix = "" if unit_prefix is None else unit_prefix
             self._unit_template = f"{final_unit_prefix}{{}}/{unit_time}"
@@ -216,6 +216,23 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
         self._cancel_max_sub_interval_exceeded_callback: CALLBACK_TYPE = (
             lambda *args: None
         )
+
+    def _derive_and_set_attributes_from_state(self, source_state: State | None) -> None:
+        if self._unit_template and source_state:
+            original_unit = self._attr_native_unit_of_measurement
+            source_unit = source_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+            self._attr_native_unit_of_measurement = self._unit_template.format(
+                "" if source_unit is None else source_unit
+            )
+            if original_unit != self._attr_native_unit_of_measurement:
+                _LOGGER.debug(
+                    "%s: Derivative sensor switched UoM from %s to %s, resetting state to 0",
+                    self.entity_id,
+                    original_unit,
+                    self._attr_native_unit_of_measurement,
+                )
+                self._state_list = []
+                self._attr_native_value = round(Decimal(0), self._round_digits)
 
     def _calc_derivative_from_state_list(self, current_time: datetime) -> Decimal:
         def calculate_weight(start: datetime, end: datetime, now: datetime) -> float:
@@ -284,6 +301,9 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
                 )
             except (InvalidOperation, TypeError):
                 self._attr_native_value = None
+
+        source_state = self.hass.states.get(self._sensor_source_id)
+        self._derive_and_set_attributes_from_state(source_state)
 
         def schedule_max_sub_interval_exceeded(source_state: State | None) -> None:
             """Schedule calculation using the source state and max_sub_interval.
@@ -358,10 +378,18 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
             _LOGGER.debug("%s: New state changed event: %s", self.entity_id, event.data)
             self._cancel_max_sub_interval_exceeded_callback()
             new_state = event.data["new_state"]
+
             if not self._handle_invalid_source_state(new_state):
                 return
 
             assert new_state
+
+            original_unit = self._attr_native_unit_of_measurement
+            self._derive_and_set_attributes_from_state(new_state)
+            if original_unit != self._attr_native_unit_of_measurement:
+                self.async_write_ha_state()
+                return
+
             schedule_max_sub_interval_exceeded(new_state)
             old_state = event.data["old_state"]
             if old_state is not None:
@@ -390,12 +418,6 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
                     # Sensor becomes valid for the first time, just keep the restored value
                     self.async_write_ha_state()
                     return
-
-            if self.native_unit_of_measurement is None:
-                unit = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-                self._attr_native_unit_of_measurement = self._unit_template.format(
-                    "" if unit is None else unit
-                )
 
             self._prune_state_list(new_timestamp)
 
