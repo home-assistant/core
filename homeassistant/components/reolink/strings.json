@@ -532,6 +532,9 @@
       "audio_noise_reduction": {
         "name": "Audio noise reduction"
       },
+      "pir_interval": {
+        "name": "PIR interval"
+      },
       "pir_sensitivity": {
         "name": "PIR sensitivity"
       },

@@ -316,6 +316,9 @@
           "0": "mdi:volume-variant-off"
         }
       },
+      "pir_interval": {
+        "default": "mdi:motion-sensor"
+      },
       "pir_sensitivity": {
         "default": "mdi:motion-sensor"
       },
