@@ -2560,12 +2560,6 @@ vsure==2.6.7
 # homeassistant.components.vasttrafik
 vtjp==0.2.1
 
-# homeassistant.components.vulcan
-vulcan-api==2.4.2
-
-# homeassistant.components.vultr
-vultr==0.1.2
-
 # homeassistant.components.samsungtv
 # homeassistant.components.wake_on_lan
 wakeonlan==3.1.0
