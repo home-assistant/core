@@ -32,7 +32,6 @@ _LOGGER = logging.getLogger(__name__)
 MAX_CHUNK_SIZE = 60 * 1024 * 1024  # largest chunk possible, must be <= 60 MiB
 TARGET_CHUNKS = 20
 TIMEOUT = ClientTimeout(connect=10, total=43200)  # 12 hours
-METADATA_VERSION = 2
 CACHE_TTL = 300
 
 
