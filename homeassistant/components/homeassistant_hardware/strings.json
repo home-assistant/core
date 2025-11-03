@@ -53,6 +53,10 @@
           },
           "title": "Pick your protocol"
         },
+        "show_z2m_config": {
+          "description": "Your {model} is now running the latest Zigbee firmware. Use the following configuration when setting up Zigbee2MQTT:\n\n```yaml\n{z2m_config}\n```",
+          "title": "Zigbee2MQTT configuration"
+        },
         "start_otbr_addon": {
           "title": "Configuring Thread"
         },

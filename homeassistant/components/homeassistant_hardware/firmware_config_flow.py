@@ -33,7 +33,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.hassio import is_hassio
 
-from .const import OTBR_DOMAIN, ZHA_DOMAIN
+from .const import OTBR_DOMAIN, Z2M_CONFIG_TEMPLATE, ZHA_DOMAIN
 from .util import (
     ApplicationType,
     FirmwareInfo,
@@ -80,6 +80,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
     """Base flow to install firmware."""
 
     ZIGBEE_BAUDRATE = 115200  # Default, subclasses may override
+    ZIGBEE_FLOW_CONTROL = "hardware"
     BOOTLOADER_RESET_METHODS: list[ResetTarget] = []  # Default, subclasses may override
     APPLICATION_PROBE_METHODS: list[tuple[ApplicationType, int]] = []
 
@@ -456,7 +457,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         assert self._hardware_name is not None
 
         if self._zigbee_integration == ZigbeeIntegration.OTHER:
-            return self._async_flow_finished()
+            return await self.async_step_show_z2m_config()
 
         result = await self.hass.config_entries.flow.async_init(
             ZHA_DOMAIN,
@@ -466,7 +467,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
                 "port": {
                     "path": self._device,
                     "baudrate": self.ZIGBEE_BAUDRATE,
-                    "flow_control": "hardware",
+                    "flow_control": self.ZIGBEE_FLOW_CONTROL,
                 },
                 "radio_type": "ezsp",
                 "flow_strategy": self._zigbee_flow_strategy,
@@ -474,6 +475,28 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
             },
         )
         return self._continue_zha_flow(result)
+
+    async def async_step_show_z2m_config(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Show Zigbee2MQTT configuration."""
+        if user_input is not None:
+            return self._async_flow_finished()
+
+        # Format Z2M config template
+        z2m_config = Z2M_CONFIG_TEMPLATE.format(
+            port=self._device,
+            rtscts=("true" if self.ZIGBEE_FLOW_CONTROL == "hardware" else "false"),
+            baudrate=self.ZIGBEE_BAUDRATE,
+        )
+
+        return self.async_show_form(
+            step_id="show_z2m_config",
+            description_placeholders={
+                **self._get_translation_placeholders(),
+                "z2m_config": z2m_config,
+            },
+        )
 
     @callback
     def _continue_zha_flow(self, zha_result: ConfigFlowResult) -> ConfigFlowResult:

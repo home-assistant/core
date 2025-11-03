@@ -35,3 +35,11 @@ ZIGBEE_FLASHER_ADDON_SLUG = "core_silabs_flasher"
 
 SILABS_MULTIPROTOCOL_ADDON_SLUG = "core_silabs_multiprotocol"
 SILABS_FLASHER_ADDON_SLUG = "core_silabs_flasher"
+
+Z2M_CONFIG_TEMPLATE = """\
+serial:
+    port: "{port}"
+    adapter: ember
+    rtscts: {rtscts}
+    baudrate: {baudrate}\
+"""

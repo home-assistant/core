@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import AsyncGenerator, Awaitable, Callable, Iterator, Sequence
 import contextlib
+from textwrap import dedent
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, call, patch
 
@@ -577,10 +578,28 @@ async def test_config_flow_zigbee_custom_other(hass: HomeAssistant) -> None:
         assert pick_result["progress_action"] == "install_firmware"
         assert pick_result["step_id"] == "install_zigbee_firmware"
 
-        create_result = await consume_progress_flow(
+        show_z2m_result = await consume_progress_flow(
             hass,
             flow_id=pick_result["flow_id"],
             valid_step_ids=("install_zigbee_firmware",),
+        )
+
+        # After firmware installation, Z2M config is shown
+        assert show_z2m_result["type"] is FlowResultType.FORM
+        assert show_z2m_result["step_id"] == "show_z2m_config"
+        assert show_z2m_result["description_placeholders"]["z2m_config"] == dedent(
+            f"""\
+            serial:
+                port: "{TEST_DEVICE}"
+                adapter: ember
+                rtscts: true
+                baudrate: 115200"""
+        )
+
+        # Submit the form to complete the flow
+        create_result = await hass.config_entries.flow.async_configure(
+            show_z2m_result["flow_id"],
+            user_input={},
         )
 
         assert create_result["type"] is FlowResultType.CREATE_ENTRY
