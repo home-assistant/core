@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "homeassistant"
-version = "2025.11.0.dev0"
+version = "2025.12.0.dev0"
 license = "Apache-2.0"
 license-files = ["LICENSE*", "homeassistant/backports/LICENSE*"]
 description = "Open-source home automation platform running on Python 3."
@@ -44,7 +44,7 @@ dependencies = [
   "bcrypt==5.0.0",
   "certifi>=2021.5.30",
   "ciso8601==2.3.3",
-  "cronsim==2.6",
+  "cronsim==2.7",
   "fnv-hash-fast==1.6.0",
   # hass-nabucasa is imported by helpers which don't depend on the cloud
   # integration
@@ -75,7 +75,7 @@ dependencies = [
   "typing-extensions>=4.15.0,<5.0",
   "ulid-transform==1.5.2",
   "urllib3>=2.0",
-  "uv==0.9.5",
+  "uv==0.9.6",
   "voluptuous==0.15.2",
   "voluptuous-serialize==2.7.0",
   "voluptuous-openapi==0.1.0",
