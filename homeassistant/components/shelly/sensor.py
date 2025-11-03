@@ -81,8 +81,8 @@ def get_entity_translation_attributes(
     default_to_device_class_name: bool,
 ) -> tuple[dict[str, str] | None, str | None]:
     """Translation attributes for entity with channel name."""
-    return (
-        (
+    if channel_name is not None:
+        return (
             {"channel_name": channel_name},
             f"{key}_with_channel_name"
             if (
@@ -91,9 +91,8 @@ def get_entity_translation_attributes(
             )
             else None,
         )
-        if channel_name is not None
-        else (None, None)
-    )
+
+    return (None, None)
 
 
 @dataclass(frozen=True, kw_only=True)
