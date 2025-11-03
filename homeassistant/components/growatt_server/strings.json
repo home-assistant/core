@@ -537,7 +537,7 @@
       "description": "Read all time segments from a supported inverter.",
       "fields": {
         "device_id": {
-          "description": "The Growatt device to read time segments from.",
+          "description": "The Growatt device to perform the action on.",
           "name": "Device"
         }
       },
