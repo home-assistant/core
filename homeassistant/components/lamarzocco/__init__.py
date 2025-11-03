@@ -2,7 +2,9 @@
 
 import asyncio
 import logging
+import uuid
 
+from aiohttp import ClientSession
 from packaging import version
 from pylamarzocco import (
     LaMarzoccoBluetoothClient,
@@ -11,6 +13,7 @@ from pylamarzocco import (
 )
 from pylamarzocco.const import FirmwareType
 from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
+from pylamarzocco.util import InstallationKey, generate_installation_key
 
 from homeassistant.components.bluetooth import async_discovered_service_info
 from homeassistant.const import (
@@ -19,13 +22,14 @@ from homeassistant.const import (
     CONF_TOKEN,
     CONF_USERNAME,
     Platform,
+    __version__,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import issue_registry as ir
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from .const import CONF_USE_BLUETOOTH, DOMAIN
+from .const import CONF_INSTALLATION_KEY, CONF_USE_BLUETOOTH, DOMAIN
 from .coordinator import (
     LaMarzoccoConfigEntry,
     LaMarzoccoConfigUpdateCoordinator,
@@ -57,11 +61,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
     assert entry.unique_id
     serial = entry.unique_id
 
-    client = async_get_clientsession(hass)
     cloud_client = LaMarzoccoCloudClient(
         username=entry.data[CONF_USERNAME],
         password=entry.data[CONF_PASSWORD],
-        client=client,
+        installation_key=InstallationKey.from_json(entry.data[CONF_INSTALLATION_KEY]),
+        client=create_client_session(hass),
     )
 
     try:
@@ -138,7 +142,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
     )
 
     coordinators = LaMarzoccoRuntimeData(
-        LaMarzoccoConfigUpdateCoordinator(hass, entry, device),
+        LaMarzoccoConfigUpdateCoordinator(hass, entry, device, cloud_client),
         LaMarzoccoSettingsUpdateCoordinator(hass, entry, device),
         LaMarzoccoScheduleUpdateCoordinator(hass, entry, device),
         LaMarzoccoStatisticsUpdateCoordinator(hass, entry, device),
@@ -155,13 +159,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    async def update_listener(
-        hass: HomeAssistant, entry: LaMarzoccoConfigEntry
-    ) -> None:
-        await hass.config_entries.async_reload(entry.entry_id)
-
-    entry.async_on_unload(entry.add_update_listener(update_listener))
-
     return True
 
 
@@ -174,45 +171,50 @@ async def async_migrate_entry(
     hass: HomeAssistant, entry: LaMarzoccoConfigEntry
 ) -> bool:
     """Migrate config entry."""
-    if entry.version > 3:
+    if entry.version > 4:
         # guard against downgrade from a future version
         return False
 
-    if entry.version == 1:
+    if entry.version in (1, 2):
         _LOGGER.error(
-            "Migration from version 1 is no longer supported, please remove and re-add the integration"
+            "Migration from version 1 or 2 is no longer supported, please remove and re-add the integration"
         )
         return False
 
-    if entry.version == 2:
+    if entry.version == 3:
+        installation_key = generate_installation_key(str(uuid.uuid4()).lower())
         cloud_client = LaMarzoccoCloudClient(
             username=entry.data[CONF_USERNAME],
             password=entry.data[CONF_PASSWORD],
+            installation_key=installation_key,
+            client=create_client_session(hass),
         )
         try:
-            things = await cloud_client.list_things()
+            await cloud_client.async_register_client()
         except (AuthFail, RequestNotSuccessful) as exc:
             _LOGGER.error("Migration failed with error %s", exc)
             return False
-        v3_data = {
-            CONF_USERNAME: entry.data[CONF_USERNAME],
-            CONF_PASSWORD: entry.data[CONF_PASSWORD],
-            CONF_TOKEN: next(
-                (
-                    thing.ble_auth_token
-                    for thing in things
-                    if thing.serial_number == entry.unique_id
-                ),
-                None,
-            ),
-        }
-        if CONF_MAC in entry.data:
-            v3_data[CONF_MAC] = entry.data[CONF_MAC]
+
         hass.config_entries.async_update_entry(
             entry,
-            data=v3_data,
-            version=3,
+            data={
+                **entry.data,
+                CONF_INSTALLATION_KEY: installation_key.to_json(),
+            },
+            version=4,
         )
-        _LOGGER.debug("Migrated La Marzocco config entry to version 2")
+        _LOGGER.debug("Migrated La Marzocco config entry to version 4")
 
     return True
+
+
+def create_client_session(hass: HomeAssistant) -> ClientSession:
+    """Create a ClientSession with La Marzocco specific headers."""
+
+    return async_create_clientsession(
+        hass,
+        headers={
+            "X-Client": "HOME_ASSISTANT",
+            "X-Client-Build": __version__,
+        },
+    )

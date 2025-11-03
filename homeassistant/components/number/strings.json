@@ -1,5 +1,4 @@
 {
-  "title": "Number",
   "device_automation": {
     "action_type": {
       "set_value": "Set value for {entity_name}"
@@ -22,7 +21,7 @@
           "name": "Mode",
           "state": {
             "auto": "Automatic",
-            "box": "Box",
+            "box": "Input field",
             "slider": "Slider"
           }
         },
@@ -30,6 +29,9 @@
           "name": "Step"
         }
       }
+    },
+    "absolute_humidity": {
+      "name": "[%key:component::sensor::entity_component::absolute_humidity::name%]"
     },
     "apparent_power": {
       "name": "[%key:component::sensor::entity_component::apparent_power::name%]"
@@ -115,11 +117,14 @@
     "pm25": {
       "name": "[%key:component::sensor::entity_component::pm25::name%]"
     },
-    "power_factor": {
-      "name": "[%key:component::sensor::entity_component::power_factor::name%]"
+    "pm4": {
+      "name": "[%key:component::sensor::entity_component::pm4::name%]"
     },
     "power": {
       "name": "[%key:component::sensor::entity_component::power::name%]"
+    },
+    "power_factor": {
+      "name": "[%key:component::sensor::entity_component::power_factor::name%]"
     },
     "precipitation": {
       "name": "[%key:component::sensor::entity_component::precipitation::name%]"
@@ -151,6 +156,9 @@
     "temperature": {
       "name": "[%key:component::sensor::entity_component::temperature::name%]"
     },
+    "temperature_delta": {
+      "name": "[%key:component::sensor::entity_component::temperature_delta::name%]"
+    },
     "volatile_organic_compounds": {
       "name": "[%key:component::sensor::entity_component::volatile_organic_compounds::name%]"
     },
@@ -160,11 +168,11 @@
     "volume": {
       "name": "[%key:component::sensor::entity_component::volume::name%]"
     },
-    "volume_storage": {
-      "name": "[%key:component::sensor::entity_component::volume_storage::name%]"
-    },
     "volume_flow_rate": {
       "name": "[%key:component::sensor::entity_component::volume_flow_rate::name%]"
+    },
+    "volume_storage": {
+      "name": "[%key:component::sensor::entity_component::volume_storage::name%]"
     },
     "water": {
       "name": "[%key:component::sensor::entity_component::water::name%]"
@@ -186,14 +194,15 @@
   },
   "services": {
     "set_value": {
-      "name": "Set",
       "description": "Sets the value of a number.",
       "fields": {
         "value": {
-          "name": "Value",
-          "description": "The target value to set."
+          "description": "The target value to set.",
+          "name": "Value"
         }
-      }
+      },
+      "name": "Set"
     }
-  }
+  },
+  "title": "Number"
 }

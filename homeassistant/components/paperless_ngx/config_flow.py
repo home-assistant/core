@@ -16,7 +16,7 @@ from pypaperless.exceptions import (
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_API_KEY, CONF_URL
+from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, LOGGER
@@ -25,6 +25,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_URL): str,
         vol.Required(CONF_API_KEY): str,
+        vol.Required(CONF_VERIFY_SSL, default=True): bool,
     }
 )
 
@@ -78,15 +79,19 @@ class PaperlessConfigFlow(ConfigFlow, domain=DOMAIN):
             if not errors:
                 return self.async_update_reload_and_abort(entry, data=user_input)
 
+        if user_input is not None:
+            suggested_values = user_input
+        else:
+            suggested_values = {
+                CONF_URL: entry.data[CONF_URL],
+                CONF_VERIFY_SSL: entry.data.get(CONF_VERIFY_SSL, True),
+            }
+
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
                 data_schema=STEP_USER_DATA_SCHEMA,
-                suggested_values={
-                    CONF_URL: user_input[CONF_URL]
-                    if user_input is not None
-                    else entry.data[CONF_URL],
-                },
+                suggested_values=suggested_values,
             ),
             errors=errors,
         )
@@ -122,13 +127,15 @@ class PaperlessConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def _validate_input(self, user_input: dict[str, str]) -> dict[str, str]:
+    async def _validate_input(self, user_input: dict[str, Any]) -> dict[str, str]:
         errors: dict[str, str] = {}
 
         client = Paperless(
             user_input[CONF_URL],
             user_input[CONF_API_KEY],
-            session=async_get_clientsession(self.hass),
+            session=async_get_clientsession(
+                self.hass, user_input.get(CONF_VERIFY_SSL, True)
+            ),
         )
 
         try:

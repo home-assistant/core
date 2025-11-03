@@ -18,7 +18,6 @@
           'air-purifier',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'VeSync',
@@ -28,7 +27,6 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
     }),
@@ -69,7 +67,53 @@
       'unique_id': 'air-purifier-display',
       'unit_of_measurement': None,
     }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'switch',
+      'entity_category': None,
+      'entity_id': 'switch.air_purifier_131s_child_lock',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Child lock',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'child_lock',
+      'unique_id': 'air-purifier-child_lock',
+      'unit_of_measurement': None,
+    }),
   ])
+# ---
+# name: test_switch_state[Air Purifier 131s][switch.air_purifier_131s_child_lock]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Air Purifier 131s Child lock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.air_purifier_131s_child_lock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
 # ---
 # name: test_switch_state[Air Purifier 131s][switch.air_purifier_131s_display]
   StateSnapshot({
@@ -103,7 +147,6 @@
           'asd_sdfKIHG7IJHGwJGJ7GJ_ag5h3G55',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'VeSync',
@@ -113,7 +156,6 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
     }),
@@ -154,7 +196,53 @@
       'unique_id': 'asd_sdfKIHG7IJHGwJGJ7GJ_ag5h3G55-display',
       'unit_of_measurement': None,
     }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'switch',
+      'entity_category': None,
+      'entity_id': 'switch.air_purifier_200s_child_lock',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Child lock',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'child_lock',
+      'unique_id': 'asd_sdfKIHG7IJHGwJGJ7GJ_ag5h3G55-child_lock',
+      'unit_of_measurement': None,
+    }),
   ])
+# ---
+# name: test_switch_state[Air Purifier 200s][switch.air_purifier_200s_child_lock]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Air Purifier 200s Child lock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.air_purifier_200s_child_lock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
 # ---
 # name: test_switch_state[Air Purifier 200s][switch.air_purifier_200s_display]
   StateSnapshot({
@@ -188,7 +276,6 @@
           '400s-purifier',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'VeSync',
@@ -198,7 +285,6 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
     }),
@@ -239,7 +325,53 @@
       'unique_id': '400s-purifier-display',
       'unit_of_measurement': None,
     }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'switch',
+      'entity_category': None,
+      'entity_id': 'switch.air_purifier_400s_child_lock',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Child lock',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'child_lock',
+      'unique_id': '400s-purifier-child_lock',
+      'unit_of_measurement': None,
+    }),
   ])
+# ---
+# name: test_switch_state[Air Purifier 400s][switch.air_purifier_400s_child_lock]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Air Purifier 400s Child lock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.air_purifier_400s_child_lock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
 # ---
 # name: test_switch_state[Air Purifier 400s][switch.air_purifier_400s_display]
   StateSnapshot({
@@ -273,7 +405,6 @@
           '600s-purifier',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'VeSync',
@@ -283,7 +414,6 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
     }),
@@ -324,7 +454,53 @@
       'unique_id': '600s-purifier-display',
       'unit_of_measurement': None,
     }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'switch',
+      'entity_category': None,
+      'entity_id': 'switch.air_purifier_600s_child_lock',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Child lock',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'child_lock',
+      'unique_id': '600s-purifier-child_lock',
+      'unit_of_measurement': None,
+    }),
   ])
+# ---
+# name: test_switch_state[Air Purifier 600s][switch.air_purifier_600s_child_lock]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Air Purifier 600s Child lock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.air_purifier_600s_child_lock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
 # ---
 # name: test_switch_state[Air Purifier 600s][switch.air_purifier_600s_display]
   StateSnapshot({
@@ -358,7 +534,6 @@
           'dimmable-bulb',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'VeSync',
@@ -368,7 +543,6 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
     }),
@@ -397,7 +571,6 @@
           'dimmable-switch',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'VeSync',
@@ -407,7 +580,6 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
     }),
@@ -436,7 +608,6 @@
           '200s-humidifier4321',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'VeSync',
@@ -446,7 +617,6 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
     }),
@@ -521,7 +691,6 @@
           '600s-humidifier',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'VeSync',
@@ -531,7 +700,6 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
     }),
@@ -606,7 +774,6 @@
           'outlet',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'VeSync',
@@ -616,7 +783,6 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
     }),
@@ -692,7 +858,6 @@
           'smarttowerfan',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'VeSync',
@@ -702,7 +867,6 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
     }),
@@ -777,7 +941,6 @@
           'tunable-bulb',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'VeSync',
@@ -787,7 +950,6 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
     }),
@@ -816,7 +978,6 @@
           'switch',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'VeSync',
@@ -826,7 +987,6 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
     }),

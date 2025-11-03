@@ -9,8 +9,6 @@
       "unit": null,
       "food": null,
       "note": "Apples",
-      "isFood": false,
-      "disableAmount": true,
       "display": "2 Apples",
       "shoppingListId": "9ce096fe-ded2-4077-877d-78ba450ab13e",
       "checked": false,

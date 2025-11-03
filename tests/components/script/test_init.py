@@ -627,9 +627,6 @@ async def test_service_descriptions(hass: HomeAssistant) -> None:
 
     assert descriptions[DOMAIN]["test_name"]["name"] == "ABC"
 
-    # Test 4: verify that names from YAML are taken into account as well
-    assert descriptions[DOMAIN]["turn_on"]["name"] == "Turn on"
-
 
 async def test_shared_context(hass: HomeAssistant) -> None:
     """Test that the shared context is passed down the chain."""
@@ -654,14 +651,14 @@ async def test_shared_context(hass: HomeAssistant) -> None:
     assert event_mock.call_count == 1
     assert run_mock.call_count == 1
 
-    args, kwargs = run_mock.call_args
+    args, _kwargs = run_mock.call_args
     assert args[0].context == context
     # Ensure event data has all attributes set
     assert args[0].data.get(ATTR_NAME) == "test"
     assert args[0].data.get(ATTR_ENTITY_ID) == "script.test"
 
     # Ensure context carries through the event
-    args, kwargs = event_mock.call_args
+    args, _kwargs = event_mock.call_args
     assert args[0].context == context
 
     # Ensure the script state shares the same context

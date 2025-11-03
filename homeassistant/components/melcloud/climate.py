@@ -24,13 +24,12 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import MelCloudDevice
+from . import MelCloudConfigEntry, MelCloudDevice
 from .const import (
     ATTR_STATUS,
     ATTR_VANE_HORIZONTAL,
@@ -38,7 +37,6 @@ from .const import (
     ATTR_VANE_VERTICAL,
     ATTR_VANE_VERTICAL_POSITIONS,
     CONF_POSITION,
-    DOMAIN,
     SERVICE_SET_VANE_HORIZONTAL,
     SERVICE_SET_VANE_VERTICAL,
 )
@@ -77,11 +75,11 @@ ATW_ZONE_HVAC_ACTION_LOOKUP = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: MelCloudConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MelCloud device climate based on config_entry."""
-    mel_devices = hass.data[DOMAIN][entry.entry_id]
+    mel_devices = entry.runtime_data
     entities: list[AtaDeviceClimate | AtwDeviceZoneClimate] = [
         AtaDeviceClimate(mel_device, mel_device.device)
         for mel_device in mel_devices[DEVICE_TYPE_ATA]
@@ -410,5 +408,5 @@ class AtwDeviceZoneClimate(MelCloudClimate):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         await self._zone.set_target_temperature(
-            kwargs.get("temperature", self.target_temperature)
+            kwargs.get(ATTR_TEMPERATURE, self.target_temperature)
         )

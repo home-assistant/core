@@ -1,0 +1,166 @@
+[
+  {
+    "Id": "aa86eacfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf",
+    "Names": ["/funny_chatelet"],
+    "Image": "docker.io/library/ubuntu:latest",
+    "ImageID": "sha256:72297848456d5d37d1262630108ab308d3e9ec7ed1c3286a32fe09856619a782",
+    "ImageManifestDescriptor": {
+      "mediaType": "application/vnd.oci.image.manifest.v1+json",
+      "digest": "sha256:c0537ff6a5218ef531ece93d4984efc99bbf3f7497c0a7726c88e2bb7584dc96",
+      "size": 424,
+      "urls": ["http://example.com"],
+      "annotations": {
+        "com.docker.official-images.bashbrew.arch": "amd64",
+        "org.opencontainers.image.base.digest": "sha256:0d0ef5c914d3ea700147da1bd050c59edb8bb12ca312f3800b29d7c8087eabd8",
+        "org.opencontainers.image.base.name": "scratch",
+        "org.opencontainers.image.created": "2025-01-27T00:00:00Z",
+        "org.opencontainers.image.revision": "9fabb4bad5138435b01857e2fe9363e2dc5f6a79",
+        "org.opencontainers.image.source": "https://git.launchpad.net/cloud-images/+oci/ubuntu-base",
+        "org.opencontainers.image.url": "https://hub.docker.com/_/ubuntu",
+        "org.opencontainers.image.version": "24.04"
+      },
+      "data": null,
+      "platform": {
+        "architecture": "arm",
+        "os": "windows",
+        "os.version": "10.0.19041.1165",
+        "os.features": ["win32k"],
+        "variant": "v7"
+      },
+      "artifactType": null
+    },
+    "Command": "/bin/bash",
+    "Created": "1739811096",
+    "Ports": [
+      {
+        "PrivatePort": 8080,
+        "PublicPort": 80,
+        "Type": "tcp"
+      }
+    ],
+    "SizeRw": "122880",
+    "SizeRootFs": "1653948416",
+    "Labels": {
+      "com.example.vendor": "Acme",
+      "com.example.license": "GPL",
+      "com.example.version": "1.0"
+    },
+    "State": "running",
+    "Status": "Up 4 days",
+    "HostConfig": {
+      "NetworkMode": "mynetwork",
+      "Annotations": {
+        "io.kubernetes.docker.type": "container",
+        "io.kubernetes.sandbox.id": "3befe639bed0fd6afdd65fd1fa84506756f59360ec4adc270b0fdac9be22b4d3"
+      }
+    },
+    "NetworkSettings": {
+      "Networks": {
+        "property1": {
+          "IPAMConfig": {
+            "IPv4Address": "172.20.30.33",
+            "IPv6Address": "2001:db8:abcd::3033",
+            "LinkLocalIPs": ["169.254.34.68", "fe80::3468"]
+          },
+          "Links": ["container_1", "container_2"],
+          "MacAddress": "02:42:ac:11:00:04",
+          "Aliases": ["server_x", "server_y"],
+          "DriverOpts": {
+            "com.example.some-label": "some-value",
+            "com.example.some-other-label": "some-other-value"
+          },
+          "GwPriority": [10],
+          "NetworkID": "08754567f1f40222263eab4102e1c733ae697e8e354aa9cd6e18d7402835292a",
+          "EndpointID": "b88f5b905aabf2893f3cbc4ee42d1ea7980bbc0a92e2c8922b1e1795298afb0b",
+          "Gateway": "172.17.0.1",
+          "IPAddress": "172.17.0.4",
+          "IPPrefixLen": 16,
+          "IPv6Gateway": "2001:db8:2::100",
+          "GlobalIPv6Address": "2001:db8::5689",
+          "GlobalIPv6PrefixLen": 64,
+          "DNSNames": ["foobar", "server_x", "server_y", "my.ctr"]
+        }
+      }
+    },
+    "Mounts": [
+      {
+        "Type": "volume",
+        "Name": "myvolume",
+        "Source": "/var/lib/docker/volumes/myvolume/_data",
+        "Destination": "/usr/share/nginx/html/",
+        "Driver": "local",
+        "Mode": "z",
+        "RW": true,
+        "Propagation": ""
+      }
+    ]
+  },
+  {
+    "Id": "bb97facfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf",
+    "Names": ["/serene_banach"],
+    "Image": "docker.io/library/nginx:latest",
+    "ImageID": "sha256:3f8a4339a5c5d5d37d1262630108ab308d3e9ec7ed1c3286a32fe09856619a782",
+    "Command": "nginx -g 'daemon off;'",
+    "Created": "1739812096",
+    "Ports": [
+      {
+        "PrivatePort": 80,
+        "PublicPort": 8081,
+        "Type": "tcp"
+      }
+    ],
+    "State": "running",
+    "Status": "Up 2 days"
+  },
+  {
+    "Id": "cc08facfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf",
+    "Names": ["/stoic_turing"],
+    "Image": "docker.io/library/postgres:15",
+    "ImageID": "sha256:4f8a4339a5c5d5d37d1262630108ab308d3e9ec7ed1c3286a32fe09856619a782",
+    "Command": "postgres",
+    "Created": "1739813096",
+    "Ports": [
+      {
+        "PrivatePort": 5432,
+        "PublicPort": 5432,
+        "Type": "tcp"
+      }
+    ],
+    "State": "running",
+    "Status": "Up 1 day"
+  },
+  {
+    "Id": "dd19facfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf",
+    "Names": ["/focused_einstein"],
+    "Image": "docker.io/library/redis:7",
+    "ImageID": "sha256:5f8a4339a5c5d5d37d1262630108ab308d3e9ec7ed1c3286a32fe09856619a782",
+    "Command": "redis-server",
+    "Created": "1739814096",
+    "Ports": [
+      {
+        "PrivatePort": 6379,
+        "PublicPort": 6379,
+        "Type": "tcp"
+      }
+    ],
+    "State": "running",
+    "Status": "Up 12 hours"
+  },
+  {
+    "Id": "ee20facfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf",
+    "Names": ["/practical_morse"],
+    "Image": "docker.io/library/python:3.13-slim",
+    "ImageID": "sha256:6f8a4339a5c5d5d37d1262630108ab308d3e9ec7ed1c3286a32fe09856619a782",
+    "Command": "python3 -m http.server",
+    "Created": "1739815096",
+    "Ports": [
+      {
+        "PrivatePort": 8000,
+        "PublicPort": 8000,
+        "Type": "tcp"
+      }
+    ],
+    "State": "running",
+    "Status": "Up 6 hours"
+  }
+]

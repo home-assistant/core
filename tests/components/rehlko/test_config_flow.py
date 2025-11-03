@@ -19,7 +19,7 @@ from tests.common import MockConfigEntry
 DHCP_DISCOVERY = DhcpServiceInfo(
     ip="1.1.1.1",
     hostname="KohlerGen",
-    macaddress="00146FAABBCC",
+    macaddress="00146faabbcc",
 )
 
 

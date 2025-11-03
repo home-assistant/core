@@ -9,9 +9,11 @@ from functools import partial
 import logging
 import os
 import re
+import struct
 from typing import Any, NamedTuple
 
 from aiohasupervisor import SupervisorError
+from aiohasupervisor.models import GreenOptions, YellowOptions  # noqa: F401
 import voluptuous as vol
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
@@ -56,7 +58,6 @@ from homeassistant.helpers.issue_registry import IssueSeverity
 from homeassistant.helpers.service_info.hassio import (
     HassioServiceInfo as _HassioServiceInfo,
 )
-from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import create_eager_task
@@ -73,6 +74,7 @@ from . import (  # noqa: F401
     config_flow,
     diagnostics,
     sensor,
+    switch,
     system_health,
     update,
 )
@@ -122,11 +124,6 @@ from .discovery import async_setup_discovery_view
 from .handler import (  # noqa: F401
     HassIO,
     HassioAPIError,
-    async_create_backup,
-    async_get_green_settings,
-    async_get_yellow_settings,
-    async_set_green_settings,
-    async_set_yellow_settings,
     async_update_diagnostics,
     get_supervisor_client,
 )
@@ -149,7 +146,7 @@ _DEPRECATED_HassioServiceInfo = DeprecatedConstant(
 # If new platforms are added, be sure to import them above
 # so we do not make other components that depend on hassio
 # wait for the import of the platforms
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.UPDATE]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH, Platform.UPDATE]
 
 CONF_FRONTEND_REPO = "development_repo"
 
@@ -231,6 +228,11 @@ SCHEMA_RESTORE_PARTIAL = SCHEMA_RESTORE_FULL.extend(
         vol.Optional(ATTR_ADDONS): vol.All(cv.ensure_list, [VALID_ADDON_SLUG]),
     }
 )
+
+
+def _is_32_bit() -> bool:
+    size = struct.calcsize("P")
+    return size * 8 == 32
 
 
 class APIEndpointSettings(NamedTuple):
@@ -554,28 +556,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator.async_config_entry_first_refresh()
     hass.data[ADDONS_COORDINATOR] = coordinator
 
-    system_info = await async_get_system_info(hass)
-
     def deprecated_setup_issue() -> None:
         os_info = get_os_info(hass)
         info = get_info(hass)
         if os_info is None or info is None:
             return
         is_haos = info.get("hassos") is not None
-        arch = system_info["arch"]
         board = os_info.get("board")
-        supported_board = board in {"rpi3", "rpi4", "tinker", "odroid-xu4", "rpi2"}
-        if is_haos and arch == "armv7" and supported_board:
+        arch = info.get("arch", "unknown")
+        unsupported_board = board in {"tinker", "odroid-xu4", "rpi2"}
+        unsupported_os_on_board = board in {"rpi3", "rpi4"}
+        if is_haos and (unsupported_board or unsupported_os_on_board):
             issue_id = "deprecated_os_"
-            if board in {"rpi3", "rpi4"}:
+            if unsupported_os_on_board:
                 issue_id += "aarch64"
-            elif board in {"tinker", "odroid-xu4", "rpi2"}:
+            elif unsupported_board:
                 issue_id += "armv7"
             ir.async_create_issue(
                 hass,
                 "homeassistant",
                 issue_id,
-                breaks_in_ha_version="2025.12.0",
                 learn_more_url=DEPRECATION_URL,
                 is_fixable=False,
                 severity=IssueSeverity.WARNING,
@@ -584,9 +584,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     "installation_guide": "https://www.home-assistant.io/installation/",
                 },
             )
-        deprecated_architecture = False
-        if arch in {"i386", "armhf"} or (arch == "armv7" and not supported_board):
-            deprecated_architecture = True
+        bit32 = _is_32_bit()
+        deprecated_architecture = bit32 and not (
+            unsupported_board or unsupported_os_on_board
+        )
         if not is_haos or deprecated_architecture:
             issue_id = "deprecated"
             if not is_haos:
@@ -597,7 +598,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 hass,
                 "homeassistant",
                 issue_id,
-                breaks_in_ha_version="2025.12.0",
                 learn_more_url=DEPRECATION_URL,
                 is_fixable=False,
                 severity=IssueSeverity.WARNING,
@@ -620,7 +620,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    # Pop add-on data
+    # Unload coordinator
+    coordinator: HassioDataUpdateCoordinator = hass.data[ADDONS_COORDINATOR]
+    coordinator.unload()
+
+    # Pop coordinator
     hass.data.pop(ADDONS_COORDINATOR, None)
 
     return unload_ok

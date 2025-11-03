@@ -26,7 +26,6 @@ PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
 COORDINATOR_FORECAST = "coordinator_forecast"
 COORDINATOR_RAIN = "coordinator_rain"
 COORDINATOR_ALERT = "coordinator_alert"
-UNDO_UPDATE_LISTENER = "undo_update_listener"
 ATTRIBUTION = "Data provided by Météo-France"
 MODEL = "Météo-France mobile API"
 MANUFACTURER = "Météo-France"
@@ -50,7 +49,7 @@ CONDITION_CLASSES: dict[str, list[str]] = {
         "Bancs de Brouillard",
         "Brouillard dense",
     ],
-    ATTR_CONDITION_HAIL: ["Risque de grêle", "Risque de grèle"],
+    ATTR_CONDITION_HAIL: ["Risque de grêle", "Averses de grêle"],
     ATTR_CONDITION_LIGHTNING: ["Risque d'orages", "Orages", "Orage avec grêle"],
     ATTR_CONDITION_LIGHTNING_RAINY: [
         "Pluie orageuses",

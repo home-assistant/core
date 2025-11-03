@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import slugify
 
-from .account import IcloudAccount
+from .account import IcloudAccount, IcloudConfigEntry
 from .const import (
     ATTR_ACCOUNT,
     ATTR_DEVICE_NAME,
@@ -92,8 +92,10 @@ def lost_device(service: ServiceCall) -> None:
 def update_account(service: ServiceCall) -> None:
     """Call the update function of an iCloud account."""
     if (account := service.data.get(ATTR_ACCOUNT)) is None:
-        for account in service.hass.data[DOMAIN].values():
-            account.keep_alive()
+        # Update all accounts when no specific account is provided
+        entry: IcloudConfigEntry
+        for entry in service.hass.config_entries.async_loaded_entries(DOMAIN):
+            entry.runtime_data.keep_alive()
     else:
         _get_account(service.hass, account).keep_alive()
 
@@ -102,19 +104,15 @@ def _get_account(hass: HomeAssistant, account_identifier: str) -> IcloudAccount:
     if account_identifier is None:
         return None
 
-    icloud_account: IcloudAccount | None = hass.data[DOMAIN].get(account_identifier)
-    if icloud_account is None:
-        for account in hass.data[DOMAIN].values():
-            if account.username == account_identifier:
-                icloud_account = account
+    entry: IcloudConfigEntry
+    for entry in hass.config_entries.async_loaded_entries(DOMAIN):
+        if entry.runtime_data.username == account_identifier:
+            return entry.runtime_data
 
-    if icloud_account is None:
-        raise ValueError(
-            f"No iCloud account with username or name {account_identifier}"
-        )
-    return icloud_account
+    raise ValueError(f"No iCloud account with username or name {account_identifier}")
 
 
+@callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register iCloud services."""
 

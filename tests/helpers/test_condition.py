@@ -1,14 +1,21 @@
 """Test the condition helper."""
 
 from datetime import timedelta
+import io
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from freezegun import freeze_time
 import pytest
+from pytest_unordered import unordered
 import voluptuous as vol
 
+from homeassistant.components.device_automation import (
+    DOMAIN as DOMAIN_DEVICE_AUTOMATION,
+)
 from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.sun import DOMAIN as DOMAIN_SUN
+from homeassistant.components.system_health import DOMAIN as DOMAIN_SYSTEM_HEALTH
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     CONF_CONDITION,
@@ -25,9 +32,21 @@ from homeassistant.helpers import (
     entity_registry as er,
     trace,
 )
+from homeassistant.helpers.automation import move_top_level_schema_fields_to_options
+from homeassistant.helpers.condition import (
+    Condition,
+    ConditionCheckerType,
+    ConditionConfig,
+    async_validate_condition_config,
+)
 from homeassistant.helpers.template import Template
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.loader import Integration, async_get_integration
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
+from homeassistant.util.yaml.loader import parse_yaml
+
+from tests.common import MockModule, MockPlatform, mock_integration, mock_platform
 
 
 def assert_element(trace_element, expected_element, path):
@@ -70,11 +89,26 @@ def assert_condition_trace(expected):
             assert_element(condition_trace[key][index], element, path)
 
 
-async def test_invalid_condition(hass: HomeAssistant) -> None:
-    """Test if invalid condition raises."""
-    with pytest.raises(HomeAssistantError):
-        await condition.async_from_config(
-            hass,
+@pytest.mark.parametrize(
+    ("config", "error"),
+    [
+        (
+            {"condition": 123},
+            "Unexpected value for condition: '123'. Expected a condition, "
+            "a list of conditions or a valid template",
+        )
+    ],
+)
+async def test_invalid_condition(hass: HomeAssistant, config: dict, error: str) -> None:
+    """Test if validating an invalid condition raises."""
+    with pytest.raises(vol.Invalid, match=error):
+        cv.CONDITION_SCHEMA(config)
+
+
+@pytest.mark.parametrize(
+    ("config", "error"),
+    [
+        (
             {
                 "condition": "invalid",
                 "conditions": [
@@ -85,7 +119,15 @@ async def test_invalid_condition(hass: HomeAssistant) -> None:
                     },
                 ],
             },
+            'Invalid condition "invalid" specified',
         )
+    ],
+)
+async def test_unknown_condition(hass: HomeAssistant, config: dict, error: str) -> None:
+    """Test if creating an unknown condition raises."""
+    config = cv.CONDITION_SCHEMA(config)
+    with pytest.raises(HomeAssistantError, match=error):
+        await condition.async_from_config(hass, config)
 
 
 async def test_and_condition(hass: HomeAssistant) -> None:
@@ -1880,201 +1922,6 @@ async def test_numeric_state_using_input_number(hass: HomeAssistant) -> None:
         )
 
 
-async def test_zone_raises(hass: HomeAssistant) -> None:
-    """Test that zone raises ConditionError on errors."""
-    config = {
-        "condition": "zone",
-        "entity_id": "device_tracker.cat",
-        "zone": "zone.home",
-    }
-    config = cv.CONDITION_SCHEMA(config)
-    config = await condition.async_validate_condition_config(hass, config)
-    test = await condition.async_from_config(hass, config)
-
-    with pytest.raises(ConditionError, match="no zone"):
-        condition.zone(hass, zone_ent=None, entity="sensor.any")
-
-    with pytest.raises(ConditionError, match="unknown zone"):
-        test(hass)
-
-    hass.states.async_set(
-        "zone.home",
-        "zoning",
-        {"name": "home", "latitude": 2.1, "longitude": 1.1, "radius": 10},
-    )
-
-    with pytest.raises(ConditionError, match="no entity"):
-        condition.zone(hass, zone_ent="zone.home", entity=None)
-
-    with pytest.raises(ConditionError, match="unknown entity"):
-        test(hass)
-
-    hass.states.async_set(
-        "device_tracker.cat",
-        "home",
-        {"friendly_name": "cat"},
-    )
-
-    with pytest.raises(ConditionError, match="latitude"):
-        test(hass)
-
-    hass.states.async_set(
-        "device_tracker.cat",
-        "home",
-        {"friendly_name": "cat", "latitude": 2.1},
-    )
-
-    with pytest.raises(ConditionError, match="longitude"):
-        test(hass)
-
-    hass.states.async_set(
-        "device_tracker.cat",
-        "home",
-        {"friendly_name": "cat", "latitude": 2.1, "longitude": 1.1},
-    )
-
-    # All okay, now test multiple failed conditions
-    assert test(hass)
-
-    config = {
-        "condition": "zone",
-        "entity_id": ["device_tracker.cat", "device_tracker.dog"],
-        "zone": ["zone.home", "zone.work"],
-    }
-    config = cv.CONDITION_SCHEMA(config)
-    config = await condition.async_validate_condition_config(hass, config)
-    test = await condition.async_from_config(hass, config)
-
-    with pytest.raises(ConditionError, match="dog"):
-        test(hass)
-
-    with pytest.raises(ConditionError, match="work"):
-        test(hass)
-
-    hass.states.async_set(
-        "zone.work",
-        "zoning",
-        {"name": "work", "latitude": 20, "longitude": 10, "radius": 25000},
-    )
-
-    hass.states.async_set(
-        "device_tracker.dog",
-        "work",
-        {"friendly_name": "dog", "latitude": 20.1, "longitude": 10.1},
-    )
-
-    assert test(hass)
-
-
-async def test_zone_multiple_entities(hass: HomeAssistant) -> None:
-    """Test with multiple entities in condition."""
-    config = {
-        "condition": "and",
-        "conditions": [
-            {
-                "alias": "Zone Condition",
-                "condition": "zone",
-                "entity_id": ["device_tracker.person_1", "device_tracker.person_2"],
-                "zone": "zone.home",
-            },
-        ],
-    }
-    config = cv.CONDITION_SCHEMA(config)
-    config = await condition.async_validate_condition_config(hass, config)
-    test = await condition.async_from_config(hass, config)
-
-    hass.states.async_set(
-        "zone.home",
-        "zoning",
-        {"name": "home", "latitude": 2.1, "longitude": 1.1, "radius": 10},
-    )
-
-    hass.states.async_set(
-        "device_tracker.person_1",
-        "home",
-        {"friendly_name": "person_1", "latitude": 2.1, "longitude": 1.1},
-    )
-    hass.states.async_set(
-        "device_tracker.person_2",
-        "home",
-        {"friendly_name": "person_2", "latitude": 2.1, "longitude": 1.1},
-    )
-    assert test(hass)
-
-    hass.states.async_set(
-        "device_tracker.person_1",
-        "home",
-        {"friendly_name": "person_1", "latitude": 20.1, "longitude": 10.1},
-    )
-    hass.states.async_set(
-        "device_tracker.person_2",
-        "home",
-        {"friendly_name": "person_2", "latitude": 2.1, "longitude": 1.1},
-    )
-    assert not test(hass)
-
-    hass.states.async_set(
-        "device_tracker.person_1",
-        "home",
-        {"friendly_name": "person_1", "latitude": 2.1, "longitude": 1.1},
-    )
-    hass.states.async_set(
-        "device_tracker.person_2",
-        "home",
-        {"friendly_name": "person_2", "latitude": 20.1, "longitude": 10.1},
-    )
-    assert not test(hass)
-
-
-async def test_multiple_zones(hass: HomeAssistant) -> None:
-    """Test with multiple entities in condition."""
-    config = {
-        "condition": "and",
-        "conditions": [
-            {
-                "condition": "zone",
-                "entity_id": "device_tracker.person",
-                "zone": ["zone.home", "zone.work"],
-            },
-        ],
-    }
-    config = cv.CONDITION_SCHEMA(config)
-    config = await condition.async_validate_condition_config(hass, config)
-    test = await condition.async_from_config(hass, config)
-
-    hass.states.async_set(
-        "zone.home",
-        "zoning",
-        {"name": "home", "latitude": 2.1, "longitude": 1.1, "radius": 10},
-    )
-    hass.states.async_set(
-        "zone.work",
-        "zoning",
-        {"name": "work", "latitude": 20.1, "longitude": 10.1, "radius": 10},
-    )
-
-    hass.states.async_set(
-        "device_tracker.person",
-        "home",
-        {"friendly_name": "person", "latitude": 2.1, "longitude": 1.1},
-    )
-    assert test(hass)
-
-    hass.states.async_set(
-        "device_tracker.person",
-        "home",
-        {"friendly_name": "person", "latitude": 20.1, "longitude": 10.1},
-    )
-    assert test(hass)
-
-    hass.states.async_set(
-        "device_tracker.person",
-        "home",
-        {"friendly_name": "person", "latitude": 50.1, "longitude": 20.1},
-    )
-    assert not test(hass)
-
-
 @pytest.mark.usefixtures("hass")
 async def test_extract_entities() -> None:
     """Test extracting entities."""
@@ -2251,15 +2098,144 @@ async def test_trigger(hass: HomeAssistant) -> None:
     assert test(hass, {"trigger": {"id": "123456"}})
 
 
-async def test_platform_async_validate_condition_config(hass: HomeAssistant) -> None:
-    """Test platform.async_validate_condition_config will be called if it exists."""
+async def test_platform_async_get_conditions(hass: HomeAssistant) -> None:
+    """Test platform.async_get_conditions will be called if it exists."""
     config = {CONF_DEVICE_ID: "test", CONF_DOMAIN: "test", CONF_CONDITION: "device"}
     with patch(
-        "homeassistant.components.device_automation.condition.async_validate_condition_config",
-        AsyncMock(),
-    ) as device_automation_validate_condition_mock:
+        "homeassistant.components.device_automation.condition.async_get_conditions",
+        AsyncMock(return_value={"_device": AsyncMock()}),
+    ) as device_automation_async_get_conditions_mock:
         await condition.async_validate_condition_config(hass, config)
-        device_automation_validate_condition_mock.assert_awaited()
+        device_automation_async_get_conditions_mock.assert_awaited()
+
+
+async def test_platform_multiple_conditions(hass: HomeAssistant) -> None:
+    """Test a condition platform with multiple conditions."""
+
+    class MockCondition(Condition):
+        """Mock condition."""
+
+        @classmethod
+        async def async_validate_config(
+            cls, hass: HomeAssistant, config: ConfigType
+        ) -> ConfigType:
+            """Validate config."""
+            return config
+
+        def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
+            """Initialize condition."""
+
+    class MockCondition1(MockCondition):
+        """Mock condition 1."""
+
+        async def async_get_checker(self) -> ConditionCheckerType:
+            """Evaluate state based on configuration."""
+            return lambda hass, vars: True
+
+    class MockCondition2(MockCondition):
+        """Mock condition 2."""
+
+        async def async_get_checker(self) -> ConditionCheckerType:
+            """Evaluate state based on configuration."""
+            return lambda hass, vars: False
+
+    async def async_get_conditions(hass: HomeAssistant) -> dict[str, type[Condition]]:
+        return {
+            "_": MockCondition1,
+            "cond_2": MockCondition2,
+        }
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(
+        hass, "test.condition", Mock(async_get_conditions=async_get_conditions)
+    )
+
+    config_1 = {CONF_CONDITION: "test"}
+    config_2 = {CONF_CONDITION: "test.cond_2"}
+    config_3 = {CONF_CONDITION: "test.unknown_cond"}
+    assert await async_validate_condition_config(hass, config_1) == config_1
+    assert await async_validate_condition_config(hass, config_2) == config_2
+    with pytest.raises(
+        vol.Invalid, match="Invalid condition 'test.unknown_cond' specified"
+    ):
+        await async_validate_condition_config(hass, config_3)
+
+    cond_func = await condition.async_from_config(hass, config_1)
+    assert cond_func(hass, {}) is True
+
+    cond_func = await condition.async_from_config(hass, config_2)
+    assert cond_func(hass, {}) is False
+
+    with pytest.raises(KeyError):
+        await condition.async_from_config(hass, config_3)
+
+
+async def test_platform_migrate_trigger(hass: HomeAssistant) -> None:
+    """Test a condition platform with a migration."""
+
+    OPTIONS_SCHEMA_DICT = {
+        vol.Required("option_1"): str,
+        vol.Optional("option_2"): int,
+    }
+
+    class MockCondition(Condition):
+        """Mock condition."""
+
+        @classmethod
+        async def async_validate_complete_config(
+            cls, hass: HomeAssistant, complete_config: ConfigType
+        ) -> ConfigType:
+            """Validate complete config."""
+            complete_config = move_top_level_schema_fields_to_options(
+                complete_config, OPTIONS_SCHEMA_DICT
+            )
+            return await super().async_validate_complete_config(hass, complete_config)
+
+        @classmethod
+        async def async_validate_config(
+            cls, hass: HomeAssistant, config: ConfigType
+        ) -> ConfigType:
+            """Validate config."""
+            return config
+
+    async def async_get_conditions(hass: HomeAssistant) -> dict[str, type[Condition]]:
+        return {
+            "_": MockCondition,
+        }
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(
+        hass, "test.condition", Mock(async_get_conditions=async_get_conditions)
+    )
+
+    config_1 = {
+        "condition": "test",
+        "option_1": "value_1",
+        "option_2": 2,
+    }
+    config_2 = {
+        "condition": "test",
+        "option_1": "value_1",
+    }
+    config_1_migrated = {
+        "condition": "test",
+        "options": {"option_1": "value_1", "option_2": 2},
+    }
+    config_2_migrated = {
+        "condition": "test",
+        "options": {"option_1": "value_1"},
+    }
+
+    assert await async_validate_condition_config(hass, config_1) == config_1_migrated
+    assert await async_validate_condition_config(hass, config_2) == config_2_migrated
+    assert (
+        await async_validate_condition_config(hass, config_1_migrated)
+        == config_1_migrated
+    )
+    assert (
+        await async_validate_condition_config(hass, config_2_migrated)
+        == config_2_migrated
+    )
 
 
 @pytest.mark.parametrize("enabled_value", [True, "{{ 1 == 1 }}"])
@@ -2451,3 +2427,331 @@ async def test_or_condition_with_disabled_condition(hass: HomeAssistant) -> None
             "conditions/1/entity_id/0": [{"result": {"result": True, "state": 100.0}}],
         }
     )
+
+
+@pytest.mark.parametrize(
+    "sun_condition_descriptions",
+    [
+        """
+        _:
+          fields:
+            after:
+              example: sunrise
+              selector:
+                select:
+                  options:
+                    - sunrise
+                    - sunset
+            after_offset:
+              selector:
+                time: null
+            before:
+              example: sunrise
+              selector:
+                select:
+                  options:
+                    - sunrise
+                    - sunset
+            before_offset:
+              selector:
+                time: null
+        """,
+        """
+        .sunrise_sunset_selector: &sunrise_sunset_selector
+          example: sunrise
+          selector:
+            select:
+              options:
+                - sunrise
+                - sunset
+        .offset_selector: &offset_selector
+          selector:
+            time: null
+        _:
+          fields:
+            after: *sunrise_sunset_selector
+            after_offset: *offset_selector
+            before: *sunrise_sunset_selector
+            before_offset: *offset_selector
+        """,
+    ],
+)
+async def test_async_get_all_descriptions(
+    hass: HomeAssistant, sun_condition_descriptions: str
+) -> None:
+    """Test async_get_all_descriptions."""
+    device_automation_condition_descriptions = """
+        _device:
+          fields:
+            entity:
+              selector:
+                entity:
+                  filter:
+                    domain: alarm_control_panel
+                    supported_features:
+                      - alarm_control_panel.AlarmControlPanelEntityFeature.ARM_HOME
+        """
+
+    assert await async_setup_component(hass, DOMAIN_SUN, {})
+    assert await async_setup_component(hass, DOMAIN_SYSTEM_HEALTH, {})
+    await hass.async_block_till_done()
+
+    def _load_yaml(fname, secrets=None):
+        if fname.endswith("device_automation/conditions.yaml"):
+            condition_descriptions = device_automation_condition_descriptions
+        elif fname.endswith("sun/conditions.yaml"):
+            condition_descriptions = sun_condition_descriptions
+        with io.StringIO(condition_descriptions) as file:
+            return parse_yaml(file)
+
+    with (
+        patch(
+            "homeassistant.helpers.condition._load_conditions_files",
+            side_effect=condition._load_conditions_files,
+        ) as proxy_load_conditions_files,
+        patch(
+            "annotatedyaml.loader.load_yaml",
+            side_effect=_load_yaml,
+        ),
+        patch.object(Integration, "has_conditions", return_value=True),
+    ):
+        descriptions = await condition.async_get_all_descriptions(hass)
+
+    # Test we only load conditions.yaml for integrations with conditions,
+    # system_health has no conditions
+    assert proxy_load_conditions_files.mock_calls[0][1][0] == unordered(
+        [
+            await async_get_integration(hass, DOMAIN_SUN),
+        ]
+    )
+
+    # system_health does not have conditions and should not be in descriptions
+    assert descriptions == {
+        "sun": {
+            "fields": {
+                "after": {
+                    "example": "sunrise",
+                    "selector": {
+                        "select": {
+                            "custom_value": False,
+                            "multiple": False,
+                            "options": ["sunrise", "sunset"],
+                            "sort": False,
+                        }
+                    },
+                },
+                "after_offset": {"selector": {"time": {}}},
+                "before": {
+                    "example": "sunrise",
+                    "selector": {
+                        "select": {
+                            "custom_value": False,
+                            "multiple": False,
+                            "options": ["sunrise", "sunset"],
+                            "sort": False,
+                        }
+                    },
+                },
+                "before_offset": {"selector": {"time": {}}},
+            }
+        }
+    }
+
+    # Verify the cache returns the same object
+    assert await condition.async_get_all_descriptions(hass) is descriptions
+
+    # Load the device_automation integration and check a new cache object is created
+    assert await async_setup_component(hass, DOMAIN_DEVICE_AUTOMATION, {})
+    await hass.async_block_till_done()
+
+    with (
+        patch(
+            "annotatedyaml.loader.load_yaml",
+            side_effect=_load_yaml,
+        ),
+        patch.object(Integration, "has_conditions", return_value=True),
+    ):
+        new_descriptions = await condition.async_get_all_descriptions(hass)
+    assert new_descriptions is not descriptions
+    assert new_descriptions == {
+        "sun": {
+            "fields": {
+                "after": {
+                    "example": "sunrise",
+                    "selector": {
+                        "select": {
+                            "custom_value": False,
+                            "multiple": False,
+                            "options": ["sunrise", "sunset"],
+                            "sort": False,
+                        }
+                    },
+                },
+                "after_offset": {"selector": {"time": {}}},
+                "before": {
+                    "example": "sunrise",
+                    "selector": {
+                        "select": {
+                            "custom_value": False,
+                            "multiple": False,
+                            "options": ["sunrise", "sunset"],
+                            "sort": False,
+                        }
+                    },
+                },
+                "before_offset": {"selector": {"time": {}}},
+            }
+        },
+        "device": {
+            "fields": {
+                "entity": {
+                    "selector": {
+                        "entity": {
+                            "filter": [
+                                {
+                                    "domain": ["alarm_control_panel"],
+                                    "supported_features": [1],
+                                }
+                            ],
+                            "multiple": False,
+                            "reorder": False,
+                        },
+                    },
+                },
+            }
+        },
+    }
+
+    # Verify the cache returns the same object
+    assert await condition.async_get_all_descriptions(hass) is new_descriptions
+
+
+@pytest.mark.parametrize(
+    ("yaml_error", "expected_message"),
+    [
+        (
+            FileNotFoundError("Blah"),
+            "Unable to find conditions.yaml for the sun integration",
+        ),
+        (
+            HomeAssistantError("Test error"),
+            "Unable to parse conditions.yaml for the sun integration: Test error",
+        ),
+    ],
+)
+async def test_async_get_all_descriptions_with_yaml_error(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    yaml_error: Exception,
+    expected_message: str,
+) -> None:
+    """Test async_get_all_descriptions."""
+    assert await async_setup_component(hass, DOMAIN_SUN, {})
+    await hass.async_block_till_done()
+
+    def _load_yaml_dict(fname, secrets=None):
+        raise yaml_error
+
+    with (
+        patch(
+            "homeassistant.helpers.condition.load_yaml_dict",
+            side_effect=_load_yaml_dict,
+        ),
+        patch.object(Integration, "has_conditions", return_value=True),
+    ):
+        descriptions = await condition.async_get_all_descriptions(hass)
+
+    assert descriptions == {DOMAIN_SUN: None}
+
+    assert expected_message in caplog.text
+
+
+async def test_async_get_all_descriptions_with_bad_description(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test async_get_all_descriptions."""
+    sun_service_descriptions = """
+        _:
+          fields: not_a_dict
+    """
+
+    assert await async_setup_component(hass, DOMAIN_SUN, {})
+    await hass.async_block_till_done()
+
+    def _load_yaml(fname, secrets=None):
+        with io.StringIO(sun_service_descriptions) as file:
+            return parse_yaml(file)
+
+    with (
+        patch(
+            "annotatedyaml.loader.load_yaml",
+            side_effect=_load_yaml,
+        ),
+        patch.object(Integration, "has_conditions", return_value=True),
+    ):
+        descriptions = await condition.async_get_all_descriptions(hass)
+
+    assert descriptions == {"sun": None}
+
+    assert (
+        "Unable to parse conditions.yaml for the sun integration: "
+        "expected a dictionary for dictionary value @ data['_']['fields']"
+    ) in caplog.text
+
+
+async def test_invalid_condition_platform(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid condition platform."""
+    mock_integration(hass, MockModule("test", async_setup=AsyncMock(return_value=True)))
+    mock_platform(hass, "test.condition", MockPlatform())
+
+    await async_setup_component(hass, "test", {})
+
+    assert (
+        "Integration test does not provide condition support, skipping" in caplog.text
+    )
+
+
+@patch("annotatedyaml.loader.load_yaml")
+@patch.object(Integration, "has_conditions", return_value=True)
+async def test_subscribe_conditions(
+    mock_has_conditions: Mock,
+    mock_load_yaml: Mock,
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test condition.async_subscribe_platform_events."""
+    sun_condition_descriptions = """
+        sun: {}
+        """
+
+    def _load_yaml(fname, secrets=None):
+        if fname.endswith("sun/conditions.yaml"):
+            condition_descriptions = sun_condition_descriptions
+        else:
+            raise FileNotFoundError
+        with io.StringIO(condition_descriptions) as file:
+            return parse_yaml(file)
+
+    mock_load_yaml.side_effect = _load_yaml
+
+    async def broken_subscriber(_):
+        """Simulate a broken subscriber."""
+        raise Exception("Boom!")  # noqa: TRY002
+
+    condition_events = []
+
+    async def good_subscriber(new_conditions: set[str]):
+        """Simulate a working subscriber."""
+        condition_events.append(new_conditions)
+
+    condition.async_subscribe_platform_events(hass, broken_subscriber)
+    condition.async_subscribe_platform_events(hass, good_subscriber)
+
+    assert await async_setup_component(hass, "sun", {})
+
+    assert condition_events == [{"sun"}]
+    assert "Error while notifying condition platform listener" in caplog.text

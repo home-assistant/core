@@ -7,7 +7,7 @@ from voluptuous import All, Range
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_LATITUDE, CONF_LONGITUDE
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
@@ -22,6 +22,7 @@ ATTR_ID = "id"
 ATTR_GPS = "gps"
 ATTR_TYPE = "type"
 ATTR_VALUE = "value"
+ATTR_LOCATION = "location"
 ATTR_LOCALE = "locale"
 ATTR_ORDER = "order"
 ATTR_TIMESTAMP = "timestamp"
@@ -36,6 +37,12 @@ ATTR_DEPARTURE_TIME = "departure_time"
 ATTR_OFF_PEAK_CHARGING_ENABLED = "off_peak_charging_enabled"
 ATTR_OFF_PEAK_CHARGING_WEEKDAYS = "off_peak_charging_weekdays_only"
 ATTR_END_OFF_PEAK_TIME = "end_off_peak_time"
+ATTR_DAYS_OF_WEEK = "days_of_week"
+ATTR_START_TIME = "start_time"
+ATTR_END_TIME = "end_time"
+ATTR_ONE_TIME = "one_time"
+ATTR_NAME = "name"
+ATTR_PRECONDITION_TIME = "precondition_time"
 
 # Services
 SERVICE_NAVIGATE_ATTR_GPS_REQUEST = "navigation_gps_request"
@@ -44,6 +51,10 @@ SERVICE_SET_SCHEDULED_DEPARTURE = "set_scheduled_departure"
 SERVICE_VALET_MODE = "valet_mode"
 SERVICE_SPEED_LIMIT = "speed_limit"
 SERVICE_TIME_OF_USE = "time_of_use"
+SERVICE_ADD_CHARGE_SCHEDULE = "add_charge_schedule"
+SERVICE_REMOVE_CHARGE_SCHEDULE = "remove_charge_schedule"
+SERVICE_ADD_PRECONDITION_SCHEDULE = "add_precondition_schedule"
+SERVICE_REMOVE_PRECONDITION_SCHEDULE = "remove_precondition_schedule"
 
 
 def async_get_device_for_service_call(
@@ -98,6 +109,7 @@ def async_get_energy_site_for_entry(
     return energy_data
 
 
+@callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the Teslemetry services."""
 
@@ -140,7 +152,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         time: int | None = None
         # Convert time to minutes since minute
         if "time" in call.data:
-            (hours, minutes, *seconds) = call.data["time"].split(":")
+            (hours, minutes, *_seconds) = call.data["time"].split(":")
             time = int(hours) * 60 + int(minutes)
         elif call.data["enable"]:
             raise ServiceValidationError(
@@ -179,7 +191,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         )
         departure_time: int | None = None
         if ATTR_DEPARTURE_TIME in call.data:
-            (hours, minutes, *seconds) = call.data[ATTR_DEPARTURE_TIME].split(":")
+            (hours, minutes, *_seconds) = call.data[ATTR_DEPARTURE_TIME].split(":")
             departure_time = int(hours) * 60 + int(minutes)
         elif preconditioning_enabled:
             raise ServiceValidationError(
@@ -195,7 +207,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         end_off_peak_time: int | None = None
 
         if ATTR_END_OFF_PEAK_TIME in call.data:
-            (hours, minutes, *seconds) = call.data[ATTR_END_OFF_PEAK_TIME].split(":")
+            (hours, minutes, *_seconds) = call.data[ATTR_END_OFF_PEAK_TIME].split(":")
             end_off_peak_time = int(hours) * 60 + int(minutes)
         elif off_peak_charging_enabled:
             raise ServiceValidationError(
@@ -311,6 +323,198 @@ def async_setup_services(hass: HomeAssistant) -> None:
             {
                 vol.Required(CONF_DEVICE_ID): cv.string,
                 vol.Required(ATTR_TOU_SETTINGS): dict,
+            }
+        ),
+    )
+
+    async def add_charge_schedule(call: ServiceCall) -> None:
+        """Configure charging schedule for a vehicle."""
+        device = async_get_device_for_service_call(hass, call)
+        config = async_get_config_for_device(hass, device)
+        vehicle = async_get_vehicle_for_entry(hass, device, config)
+
+        # Extract parameters from the service call
+        days_of_week = call.data[ATTR_DAYS_OF_WEEK]
+        # If days_of_week is a list (from select with multiple), convert to comma-separated string
+        if isinstance(days_of_week, list):
+            days_of_week = ",".join(days_of_week)
+        enabled = call.data[ATTR_ENABLE]
+
+        # Optional parameters
+        location = call.data.get(
+            ATTR_LOCATION,
+            {
+                CONF_LATITUDE: hass.config.latitude,
+                CONF_LONGITUDE: hass.config.longitude,
+            },
+        )
+
+        # Handle time inputs
+        start_time = None
+        if start_time_obj := call.data.get(ATTR_START_TIME):
+            # Convert time object to minutes since midnight
+            start_time = start_time_obj.hour * 60 + start_time_obj.minute
+
+        end_time = None
+        if end_time_obj := call.data.get(ATTR_END_TIME):
+            # Convert time object to minutes since midnight
+            end_time = end_time_obj.hour * 60 + end_time_obj.minute
+
+        one_time = call.data.get(ATTR_ONE_TIME)
+        schedule_id = call.data.get(ATTR_ID)
+        name = call.data.get(ATTR_NAME)
+
+        await handle_vehicle_command(
+            vehicle.api.add_charge_schedule(
+                days_of_week=days_of_week,
+                enabled=enabled,
+                lat=location[CONF_LATITUDE],
+                lon=location[CONF_LONGITUDE],
+                start_time=start_time,
+                end_time=end_time,
+                one_time=one_time,
+                id=schedule_id,
+                name=name,
+            )
+        )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_ADD_CHARGE_SCHEDULE,
+        add_charge_schedule,
+        schema=vol.Schema(
+            {
+                vol.Required(CONF_DEVICE_ID): cv.string,
+                vol.Required(ATTR_DAYS_OF_WEEK): cv.ensure_list,
+                vol.Required(ATTR_ENABLE): cv.boolean,
+                vol.Optional(ATTR_LOCATION): {
+                    vol.Required(CONF_LATITUDE): cv.latitude,
+                    vol.Required(CONF_LONGITUDE): cv.longitude,
+                },
+                vol.Optional(ATTR_START_TIME): cv.time,
+                vol.Optional(ATTR_END_TIME): cv.time,
+                vol.Optional(ATTR_ONE_TIME): cv.boolean,
+                vol.Optional(ATTR_ID): cv.positive_int,
+                vol.Optional(ATTR_NAME): cv.string,
+            }
+        ),
+    )
+
+    async def remove_charge_schedule(call: ServiceCall) -> None:
+        """Remove a charging schedule for a vehicle."""
+        device = async_get_device_for_service_call(hass, call)
+        config = async_get_config_for_device(hass, device)
+        vehicle = async_get_vehicle_for_entry(hass, device, config)
+
+        # Extract parameters from the service call
+        schedule_id = call.data[ATTR_ID]
+
+        await handle_vehicle_command(
+            vehicle.api.remove_charge_schedule(
+                id=schedule_id,
+            )
+        )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_REMOVE_CHARGE_SCHEDULE,
+        remove_charge_schedule,
+        schema=vol.Schema(
+            {
+                vol.Required(CONF_DEVICE_ID): cv.string,
+                vol.Required(ATTR_ID): cv.positive_int,
+            }
+        ),
+    )
+
+    async def add_precondition_schedule(call: ServiceCall) -> None:
+        """Add or modify a precondition schedule for a vehicle."""
+        device = async_get_device_for_service_call(hass, call)
+        config = async_get_config_for_device(hass, device)
+        vehicle = async_get_vehicle_for_entry(hass, device, config)
+
+        # Extract parameters from the service call
+        days_of_week = call.data[ATTR_DAYS_OF_WEEK]
+        # If days_of_week is a list (from select with multiple), convert to comma-separated string
+        if isinstance(days_of_week, list):
+            days_of_week = ",".join(days_of_week)
+        enabled = call.data[ATTR_ENABLE]
+        location = call.data.get(
+            ATTR_LOCATION,
+            {
+                CONF_LATITUDE: hass.config.latitude,
+                CONF_LONGITUDE: hass.config.longitude,
+            },
+        )
+
+        # Convert time object to minutes since midnight
+        precondition_time = (
+            call.data[ATTR_PRECONDITION_TIME].hour * 60
+            + call.data[ATTR_PRECONDITION_TIME].minute
+        )
+
+        # Optional parameters
+        schedule_id = call.data.get(ATTR_ID)
+        one_time = call.data.get(ATTR_ONE_TIME)
+        name = call.data.get(ATTR_NAME)
+
+        await handle_vehicle_command(
+            vehicle.api.add_precondition_schedule(
+                days_of_week=days_of_week,
+                enabled=enabled,
+                lat=location[CONF_LATITUDE],
+                lon=location[CONF_LONGITUDE],
+                precondition_time=precondition_time,
+                id=schedule_id,
+                one_time=one_time,
+                name=name,
+            )
+        )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_ADD_PRECONDITION_SCHEDULE,
+        add_precondition_schedule,
+        schema=vol.Schema(
+            {
+                vol.Required(CONF_DEVICE_ID): cv.string,
+                vol.Required(ATTR_DAYS_OF_WEEK): cv.ensure_list,
+                vol.Required(ATTR_ENABLE): cv.boolean,
+                vol.Optional(ATTR_LOCATION): {
+                    vol.Required(CONF_LATITUDE): cv.latitude,
+                    vol.Required(CONF_LONGITUDE): cv.longitude,
+                },
+                vol.Required(ATTR_PRECONDITION_TIME): cv.time,
+                vol.Optional(ATTR_ID): cv.positive_int,
+                vol.Optional(ATTR_ONE_TIME): cv.boolean,
+                vol.Optional(ATTR_NAME): cv.string,
+            }
+        ),
+    )
+
+    async def remove_precondition_schedule(call: ServiceCall) -> None:
+        """Remove a preconditioning schedule for a vehicle."""
+        device = async_get_device_for_service_call(hass, call)
+        config = async_get_config_for_device(hass, device)
+        vehicle = async_get_vehicle_for_entry(hass, device, config)
+
+        # Extract parameters from the service call
+        schedule_id = call.data[ATTR_ID]
+
+        await handle_vehicle_command(
+            vehicle.api.remove_precondition_schedule(
+                id=schedule_id,
+            )
+        )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_REMOVE_PRECONDITION_SCHEDULE,
+        remove_precondition_schedule,
+        schema=vol.Schema(
+            {
+                vol.Required(CONF_DEVICE_ID): cv.string,
+                vol.Required(ATTR_ID): cv.positive_int,
             }
         ),
     )

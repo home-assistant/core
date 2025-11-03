@@ -62,6 +62,7 @@ TILT_DEVICE_MAP = {
     BlindType.VerticalBlind: CoverDeviceClass.BLIND,
     BlindType.VerticalBlindLeft: CoverDeviceClass.BLIND,
     BlindType.VerticalBlindRight: CoverDeviceClass.BLIND,
+    BlindType.RollerTiltMotor: CoverDeviceClass.BLIND,
 }
 
 TILT_ONLY_DEVICE_MAP = {
@@ -173,7 +174,7 @@ class MotionBaseDevice(MotionCoordinatorEntity, CoverEntity):
 
     _restore_tilt = False
 
-    def __init__(self, coordinator, blind, device_class):
+    def __init__(self, coordinator, blind, device_class) -> None:
         """Initialize the blind."""
         super().__init__(coordinator, blind)
 
@@ -274,7 +275,7 @@ class MotionTiltDevice(MotionPositionDevice):
         """
         if self._blind.angle is None:
             return None
-        return self._blind.angle * 100 / 180
+        return 100 - (self._blind.angle * 100 / 180)
 
     @property
     def is_closed(self) -> bool | None:
@@ -286,18 +287,24 @@ class MotionTiltDevice(MotionPositionDevice):
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
         async with self._api_lock:
-            await self.hass.async_add_executor_job(self._blind.Set_angle, 180)
+            await self.hass.async_add_executor_job(self._blind.Set_angle, 0)
+
+        await self.async_request_position_till_stop()
 
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
         async with self._api_lock:
-            await self.hass.async_add_executor_job(self._blind.Set_angle, 0)
+            await self.hass.async_add_executor_job(self._blind.Set_angle, 180)
+
+        await self.async_request_position_till_stop()
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
         angle = kwargs[ATTR_TILT_POSITION] * 180 / 100
         async with self._api_lock:
-            await self.hass.async_add_executor_job(self._blind.Set_angle, angle)
+            await self.hass.async_add_executor_job(self._blind.Set_angle, 180 - angle)
+
+        await self.async_request_position_till_stop()
 
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop the cover."""
@@ -340,9 +347,9 @@ class MotionTiltOnlyDevice(MotionTiltDevice):
         if self._blind.position is None:
             if self._blind.angle is None:
                 return None
-            return self._blind.angle * 100 / 180
+            return 100 - (self._blind.angle * 100 / 180)
 
-        return self._blind.position
+        return 100 - self._blind.position
 
     @property
     def is_closed(self) -> bool | None:
@@ -350,19 +357,23 @@ class MotionTiltOnlyDevice(MotionTiltDevice):
         if self._blind.position is None:
             if self._blind.angle is None:
                 return None
-            return self._blind.angle == 0
+            return self._blind.angle == 180
 
-        return self._blind.position == 0
+        return self._blind.position == 100
 
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
         async with self._api_lock:
             await self.hass.async_add_executor_job(self._blind.Open)
 
+        await self.async_request_position_till_stop()
+
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
         async with self._api_lock:
             await self.hass.async_add_executor_job(self._blind.Close)
+
+        await self.async_request_position_till_stop()
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
@@ -370,10 +381,16 @@ class MotionTiltOnlyDevice(MotionTiltDevice):
         if self._blind.position is None:
             angle = angle * 180 / 100
             async with self._api_lock:
-                await self.hass.async_add_executor_job(self._blind.Set_angle, angle)
+                await self.hass.async_add_executor_job(
+                    self._blind.Set_angle, 180 - angle
+                )
         else:
             async with self._api_lock:
-                await self.hass.async_add_executor_job(self._blind.Set_position, angle)
+                await self.hass.async_add_executor_job(
+                    self._blind.Set_position, 100 - angle
+                )
+
+        await self.async_request_position_till_stop()
 
     async def async_set_absolute_position(self, **kwargs):
         """Move the cover to a specific absolute position (see TDBU)."""
@@ -384,16 +401,22 @@ class MotionTiltOnlyDevice(MotionTiltDevice):
         if self._blind.position is None:
             angle = angle * 180 / 100
             async with self._api_lock:
-                await self.hass.async_add_executor_job(self._blind.Set_angle, angle)
+                await self.hass.async_add_executor_job(
+                    self._blind.Set_angle, 180 - angle
+                )
         else:
             async with self._api_lock:
-                await self.hass.async_add_executor_job(self._blind.Set_position, angle)
+                await self.hass.async_add_executor_job(
+                    self._blind.Set_position, 100 - angle
+                )
+
+        await self.async_request_position_till_stop()
 
 
 class MotionTDBUDevice(MotionBaseDevice):
     """Representation of a Motion Top Down Bottom Up blind Device."""
 
-    def __init__(self, coordinator, blind, device_class, motor):
+    def __init__(self, coordinator, blind, device_class, motor) -> None:
         """Initialize the blind."""
         super().__init__(coordinator, blind, device_class)
         self._motor = motor

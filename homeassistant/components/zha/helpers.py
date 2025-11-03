@@ -74,7 +74,12 @@ from zha.event import EventBase
 from zha.exceptions import ZHAException
 from zha.mixins import LogMixin
 from zha.zigbee.cluster_handlers import ClusterBindEvent, ClusterConfigureReportingEvent
-from zha.zigbee.device import ClusterHandlerConfigurationComplete, Device, ZHAEvent
+from zha.zigbee.device import (
+    ClusterHandlerConfigurationComplete,
+    Device,
+    DeviceFirmwareInfoUpdatedEvent,
+    ZHAEvent,
+)
 from zha.zigbee.group import Group, GroupInfo, GroupMember
 from zigpy.config import (
     CONF_DATABASE,
@@ -85,6 +90,7 @@ from zigpy.config import (
 )
 import zigpy.exceptions
 from zigpy.profiles import PROFILES
+from zigpy.state import NetworkInfo
 import zigpy.types
 from zigpy.types import EUI64
 import zigpy.util
@@ -531,7 +537,6 @@ class ZHAGatewayProxy(EventBase):
 
         self._unsubs: list[Callable[[], None]] = []
         self._unsubs.append(self.gateway.on_all_events(self._handle_event_protocol))
-        self._reload_task: asyncio.Task | None = None
         config_entry.async_on_unload(
             self.hass.bus.async_listen(
                 er.EVENT_ENTITY_REGISTRY_UPDATED,
@@ -617,15 +622,7 @@ class ZHAGatewayProxy(EventBase):
         """Handle a connection lost event."""
 
         _LOGGER.debug("Connection to the radio was lost: %r", event)
-
-        # Ensure we do not queue up multiple resets
-        if self._reload_task is not None:
-            _LOGGER.debug("Ignoring reset, one is already running")
-            return
-
-        self._reload_task = self.hass.async_create_task(
-            self.hass.config_entries.async_reload(self.config_entry.entry_id),
-        )
+        self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
 
     @callback
     def handle_device_joined(self, event: DeviceJoinedEvent) -> None:
@@ -843,8 +840,23 @@ class ZHAGatewayProxy(EventBase):
                 name=zha_device.name,
                 manufacturer=zha_device.manufacturer,
                 model=zha_device.model,
+                sw_version=zha_device.firmware_version,
             )
             zha_device_proxy.device_id = device_registry_device.id
+
+            def update_sw_version(event: DeviceFirmwareInfoUpdatedEvent) -> None:
+                """Update software version in device registry."""
+                device_registry.async_update_device(
+                    device_registry_device.id,
+                    sw_version=event.new_firmware_version,
+                )
+
+            self._unsubs.append(
+                zha_device.on_event(
+                    DeviceFirmwareInfoUpdatedEvent.event_type, update_sw_version
+                )
+            )
+
         return zha_device_proxy
 
     def _async_get_or_create_group_proxy(self, group_info: GroupInfo) -> ZHAGroupProxy:
@@ -1379,3 +1391,8 @@ def convert_zha_error_to_ha_error[**_P, _EntityT: ZHAEntity](
 def exclude_none_values(obj: Mapping[str, Any]) -> dict[str, Any]:
     """Return a new dictionary excluding keys with None values."""
     return {k: v for k, v in obj.items() if v is not None}
+
+
+def get_config_entry_unique_id(network_info: NetworkInfo) -> str:
+    """Generate a unique id for a config entry based on the network info."""
+    return f"epid={network_info.extended_pan_id}".lower()

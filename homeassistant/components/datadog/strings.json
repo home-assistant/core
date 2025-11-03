@@ -1,0 +1,56 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "prefix": "Prefix",
+          "rate": "Rate"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the Datadog Agent.",
+          "port": "Port the Datadog Agent is listening on",
+          "prefix": "Metric prefix to use",
+          "rate": "The sample rate of UDP packets sent to Datadog."
+        },
+        "description": "Enter your Datadog Agent's address and port."
+      }
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_connection_error": {
+      "description": "There was an error connecting to the Datadog Agent when trying to import the YAML configuration.\n\nEnsure the YAML configuration is correct and restart Home Assistant to try again or remove the {domain} configuration from your `configuration.yaml` file and continue to [set up the integration]({url}) manually.",
+      "title": "{domain} YAML configuration import failed"
+    }
+  },
+  "options": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "init": {
+        "data": {
+          "prefix": "[%key:component::datadog::config::step::user::data::prefix%]",
+          "rate": "[%key:component::datadog::config::step::user::data::rate%]"
+        },
+        "data_description": {
+          "prefix": "[%key:component::datadog::config::step::user::data_description::prefix%]",
+          "rate": "[%key:component::datadog::config::step::user::data_description::rate%]"
+        },
+        "description": "Update the Datadog configuration."
+      }
+    }
+  }
+}

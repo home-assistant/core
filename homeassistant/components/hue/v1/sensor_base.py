@@ -53,6 +53,7 @@ class SensorManager:
             LOGGER,
             name="sensor",
             update_method=self.async_update_data,
+            config_entry=bridge.config_entry,
             update_interval=self.SCAN_INTERVAL,
             request_refresh_debouncer=debounce.Debouncer(
                 bridge.hass, LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=True

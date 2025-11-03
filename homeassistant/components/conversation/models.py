@@ -7,7 +7,9 @@ from dataclasses import dataclass
 from typing import Any, Literal
 
 from homeassistant.core import Context
-from homeassistant.helpers import intent
+from homeassistant.helpers import intent, llm
+
+from .const import DOMAIN
 
 
 @dataclass(frozen=True)
@@ -35,6 +37,9 @@ class ConversationInput:
     device_id: str | None
     """Unique identifier for the device."""
 
+    satellite_id: str | None
+    """Unique identifier for the satellite."""
+
     language: str
     """Language of the request."""
 
@@ -51,10 +56,21 @@ class ConversationInput:
             "context": self.context.as_dict(),
             "conversation_id": self.conversation_id,
             "device_id": self.device_id,
+            "satellite_id": self.satellite_id,
             "language": self.language,
             "agent_id": self.agent_id,
             "extra_system_prompt": self.extra_system_prompt,
         }
+
+    def as_llm_context(self, conversing_domain: str) -> llm.LLMContext:
+        """Return input as an LLM context."""
+        return llm.LLMContext(
+            platform=conversing_domain,
+            context=self.context,
+            language=self.language,
+            assistant=DOMAIN,
+            device_id=self.device_id,
+        )
 
 
 @dataclass(slots=True)

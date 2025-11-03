@@ -15,7 +15,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     ATTR_TIME,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 
@@ -61,6 +61,7 @@ def _get_gateway(call: ServiceCall) -> OpenThermGatewayHub:
     return gw_hub
 
 
+@callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register services for the component."""
     service_reset_schema = vol.Schema({vol.Required(ATTR_GW_ID): vol.All(cv.string)})

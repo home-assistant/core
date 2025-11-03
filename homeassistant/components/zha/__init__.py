@@ -13,6 +13,7 @@ from zigpy.config import CONF_DATABASE, CONF_DEVICE, CONF_DEVICE_PATH
 from zigpy.exceptions import NetworkSettingsInconsistent, TransientConnectionError
 
 from homeassistant.components.homeassistant_hardware.helpers import (
+    async_is_firmware_update_in_progress,
     async_notify_firmware_info,
     async_register_firmware_info_provider,
 )
@@ -47,6 +48,7 @@ from .helpers import (
     HAZHAData,
     ZHAGatewayProxy,
     create_zha_config,
+    get_config_entry_unique_id,
     get_zha_data,
 )
 from .radio_manager import ZhaRadioManager
@@ -119,6 +121,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+def _raise_if_port_in_use(hass: HomeAssistant, device_path: str) -> None:
+    """Ensure that the specified serial port is not in use by a firmware update."""
+    if async_is_firmware_update_in_progress(hass, device_path):
+        raise ConfigEntryNotReady(
+            f"Firmware update in progress for device {device_path}"
+        )
+
+
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up ZHA.
 
@@ -134,7 +144,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     device_registry = dr.async_get(hass)
     radio_mgr = ZhaRadioManager.from_config_entry(hass, config_entry)
 
-    async with radio_mgr.connect_zigpy_app() as app:
+    async with radio_mgr.create_zigpy_app(connect=False) as app:
         for dev in app.devices.values():
             dev_entry = device_registry.async_get_device(
                 identifiers={(DOMAIN, str(dev.ieee))},
@@ -152,6 +162,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     _LOGGER.debug("Trigger cache: %s", zha_lib_data.device_trigger_cache)
 
+    # Check if firmware update is in progress for this device
+    device_path = config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
+    _raise_if_port_in_use(hass, device_path)
+
     try:
         await zha_gateway.async_initialize()
     except NetworkSettingsInconsistent as exc:
@@ -168,7 +182,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         raise ConfigEntryNotReady from exc
     except Exception as exc:
         _LOGGER.debug("Failed to set up ZHA", exc_info=exc)
-        device_path = config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
+        _raise_if_port_in_use(hass, device_path)
 
         if (
             not device_path.startswith("socket://")
@@ -184,6 +198,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         raise ConfigEntryNotReady from exc
 
     repairs.async_delete_blocking_issues(hass)
+
+    # Set unique_id if it was not migrated previously
+    if not config_entry.unique_id or not config_entry.unique_id.startswith("epid="):
+        unique_id = get_config_entry_unique_id(zha_gateway.state.network_info)
+        hass.config_entries.async_update_entry(config_entry, unique_id=unique_id)
 
     ha_zha_data.gateway_proxy = ZHAGatewayProxy(hass, config_entry, zha_gateway)
 
@@ -299,6 +318,27 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             data[CONF_DEVICE][CONF_FLOW_CONTROL] = None
 
         hass.config_entries.async_update_entry(config_entry, data=data, version=4)
+
+    if config_entry.version == 4:
+        radio_mgr = ZhaRadioManager.from_config_entry(hass, config_entry)
+        await radio_mgr.async_read_backups_from_database()
+
+        if radio_mgr.backups:
+            # We migrate all ZHA config entries to use a `unique_id` specific to the
+            # Zigbee network, not to the hardware
+            backup = radio_mgr.backups[0]
+            hass.config_entries.async_update_entry(
+                config_entry,
+                unique_id=get_config_entry_unique_id(backup.network_info),
+                version=5,
+            )
+        else:
+            # If no backups are available, the unique_id will be set when the network is
+            # loaded during setup
+            hass.config_entries.async_update_entry(
+                config_entry,
+                version=5,
+            )
 
     _LOGGER.info("Migration to version %s successful", config_entry.version)
     return True

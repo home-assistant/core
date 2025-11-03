@@ -2,7 +2,6 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
 from eq3btsmart.models import Status
 
@@ -79,8 +78,5 @@ class Eq3BinarySensorEntity(Eq3Entity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return the state of the binary sensor."""
-
-        if TYPE_CHECKING:
-            assert self._thermostat.status is not None
 
         return self.entity_description.value_func(self._thermostat.status)

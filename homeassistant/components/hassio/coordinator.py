@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
+from copy import deepcopy
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -55,6 +56,7 @@ from .const import (
     SupervisorEntityModel,
 )
 from .handler import HassioAPIError, get_supervisor_client
+from .jobs import SupervisorJobs
 
 if TYPE_CHECKING:
     from .issues import SupervisorIssues
@@ -310,6 +312,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
             lambda: defaultdict(set)
         )
         self.supervisor_client = get_supervisor_client(hass)
+        self.jobs = SupervisorJobs(hass)
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
@@ -484,6 +487,9 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
                 )
             )
 
+        # Refresh jobs data
+        await self.jobs.refresh_data(first_update)
+
     async def _update_addon_stats(self, slug: str) -> tuple[str, dict[str, Any] | None]:
         """Update single addon stats."""
         try:
@@ -545,3 +551,20 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         await super()._async_refresh(
             log_failures, raise_on_auth_failed, scheduled, raise_on_entry_error
         )
+
+    async def force_addon_info_data_refresh(self, addon_slug: str) -> None:
+        """Force refresh of addon info data for a specific addon."""
+        try:
+            slug, info = await self._update_addon_info(addon_slug)
+            if info is not None and DATA_KEY_ADDONS in self.data:
+                if slug in self.data[DATA_KEY_ADDONS]:
+                    data = deepcopy(self.data)
+                    data[DATA_KEY_ADDONS][slug].update(info)
+                    self.async_set_updated_data(data)
+        except SupervisorError as err:
+            _LOGGER.warning("Could not refresh info for %s: %s", addon_slug, err)
+
+    @callback
+    def unload(self) -> None:
+        """Clean up when config entry unloaded."""
+        self.jobs.unload()

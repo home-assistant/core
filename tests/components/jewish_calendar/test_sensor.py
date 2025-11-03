@@ -8,11 +8,7 @@ from hdate.holidays import HolidayDatabase
 from hdate.parasha import Parasha
 import pytest
 
-from homeassistant.components.jewish_calendar.const import DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import CONF_PLATFORM
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -141,6 +137,8 @@ TEST_PARAMS = [
             "attr": {
                 "hebrew_year": "5779",
                 "hebrew_month_name": "מרחשוון",
+                "hebrew_month_standard_order": "2",
+                "hebrew_month_biblical_order": "8",
                 "hebrew_day": "6",
                 "friendly_name": "Jewish Calendar Date",
             },
@@ -569,17 +567,3 @@ async def test_sensor_does_not_update_on_time_change(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert hass.states.get(sensor_id).state == results["new_state"]
-
-
-async def test_no_discovery_info(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test setup without discovery info."""
-    assert SENSOR_DOMAIN not in hass.config.components
-    assert await async_setup_component(
-        hass,
-        SENSOR_DOMAIN,
-        {SENSOR_DOMAIN: {CONF_PLATFORM: DOMAIN}},
-    )
-    await hass.async_block_till_done()
-    assert SENSOR_DOMAIN in hass.config.components

@@ -1,0 +1,145 @@
+# serializer version: 1
+# name: test_button_entities[button.my_super_test_player_2_favorite_current_song-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.my_super_test_player_2_favorite_current_song',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Favorite current song',
+    'platform': 'music_assistant',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'favorite_now_playing',
+    'unique_id': '00:00:00:00:00:02_favorite_now_playing',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_entities[button.my_super_test_player_2_favorite_current_song-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'My Super Test Player 2 Favorite current song',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.my_super_test_player_2_favorite_current_song',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_entities[button.test_group_player_1_favorite_current_song-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.test_group_player_1_favorite_current_song',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Favorite current song',
+    'platform': 'music_assistant',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'favorite_now_playing',
+    'unique_id': 'test_group_player_1_favorite_now_playing',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_entities[button.test_group_player_1_favorite_current_song-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Group Player 1 Favorite current song',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_group_player_1_favorite_current_song',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_entities[button.test_player_1_favorite_current_song-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.test_player_1_favorite_current_song',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Favorite current song',
+    'platform': 'music_assistant',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'favorite_now_playing',
+    'unique_id': '00:00:00:00:00:01_favorite_now_playing',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_entities[button.test_player_1_favorite_current_song-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Player 1 Favorite current song',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_player_1_favorite_current_song',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

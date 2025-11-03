@@ -2,18 +2,24 @@
 
 from __future__ import annotations
 
-from mastodon.Mastodon import Account, Instance, InstanceV2, Mastodon, MastodonError
+from mastodon.Mastodon import (
+    Account,
+    Instance,
+    InstanceV2,
+    Mastodon,
+    MastodonError,
+    MastodonNotFoundError,
+)
 
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
-    CONF_NAME,
     Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, discovery
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 
@@ -22,7 +28,7 @@ from .coordinator import MastodonConfigEntry, MastodonCoordinator, MastodonData
 from .services import setup_services
 from .utils import construct_mastodon_username, create_mastodon_client
 
-PLATFORMS: list[Platform] = [Platform.NOTIFY, Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
@@ -53,26 +59,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: MastodonConfigEntry) -> 
 
     entry.runtime_data = MastodonData(client, instance, account, coordinator)
 
-    await discovery.async_load_platform(
-        hass,
-        Platform.NOTIFY,
-        DOMAIN,
-        {CONF_NAME: entry.title, "client": client},
-        {},
-    )
-
-    await hass.config_entries.async_forward_entry_setups(
-        entry, [platform for platform in PLATFORMS if platform != Platform.NOTIFY]
-    )
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: MastodonConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(
-        entry, [platform for platform in PLATFORMS if platform != Platform.NOTIFY]
-    )
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def async_migrate_entry(hass: HomeAssistant, entry: MastodonConfigEntry) -> bool:
@@ -118,7 +112,11 @@ def setup_mastodon(
         entry.data[CONF_ACCESS_TOKEN],
     )
 
-    instance = client.instance()
+    try:
+        instance = client.instance_v2()
+    except MastodonNotFoundError:
+        instance = client.instance_v1()
+
     account = client.account_verify_credentials()
 
     return client, instance, account

@@ -3,26 +3,22 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import logging
-from typing import TYPE_CHECKING
 
 from kaleidescape import Device as KaleidescapeDevice, KaleidescapeError
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
-
-from .const import DOMAIN
-
-if TYPE_CHECKING:
-    from homeassistant.config_entries import ConfigEntry
-    from homeassistant.core import Event, HomeAssistant
-
-_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.MEDIA_PLAYER, Platform.REMOTE, Platform.SENSOR]
 
+type KaleidescapeConfigEntry = ConfigEntry[KaleidescapeDevice]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: KaleidescapeConfigEntry
+) -> bool:
     """Set up Kaleidescape from a config entry."""
     device = KaleidescapeDevice(
         entry.data[CONF_HOST], timeout=5, reconnect=True, reconnect_delay=5
@@ -36,7 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             f"Unable to connect to {entry.data[CONF_HOST]}: {err}"
         ) from err
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = device
+    entry.runtime_data = device
 
     async def disconnect(event: Event) -> None:
         await device.disconnect()
@@ -44,18 +40,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, disconnect)
     )
+    entry.async_on_unload(device.disconnect)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: KaleidescapeConfigEntry
+) -> bool:
     """Unload config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        await hass.data[DOMAIN][entry.entry_id].disconnect()
-        hass.data[DOMAIN].pop(entry.entry_id)
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 @dataclass

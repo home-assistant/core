@@ -12,7 +12,7 @@ from homematicip.group import HeatingGroup
 import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_validation import comp_entity_ids
@@ -120,10 +120,11 @@ SCHEMA_SET_HOME_COOLING_MODE = vol.Schema(
 )
 
 
-async def async_setup_services(hass: HomeAssistant) -> None:
+@callback
+def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the HomematicIP Cloud services."""
 
-    @verify_domain_control(hass, DOMAIN)
+    @verify_domain_control(DOMAIN)
     async def async_call_hmipc_service(service: ServiceCall) -> None:
         """Call correct HomematicIP Cloud service."""
         service_name = service.service

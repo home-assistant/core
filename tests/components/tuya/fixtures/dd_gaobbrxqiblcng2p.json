@@ -1,0 +1,21 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "TV Sync Backlights",
+  "category": "dd",
+  "product_id": "gaobbrxqiblcng2p",
+  "product_name": "TV Sync Backlights",
+  "online": true,
+  "sub": false,
+  "time_zone": "+02:00",
+  "active_time": "2024-08-31T10:40:08+00:00",
+  "create_time": "2024-08-31T10:40:08+00:00",
+  "update_time": "2024-08-31T10:40:08+00:00",
+  "function": {},
+  "status_range": {},
+  "status": {},
+  "set_up": false,
+  "support_local": true
+}

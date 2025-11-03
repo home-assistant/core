@@ -93,11 +93,11 @@ async def test_number_state_update(
 
     entity_id = entity_info["entity_id"]
 
-    assert hass.states.get(entity_id).state == "1"
+    assert hass.states.get(entity_id).state == "1.0"
 
     mock_number_property.get.return_value = 100
 
     await update_property_listeners(mock_number_property)
     await hass.async_block_till_done()
 
-    assert hass.states.get(entity_id).state == "100"
+    assert hass.states.get(entity_id).state == "100.0"

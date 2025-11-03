@@ -16,7 +16,7 @@ jobs:
     steps:
       - name: Check issue language
         id: detect_language
-        uses: actions/github-script@v7.0.1
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         env:
           ISSUE_NUMBER: ${{ github.event.issue.number }}
           ISSUE_TITLE: ${{ github.event.issue.title }}
@@ -57,23 +57,26 @@ jobs:
       - name: Detect language using AI
         id: ai_language_detection
         if: steps.detect_language.outputs.should_continue == 'true'
-        uses: actions/ai-inference@v1.1.0
+        uses: actions/ai-inference@a1c11829223a786afe3b5663db904a3aa1eac3a2 # v2.0.1
         with:
           model: openai/gpt-4o-mini
           system-prompt: |
             You are a language detection system. Your task is to determine if the provided text is written in English or another language.
 
             Rules:
-            1. Analyze the text and determine the primary language
+            1. Analyze the text and determine the primary language of the USER'S DESCRIPTION only
             2. IGNORE markdown headers (lines starting with #, ##, ###, etc.) as these are from issue templates, not user input
             3. IGNORE all code blocks (text between ``` or ` markers) as they may contain system-generated error messages in other languages
-            4. Consider technical terms, code snippets, and URLs as neutral (they don't indicate non-English)
-            5. Focus on the actual sentences and descriptions written by the user
-            6. Return ONLY a JSON object with two fields:
-               - "is_english": boolean (true if the text is primarily in English, false otherwise)
+            4. IGNORE error messages, logs, and system output even if not in code blocks - these often appear in the user's system language
+            5. Consider technical terms, code snippets, URLs, and file paths as neutral (they don't indicate non-English)
+            6. Focus ONLY on the actual sentences and descriptions written by the user explaining their issue
+            7. If the user's explanation/description is in English but includes non-English error messages or logs, consider it ENGLISH
+            8. Return ONLY a JSON object with two fields:
+               - "is_english": boolean (true if the user's description is primarily in English, false otherwise)
                - "detected_language": string (the name of the detected language, e.g., "English", "Spanish", "Chinese", etc.)
-            7. Be lenient - if the text is mostly English with minor non-English elements, consider it English
-            8. Common programming terms, error messages, and technical jargon should not be considered as non-English
+            9. Be lenient - if the user's explanation is in English with non-English system output, it's still English
+            10. Common programming terms, error messages, and technical jargon should not be considered as non-English
+            11. If you cannot reliably determine the language, set detected_language to "undefined"
 
             Example response:
             {"is_english": false, "detected_language": "Spanish"}
@@ -87,7 +90,7 @@ jobs:
 
       - name: Process non-English issues
         if: steps.detect_language.outputs.should_continue == 'true'
-        uses: actions/github-script@v7.0.1
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         env:
           AI_RESPONSE: ${{ steps.ai_language_detection.outputs.response }}
           ISSUE_NUMBER: ${{ steps.detect_language.outputs.issue_number }}
@@ -119,6 +122,12 @@ jobs:
 
             if (languageResult.is_english) {
               console.log('Issue is in English, no action needed');
+              return;
+            }
+
+            // If language is undefined or not detected, skip processing
+            if (!languageResult.detected_language || languageResult.detected_language === 'undefined') {
+              console.log('Language could not be determined, skipping processing');
               return;
             }
 

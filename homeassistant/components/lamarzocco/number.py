@@ -221,7 +221,7 @@ class LaMarzoccoNumberEntity(LaMarzoccoEntity, NumberEntity):
     entity_description: LaMarzoccoNumberEntityDescription
 
     @property
-    def native_value(self) -> float:
+    def native_value(self) -> float | int:
         """Return the current value."""
         return self.entity_description.native_value_fn(self.coordinator.device)
 
