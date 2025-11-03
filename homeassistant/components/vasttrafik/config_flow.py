@@ -199,7 +199,10 @@ class VasttrafikConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(
             title="Västtrafik",
-            data={CONF_KEY: import_data[CONF_KEY], CONF_SECRET: import_data[CONF_SECRET]},
+            data={
+                CONF_KEY: import_data[CONF_KEY],
+                CONF_SECRET: import_data[CONF_SECRET],
+            },
             subentries=subentries,
         )
 

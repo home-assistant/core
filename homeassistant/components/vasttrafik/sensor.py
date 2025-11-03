@@ -16,12 +16,15 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_DELAY, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    issue_registry as ir,
+)
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import (
-    AddEntitiesCallback,
     AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.dt import now

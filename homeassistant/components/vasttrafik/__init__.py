@@ -6,10 +6,7 @@ import logging
 
 import vasttrafik
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigEntryNotReady,
-)
+from homeassistant.config_entries import ConfigEntry, ConfigEntryNotReady
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
