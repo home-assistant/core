@@ -228,9 +228,9 @@ NUMBER_ENTITIES = (
         method=lambda api, ch, value: api.set_volume(ch, volume_doorbell=int(value)),
     ),
     ReolinkNumberEntityDescription(
-        key="noise_reduction",
+        key="audio_noise_reduction",
         cmd_key="439",
-        translation_key="noise_reduction",
+        translation_key="audio_noise_reduction",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         native_step=1,

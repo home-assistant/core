@@ -529,7 +529,7 @@
       "motion_sensitivity": {
         "name": "Motion sensitivity"
       },
-      "noise_reduction": {
+      "audio_noise_reduction": {
         "name": "Audio noise reduction"
       },
       "pir_sensitivity": {
