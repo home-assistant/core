@@ -208,6 +208,8 @@ build.json @home-assistant/supervisor
 /tests/components/bang_olufsen/ @mj23000
 /homeassistant/components/bayesian/ @HarvsG
 /tests/components/bayesian/ @HarvsG
+/homeassistant/components/bbox/ @sweenu
+/tests/components/bbox/ @sweenu
 /homeassistant/components/beewi_smartclim/ @alemuro
 /homeassistant/components/binary_sensor/ @home-assistant/core
 /tests/components/binary_sensor/ @home-assistant/core

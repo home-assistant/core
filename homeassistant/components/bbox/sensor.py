@@ -194,10 +194,10 @@ class BboxData:
     def update(self):
         """Get the latest data from the Bbox."""
 
+        bbox = pybbox.Bbox()
         try:
-            box = pybbox.Bbox()
-            self.data = box.get_ip_stats()
-            self.router_infos = box.get_bbox_info()
+            self.data = bbox.get_ip_stats()
+            self.router_infos = bbox.get_bbox_info()
         except requests.exceptions.HTTPError as error:
             _LOGGER.error(error)
             self.data = None

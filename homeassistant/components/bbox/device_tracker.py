@@ -7,6 +7,7 @@ from datetime import timedelta
 import logging
 
 import pybbox
+import requests
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
@@ -45,13 +46,10 @@ class BboxDeviceScanner(DeviceScanner):
     """Scanner for devices connected to the bbox."""
 
     def __init__(self, config):
-        """Get host from config."""
+        """Initialize the scanner."""
 
         self.host = config[CONF_HOST]
-
-        """Initialize the scanner."""
         self.last_results: list[Device] = []
-
         self.success_init = self._update_info()
 
     def scan_devices(self):
@@ -78,8 +76,13 @@ class BboxDeviceScanner(DeviceScanner):
         """
         _LOGGER.debug("Scanning")
 
-        box = pybbox.Bbox(ip=self.host)
-        result = box.get_all_connected_devices()
+        bbox = pybbox.Bbox(ip=self.host)
+        try:
+            result = bbox.get_all_connected_devices()
+        except requests.exceptions.HTTPError as err:
+            _LOGGER.error("Error scanning devices: %s", err)
+            self.last_results = []
+            return False
 
         now = dt_util.now()
         last_results = []
@@ -88,7 +91,10 @@ class BboxDeviceScanner(DeviceScanner):
                 continue
             last_results.append(
                 Device(
-                    device["macaddress"], device["hostname"], device["ipaddress"], now
+                    device["macaddress"],
+                    device["hostname"],
+                    device["ipaddress"],
+                    now,
                 )
             )
 
