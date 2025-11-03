@@ -2146,11 +2146,18 @@ async def test_formation_strategy_restore_automatic_backup_ezsp(
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "choose_automatic_backup"
 
-    result3 = await hass.config_entries.flow.async_configure(
+    result_backup = await hass.config_entries.flow.async_configure(
         result2["flow_id"],
         user_input={
             config_flow.CHOOSE_AUTOMATIC_BACKUP: "choice:" + repr(backup),
         },
+    )
+
+    # Consume progress flow for restore_backup
+    result3 = await consume_progress_flow(
+        hass,
+        flow_id=result_backup["flow_id"],
+        valid_step_ids=("restore_backup",),
     )
 
     mock_app.backups.restore_backup.assert_called_once()
@@ -2208,11 +2215,18 @@ async def test_formation_strategy_restore_automatic_backup_non_ezsp(
         f"choice:{mock_app.backups.backups[1]!r}",
     ]
 
-    result3 = await hass.config_entries.flow.async_configure(
+    result_backup = await hass.config_entries.flow.async_configure(
         result2["flow_id"],
         user_input={
             config_flow.CHOOSE_AUTOMATIC_BACKUP: f"choice:{backup!r}",
         },
+    )
+
+    # Consume progress flow for restore_backup
+    result3 = await consume_progress_flow(
+        hass,
+        flow_id=result_backup["flow_id"],
+        valid_step_ids=("restore_backup",),
     )
 
     mock_app.backups.restore_backup.assert_called_once_with(backup)
@@ -2651,11 +2665,18 @@ async def test_options_flow_migration_reset_old_adapter(
         spec=ZhaRadioManager,
         side_effect=[mock_radio_manager],
     ):
-        result_strategy = await hass.config_entries.options.async_configure(
+        result_migrate_start = await hass.config_entries.options.async_configure(
             flow["flow_id"],
             user_input={
                 "next_step_id": config_flow.MIGRATION_STRATEGY_RECOMMENDED,
             },
+        )
+
+        # Consume progress steps
+        result_strategy = await consume_progress_flow(
+            hass,
+            flow_id=result_migrate_start["flow_id"],
+            valid_step_ids=("maybe_reset_old_radio", "restore_backup"),
         )
 
     # The old adapter is reset, not the new one
@@ -2744,11 +2765,18 @@ async def test_options_flow_reconfigure_no_reset(
     with patch(
         "homeassistant.components.zha.config_flow.ZhaRadioManager"
     ) as mock_radio_manager:
-        result_strategy = await hass.config_entries.options.async_configure(
+        result_migrate_start = await hass.config_entries.options.async_configure(
             flow["flow_id"],
             user_input={
                 "next_step_id": config_flow.MIGRATION_STRATEGY_RECOMMENDED,
             },
+        )
+
+        # Consume progress steps
+        result_strategy = await consume_progress_flow(
+            hass,
+            flow_id=result_migrate_start["flow_id"],
+            valid_step_ids=("maybe_reset_old_radio", "restore_backup"),
         )
 
     # A temp radio manager is never created
@@ -2983,9 +3011,16 @@ async def test_migration_resets_old_radio(
 
         assert result_confirm["step_id"] == "choose_migration_strategy"
 
-        result_recommended = await hass.config_entries.flow.async_configure(
+        result_migrate = await hass.config_entries.flow.async_configure(
             result_confirm["flow_id"],
             user_input={"next_step_id": config_flow.MIGRATION_STRATEGY_RECOMMENDED},
+        )
+
+        # Consume progress steps
+        result_recommended = await consume_progress_flow(
+            hass,
+            flow_id=result_migrate["flow_id"],
+            valid_step_ids=("maybe_reset_old_radio", "restore_backup"),
         )
 
     assert result_recommended["type"] is FlowResultType.ABORT
