@@ -132,7 +132,7 @@ async def test_reconfigure_success(
     mock_config_entry.add_to_hass(hass)
     result = await mock_config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
+    assert result["step_id"] == "user"
     assert result["errors"] == {}
 
     # original entry
@@ -168,7 +168,7 @@ async def test_reconfigure_another_device(
     mock_config_entry.add_to_hass(hass)
     result = await mock_config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
+    assert result["step_id"] == "user"
     assert result["errors"] == {}
 
     # original entry
@@ -211,7 +211,7 @@ async def test_reconfigure_error(
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
+    assert result["step_id"] == "user"
 
     with patch(
         "homeassistant.components.solarman.config_flow.get_config",
@@ -254,7 +254,7 @@ async def test_zeroconf(hass: HomeAssistant, mock_solarman: AsyncMock) -> None:
             name="mock_name",
             port=8080,
             hostname="mock_hostname",
-            type="_http._tcp.local.",
+            type="_solarman._tcp.local.",
             properties={
                 "product_type": "SP-2W-EU",
                 "serial": TEST_DEVICE_SN,
@@ -302,7 +302,7 @@ async def test_zeroconf_already_configured(
             name="mock_name",
             port=8080,
             hostname="mock_hostname",
-            type="_http._tcp.local.",
+            type="_solarman._tcp.local.",
             properties={
                 "product_type": "SP-2W-EU",
                 "serial": TEST_DEVICE_SN,
@@ -336,7 +336,7 @@ async def test_zeroconf_ip_change(
             name="mock_name",
             port=8080,
             hostname="mock_hostname",
-            type="_http._tcp.local.",
+            type="_solarman._tcp.local.",
             properties={
                 "product_type": "SP-2W-EU",
                 "serial": TEST_DEVICE_SN,
@@ -349,3 +349,74 @@ async def test_zeroconf_ip_change(
     assert result["reason"] == "already_configured"
 
     assert mock_config_entry.data["host"] == "192.168.1.101"
+
+@pytest.mark.parametrize(
+    "exception, expected_error",
+    [
+        (TimeoutError, "timeout"),
+        (ConnectionError, "cannot_connect"),
+        (Exception("Some unknown error"), "unknown"),
+    ],
+)
+@pytest.mark.parametrize(
+    "device_fixture", ["SP-2W-EU"], indirect=True
+)
+async def test_zeroconf_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    exception: Exception,
+    expected_error: str
+) -> None:
+    """Test discovery setup."""
+    with patch(
+        "homeassistant.components.solarman.config_flow.get_config",
+        new_callable=AsyncMock,
+        side_effect=exception,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=ZeroconfServiceInfo(
+                ip_address=ip_address(TEST_HOST),
+                ip_addresses=[ip_address(TEST_HOST)],
+                name="mock_name",
+                port=8080,
+                hostname="mock_hostname",
+                type="_solarman._tcp.local.",
+                properties={
+                    "product_type": "SP-2W-EU",
+                    "serial": TEST_DEVICE_SN,
+                    "fw_version": TEST_FW_VERSION
+                },
+            ),
+        )
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], 
+            user_input={},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"]["base"] == expected_error
+
+async def test_zeroconf_invalid(hass: HomeAssistant) -> None:
+    """Test discovery detecting missing discovery info."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=ZeroconfServiceInfo(
+            ip_address=ip_address(TEST_HOST),
+            ip_addresses=[ip_address(TEST_HOST)],
+            name="mock_name",
+            port=8080,
+            hostname="mock_hostname",
+            type="_solarman._tcp.local.",
+            properties={
+                "product_type": "SP-2W-EU",
+                "fw_version": TEST_FW_VERSION
+            },
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "invalid_discovery_parameters"

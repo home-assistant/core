@@ -28,6 +28,7 @@
         },
         "data_description": {
           "host": "[%key:component::solarman::config::step::user::data_description::host%]",
+          "port": "The TCP port of the Solarman device (default: 8080).",
           "scan_interval": "[%key:component::solarman::config::step::user::data_description::scan_interval%]"
         }
       }
@@ -55,10 +56,10 @@
         "name": "Power"
       },
       "positive_active_energy": {
-        "name": "Positive Active Energy"
+        "name": "Positive active energy"
       },
       "reverse_active_energy": {
-        "name": "Reverse Active Energy"
+        "name": "Reverse active energy"
       },
       "sn": {
         "name": "Meter SN"
@@ -67,90 +68,85 @@
         "name": "Device version"
       },
       "total_act_energy_lt": {
-        "name": "Total Actual Energy Low Tariff"
+        "name": "Total actual energy low tariff"
       },
       "total_act_energy_nt": {
-        "name": "Total Actual Energy Normal Tariff"
+        "name": "Total actual energy normal tariff"
       },
       "total_act_ret_energy_lt": {
-        "name": "Total Actual Returned Energy Low Tariff"
+        "name": "Total actual returned energy low tariff"
       },
       "total_act_ret_energy_nt": {
-        "name": "Total Actual Returned Energy Normal Tariff"
+        "name": "Total actual returned energy normal tariff"
       },
       "a_current": {
-        "name": "AC Phase-A Current"
+        "name": "AC Phase-A current"
       },
       "b_current": {
-        "name": "AC Phase-B Current"
+        "name": "AC Phase-B current"
       },
       "c_current": {
-        "name": "AC Phase-C Current"
+        "name": "AC Phase-C current"
       },
       "a_voltage": {
-        "name": "AC Phase-A Voltage"
+        "name": "AC Phase-A voltage"
       },
       "b_voltage": {
-        "name": "AC Phase-B Voltage"
+        "name": "AC Phase-B voltage"
       },
       "c_voltage": {
-        "name": "AC Phase-C Voltage"
+        "name": "AC Phase-C voltage"
       },
       "total_act_power": {
-        "name": "Total Actual Power"
+        "name": "Total actual power"
       },
       "total_act_ret_power": {
-        "name": "Total Actual Returned Power"
+        "name": "Total actual returned power"
       },
       "a_act_power": {
-        "name": "Active Power Phase-A"
+        "name": "Active power phase-A"
       },
       "b_act_power": {
-        "name": "Active Power Phase-B"
+        "name": "Active power phase-B"
       },
       "c_act_power": {
-        "name": "Active Power Phase-C"
+        "name": "Active power phase-C"
       },
       "a_act_ret_power": {
-        "name": "Active Returned Power Phase-A"
+        "name": "Active returned power phase-A"
       },
       "b_act_ret_power": {
-        "name": "Active Returned Power Phase-B"
+        "name": "Active returned power phase-B"
       },
       "c_act_ret_power": {
-        "name": "Active Returned Power Phase-C"
+        "name": "Active returned power phase-C"
       },
       "total_gas": {
-        "name": "Total Gas Consumption"
+        "name": "Total gas consumption"
       },
       "current": {
         "name": "Current"
       },
       "active_power": {
-        "name": "Active Power"
+        "name": "Active power"
       },
       "apparent_power": {
-        "name": "Apparent Power"
+        "name": "Apparent power"
       },
       "reactive_power": {
-        "name": "Reactive Power"
+        "name": "Reactive power"
       },
       "power_factor": {
-        "name": "Power Factor"
+        "name": "Power factor"
       },
       "frequency": {
         "name": "Frequency"
       },
       "total_act_energy": {
-        "name": "Total Actual Energy"
+        "name": "Total actual energy"
       },
       "total_act_ret_energy": {
-        "name": "Total Actual Returned Energy"
-      }
-    },
-    "switch": {
-      "smart_plug": {
-        "name": "Smart Plug"
+        "name": "Total actual returned energy"
       }
     }
   },

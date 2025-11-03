@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import SolarmanConfigEntry
 
-TO_REDACT = {"sn"}
+TO_REDACT = {"sn", "SN"}
 
 
 async def async_get_config_entry_diagnostics(

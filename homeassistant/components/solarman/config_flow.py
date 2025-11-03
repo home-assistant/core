@@ -3,16 +3,14 @@
 import logging
 from typing import Any
 
+from solarman_opendata.utils import get_config
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, SOURCE_RECONFIGURE
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DOMAIN
-
-# from solarman_opendata import get_config
-from .solarman import get_config
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +25,9 @@ class SolarmanConfigFlow(ConfigFlow, domain=DOMAIN):
     device_sn = ""
     fw_version = ""
 
-    async def async_step_user(self, user_input=None) -> ConfigFlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step via user interface."""
         errors = {}
         if user_input is not None:
@@ -54,9 +54,19 @@ class SolarmanConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(f"{self.model}_{self.device_sn}")
-                self._abort_if_unique_id_configured()
 
                 if not errors:
+                    if self.source == SOURCE_RECONFIGURE:
+                        self._abort_if_unique_id_mismatch(reason="another_device")
+                        reconfigure_entry = self._get_reconfigure_entry()
+
+                        self.host = reconfigure_entry.data.get("host")
+                        return self.async_update_reload_and_abort(
+                            reconfigure_entry,
+                            data_updates=reconfigure_entry.data,
+                        )
+                    
+                    self._abort_if_unique_id_configured()
                     return self.async_create_entry(
                         title=f"{self.model} ({self.host})",
                         data={
@@ -75,7 +85,7 @@ class SolarmanConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required("host"): str,
+                    vol.Required("host", default=self.host): str,
                     vol.Optional("port", default=DEFAULT_PORT): int,
                     vol.Optional("scan_interval", default=DEFAULT_SCAN_INTERVAL): int,
                 }
@@ -87,66 +97,7 @@ class SolarmanConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle reconfiguration of the integration."""
-        errors: dict[str, str] = {}
-        reconfigure_entry = self._get_reconfigure_entry()
-
-        if user_input is not None:
-            self.host = user_input["host"]
-            port = user_input.get("port", DEFAULT_PORT)
-
-            try:
-                config_data = await get_config(
-                    async_get_clientsession(self.hass), self.host
-                )
-
-                device_info = config_data.get("device", config_data)
-
-                self.device_sn = device_info.get("sn", "unknown")
-                self.fw_version = device_info.get("fw", "unknown")
-                self.model = device_info.get("type", "unknown")
-
-            except TimeoutError:
-                errors["base"] = "timeout"
-            except ConnectionError:
-                errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception("Unknown error occurred while verifying device")
-                errors["base"] = "unknown"
-            else:
-                await self.async_set_unique_id(f"{self.model}_{self.device_sn}")
-                self._abort_if_unique_id_mismatch(reason="another_device")
-                return self.async_update_reload_and_abort(
-                    self._get_reconfigure_entry(),
-                    data_updates={
-                        "host": self.host,
-                        "port": port,
-                        "scan_interval": user_input.get(
-                            "scan_interval", DEFAULT_SCAN_INTERVAL
-                        ),
-                    },
-                )
-        return self.async_show_form(
-            step_id="reconfigure",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        "host", default=reconfigure_entry.data.get("host")
-                    ): str,
-                    vol.Optional(
-                        "port",
-                        default=reconfigure_entry.data.get("port"),
-                    ): int,
-                    vol.Optional(
-                        "scan_interval",
-                        default=reconfigure_entry.data.get("scan_interval"),
-                    ): int,
-                }
-            ),
-            description_placeholders={
-                "title": reconfigure_entry.title,
-            },
-            errors=errors,
-        )
+        return await self.async_step_user(user_input) 
 
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
@@ -180,9 +131,7 @@ class SolarmanConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             try:
-                await get_config(
-                    async_get_clientsession(self.hass), self.host
-                )
+                await get_config(async_get_clientsession(self.hass), self.host)
 
             except TimeoutError:
                 errors["base"] = "timeout"

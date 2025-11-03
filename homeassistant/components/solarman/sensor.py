@@ -24,6 +24,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN
+from .coordinator import SolarmanDeviceUpdateCoordinator
 from .entity import SolarmanEntity
 
 PARALLEL_UPDATES = 1
@@ -290,9 +291,12 @@ class SolarmanSensorEntity(SolarmanEntity, SensorEntity):
     """Representation of a Solarman sensor."""
 
     def __init__(
-        self, coordinator, description: SolarmanSensorEntityDescription
+        self,
+        coordinator: SolarmanDeviceUpdateCoordinator,
+        description: SolarmanSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
+        assert coordinator.config_entry
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = (

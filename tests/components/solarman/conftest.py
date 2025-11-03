@@ -4,6 +4,7 @@ from collections.abc import Generator
 import pytest
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from homeassistant.components.solarman.const import DOMAIN
 
@@ -52,7 +53,12 @@ def mock_solarman(device_fixture: str) -> Generator[AsyncMock]:
             "homeassistant.components.solarman.config_flow.get_config",
             new_callable=AsyncMock,
             return_value=load_json_object_fixture(f"{device_fixture}/config.json", DOMAIN)
-        )
+        ),
+        patch(
+            "homeassistant.components.solarman.coordinator.get_config",
+            new_callable=AsyncMock,
+            return_value=load_json_object_fixture(f"{device_fixture}/config.json", DOMAIN)
+        ),
     ):
         client = mock_client.return_value
         client.fetch_data.return_value = load_json_object_fixture(f"{device_fixture}/data.json", DOMAIN)
@@ -65,5 +71,11 @@ async def setup_integration(
 ) -> None:
     """Set up the integration for testing."""
     mock_config_entry.add_to_hass(hass)
+    device_registry = dr.async_get(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, mock_config_entry.data["sn"])}
+    )
+
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
