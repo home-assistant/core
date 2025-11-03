@@ -61,12 +61,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> 
             entry, data={**entry.data, CONF_FOLDER_ID: backup_folder.id}
         )
 
-    # update in case folder was renamed manually inside OneDrive
-    if backup_folder.name != entry.data[CONF_FOLDER_PATH]:
-        hass.config_entries.async_update_entry(
-            entry, data={**entry.data, CONF_FOLDER_PATH: backup_folder.name}
-        )
-
     entry.runtime_data = OneDriveRuntimeData(
         client=client,
         token_function=get_access_token,

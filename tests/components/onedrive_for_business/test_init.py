@@ -87,7 +87,7 @@ async def test_get_integration_folder_creation(
     )
     # ensure the folder id and name are updated
     assert mock_config_entry.data[CONF_FOLDER_ID] == mock_folder.id
-    assert mock_config_entry.data[CONF_FOLDER_PATH] == mock_folder.name
+    assert mock_config_entry.data[CONF_FOLDER_PATH] == folder_name
 
 
 async def test_get_integration_folder_creation_error(
