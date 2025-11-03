@@ -28,10 +28,10 @@ STATIONS = [
 
 
 async def init_integration(
-    hass: HomeAssistant, incomplete_data=False, invalid_indexes=False
+    hass: HomeAssistant, incomplete_data=False, invalid_indexes=False, config_entry=None
 ) -> MockConfigEntry:
     """Set up the GIOS integration in Home Assistant."""
-    entry = MockConfigEntry(
+    entry = config_entry or MockConfigEntry(
         domain=DOMAIN,
         title="Home",
         unique_id="123",
