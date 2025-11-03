@@ -59,6 +59,7 @@
   })
 # ---
 # name: test_selects[aqara_motion_p2][select.aqara_motion_and_light_sensor_p2_sensitivity-entry]
+# name: test_selects[aqara_thermostat_w500][select.floor_heating_thermostat_temperature_display_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -68,6 +69,8 @@
         'low',
         'standard',
         'high',
+        'Celsius',
+        'Fahrenheit',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -78,6 +81,7 @@
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
     'entity_id': 'select.aqara_motion_and_light_sensor_p2_sensitivity',
+    'entity_id': 'select.floor_heating_thermostat_temperature_display_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -90,6 +94,7 @@
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Sensitivity',
+    'original_name': 'Temperature display mode',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -174,6 +179,26 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'low',
+    'translation_key': 'temperature_display_mode',
+    'unique_id': '00000000000004D2-0000000000000064-MatterNodeDevice-1-TrvTemperatureDisplayMode-516-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[aqara_thermostat_w500][select.floor_heating_thermostat_temperature_display_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Floor Heating Thermostat Temperature display mode',
+      'options': list([
+        'Celsius',
+        'Fahrenheit',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.floor_heating_thermostat_temperature_display_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Celsius',
   })
 # ---
 # name: test_selects[color_temperature_light][select.mock_color_temperature_light_lighting-entry]
@@ -798,6 +823,65 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'silent',
+  })
+# ---
+# name: test_selects[ecovacs_deebot][select.ecodeebot_clean_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Vacuum & Mop',
+        'Vacuum-Only',
+        'Mop after Vacuum',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.ecodeebot_clean_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Clean mode',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'clean_mode',
+    'unique_id': '00000000000004D2-000000000000002F-MatterNodeDevice-1-MatterRvcCleanMode-85-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[ecovacs_deebot][select.ecodeebot_clean_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'ecodeebot Clean mode',
+      'options': list([
+        'Vacuum & Mop',
+        'Vacuum-Only',
+        'Mop after Vacuum',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.ecodeebot_clean_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Vacuum & Mop',
   })
 # ---
 # name: test_selects[eve_energy_20ecn4101][select.eve_energy_20ecn4101_power_on_behavior_on_startup_bottom-entry]
