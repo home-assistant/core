@@ -8,8 +8,8 @@ from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Any
 
-from xbox.webapi.api.provider.people.models import Person
-from xbox.webapi.api.provider.titlehub.models import Title
+from pythonxbox.api.provider.people.models import Person
+from pythonxbox.api.provider.titlehub.models import Title
 
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,

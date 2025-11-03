@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Iterable
 from typing import Any
 
-from xbox.webapi.api.provider.smartglass.models import InputKeyType, PowerState
+from pythonxbox.api.provider.smartglass.models import InputKeyType, PowerState
 
 from homeassistant.components.remote import (
     ATTR_DELAY_SECS,

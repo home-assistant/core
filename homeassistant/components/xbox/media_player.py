@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from xbox.webapi.api.provider.catalog.models import Image
-from xbox.webapi.api.provider.smartglass.models import (
+from pythonxbox.api.provider.catalog.models import Image
+from pythonxbox.api.provider.smartglass.models import (
     PlaybackState,
     PowerState,
     VolumeDirection,

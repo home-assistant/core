@@ -7,8 +7,8 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
 
-from xbox.webapi.api.provider.people.models import Person
-from xbox.webapi.api.provider.titlehub.models import Title
+from pythonxbox.api.provider.people.models import Person
+from pythonxbox.api.provider.titlehub.models import Title
 
 from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
