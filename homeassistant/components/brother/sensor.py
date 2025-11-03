@@ -330,7 +330,7 @@ async def async_setup_entry(
 
 
 class BrotherPrinterSensor(BrotherPrinterEntity, SensorEntity):
-    """Define an Brother Printer sensor."""
+    """Define a Brother Printer sensor."""
 
     entity_description: BrotherSensorEntityDescription
 
