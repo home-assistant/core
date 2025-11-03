@@ -52,28 +52,26 @@ async def search_stations(
     if not query or len(query) < 2:
         return [], None
 
+    planner = config_entry.runtime_data
     try:
-        planner = config_entry.runtime_data
-
         results = await hass.async_add_executor_job(planner.location_name, query)
-
-        stations = []
-        for result in results[:10]:  # Limit to 10 results
-            name = result.get("name", "")
-            gid = result.get("gid", "")
-            if name and gid:
-                stations.append({"value": name, "label": f"{name} ({gid})"})
-
-        if stations:
-            return stations, None
-        return [], "no_stations_found"
-
     except vasttrafik.Error as err:
         _LOGGER.error("Västtrafik API error in search_stations: %s", err)
         return [], "api_error"
     except Exception:
         _LOGGER.exception("Unexpected error in search_stations")
         return [], "api_error"
+
+    stations = []
+    for result in results[:10]:  # Limit to 10 results
+        name = result.get("name", "")
+        gid = result.get("gid", "")
+        if name and gid:
+            stations.append({"value": name, "label": f"{name} ({gid})"})
+
+    if stations:
+        return stations, None
+    return [], "no_stations_found"
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
