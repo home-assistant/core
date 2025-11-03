@@ -92,13 +92,6 @@ def is_installed(requirement_str: str) -> bool:
             # Branch and tag returns False
             if (origin := Distribution.from_name(req.name).origin) is None:
                 return False
-            if getattr(origin, "vcs_info", None) is None:
-                # If existing package is a specifier we can't match with vcs
-                _LOGGER.error(
-                    "Invalid requirement '%s'. Current installation is not VCS format",
-                    requirement_str,
-                )
-                return False
 
             return origin.vcs_info.commit_id[:7] in req.url
     except PackageNotFoundError:

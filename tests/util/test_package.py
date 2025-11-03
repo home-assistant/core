@@ -451,8 +451,7 @@ def test_is_installed_vcs_commit(requirement_str, expected) -> None:
 def test_is_installed_non_vcs_commit() -> None:
     """Test is_installed with homeassistant and no VCS info present (simulate dir install)."""
     requirement_str = "homeassistant@git+https://github.com/home-assistant/core@e8bdc72"
-    fake_origin = SimpleNamespace(dir_info=True)
-    fake_dist = MagicMock(origin=fake_origin)
+    fake_dist = MagicMock(origin=None)
     with (
         patch(
             "homeassistant.util.package.Distribution.from_name", return_value=fake_dist
