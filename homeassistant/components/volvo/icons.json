@@ -283,6 +283,14 @@
         "default": "mdi:alarm-light"
       }
     },
+    "device_tracker": {
+      "location": {
+        "default": "mdi:car",
+        "state": {
+          "not_home": "mdi:car-arrow-right"
+        }
+      }
+    },
     "sensor": {
       "availability": {
         "default": "mdi:car-connected"
