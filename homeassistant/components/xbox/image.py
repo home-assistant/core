@@ -6,8 +6,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
 
-from xbox.webapi.api.provider.people.models import Person
-from xbox.webapi.api.provider.titlehub.models import Title
+from pythonxbox.api.provider.people.models import Person
+from pythonxbox.api.provider.titlehub.models import Title
 
 from homeassistant.components.image import ImageEntity, ImageEntityDescription
 from homeassistant.core import HomeAssistant, callback
