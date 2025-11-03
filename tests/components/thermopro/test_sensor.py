@@ -2,6 +2,9 @@
 
 from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.components.thermopro.const import DOMAIN
+from homeassistant.components.thermopro.coordinator import (
+    ThermoProBluetoothProcessorCoordinator,
+)
 from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant
 
@@ -167,6 +170,7 @@ async def test_entities_restore_and_update(hass: HomeAssistant) -> None:
 
     # Verify coordinator is available and properly configured for data restoration
     coordinator = entry.runtime_data
+    assert isinstance(coordinator, ThermoProBluetoothProcessorCoordinator)
     assert coordinator.available
     # The coordinator should have a restore_key (config entry ID) for data persistence
     assert coordinator.restore_key == entry.entry_id
