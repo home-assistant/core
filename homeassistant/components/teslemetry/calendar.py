@@ -86,7 +86,7 @@ class TeslemetryTariffSchedule(TeslemetryEnergyInfoEntity, CalendarEntity):
                 day_of_week = now.weekday()  # Monday is 0, Sunday is 6
                 from_day = period_def.get("fromDayOfWeek", 0)
                 to_day = period_def.get("toDayOfWeek", 6)
-                if not (from_day <= day_of_week <= to_day):
+                if from_day > day_of_week > to_day:
                     continue
 
                 # Calculate start and end times for today
@@ -162,7 +162,7 @@ class TeslemetryTariffSchedule(TeslemetryEnergyInfoEntity, CalendarEntity):
                     # Check if current day falls within the period's day range
                     from_day = period_def.get("fromDayOfWeek", 0)
                     to_day = period_def.get("toDayOfWeek", 6)
-                    if not (from_day <= day_of_week <= to_day):
+                    if from_day > day_of_week > to_day:
                         continue
 
                     # Extract period timing for current day
