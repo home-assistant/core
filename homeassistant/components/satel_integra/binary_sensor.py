@@ -91,6 +91,7 @@ class SatelIntegraBinarySensor(BinarySensorEntity):
     """Representation of an Satel Integra binary sensor."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -105,11 +106,11 @@ class SatelIntegraBinarySensor(BinarySensorEntity):
         """Initialize the binary_sensor."""
         self._device_number = device_number
         self._attr_unique_id = f"{config_entry_id}_{sensor_type}_{device_number}"
-        self._name = device_name
         self._state = 0
         self._react_to_signal = react_to_signal
         self._satel = controller
 
+        self._attr_name = device_name
         self._attr_device_class = device_class
 
     async def async_added_to_hass(self) -> None:
@@ -128,11 +129,6 @@ class SatelIntegraBinarySensor(BinarySensorEntity):
                 self.hass, self._react_to_signal, self._devices_updated
             )
         )
-
-    @property
-    def name(self) -> str | None:
-        """Return the name of the entity."""
-        return self._name
 
     @property
     def is_on(self) -> bool | None:
