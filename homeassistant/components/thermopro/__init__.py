@@ -48,13 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ThermoProConfigEntry) ->
     service_info = async_last_service_info(hass, address, connectable=False) or async_last_service_info(hass, address, connectable=True)
     if service_info:
         coordinator.restore_service_info(service_info)
-    # The coordinator automatically handles device availability changes.
-    # When a device becomes unavailable, entities will reflect that state.
-    # When the device reappears and broadcasts again, the coordinator will
-    # automatically start receiving updates and mark entities as available.
-    # Entity data is persisted to storage and restored on restart, so entities
-    # will show their last known values even if the device hasn't broadcast yet.
-    # This self-healing behavior is built into PassiveBluetoothProcessorCoordinator.
+    # Only start after all platforms have had a chance to subscribe.
     entry.async_on_unload(coordinator.async_start())
     return True
 
