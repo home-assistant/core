@@ -135,6 +135,21 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     Will automatically load components to support devices found on the network.
     """
+
+    # Try to perform an in-place migration if we detect that the device path can be made
+    # unique
+    device_path = config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
+    usb_device = await hass.async_add_executor_job(usb_device_from_path, device_path)
+
+    if usb_device is not None and device_path != usb_device.device:
+        _LOGGER.info(
+            "Migrating ZHA device path from %s to %s", device_path, usb_device.device
+        )
+        new_data = {**config_entry.data}
+        new_data[CONF_DEVICE][CONF_DEVICE_PATH] = usb_device.device
+        hass.config_entries.async_update_entry(config_entry, data=new_data)
+        device_path = usb_device.device
+
     ha_zha_data: HAZHAData = get_zha_data(hass)
     ha_zha_data.config_entry = config_entry
     zha_lib_data: ZHAData = create_zha_config(hass, ha_zha_data)
@@ -162,21 +177,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         ha_zha_data.device_trigger_cache = zha_lib_data.device_trigger_cache
 
     _LOGGER.debug("Trigger cache: %s", zha_lib_data.device_trigger_cache)
-
-    device_path = config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
-
-    # Try to perform an in-place migration if we detect that the device path can be made
-    # unique
-    usb_device = await hass.async_add_executor_job(usb_device_from_path, device_path)
-
-    if usb_device is not None and device_path != usb_device.device:
-        _LOGGER.info(
-            "Migrating ZHA device path from %s to %s", device_path, usb_device.device
-        )
-        new_data = {**config_entry.data}
-        new_data[CONF_DEVICE][CONF_DEVICE_PATH] = usb_device.device
-        hass.config_entries.async_update_entry(config_entry, data=new_data)
-        device_path = usb_device.device
 
     # Check if firmware update is in progress for this device
     _raise_if_port_in_use(hass, device_path)
