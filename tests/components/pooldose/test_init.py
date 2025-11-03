@@ -148,9 +148,8 @@ async def test_migrate_entity_unique_ids(
         config_entry=mock_migration_config_entry,
     )
 
-    # Store original version for comparison
-    original_version = mock_migration_config_entry.version
-    original_minor_version = mock_migration_config_entry.minor_version
+    assert mock_migration_config_entry.version == 1
+    assert mock_migration_config_entry.minor_version == 1
 
     # Setup the integration - this will trigger migration
     await hass.config_entries.async_setup(mock_migration_config_entry.entry_id)
