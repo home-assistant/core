@@ -25,8 +25,17 @@
       "containers_stopped": {
         "default": "mdi:stop-circle-outline"
       },
-      "containers_paused": {
-        "default": "mdi:pause-circle"
+      "cpu_total": {
+        "default": "mdi:cpu-64-bit"
+      },
+      "cpu_usage_total": {
+        "default": "mdi:cpu-64-bit"
+      },
+      "docker_version": {
+        "default": "mdi:docker"
+      },
+      "image": {
+        "default": "mdi:docker"
       },
       "images_count": {
         "default": "mdi:image-multiple"
@@ -34,11 +43,20 @@
       "containers_count": {
         "default": "mdi:database"
       },
+      "memory_limit": {
+        "default": "mdi:memory"
+      },
       "memory_total": {
         "default": "mdi:memory"
       },
-      "docker_version": {
-        "default": "mdi:docker"
+      "memory_usage": {
+        "default": "mdi:memory"
+      },
+      "memory_usage_percentage": {
+        "default": "mdi:memory"
+      },
+      "operating_system": {
+        "default": "mdi:chip"
       },
       "cpu_total": {
         "default": "mdi:cpu-64-bit"

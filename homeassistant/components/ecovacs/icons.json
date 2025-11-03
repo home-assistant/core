@@ -65,6 +65,20 @@
         }
       }
     },
+    "select": {
+      "active_map": {
+        "default": "mdi:floor-plan"
+      },
+      "auto_empty": {
+        "default": "mdi:delete-empty"
+      },
+      "water_amount": {
+        "default": "mdi:water"
+      },
+      "work_mode": {
+        "default": "mdi:cog"
+      }
+    },
     "sensor": {
       "error": {
         "default": "mdi:alert-circle"

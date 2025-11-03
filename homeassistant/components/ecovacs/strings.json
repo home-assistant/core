@@ -113,6 +113,39 @@
         "name": "Water flow level"
       }
     },
+    "select": {
+      "active_map": {
+        "name": "Active map"
+      },
+      "auto_empty": {
+        "name": "Auto-empty frequency",
+        "state": {
+          "auto": "Auto",
+          "min_10": "10 minutes",
+          "min_15": "15 minutes",
+          "min_25": "25 minutes",
+          "smart": "Smart"
+        }
+      },
+      "water_amount": {
+        "name": "[%key:component::ecovacs::entity::number::water_amount::name%]",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "ultrahigh": "Ultrahigh"
+        }
+      },
+      "work_mode": {
+        "name": "Work mode",
+        "state": {
+          "mop": "Mop",
+          "mop_after_vacuum": "Mop after vacuum",
+          "vacuum": "Vacuum",
+          "vacuum_and_mop": "Vacuum & mop"
+        }
+      }
+    },
     "sensor": {
       "error": {
         "name": "Error",

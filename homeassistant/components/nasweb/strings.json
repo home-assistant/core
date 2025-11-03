@@ -19,8 +19,40 @@
       "missing_status": "Did not receive any status updates within the expected time window. Make sure the Home Assistant internal URL is reachable from the NASweb device.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "description": "{nasweb_schema_img}NASweb combines the functions of a control panel and the ability to manage building automation. The device monitors the flow of information from sensors and programmable switches and stores settings, definitions and configured actions.",
+        "title": "Add NASweb device"
+      }
+    }
+  },
+  "entity": {
+    "alarm_control_panel": {
+      "zone": {
+        "name": "Zone {index}"
+      }
+    },
+    "sensor": {
+      "sensor_input": {
+        "name": "Input {index}",
+        "state": {
+          "active": "[%key:common::state::active%]",
+          "normal": "[%key:common::state::normal%]",
+          "problem": "Problem",
+          "tamper": "Tamper",
+          "undefined": "Undefined"
+        }
+      }
+    },
+    "switch": {
+      "switch_output": {
+        "name": "Relay switch {index}"
+      }
     }
   },
   "exceptions": {
