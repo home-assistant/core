@@ -1,5 +1,16 @@
 {
   "entity": {
+    "switch": {
+      "poe_control": {
+        "default": "mdi:ethernet"
+      },
+      "wan_connect_ipv4": {
+        "default": "mdi:wan"
+      },
+      "wan_connect_ipv6": {
+        "default": "mdi:wan"
+      }
+    },
     "binary_sensor": {
       "online_detection": {
         "default": "mdi:cloud-check",
@@ -14,17 +25,6 @@
       },
       "mem_usage": {
         "default": "mdi:memory"
-      }
-    },
-    "switch": {
-      "poe_control": {
-        "default": "mdi:ethernet"
-      },
-      "wan_connect_ipv4": {
-        "default": "mdi:wan"
-      },
-      "wan_connect_ipv6": {
-        "default": "mdi:wan"
       }
     }
   },

@@ -6,9 +6,6 @@
       }
     },
     "sensor": {
-      "camera_type": {
-        "default": "mdi:camera-iris"
-      },
       "direction": {
         "default": "mdi:sign-direction"
       },
@@ -23,6 +20,9 @@
       },
       "status": {
         "default": "mdi:camera-outline"
+      },
+      "camera_type": {
+        "default": "mdi:camera-iris"
       }
     }
   }

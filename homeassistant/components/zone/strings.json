@@ -1,8 +1,8 @@
 {
   "services": {
     "reload": {
-      "description": "Reloads zones from the YAML-configuration.",
-      "name": "[%key:common::action::reload%]"
+      "name": "[%key:common::action::reload%]",
+      "description": "Reloads zones from the YAML-configuration."
     }
   }
 }

@@ -12,6 +12,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS,
     EntityCategory,
@@ -20,11 +21,14 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .coordinator import SFRConfigEntry
-from .entity import SFRCoordinatorEntity
+from .const import DOMAIN
+from .coordinator import SFRDataUpdateCoordinator
+from .models import DomainData
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -216,11 +220,11 @@ def _get_temperature(value: float | None) -> float | None:
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: SFRConfigEntry,
+    entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensors."""
-    data = entry.runtime_data
+    data: DomainData = hass.data[DOMAIN][entry.entry_id]
     system_info = data.system.data
     if TYPE_CHECKING:
         assert system_info is not None
@@ -242,10 +246,27 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class SFRBoxSensor[_T](SFRCoordinatorEntity[_T], SensorEntity):
+class SFRBoxSensor[_T](CoordinatorEntity[SFRDataUpdateCoordinator[_T]], SensorEntity):
     """SFR Box sensor."""
 
     entity_description: SFRBoxSensorEntityDescription[_T]
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: SFRDataUpdateCoordinator[_T],
+        description: SFRBoxSensorEntityDescription,
+        system_info: SystemInfo,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self.entity_description = description
+        self._attr_unique_id = (
+            f"{system_info.mac_addr}_{coordinator.name}_{description.key}"
+        )
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, system_info.mac_addr)},
+        )
 
     @property
     def native_value(self) -> StateType:

@@ -1,4 +1,5 @@
 {
+  "title": "Mold Indicator",
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
@@ -8,21 +9,21 @@
     },
     "step": {
       "user": {
+        "description": "Create Mold indicator helper",
         "data": {
-          "calibration_factor": "Calibration factor",
+          "name": "[%key:common::config_flow::data::name%]",
           "indoor_humidity_sensor": "Indoor humidity sensor",
           "indoor_temp_sensor": "Indoor temperature sensor",
-          "name": "[%key:common::config_flow::data::name%]",
-          "outdoor_temp_sensor": "Outdoor temperature sensor"
+          "outdoor_temp_sensor": "Outdoor temperature sensor",
+          "calibration_factor": "Calibration factor"
         },
         "data_description": {
-          "calibration_factor": "Needs to be calibrated to the critical point in the room.",
+          "name": "Name for the created entity.",
           "indoor_humidity_sensor": "The entity ID of the indoor humidity sensor.",
           "indoor_temp_sensor": "The entity ID of the indoor temperature sensor.",
-          "name": "Name for the created entity.",
-          "outdoor_temp_sensor": "The entity ID of the outdoor temperature sensor."
-        },
-        "description": "Create Mold indicator helper"
+          "outdoor_temp_sensor": "The entity ID of the outdoor temperature sensor.",
+          "calibration_factor": "Needs to be calibrated to the critical point in the room."
+        }
       }
     }
   },
@@ -35,15 +36,14 @@
     },
     "step": {
       "init": {
+        "description": "Adjust the calibration factor as required",
         "data": {
           "calibration_factor": "[%key:component::mold_indicator::config::step::user::data::calibration_factor%]"
         },
         "data_description": {
           "calibration_factor": "[%key:component::mold_indicator::config::step::user::data_description::calibration_factor%]"
-        },
-        "description": "Adjust the calibration factor as required"
+        }
       }
     }
-  },
-  "title": "Mold Indicator"
+  }
 }

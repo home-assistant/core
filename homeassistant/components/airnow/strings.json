@@ -1,7 +1,15 @@
 {
   "config": {
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    "step": {
+      "user": {
+        "description": "To generate API key go to {api_key_url}",
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "latitude": "[%key:common::config_flow::data::latitude%]",
+          "longitude": "[%key:common::config_flow::data::longitude%]",
+          "radius": "Station radius (miles; optional)"
+        }
+      }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -9,15 +17,16 @@
       "invalid_location": "No results found for that location, try changing the location or station radius.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "options": {
     "step": {
-      "user": {
+      "init": {
         "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]",
-          "latitude": "[%key:common::config_flow::data::latitude%]",
-          "longitude": "[%key:common::config_flow::data::longitude%]",
-          "radius": "Station radius (miles; optional)"
-        },
-        "description": "To generate API key go to {api_key_url}"
+          "radius": "Station radius (miles)"
+        }
       }
     }
   },
@@ -31,15 +40,6 @@
         "state_attributes": {
           "lat": { "name": "[%key:common::config_flow::data::latitude%]" },
           "long": { "name": "[%key:common::config_flow::data::longitude%]" }
-        }
-      }
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "radius": "Station radius (miles)"
         }
       }
     }

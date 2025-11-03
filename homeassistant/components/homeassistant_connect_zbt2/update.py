@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import logging
 
+import aiohttp
+
 from homeassistant.components.homeassistant_hardware.coordinator import (
     FirmwareUpdateCoordinator,
 )
@@ -17,14 +19,22 @@ from homeassistant.components.homeassistant_hardware.util import (
     ResetTarget,
 )
 from homeassistant.components.update import UpdateDeviceClass
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import HomeAssistantConnectZBT2ConfigEntry
-from .const import DOMAIN, FIRMWARE, FIRMWARE_VERSION, HARDWARE_NAME, SERIAL_NUMBER
+from .const import (
+    DOMAIN,
+    FIRMWARE,
+    FIRMWARE_VERSION,
+    HARDWARE_NAME,
+    NABU_CASA_FIRMWARE_RELEASES_URL,
+    SERIAL_NUMBER,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,7 +91,8 @@ FIRMWARE_ENTITY_DESCRIPTIONS: dict[
 
 def _async_create_update_entity(
     hass: HomeAssistant,
-    config_entry: HomeAssistantConnectZBT2ConfigEntry,
+    config_entry: ConfigEntry,
+    session: aiohttp.ClientSession,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> FirmwareUpdateEntity:
     """Create an update entity that handles firmware type changes."""
@@ -100,7 +111,12 @@ def _async_create_update_entity(
     entity = FirmwareUpdateEntity(
         device=config_entry.data["device"],
         config_entry=config_entry,
-        update_coordinator=config_entry.runtime_data.coordinator,
+        update_coordinator=FirmwareUpdateCoordinator(
+            hass,
+            config_entry,
+            session,
+            NABU_CASA_FIRMWARE_RELEASES_URL,
+        ),
         entity_description=entity_description,
     )
 
@@ -110,7 +126,11 @@ def _async_create_update_entity(
         """Replace the current entity when the firmware type changes."""
         er.async_get(hass).async_remove(entity.entity_id)
         async_add_entities(
-            [_async_create_update_entity(hass, config_entry, async_add_entities)]
+            [
+                _async_create_update_entity(
+                    hass, config_entry, session, async_add_entities
+                )
+            ]
         )
 
     entity.async_on_remove(
@@ -122,11 +142,14 @@ def _async_create_update_entity(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: HomeAssistantConnectZBT2ConfigEntry,
+    config_entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the firmware update config entry."""
-    entity = _async_create_update_entity(hass, config_entry, async_add_entities)
+    session = async_get_clientsession(hass)
+    entity = _async_create_update_entity(
+        hass, config_entry, session, async_add_entities
+    )
 
     async_add_entities([entity])
 
@@ -139,7 +162,7 @@ class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
     def __init__(
         self,
         device: str,
-        config_entry: HomeAssistantConnectZBT2ConfigEntry,
+        config_entry: ConfigEntry,
         update_coordinator: FirmwareUpdateCoordinator,
         entity_description: FirmwareUpdateEntityDescription,
     ) -> None:

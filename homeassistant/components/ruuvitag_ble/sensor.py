@@ -104,25 +104,7 @@ SENSOR_DESCRIPTIONS = {
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),
-    # Keys exported for dataformat 06/e1 sensors in newer versions of ruuvitag-ble
-    "pm1": SensorEntityDescription(
-        key=f"{SSDSensorDeviceClass.PM1}_{Units.CONCENTRATION_MICROGRAMS_PER_CUBIC_METER}",
-        device_class=SensorDeviceClass.PM1,
-        native_unit_of_measurement=Units.CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    "pm4": SensorEntityDescription(
-        key=f"{SSDSensorDeviceClass.PM4}_{Units.CONCENTRATION_MICROGRAMS_PER_CUBIC_METER}",
-        device_class=SensorDeviceClass.PM4,
-        native_unit_of_measurement=Units.CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    "pm10": SensorEntityDescription(
-        key=f"{SSDSensorDeviceClass.PM10}_{Units.CONCENTRATION_MICROGRAMS_PER_CUBIC_METER}",
-        device_class=SensorDeviceClass.PM10,
-        native_unit_of_measurement=Units.CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
+    # Keys exported for dataformat 06 sensors in newer versions of ruuvitag-ble
     "pm25": SensorEntityDescription(
         key=f"{SSDSensorDeviceClass.PM25}_{Units.CONCENTRATION_MICROGRAMS_PER_CUBIC_METER}",
         device_class=SensorDeviceClass.PM25,

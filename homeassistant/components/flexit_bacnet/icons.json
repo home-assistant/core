@@ -16,9 +16,6 @@
       "fireplace_extract_fan_setpoint": {
         "default": "mdi:fan-minus"
       },
-      "fireplace_mode_runtime": {
-        "default": "mdi:fireplace"
-      },
       "fireplace_supply_fan_setpoint": {
         "default": "mdi:fan-plus"
       },
@@ -33,15 +30,12 @@
       },
       "home_supply_fan_setpoint": {
         "default": "mdi:fan-plus"
+      },
+      "fireplace_mode_runtime": {
+        "default": "mdi:fireplace"
       }
     },
     "switch": {
-      "cooker_hood_mode": {
-        "default": "mdi:kettle-steam",
-        "state": {
-          "off": "mdi:kettle"
-        }
-      },
       "electric_heater": {
         "default": "mdi:radiator",
         "state": {
@@ -52,6 +46,12 @@
         "default": "mdi:fireplace",
         "state": {
           "off": "mdi:fireplace-off"
+        }
+      },
+      "cooker_hood_mode": {
+        "default": "mdi:kettle-steam",
+        "state": {
+          "off": "mdi:kettle"
         }
       }
     }

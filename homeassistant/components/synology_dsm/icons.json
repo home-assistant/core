@@ -1,16 +1,10 @@
 {
   "entity": {
     "sensor": {
-      "cpu_15min_load": {
-        "default": "mdi:chip"
-      },
-      "cpu_1min_load": {
-        "default": "mdi:chip"
-      },
-      "cpu_5min_load": {
-        "default": "mdi:chip"
-      },
       "cpu_other_load": {
+        "default": "mdi:chip"
+      },
+      "cpu_user_load": {
         "default": "mdi:chip"
       },
       "cpu_system_load": {
@@ -19,7 +13,13 @@
       "cpu_total_load": {
         "default": "mdi:chip"
       },
-      "cpu_user_load": {
+      "cpu_1min_load": {
+        "default": "mdi:chip"
+      },
+      "cpu_5min_load": {
+        "default": "mdi:chip"
+      },
+      "cpu_15min_load": {
         "default": "mdi:chip"
       },
       "device_size_total": {
@@ -28,38 +28,32 @@
       "device_status": {
         "default": "mdi:checkbox-marked-circle-outline"
       },
-      "disk_smart_status": {
-        "default": "mdi:checkbox-marked-circle-outline"
-      },
-      "disk_status": {
-        "default": "mdi:checkbox-marked-circle-outline"
-      },
-      "memory_available_real": {
-        "default": "mdi:memory"
-      },
-      "memory_available_swap": {
-        "default": "mdi:memory"
-      },
-      "memory_cached": {
-        "default": "mdi:memory"
-      },
       "memory_real_usage": {
         "default": "mdi:memory"
       },
       "memory_size": {
         "default": "mdi:memory"
       },
-      "memory_total_real": {
+      "memory_cached": {
+        "default": "mdi:memory"
+      },
+      "memory_available_swap": {
+        "default": "mdi:memory"
+      },
+      "memory_available_real": {
         "default": "mdi:memory"
       },
       "memory_total_swap": {
         "default": "mdi:memory"
       },
-      "network_down": {
-        "default": "mdi:download"
+      "memory_total_real": {
+        "default": "mdi:memory"
       },
       "network_up": {
         "default": "mdi:upload"
+      },
+      "network_down": {
+        "default": "mdi:download"
       },
       "partition_percentage_used": {
         "default": "mdi:chart-pie"
@@ -70,8 +64,11 @@
       "partition_size_used": {
         "default": "mdi:chart-pie"
       },
-      "volume_percentage_used": {
-        "default": "mdi:chart-pie"
+      "volume_status": {
+        "default": "mdi:checkbox-marked-circle-outline",
+        "state": {
+          "degrade": "mdi:alert-circle-outline"
+        }
       },
       "volume_size_total": {
         "default": "mdi:chart-pie"
@@ -79,11 +76,14 @@
       "volume_size_used": {
         "default": "mdi:chart-pie"
       },
-      "volume_status": {
-        "default": "mdi:checkbox-marked-circle-outline",
-        "state": {
-          "degrade": "mdi:alert-circle-outline"
-        }
+      "volume_percentage_used": {
+        "default": "mdi:chart-pie"
+      },
+      "disk_smart_status": {
+        "default": "mdi:checkbox-marked-circle-outline"
+      },
+      "disk_status": {
+        "default": "mdi:checkbox-marked-circle-outline"
       }
     },
     "switch": {

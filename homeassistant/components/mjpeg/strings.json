@@ -1,12 +1,5 @@
 {
   "config": {
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
-    },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
-    },
     "step": {
       "user": {
         "data": {
@@ -18,14 +11,16 @@
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         }
       }
-    }
-  },
-  "options": {
+    },
     "error": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "options": {
     "step": {
       "init": {
         "data": {
@@ -37,6 +32,11 @@
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         }
       }
+    },
+    "error": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     }
   }
 }

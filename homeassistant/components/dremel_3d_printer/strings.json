@@ -1,12 +1,5 @@
 {
   "config": {
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
-    },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
-    },
     "step": {
       "user": {
         "data": {
@@ -16,6 +9,13 @@
           "host": "The hostname or IP address of your Dremel 3D printer."
         }
       }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
   "entity": {
@@ -31,20 +31,41 @@
       }
     },
     "sensor": {
-      "api_version": {
-        "name": "API version"
-      },
-      "available_storage": {
-        "name": "Available storage"
-      },
-      "chamber": {
-        "name": "Chamber"
+      "job_phase": {
+        "name": "Job phase"
       },
       "completion_time": {
         "name": "Completion time"
       },
-      "connection_type": {
-        "name": "Connection type"
+      "progress": {
+        "name": "Progress"
+      },
+      "chamber": {
+        "name": "Chamber"
+      },
+      "platform_temperature": {
+        "name": "Platform temperature"
+      },
+      "target_platform_temperature": {
+        "name": "Target platform temperature"
+      },
+      "max_platform_temperature": {
+        "name": "Max platform temperature"
+      },
+      "extruder": {
+        "name": "Extruder"
+      },
+      "target_extruder_temperature": {
+        "name": "Target extruder temperature"
+      },
+      "max_extruder_temperature": {
+        "name": "Max extruder temperature"
+      },
+      "network_build": {
+        "name": "Network build"
+      },
+      "filament": {
+        "name": "Filament"
       },
       "elapsed_time": {
         "name": "Elapsed time"
@@ -52,47 +73,26 @@
       "estimated_total_time": {
         "name": "Estimated total time"
       },
-      "extruder": {
-        "name": "Extruder"
-      },
-      "filament": {
-        "name": "Filament"
-      },
-      "host": {
-        "name": "[%key:common::config_flow::data::host%]"
-      },
-      "hours_used": {
-        "name": "Hours used"
+      "job_status": {
+        "name": "Job status"
       },
       "job_name": {
         "name": "Job name"
       },
-      "job_phase": {
-        "name": "Job phase"
+      "api_version": {
+        "name": "API version"
       },
-      "job_status": {
-        "name": "Job status"
+      "host": {
+        "name": "[%key:common::config_flow::data::host%]"
       },
-      "max_extruder_temperature": {
-        "name": "Max extruder temperature"
+      "connection_type": {
+        "name": "Connection type"
       },
-      "max_platform_temperature": {
-        "name": "Max platform temperature"
+      "available_storage": {
+        "name": "Available storage"
       },
-      "network_build": {
-        "name": "Network build"
-      },
-      "platform_temperature": {
-        "name": "Platform temperature"
-      },
-      "progress": {
-        "name": "Progress"
-      },
-      "target_extruder_temperature": {
-        "name": "Target extruder temperature"
-      },
-      "target_platform_temperature": {
-        "name": "Target platform temperature"
+      "hours_used": {
+        "name": "Hours used"
       }
     }
   }

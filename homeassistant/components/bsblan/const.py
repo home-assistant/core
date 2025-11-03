@@ -10,9 +10,7 @@ from typing import Final
 DOMAIN: Final = "bsblan"
 
 LOGGER = logging.getLogger(__package__)
-SCAN_INTERVAL = timedelta(seconds=12)  # Legacy interval, kept for compatibility
-SCAN_INTERVAL_FAST = timedelta(seconds=12)  # For state/sensor data
-SCAN_INTERVAL_SLOW = timedelta(minutes=5)  # For config data
+SCAN_INTERVAL = timedelta(seconds=12)
 
 # Services
 DATA_BSBLAN_CLIENT: Final = "bsblan_client"

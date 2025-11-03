@@ -1,13 +1,5 @@
 {
   "config": {
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
-    },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
-    },
     "step": {
       "user": {
         "data": {
@@ -17,15 +9,26 @@
           "token": "The NYT Games NYT-S cookie value."
         }
       }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
   "entity": {
     "sensor": {
-      "connections_played": {
-        "name": "[%key:component::nyt_games::entity::sensor::wordles_played::name%]"
+      "wordles_played": {
+        "name": "Played"
       },
-      "last_played": {
-        "name": "Last played"
+      "won": {
+        "name": "Won"
+      },
+      "streak": {
+        "name": "Current streak"
       },
       "max_streak": {
         "name": "Highest streak"
@@ -33,20 +36,17 @@
       "spelling_bees_played": {
         "name": "[%key:component::nyt_games::entity::sensor::wordles_played::name%]"
       },
-      "streak": {
-        "name": "Current streak"
+      "total_words": {
+        "name": "Total words found"
       },
       "total_pangrams": {
         "name": "Total pangrams found"
       },
-      "total_words": {
-        "name": "Total words found"
+      "connections_played": {
+        "name": "[%key:component::nyt_games::entity::sensor::wordles_played::name%]"
       },
-      "won": {
-        "name": "Won"
-      },
-      "wordles_played": {
-        "name": "Played"
+      "last_played": {
+        "name": "Last played"
       }
     }
   }

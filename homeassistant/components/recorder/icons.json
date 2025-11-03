@@ -1,5 +1,11 @@
 {
   "services": {
+    "purge": {
+      "service": "mdi:database-sync"
+    },
+    "purge_entities": {
+      "service": "mdi:database-sync"
+    },
     "disable": {
       "service": "mdi:database-off"
     },
@@ -8,12 +14,6 @@
     },
     "get_statistics": {
       "service": "mdi:chart-bar"
-    },
-    "purge": {
-      "service": "mdi:database-sync"
-    },
-    "purge_entities": {
-      "service": "mdi:database-sync"
     }
   }
 }

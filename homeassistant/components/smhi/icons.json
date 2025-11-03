@@ -1,11 +1,11 @@
 {
   "entity": {
     "sensor": {
-      "frozen_precipitation": {
-        "default": "mdi:weather-snowy-rainy"
+      "thunder": {
+        "default": "mdi:weather-lightning"
       },
-      "high_cloud": {
-        "default": "mdi:cloud-arrow-up"
+      "total_cloud": {
+        "default": "mdi:cloud"
       },
       "low_cloud": {
         "default": "mdi:cloud-arrow-down"
@@ -13,14 +13,14 @@
       "medium_cloud": {
         "default": "mdi:cloud-arrow-right"
       },
+      "high_cloud": {
+        "default": "mdi:cloud-arrow-up"
+      },
       "precipitation_category": {
         "default": "mdi:weather-pouring"
       },
-      "thunder": {
-        "default": "mdi:weather-lightning"
-      },
-      "total_cloud": {
-        "default": "mdi:cloud"
+      "frozen_precipitation": {
+        "default": "mdi:weather-snowy-rainy"
       }
     }
   }

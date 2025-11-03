@@ -1,8 +1,8 @@
 {
   "services": {
     "reload": {
-      "description": "Reloads all available Python scripts.",
-      "name": "[%key:common::action::reload%]"
+      "name": "[%key:common::action::reload%]",
+      "description": "Reloads all available Python scripts."
     }
   }
 }

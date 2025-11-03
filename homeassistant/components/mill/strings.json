@@ -7,10 +7,16 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "step": {
+      "user": {
+        "data": {
+          "connection_type": "Select connection type"
+        },
+        "description": "Select connection type. Local requires generation 3 heaters"
+      },
       "cloud": {
         "data": {
-          "password": "[%key:common::config_flow::data::password%]",
-          "username": "[%key:common::config_flow::data::username%]"
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
         }
       },
       "local": {
@@ -18,22 +24,13 @@
           "ip_address": "[%key:common::config_flow::data::ip%]"
         },
         "description": "Local IP address of the device."
-      },
-      "user": {
-        "data": {
-          "connection_type": "Select connection type"
-        },
-        "description": "Select connection type. Local requires generation 3 heaters"
       }
     }
   },
   "entity": {
     "sensor": {
-      "control_signal": {
-        "name": "Control signal"
-      },
-      "current_power": {
-        "name": "Current power"
+      "year_consumption": {
+        "name": "Year consumption"
       },
       "day_consumption": {
         "name": "Day consumption"
@@ -44,36 +41,39 @@
       "tvoc": {
         "name": "TVOC"
       },
+      "control_signal": {
+        "name": "Control signal"
+      },
+      "current_power": {
+        "name": "Current power"
+      },
       "uncalibrated_temperature": {
         "name": "Uncalibrated temperature"
-      },
-      "year_consumption": {
-        "name": "Year consumption"
       }
     }
   },
   "services": {
     "set_room_temperature": {
+      "name": "Set room temperature",
       "description": "Sets Mill room temperatures.",
       "fields": {
+        "room_name": {
+          "name": "Room name",
+          "description": "Name of room to change."
+        },
         "away_temp": {
-          "description": "Room temperature in away mode",
-          "name": "Away temperature"
+          "name": "Away temperature",
+          "description": "Room temperature in away mode"
         },
         "comfort_temp": {
-          "description": "Room temperature in comfort mode",
-          "name": "Comfort temperature"
-        },
-        "room_name": {
-          "description": "Name of room to change.",
-          "name": "Room name"
+          "name": "Comfort temperature",
+          "description": "Room temperature in comfort mode"
         },
         "sleep_temp": {
-          "description": "Room temperature in sleep mode",
-          "name": "Sleep temperature"
+          "name": "Sleep temperature",
+          "description": "Room temperature in sleep mode"
         }
-      },
-      "name": "Set room temperature"
+      }
     }
   }
 }

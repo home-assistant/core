@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import datetime
+import decimal
 import logging
 
 from sqlalchemy.engine import Result
@@ -24,7 +26,6 @@ from homeassistant.util.json import JsonValueType
 from .const import CONF_QUERY, DOMAIN
 from .util import (
     async_create_sessionmaker,
-    convert_value,
     generate_lambda_stmt,
     redact_credentials,
     resolve_db_url,
@@ -87,7 +88,14 @@ async def _async_query_service(
             for row in result.mappings():
                 processed_row: dict[str, JsonValueType] = {}
                 for key, value in row.items():
-                    processed_row[key] = convert_value(value)
+                    if isinstance(value, decimal.Decimal):
+                        processed_row[key] = float(value)
+                    elif isinstance(value, datetime.date):
+                        processed_row[key] = value.isoformat()
+                    elif isinstance(value, (bytes, bytearray)):
+                        processed_row[key] = f"0x{value.hex()}"
+                    else:
+                        processed_row[key] = value
                 rows.append(processed_row)
             return rows
         finally:

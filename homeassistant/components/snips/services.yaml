@@ -1,0 +1,56 @@
+feedback_off:
+  fields:
+    site_id:
+      example: bedroom
+      default: default
+      selector:
+        text:
+feedback_on:
+  fields:
+    site_id:
+      example: bedroom
+      default: default
+      selector:
+        text:
+say:
+  fields:
+    custom_data:
+      example: user=UserName
+      default: ""
+      selector:
+        text:
+    site_id:
+      example: bedroom
+      default: default
+      selector:
+        text:
+    text:
+      required: true
+      example: My name is snips
+      selector:
+        text:
+say_action:
+  fields:
+    can_be_enqueued:
+      default: true
+      selector:
+        boolean:
+    custom_data:
+      example: user=UserName
+      default: ""
+      selector:
+        text:
+    intent_filter:
+      example: "turnOnLights, turnOffLights"
+      selector:
+        object:
+    site_id:
+      example: bedroom
+      default: default
+      selector:
+        text:
+    text:
+      required: true
+      example: My name is snips
+      selector:
+        text:

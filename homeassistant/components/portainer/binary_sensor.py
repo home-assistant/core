@@ -61,53 +61,30 @@ async def async_setup_entry(
 ) -> None:
     """Set up Portainer binary sensors."""
     coordinator = entry.runtime_data
+    entities: list[BinarySensorEntity] = []
 
-    def _async_add_new_endpoints(endpoints: list[PortainerCoordinatorData]) -> None:
-        """Add new endpoint binary sensors."""
-        async_add_entities(
+    for endpoint in coordinator.data.values():
+        entities.extend(
             PortainerEndpointSensor(
                 coordinator,
                 entity_description,
                 endpoint,
             )
             for entity_description in ENDPOINT_SENSORS
-            for endpoint in endpoints
-            if entity_description.state_fn(endpoint)
         )
 
-    def _async_add_new_containers(
-        containers: list[tuple[PortainerCoordinatorData, DockerContainer]],
-    ) -> None:
-        """Add new container binary sensors."""
-        async_add_entities(
+        entities.extend(
             PortainerContainerSensor(
                 coordinator,
                 entity_description,
                 container,
                 endpoint,
             )
-            for (endpoint, container) in containers
+            for container in endpoint.containers.values()
             for entity_description in CONTAINER_SENSORS
-            if entity_description.state_fn(container)
         )
 
-    coordinator.new_endpoints_callbacks.append(_async_add_new_endpoints)
-    coordinator.new_containers_callbacks.append(_async_add_new_containers)
-
-    _async_add_new_endpoints(
-        [
-            endpoint
-            for endpoint in coordinator.data.values()
-            if endpoint.id in coordinator.known_endpoints
-        ]
-    )
-    _async_add_new_containers(
-        [
-            (endpoint, container)
-            for endpoint in coordinator.data.values()
-            for container in endpoint.containers.values()
-        ]
-    )
+    async_add_entities(entities)
 
 
 class PortainerEndpointSensor(PortainerEndpointEntity, BinarySensorEntity):

@@ -6,17 +6,17 @@
           "effect": {
             "state": {
               "candle": "mdi:candle",
-              "cosmos": "mdi:star-shooting",
-              "enchant": "mdi:magic-staff",
-              "fire": "mdi:fire",
-              "glisten": "mdi:creation",
-              "opal": "mdi:diamond-stone",
-              "prism": "mdi:triangle-outline",
               "sparkle": "mdi:shimmer",
-              "sunbeam": "mdi:spotlight-beam",
+              "glisten": "mdi:creation",
               "sunrise": "mdi:weather-sunset-up",
               "sunset": "mdi:weather-sunset",
-              "underwater": "mdi:waves"
+              "fire": "mdi:fire",
+              "prism": "mdi:triangle-outline",
+              "opal": "mdi:diamond-stone",
+              "underwater": "mdi:waves",
+              "cosmos": "mdi:star-shooting",
+              "sunbeam": "mdi:spotlight-beam",
+              "enchant": "mdi:magic-staff"
             }
           }
         }
@@ -24,10 +24,10 @@
     }
   },
   "services": {
-    "activate_scene": {
+    "hue_activate_scene": {
       "service": "mdi:palette"
     },
-    "hue_activate_scene": {
+    "activate_scene": {
       "service": "mdi:palette"
     }
   }

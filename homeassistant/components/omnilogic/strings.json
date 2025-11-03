@@ -1,42 +1,42 @@
 {
   "config": {
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    "step": {
+      "user": {
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
-    "step": {
-      "user": {
-        "data": {
-          "password": "[%key:common::config_flow::data::password%]",
-          "username": "[%key:common::config_flow::data::username%]"
-        }
-      }
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     }
   },
   "options": {
     "step": {
       "init": {
         "data": {
-          "ph_offset": "pH offset (positive or negative)",
-          "polling_interval": "Polling interval (in seconds)"
+          "polling_interval": "Polling interval (in seconds)",
+          "ph_offset": "pH offset (positive or negative)"
         }
       }
     }
   },
   "services": {
     "set_pump_speed": {
+      "name": "Set pump speed",
       "description": "Sets the run speed of a variable speed pump.",
       "fields": {
         "speed": {
-          "description": "Speed for the pump between min and max speed.",
-          "name": "Speed"
+          "name": "Speed",
+          "description": "Speed for the pump between min and max speed."
         }
-      },
-      "name": "Set pump speed"
+      }
     }
   }
 }

@@ -1,38 +1,38 @@
 {
   "services": {
     "enable_output": {
+      "name": "Enable output",
       "description": "Enables or disables an output port.",
       "fields": {
-        "enabled": {
-          "description": "Indicate if port should be enabled or not.",
-          "name": "[%key:common::state::enabled%]"
-        },
         "port": {
-          "description": "Name of port to enable/disable.",
-          "name": "[%key:common::config_flow::data::port%]"
+          "name": "[%key:common::config_flow::data::port%]",
+          "description": "Name of port to enable/disable."
+        },
+        "enabled": {
+          "name": "[%key:common::state::enabled%]",
+          "description": "Indicate if port should be enabled or not."
         }
-      },
-      "name": "Enable output"
+      }
     },
     "menu_cursor": {
+      "name": "Menu cursor",
       "description": "Controls the cursor in a menu.",
       "fields": {
         "cursor": {
-          "description": "Name of the cursor key to press ('up', 'down', 'left', 'right', 'select', 'return').",
-          "name": "Cursor"
+          "name": "Cursor",
+          "description": "Name of the cursor key to press ('up', 'down', 'left', 'right', 'select', 'return')."
         }
-      },
-      "name": "Menu cursor"
+      }
     },
     "select_scene": {
+      "name": "Select scene",
       "description": "Selects a scene on the receiver.",
       "fields": {
         "scene": {
-          "description": "Name of the scene. Standard for RX-V437 is 'BD/DVD Movie Viewing', 'TV Viewing', 'NET Audio Listening' or 'Radio Listening'.",
-          "name": "Scene"
+          "name": "Scene",
+          "description": "Name of the scene. Standard for RX-V437 is 'BD/DVD Movie Viewing', 'TV Viewing', 'NET Audio Listening' or 'Radio Listening'."
         }
-      },
-      "name": "Select scene"
+      }
     }
   }
 }

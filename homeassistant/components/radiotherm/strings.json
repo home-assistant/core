@@ -1,17 +1,7 @@
 {
   "config": {
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
-    },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
-    },
     "flow_title": "{name} {model} ({host})",
     "step": {
-      "confirm": {
-        "description": "Do you want to set up {name} {model} ({host})?"
-      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
@@ -19,14 +9,17 @@
         "data_description": {
           "host": "The hostname or IP address of your Radio Thermostat."
         }
+      },
+      "confirm": {
+        "description": "Do you want to set up {name} {model} ({host})?"
       }
-    }
-  },
-  "entity": {
-    "switch": {
-      "hold": {
-        "name": "Hold"
-      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
   "options": {
@@ -35,6 +28,13 @@
         "data": {
           "hold_temp": "Set a permanent hold when adjusting the temperature."
         }
+      }
+    }
+  },
+  "entity": {
+    "switch": {
+      "hold": {
+        "name": "Hold"
       }
     }
   }

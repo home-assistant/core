@@ -5,7 +5,6 @@ from __future__ import annotations
 from functools import partial
 import json
 import re
-import string
 from typing import Any
 
 import voluptuous as vol
@@ -132,12 +131,10 @@ def translation_value_validator(value: Any) -> str:
 
     - prevents string with HTML
     - prevents strings with single quoted placeholders
-    - prevents strings with placeholders using invalid identifiers
     - prevents combined translations
     """
     string_value = cv.string_with_no_html(value)
     string_value = string_no_single_quoted_placeholders(string_value)
-    string_value = validate_placeholders(string_value)
     if RE_COMBINED_REFERENCE.search(string_value):
         raise vol.Invalid("the string should not contain combined translations")
     if string_value != string_value.strip():
@@ -151,19 +148,6 @@ def string_no_single_quoted_placeholders(value: str) -> str:
         raise vol.Invalid(
             "the string should not contain placeholders inside single quotes"
         )
-    return value
-
-
-def validate_placeholders(value: str) -> str:
-    """Validate that placeholders in translations use valid identifiers."""
-    formatter = string.Formatter()
-
-    for _, field_name, _, _ in formatter.parse(value):
-        if field_name:  # skip literal text segments
-            if not field_name.isidentifier():
-                raise vol.Invalid(
-                    "placeholders must be valid identifiers ([a-zA-Z_][a-zA-Z0-9_]*)"
-                )
     return value
 
 

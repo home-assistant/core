@@ -1,13 +1,6 @@
 """Alexa Devices tests const."""
 
-from datetime import UTC, datetime
-
-from aioamazondevices.api import AmazonDevice, AmazonDeviceSensor, AmazonSchedule
-from aioamazondevices.const import (
-    NOTIFICATION_ALARM,
-    NOTIFICATION_REMINDER,
-    NOTIFICATION_TIMER,
-)
+from aioamazondevices.api import AmazonDevice, AmazonDeviceSensor
 
 TEST_CODE = "023123"
 TEST_PASSWORD = "fake_password"
@@ -46,26 +39,6 @@ TEST_DEVICE_1 = AmazonDevice(
             scale="CELSIUS",
         ),
     },
-    notifications={
-        NOTIFICATION_ALARM: AmazonSchedule(
-            type=NOTIFICATION_ALARM,
-            status="ON",
-            label="Morning Alarm",
-            next_occurrence=datetime(2023, 10, 1, 7, 0, 0, tzinfo=UTC),
-        ),
-        NOTIFICATION_REMINDER: AmazonSchedule(
-            type=NOTIFICATION_REMINDER,
-            status="ON",
-            label="Take out the trash",
-            next_occurrence=None,
-        ),
-        NOTIFICATION_TIMER: AmazonSchedule(
-            type=NOTIFICATION_TIMER,
-            status="OFF",
-            label="",
-            next_occurrence=None,
-        ),
-    },
 )
 
 TEST_DEVICE_2_SN = "echo_test_2_serial_number"
@@ -93,5 +66,4 @@ TEST_DEVICE_2 = AmazonDevice(
             scale="CELSIUS",
         )
     },
-    notifications={},
 )

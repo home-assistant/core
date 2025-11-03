@@ -1,0 +1,1 @@
+"""Padora component tests."""

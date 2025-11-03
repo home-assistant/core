@@ -1,4 +1,5 @@
 {
+  "title": "Plant Monitor",
   "entity_component": {
     "_": {
       "name": "[%key:component::plant::title%]",
@@ -7,6 +8,5 @@
         "problem": "[%key:component::binary_sensor::entity_component::problem::state::on%]"
       }
     }
-  },
-  "title": "Plant Monitor"
+  }
 }

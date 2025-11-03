@@ -19,6 +19,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     PERCENTAGE,
     REVOLUTIONS_PER_MINUTE,
+    STATE_UNKNOWN,
     EntityCategory,
     UnitOfEnergy,
     UnitOfTemperature,
@@ -761,35 +762,40 @@ class MieleSensor(MieleEntity, SensorEntity):
 class MieleRestorableSensor(MieleSensor, RestoreSensor):
     """Representation of a Sensor whose internal state can be restored."""
 
-    _attr_native_value: StateType
+    _last_value: StateType
+
+    def __init__(
+        self,
+        coordinator: MieleDataUpdateCoordinator,
+        device_id: str,
+        description: MieleSensorDescription,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator, device_id, description)
+        self._last_value = None
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
 
         # recover last value from cache when adding entity
-        last_data = await self.async_get_last_sensor_data()
-        if last_data:
-            self._attr_native_value = last_data.native_value  # type: ignore[assignment]
+        last_value = await self.async_get_last_state()
+        if last_value and last_value.state != STATE_UNKNOWN:
+            self._last_value = last_value.state
 
     @property
     def native_value(self) -> StateType:
-        """Return the state of the sensor.
+        """Return the state of the sensor."""
+        return self._last_value
 
-        It is necessary to override `native_value` to fall back to the default
-        attribute-based implementation, instead of the function-based
-        implementation in `MieleSensor`.
-        """
-        return self._attr_native_value
-
-    def _update_native_value(self) -> None:
-        """Update the native value attribute of the sensor."""
-        self._attr_native_value = self.entity_description.value_fn(self.device)
+    def _update_last_value(self) -> None:
+        """Update the last value of the sensor."""
+        self._last_value = self.entity_description.value_fn(self.device)
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._update_native_value()
+        self._update_last_value()
         super()._handle_coordinator_update()
 
 
@@ -906,7 +912,7 @@ class MieleProgramIdSensor(MieleSensor):
 class MieleTimeSensor(MieleRestorableSensor):
     """Representation of time sensors keeping state from cache."""
 
-    def _update_native_value(self) -> None:
+    def _update_last_value(self) -> None:
         """Update the last value of the sensor."""
 
         current_value = self.entity_description.value_fn(self.device)
@@ -917,9 +923,7 @@ class MieleTimeSensor(MieleRestorableSensor):
             current_status == StateStatus.PROGRAM_ENDED
             and self.entity_description.end_value_fn is not None
         ):
-            self._attr_native_value = self.entity_description.end_value_fn(
-                self._attr_native_value
-            )
+            self._last_value = self.entity_description.end_value_fn(self._last_value)
 
         # keep value when program ends if no function is specified
         elif current_status == StateStatus.PROGRAM_ENDED:
@@ -927,11 +931,11 @@ class MieleTimeSensor(MieleRestorableSensor):
 
         # force unknown when appliance is not working (some devices are keeping last value until a new cycle starts)
         elif current_status in (StateStatus.OFF, StateStatus.ON, StateStatus.IDLE):
-            self._attr_native_value = None
+            self._last_value = None
 
         # otherwise, cache value and return it
         else:
-            self._attr_native_value = current_value
+            self._last_value = current_value
 
 
 class MieleConsumptionSensor(MieleRestorableSensor):
@@ -939,13 +943,13 @@ class MieleConsumptionSensor(MieleRestorableSensor):
 
     _is_reporting: bool = False
 
-    def _update_native_value(self) -> None:
+    def _update_last_value(self) -> None:
         """Update the last value of the sensor."""
         current_value = self.entity_description.value_fn(self.device)
         current_status = StateStatus(self.device.state_status)
         last_value = (
-            float(cast(str, self._attr_native_value))
-            if self._attr_native_value is not None
+            float(cast(str, self._last_value))
+            if self._last_value is not None and self._last_value != STATE_UNKNOWN
             else 0
         )
 
@@ -959,7 +963,7 @@ class MieleConsumptionSensor(MieleRestorableSensor):
             StateStatus.SERVICE,
         ):
             self._is_reporting = False
-            self._attr_native_value = None
+            self._last_value = None
 
         # appliance might report the last value for consumption of previous cycle and it will report 0
         # only after a while, so it is necessary to force 0 until we see the 0 value coming from API, unless
@@ -969,7 +973,7 @@ class MieleConsumptionSensor(MieleRestorableSensor):
             and not self._is_reporting
             and last_value > 0
         ):
-            self._attr_native_value = current_value
+            self._last_value = current_value
             self._is_reporting = True
 
         elif (
@@ -978,12 +982,12 @@ class MieleConsumptionSensor(MieleRestorableSensor):
             and current_value is not None
             and cast(int, current_value) > 0
         ):
-            self._attr_native_value = 0
+            self._last_value = 0
 
         # keep value when program ends
         elif current_status == StateStatus.PROGRAM_ENDED:
             pass
 
         else:
-            self._attr_native_value = current_value
+            self._last_value = current_value
             self._is_reporting = True

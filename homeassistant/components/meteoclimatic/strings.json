@@ -1,12 +1,5 @@
 {
   "config": {
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
-    },
-    "error": {
-      "not_found": "[%key:common::config_flow::abort::no_devices_found%]"
-    },
     "step": {
       "user": {
         "data": {
@@ -16,6 +9,13 @@
           "code": "Looks like ESCAT4300000043206B"
         }
       }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "error": {
+      "not_found": "[%key:common::config_flow::abort::no_devices_found%]"
     }
   }
 }

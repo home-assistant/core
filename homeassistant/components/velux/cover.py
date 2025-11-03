@@ -21,10 +21,11 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import VeluxConfigEntry
+from .const import DOMAIN
 from .entity import VeluxEntity
 
 PARALLEL_UPDATES = 1
@@ -32,14 +33,14 @@ PARALLEL_UPDATES = 1
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config: VeluxConfigEntry,
+    config: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up cover(s) for Velux platform."""
-    pyvlx = config.runtime_data
+    module = hass.data[DOMAIN][config.entry_id]
     async_add_entities(
         VeluxCover(node, config.entry_id)
-        for node in pyvlx.nodes
+        for node in module.pyvlx.nodes
         if isinstance(node, OpeningDevice)
     )
 

@@ -1,4 +1,5 @@
 {
+  "title": "Time",
   "entity_component": {
     "_": {
       "name": "[%key:component::time::title%]"
@@ -6,15 +7,14 @@
   },
   "services": {
     "set_value": {
+      "name": "Set Time",
       "description": "Sets the time.",
       "fields": {
         "time": {
-          "description": "The time to set.",
-          "name": "Time"
+          "name": "Time",
+          "description": "The time to set."
         }
-      },
-      "name": "Set Time"
+      }
     }
-  },
-  "title": "Time"
+  }
 }

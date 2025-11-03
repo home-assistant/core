@@ -52,8 +52,8 @@
         "elevation": "Elevation",
         "email": "Email",
         "host": "Host",
-        "implementation": "Application credentials",
         "ip": "IP address",
+        "implementation": "Application credentials",
         "language": "Language",
         "latitude": "Latitude",
         "llm_hass_api": "Control Home Assistant",
@@ -157,13 +157,13 @@
       "yes": "Yes"
     },
     "time": {
-      "friday": "Friday",
       "monday": "Monday",
-      "saturday": "Saturday",
-      "sunday": "Sunday",
-      "thursday": "Thursday",
       "tuesday": "Tuesday",
-      "wednesday": "Wednesday"
+      "wednesday": "Wednesday",
+      "thursday": "Thursday",
+      "friday": "Friday",
+      "saturday": "Saturday",
+      "sunday": "Sunday"
     }
   }
 }

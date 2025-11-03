@@ -1,12 +1,5 @@
 {
   "config": {
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
-    },
-    "error": {
-      "no_device_found": "[%key:common::config_flow::error::cannot_connect%]"
-    },
     "flow_title": "{name}",
     "step": {
       "discovery_confirm": {
@@ -21,30 +14,37 @@
         },
         "description": "Fill in Altruist IP address or hostname in your local network"
       }
+    },
+    "abort": {
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "no_device_found": "[%key:common::config_flow::error::cannot_connect%]"
     }
   },
   "entity": {
     "sensor": {
-      "co2": {
-        "name": "{sensor_name} CO2"
-      },
       "humidity": {
         "name": "{sensor_name} humidity"
-      },
-      "noise_avg": {
-        "name": "Average noise"
-      },
-      "noise_max": {
-        "name": "Maximum noise"
       },
       "pressure": {
         "name": "{sensor_name} pressure"
       },
-      "radiation": {
-        "name": "Radiation level"
-      },
       "temperature": {
         "name": "{sensor_name} temperature"
+      },
+      "noise_max": {
+        "name": "Maximum noise"
+      },
+      "noise_avg": {
+        "name": "Average noise"
+      },
+      "co2": {
+        "name": "{sensor_name} CO2"
+      },
+      "radiation": {
+        "name": "Radiation level"
       }
     }
   }

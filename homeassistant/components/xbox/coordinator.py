@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import timedelta
-from http import HTTPStatus
 import logging
 
 from httpx import HTTPStatusError, RequestError, TimeoutException
@@ -16,7 +15,6 @@ from xbox.webapi.api.provider.smartglass.models import (
     SmartglassConsoleList,
     SmartglassConsoleStatus,
 )
-from xbox.webapi.api.provider.titlehub.models import Title
 from xbox.webapi.common.signed_session import SignedSession
 
 from homeassistant.config_entries import ConfigEntry
@@ -47,7 +45,6 @@ class XboxData:
 
     consoles: dict[str, ConsoleData] = field(default_factory=dict)
     presence: dict[str, Person] = field(default_factory=dict)
-    title_info: dict[str, Title] = field(default_factory=dict)
 
 
 class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
@@ -202,42 +199,6 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
                 {friend.xuid: friend for friend in friends.people if friend.is_favorite}
             )
 
-        # retrieve title details
-        title_data: dict[str, Title] = {}
-        for person in presence_data.values():
-            if presence_detail := next(
-                (
-                    d
-                    for d in person.presence_details or []
-                    if d.state == "Active" and d.title_id and d.is_game and d.is_primary
-                ),
-                None,
-            ):
-                try:
-                    title = await self.client.titlehub.get_title_info(
-                        presence_detail.title_id
-                    )
-                except TimeoutException as e:
-                    raise UpdateFailed(
-                        translation_domain=DOMAIN,
-                        translation_key="timeout_exception",
-                    ) from e
-                except HTTPStatusError as e:
-                    _LOGGER.debug("Xbox exception:", exc_info=True)
-                    if e.response.status_code == HTTPStatus.NOT_FOUND:
-                        continue
-                    raise UpdateFailed(
-                        translation_domain=DOMAIN,
-                        translation_key="request_exception",
-                    ) from e
-                except RequestError as e:
-                    _LOGGER.debug("Xbox exception:", exc_info=True)
-                    raise UpdateFailed(
-                        translation_domain=DOMAIN,
-                        translation_key="request_exception",
-                    ) from e
-                title_data[person.xuid] = title.titles[0]
-
         if (
             self.current_friends - (new_friends := set(presence_data))
             or not self.current_friends
@@ -245,7 +206,7 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
             self.remove_stale_devices(new_friends)
         self.current_friends = new_friends
 
-        return XboxData(new_console_data, presence_data, title_data)
+        return XboxData(new_console_data, presence_data)
 
     def remove_stale_devices(self, xuids: set[str]) -> None:
         """Remove stale devices from registry."""

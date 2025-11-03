@@ -10,11 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
-from .fixtures import (
-    RUUVI_E1_SERVICE_INFO,
-    RUUVI_V5_SERVICE_INFO,
-    RUUVI_V6_SERVICE_INFO,
-)
+from .fixtures import RUUVI_V5_SERVICE_INFO, RUUVI_V6_SERVICE_INFO
 
 from tests.common import MockConfigEntry, snapshot_platform
 from tests.components.bluetooth import inject_bluetooth_service_info
@@ -22,12 +18,7 @@ from tests.components.bluetooth import inject_bluetooth_service_info
 
 @pytest.mark.usefixtures("enable_bluetooth", "entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
-    "service_info",
-    [
-        pytest.param(RUUVI_E1_SERVICE_INFO, id="e1"),
-        pytest.param(RUUVI_V5_SERVICE_INFO, id="v5"),
-        pytest.param(RUUVI_V6_SERVICE_INFO, id="v6"),
-    ],
+    "service_info", [RUUVI_V5_SERVICE_INFO, RUUVI_V6_SERVICE_INFO], ids=("v5", "v6")
 )
 async def test_sensors(
     hass: HomeAssistant,

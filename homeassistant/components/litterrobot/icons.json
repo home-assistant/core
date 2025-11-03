@@ -1,31 +1,31 @@
 {
   "entity": {
     "binary_sensor": {
-      "hopper_connected": {
-        "default": "mdi:filter-check"
+      "sleeping": {
+        "default": "mdi:sleep"
       },
       "sleep_mode": {
         "default": "mdi:sleep"
       },
-      "sleeping": {
-        "default": "mdi:sleep"
+      "hopper_connected": {
+        "default": "mdi:filter-check"
       }
     },
     "button": {
-      "give_snack": {
-        "default": "mdi:candy-outline"
-      },
       "reset_waste_drawer": {
         "default": "mdi:delete-variant"
+      },
+      "give_snack": {
+        "default": "mdi:candy-outline"
       }
     },
     "select": {
       "brightness_level": {
         "default": "mdi:lightbulb-question",
         "state": {
-          "high": "mdi:lightbulb-on",
           "low": "mdi:lightbulb-on-30",
-          "medium": "mdi:lightbulb-on-50"
+          "medium": "mdi:lightbulb-on-50",
+          "high": "mdi:lightbulb-on"
         }
       },
       "cycle_delay": {
@@ -34,16 +34,16 @@
       "globe_brightness": {
         "default": "mdi:lightbulb-question",
         "state": {
-          "high": "mdi:lightbulb-on",
           "low": "mdi:lightbulb-on-30",
-          "medium": "mdi:lightbulb-on-50"
+          "medium": "mdi:lightbulb-on-50",
+          "high": "mdi:lightbulb-on"
         }
       },
       "globe_light": {
         "state": {
-          "auto": "mdi:lightbulb-auto",
           "off": "mdi:lightbulb-off",
-          "on": "mdi:lightbulb-on"
+          "on": "mdi:lightbulb-on",
+          "auto": "mdi:lightbulb-auto"
         }
       },
       "meal_insert_size": {

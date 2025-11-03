@@ -23,16 +23,10 @@
       }
     },
     "sensor": {
-      "cart1": {
-        "default": "mdi:gauge"
-      },
-      "cart2": {
-        "default": "mdi:gauge"
-      },
-      "cart3": {
-        "default": "mdi:gauge"
-      },
       "current_flow_rate": {
+        "default": "mdi:shower-head"
+      },
+      "peak_flow_rate": {
         "default": "mdi:shower-head"
       },
       "inlet_tds": {
@@ -41,23 +35,29 @@
       "outlet_tds": {
         "default": "mdi:water-opacity"
       },
-      "peak_flow_rate": {
-        "default": "mdi:shower-head"
+      "cart1": {
+        "default": "mdi:gauge"
+      },
+      "cart2": {
+        "default": "mdi:gauge"
+      },
+      "cart3": {
+        "default": "mdi:gauge"
       }
     },
     "switch": {
-      "bypass": {
-        "default": "mdi:valve",
-        "state": {
-          "off": "mdi:valve-closed",
-          "on": "mdi:valve-open"
-        }
-      },
       "water": {
         "default": "mdi:valve",
         "state": {
-          "off": "mdi:valve-closed",
-          "on": "mdi:valve-open"
+          "on": "mdi:valve-open",
+          "off": "mdi:valve-closed"
+        }
+      },
+      "bypass": {
+        "default": "mdi:valve",
+        "state": {
+          "on": "mdi:valve-open",
+          "off": "mdi:valve-closed"
         }
       }
     }

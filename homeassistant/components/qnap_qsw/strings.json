@@ -11,15 +11,15 @@
     "step": {
       "discovered_connection": {
         "data": {
-          "password": "[%key:common::config_flow::data::password%]",
-          "username": "[%key:common::config_flow::data::username%]"
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
         }
       },
       "user": {
         "data": {
-          "password": "[%key:common::config_flow::data::password%]",
           "url": "[%key:common::config_flow::data::url%]",
-          "username": "[%key:common::config_flow::data::username%]"
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
         }
       }
     }

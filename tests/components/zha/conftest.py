@@ -195,7 +195,7 @@ async def zigpy_app_controller():
 async def config_entry_fixture() -> MockConfigEntry:
     """Fixture representing a config entry."""
     return MockConfigEntry(
-        version=5,
+        version=4,
         domain=zha_const.DOMAIN,
         data={
             zigpy.config.CONF_DEVICE: {

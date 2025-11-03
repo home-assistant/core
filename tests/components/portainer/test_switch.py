@@ -60,7 +60,11 @@ async def test_turn_off_on(
     client_method: str,
 ) -> None:
     """Test the switches. Have you tried to turn it off and on again?"""
-    await setup_integration(hass, mock_config_entry)
+    with patch(
+        "homeassistant.components.portainer._PLATFORMS",
+        [Platform.SWITCH],
+    ):
+        await setup_integration(hass, mock_config_entry)
 
     entity_id = "switch.practical_morse_container"
     method_mock = getattr(mock_portainer_client, client_method)
@@ -103,7 +107,11 @@ async def test_turn_off_on_exceptions(
     expected_exception: Exception,
 ) -> None:
     """Test the switches. Have you tried to turn it off and on again? This time they will do boom!"""
-    await setup_integration(hass, mock_config_entry)
+    with patch(
+        "homeassistant.components.portainer._PLATFORMS",
+        [Platform.SWITCH],
+    ):
+        await setup_integration(hass, mock_config_entry)
 
     entity_id = "switch.practical_morse_container"
     method_mock = getattr(mock_portainer_client, client_method)

@@ -192,7 +192,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_events[haojai_switch][event.hjmt_6b_button_1-entry]
+# name: test_events[haijai_switch][event.hjmt_6b_button_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -234,7 +234,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_events[haojai_switch][event.hjmt_6b_button_1-state]
+# name: test_events[haijai_switch][event.hjmt_6b_button_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
@@ -255,7 +255,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_events[haojai_switch][event.hjmt_6b_button_2-entry]
+# name: test_events[haijai_switch][event.hjmt_6b_button_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -297,7 +297,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_events[haojai_switch][event.hjmt_6b_button_2-state]
+# name: test_events[haijai_switch][event.hjmt_6b_button_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
@@ -318,7 +318,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_events[haojai_switch][event.hjmt_6b_button_3-entry]
+# name: test_events[haijai_switch][event.hjmt_6b_button_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -360,7 +360,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_events[haojai_switch][event.hjmt_6b_button_3-state]
+# name: test_events[haijai_switch][event.hjmt_6b_button_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
@@ -381,7 +381,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_events[haojai_switch][event.hjmt_6b_button_4-entry]
+# name: test_events[haijai_switch][event.hjmt_6b_button_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -423,7 +423,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_events[haojai_switch][event.hjmt_6b_button_4-state]
+# name: test_events[haijai_switch][event.hjmt_6b_button_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
@@ -444,7 +444,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_events[haojai_switch][event.hjmt_6b_button_5-entry]
+# name: test_events[haijai_switch][event.hjmt_6b_button_5-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -486,7 +486,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_events[haojai_switch][event.hjmt_6b_button_5-state]
+# name: test_events[haijai_switch][event.hjmt_6b_button_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
@@ -507,7 +507,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_events[haojai_switch][event.hjmt_6b_button_6-entry]
+# name: test_events[haijai_switch][event.hjmt_6b_button_6-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -549,7 +549,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_events[haojai_switch][event.hjmt_6b_button_6-state]
+# name: test_events[haijai_switch][event.hjmt_6b_button_6-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',

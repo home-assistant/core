@@ -1,130 +1,130 @@
 {
   "services": {
-    "disable_audio": {
-      "description": "Disables audio stream.",
-      "fields": {
-        "entity_id": {
-          "description": "[%key:component::amcrest::services::enable_recording::fields::entity_id::description%]",
-          "name": "[%key:component::amcrest::services::enable_recording::fields::entity_id::name%]"
-        }
-      },
-      "name": "Disable audio"
-    },
-    "disable_motion_recording": {
-      "description": "Disables recording a clip to camera storage when motion is detected.",
-      "fields": {
-        "entity_id": {
-          "description": "[%key:component::amcrest::services::enable_recording::fields::entity_id::description%]",
-          "name": "[%key:component::amcrest::services::enable_recording::fields::entity_id::name%]"
-        }
-      },
-      "name": "Disable motion recording"
-    },
-    "disable_recording": {
-      "description": "Disables continuous recording to camera storage.",
-      "fields": {
-        "entity_id": {
-          "description": "[%key:component::amcrest::services::enable_recording::fields::entity_id::description%]",
-          "name": "[%key:component::amcrest::services::enable_recording::fields::entity_id::name%]"
-        }
-      },
-      "name": "Disable recording"
-    },
-    "enable_audio": {
-      "description": "Enables audio stream.",
-      "fields": {
-        "entity_id": {
-          "description": "[%key:component::amcrest::services::enable_recording::fields::entity_id::description%]",
-          "name": "[%key:component::amcrest::services::enable_recording::fields::entity_id::name%]"
-        }
-      },
-      "name": "Enable audio"
-    },
-    "enable_motion_recording": {
-      "description": "Enables recording a clip to camera storage when motion is detected.",
-      "fields": {
-        "entity_id": {
-          "description": "[%key:component::amcrest::services::enable_recording::fields::entity_id::description%]",
-          "name": "[%key:component::amcrest::services::enable_recording::fields::entity_id::name%]"
-        }
-      },
-      "name": "Enable motion recording"
-    },
     "enable_recording": {
+      "name": "Enable recording",
       "description": "Enables continuous recording to camera storage.",
       "fields": {
         "entity_id": {
-          "description": "Name(s) of the cameras, or 'all' for all cameras.",
-          "name": "Entity"
+          "name": "Entity",
+          "description": "Name(s) of the cameras, or 'all' for all cameras."
         }
-      },
-      "name": "Enable recording"
+      }
+    },
+    "disable_recording": {
+      "name": "Disable recording",
+      "description": "Disables continuous recording to camera storage.",
+      "fields": {
+        "entity_id": {
+          "name": "[%key:component::amcrest::services::enable_recording::fields::entity_id::name%]",
+          "description": "[%key:component::amcrest::services::enable_recording::fields::entity_id::description%]"
+        }
+      }
+    },
+    "enable_audio": {
+      "name": "Enable audio",
+      "description": "Enables audio stream.",
+      "fields": {
+        "entity_id": {
+          "name": "[%key:component::amcrest::services::enable_recording::fields::entity_id::name%]",
+          "description": "[%key:component::amcrest::services::enable_recording::fields::entity_id::description%]"
+        }
+      }
+    },
+    "disable_audio": {
+      "name": "Disable audio",
+      "description": "Disables audio stream.",
+      "fields": {
+        "entity_id": {
+          "name": "[%key:component::amcrest::services::enable_recording::fields::entity_id::name%]",
+          "description": "[%key:component::amcrest::services::enable_recording::fields::entity_id::description%]"
+        }
+      }
+    },
+    "enable_motion_recording": {
+      "name": "Enable motion recording",
+      "description": "Enables recording a clip to camera storage when motion is detected.",
+      "fields": {
+        "entity_id": {
+          "name": "[%key:component::amcrest::services::enable_recording::fields::entity_id::name%]",
+          "description": "[%key:component::amcrest::services::enable_recording::fields::entity_id::description%]"
+        }
+      }
+    },
+    "disable_motion_recording": {
+      "name": "Disable motion recording",
+      "description": "Disables recording a clip to camera storage when motion is detected.",
+      "fields": {
+        "entity_id": {
+          "name": "[%key:component::amcrest::services::enable_recording::fields::entity_id::name%]",
+          "description": "[%key:component::amcrest::services::enable_recording::fields::entity_id::description%]"
+        }
+      }
     },
     "goto_preset": {
+      "name": "Go to preset",
       "description": "Moves camera to PTZ preset.",
       "fields": {
         "entity_id": {
-          "description": "[%key:component::amcrest::services::enable_recording::fields::entity_id::description%]",
-          "name": "[%key:component::amcrest::services::enable_recording::fields::entity_id::name%]"
+          "name": "[%key:component::amcrest::services::enable_recording::fields::entity_id::name%]",
+          "description": "[%key:component::amcrest::services::enable_recording::fields::entity_id::description%]"
         },
         "preset": {
-          "description": "Preset number.",
-          "name": "Preset"
+          "name": "Preset",
+          "description": "Preset number."
         }
-      },
-      "name": "Go to preset"
-    },
-    "ptz_control": {
-      "description": "Moves (pan/tilt) and/or zoom a PTZ camera.",
-      "fields": {
-        "entity_id": {
-          "description": "[%key:component::amcrest::services::enable_recording::fields::entity_id::description%]",
-          "name": "[%key:component::amcrest::services::enable_recording::fields::entity_id::name%]"
-        },
-        "movement": {
-          "description": "Direction to move the camera.",
-          "name": "Movement"
-        },
-        "travel_time": {
-          "description": "Travel time in fractional seconds: from 0 to 1.",
-          "name": "Travel time"
-        }
-      },
-      "name": "PTZ control"
+      }
     },
     "set_color_bw": {
+      "name": "Set color",
       "description": "Sets camera color mode.",
       "fields": {
-        "color_bw": {
-          "description": "Color mode.",
-          "name": "Color"
-        },
         "entity_id": {
-          "description": "[%key:component::amcrest::services::enable_recording::fields::entity_id::description%]",
-          "name": "[%key:component::amcrest::services::enable_recording::fields::entity_id::name%]"
+          "name": "[%key:component::amcrest::services::enable_recording::fields::entity_id::name%]",
+          "description": "[%key:component::amcrest::services::enable_recording::fields::entity_id::description%]"
+        },
+        "color_bw": {
+          "name": "Color",
+          "description": "Color mode."
         }
-      },
-      "name": "Set color"
+      }
     },
     "start_tour": {
+      "name": "Start tour",
       "description": "Starts camera's PTZ tour function.",
       "fields": {
         "entity_id": {
-          "description": "[%key:component::amcrest::services::enable_recording::fields::entity_id::description%]",
-          "name": "[%key:component::amcrest::services::enable_recording::fields::entity_id::name%]"
+          "name": "[%key:component::amcrest::services::enable_recording::fields::entity_id::name%]",
+          "description": "[%key:component::amcrest::services::enable_recording::fields::entity_id::description%]"
         }
-      },
-      "name": "Start tour"
+      }
     },
     "stop_tour": {
+      "name": "Stop tour",
       "description": "Stops camera's PTZ tour function.",
       "fields": {
         "entity_id": {
-          "description": "[%key:component::amcrest::services::enable_recording::fields::entity_id::description%]",
-          "name": "[%key:component::amcrest::services::enable_recording::fields::entity_id::name%]"
+          "name": "[%key:component::amcrest::services::enable_recording::fields::entity_id::name%]",
+          "description": "[%key:component::amcrest::services::enable_recording::fields::entity_id::description%]"
         }
-      },
-      "name": "Stop tour"
+      }
+    },
+    "ptz_control": {
+      "name": "PTZ control",
+      "description": "Moves (pan/tilt) and/or zoom a PTZ camera.",
+      "fields": {
+        "entity_id": {
+          "name": "[%key:component::amcrest::services::enable_recording::fields::entity_id::name%]",
+          "description": "[%key:component::amcrest::services::enable_recording::fields::entity_id::description%]"
+        },
+        "movement": {
+          "name": "Movement",
+          "description": "Direction to move the camera."
+        },
+        "travel_time": {
+          "name": "Travel time",
+          "description": "Travel time in fractional seconds: from 0 to 1."
+        }
+      }
     }
   }
 }

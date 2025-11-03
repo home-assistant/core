@@ -9,8 +9,8 @@
   "requirements": ["aiomodernforms==0.1.8"],
   "zeroconf": [
     {
-      "name": "wac*",
-      "type": "_easylink._tcp.local."
+      "type": "_easylink._tcp.local.",
+      "name": "wac*"
     }
   ]
 }

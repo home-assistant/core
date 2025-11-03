@@ -1,4 +1,5 @@
 {
+  "title": "Configurator",
   "entity_component": {
     "_": {
       "name": "[%key:component::configurator::title%]",
@@ -7,6 +8,5 @@
         "configured": "Configured"
       }
     }
-  },
-  "title": "Configurator"
+  }
 }

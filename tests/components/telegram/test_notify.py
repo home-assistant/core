@@ -7,15 +7,12 @@ from homeassistant.components import notify
 from homeassistant.components.telegram import DOMAIN
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from tests.common import get_fixture_path
 
 
-async def test_reload_notify(
-    hass: HomeAssistant, issue_registry: ir.IssueRegistry
-) -> None:
+async def test_reload_notify(hass: HomeAssistant) -> None:
     """Verify we can reload the notify service."""
 
     with patch("homeassistant.components.telegram_bot.async_setup", return_value=True):
@@ -48,9 +45,3 @@ async def test_reload_notify(
 
     assert not hass.services.has_service(notify.DOMAIN, DOMAIN)
     assert hass.services.has_service(notify.DOMAIN, "telegram_reloaded")
-
-    assert issue_registry.async_get_issue(
-        domain=DOMAIN,
-        issue_id="migrate_notify",
-    )
-    assert len(issue_registry.issues) == 1

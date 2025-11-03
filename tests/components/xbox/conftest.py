@@ -1,4 +1,3 @@
-# type: ignore[reportArgumentType] # ignore JsonValueType assignment to pydantic model
 """Common fixtures for the Xbox tests."""
 
 from collections.abc import Generator
@@ -11,7 +10,6 @@ from xbox.webapi.api.provider.smartglass.models import (
     SmartglassConsoleList,
     SmartglassConsoleStatus,
 )
-from xbox.webapi.api.provider.titlehub.models import TitleHubResponse
 
 from homeassistant.components.application_credentials import (
     ClientCredential,
@@ -135,11 +133,6 @@ def mock_xbox_live_client(signed_session) -> Generator[AsyncMock]:
         )
         client.people.get_friends_own.return_value = PeopleResponse(
             **load_json_object_fixture("people_friends_own.json", DOMAIN)
-        )
-
-        client.titlehub = AsyncMock()
-        client.titlehub.get_title_info.return_value = TitleHubResponse(
-            **load_json_object_fixture("titlehub_titleinfo.json", DOMAIN)
         )
 
         client.xuid = "271958441785640"

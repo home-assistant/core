@@ -3,8 +3,8 @@
   "name": "Moat",
   "bluetooth": [
     {
-      "connectable": false,
-      "local_name": "Moat_S*"
+      "local_name": "Moat_S*",
+      "connectable": false
     }
   ],
   "codeowners": ["@bdraco"],

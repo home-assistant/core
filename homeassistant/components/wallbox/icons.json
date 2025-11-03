@@ -6,11 +6,11 @@
       }
     },
     "sensor": {
-      "added_range": {
-        "default": "mdi:map-marker-distance"
-      },
       "charging_speed": {
         "default": "mdi:speedometer"
+      },
+      "added_range": {
+        "default": "mdi:map-marker-distance"
       },
       "cost": {
         "default": "mdi:ev-station"

@@ -29,7 +29,6 @@ from homeassistant.helpers.issue_registry import (
 from .const import (
     ATTR_DATA,
     ATTR_HEALTHY,
-    ATTR_STARTUP,
     ATTR_SUPPORTED,
     ATTR_UNHEALTHY_REASONS,
     ATTR_UNSUPPORTED_REASONS,
@@ -55,7 +54,6 @@ from .const import (
     PLACEHOLDER_KEY_FREE_SPACE,
     PLACEHOLDER_KEY_REFERENCE,
     REQUEST_REFRESH_DELAY,
-    STARTUP_COMPLETE,
     UPDATE_KEY_SUPERVISOR,
 )
 from .coordinator import get_addons_info, get_host_info
@@ -385,7 +383,6 @@ class SupervisorIssues:
         if (
             event[ATTR_WS_EVENT] == EVENT_SUPERVISOR_UPDATE
             and event.get(ATTR_UPDATE_KEY) == UPDATE_KEY_SUPERVISOR
-            and event.get(ATTR_DATA, {}).get(ATTR_STARTUP) == STARTUP_COMPLETE
         ):
             self._hass.async_create_task(self._update())
 

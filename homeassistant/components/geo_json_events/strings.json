@@ -1,16 +1,16 @@
 {
   "config": {
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
-    },
     "step": {
       "user": {
+        "title": "Fill in your GeoJSON feed details.",
         "data": {
-          "location": "[%key:common::config_flow::data::location%]",
-          "url": "[%key:common::config_flow::data::url%]"
-        },
-        "title": "Fill in your GeoJSON feed details."
+          "url": "[%key:common::config_flow::data::url%]",
+          "location": "[%key:common::config_flow::data::location%]"
+        }
       }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     }
   }
 }

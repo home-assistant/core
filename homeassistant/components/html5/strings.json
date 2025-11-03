@@ -1,12 +1,5 @@
 {
   "config": {
-    "abort": {
-      "invalid_config": "Invalid configuration"
-    },
-    "error": {
-      "invalid_prv_key": "Invalid private key",
-      "unknown": "Unknown error"
-    },
     "step": {
       "user": {
         "data": {
@@ -18,28 +11,35 @@
           "vapid_prv_key": "If not specified, one will be automatically generated."
         }
       }
+    },
+    "error": {
+      "unknown": "Unknown error",
+      "invalid_prv_key": "Invalid private key"
+    },
+    "abort": {
+      "invalid_config": "Invalid configuration"
     }
   },
   "issues": {
     "deprecated_yaml_import_issue": {
-      "description": "Configuring HTML5 push notification using YAML has been deprecated. An automatic import of your existing configuration was attempted, but it failed.\n\nPlease remove the HTML5 push notification YAML configuration from your configuration.yaml file and reconfigure HTML5 push notification again manually.",
-      "title": "HTML5 YAML configuration import failed"
+      "title": "HTML5 YAML configuration import failed",
+      "description": "Configuring HTML5 push notification using YAML has been deprecated. An automatic import of your existing configuration was attempted, but it failed.\n\nPlease remove the HTML5 push notification YAML configuration from your configuration.yaml file and reconfigure HTML5 push notification again manually."
     }
   },
   "services": {
     "dismiss": {
+      "name": "Dismiss",
       "description": "Dismisses an HTML5 notification.",
       "fields": {
-        "data": {
-          "description": "Extended information of notification. Supports tag.",
-          "name": "Data"
-        },
         "target": {
-          "description": "An array of targets.",
-          "name": "Target"
+          "name": "Target",
+          "description": "An array of targets."
+        },
+        "data": {
+          "name": "Data",
+          "description": "Extended information of notification. Supports tag."
         }
-      },
-      "name": "Dismiss"
+      }
     }
   }
 }

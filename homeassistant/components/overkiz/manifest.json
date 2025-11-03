@@ -16,12 +16,12 @@
   "requirements": ["pyoverkiz==1.19.0"],
   "zeroconf": [
     {
-      "name": "gateway*",
-      "type": "_kizbox._tcp.local."
+      "type": "_kizbox._tcp.local.",
+      "name": "gateway*"
     },
     {
-      "name": "gateway*",
-      "type": "_kizboxdev._tcp.local."
+      "type": "_kizboxdev._tcp.local.",
+      "name": "gateway*"
     }
   ]
 }

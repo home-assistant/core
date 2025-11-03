@@ -5,10 +5,10 @@
         "state_attributes": {
           "preset_mode": {
             "state": {
-              "advanced_sleep": "mdi:sleep",
               "auto": "mdi:fan-auto",
-              "pet": "mdi:paw",
               "sleep": "mdi:sleep",
+              "advanced_sleep": "mdi:sleep",
+              "pet": "mdi:paw",
               "turbo": "mdi:weather-tornado"
             }
           }

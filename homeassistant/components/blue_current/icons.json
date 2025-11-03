@@ -1,25 +1,11 @@
 {
   "entity": {
-    "button": {
-      "reboot": {
-        "default": "mdi:restart-alert"
-      },
-      "reset": {
-        "default": "mdi:restart"
-      },
-      "stop_charge_session": {
-        "default": "mdi:stop"
-      }
-    },
     "sensor": {
+      "vehicle_status": {
+        "default": "mdi:car"
+      },
       "activity": {
         "default": "mdi:ev-station"
-      },
-      "current_left": {
-        "default": "mdi:gauge"
-      },
-      "max_offline": {
-        "default": "mdi:gauge-full"
       },
       "max_usage": {
         "default": "mdi:gauge-full"
@@ -27,19 +13,33 @@
       "smartcharging_max_usage": {
         "default": "mdi:gauge-full"
       },
-      "vehicle_status": {
-        "default": "mdi:car"
+      "max_offline": {
+        "default": "mdi:gauge-full"
+      },
+      "current_left": {
+        "default": "mdi:gauge"
+      }
+    },
+    "button": {
+      "reset": {
+        "default": "mdi:restart"
+      },
+      "reboot": {
+        "default": "mdi:restart-alert"
+      },
+      "stop_charge_session": {
+        "default": "mdi:stop"
       }
     },
     "switch": {
-      "block": {
-        "default": "mdi:lock"
+      "plug_and_charge": {
+        "default": "mdi:ev-plug-type2"
       },
       "linked_charge_cards": {
         "default": "mdi:account-group"
       },
-      "plug_and_charge": {
-        "default": "mdi:ev-plug-type2"
+      "block": {
+        "default": "mdi:lock"
       }
     }
   },

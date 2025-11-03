@@ -1,17 +1,17 @@
 {
   "entity": {
     "binary_sensor": {
-      "carbon_dioxide": {
-        "default": "mdi:molecule-co2"
-      },
       "carbon_monoxide": {
         "default": "mdi:molecule-co"
       },
-      "drop": {
-        "default": "mdi:package-down"
+      "carbon_dioxide": {
+        "default": "mdi:molecule-co2"
       },
       "feeding": {
         "default": "mdi:information"
+      },
+      "drop": {
+        "default": "mdi:package-down"
       },
       "tilt": {
         "default": "mdi:spirit-level"
@@ -41,38 +41,47 @@
       }
     },
     "number": {
-      "cook_time": {
+      "heat_preservation_time": {
         "default": "mdi:timer"
-      },
-      "down_delay": {
-        "default": "mdi:timer"
-      },
-      "far_detection": {
-        "default": "mdi:signal-distance-variant"
       },
       "feed": {
         "default": "mdi:bowl"
       },
-      "heat_preservation_time": {
+      "voice_times": {
+        "default": "mdi:microphone"
+      },
+      "near_detection": {
+        "default": "mdi:signal-distance-variant"
+      },
+      "far_detection": {
+        "default": "mdi:signal-distance-variant"
+      },
+      "water_level": {
+        "default": "mdi:cup-water"
+      },
+      "cook_time": {
         "default": "mdi:timer"
       },
-      "maximum_brightness": {
-        "default": "mdi:lightbulb-on-outline"
-      },
-      "maximum_brightness_2": {
-        "default": "mdi:lightbulb-on-outline"
-      },
-      "maximum_brightness_3": {
-        "default": "mdi:lightbulb-on-outline"
+      "volume": {
+        "default": "mdi:volume-high"
       },
       "minimum_brightness": {
         "default": "mdi:lightbulb-outline"
       },
+      "maximum_brightness": {
+        "default": "mdi:lightbulb-on-outline"
+      },
       "minimum_brightness_2": {
         "default": "mdi:lightbulb-outline"
       },
+      "maximum_brightness_2": {
+        "default": "mdi:lightbulb-on-outline"
+      },
       "minimum_brightness_3": {
         "default": "mdi:lightbulb-outline"
+      },
+      "maximum_brightness_3": {
+        "default": "mdi:lightbulb-on-outline"
       },
       "move_down": {
         "default": "mdi:arrow-down-bold"
@@ -80,70 +89,43 @@
       "move_up": {
         "default": "mdi:arrow-up-bold"
       },
-      "near_detection": {
-        "default": "mdi:signal-distance-variant"
+      "down_delay": {
+        "default": "mdi:timer"
       },
       "temperature": {
         "default": "mdi:thermometer"
-      },
-      "voice_times": {
-        "default": "mdi:microphone"
-      },
-      "volume": {
-        "default": "mdi:volume-high"
-      },
-      "water_level": {
-        "default": "mdi:cup-water"
       }
     },
     "select": {
-      "basic_anti_flicker": {
-        "default": "mdi:image-outline"
-      },
-      "basic_nightvision": {
-        "default": "mdi:theme-light-dark"
+      "cups": {
+        "default": "mdi:numeric"
       },
       "concentration": {
         "default": "mdi:altimeter"
       },
-      "countdown": {
-        "default": "mdi:timer-cog-outline"
+      "mode": {
+        "default": "mdi:coffee"
       },
-      "cups": {
-        "default": "mdi:numeric"
+      "temperature_level": {
+        "default": "mdi:thermometer-lines"
       },
-      "curtain_motor_mode": {
-        "default": "mdi:swap-horizontal"
+      "weather_delay": {
+        "default": "mdi:weather-cloudy-clock"
       },
       "decibel_sensitivity": {
         "default": "mdi:volume-vibrate"
       },
-      "horizontal_fan_angle": {
-        "default": "mdi:format-horizontal-align-center"
-      },
-      "humidifier_level": {
-        "default": "mdi:spray"
-      },
-      "humidifier_moodlighting": {
-        "default": "mdi:lightbulb-multiple"
-      },
-      "humidifier_spray_mode": {
-        "default": "mdi:spray"
-      },
-      "mode": {
-        "default": "mdi:coffee"
-      },
-      "motion_sensitivity": {
-        "default": "mdi:motion-sensor"
-      },
       "record_mode": {
         "default": "mdi:record-rec"
       },
-      "target_humidity": {
-        "default": "mdi:water-percent"
+      "basic_nightvision": {
+        "default": "mdi:theme-light-dark"
       },
-      "temperature_level": {
-        "default": "mdi:thermometer-lines"
+      "basic_anti_flicker": {
+        "default": "mdi:image-outline"
+      },
+      "motion_sensitivity": {
+        "default": "mdi:motion-sensor"
       },
       "vacuum_cistern": {
         "default": "mdi:water-opacity"
@@ -157,73 +139,64 @@
       "vertical_fan_angle": {
         "default": "mdi:format-vertical-align-center"
       },
-      "weather_delay": {
-        "default": "mdi:weather-cloudy-clock"
+      "horizontal_fan_angle": {
+        "default": "mdi:format-horizontal-align-center"
+      },
+      "countdown": {
+        "default": "mdi:timer-cog-outline"
+      },
+      "curtain_motor_mode": {
+        "default": "mdi:swap-horizontal"
+      },
+      "humidifier_spray_mode": {
+        "default": "mdi:spray"
+      },
+      "humidifier_level": {
+        "default": "mdi:spray"
+      },
+      "humidifier_moodlighting": {
+        "default": "mdi:lightbulb-multiple"
+      },
+      "target_humidity": {
+        "default": "mdi:water-percent"
       }
     },
     "sensor": {
-      "air_quality": {
-        "default": "mdi:air-filter"
-      },
-      "air_quality_index": {
-        "default": "mdi:air-filter"
-      },
       "battery_state": {
         "default": "mdi:battery"
+      },
+      "gas": {
+        "default": "mdi:gas-cylinder"
+      },
+      "carbon_monoxide": {
+        "default": "mdi:molecule-co"
       },
       "carbon_dioxide": {
         "default": "mdi:molecule-co2"
       },
-      "carbon_monoxide": {
-        "default": "mdi:molecule-co"
+      "luminosity": {
+        "default": "mdi:brightness-6"
+      },
+      "illuminance": {
+        "default": "mdi:brightness-6"
+      },
+      "smoke_amount": {
+        "default": "mdi:smoke-detector"
+      },
+      "last_amount": {
+        "default": "mdi:counter"
+      },
+      "remaining_time": {
+        "default": "mdi:timer"
+      },
+      "total_watering_time": {
+        "default": "mdi:history"
       },
       "cleaning_area": {
         "default": "mdi:texture-box"
       },
       "cleaning_time": {
         "default": "mdi:progress-clock"
-      },
-      "duster_cloth_life": {
-        "default": "mdi:ticket-percent-outline"
-      },
-      "filter_life": {
-        "default": "mdi:ticket-percent-outline"
-      },
-      "filter_utilization": {
-        "default": "mdi:ticket-percent-outline"
-      },
-      "gas": {
-        "default": "mdi:gas-cylinder"
-      },
-      "illuminance": {
-        "default": "mdi:brightness-6"
-      },
-      "last_amount": {
-        "default": "mdi:counter"
-      },
-      "last_operation_duration": {
-        "default": "mdi:progress-clock"
-      },
-      "luminosity": {
-        "default": "mdi:brightness-6"
-      },
-      "pm25": {
-        "default": "mdi:molecule"
-      },
-      "remaining_time": {
-        "default": "mdi:timer"
-      },
-      "rolling_brush_life": {
-        "default": "mdi:ticket-percent-outline"
-      },
-      "side_brush_life": {
-        "default": "mdi:ticket-percent-outline"
-      },
-      "smoke_amount": {
-        "default": "mdi:smoke-detector"
-      },
-      "total_absorption_particles": {
-        "default": "mdi:texture-box"
       },
       "total_cleaning_area": {
         "default": "mdi:texture-box"
@@ -234,17 +207,74 @@
       "total_cleaning_times": {
         "default": "mdi:counter"
       },
-      "total_operating_time": {
-        "default": "mdi:history"
+      "duster_cloth_life": {
+        "default": "mdi:ticket-percent-outline"
       },
-      "total_watering_time": {
-        "default": "mdi:history"
+      "side_brush_life": {
+        "default": "mdi:ticket-percent-outline"
+      },
+      "filter_life": {
+        "default": "mdi:ticket-percent-outline"
+      },
+      "rolling_brush_life": {
+        "default": "mdi:ticket-percent-outline"
+      },
+      "last_operation_duration": {
+        "default": "mdi:progress-clock"
       },
       "water_level": {
         "default": "mdi:waves-arrow-up"
+      },
+      "filter_utilization": {
+        "default": "mdi:ticket-percent-outline"
+      },
+      "pm25": {
+        "default": "mdi:molecule"
+      },
+      "total_operating_time": {
+        "default": "mdi:history"
+      },
+      "total_absorption_particles": {
+        "default": "mdi:texture-box"
+      },
+      "air_quality": {
+        "default": "mdi:air-filter"
+      },
+      "air_quality_index": {
+        "default": "mdi:air-filter"
       }
     },
     "switch": {
+      "start": {
+        "default": "mdi:kettle-steam"
+      },
+      "disinfection": {
+        "default": "mdi:bacteria"
+      },
+      "water": {
+        "default": "mdi:water"
+      },
+      "slow_feed": {
+        "default": "mdi:speedometer-slow"
+      },
+      "filter_reset": {
+        "default": "mdi:filter"
+      },
+      "water_pump_reset": {
+        "default": "mdi:pump"
+      },
+      "reset_of_water_usage_days": {
+        "default": "mdi:water-sync"
+      },
+      "uv_sterilization": {
+        "default": "mdi:lightbulb"
+      },
+      "child_lock": {
+        "default": "mdi:account-lock"
+      },
+      "radio": {
+        "default": "mdi:radio"
+      },
       "alarm_1": {
         "default": "mdi:alarm"
       },
@@ -257,128 +287,98 @@
       "alarm_4": {
         "default": "mdi:alarm"
       },
-      "anion": {
-        "default": "mdi:atom"
-      },
-      "arm_beep": {
-        "default": "mdi:volume-high"
-      },
-      "battery_lock": {
-        "default": "mdi:battery-lock"
-      },
-      "child_lock": {
-        "default": "mdi:account-lock"
-      },
-      "cry_detection": {
-        "default": "mdi:emoticon-cry"
-      },
-      "disinfection": {
-        "default": "mdi:bacteria"
-      },
-      "do_not_disturb": {
-        "default": "mdi:minus-circle"
-      },
-      "energy_saving": {
-        "default": "mdi:leaf"
-      },
-      "filter_cartridge_reset": {
-        "default": "mdi:filter"
-      },
-      "filter_reset": {
-        "default": "mdi:filter"
-      },
-      "flip": {
-        "default": "mdi:flip-horizontal"
-      },
-      "humidification": {
-        "default": "mdi:water-percent"
+      "sleep_aid": {
+        "default": "mdi:power-sleep"
       },
       "ionizer": {
         "default": "mdi:minus-circle-outline"
       },
-      "motion_alarm": {
-        "default": "mdi:motion-sensor"
+      "filter_cartridge_reset": {
+        "default": "mdi:filter"
       },
-      "motion_recording": {
-        "default": "mdi:record-rec"
-      },
-      "motion_tracking": {
-        "default": "mdi:motion-sensor"
-      },
-      "mute_voice": {
-        "default": "mdi:account-voice"
-      },
-      "natural_wind": {
-        "default": "mdi:weather-windy"
-      },
-      "open_window_detection": {
-        "default": "mdi:window-open"
-      },
-      "oxygen_bar": {
-        "default": "mdi:molecule"
-      },
-      "privacy_mode": {
-        "default": "mdi:eye-off"
-      },
-      "radio": {
-        "default": "mdi:radio"
-      },
-      "reset_of_water_usage_days": {
-        "default": "mdi:water-sync"
-      },
-      "reverse": {
-        "default": "mdi:swap-horizontal"
-      },
-      "siren": {
-        "default": "mdi:alarm-light"
-      },
-      "sleep": {
-        "default": "mdi:power-sleep"
-      },
-      "sleep_aid": {
-        "default": "mdi:power-sleep"
-      },
-      "slow_feed": {
-        "default": "mdi:speedometer-slow"
-      },
-      "sound": {
-        "default": "mdi:minus-circle"
-      },
-      "sound_detection": {
-        "default": "mdi:microphone-outline"
-      },
-      "spray": {
-        "default": "mdi:spray"
-      },
-      "start": {
-        "default": "mdi:kettle-steam"
-      },
-      "sterilization": {
-        "default": "mdi:minus-circle-outline"
+      "humidification": {
+        "default": "mdi:water-percent"
       },
       "switch": {
         "default": "mdi:power"
       },
-      "time_watermark": {
-        "default": "mdi:watermark"
+      "do_not_disturb": {
+        "default": "mdi:minus-circle"
       },
-      "uv_sterilization": {
-        "default": "mdi:lightbulb"
+      "mute_voice": {
+        "default": "mdi:account-voice"
+      },
+      "battery_lock": {
+        "default": "mdi:battery-lock"
+      },
+      "cry_detection": {
+        "default": "mdi:emoticon-cry"
+      },
+      "sound_detection": {
+        "default": "mdi:microphone-outline"
       },
       "video_recording": {
         "default": "mdi:record-rec"
       },
-      "voice": {
-        "default": "mdi:account-voice"
+      "motion_recording": {
+        "default": "mdi:record-rec"
       },
-      "water": {
-        "default": "mdi:water"
+      "privacy_mode": {
+        "default": "mdi:eye-off"
       },
-      "water_pump_reset": {
-        "default": "mdi:pump"
+      "flip": {
+        "default": "mdi:flip-horizontal"
+      },
+      "time_watermark": {
+        "default": "mdi:watermark"
       },
       "wide_dynamic_range": {
         "default": "mdi:watermark"
+      },
+      "motion_tracking": {
+        "default": "mdi:motion-sensor"
+      },
+      "motion_alarm": {
+        "default": "mdi:motion-sensor"
+      },
+      "energy_saving": {
+        "default": "mdi:leaf"
+      },
+      "open_window_detection": {
+        "default": "mdi:window-open"
+      },
+      "spray": {
+        "default": "mdi:spray"
+      },
+      "voice": {
+        "default": "mdi:account-voice"
+      },
+      "anion": {
+        "default": "mdi:atom"
+      },
+      "oxygen_bar": {
+        "default": "mdi:molecule"
+      },
+      "natural_wind": {
+        "default": "mdi:weather-windy"
+      },
+      "sound": {
+        "default": "mdi:minus-circle"
+      },
+      "reverse": {
+        "default": "mdi:swap-horizontal"
+      },
+      "sleep": {
+        "default": "mdi:power-sleep"
+      },
+      "sterilization": {
+        "default": "mdi:minus-circle-outline"
+      },
+      "arm_beep": {
+        "default": "mdi:volume-high"
+      },
+      "siren": {
+        "default": "mdi:alarm-light"
       }
     }
   }

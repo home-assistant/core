@@ -11,11 +11,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import VeluxConfigEntry
-from .const import LOGGER
+from .const import DOMAIN, LOGGER
 from .entity import VeluxEntity
 
 PARALLEL_UPDATES = 1
@@ -24,15 +24,15 @@ SCAN_INTERVAL = timedelta(minutes=5)  # Use standard polling
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config: VeluxConfigEntry,
+    config: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up rain sensor(s) for Velux platform."""
-    pyvlx = config.runtime_data
+    module = hass.data[DOMAIN][config.entry_id]
 
     async_add_entities(
         VeluxRainSensor(node, config.entry_id)
-        for node in pyvlx.nodes
+        for node in module.pyvlx.nodes
         if isinstance(node, Window) and node.rain_sensor
     )
 

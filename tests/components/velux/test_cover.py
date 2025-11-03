@@ -13,7 +13,7 @@ from . import update_callback_entity
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.usefixtures("mock_pyvlx")
+@pytest.mark.usefixtures("mock_module")
 async def test_cover_closed(
     hass: HomeAssistant,
     mock_window: AsyncMock,

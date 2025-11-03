@@ -21,7 +21,6 @@ TRANSLATED_ERRORS = {
     "already inactive": "already_inactive",
     "incorrect pin": "incorrect_pin",
     "no cable": "no_cable",
-    "cpd_enabled": "cpd_enabled",
 }
 
 

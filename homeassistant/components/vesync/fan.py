@@ -267,12 +267,8 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
             await self.async_set_preset_mode(preset_mode)
             return
         if percentage is None:
-            success = await self.device.turn_on()
-            if not success:
-                raise HomeAssistantError(self.device.last_response.message)
-            self.schedule_update_ha_state()
-        else:
-            await self.async_set_percentage(percentage)
+            percentage = 50
+        await self.async_set_percentage(percentage)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""

@@ -1,0 +1,10 @@
+{
+  "domain": "lirc",
+  "name": "LIRC",
+  "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/lirc",
+  "iot_class": "local_push",
+  "loggers": ["lirc"],
+  "quality_scale": "legacy",
+  "requirements": ["python-lirc==1.2.3"]
+}

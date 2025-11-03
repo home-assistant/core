@@ -10,22 +10,22 @@
     "add_item": {
       "service": "mdi:cart-plus"
     },
-    "clear_completed_items": {
+    "remove_item": {
       "service": "mdi:cart-remove"
     },
-    "complete_all": {
+    "complete_item": {
       "service": "mdi:cart-check"
     },
-    "complete_item": {
+    "incomplete_item": {
+      "service": "mdi:cart-off"
+    },
+    "complete_all": {
       "service": "mdi:cart-check"
     },
     "incomplete_all": {
       "service": "mdi:cart-off"
     },
-    "incomplete_item": {
-      "service": "mdi:cart-off"
-    },
-    "remove_item": {
+    "clear_completed_items": {
       "service": "mdi:cart-remove"
     },
     "sort": {

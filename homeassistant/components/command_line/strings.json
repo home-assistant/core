@@ -1,8 +1,8 @@
 {
   "services": {
     "reload": {
-      "description": "Reloads command line configuration from the YAML-configuration.",
-      "name": "[%key:common::action::reload%]"
+      "name": "[%key:common::action::reload%]",
+      "description": "Reloads command line configuration from the YAML-configuration."
     }
   }
 }

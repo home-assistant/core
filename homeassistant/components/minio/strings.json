@@ -1,54 +1,54 @@
 {
   "services": {
     "get": {
+      "name": "Get",
       "description": "Downloads file from Minio.",
       "fields": {
         "bucket": {
-          "description": "Bucket to use.",
-          "name": "Bucket"
-        },
-        "file_path": {
-          "description": "File path on local filesystem.",
-          "name": "File path"
+          "name": "Bucket",
+          "description": "Bucket to use."
         },
         "key": {
-          "description": "Object key of the file.",
-          "name": "Key"
+          "name": "Key",
+          "description": "Object key of the file."
+        },
+        "file_path": {
+          "name": "File path",
+          "description": "File path on local filesystem."
         }
-      },
-      "name": "Get"
+      }
     },
     "put": {
+      "name": "Put",
       "description": "Uploads file to Minio.",
       "fields": {
         "bucket": {
-          "description": "[%key:component::minio::services::get::fields::bucket::description%]",
-          "name": "[%key:component::minio::services::get::fields::bucket::name%]"
-        },
-        "file_path": {
-          "description": "[%key:component::minio::services::get::fields::file_path::description%]",
-          "name": "File path"
+          "name": "[%key:component::minio::services::get::fields::bucket::name%]",
+          "description": "[%key:component::minio::services::get::fields::bucket::description%]"
         },
         "key": {
-          "description": "[%key:component::minio::services::get::fields::key::description%]",
-          "name": "Key"
+          "name": "Key",
+          "description": "[%key:component::minio::services::get::fields::key::description%]"
+        },
+        "file_path": {
+          "name": "File path",
+          "description": "[%key:component::minio::services::get::fields::file_path::description%]"
         }
-      },
-      "name": "Put"
+      }
     },
     "remove": {
+      "name": "Remove",
       "description": "Deletes file from Minio.",
       "fields": {
         "bucket": {
-          "description": "[%key:component::minio::services::get::fields::bucket::description%]",
-          "name": "[%key:component::minio::services::get::fields::bucket::name%]"
+          "name": "[%key:component::minio::services::get::fields::bucket::name%]",
+          "description": "[%key:component::minio::services::get::fields::bucket::description%]"
         },
         "key": {
-          "description": "[%key:component::minio::services::get::fields::key::description%]",
-          "name": "Key"
+          "name": "Key",
+          "description": "[%key:component::minio::services::get::fields::key::description%]"
         }
-      },
-      "name": "Remove"
+      }
     }
   }
 }

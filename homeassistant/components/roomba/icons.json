@@ -6,41 +6,41 @@
       }
     },
     "sensor": {
-      "average_mission_time": {
-        "default": "mdi:clock"
-      },
       "battery_cycles": {
         "default": "mdi:counter"
       },
-      "canceled_missions": {
-        "default": "mdi:counter"
+      "total_cleaning_time": {
+        "default": "mdi:clock"
       },
-      "dock_tank_level": {
-        "default": "mdi:water"
+      "average_mission_time": {
+        "default": "mdi:clock"
       },
-      "failed_missions": {
-        "default": "mdi:counter"
-      },
-      "last_mission": {
-        "default": "mdi:calendar-clock"
-      },
-      "scrubs_count": {
+      "total_missions": {
         "default": "mdi:counter"
       },
       "successful_missions": {
         "default": "mdi:counter"
       },
-      "tank_level": {
-        "default": "mdi:water"
+      "canceled_missions": {
+        "default": "mdi:counter"
+      },
+      "failed_missions": {
+        "default": "mdi:counter"
+      },
+      "scrubs_count": {
+        "default": "mdi:counter"
       },
       "total_cleaned_area": {
         "default": "mdi:texture-box"
       },
-      "total_cleaning_time": {
-        "default": "mdi:clock"
+      "last_mission": {
+        "default": "mdi:calendar-clock"
       },
-      "total_missions": {
-        "default": "mdi:counter"
+      "tank_level": {
+        "default": "mdi:water"
+      },
+      "dock_tank_level": {
+        "default": "mdi:water"
       }
     }
   }

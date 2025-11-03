@@ -1,25 +1,25 @@
 {
   "config": {
-    "abort": {
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "title": "Connect to NZBGet",
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "host": "[%key:common::config_flow::data::host%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        }
+      }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
-    "flow_title": "{name}",
-    "step": {
-      "user": {
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "name": "[%key:common::config_flow::data::name%]",
-          "password": "[%key:common::config_flow::data::password%]",
-          "port": "[%key:common::config_flow::data::port%]",
-          "ssl": "[%key:common::config_flow::data::ssl%]",
-          "username": "[%key:common::config_flow::data::username%]",
-          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
-        },
-        "title": "Connect to NZBGet"
-      }
+    "abort": {
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
   "entity": {
@@ -30,11 +30,17 @@
       "average_speed": {
         "name": "Average speed"
       },
-      "disk_free": {
-        "name": "Disk free"
-      },
       "download_paused": {
         "name": "Download paused"
+      },
+      "speed": {
+        "name": "Speed"
+      },
+      "size": {
+        "name": "Size"
+      },
+      "disk_free": {
+        "name": "Disk free"
       },
       "post_processing_jobs": {
         "name": "Post-processing jobs"
@@ -45,17 +51,11 @@
       "queue_size": {
         "name": "Queue size"
       },
-      "size": {
-        "name": "Size"
-      },
-      "speed": {
-        "name": "Speed"
+      "uptime": {
+        "name": "Uptime"
       },
       "speed_limit": {
         "name": "Speed limit"
-      },
-      "uptime": {
-        "name": "Uptime"
       }
     },
     "switch": {
@@ -71,22 +71,22 @@
   },
   "services": {
     "pause": {
-      "description": "Pauses download queue.",
-      "name": "[%key:common::action::pause%]"
+      "name": "[%key:common::action::pause%]",
+      "description": "Pauses download queue."
     },
     "resume": {
-      "description": "Resumes download queue.",
-      "name": "Resume"
+      "name": "Resume",
+      "description": "Resumes download queue."
     },
     "set_speed": {
+      "name": "Set speed",
       "description": "Sets download speed limit.",
       "fields": {
         "speed": {
-          "description": "Speed limit. 0 is unlimited.",
-          "name": "Speed"
+          "name": "Speed",
+          "description": "Speed limit. 0 is unlimited."
         }
-      },
-      "name": "Set speed"
+      }
     }
   }
 }

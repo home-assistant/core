@@ -2,10 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date
-from decimal import Decimal
 import logging
-from typing import Any
 
 import sqlalchemy
 from sqlalchemy import lambda_stmt
@@ -226,16 +223,3 @@ def generate_lambda_stmt(query: str) -> StatementLambdaElement:
     """Generate the lambda statement."""
     text = sqlalchemy.text(query)
     return lambda_stmt(lambda: text, lambda_cache=_SQL_LAMBDA_CACHE)
-
-
-def convert_value(value: Any) -> Any:
-    """Convert value."""
-    match value:
-        case Decimal():
-            return float(value)
-        case date():
-            return value.isoformat()
-        case bytes() | bytearray():
-            return f"0x{value.hex()}"
-        case _:
-            return value

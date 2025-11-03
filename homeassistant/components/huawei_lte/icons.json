@@ -1,7 +1,13 @@
 {
   "entity": {
     "binary_sensor": {
-      "5ghz_wifi_status": {
+      "mobile_connection": {
+        "default": "mdi:signal-off",
+        "state": {
+          "on": "mdi:signal"
+        }
+      },
+      "wifi_status": {
         "default": "mdi:wifi-off",
         "state": {
           "on": "mdi:wifi"
@@ -13,22 +19,16 @@
           "on": "mdi:wifi"
         }
       },
-      "mobile_connection": {
-        "default": "mdi:signal-off",
+      "5ghz_wifi_status": {
+        "default": "mdi:wifi-off",
         "state": {
-          "on": "mdi:signal"
+          "on": "mdi:wifi"
         }
       },
       "sms_storage_full": {
         "default": "mdi:email-off",
         "state": {
           "on": "mdi:email-alert"
-        }
-      },
-      "wifi_status": {
-        "default": "mdi:wifi-off",
-        "state": {
-          "on": "mdi:wifi"
         }
       }
     },
@@ -38,6 +38,15 @@
       }
     },
     "sensor": {
+      "uptime": {
+        "default": "mdi:timer-outline"
+      },
+      "wan_ip_address": {
+        "default": "mdi:ip"
+      },
+      "wan_ipv6_address": {
+        "default": "mdi:ip"
+      },
       "cell_id": {
         "default": "mdi:antenna"
       },
@@ -46,30 +55,6 @@
       },
       "cqi1": {
         "default": "mdi:speedometer"
-      },
-      "current_connection_download": {
-        "default": "mdi:download"
-      },
-      "current_connection_duration": {
-        "default": "mdi:timer-outline"
-      },
-      "current_connection_upload": {
-        "default": "mdi:upload"
-      },
-      "current_day_transfer": {
-        "default": "mdi:arrow-up-down-bold"
-      },
-      "current_download_rate": {
-        "default": "mdi:download"
-      },
-      "current_month_download": {
-        "default": "mdi:download"
-      },
-      "current_month_upload": {
-        "default": "mdi:upload"
-      },
-      "current_upload_rate": {
-        "default": "mdi:upload"
       },
       "enodeb_id": {
         "default": "mdi:antenna"
@@ -89,14 +74,32 @@
       "pci": {
         "default": "mdi:antenna"
       },
+      "rac": {
+        "default": "mdi:map-marker"
+      },
+      "tac": {
+        "default": "mdi:map-marker"
+      },
+      "sms_unread": {
+        "default": "mdi:email-arrow-left"
+      },
+      "current_day_transfer": {
+        "default": "mdi:arrow-up-down-bold"
+      },
+      "current_month_download": {
+        "default": "mdi:download"
+      },
+      "current_month_upload": {
+        "default": "mdi:upload"
+      },
+      "wifi_clients_connected": {
+        "default": "mdi:wifi"
+      },
       "primary_dns_server": {
         "default": "mdi:ip"
       },
       "primary_ipv6_dns_server": {
         "default": "mdi:ip"
-      },
-      "rac": {
-        "default": "mdi:map-marker"
       },
       "secondary_dns_server": {
         "default": "mdi:ip"
@@ -104,47 +107,20 @@
       "secondary_ipv6_dns_server": {
         "default": "mdi:ip"
       },
-      "sms_capacity_device": {
-        "default": "mdi:email"
+      "current_connection_duration": {
+        "default": "mdi:timer-outline"
       },
-      "sms_capacity_sim": {
-        "default": "mdi:email"
+      "current_connection_download": {
+        "default": "mdi:download"
       },
-      "sms_deleted_device": {
-        "default": "mdi:email-minus"
+      "current_download_rate": {
+        "default": "mdi:download"
       },
-      "sms_drafts_device": {
-        "default": "mdi:email-arrow-right-outline"
+      "current_connection_upload": {
+        "default": "mdi:upload"
       },
-      "sms_drafts_sim": {
-        "default": "mdi:email-arrow-right-outline"
-      },
-      "sms_inbox_device": {
-        "default": "mdi:email"
-      },
-      "sms_inbox_sim": {
-        "default": "mdi:email"
-      },
-      "sms_messages_sim": {
-        "default": "mdi:email-arrow-left"
-      },
-      "sms_outbox_device": {
-        "default": "mdi:email-arrow-right"
-      },
-      "sms_outbox_sim": {
-        "default": "mdi:email-arrow-right"
-      },
-      "sms_unread": {
-        "default": "mdi:email-arrow-left"
-      },
-      "sms_unread_device": {
-        "default": "mdi:email-arrow-left"
-      },
-      "sms_unread_sim": {
-        "default": "mdi:email-arrow-left"
-      },
-      "tac": {
-        "default": "mdi:map-marker"
+      "current_upload_rate": {
+        "default": "mdi:upload"
       },
       "total_connected_duration": {
         "default": "mdi:timer-outline"
@@ -155,17 +131,41 @@
       "total_upload": {
         "default": "mdi:upload"
       },
-      "uptime": {
-        "default": "mdi:timer-outline"
+      "sms_deleted_device": {
+        "default": "mdi:email-minus"
       },
-      "wan_ip_address": {
-        "default": "mdi:ip"
+      "sms_drafts_device": {
+        "default": "mdi:email-arrow-right-outline"
       },
-      "wan_ipv6_address": {
-        "default": "mdi:ip"
+      "sms_inbox_device": {
+        "default": "mdi:email"
       },
-      "wifi_clients_connected": {
-        "default": "mdi:wifi"
+      "sms_capacity_device": {
+        "default": "mdi:email"
+      },
+      "sms_outbox_device": {
+        "default": "mdi:email-arrow-right"
+      },
+      "sms_unread_device": {
+        "default": "mdi:email-arrow-left"
+      },
+      "sms_drafts_sim": {
+        "default": "mdi:email-arrow-right-outline"
+      },
+      "sms_inbox_sim": {
+        "default": "mdi:email"
+      },
+      "sms_capacity_sim": {
+        "default": "mdi:email"
+      },
+      "sms_outbox_sim": {
+        "default": "mdi:email-arrow-right"
+      },
+      "sms_unread_sim": {
+        "default": "mdi:email-arrow-left"
+      },
+      "sms_messages_sim": {
+        "default": "mdi:email-arrow-left"
       }
     },
     "switch": {

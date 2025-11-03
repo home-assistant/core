@@ -3343,11 +3343,6 @@ async def test_language_with_alternative_code(
             "HassLightSet",
             {"name": "office light", "brightness": "50%"},
         ),
-        (
-            "turn on the lights in the spaceship",
-            "HassTurnOn",
-            {"domain": "lights", "area": "office"},  # context area
-        ),
     ],
 )
 async def test_fuzzy_matching(

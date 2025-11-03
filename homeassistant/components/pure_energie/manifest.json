@@ -8,8 +8,8 @@
   "requirements": ["gridnet==5.0.1"],
   "zeroconf": [
     {
-      "name": "smartbridge*",
-      "type": "_http._tcp.local."
+      "type": "_http._tcp.local.",
+      "name": "smartbridge*"
     }
   ]
 }

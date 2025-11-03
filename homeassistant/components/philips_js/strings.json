@@ -1,33 +1,45 @@
 {
   "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "api_version": "API Version"
+        }
+      },
+      "zeroconf_confirm": {
+        "title": "Discovered Philips TV",
+        "description": "Do you want to add the TV ({name}) to Home Assistant? It will turn on and a pairing code will be displayed on it that you will need to enter in the next screen."
+      },
+      "pair": {
+        "title": "Pair",
+        "description": "Enter the PIN displayed on your TV",
+        "data": {
+          "pin": "[%key:common::config_flow::data::pin%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "invalid_pin": "Invalid PIN"
+    },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "pairing_failure": "Unable to pair: {error_id}",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
-    },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_pin": "Invalid PIN",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
-    },
-    "flow_title": "{name}",
+    }
+  },
+  "options": {
     "step": {
-      "pair": {
+      "init": {
         "data": {
-          "pin": "[%key:common::config_flow::data::pin%]"
+          "allow_notify": "Allow notification service"
         },
-        "description": "Enter the PIN displayed on your TV",
-        "title": "Pair"
-      },
-      "user": {
-        "data": {
-          "api_version": "API Version",
-          "host": "[%key:common::config_flow::data::host%]"
+        "data_description": {
+          "allow_notify": "Allow the usage of data notification service on TV instead of periodic polling. This allows faster reaction to state changes on the TV, however, some TV's will stop responding with this activated due to firmware bugs."
         }
-      },
-      "zeroconf_confirm": {
-        "description": "Do you want to add the TV ({name}) to Home Assistant? It will turn on and a pairing code will be displayed on it that you will need to enter in the next screen.",
-        "title": "Discovered Philips TV"
       }
     }
   },
@@ -56,23 +68,11 @@
       }
     },
     "switch": {
-      "ambilight_hue": {
-        "name": "Ambilight + Hue"
-      },
       "screen_state": {
         "name": "Screen state"
-      }
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "allow_notify": "Allow notification service"
-        },
-        "data_description": {
-          "allow_notify": "Allow the usage of data notification service on TV instead of periodic polling. This allows faster reaction to state changes on the TV, however, some TV's will stop responding with this activated due to firmware bugs."
-        }
+      },
+      "ambilight_hue": {
+        "name": "Ambilight + Hue"
       }
     }
   }

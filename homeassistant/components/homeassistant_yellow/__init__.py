@@ -2,13 +2,9 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import logging
 
 from homeassistant.components.hassio import get_os_info
-from homeassistant.components.homeassistant_hardware.coordinator import (
-    FirmwareUpdateCoordinator,
-)
 from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon import (
     check_multi_pan_addon,
 )
@@ -20,34 +16,14 @@ from homeassistant.config_entries import SOURCE_HARDWARE, ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import discovery_flow
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.hassio import is_hassio
 
-from .const import (
-    FIRMWARE,
-    FIRMWARE_VERSION,
-    NABU_CASA_FIRMWARE_RELEASES_URL,
-    RADIO_DEVICE,
-    ZHA_HW_DISCOVERY_DATA,
-)
+from .const import FIRMWARE, FIRMWARE_VERSION, RADIO_DEVICE, ZHA_HW_DISCOVERY_DATA
 
 _LOGGER = logging.getLogger(__name__)
 
-type HomeAssistantYellowConfigEntry = ConfigEntry[HomeAssistantYellowData]
 
-
-@dataclass
-class HomeAssistantYellowData:
-    """Runtime data definition."""
-
-    coordinator: (
-        FirmwareUpdateCoordinator  # Type from homeassistant_hardware.coordinator
-    )
-
-
-async def async_setup_entry(
-    hass: HomeAssistant, entry: HomeAssistantYellowConfigEntry
-) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a Home Assistant Yellow config entry."""
     if not is_hassio(hass):
         # Not running under supervisor, Home Assistant may have been migrated
@@ -80,31 +56,18 @@ async def async_setup_entry(
             data=ZHA_HW_DISCOVERY_DATA,
         )
 
-    # Create and store the firmware update coordinator in runtime_data
-    session = async_get_clientsession(hass)
-    coordinator = FirmwareUpdateCoordinator(
-        hass,
-        entry,
-        session,
-        NABU_CASA_FIRMWARE_RELEASES_URL,
-    )
-    entry.runtime_data = HomeAssistantYellowData(coordinator)
-
-    await hass.config_entries.async_forward_entry_setups(entry, ["switch", "update"])
+    await hass.config_entries.async_forward_entry_setups(entry, ["update"])
 
     return True
 
 
-async def async_unload_entry(
-    hass: HomeAssistant, entry: HomeAssistantYellowConfigEntry
-) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, ["switch", "update"])
+    await hass.config_entries.async_unload_platforms(entry, ["update"])
+    return True
 
 
-async def async_migrate_entry(
-    hass: HomeAssistant, config_entry: HomeAssistantYellowConfigEntry
-) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Migrate old entry."""
 
     _LOGGER.debug(

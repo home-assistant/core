@@ -296,7 +296,7 @@ class Elkm1ConfigFlow(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_discovered_connection()
             return await self.async_step_manual_connection()
 
-        current_unique_ids = self._async_current_ids(include_ignore=False)
+        current_unique_ids = self._async_current_ids()
         current_hosts = {
             hostname_from_url(entry.data[CONF_HOST])
             for entry in self._async_current_entries(include_ignore=False)

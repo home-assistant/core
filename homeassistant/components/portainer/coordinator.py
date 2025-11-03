@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -64,16 +63,6 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
             update_interval=DEFAULT_SCAN_INTERVAL,
         )
         self.portainer = portainer
-
-        self.known_endpoints: set[int] = set()
-        self.known_containers: set[tuple[int, str]] = set()
-
-        self.new_endpoints_callbacks: list[
-            Callable[[list[PortainerCoordinatorData]], None]
-        ] = []
-        self.new_containers_callbacks: list[
-            Callable[[list[tuple[PortainerCoordinatorData, DockerContainer]]], None]
-        ] = []
 
     async def _async_setup(self) -> None:
         """Set up the Portainer Data Update Coordinator."""
@@ -163,27 +152,4 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                 docker_info=docker_info,
             )
 
-        self._async_add_remove_endpoints(mapped_endpoints)
-
         return mapped_endpoints
-
-    def _async_add_remove_endpoints(
-        self, mapped_endpoints: dict[int, PortainerCoordinatorData]
-    ) -> None:
-        """Add new endpoints, remove non-existing endpoints."""
-        current_endpoints = {endpoint.id for endpoint in mapped_endpoints.values()}
-        new_endpoints = current_endpoints - self.known_endpoints
-        if new_endpoints:
-            _LOGGER.debug("New endpoints found: %s", new_endpoints)
-            self.known_endpoints.update(new_endpoints)
-
-        # Surprise, we also handle containers here :)
-        current_containers = {
-            (endpoint.id, container.id)
-            for endpoint in mapped_endpoints.values()
-            for container in endpoint.containers.values()
-        }
-        new_containers = current_containers - self.known_containers
-        if new_containers:
-            _LOGGER.debug("New containers found: %s", new_containers)
-            self.known_containers.update(new_containers)

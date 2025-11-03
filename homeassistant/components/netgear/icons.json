@@ -1,53 +1,11 @@
 {
   "entity": {
     "sensor": {
-      "access_point_mac": {
-        "default": "mdi:router-network"
-      },
-      "average_ping": {
-        "default": "mdi:wan"
-      },
-      "cpu_utilization": {
-        "default": "mdi:cpu-64-bit"
-      },
-      "downlink_bandwidth": {
-        "default": "mdi:download"
-      },
-      "download_last_month": {
-        "default": "mdi:download"
-      },
-      "download_last_month_average": {
-        "default": "mdi:download"
-      },
-      "download_month": {
-        "default": "mdi:download"
-      },
-      "download_month_average": {
-        "default": "mdi:download"
-      },
-      "download_today": {
-        "default": "mdi:download"
-      },
-      "download_week": {
-        "default": "mdi:download"
-      },
-      "download_week_average": {
-        "default": "mdi:download"
-      },
-      "download_yesterday": {
-        "default": "mdi:download"
-      },
-      "ethernet_link_status": {
-        "default": "mdi:ethernet"
-      },
-      "link_rate": {
-        "default": "mdi:speedometer"
-      },
       "link_type": {
         "default": "mdi:lan"
       },
-      "memory_utilization": {
-        "default": "mdi:memory"
+      "link_rate": {
+        "default": "mdi:speedometer"
       },
       "signal_strength": {
         "default": "mdi:wifi"
@@ -55,23 +13,20 @@
       "ssid": {
         "default": "mdi:wifi-marker"
       },
-      "uplink_bandwidth": {
-        "default": "mdi:upload"
-      },
-      "upload_last_month": {
-        "default": "mdi:upload"
-      },
-      "upload_last_month_average": {
-        "default": "mdi:upload"
-      },
-      "upload_month": {
-        "default": "mdi:upload"
-      },
-      "upload_month_average": {
-        "default": "mdi:upload"
+      "access_point_mac": {
+        "default": "mdi:router-network"
       },
       "upload_today": {
         "default": "mdi:upload"
+      },
+      "download_today": {
+        "default": "mdi:download"
+      },
+      "upload_yesterday": {
+        "default": "mdi:upload"
+      },
+      "download_yesterday": {
+        "default": "mdi:download"
       },
       "upload_week": {
         "default": "mdi:upload"
@@ -79,22 +34,64 @@
       "upload_week_average": {
         "default": "mdi:upload"
       },
-      "upload_yesterday": {
+      "download_week": {
+        "default": "mdi:download"
+      },
+      "download_week_average": {
+        "default": "mdi:download"
+      },
+      "upload_month": {
         "default": "mdi:upload"
+      },
+      "upload_month_average": {
+        "default": "mdi:upload"
+      },
+      "download_month": {
+        "default": "mdi:download"
+      },
+      "download_month_average": {
+        "default": "mdi:download"
+      },
+      "upload_last_month": {
+        "default": "mdi:upload"
+      },
+      "upload_last_month_average": {
+        "default": "mdi:upload"
+      },
+      "download_last_month": {
+        "default": "mdi:download"
+      },
+      "download_last_month_average": {
+        "default": "mdi:download"
+      },
+      "uplink_bandwidth": {
+        "default": "mdi:upload"
+      },
+      "downlink_bandwidth": {
+        "default": "mdi:download"
+      },
+      "average_ping": {
+        "default": "mdi:wan"
+      },
+      "cpu_utilization": {
+        "default": "mdi:cpu-64-bit"
+      },
+      "memory_utilization": {
+        "default": "mdi:memory"
+      },
+      "ethernet_link_status": {
+        "default": "mdi:ethernet"
       }
     },
     "switch": {
-      "2g_guest_wifi": {
-        "default": "mdi:wifi"
-      },
-      "5g_guest_wifi": {
-        "default": "mdi:wifi"
+      "allowed_on_network": {
+        "default": "mdi:block-helper"
       },
       "access_control": {
         "default": "mdi:block-helper"
       },
-      "allowed_on_network": {
-        "default": "mdi:block-helper"
+      "traffic_meter": {
+        "default": "mdi:wifi-arrow-up-down"
       },
       "parental_control": {
         "default": "mdi:account-child-outline"
@@ -102,11 +99,14 @@
       "quality_of_service": {
         "default": "mdi:wifi-star"
       },
-      "smart_connect": {
+      "2g_guest_wifi": {
         "default": "mdi:wifi"
       },
-      "traffic_meter": {
-        "default": "mdi:wifi-arrow-up-down"
+      "5g_guest_wifi": {
+        "default": "mdi:wifi"
+      },
+      "smart_connect": {
+        "default": "mdi:wifi"
       }
     }
   }

@@ -1,24 +1,38 @@
 {
   "config": {
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    "step": {
+      "user": {
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "Your Snoo username or email",
+          "password": "Your Snoo password"
+        }
+      }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
-    "step": {
-      "user": {
-        "data": {
-          "password": "[%key:common::config_flow::data::password%]",
-          "username": "[%key:common::config_flow::data::username%]"
-        },
-        "data_description": {
-          "password": "Your Snoo password",
-          "username": "Your Snoo username or email"
-        }
-      }
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "exceptions": {
+    "select_failed": {
+      "message": "Error while updating {name} to {option}"
+    },
+    "start_snoo_failed": {
+      "message": "Starting {name} failed"
+    },
+    "switch_on_failed": {
+      "message": "Turning {name} on failed"
+    },
+    "switch_off_failed": {
+      "message": "Turning {name} off failed"
     }
   },
   "entity": {
@@ -41,20 +55,39 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "activity": "Activity press",
-              "command": "Command sent",
-              "config_change": "Config changed",
+              "timer": "Timer",
               "cry": "Cry",
-              "long_activity_press": "Long activity press",
-              "power": "Power button pressed",
-              "restart": "Restart",
+              "command": "Command sent",
               "safety_clip": "Safety clip changed",
+              "long_activity_press": "Long activity press",
+              "activity": "Activity press",
+              "power": "Power button pressed",
               "status_requested": "Status requested",
               "sticky_white_noise_updated": "Sleepytime sounds updated",
-              "timer": "Timer"
+              "config_change": "Config changed",
+              "restart": "Restart"
             }
           }
         }
+      }
+    },
+    "sensor": {
+      "state": {
+        "name": "State",
+        "state": {
+          "baseline": "Baseline",
+          "weaning_baseline": "Baseline (Weaning)",
+          "level1": "Level 1",
+          "level2": "Level 2",
+          "level3": "Level 3",
+          "level4": "Level 4",
+          "stop": "[%key:common::state::stopped%]",
+          "pretimeout": "Pre-timeout",
+          "timeout": "Timeout"
+        }
+      },
+      "time_left": {
+        "name": "Time left"
       }
     },
     "select": {
@@ -70,46 +103,13 @@
         }
       }
     },
-    "sensor": {
-      "state": {
-        "name": "State",
-        "state": {
-          "baseline": "Baseline",
-          "level1": "Level 1",
-          "level2": "Level 2",
-          "level3": "Level 3",
-          "level4": "Level 4",
-          "pretimeout": "Pre-timeout",
-          "stop": "[%key:common::state::stopped%]",
-          "timeout": "Timeout",
-          "weaning_baseline": "Baseline (Weaning)"
-        }
-      },
-      "time_left": {
-        "name": "Time left"
-      }
-    },
     "switch": {
-      "hold": {
-        "name": "Level lock"
-      },
       "sticky_white_noise": {
         "name": "Sleepytime sounds"
+      },
+      "hold": {
+        "name": "Level lock"
       }
-    }
-  },
-  "exceptions": {
-    "select_failed": {
-      "message": "Error while updating {name} to {option}"
-    },
-    "start_snoo_failed": {
-      "message": "Starting {name} failed"
-    },
-    "switch_off_failed": {
-      "message": "Turning {name} off failed"
-    },
-    "switch_on_failed": {
-      "message": "Turning {name} on failed"
     }
   }
 }

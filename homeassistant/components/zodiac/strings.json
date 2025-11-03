@@ -1,12 +1,13 @@
 {
+  "title": "Zodiac",
   "config": {
-    "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
-    },
     "step": {
       "user": {
         "description": "[%key:common::config_flow::description::confirm_setup%]"
       }
+    },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }
   },
   "entity": {
@@ -28,6 +29,5 @@
         }
       }
     }
-  },
-  "title": "Zodiac"
+  }
 }

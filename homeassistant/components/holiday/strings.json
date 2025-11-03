@@ -1,33 +1,34 @@
 {
+  "title": "Holiday",
   "config": {
     "abort": {
       "already_configured": "Already configured. Only a single configuration for country/province/categories combination is possible.",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "step": {
+      "user": {
+        "data": {
+          "country": "[%key:common::config_flow::data::country%]"
+        }
+      },
       "options": {
         "data": {
-          "categories": "Categories",
-          "province": "Province"
+          "province": "Province",
+          "categories": "Categories"
         },
         "data_description": {
-          "categories": "Optionally choose additional holiday categories, public holidays are already included",
-          "province": "Optionally choose a province / subdivision of {country}"
+          "province": "Optionally choose a province / subdivision of {country}",
+          "categories": "Optionally choose additional holiday categories, public holidays are already included"
         }
       },
       "reconfigure": {
         "data": {
-          "categories": "[%key:component::holiday::config::step::options::data::categories%]",
-          "province": "[%key:component::holiday::config::step::options::data::province%]"
+          "province": "[%key:component::holiday::config::step::options::data::province%]",
+          "categories": "[%key:component::holiday::config::step::options::data::categories%]"
         },
         "data_description": {
-          "categories": "[%key:component::holiday::config::step::options::data_description::categories%]",
-          "province": "[%key:component::holiday::config::step::options::data_description::province%]"
-        }
-      },
-      "user": {
-        "data": {
-          "country": "[%key:common::config_flow::data::country%]"
+          "province": "[%key:component::holiday::config::step::options::data_description::province%]",
+          "categories": "[%key:component::holiday::config::step::options::data_description::categories%]"
         }
       }
     }
@@ -67,6 +68,5 @@
         "workday": "Workday"
       }
     }
-  },
-  "title": "Holiday"
+  }
 }

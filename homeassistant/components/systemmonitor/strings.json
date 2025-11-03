@@ -9,6 +9,19 @@
       }
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "description": "Configure a monitoring sensor for a running process",
+        "data": {
+          "process": "Processes to add as sensor(s)"
+        },
+        "data_description": {
+          "process": "Select a running process from the list or add a custom value. Multiple selections/custom values are supported"
+        }
+      }
+    }
+  },
   "entity": {
     "binary_sensor": {
       "process": {
@@ -64,17 +77,20 @@
       "packets_out": {
         "name": "Packets out {interface}"
       },
+      "throughput_network_in": {
+        "name": "Network throughput in {interface}"
+      },
+      "throughput_network_out": {
+        "name": "Network throughput out {interface}"
+      },
       "process": {
         "name": "Process {process}"
       },
-      "process_num_fds": {
-        "name": "Open file descriptors {process}"
+      "processor_use": {
+        "name": "Processor use"
       },
       "processor_temperature": {
         "name": "Processor temperature"
-      },
-      "processor_use": {
-        "name": "Processor use"
       },
       "swap_free": {
         "name": "Swap free"
@@ -85,24 +101,8 @@
       "swap_use_percent": {
         "name": "Swap usage"
       },
-      "throughput_network_in": {
-        "name": "Network throughput in {interface}"
-      },
-      "throughput_network_out": {
-        "name": "Network throughput out {interface}"
-      }
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "process": "Processes to add as sensor(s)"
-        },
-        "data_description": {
-          "process": "Select a running process from the list or add a custom value. Multiple selections/custom values are supported"
-        },
-        "description": "Configure a monitoring sensor for a running process"
+      "process_num_fds": {
+        "name": "Open file descriptors {process}"
       }
     }
   }

@@ -1,10 +1,10 @@
 {
   "services": {
-    "action": {
-      "service": "mdi:gesture-tap-button"
-    },
     "set_text_overlay": {
       "service": "mdi:text-box-outline"
+    },
+    "action": {
+      "service": "mdi:gesture-tap-button"
     },
     "snapshot": {
       "service": "mdi:camera"

@@ -6,7 +6,6 @@ import re
 from typing import Any
 
 from aiohasupervisor import SupervisorError
-from aiohasupervisor.models import Job
 from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
 
 from homeassistant.components.update import (
@@ -16,7 +15,7 @@ from homeassistant.components.update import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ICON, ATTR_NAME
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -36,7 +35,6 @@ from .entity import (
     HassioOSEntity,
     HassioSupervisorEntity,
 )
-from .jobs import JobSubscription
 from .update_helper import update_addon, update_core, update_os
 
 ENTITY_DESCRIPTION = UpdateEntityDescription(
@@ -91,7 +89,6 @@ class SupervisorAddonUpdateEntity(HassioAddonEntity, UpdateEntity):
         UpdateEntityFeature.INSTALL
         | UpdateEntityFeature.BACKUP
         | UpdateEntityFeature.RELEASE_NOTES
-        | UpdateEntityFeature.PROGRESS
     )
 
     @property
@@ -156,30 +153,6 @@ class SupervisorAddonUpdateEntity(HassioAddonEntity, UpdateEntity):
             self.hass, self._addon_slug, backup, self.title, self.installed_version
         )
         await self.coordinator.async_refresh()
-
-    @callback
-    def _update_job_changed(self, job: Job) -> None:
-        """Process update for this entity's update job."""
-        if job.done is False:
-            self._attr_in_progress = True
-            self._attr_update_percentage = job.progress
-        else:
-            self._attr_in_progress = False
-            self._attr_update_percentage = None
-        self.async_write_ha_state()
-
-    async def async_added_to_hass(self) -> None:
-        """Subscribe to progress updates."""
-        await super().async_added_to_hass()
-        self.async_on_remove(
-            self.coordinator.jobs.subscribe(
-                JobSubscription(
-                    self._update_job_changed,
-                    name="addon_manager_update",
-                    reference=self._addon_slug,
-                )
-            )
-        )
 
 
 class SupervisorOSUpdateEntity(HassioOSEntity, UpdateEntity):
@@ -277,7 +250,6 @@ class SupervisorCoreUpdateEntity(HassioCoreEntity, UpdateEntity):
         UpdateEntityFeature.INSTALL
         | UpdateEntityFeature.SPECIFIC_VERSION
         | UpdateEntityFeature.BACKUP
-        | UpdateEntityFeature.PROGRESS
     )
     _attr_title = "Home Assistant Core"
 
@@ -309,25 +281,3 @@ class SupervisorCoreUpdateEntity(HassioCoreEntity, UpdateEntity):
     ) -> None:
         """Install an update."""
         await update_core(self.hass, version, backup)
-
-    @callback
-    def _update_job_changed(self, job: Job) -> None:
-        """Process update for this entity's update job."""
-        if job.done is False:
-            self._attr_in_progress = True
-            self._attr_update_percentage = job.progress
-        else:
-            self._attr_in_progress = False
-            self._attr_update_percentage = None
-        self.async_write_ha_state()
-
-    async def async_added_to_hass(self) -> None:
-        """Subscribe to progress updates."""
-        await super().async_added_to_hass()
-        self.async_on_remove(
-            self.coordinator.jobs.subscribe(
-                JobSubscription(
-                    self._update_job_changed, name="home_assistant_core_update"
-                )
-            )
-        )

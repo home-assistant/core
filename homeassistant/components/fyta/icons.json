@@ -21,11 +21,11 @@
       }
     },
     "sensor": {
-      "last_fertilised": {
-        "default": "mdi:calendar-check"
+      "status": {
+        "default": "mdi:flower"
       },
-      "light": {
-        "default": "mdi:weather-sunny"
+      "temperature_status": {
+        "default": "mdi:thermometer-lines"
       },
       "light_status": {
         "default": "mdi:sun-clock-outline"
@@ -33,23 +33,23 @@
       "moisture_status": {
         "default": "mdi:water-percent-alert"
       },
-      "next_fertilisation": {
-        "default": "mdi:calendar-end"
-      },
       "nutrients_status": {
         "default": "mdi:emoticon-poop"
-      },
-      "salinity": {
-        "default": "mdi:sprout-outline"
       },
       "salinity_status": {
         "default": "mdi:sprout-outline"
       },
-      "status": {
-        "default": "mdi:flower"
+      "light": {
+        "default": "mdi:weather-sunny"
       },
-      "temperature_status": {
-        "default": "mdi:thermometer-lines"
+      "salinity": {
+        "default": "mdi:sprout-outline"
+      },
+      "last_fertilised": {
+        "default": "mdi:calendar-check"
+      },
+      "next_fertilisation": {
+        "default": "mdi:calendar-end"
       }
     }
   }

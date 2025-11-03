@@ -1,85 +1,74 @@
 {
   "config": {
-    "error": {
-      "error_auth_app": "Incorrect application ID or secret",
-      "error_auth_mfa": "Incorrect code",
-      "error_auth_user": "Incorrect username or password"
-    },
     "step": {
       "auth_app": {
+        "title": "Application credentials",
+        "description": "Application ID and secret code from [StarLine developer account]({developer_account_url})",
         "data": {
           "app_id": "App ID",
           "app_secret": "Secret"
-        },
-        "description": "Application ID and secret code from [StarLine developer account]({developer_account_url})",
-        "title": "Application credentials"
-      },
-      "auth_captcha": {
-        "data": {
-          "captcha_code": "Code from image"
-        },
-        "description": "{captcha_img}",
-        "title": "Captcha"
-      },
-      "auth_mfa": {
-        "data": {
-          "mfa_code": "SMS code"
-        },
-        "description": "Enter the code sent to phone {phone_number}",
-        "title": "Two-factor authorization"
+        }
       },
       "auth_user": {
-        "data": {
-          "password": "[%key:common::config_flow::data::password%]",
-          "username": "[%key:common::config_flow::data::username%]"
-        },
+        "title": "User credentials",
         "description": "StarLine account email and password",
-        "title": "User credentials"
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "auth_mfa": {
+        "title": "Two-factor authorization",
+        "description": "Enter the code sent to phone {phone_number}",
+        "data": {
+          "mfa_code": "SMS code"
+        }
+      },
+      "auth_captcha": {
+        "title": "Captcha",
+        "description": "{captcha_img}",
+        "data": {
+          "captcha_code": "Code from image"
+        }
       }
+    },
+    "error": {
+      "error_auth_app": "Incorrect application ID or secret",
+      "error_auth_user": "Incorrect username or password",
+      "error_auth_mfa": "Incorrect code"
     }
   },
   "entity": {
     "binary_sensor": {
-      "alarm": {
-        "name": "Alarm"
-      },
-      "autostart": {
-        "name": "Autostart"
-      },
-      "doors": {
-        "name": "Doors"
-      },
       "hand_brake": {
         "name": "Hand brake"
-      },
-      "handsfree": {
-        "name": "Handsfree"
       },
       "hood": {
         "name": "Hood"
       },
-      "ignition": {
-        "name": "Ignition"
+      "trunk": {
+        "name": "Trunk"
       },
-      "moving_ban": {
-        "name": "Moving ban"
+      "alarm": {
+        "name": "Alarm"
+      },
+      "doors": {
+        "name": "Doors"
+      },
+      "handsfree": {
+        "name": "Handsfree"
       },
       "neutral": {
         "name": "Programmable neutral"
       },
-      "trunk": {
-        "name": "Trunk"
-      }
-    },
-    "button": {
-      "flex": {
-        "name": "Flex logic {num}"
+      "moving_ban": {
+        "name": "Moving ban"
       },
-      "horn": {
-        "name": "Horn"
+      "ignition": {
+        "name": "Ignition"
       },
-      "panic": {
-        "name": "Panic mode"
+      "autostart": {
+        "name": "Autostart"
       }
     },
     "device_tracker": {
@@ -93,73 +82,84 @@
       }
     },
     "sensor": {
-      "balance": {
-        "name": "Balance"
-      },
       "battery": {
         "name": "[%key:component::sensor::entity_component::battery::name%]"
       },
-      "engine_temperature": {
-        "name": "Engine temperature"
-      },
-      "errors": {
-        "name": "OBD errors"
-      },
-      "fuel": {
-        "name": "Fuel volume"
-      },
-      "gps_count": {
-        "name": "GPS satellites"
-      },
-      "gsm_signal": {
-        "name": "GSM signal"
+      "balance": {
+        "name": "Balance"
       },
       "interior_temperature": {
         "name": "Interior temperature"
       },
+      "engine_temperature": {
+        "name": "Engine temperature"
+      },
+      "gsm_signal": {
+        "name": "GSM signal"
+      },
+      "fuel": {
+        "name": "Fuel volume"
+      },
+      "errors": {
+        "name": "OBD errors"
+      },
       "mileage": {
         "name": "Mileage"
+      },
+      "gps_count": {
+        "name": "GPS satellites"
       }
     },
     "switch": {
-      "additional_channel": {
-        "name": "Additional channel"
-      },
       "engine": {
         "name": "Engine"
       },
-      "service_mode": {
-        "name": "Service mode"
-      },
       "webasto": {
         "name": "Webasto"
+      },
+      "additional_channel": {
+        "name": "Additional channel"
+      },
+      "service_mode": {
+        "name": "Service mode"
+      }
+    },
+    "button": {
+      "horn": {
+        "name": "Horn"
+      },
+      "flex": {
+        "name": "Flex logic {num}"
+      },
+      "panic": {
+        "name": "Panic mode"
       }
     }
   },
   "services": {
+    "update_state": {
+      "name": "Update state",
+      "description": "Fetches the last state of the devices from the StarLine server."
+    },
     "set_scan_interval": {
+      "name": "Set scan interval",
       "description": "Sets the update frequency for entities.",
       "fields": {
         "scan_interval": {
-          "description": "Update frequency.",
-          "name": "Scan interval"
+          "name": "Scan interval",
+          "description": "Update frequency."
         }
-      },
-      "name": "Set scan interval"
+      }
     },
     "set_scan_obd_interval": {
+      "name": "Set scan OBD interval",
       "description": "Sets the update frequency for OBD information.",
       "fields": {
         "scan_interval": {
-          "description": "[%key:component::starline::services::set_scan_interval::fields::scan_interval::description%]",
-          "name": "Scan interval"
+          "name": "Scan interval",
+          "description": "[%key:component::starline::services::set_scan_interval::fields::scan_interval::description%]"
         }
-      },
-      "name": "Set scan OBD interval"
-    },
-    "update_state": {
-      "description": "Fetches the last state of the devices from the StarLine server.",
-      "name": "Update state"
+      }
     }
   }
 }

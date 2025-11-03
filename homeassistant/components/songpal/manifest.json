@@ -9,8 +9,8 @@
   "requirements": ["python-songpal==0.16.2"],
   "ssdp": [
     {
-      "manufacturer": "Sony Corporation",
-      "st": "urn:schemas-sony-com:service:ScalarWebAPI:1"
+      "st": "urn:schemas-sony-com:service:ScalarWebAPI:1",
+      "manufacturer": "Sony Corporation"
     }
   ]
 }

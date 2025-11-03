@@ -37,14 +37,14 @@
   },
   "entity": {
     "binary_sensor": {
-      "hub_short_id": {
-        "name": "Hub short on branch {id}"
-      },
       "sensed": {
         "name": "Sensed"
       },
       "sensed_id": {
         "name": "Sensed {id}"
+      },
+      "hub_short_id": {
+        "name": "Hub short on branch {id}"
       }
     },
     "select": {
@@ -137,16 +137,6 @@
       "device_not_selected": "Select devices to configure"
     },
     "step": {
-      "configure_device": {
-        "data": {
-          "precision": "Sensor precision"
-        },
-        "data_description": {
-          "precision": "The lower the precision, the faster the sensor will respond, but with less accuracy."
-        },
-        "description": "Select sensor precision for {sensor_id}",
-        "title": "1-Wire sensor precision"
-      },
       "device_selection": {
         "data": {
           "clear_device_options": "Reset all device customizations",
@@ -158,6 +148,16 @@
         },
         "description": "Select what configuration steps to process",
         "title": "1-Wire device options"
+      },
+      "configure_device": {
+        "data": {
+          "precision": "Sensor precision"
+        },
+        "data_description": {
+          "precision": "The lower the precision, the faster the sensor will respond, but with less accuracy."
+        },
+        "description": "Select sensor precision for {sensor_id}",
+        "title": "1-Wire sensor precision"
       }
     }
   }

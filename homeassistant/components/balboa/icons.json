@@ -1,12 +1,6 @@
 {
   "entity": {
     "binary_sensor": {
-      "circ_pump": {
-        "default": "mdi:pump",
-        "state": {
-          "off": "mdi:pump-off"
-        }
-      },
       "filter_1": {
         "default": "mdi:sync",
         "state": {
@@ -17,6 +11,12 @@
         "default": "mdi:sync",
         "state": {
           "off": "mdi:sync-off"
+        }
+      },
+      "circ_pump": {
+        "default": "mdi:pump",
+        "state": {
+          "off": "mdi:pump-off"
         }
       }
     },

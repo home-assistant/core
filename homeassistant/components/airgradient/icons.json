@@ -9,17 +9,14 @@
       }
     },
     "number": {
-      "display_brightness": {
+      "led_bar_brightness": {
         "default": "mdi:brightness-percent"
       },
-      "led_bar_brightness": {
+      "display_brightness": {
         "default": "mdi:brightness-percent"
       }
     },
     "select": {
-      "co2_automatic_baseline_calibration": {
-        "default": "mdi:molecule-co2"
-      },
       "configuration_control": {
         "default": "mdi:cloud-cog"
       },
@@ -34,11 +31,23 @@
       },
       "voc_index_learning_time_offset": {
         "default": "mdi:clock-outline"
+      },
+      "co2_automatic_baseline_calibration": {
+        "default": "mdi:molecule-co2"
       }
     },
     "sensor": {
-      "co2_automatic_baseline_calibration": {
-        "default": "mdi:molecule-co2"
+      "total_volatile_organic_component_index": {
+        "default": "mdi:molecule"
+      },
+      "nitrogen_index": {
+        "default": "mdi:molecule"
+      },
+      "pm003_count": {
+        "default": "mdi:blur"
+      },
+      "led_bar_brightness": {
+        "default": "mdi:brightness-percent"
       },
       "display_brightness": {
         "default": "mdi:brightness-percent"
@@ -46,26 +55,17 @@
       "display_temperature_unit": {
         "default": "mdi:thermometer-lines"
       },
-      "led_bar_brightness": {
-        "default": "mdi:brightness-percent"
-      },
       "led_bar_mode": {
         "default": "mdi:led-strip"
-      },
-      "nitrogen_index": {
-        "default": "mdi:molecule"
       },
       "nox_index_learning_time_offset": {
         "default": "mdi:clock-outline"
       },
-      "pm003_count": {
-        "default": "mdi:blur"
-      },
-      "total_volatile_organic_component_index": {
-        "default": "mdi:molecule"
-      },
       "voc_index_learning_time_offset": {
         "default": "mdi:clock-outline"
+      },
+      "co2_automatic_baseline_calibration": {
+        "default": "mdi:molecule-co2"
       }
     },
     "switch": {

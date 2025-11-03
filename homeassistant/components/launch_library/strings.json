@@ -8,8 +8,11 @@
   },
   "entity": {
     "sensor": {
-      "launch_mission": {
-        "name": "Launch mission"
+      "next_launch": {
+        "name": "Next launch"
+      },
+      "launch_time": {
+        "name": "Launch time"
       },
       "launch_probability": {
         "name": "Launch probability"
@@ -17,17 +20,14 @@
       "launch_status": {
         "name": "Launch status"
       },
-      "launch_time": {
-        "name": "Launch time"
-      },
-      "next_launch": {
-        "name": "Next launch"
-      },
-      "starship_event": {
-        "name": "Next Starship event"
+      "launch_mission": {
+        "name": "Launch mission"
       },
       "starship_launch": {
         "name": "Next Starship launch"
+      },
+      "starship_event": {
+        "name": "Next Starship event"
       }
     }
   }

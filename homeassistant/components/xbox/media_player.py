@@ -70,7 +70,6 @@ class XboxMediaPlayer(XboxConsoleBaseEntity, MediaPlayerEntity):
     """Representation of an Xbox Media Player."""
 
     _attr_media_image_remotely_accessible = True
-    _attr_translation_key = "xbox"
 
     @property
     def state(self) -> MediaPlayerState | None:

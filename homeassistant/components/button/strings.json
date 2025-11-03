@@ -1,10 +1,11 @@
 {
+  "title": "Button",
   "device_automation": {
-    "action_type": {
-      "press": "Press {entity_name} button"
-    },
     "trigger_type": {
       "pressed": "{entity_name} has been pressed"
+    },
+    "action_type": {
+      "press": "Press {entity_name} button"
     }
   },
   "entity_component": {
@@ -23,9 +24,8 @@
   },
   "services": {
     "press": {
-      "description": "Presses a button entity.",
-      "name": "Press"
+      "name": "Press",
+      "description": "Presses a button entity."
     }
-  },
-  "title": "Button"
+  }
 }

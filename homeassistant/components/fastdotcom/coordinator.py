@@ -15,7 +15,7 @@ from .const import DEFAULT_INTERVAL, DOMAIN, LOGGER
 type FastdotcomConfigEntry = ConfigEntry[FastdotcomDataUpdateCoordinator]
 
 
-class FastdotcomDataUpdateCoordinator(DataUpdateCoordinator[dict[str, float] | None]):
+class FastdotcomDataUpdateCoordinator(DataUpdateCoordinator[float]):
     """Class to manage fetching Fast.com data API."""
 
     def __init__(self, hass: HomeAssistant, entry: FastdotcomConfigEntry) -> None:
@@ -28,7 +28,7 @@ class FastdotcomDataUpdateCoordinator(DataUpdateCoordinator[dict[str, float] | N
             update_interval=timedelta(hours=DEFAULT_INTERVAL),
         )
 
-    async def _async_update_data(self) -> dict[str, float] | None:
+    async def _async_update_data(self) -> float:
         """Run an executor job to retrieve Fast.com data."""
         try:
             return await self.hass.async_add_executor_job(fast_com)

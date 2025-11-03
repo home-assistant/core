@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from dataclasses import fields
 import logging
 from types import MethodType
 from typing import Any
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, Mock, patch
 
 from aiohasupervisor.models import (
     AddonsOptions,
@@ -194,6 +195,14 @@ def mock_set_addon_options_side_effect(addon_options: dict[str, Any]) -> Any | N
         addon_options.update(options.config)
 
     return set_addon_options
+
+
+def mock_create_backup() -> Generator[AsyncMock]:
+    """Mock create backup."""
+    with patch(
+        "homeassistant.components.hassio.addon_manager.async_create_backup"
+    ) as create_backup:
+        yield create_backup
 
 
 def mock_addon_stats(supervisor_client: AsyncMock) -> AsyncMock:

@@ -14,7 +14,7 @@ from onedrive_personal_sdk.exceptions import (
     NotFoundError,
     OneDriveException,
 )
-from onedrive_personal_sdk.models.items import ItemUpdate
+from onedrive_personal_sdk.models.items import Item, ItemUpdate
 
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
@@ -202,7 +202,9 @@ async def _get_onedrive_client(
     )
 
 
-async def _handle_item_operation[T](func: Callable[[], Awaitable[T]], folder: str) -> T:
+async def _handle_item_operation(
+    func: Callable[[], Awaitable[Item]], folder: str
+) -> Item:
     try:
         return await func()
     except NotFoundError:

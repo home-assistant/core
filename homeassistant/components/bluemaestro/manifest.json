@@ -3,8 +3,8 @@
   "name": "BlueMaestro",
   "bluetooth": [
     {
-      "connectable": false,
-      "manufacturer_id": 307
+      "manufacturer_id": 307,
+      "connectable": false
     }
   ],
   "codeowners": ["@bdraco"],

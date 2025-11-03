@@ -79,16 +79,28 @@ def mock_window() -> AsyncMock:
 
 
 @pytest.fixture
-def mock_pyvlx(mock_window: MagicMock) -> Generator[MagicMock]:
-    """Create the library mock and patch PyVLX."""
+def mock_pyvlx(mock_window: MagicMock) -> MagicMock:
+    """Create the library mock."""
     pyvlx = MagicMock()
     pyvlx.nodes = [mock_window]
     pyvlx.load_scenes = AsyncMock()
     pyvlx.load_nodes = AsyncMock()
     pyvlx.disconnect = AsyncMock()
+    return pyvlx
 
-    with patch("homeassistant.components.velux.PyVLX", return_value=pyvlx):
-        yield pyvlx
+
+@pytest.fixture
+def mock_module(mock_pyvlx: MagicMock) -> Generator[AsyncMock]:
+    """Create the Velux module mock."""
+    with (
+        patch(
+            "homeassistant.components.velux.VeluxModule",
+            autospec=True,
+        ) as mock_velux,
+    ):
+        module = mock_velux.return_value
+        module.pyvlx = mock_pyvlx
+        yield module
 
 
 @pytest.fixture

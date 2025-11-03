@@ -35,12 +35,6 @@
       }
     },
     "switch": {
-      "live_tracking": {
-        "default": "mdi:map-marker-path",
-        "state": {
-          "off": "mdi:map-marker-off"
-        }
-      },
       "tracker_buzzer": {
         "default": "mdi:volume-high",
         "state": {
@@ -51,6 +45,12 @@
         "default": "mdi:led-on",
         "state": {
           "off": "mdi:led-off"
+        }
+      },
+      "live_tracking": {
+        "default": "mdi:map-marker-path",
+        "state": {
+          "off": "mdi:map-marker-off"
         }
       }
     }

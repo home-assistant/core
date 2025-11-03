@@ -1,13 +1,16 @@
 {
   "entity": {
     "sensor": {
+      "departure_time": {
+        "default": "mdi:clock"
+      },
       "departure_from": {
         "default": "mdi:ferry"
       },
-      "departure_modified": {
-        "default": "mdi:clock"
+      "departure_to": {
+        "default": "mdi:ferry"
       },
-      "departure_time": {
+      "departure_modified": {
         "default": "mdi:clock"
       },
       "departure_time_next": {
@@ -15,9 +18,6 @@
       },
       "departure_time_next_next": {
         "default": "mdi:clock"
-      },
-      "departure_to": {
-        "default": "mdi:ferry"
       }
     }
   }

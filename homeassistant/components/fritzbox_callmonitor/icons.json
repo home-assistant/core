@@ -4,8 +4,8 @@
       "fritzbox_callmonitor": {
         "default": "mdi:phone",
         "state": {
-          "dialing": "mdi:phone-outgoing",
           "ringing": "mdi:phone-incoming",
+          "dialing": "mdi:phone-outgoing",
           "talking": "mdi:phone-in-talk"
         }
       }

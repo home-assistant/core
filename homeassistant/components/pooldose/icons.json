@@ -1,23 +1,17 @@
 {
   "entity": {
     "sensor": {
-      "ofa_orp_value": {
-        "default": "mdi:clock"
-      },
-      "ofa_ph_value": {
-        "default": "mdi:clock"
-      },
       "orp": {
         "default": "mdi:water-check"
       },
-      "orp_calibration_offset": {
-        "default": "mdi:tune"
+      "ph_type_dosing": {
+        "default": "mdi:flask"
       },
-      "orp_calibration_slope": {
-        "default": "mdi:slope-downhill"
+      "peristaltic_ph_dosing": {
+        "default": "mdi:pump"
       },
-      "orp_calibration_type": {
-        "default": "mdi:form-select"
+      "ofa_ph_value": {
+        "default": "mdi:clock"
       },
       "orp_type_dosing": {
         "default": "mdi:flask"
@@ -25,8 +19,11 @@
       "peristaltic_orp_dosing": {
         "default": "mdi:pump"
       },
-      "peristaltic_ph_dosing": {
-        "default": "mdi:pump"
+      "ofa_orp_value": {
+        "default": "mdi:clock"
+      },
+      "ph_calibration_type": {
+        "default": "mdi:form-select"
       },
       "ph_calibration_offset": {
         "default": "mdi:tune"
@@ -34,11 +31,14 @@
       "ph_calibration_slope": {
         "default": "mdi:slope-downhill"
       },
-      "ph_calibration_type": {
+      "orp_calibration_type": {
         "default": "mdi:form-select"
       },
-      "ph_type_dosing": {
-        "default": "mdi:flask"
+      "orp_calibration_offset": {
+        "default": "mdi:tune"
+      },
+      "orp_calibration_slope": {
+        "default": "mdi:slope-downhill"
       }
     }
   }

@@ -1,37 +1,37 @@
 {
   "entity": {
     "button": {
-      "force_stop_server": {
-        "default": "mdi:flash-alert"
-      },
-      "restart_server": {
-        "default": "mdi:refresh"
-      },
       "start_server": {
         "default": "mdi:play"
       },
       "stop_server": {
         "default": "mdi:stop"
+      },
+      "restart_server": {
+        "default": "mdi:refresh"
+      },
+      "force_stop_server": {
+        "default": "mdi:flash-alert"
       }
     },
     "sensor": {
-      "cpu_limit": {
-        "default": "mdi:cpu-64-bit"
-      },
       "cpu_utilization": {
         "default": "mdi:cpu-64-bit"
       },
-      "disk_limit": {
-        "default": "mdi:harddisk"
+      "cpu_limit": {
+        "default": "mdi:cpu-64-bit"
       },
-      "disk_usage": {
-        "default": "mdi:harddisk"
+      "memory_usage": {
+        "default": "mdi:memory"
       },
       "memory_limit": {
         "default": "mdi:memory"
       },
-      "memory_usage": {
-        "default": "mdi:memory"
+      "disk_usage": {
+        "default": "mdi:harddisk"
+      },
+      "disk_limit": {
+        "default": "mdi:harddisk"
       },
       "network_inbound": {
         "default": "mdi:download"

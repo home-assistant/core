@@ -8,7 +8,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
 from aiohasupervisor import SupervisorError
-from aiohasupervisor.models import AddonsOptions, PartialBackupOptions
+from aiohasupervisor.models import AddonsOptions
 import pytest
 from zwave_js_server.client import Client
 from zwave_js_server.const import SecurityClass
@@ -22,6 +22,7 @@ from zwave_js_server.model.controller import ProvisioningEntry
 from zwave_js_server.model.node import Node, NodeDataType
 from zwave_js_server.model.version import VersionInfo
 
+from homeassistant.components.hassio import HassioAPIError
 from homeassistant.components.persistent_notification import async_dismiss
 from homeassistant.components.zwave_js import DOMAIN
 from homeassistant.components.zwave_js.helpers import get_device_id, get_device_id_ext
@@ -1117,7 +1118,7 @@ async def test_addon_options_changed(
         ("1.0.0", True, 1, 1, None, None),
         ("1.0.0", False, 0, 0, None, None),
         ("1.0.0", True, 1, 1, SupervisorError("Boom"), None),
-        ("1.0.0", True, 0, 1, None, SupervisorError("Boom")),
+        ("1.0.0", True, 0, 1, None, HassioAPIError("Boom")),
     ],
 )
 async def test_update_addon(
@@ -1297,7 +1298,9 @@ async def test_remove_entry(
     assert stop_addon.call_args == call("core_zwave_js")
     assert create_backup.call_count == 1
     assert create_backup.call_args == call(
-        PartialBackupOptions(name="addon_core_zwave_js_1.0.0", addons={"core_zwave_js"})
+        hass,
+        {"name": "addon_core_zwave_js_1.0.0", "addons": ["core_zwave_js"]},
+        partial=True,
     )
     assert uninstall_addon.call_count == 1
     assert uninstall_addon.call_args == call("core_zwave_js")
@@ -1329,7 +1332,7 @@ async def test_remove_entry(
     # test create backup failure
     entry.add_to_hass(hass)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    create_backup.side_effect = SupervisorError()
+    create_backup.side_effect = HassioAPIError()
 
     await hass.config_entries.async_remove(entry.entry_id)
 
@@ -1337,7 +1340,9 @@ async def test_remove_entry(
     assert stop_addon.call_args == call("core_zwave_js")
     assert create_backup.call_count == 1
     assert create_backup.call_args == call(
-        PartialBackupOptions(name="addon_core_zwave_js_1.0.0", addons={"core_zwave_js"})
+        hass,
+        {"name": "addon_core_zwave_js_1.0.0", "addons": ["core_zwave_js"]},
+        partial=True,
     )
     assert uninstall_addon.call_count == 0
     assert entry.state is ConfigEntryState.NOT_LOADED
@@ -1359,7 +1364,9 @@ async def test_remove_entry(
     assert stop_addon.call_args == call("core_zwave_js")
     assert create_backup.call_count == 1
     assert create_backup.call_args == call(
-        PartialBackupOptions(name="addon_core_zwave_js_1.0.0", addons={"core_zwave_js"})
+        hass,
+        {"name": "addon_core_zwave_js_1.0.0", "addons": ["core_zwave_js"]},
+        partial=True,
     )
     assert uninstall_addon.call_count == 1
     assert uninstall_addon.call_args == call("core_zwave_js")

@@ -9,8 +9,8 @@
   "requirements": ["powerfox==1.2.1"],
   "zeroconf": [
     {
-      "name": "powerfox*",
-      "type": "_http._tcp.local."
+      "type": "_http._tcp.local.",
+      "name": "powerfox*"
     }
   ]
 }

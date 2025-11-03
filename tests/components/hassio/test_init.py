@@ -72,7 +72,6 @@ def mock_all(
     addon_stats: AsyncMock,
     addon_changelog: AsyncMock,
     resolution_info: AsyncMock,
-    jobs_info: AsyncMock,
 ) -> None:
     """Mock all setup requests."""
     aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
@@ -233,7 +232,7 @@ async def test_setup_api_ping(
         await hass.async_block_till_done()
 
     assert result
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 19
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 18
     assert get_core_info(hass)["version_latest"] == "1.0.0"
     assert is_hassio(hass)
 
@@ -280,7 +279,7 @@ async def test_setup_api_push_api_data(
         await hass.async_block_till_done()
 
     assert result
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 19
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 18
     assert not aioclient_mock.mock_calls[0][2]["ssl"]
     assert aioclient_mock.mock_calls[0][2]["port"] == 9999
     assert "watchdog" not in aioclient_mock.mock_calls[0][2]
@@ -301,7 +300,7 @@ async def test_setup_api_push_api_data_server_host(
         await hass.async_block_till_done()
 
     assert result
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 19
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 18
     assert not aioclient_mock.mock_calls[0][2]["ssl"]
     assert aioclient_mock.mock_calls[0][2]["port"] == 9999
     assert not aioclient_mock.mock_calls[0][2]["watchdog"]
@@ -322,7 +321,7 @@ async def test_setup_api_push_api_data_default(
         await hass.async_block_till_done()
 
     assert result
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 19
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 18
     assert not aioclient_mock.mock_calls[0][2]["ssl"]
     assert aioclient_mock.mock_calls[0][2]["port"] == 8123
     refresh_token = aioclient_mock.mock_calls[0][2]["refresh_token"]
@@ -403,7 +402,7 @@ async def test_setup_api_existing_hassio_user(
         await hass.async_block_till_done()
 
     assert result
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 19
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 18
     assert not aioclient_mock.mock_calls[0][2]["ssl"]
     assert aioclient_mock.mock_calls[0][2]["port"] == 8123
     assert aioclient_mock.mock_calls[0][2]["refresh_token"] == token.token
@@ -422,7 +421,7 @@ async def test_setup_core_push_config(
         await hass.async_block_till_done()
 
     assert result
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 19
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 18
     assert aioclient_mock.mock_calls[1][2]["timezone"] == "testzone"
 
     with patch("homeassistant.util.dt.set_default_time_zone"):
@@ -446,7 +445,7 @@ async def test_setup_hassio_no_additional_data(
         await hass.async_block_till_done()
 
     assert result
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 19
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 18
     assert aioclient_mock.mock_calls[-1][3]["Authorization"] == "Bearer 123456"
 
 
@@ -528,14 +527,14 @@ async def test_service_calls(
     )
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 23
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 22
     assert aioclient_mock.mock_calls[-1][2] == "test"
 
     await hass.services.async_call("hassio", "host_shutdown", {})
     await hass.services.async_call("hassio", "host_reboot", {})
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 25
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 24
 
     await hass.services.async_call("hassio", "backup_full", {})
     await hass.services.async_call(
@@ -550,7 +549,7 @@ async def test_service_calls(
     )
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 27
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 26
     assert aioclient_mock.mock_calls[-1][2] == {
         "name": "2021-11-13 03:48:00",
         "homeassistant": True,
@@ -575,7 +574,7 @@ async def test_service_calls(
     )
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 29
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 28
     assert aioclient_mock.mock_calls[-1][2] == {
         "addons": ["test"],
         "folders": ["ssl"],
@@ -594,7 +593,7 @@ async def test_service_calls(
     )
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 30
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 29
     assert aioclient_mock.mock_calls[-1][2] == {
         "name": "backup_name",
         "location": "backup_share",
@@ -610,7 +609,7 @@ async def test_service_calls(
     )
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 31
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 30
     assert aioclient_mock.mock_calls[-1][2] == {
         "name": "2021-11-13 03:48:00",
         "location": None,
@@ -629,7 +628,7 @@ async def test_service_calls(
     )
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 33
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 32
     assert aioclient_mock.mock_calls[-1][2] == {
         "name": "2021-11-13 11:48:00",
         "location": None,
@@ -1075,7 +1074,7 @@ async def test_setup_hardware_integration(
         await hass.async_block_till_done(wait_background_tasks=True)
 
     assert result
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 19
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 18
     assert len(mock_setup_entry.mock_calls) == 1
 
 

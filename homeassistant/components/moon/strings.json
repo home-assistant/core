@@ -1,4 +1,5 @@
 {
+  "title": "Moon",
   "config": {
     "step": {
       "user": {
@@ -36,6 +37,5 @@
         }
       }
     }
-  },
-  "title": "Moon"
+  }
 }

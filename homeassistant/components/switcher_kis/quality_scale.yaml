@@ -14,11 +14,11 @@ rules:
   docs-actions: done
   docs-high-level-description: done
   docs-installation-instructions: done
-  docs-removal-instructions: done
+  docs-removal-instructions: todo
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
-  runtime-data: done
+  runtime-data: todo
   test-before-configure: done
   test-before-setup:
     status: exempt
@@ -28,7 +28,7 @@ rules:
     comment: The integration only supports a single config entry.
 
   # Silver
-  action-exceptions: done
+  action-exceptions: todo
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done

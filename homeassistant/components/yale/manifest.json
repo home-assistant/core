@@ -1,6 +1,6 @@
 {
   "domain": "yale",
-  "name": "Yale Home",
+  "name": "Yale",
   "codeowners": ["@bdraco"],
   "config_flow": true,
   "dependencies": ["application_credentials", "cloud"],

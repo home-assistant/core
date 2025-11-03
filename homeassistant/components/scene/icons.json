@@ -5,6 +5,12 @@
     }
   },
   "services": {
+    "turn_on": {
+      "service": "mdi:power"
+    },
+    "reload": {
+      "service": "mdi:reload"
+    },
     "apply": {
       "service": "mdi:check"
     },
@@ -13,12 +19,6 @@
     },
     "delete": {
       "service": "mdi:delete"
-    },
-    "reload": {
-      "service": "mdi:reload"
-    },
-    "turn_on": {
-      "service": "mdi:power"
     }
   }
 }

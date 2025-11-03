@@ -260,6 +260,11 @@ async def handle_call_service(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle call service command."""
+    # We do not support templates.
+    target = msg.get("target")
+    if template.is_complex(target):
+        raise vol.Invalid("Templates are not supported here")
+
     try:
         context = connection.context(msg)
         response = await hass.services.async_call(
@@ -268,7 +273,7 @@ async def handle_call_service(
             service_data=msg.get("service_data"),
             blocking=True,
             context=context,
-            target=msg.get("target"),
+            target=target,
             return_response=msg["return_response"],
         )
         result: dict[str, Context | ServiceResponse] = {"context": context}

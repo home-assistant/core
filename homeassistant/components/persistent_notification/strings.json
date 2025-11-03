@@ -1,37 +1,37 @@
 {
+  "title": "Persistent Notification",
   "services": {
     "create": {
+      "name": "Create",
       "description": "Shows a notification on the notifications panel.",
       "fields": {
         "message": {
-          "description": "Message body of the notification.",
-          "name": "Message"
-        },
-        "notification_id": {
-          "description": "ID of the notification. This new notification will overwrite an existing notification with the same ID.",
-          "name": "Notification ID"
+          "name": "Message",
+          "description": "Message body of the notification."
         },
         "title": {
-          "description": "Optional title of the notification.",
-          "name": "Title"
+          "name": "Title",
+          "description": "Optional title of the notification."
+        },
+        "notification_id": {
+          "name": "Notification ID",
+          "description": "ID of the notification. This new notification will overwrite an existing notification with the same ID."
         }
-      },
-      "name": "Create"
+      }
     },
     "dismiss": {
+      "name": "Dismiss",
       "description": "Deletes a notification from the notifications panel.",
       "fields": {
         "notification_id": {
-          "description": "ID of the notification to be deleted.",
-          "name": "[%key:component::persistent_notification::services::create::fields::notification_id::name%]"
+          "name": "[%key:component::persistent_notification::services::create::fields::notification_id::name%]",
+          "description": "ID of the notification to be deleted."
         }
-      },
-      "name": "Dismiss"
+      }
     },
     "dismiss_all": {
-      "description": "Deletes all notifications from the notifications panel.",
-      "name": "Dismiss all"
+      "name": "Dismiss all",
+      "description": "Deletes all notifications from the notifications panel."
     }
-  },
-  "title": "Persistent Notification"
+  }
 }
