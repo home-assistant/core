@@ -14,6 +14,7 @@ from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.shelly.const import (
     DOMAIN,
     ENTRY_RELOAD_COOLDOWN,
+    MODEL_TOP_EV_CHARGER_EVE01,
     MODEL_WALL_DISPLAY,
     MOTION_MODELS,
 )
@@ -832,11 +833,13 @@ async def test_cury_switch_entity(
                 "left": {
                     "intensity": 70,
                     "on": True,
+                    "boost": {"started_at": 1760365354, "duration": 1800},
                     "vial": {"level": 27, "name": "Forest Dream"},
                 },
                 "right": {
                     "intensity": 70,
                     "on": False,
+                    "boost": None,
                     "vial": {"level": 84, "name": "Velvet Rose"},
                 },
             },
@@ -845,7 +848,7 @@ async def test_cury_switch_entity(
     monkeypatch.setattr(mock_rpc_device, "status", status)
     await init_integration(hass, 3)
 
-    for entity in ("left_slot", "right_slot"):
+    for entity in ("left_slot", "left_slot_boost", "right_slot", "right_slot_boost"):
         entity_id = f"{SWITCH_DOMAIN}.test_name_{entity}"
 
         state = hass.states.get(entity_id)
@@ -872,6 +875,24 @@ async def test_cury_switch_entity(
     mock_rpc_device.mock_update()
     mock_rpc_device.cury_set.assert_called_with(0, "right", True)
 
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.test_name_left_slot_boost"},
+        blocking=True,
+    )
+    mock_rpc_device.mock_update()
+    mock_rpc_device.cury_stop_boost.assert_called_with(0, "left")
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.test_name_right_slot_boost"},
+        blocking=True,
+    )
+    mock_rpc_device.mock_update()
+    mock_rpc_device.cury_boost.assert_called_with(0, "right")
+
 
 async def test_cury_switch_availability(
     hass: HomeAssistant,
@@ -883,11 +904,13 @@ async def test_cury_switch_availability(
         "left": {
             "intensity": 70,
             "on": True,
+            "boost": None,
             "vial": {"level": 27, "name": "Forest Dream"},
         },
         "right": {
             "intensity": 70,
             "on": False,
+            "boost": None,
             "vial": {"level": 84, "name": "Velvet Rose"},
         },
     }
@@ -924,6 +947,7 @@ async def test_cury_switch_availability(
     slots["left"] = {
         "intensity": 70,
         "on": True,
+        "boost": None,
         "vial": {"level": 27, "name": "Forest Dream"},
     }
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cury:0", "slots", slots)
@@ -931,3 +955,33 @@ async def test_cury_switch_availability(
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
+
+
+async def test_rpc_ev_charging_switch(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    entity_registry: EntityRegistry,
+) -> None:
+    """Test the charging switch for EV charger."""
+    config = deepcopy(mock_rpc_device.config)
+    config["boolean:200"] = {
+        "name": "Start Charging",
+        "meta": {"ui": {"view": "toggle"}},
+        "role": "start_charging",
+    }
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    status = deepcopy(mock_rpc_device.status)
+    status["boolean:200"] = {"value": False}
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    entity_id = "switch.test_name_charging"
+
+    await init_integration(hass, 3, model=MODEL_TOP_EV_CHARGER_EVE01)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_OFF
+
+    assert (entry := entity_registry.async_get(entity_id))
+    assert entry.unique_id == "123456789ABC-boolean:200-boolean_start_charging"

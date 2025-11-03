@@ -82,20 +82,20 @@ async def async_setup_entry(
     config_entry: ShellyConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up lights for device."""
+    """Set up light entities."""
     if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
-        return async_setup_rpc_entry(hass, config_entry, async_add_entities)
+        return _async_setup_rpc_entry(hass, config_entry, async_add_entities)
 
-    return async_setup_block_entry(hass, config_entry, async_add_entities)
+    return _async_setup_block_entry(hass, config_entry, async_add_entities)
 
 
 @callback
-def async_setup_block_entry(
+def _async_setup_block_entry(
     hass: HomeAssistant,
     config_entry: ShellyConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up entities for block device."""
+    """Set up entities for BLOCK device."""
     coordinator = config_entry.runtime_data.block
     assert coordinator
 
@@ -399,6 +399,11 @@ class RpcShellyLightBase(ShellyRpcAttributeEntity, LightEntity):
         """Return the rgbw color value [int, int, int, int]."""
         return (*self.status["rgb"], self.status["white"])
 
+    @property
+    def color_temp_kelvin(self) -> int:
+        """Return the CT color value in Kelvin."""
+        return cast(int, self.status["ct"])
+
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on light."""
         params: dict[str, Any] = {"id": self._id, "on": True}
@@ -420,6 +425,12 @@ class RpcShellyLightBase(ShellyRpcAttributeEntity, LightEntity):
         if ATTR_RGBW_COLOR in kwargs:
             params["rgb"] = list(kwargs[ATTR_RGBW_COLOR][:-1])
             params["white"] = kwargs[ATTR_RGBW_COLOR][-1]
+
+        if self.status.get("mode") is not None:
+            if ATTR_COLOR_TEMP_KELVIN in kwargs:
+                params["mode"] = "cct"
+            elif ATTR_RGB_COLOR in kwargs:
+                params["mode"] = "rgb"
 
         await self.call_rpc(f"{self._component}.Set", params)
 
@@ -479,10 +490,24 @@ class RpcShellyCctLight(RpcShellyLightBase):
             self._attr_min_color_temp_kelvin = KELVIN_MIN_VALUE_WHITE
             self._attr_max_color_temp_kelvin = KELVIN_MAX_VALUE
 
+
+class RpcShellyRgbCctLight(RpcShellyLightBase):
+    """Entity that controls a RGBCCT light on RPC based Shelly devices."""
+
+    _component = "RGBCCT"
+
+    _attr_supported_color_modes = {ColorMode.COLOR_TEMP, ColorMode.RGB}
+    _attr_supported_features = LightEntityFeature.TRANSITION
+    _attr_min_color_temp_kelvin = KELVIN_MIN_VALUE_WHITE
+    _attr_max_color_temp_kelvin = KELVIN_MAX_VALUE
+
     @property
-    def color_temp_kelvin(self) -> int:
-        """Return the CT color value in Kelvin."""
-        return cast(int, self.status["ct"])
+    def color_mode(self) -> ColorMode:
+        """Return the color mode."""
+        if self.status["mode"] == "cct":
+            return ColorMode.COLOR_TEMP
+
+        return ColorMode.RGB
 
 
 class RpcShellyRgbLight(RpcShellyLightBase):
@@ -529,6 +554,11 @@ LIGHTS: Final = {
         sub_key="output",
         entity_class=RpcShellyRgbLight,
     ),
+    "rgbcct": RpcEntityDescription(
+        key="rgbcct",
+        sub_key="output",
+        entity_class=RpcShellyRgbCctLight,
+    ),
     "rgbw": RpcEntityDescription(
         key="rgbw",
         sub_key="output",
@@ -538,7 +568,7 @@ LIGHTS: Final = {
 
 
 @callback
-def async_setup_rpc_entry(
+def _async_setup_rpc_entry(
     hass: HomeAssistant,
     config_entry: ShellyConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,

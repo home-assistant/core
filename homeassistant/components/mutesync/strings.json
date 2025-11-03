@@ -1,5 +1,10 @@
 {
   "config": {
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "Enable authentication in mütesync Preferences > Authentication",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
     "step": {
       "user": {
         "data": {
@@ -9,11 +14,6 @@
           "host": "The hostname or IP address of your mutesync device."
         }
       }
-    },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "Enable authentication in mütesync Preferences > Authentication",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
   "entity": {
