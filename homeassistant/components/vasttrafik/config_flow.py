@@ -122,10 +122,6 @@ class VasttrafikConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step."""
 
-        existing_entries = self._async_current_entries(include_ignore=False)
-        if existing_entries:
-            return self.async_abort(reason="single_instance_allowed")
-
         errors: dict[str, str] = {}
         if user_input is not None:
             await self.async_set_unique_id(DOMAIN)
