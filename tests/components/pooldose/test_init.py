@@ -157,12 +157,8 @@ async def test_migrate_entity_unique_ids(
     await hass.async_block_till_done()
 
     # Verify the config entry version was updated from 1.1 to 1.2
-    assert (
-        original_version == 1
-        and original_minor_version == 1
-        and mock_migration_config_entry.version == 1
-        and mock_migration_config_entry.minor_version == 2
-    )
+    assert mock_migration_config_entry.version == 1
+    assert mock_migration_config_entry.minor_version == 2
 
     # Verify the entities have been migrated
     assert entity_registry.async_get_entity_id(
