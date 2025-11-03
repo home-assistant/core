@@ -159,6 +159,8 @@ class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                await self.async_set_unique_id(user_input[CONF_API_TOKEN])
+                self._abort_if_unique_id_configured()
                 return self.async_update_reload_and_abort(
                     reconf_entry,
                     data_updates={
