@@ -76,6 +76,9 @@
       }
     },
     "sensor": {
+      "rf_message_rssi": {
+        "name": "RSSI"
+      },
       "tap_temperature": {
         "name": "Tap temperature"
       }
