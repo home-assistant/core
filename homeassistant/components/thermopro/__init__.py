@@ -45,9 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ThermoProConfigEntry) ->
         entry=entry,
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    service_info = async_last_service_info(hass, address, connectable=False) or (
-        async_last_service_info(hass, address, connectable=True)
-    )
+    service_info = async_last_service_info(hass, address, connectable=False) or async_last_service_info(hass, address, connectable=True)
     if service_info:
         coordinator.restore_service_info(service_info)
     # The coordinator automatically handles device availability changes.
