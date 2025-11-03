@@ -63,7 +63,7 @@ async def search_stations(
         return [], "api_error"
 
     stations = []
-    for result in results[:10]:  # Limit to 10 results
+    for result in results:
         name = result.get("name", "")
         gid = result.get("gid", "")
         if name and gid:
