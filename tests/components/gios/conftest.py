@@ -11,21 +11,6 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
-STATIONS = [
-    {
-        "Identyfikator stacji": 123,
-        "Nazwa stacji": "Test Name 1",
-        "WGS84 φ N": "99.99",
-        "WGS84 λ E": "88.88",
-    },
-    {
-        "Identyfikator stacji": 321,
-        "Nazwa stacji": "Test Name 2",
-        "WGS84 φ N": "77.77",
-        "WGS84 λ E": "66.66",
-    },
-]
-
 
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
