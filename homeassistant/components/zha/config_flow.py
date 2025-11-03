@@ -719,7 +719,7 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         except DestructiveWriteNetworkSettings:
             # If we cannot restore without overwriting the IEEE, ask for confirmation
             return self.async_show_progress_done(
-                next_step_id="confirm_ezsp_ieee_overwrite"
+                next_step_id="pre_confirm_ezsp_ieee_overwrite"
             )
         except HomeAssistantError:
             # User unplugged the new adapter, allow retry
@@ -736,6 +736,13 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
 
         # Otherwise, proceed to entry creation
         return self.async_show_progress_done(next_step_id="create_entry")
+
+    async def async_step_pre_confirm_ezsp_ieee_overwrite(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Strip user_input before showing confirmation form."""
+        # This step is necessary to prevent `user_input` from being passed through
+        return await self.async_step_confirm_ezsp_ieee_overwrite()
 
     async def async_step_confirm_ezsp_ieee_overwrite(
         self, user_input: dict[str, Any] | None = None
