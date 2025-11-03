@@ -9,8 +9,8 @@
   "requirements": ["pyoctoprintapi==0.1.14"],
   "ssdp": [
     {
-      "manufacturer": "The OctoPrint Project",
-      "deviceType": "urn:schemas-upnp-org:device:Basic:1"
+      "deviceType": "urn:schemas-upnp-org:device:Basic:1",
+      "manufacturer": "The OctoPrint Project"
     }
   ],
   "zeroconf": ["_octoprint._tcp.local."]
