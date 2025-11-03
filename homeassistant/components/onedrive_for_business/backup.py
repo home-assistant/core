@@ -12,11 +12,7 @@ from typing import Any, Concatenate
 
 from aiohttp import ClientTimeout
 from onedrive_personal_sdk.clients.large_file_upload import LargeFileUploadClient
-from onedrive_personal_sdk.exceptions import (
-    AuthenticationError,
-    HashMismatchError,
-    OneDriveException,
-)
+from onedrive_personal_sdk.exceptions import HashMismatchError, OneDriveException
 from onedrive_personal_sdk.models.upload import FileInfo
 
 from homeassistant.components.backup import (
@@ -81,9 +77,6 @@ def handle_backup_errors[_R, **P](
     ) -> _R:
         try:
             return await func(self, *args, **kwargs)
-        except AuthenticationError as err:
-            self._entry.async_start_reauth(self._hass)
-            raise BackupAgentError("Authentication error") from err
         except OneDriveException as err:
             _LOGGER.error(
                 "Error during backup in %s:, message %s",

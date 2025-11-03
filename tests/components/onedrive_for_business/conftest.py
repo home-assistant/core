@@ -1,7 +1,6 @@
 """Fixtures for OneDrive tests."""
 
 from collections.abc import AsyncIterator, Generator
-from html import escape
 from json import dumps
 import time
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -183,7 +182,7 @@ def mock_metadata_file() -> File:
     """Return a mocked metadata file."""
     return File(
         id="id",
-        name="23e64aec.tar",
+        name="23e64aec.metadata.json",
         size=34519040,
         parent_reference=ItemParentReference(
             drive_id="mock_drive_id", id="id", path="path"
@@ -191,16 +190,7 @@ def mock_metadata_file() -> File:
         hashes=Hashes(
             quick_xor_hash="hash",
         ),
-        mime_type="application/x-tar",
-        description=escape(
-            dumps(
-                {
-                    "metadata_version": 2,
-                    "backup_id": "23e64aec",
-                    "backup_file_id": "id",
-                }
-            )
-        ),
+        mime_type="application/json",
         created_by=IDENTITY_SET,
     )
 

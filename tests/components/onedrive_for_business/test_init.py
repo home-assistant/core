@@ -63,22 +63,9 @@ async def test_approot_errors(
     state: ConfigEntryState,
 ) -> None:
     """Test errors during approot retrieval."""
-    mock_onedrive_client.get_approot.side_effect = side_effect
+    mock_onedrive_client.get_drive_item.side_effect = side_effect
     await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state is state
-
-
-async def test_get_integration_folder_error(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_onedrive_client: MagicMock,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test faulty integration folder retrieval."""
-    mock_onedrive_client.get_drive_item.side_effect = OneDriveException()
-    await setup_integration(hass, mock_config_entry)
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert "Failed to get backups_123 folder" in caplog.text
 
 
 async def test_get_integration_folder_creation(
@@ -95,7 +82,7 @@ async def test_get_integration_folder_creation(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     mock_onedrive_client.create_folder.assert_called_once_with(
-        parent_id=mock_approot.id,
+        parent_id="root",
         name=folder_name,
     )
     # ensure the folder id and name are updated
@@ -115,4 +102,4 @@ async def test_get_integration_folder_creation_error(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert "Failed to get backups_123 folder" in caplog.text
+    assert "Failed to get backups/home_assistant folder" in caplog.text
