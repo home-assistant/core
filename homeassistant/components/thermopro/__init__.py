@@ -14,10 +14,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN
-from .coordinator import (
-    ThermoProBluetoothProcessorCoordinator,
-    ThermoProConfigEntry,
-)
+from .coordinator import ThermoProBluetoothProcessorCoordinator, ThermoProConfigEntry
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
