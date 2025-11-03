@@ -527,7 +527,7 @@ DISCOVERY_SCHEMAS = [
         vendor_id=(4447,),
         product_id=(8194,),
     ),
-        MatterDiscoverySchema(
+    MatterDiscoverySchema(
         platform=Platform.SELECT,
         entity_description=MatterSelectEntityDescription(
             key="OccupancySensorBooleanStateConfigurationCurrentSensitivityLevel",
