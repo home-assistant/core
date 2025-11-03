@@ -221,8 +221,6 @@ class VasttrafikSubentryFlow(ConfigSubentryFlow):
                 errors = {"base": "search_too_short"}
             else:
                 parent_entry = self._get_entry()
-                if not parent_entry:
-                    return self.async_abort(reason="parent_entry_not_found")
 
                 stations, error_code = await search_stations(
                     self.hass, parent_entry, search_query
