@@ -25,7 +25,11 @@ from homeassistant.components.zha.const import (
     CONF_USB_PATH,
     DOMAIN,
 )
-from homeassistant.components.zha.helpers import get_zha_data, get_zha_gateway
+from homeassistant.components.zha.helpers import (
+    create_zha_config,
+    get_zha_data,
+    get_zha_gateway,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
@@ -478,3 +482,61 @@ async def test_device_path_not_changed_when_already_unique(
     assert "Migrating ZHA device path from" not in caplog.text
     assert config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH] == unique_path
     assert config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_gateway_created_with_migrated_device_path(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_zigpy_connect: ControllerApplication,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that the ZHA gateway is created with the migrated unique device path."""
+    config_entry.add_to_hass(hass)
+
+    # Update config entry to use a non-unique path
+    original_path = "/dev/ttyACM1"
+    hass.config_entries.async_update_entry(
+        config_entry,
+        data={
+            **config_entry.data,
+            CONF_DEVICE: {
+                **config_entry.data[CONF_DEVICE],
+                CONF_DEVICE_PATH: original_path,
+            },
+        },
+    )
+
+    unique_path = "/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0_1234567890-if00"
+    mock_usb_device = USBDevice(
+        device=unique_path,
+        vid="10C4",
+        pid="EA60",
+        serial_number="1234567890",
+        manufacturer="Nabu Casa",
+        description="SkyConnect v1.0",
+    )
+
+    with (
+        patch(
+            "homeassistant.components.zha.usb_device_from_path",
+            return_value=mock_usb_device,
+        ),
+        patch(
+            "homeassistant.components.zha.create_zha_config",
+            wraps=create_zha_config,
+        ) as mock_create_config,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Verify migration happened
+    assert (
+        f"Migrating ZHA device path from {original_path} to {unique_path}"
+    ) in caplog.text
+    assert config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH] == unique_path
+
+    # And that ZHA was started with the correct path
+    assert mock_create_config.call_count == 1
+    zha_data = mock_create_config.call_args.args[1]
+
+    assert zha_data.config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH] == unique_path
