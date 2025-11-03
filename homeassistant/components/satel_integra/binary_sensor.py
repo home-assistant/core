@@ -97,7 +97,7 @@ class SatelIntegraBinarySensor(BinarySensorEntity):
         controller: AsyncSatel,
         device_number: int,
         device_name: str,
-        zone_type: BinarySensorDeviceClass,
+        device_class: BinarySensorDeviceClass,
         sensor_type: str,
         react_to_signal: str,
         config_entry_id: str,
@@ -106,10 +106,11 @@ class SatelIntegraBinarySensor(BinarySensorEntity):
         self._device_number = device_number
         self._attr_unique_id = f"{config_entry_id}_{sensor_type}_{device_number}"
         self._name = device_name
-        self._zone_type = zone_type
         self._state = 0
         self._react_to_signal = react_to_signal
         self._satel = controller
+
+        self._attr_device_class = device_class
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -134,21 +135,9 @@ class SatelIntegraBinarySensor(BinarySensorEntity):
         return self._name
 
     @property
-    def icon(self) -> str | None:
-        """Icon for device by its type."""
-        if self._zone_type is BinarySensorDeviceClass.SMOKE:
-            return "mdi:fire"
-        return None
-
-    @property
     def is_on(self) -> bool | None:
         """Return true if sensor is on."""
         return self._state == 1
-
-    @property
-    def device_class(self) -> BinarySensorDeviceClass | None:
-        """Return the class of this sensor, from DEVICE_CLASSES."""
-        return self._zone_type
 
     @callback
     def _devices_updated(self, zones):
