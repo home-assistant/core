@@ -364,7 +364,7 @@
         "default": "mdi:theme-light-dark"
       },
       "exposure": {
-        "default": "mdi:image-edit"
+        "default": "mdi:camera-iris"
       },
       "floodlight_event_mode": {
         "default": "mdi:spotlight-beam"
