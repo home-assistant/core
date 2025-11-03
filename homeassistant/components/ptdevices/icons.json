@@ -1,0 +1,69 @@
+{
+  "entity": {
+    "sensor": {
+      "level_percent": {
+        "default": "mdi:water-percent"
+      },
+      "level_volume": {
+        "default": "mdi:water"
+      },
+      "level_depth": {
+        "default": "mdi:water"
+      },
+      "temperature_probe": {
+        "default": "mdi:thermometer"
+      },
+      "device_title": {
+        "default": "mdi:information-outline"
+      },
+      "device_id": {
+        "default": "mdi:identifier"
+      },
+      "device_mac": {
+        "default": "mdi:identifier"
+      },
+      "device_share_id": {
+        "default": "mdi:share-variant"
+      },
+      "device_created": {
+        "default": "mdi:calendar-clock"
+      },
+      "user_id": {
+        "default": "mdi:identifier"
+      },
+      "device_type": {
+        "default": "mdi:information-outline"
+      },
+      "device_version": {
+        "default": "mdi:information-outline"
+      },
+      "device_addr": {
+        "default": "mdi:map"
+      },
+      "device_status": {
+        "default": "mdi:information-outline"
+      },
+      "device_delivery_notes": {
+        "default": "mdi:truck-delivery"
+      },
+      "device_units": {
+        "default": "mdi:information-outline"
+      },
+      "device_reported": {
+        "default": "mdi:calendar-clock"
+      },
+      "tx_reported_on": {
+        "default": "mdi:calendar-clock"
+      },
+      "rx_updated_on": {
+        "default": "mdi:calendar-clock"
+      },
+      "device_wifi_signal": {
+        "default": "mdi:wifi"
+      },
+      "device_tx_signal": {
+        "default": "mdi:wifi"
+      }
+    }
+  }
+}
