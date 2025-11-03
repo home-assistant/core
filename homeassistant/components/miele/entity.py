@@ -40,7 +40,13 @@ class MieleEntity(CoordinatorEntity[MieleDataUpdateCoordinator]):
             name=device.device_name or appliance_type or device.tech_type,
             translation_key=None if device.device_name else appliance_type,
             manufacturer=MANUFACTURER,
-            model=device.tech_type,
+            model=(
+                appliance_type.capitalize().replace("_", " ")
+                if appliance_type
+                else None
+            )
+            or device.tech_type,
+            model_id=device.tech_type,
             hw_version=device.xkm_tech_type,
             sw_version=device.xkm_release_version,
         )

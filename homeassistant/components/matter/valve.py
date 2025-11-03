@@ -36,7 +36,7 @@ async def async_setup_entry(
     matter.register_platform_handler(Platform.VALVE, async_add_entities)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class MatterValveEntityDescription(ValveEntityDescription, MatterEntityDescription):
     """Describe Matter Valve entities."""
 

@@ -55,6 +55,7 @@ UNSUPPORTED_MODELS: list[str] = [
 ]
 
 UNSUPPORTED_WEB_SEARCH_MODELS: list[str] = [
+    "gpt-5-nano",
     "gpt-3.5",
     "gpt-4-turbo",
     "gpt-4.1-nano",
@@ -63,7 +64,7 @@ UNSUPPORTED_WEB_SEARCH_MODELS: list[str] = [
 ]
 
 UNSUPPORTED_IMAGE_MODELS: list[str] = [
-    "gpt-5",
+    "gpt-5-mini",
     "o3-mini",
     "o4",
     "o1",

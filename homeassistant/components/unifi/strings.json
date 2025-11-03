@@ -1,5 +1,15 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "UniFi Network site is already configured",
+      "configuration_updated": "Configuration updated",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
+      "faulty_credentials": "[%key:common::config_flow::error::invalid_auth%]",
+      "service_unavailable": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown_client_mac": "No client available on that MAC address"
+    },
     "flow_title": "{site} ({host})",
     "step": {
       "site": {
@@ -8,47 +18,42 @@
         }
       },
       "user": {
-        "title": "Set up UniFi Network",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
           "port": "[%key:common::config_flow::data::port%]",
           "site": "Site ID",
+          "username": "[%key:common::config_flow::data::username%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
           "host": "Hostname or IP address of your UniFi Network."
-        }
+        },
+        "title": "Set up UniFi Network"
       }
-    },
-    "error": {
-      "faulty_credentials": "[%key:common::config_flow::error::invalid_auth%]",
-      "service_unavailable": "[%key:common::config_flow::error::cannot_connect%]",
-      "unknown_client_mac": "No client available on that MAC address"
-    },
-    "abort": {
-      "already_configured": "UniFi Network site is already configured",
-      "configuration_updated": "Configuration updated",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
   "entity": {
+    "light": {
+      "led_control": {
+        "name": "LED"
+      }
+    },
     "sensor": {
       "device_state": {
         "state": {
-          "disconnected": "[%key:common::state::disconnected%]",
-          "connected": "[%key:common::state::connected%]",
-          "pending": "Pending",
-          "firmware_mismatch": "Firmware mismatch",
-          "upgrading": "Upgrading",
-          "provisioning": "Provisioning",
-          "heartbeat_missed": "Heartbeat missed",
           "adopting": "Adopting",
-          "deleting": "Deleting",
-          "inform_error": "Inform error",
           "adoption_failed": "Adoption failed",
-          "isolated": "Isolated"
+          "connected": "[%key:common::state::connected%]",
+          "deleting": "Deleting",
+          "disconnected": "[%key:common::state::disconnected%]",
+          "firmware_mismatch": "Firmware mismatch",
+          "heartbeat_missed": "Heartbeat missed",
+          "inform_error": "Inform error",
+          "isolated": "Isolated",
+          "pending": "Pending",
+          "provisioning": "Provisioning",
+          "upgrading": "Upgrading"
         }
       }
     }
@@ -58,6 +63,15 @@
       "integration_not_setup": "UniFi integration is not set up"
     },
     "step": {
+      "client_control": {
+        "data": {
+          "block_client": "Network access controlled clients",
+          "dpi_restrictions": "Allow control of DPI restriction groups",
+          "poe_clients": "Allow POE control of clients"
+        },
+        "description": "Configure client controls\n\nCreate switches for serial numbers you want to control network access for.",
+        "title": "UniFi Network options 2/3"
+      },
       "configure_entity_sources": {
         "data": {
           "client_source": "Create entities from network clients"
@@ -77,20 +91,11 @@
         "description": "Configure device tracking",
         "title": "UniFi Network options 1/3"
       },
-      "client_control": {
-        "data": {
-          "block_client": "Network access controlled clients",
-          "poe_clients": "Allow POE control of clients",
-          "dpi_restrictions": "Allow control of DPI restriction groups"
-        },
-        "description": "Configure client controls\n\nCreate switches for serial numbers you want to control network access for.",
-        "title": "UniFi Network options 2/3"
-      },
       "simple_options": {
         "data": {
+          "block_client": "[%key:component::unifi::options::step::client_control::data::block_client%]",
           "track_clients": "[%key:component::unifi::options::step::device_tracker::data::track_clients%]",
-          "track_devices": "[%key:component::unifi::options::step::device_tracker::data::track_devices%]",
-          "block_client": "[%key:component::unifi::options::step::client_control::data::block_client%]"
+          "track_devices": "[%key:component::unifi::options::step::device_tracker::data::track_devices%]"
         },
         "description": "Configure UniFi Network integration"
       },
@@ -106,18 +111,18 @@
   },
   "services": {
     "reconnect_client": {
-      "name": "Reconnect wireless client",
       "description": "Tries to get wireless client to reconnect to UniFi Network.",
       "fields": {
         "device_id": {
-          "name": "[%key:common::config_flow::data::device%]",
-          "description": "The device that should be forced to reconnect to the wireless network."
+          "description": "The device that should be forced to reconnect to the wireless network.",
+          "name": "[%key:common::config_flow::data::device%]"
         }
-      }
+      },
+      "name": "Reconnect wireless client"
     },
     "remove_clients": {
-      "name": "Remove clients from the UniFi Network",
-      "description": "Cleans up clients that have only been associated with the controller for a short period of time."
+      "description": "Cleans up clients that have only been associated with the controller for a short period of time.",
+      "name": "Remove clients from the UniFi Network"
     }
   }
 }
