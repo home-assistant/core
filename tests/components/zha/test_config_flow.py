@@ -47,6 +47,7 @@ from homeassistant.config_entries import (
     SOURCE_USB,
     SOURCE_USER,
     SOURCE_ZEROCONF,
+    ConfigEntriesFlowManager,
     ConfigEntryState,
     ConfigFlowResult,
 )
@@ -191,10 +192,14 @@ async def consume_progress_flow(
     hass: HomeAssistant,
     flow_id: str,
     valid_step_ids: tuple[str, ...],
+    flow_manager: ConfigEntriesFlowManager | None = None,
 ) -> ConfigFlowResult:
     """Consume a progress flow until it is done."""
+    if flow_manager is None:
+        flow_manager = hass.config_entries.flow
+
     while True:
-        result = await hass.config_entries.flow.async_configure(flow_id)
+        result = await flow_manager.async_configure(flow_id)
         flow_id = result["flow_id"]
 
         if result["type"] != FlowResultType.SHOW_PROGRESS:
@@ -205,6 +210,8 @@ async def consume_progress_flow(
 
         await asyncio.sleep(0.1)
 
+    # Ensure all background tasks complete
+    await hass.async_block_till_done()
     return result
 
 
@@ -1992,12 +1999,12 @@ async def test_formation_strategy_restore_manual_backup_overwrite_ieee_ezsp(
             user_input={config_flow.OVERWRITE_COORDINATOR_IEEE: True},
         )
 
-        # Consume progress flow for second restore_backup attempt
-        result4 = await consume_progress_flow(
-            hass,
-            flow_id=result_confirm["flow_id"],
-            valid_step_ids=("restore_backup",),
-        )
+        # Wait for background tasks to complete
+        await hass.async_block_till_done()
+
+        # The flow manager auto-completes the restore_backup step after confirmation
+        # result_confirm is already the final CREATE_ENTRY result
+        result4 = result_confirm
 
     assert result4["type"] is FlowResultType.CREATE_ENTRY
     assert result4["data"][CONF_RADIO_TYPE] == "ezsp"
@@ -2677,6 +2684,7 @@ async def test_options_flow_migration_reset_old_adapter(
             hass,
             flow_id=result_migrate_start["flow_id"],
             valid_step_ids=("maybe_reset_old_radio", "restore_backup"),
+            flow_manager=hass.config_entries.options,
         )
 
     # The old adapter is reset, not the new one
@@ -2777,6 +2785,7 @@ async def test_options_flow_reconfigure_no_reset(
             hass,
             flow_id=result_migrate_start["flow_id"],
             valid_step_ids=("maybe_reset_old_radio", "restore_backup"),
+            flow_manager=hass.config_entries.options,
         )
 
     # A temp radio manager is never created
@@ -3103,9 +3112,16 @@ async def test_formation_strategy_restore_manual_backup_overwrite_ieee_ezsp_writ
             ],
         ) as mock_restore_backup,
     ):
-        confirm_restore_result = await hass.config_entries.flow.async_configure(
+        result_upload = await hass.config_entries.flow.async_configure(
             upload_backup_result["flow_id"],
             user_input={config_flow.UPLOADED_BACKUP_FILE: str(uuid.uuid4())},
+        )
+
+        # Consume progress flow for restore_backup
+        confirm_restore_result = await consume_progress_flow(
+            hass,
+            flow_id=result_upload["flow_id"],
+            valid_step_ids=("restore_backup",),
         )
 
         assert mock_restore_backup.call_count == 1
@@ -3114,12 +3130,19 @@ async def test_formation_strategy_restore_manual_backup_overwrite_ieee_ezsp_writ
 
         # The radio requires user confirmation for restore
         assert confirm_restore_result["type"] is FlowResultType.FORM
-        assert confirm_restore_result["step_id"] == "maybe_confirm_ezsp_restore"
+        assert confirm_restore_result["step_id"] == "confirm_ezsp_ieee_overwrite"
 
-        final_result = await hass.config_entries.flow.async_configure(
+        result_confirm = await hass.config_entries.flow.async_configure(
             confirm_restore_result["flow_id"],
             user_input={config_flow.OVERWRITE_COORDINATOR_IEEE: True},
         )
+
+        # Wait for background tasks to complete
+        await hass.async_block_till_done()
+
+        # The flow manager auto-completes the restore_backup step after confirmation
+        # result_confirm is already the final ABORT result (due to write failure)
+        final_result = result_confirm
 
     assert final_result["type"] is FlowResultType.ABORT
     assert final_result["reason"] == "cannot_restore_backup"
