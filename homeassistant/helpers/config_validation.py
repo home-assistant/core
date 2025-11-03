@@ -1359,16 +1359,24 @@ _TARGET_SERVICE_FIELDS_TEMPLATED: VolDictType = {
         vol.All(list, template_complex),
     ),
     vol.Optional(ATTR_DEVICE_ID): vol.Any(
-        ENTITY_MATCH_NONE, vol.All(ensure_list, [vol.Any(dynamic_template, str)])
+        ENTITY_MATCH_NONE,
+        dynamic_template,
+        vol.All(ensure_list, [vol.Any(dynamic_template, str)]),
     ),
     vol.Optional(ATTR_AREA_ID): vol.Any(
-        ENTITY_MATCH_NONE, vol.All(ensure_list, [vol.Any(dynamic_template, str)])
+        ENTITY_MATCH_NONE,
+        dynamic_template,
+        vol.All(ensure_list, [vol.Any(dynamic_template, str)]),
     ),
     vol.Optional(ATTR_FLOOR_ID): vol.Any(
-        ENTITY_MATCH_NONE, vol.All(ensure_list, [vol.Any(dynamic_template, str)])
+        ENTITY_MATCH_NONE,
+        dynamic_template,
+        vol.All(ensure_list, [vol.Any(dynamic_template, str)]),
     ),
     vol.Optional(ATTR_LABEL_ID): vol.Any(
-        ENTITY_MATCH_NONE, vol.All(ensure_list, [vol.Any(dynamic_template, str)])
+        ENTITY_MATCH_NONE,
+        dynamic_template,
+        vol.All(ensure_list, [vol.Any(dynamic_template, str)]),
     ),
 }
 
