@@ -709,7 +709,7 @@ class TemperatureConverter(BaseUnitConverter):
 
     @classmethod
     @deprecated_function(
-        "Use TemperatureDeltaConverter.convert instead", breaks_in_ha_version="2026.6.0"
+        "Use TemperatureDeltaConverter.convert instead", breaks_in_ha_version="2026.12.0"
     )
     def convert_interval(cls, interval: float, from_unit: str, to_unit: str) -> float:
         """Convert a temperature interval from one unit to another.
