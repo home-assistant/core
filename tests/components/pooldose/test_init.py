@@ -162,7 +162,7 @@ async def test_migrate_entity_unique_ids(
     # Verify the entities have been migrated
     assert entity_registry.async_get_entity_id(
         "sensor", DOMAIN, "TEST123456789_ofa_orp_time"
-    ) 
+    )
     assert entity_registry.async_get_entity_id(
         "sensor", DOMAIN, "TEST123456789_ofa_ph_time"
     )
@@ -170,7 +170,7 @@ async def test_migrate_entity_unique_ids(
     # Verify old unique IDs no longer exist
     assert not entity_registry.async_get_entity_id(
         "sensor", DOMAIN, "TEST123456789_ofa_orp_value"
-    ) 
+    )
     assert not entity_registry.async_get_entity_id(
         "sensor", DOMAIN, "TEST123456789_ofa_ph_value"
     )
