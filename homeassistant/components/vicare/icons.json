@@ -35,6 +35,9 @@
     "button": {
       "activate_onetimecharge": {
         "default": "mdi:shower-head"
+      },
+      "deactivate_onetimecharge": {
+        "default": "mdi:shower-head"
       }
     },
     "number": {
