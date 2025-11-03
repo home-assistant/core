@@ -835,6 +835,7 @@
       "vehicle_type": {
         "name": "Vehicle type",
         "state": {
+          "bus": "Bus",
           "motorcycle": "Motorcycle",
           "pickup_truck": "Pickup truck",
           "sedan": "Sedan",

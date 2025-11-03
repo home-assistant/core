@@ -210,6 +210,11 @@
         "name": "Honk & flash"
       }
     },
+    "device_tracker": {
+      "location": {
+        "name": "Location"
+      }
+    },
     "lock": {
       "lock": {
         "name": "[%key:component::lock::title%]"
@@ -353,9 +358,6 @@
   "exceptions": {
     "command_failure": {
       "message": "Command {command} failed. Status: {status}. Message: {message}"
-    },
-    "lock_failure": {
-      "message": "Failed to {command} vehicle. Status: {status}. Message: {message}"
     },
     "no_vehicle": {
       "message": "Unable to retrieve vehicle details."

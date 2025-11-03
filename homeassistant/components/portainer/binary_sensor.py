@@ -4,9 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
-
-from pyportainer.models.docker import DockerContainer
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -18,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import PortainerConfigEntry
-from .coordinator import PortainerCoordinator
+from .coordinator import PortainerContainerData, PortainerCoordinator
 from .entity import (
     PortainerContainerEntity,
     PortainerCoordinatorData,
@@ -27,24 +24,31 @@ from .entity import (
 
 
 @dataclass(frozen=True, kw_only=True)
-class PortainerBinarySensorEntityDescription(BinarySensorEntityDescription):
-    """Class to hold Portainer binary sensor description."""
+class PortainerContainerBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Class to hold Portainer container binary sensor description."""
 
-    state_fn: Callable[[Any], bool]
+    state_fn: Callable[[PortainerContainerData], bool | None]
 
 
-CONTAINER_SENSORS: tuple[PortainerBinarySensorEntityDescription, ...] = (
-    PortainerBinarySensorEntityDescription(
+@dataclass(frozen=True, kw_only=True)
+class PortainerEndpointBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Class to hold Portainer endpoint binary sensor description."""
+
+    state_fn: Callable[[PortainerCoordinatorData], bool | None]
+
+
+CONTAINER_SENSORS: tuple[PortainerContainerBinarySensorEntityDescription, ...] = (
+    PortainerContainerBinarySensorEntityDescription(
         key="status",
         translation_key="status",
-        state_fn=lambda data: data.state == "running",
+        state_fn=lambda data: data.container.state == "running",
         device_class=BinarySensorDeviceClass.RUNNING,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
 
-ENDPOINT_SENSORS: tuple[PortainerBinarySensorEntityDescription, ...] = (
-    PortainerBinarySensorEntityDescription(
+ENDPOINT_SENSORS: tuple[PortainerEndpointBinarySensorEntityDescription, ...] = (
+    PortainerEndpointBinarySensorEntityDescription(
         key="status",
         translation_key="status",
         state_fn=lambda data: data.endpoint.status == 1,  # 1 = Running | 2 = Stopped
@@ -76,7 +80,7 @@ async def async_setup_entry(
         )
 
     def _async_add_new_containers(
-        containers: list[tuple[PortainerCoordinatorData, DockerContainer]],
+        containers: list[tuple[PortainerCoordinatorData, PortainerContainerData]],
     ) -> None:
         """Add new container binary sensors."""
         async_add_entities(
@@ -113,12 +117,12 @@ async def async_setup_entry(
 class PortainerEndpointSensor(PortainerEndpointEntity, BinarySensorEntity):
     """Representation of a Portainer endpoint binary sensor entity."""
 
-    entity_description: PortainerBinarySensorEntityDescription
+    entity_description: PortainerEndpointBinarySensorEntityDescription
 
     def __init__(
         self,
         coordinator: PortainerCoordinator,
-        entity_description: PortainerBinarySensorEntityDescription,
+        entity_description: PortainerEndpointBinarySensorEntityDescription,
         device_info: PortainerCoordinatorData,
     ) -> None:
         """Initialize Portainer endpoint binary sensor entity."""
@@ -141,13 +145,13 @@ class PortainerEndpointSensor(PortainerEndpointEntity, BinarySensorEntity):
 class PortainerContainerSensor(PortainerContainerEntity, BinarySensorEntity):
     """Representation of a Portainer container sensor."""
 
-    entity_description: PortainerBinarySensorEntityDescription
+    entity_description: PortainerContainerBinarySensorEntityDescription
 
     def __init__(
         self,
         coordinator: PortainerCoordinator,
-        entity_description: PortainerBinarySensorEntityDescription,
-        device_info: DockerContainer,
+        entity_description: PortainerContainerBinarySensorEntityDescription,
+        device_info: PortainerContainerData,
         via_device: PortainerCoordinatorData,
     ) -> None:
         """Initialize the Portainer container sensor."""
@@ -164,6 +168,4 @@ class PortainerContainerSensor(PortainerContainerEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
-        return self.entity_description.state_fn(
-            self.coordinator.data[self.endpoint_id].containers[self.device_name]
-        )
+        return self.entity_description.state_fn(self.container_data)
