@@ -306,8 +306,8 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             # Update the time segment data in the cache
             self.data[f"forcedTimeStart{segment_id}"] = start_time.strftime("%H:%M")
             self.data[f"forcedTimeStop{segment_id}"] = end_time.strftime("%H:%M")
-            self.data[f"forcedChargeBatMode{segment_id}"] = batt_mode
-            self.data[f"forcedChargeFlag{segment_id}"] = 1 if enabled else 0
+            self.data[f"time{segment_id}Mode"] = batt_mode
+            self.data[f"forcedStopSwitch{segment_id}"] = 1 if enabled else 0
 
             # Notify entities of the updated data (no API call)
             self.async_set_updated_data(self.data)
@@ -357,7 +357,7 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         # Get battery mode
         batt_mode_int = int(
-            self.data.get(f"forcedChargeBatMode{segment_id}", BATT_MODE_LOAD_FIRST)
+            self.data.get(f"time{segment_id}Mode", BATT_MODE_LOAD_FIRST)
         )
 
         # Map numeric mode to string key (matches update_time_segment input format)
@@ -369,7 +369,7 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         batt_mode = mode_map.get(batt_mode_int, "load_first")
 
         # Get enabled status
-        enabled = bool(int(self.data.get(f"forcedChargeFlag{segment_id}", 0)))
+        enabled = bool(int(self.data.get(f"forcedStopSwitch{segment_id}", 0)))
 
         return {
             "segment_id": segment_id,
