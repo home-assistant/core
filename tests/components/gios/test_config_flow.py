@@ -3,8 +3,8 @@
 from unittest.mock import MagicMock
 
 from gios import ApiError, InvalidSensorsDataError
+import pytest
 
-from homeassistant.components.gios import config_flow
 from homeassistant.components.gios.const import CONF_STATION_ID, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_NAME
@@ -16,13 +16,11 @@ CONFIG = {
     CONF_STATION_ID: "123",
 }
 
+pytestmark = pytest.mark.usefixtures("mock_gios")
 
-async def test_show_form(
-    hass: HomeAssistant,
-    mock_gios: MagicMock,
-) -> None:
+
+async def test_show_form(hass: HomeAssistant) -> None:
     """Test that the form is served with no input."""
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -32,65 +30,64 @@ async def test_show_form(
     assert len(result["data_schema"].schema[CONF_STATION_ID].config["options"]) == 2
 
 
-async def test_form_with_api_error(
-    hass: HomeAssistant,
-    mock_gios: MagicMock,
-) -> None:
+async def test_form_with_api_error(hass: HomeAssistant, mock_gios: MagicMock) -> None:
     """Test the form is aborted because of API error."""
     mock_gios.create.side_effect = ApiError("error")
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
 
 
-async def test_invalid_sensor_data(
-    hass: HomeAssistant,
-    mock_gios: MagicMock,
-) -> None:
+async def test_invalid_sensor_data(hass: HomeAssistant, mock_gios: MagicMock) -> None:
     """Test that errors are shown when sensor data is invalid."""
     mock_gios.create.return_value.async_update.side_effect = InvalidSensorsDataError(
         "Invalid data"
     )
-    flow = config_flow.GiosFlowHandler()
-    flow.hass = hass
-    flow.context = {}
 
-    result = await flow.async_step_user(user_input=CONFIG)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=CONFIG
+    )
 
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {CONF_STATION_ID: "invalid_sensors_data"}
 
 
-async def test_cannot_connect(
-    hass: HomeAssistant,
-    mock_gios: MagicMock,
-) -> None:
-    """Test that errors are shown when cannot connect to GIOS server."""
+async def test_cannot_connect(hass: HomeAssistant, mock_gios: MagicMock) -> None:
+    """Test that errors are shown when cannot fetch sensors data from GIOS server."""
     mock_gios.create.return_value.async_update.side_effect = ApiError("error")
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
+        DOMAIN,
+        context={"source": SOURCE_USER},
     )
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], CONFIG)
-    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=CONFIG
+    )
 
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_create_entry(
-    hass: HomeAssistant,
-    mock_gios: MagicMock,
-) -> None:
+async def test_create_entry(hass: HomeAssistant) -> None:
     """Test that the user step works."""
-    flow = config_flow.GiosFlowHandler()
-    flow.hass = hass
-    flow.context = {}
-
-    result = await flow.async_step_user(user_input=CONFIG)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=CONFIG
+    )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test Name 1"
-    assert result["data"][CONF_STATION_ID] == CONFIG[CONF_STATION_ID]
+    assert result["data"][CONF_STATION_ID] == 123
 
-    assert flow.context["unique_id"] == "123"
+    assert result["result"].unique_id == "123"

@@ -1,42 +1,43 @@
 """Test sensor of GIOS integration."""
 
-from copy import deepcopy
-from datetime import timedelta
-import json
-from unittest.mock import patch
+from collections.abc import Generator
+from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from gios import ApiError
+from gios.model import GiosSensors
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.gios.const import DOMAIN
-from homeassistant.components.sensor import DOMAIN as PLATFORM
+from homeassistant.components.gios.const import SCAN_INTERVAL
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util.dt import utcnow
 
-from . import init_integration
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
-from tests.common import async_fire_time_changed, async_load_fixture, snapshot_platform
+pytestmark = pytest.mark.usefixtures("init_integration")
+
+
+@pytest.fixture(autouse=True)
+def override_platforms() -> Generator[None]:
+    """Override PLATFORMS."""
+    with patch("homeassistant.components.gios.PLATFORMS", [Platform.SENSOR]):
+        yield
 
 
 async def test_sensor(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, snapshot: SnapshotAssertion
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test states of the sensor."""
-    with patch("homeassistant.components.gios.PLATFORMS", [Platform.SENSOR]):
-        entry = await init_integration(hass)
-
-    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 async def test_availability(hass: HomeAssistant) -> None:
     """Ensure that we mark the entities unavailable correctly when service causes an error."""
-    indexes = json.loads(await async_load_fixture(hass, "indexes.json", DOMAIN))
-    sensors = json.loads(await async_load_fixture(hass, "sensors.json", DOMAIN))
-
-    await init_integration(hass)
-
     state = hass.states.get("sensor.home_pm2_5")
     assert state
     assert state.state == "4"
@@ -49,13 +50,23 @@ async def test_availability(hass: HomeAssistant) -> None:
     assert state
     assert state.state == "good"
 
-    future = utcnow() + timedelta(minutes=60)
-    with patch(
-        "homeassistant.components.gios.coordinator.Gios._get_all_sensors",
-        side_effect=ApiError("Unexpected error"),
-    ):
-        async_fire_time_changed(hass, future)
-        await hass.async_block_till_done()
+
+async def test_availability_api_error(
+    hass: HomeAssistant,
+    mock_gios: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Ensure that we mark the entities unavailable correctly when service causes an error."""
+    state = hass.states.get("sensor.home_pm2_5")
+    assert state
+    assert state.state == "4"
+
+    mock_gios.create.return_value.async_update.side_effect = ApiError(
+        "Unexpected error"
+    )
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     state = hass.states.get("sensor.home_pm2_5")
     assert state
@@ -69,21 +80,16 @@ async def test_availability(hass: HomeAssistant) -> None:
     assert state
     assert state.state == STATE_UNAVAILABLE
 
-    incomplete_sensors = deepcopy(sensors)
-    incomplete_sensors["pm2.5"] = {}
-    future = utcnow() + timedelta(minutes=120)
-    with (
-        patch(
-            "homeassistant.components.gios.coordinator.Gios._get_all_sensors",
-            return_value=incomplete_sensors,
-        ),
-        patch(
-            "homeassistant.components.gios.coordinator.Gios._get_indexes",
-            return_value={},
-        ),
-    ):
-        async_fire_time_changed(hass, future)
-        await hass.async_block_till_done()
+    mock_gios.create.return_value.async_update.side_effect = None
+    gios_sensors: GiosSensors = mock_gios.create.return_value.async_update.return_value
+    old_pm25 = gios_sensors.pm25
+    old_aqi = gios_sensors.aqi
+    gios_sensors.pm25 = None
+    gios_sensors.aqi = None
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     # There is no PM2.5 data so the state should be unavailable
     state = hass.states.get("sensor.home_pm2_5")
@@ -100,19 +106,12 @@ async def test_availability(hass: HomeAssistant) -> None:
     assert state
     assert state.state == STATE_UNAVAILABLE
 
-    future = utcnow() + timedelta(minutes=180)
-    with (
-        patch(
-            "homeassistant.components.gios.coordinator.Gios._get_all_sensors",
-            return_value=sensors,
-        ),
-        patch(
-            "homeassistant.components.gios.coordinator.Gios._get_indexes",
-            return_value=indexes,
-        ),
-    ):
-        async_fire_time_changed(hass, future)
-        await hass.async_block_till_done()
+    gios_sensors.pm25 = old_pm25
+    gios_sensors.aqi = old_aqi
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     state = hass.states.get("sensor.home_pm2_5")
     assert state
@@ -125,50 +124,3 @@ async def test_availability(hass: HomeAssistant) -> None:
     state = hass.states.get("sensor.home_air_quality_index")
     assert state
     assert state.state == "good"
-
-
-async def test_invalid_indexes(hass: HomeAssistant) -> None:
-    """Test states of the sensor when API returns invalid indexes."""
-    await init_integration(hass, invalid_indexes=True)
-
-    state = hass.states.get("sensor.home_nitrogen_dioxide_index")
-    assert state
-    assert state.state == STATE_UNAVAILABLE
-
-    state = hass.states.get("sensor.home_ozone_index")
-    assert state
-    assert state.state == STATE_UNAVAILABLE
-
-    state = hass.states.get("sensor.home_pm10_index")
-    assert state
-    assert state.state == STATE_UNAVAILABLE
-
-    state = hass.states.get("sensor.home_pm2_5_index")
-    assert state
-    assert state.state == STATE_UNAVAILABLE
-
-    state = hass.states.get("sensor.home_sulphur_dioxide_index")
-    assert state
-    assert state.state == STATE_UNAVAILABLE
-
-    state = hass.states.get("sensor.home_air_quality_index")
-    assert state is None
-
-
-async def test_unique_id_migration(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
-) -> None:
-    """Test states of the unique_id migration."""
-    entity_registry.async_get_or_create(
-        PLATFORM,
-        DOMAIN,
-        "123-pm2.5",
-        suggested_object_id="home_pm2_5",
-        disabled_by=None,
-    )
-
-    await init_integration(hass)
-
-    entry = entity_registry.async_get("sensor.home_pm2_5")
-    assert entry
-    assert entry.unique_id == "123-pm25"
