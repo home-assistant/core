@@ -22,6 +22,11 @@
       }
     }
   },
+  "device": {
+    "station": {
+      "name": "Station {station_name}"
+    }
+  },
   "entity": {
     "sensor": {
       "aqi": {

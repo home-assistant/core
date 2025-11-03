@@ -7,12 +7,10 @@ import pytest
 
 from homeassistant.components.gios.const import CONF_STATION_ID, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 CONFIG = {
-    CONF_NAME: "Foo",
     CONF_STATION_ID: "123",
 }
 

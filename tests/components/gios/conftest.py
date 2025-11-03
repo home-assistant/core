@@ -21,7 +21,7 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         title="Home",
         unique_id="123",
-        data={"station_id": 123, "name": "Home"},
+        data={"station_id": 123},
         entry_id="86129426118ae32020417a53712d6eef",
     )
 
