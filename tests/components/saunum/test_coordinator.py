@@ -61,7 +61,7 @@ def _make_mock_data(**kwargs) -> SaunumData:
 
 @pytest.mark.asyncio
 async def test_update_communication_error(
-    hass: HomeAssistant, config_entry: MockConfigEntry, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
     """Test update fails when communication error occurs."""
     client = MagicMock()
@@ -73,12 +73,10 @@ async def test_update_communication_error(
     with pytest.raises(UpdateFailed):
         await coord._async_update_data()
 
-    assert "Device became unavailable" in caplog.text
-
 
 @pytest.mark.asyncio
 async def test_update_connection_error(
-    hass: HomeAssistant, config_entry: MockConfigEntry, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
     """Test update fails when connection error occurs."""
     client = MagicMock()
@@ -89,8 +87,6 @@ async def test_update_connection_error(
 
     with pytest.raises(UpdateFailed):
         await coord._async_update_data()
-
-    assert "Device became unavailable" in caplog.text
 
 
 @pytest.mark.asyncio
@@ -131,9 +127,9 @@ async def test_update_success(
 
 @pytest.mark.asyncio
 async def test_communication_restored(
-    hass: HomeAssistant, config_entry: MockConfigEntry, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
-    """Test device communication restored log message."""
+    """Test device communication can be restored after failure."""
     client = MagicMock()
 
     # First call fails
@@ -144,8 +140,6 @@ async def test_communication_restored(
 
     with pytest.raises(UpdateFailed):
         await coord._async_update_data()
-
-    assert "Device became unavailable" in caplog.text
 
     # Second call succeeds
     mock_data = SaunumData(
@@ -171,123 +165,3 @@ async def test_communication_restored(
 
     data = await coord._async_update_data()
     assert data is not None
-    assert "Device communication restored" in caplog.text
-
-
-@pytest.mark.asyncio
-async def test_start_session_success(
-    hass: HomeAssistant, config_entry: MockConfigEntry
-) -> None:
-    """Test successful session start."""
-    client = MagicMock()
-    client.async_start_session = AsyncMock()
-    client.async_get_data = AsyncMock(return_value=_make_mock_data())
-    coord = _make_coordinator(hass, config_entry, client)
-
-    result = await coord.async_start_session()
-
-    assert result is True
-    client.async_start_session.assert_awaited_once()
-    client.async_get_data.assert_awaited_once()
-
-
-@pytest.mark.asyncio
-async def test_start_session_failure(
-    hass: HomeAssistant, config_entry: MockConfigEntry, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test session start failure."""
-    client = MagicMock()
-    client.async_start_session = AsyncMock(
-        side_effect=SaunumCommunicationError("write failed")
-    )
-    coord = _make_coordinator(hass, config_entry, client)
-
-    result = await coord.async_start_session()
-
-    assert result is False
-    assert "Error starting session" in caplog.text
-
-
-@pytest.mark.asyncio
-async def test_stop_session_success(
-    hass: HomeAssistant, config_entry: MockConfigEntry
-) -> None:
-    """Test successful session stop."""
-    client = MagicMock()
-    client.async_stop_session = AsyncMock()
-    client.async_get_data = AsyncMock(return_value=_make_mock_data())
-    coord = _make_coordinator(hass, config_entry, client)
-
-    result = await coord.async_stop_session()
-
-    assert result is True
-    client.async_stop_session.assert_awaited_once()
-    client.async_get_data.assert_awaited_once()
-
-
-@pytest.mark.asyncio
-async def test_stop_session_failure(
-    hass: HomeAssistant, config_entry: MockConfigEntry, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test session stop failure."""
-    client = MagicMock()
-    client.async_stop_session = AsyncMock(
-        side_effect=SaunumCommunicationError("write failed")
-    )
-    coord = _make_coordinator(hass, config_entry, client)
-
-    result = await coord.async_stop_session()
-
-    assert result is False
-    assert "Error stopping session" in caplog.text
-
-
-@pytest.mark.asyncio
-async def test_set_target_temperature_success(
-    hass: HomeAssistant, config_entry: MockConfigEntry
-) -> None:
-    """Test successful temperature setting."""
-    client = MagicMock()
-    client.async_set_target_temperature = AsyncMock()
-    client.async_get_data = AsyncMock(return_value=_make_mock_data())
-    coord = _make_coordinator(hass, config_entry, client)
-
-    result = await coord.async_set_target_temperature(85)
-
-    assert result is True
-    client.async_set_target_temperature.assert_awaited_once_with(85)
-    client.async_get_data.assert_awaited_once()
-
-
-@pytest.mark.asyncio
-async def test_set_target_temperature_failure(
-    hass: HomeAssistant, config_entry: MockConfigEntry, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test temperature setting failure."""
-    client = MagicMock()
-    client.async_set_target_temperature = AsyncMock(
-        side_effect=SaunumCommunicationError("write failed")
-    )
-    coord = _make_coordinator(hass, config_entry, client)
-
-    result = await coord.async_set_target_temperature(85)
-
-    assert result is False
-    assert "Error setting target temperature" in caplog.text
-
-
-@pytest.mark.asyncio
-async def test_set_target_temperature_invalid_value(
-    hass: HomeAssistant, config_entry: MockConfigEntry, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test temperature setting with invalid value."""
-    client = MagicMock()
-    client.async_set_target_temperature = AsyncMock(
-        side_effect=ValueError("Temperature out of range")
-    )
-    coord = _make_coordinator(hass, config_entry, client)
-
-    result = await coord.async_set_target_temperature(200)
-
-    assert result is False
-    assert "Error setting target temperature" in caplog.text

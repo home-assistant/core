@@ -47,12 +47,7 @@ class LeilSaunaClimate(LeilSaunaEntity, ClimateEntity):
 
     def __init__(self, coordinator: LeilSaunaCoordinator) -> None:
         """Initialize the climate entity."""
-        super().__init__(coordinator, "climate")
-
-    @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return self.coordinator.last_update_success
+        super().__init__(coordinator)
 
     @property
     def current_temperature(self) -> float | None:
@@ -62,10 +57,7 @@ class LeilSaunaClimate(LeilSaunaEntity, ClimateEntity):
     @property
     def target_temperature(self) -> float | None:
         """Return the target temperature in Celsius."""
-        temp_c = self.coordinator.data.target_temperature
-        if temp_c is None or temp_c < MIN_TEMPERATURE:
-            return None
-        return temp_c
+        return self.coordinator.data.target_temperature
 
     @property
     def hvac_mode(self) -> HVACMode:
@@ -90,16 +82,15 @@ class LeilSaunaClimate(LeilSaunaEntity, ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new HVAC mode."""
         if hvac_mode == HVACMode.HEAT:
-            await self.coordinator.async_start_session()
+            await self.coordinator.client.async_start_session()
         elif hvac_mode == HVACMode.OFF:
-            await self.coordinator.async_stop_session()
-        else:
-            _LOGGER.warning("Unsupported HVAC mode: %s", hvac_mode)
+            await self.coordinator.client.async_stop_session()
+        await self.coordinator.async_request_refresh()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
-            return
-
         # Home Assistant handles conversion from user's preferred unit
-        await self.coordinator.async_set_target_temperature(int(temperature))
+        await self.coordinator.client.async_set_target_temperature(
+            int(kwargs[ATTR_TEMPERATURE])
+        )
+        await self.coordinator.async_request_refresh()

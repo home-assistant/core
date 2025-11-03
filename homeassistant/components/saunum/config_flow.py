@@ -11,7 +11,6 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN
@@ -61,20 +60,18 @@ class LeilSaunaConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 await validate_input(self.hass, user_input, self)
-
+            except SaunumException:
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
                 # Set unique ID and check for duplicates
                 await self.async_set_unique_id(
                     f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}"
                 )
                 self._abort_if_unique_id_configured()
-            except SaunumException:
-                errors["base"] = "cannot_connect"
-            except AbortFlow:
-                raise
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
+
                 return self.async_create_entry(
                     title="Saunum Leil Sauna",
                     data=user_input,

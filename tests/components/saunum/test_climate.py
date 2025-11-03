@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from unittest.mock import AsyncMock, patch
 
 from pysaunum import SaunumData
@@ -90,7 +89,7 @@ async def test_climate_set_hvac_mode_heat(
     entity_id = "climate.saunum_leil"
 
     coordinator = mock_config_entry.runtime_data
-    coordinator.async_start_session = AsyncMock(return_value=True)
+    coordinator.client.async_start_session = AsyncMock()
     coordinator.async_request_refresh = AsyncMock()
 
     # Turn on heating
@@ -102,7 +101,8 @@ async def test_climate_set_hvac_mode_heat(
     )
     await hass.async_block_till_done()
 
-    coordinator.async_start_session.assert_called_once()
+    coordinator.client.async_start_session.assert_called_once()
+    coordinator.async_request_refresh.assert_called_once()
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -114,7 +114,7 @@ async def test_climate_set_hvac_mode_off(
     entity_id = "climate.saunum_leil"
 
     coordinator = mock_config_entry.runtime_data
-    coordinator.async_stop_session = AsyncMock(return_value=True)
+    coordinator.client.async_stop_session = AsyncMock()
     coordinator.async_request_refresh = AsyncMock()
 
     # Turn off heating
@@ -126,7 +126,8 @@ async def test_climate_set_hvac_mode_off(
     )
     await hass.async_block_till_done()
 
-    coordinator.async_stop_session.assert_called_once()
+    coordinator.client.async_stop_session.assert_called_once()
+    coordinator.async_request_refresh.assert_called_once()
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -138,7 +139,7 @@ async def test_climate_set_temperature(
     entity_id = "climate.saunum_leil"
 
     coordinator = mock_config_entry.runtime_data
-    coordinator.async_set_target_temperature = AsyncMock(return_value=True)
+    coordinator.client.async_set_target_temperature = AsyncMock()
     coordinator.async_request_refresh = AsyncMock()
 
     # Set temperature to 85°C
@@ -150,7 +151,8 @@ async def test_climate_set_temperature(
     )
     await hass.async_block_till_done()
 
-    coordinator.async_set_target_temperature.assert_called_once_with(85)
+    coordinator.client.async_set_target_temperature.assert_called_once_with(85)
+    coordinator.async_request_refresh.assert_called_once()
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -182,7 +184,7 @@ async def test_climate_unique_id(
     entity_entry = entity_registry.async_get(entity_id)
     assert entity_entry is not None
 
-    expected_unique_id = f"{mock_config_entry.entry_id}_climate"
+    expected_unique_id = mock_config_entry.entry_id
     assert entity_entry.unique_id == expected_unique_id
 
 
@@ -356,8 +358,8 @@ async def test_climate_target_temp_below_minimum(
     state = hass.states.get(entity_id)
     assert state is not None
 
-    # Target temperature should be None when below minimum
-    assert state.attributes.get(ATTR_TEMPERATURE) is None
+    # Target temperature should be reported as-is from device
+    assert state.attributes.get(ATTR_TEMPERATURE) == 30
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -369,7 +371,7 @@ async def test_climate_set_hvac_mode_heat_failure(
     entity_id = "climate.saunum_leil"
 
     coordinator = mock_config_entry.runtime_data
-    coordinator.async_start_session = AsyncMock(return_value=False)
+    coordinator.client.async_start_session = AsyncMock()
     coordinator.async_request_refresh = AsyncMock()
 
     # Turn on heating
@@ -381,7 +383,8 @@ async def test_climate_set_hvac_mode_heat_failure(
     )
     await hass.async_block_till_done()
 
-    coordinator.async_start_session.assert_called_once()
+    coordinator.client.async_start_session.assert_called_once()
+    coordinator.async_request_refresh.assert_called_once()
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -393,7 +396,7 @@ async def test_climate_set_temperature_failure(
     entity_id = "climate.saunum_leil"
 
     coordinator = mock_config_entry.runtime_data
-    coordinator.async_set_target_temperature = AsyncMock(return_value=False)
+    coordinator.client.async_set_target_temperature = AsyncMock()
     coordinator.async_request_refresh = AsyncMock()
 
     # Set temperature to 85°C
@@ -405,49 +408,5 @@ async def test_climate_set_temperature_failure(
     )
     await hass.async_block_till_done()
 
-    coordinator.async_set_target_temperature.assert_called_once_with(85)
-
-
-@pytest.mark.usefixtures("init_integration")
-async def test_climate_set_unsupported_hvac_mode(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test setting unsupported HVAC mode directly on entity."""
-    entity_id = "climate.saunum_leil"
-
-    # Set log level to WARNING to capture the warning message
-    caplog.set_level(logging.WARNING)
-
-    # Get the climate entity directly from hass.data
-    climate_entity = hass.data["entity_components"]["climate"].get_entity(entity_id)
-    assert climate_entity is not None
-
-    # Call the method directly with an unsupported mode
-    await climate_entity.async_set_hvac_mode(HVACMode.COOL)
-
-    # Check that warning was logged
-    assert "Unsupported HVAC mode: cool" in caplog.text
-
-
-@pytest.mark.usefixtures("init_integration")
-async def test_climate_set_temperature_no_value(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test setting temperature without providing a temperature value."""
-    entity_id = "climate.saunum_leil"
-
-    coordinator = mock_config_entry.runtime_data
-    coordinator.async_set_target_temperature = AsyncMock(return_value=True)
-    coordinator.async_request_refresh = AsyncMock()
-
-    # Get the climate entity directly from hass.data
-    climate_entity = hass.data["entity_components"]["climate"].get_entity(entity_id)
-    assert climate_entity is not None
-
-    # Call async_set_temperature without temperature parameter (should return early)
-    await climate_entity.async_set_temperature()  # No kwargs
-
-    # Should not call the coordinator method
-    coordinator.async_set_target_temperature.assert_not_called()
+    coordinator.client.async_set_target_temperature.assert_called_once_with(85)
+    coordinator.async_request_refresh.assert_called_once()
