@@ -16,6 +16,8 @@ from homeassistant.components.switch import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.util import slugify
 
 from .const import DOMAIN
 from .coordinator import FlexitConfigEntry, FlexitCoordinator
@@ -45,6 +47,14 @@ SWITCHES: tuple[FlexitSwitchEntityDescription, ...] = (
         is_on_fn=lambda data: data.cooker_hood_status,
         turn_on_fn=lambda data: data.activate_cooker_hood(),
         turn_off_fn=lambda data: data.deactivate_cooker_hood(),
+    ),
+    FlexitSwitchEntityDescription(
+        key="fireplace_mode",
+        translation_key="fireplace_mode",
+        entity_registry_enabled_default=False,
+        is_on_fn=lambda data: data.fireplace_ventilation_status,
+        turn_on_fn=lambda data: data.trigger_fireplace_mode(),
+        turn_off_fn=lambda data: data.trigger_fireplace_mode(),
     ),
 )
 
@@ -92,6 +102,26 @@ class FlexitSwitch(FlexitEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn switch on."""
+        # Create deprecation warning for fireplace mode switch
+        if self.entity_description.key == "fireplace_mode":
+            # Derive climate entity ID from switch entity ID
+            climate_entity_id = self.entity_id.replace("switch.", "climate.").replace(
+                "_fireplace_mode", ""
+            )
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"deprecated_switch_{slugify(self.entity_id)}",
+                is_fixable=False,
+                issue_domain=DOMAIN,
+                severity=IssueSeverity.WARNING,
+                translation_key="deprecated_fireplace_switch",
+                translation_placeholders={
+                    "entity_id": self.entity_id,
+                    "climate_entity_id": climate_entity_id,
+                },
+            )
+
         try:
             await self.entity_description.turn_on_fn(self.coordinator.data)
         except (asyncio.exceptions.TimeoutError, ConnectionError, DecodingError) as exc:
@@ -107,6 +137,26 @@ class FlexitSwitch(FlexitEntity, SwitchEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn switch off."""
+        # Create deprecation warning for fireplace mode switch
+        if self.entity_description.key == "fireplace_mode":
+            # Derive climate entity ID from switch entity ID
+            climate_entity_id = self.entity_id.replace("switch.", "climate.").replace(
+                "_fireplace_mode", ""
+            )
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"deprecated_switch_{slugify(self.entity_id)}",
+                is_fixable=False,
+                issue_domain=DOMAIN,
+                severity=IssueSeverity.WARNING,
+                translation_key="deprecated_fireplace_switch",
+                translation_placeholders={
+                    "entity_id": self.entity_id,
+                    "climate_entity_id": climate_entity_id,
+                },
+            )
+
         try:
             await self.entity_description.turn_off_fn(self.coordinator.data)
         except (asyncio.exceptions.TimeoutError, ConnectionError, DecodingError) as exc:

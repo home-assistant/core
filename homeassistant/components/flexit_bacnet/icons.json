@@ -61,6 +61,12 @@
         "state": {
           "off": "mdi:radiator-off"
         }
+      },
+      "fireplace_mode": {
+        "default": "mdi:fireplace",
+        "state": {
+          "off": "mdi:fireplace-off"
+        }
       }
     }
   }

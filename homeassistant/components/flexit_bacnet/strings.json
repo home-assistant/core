@@ -128,6 +128,9 @@
       },
       "electric_heater": {
         "name": "Electric heater"
+      },
+      "fireplace_mode": {
+        "name": "Fireplace mode"
       }
     }
   },
@@ -149,6 +152,12 @@
     },
     "switch_turn": {
       "message": "Failed to turn the switch {state}."
+    }
+  },
+  "issues": {
+    "deprecated_fireplace_switch": {
+      "description": "The fireplace mode switch entity `{entity_id}` is deprecated and will be removed in a future version.\n\nFireplace mode has been moved to a climate preset to better match the device interface. Please update your automations to use the climate entity preset instead.\n\n**To migrate:**\n\n1. Open your automation that uses `{entity_id}`\n2. Replace the switch service call with:\n```yaml\nservice: climate.set_preset_mode\ntarget:\n  entity_id: {climate_entity_id}\ndata:\n  preset_mode: fireplace\n```\n\n3. After migrating your automations, you can safely disable this switch entity.",
+      "title": "Fireplace mode switch is deprecated"
     }
   }
 }
