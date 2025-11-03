@@ -17,8 +17,7 @@ from .coordinator import WLEDDataUpdateCoordinator, WLEDReleasesDataUpdateCoordi
 from .entity import WLEDEntity
 from .helpers import wled_exception_handler
 
-# Coordinator is used to centralize the data updates
-PARALLEL_UPDATES = 0
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
