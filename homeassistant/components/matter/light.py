@@ -48,11 +48,10 @@ COLOR_MODE_MAP = {
 # Default color temperature limits.
 # Most real devices are not properly calibrated and report the full mired range as being supported.
 # This sets a more realistic default range that can be further limited by the device.
-# Values based on testing showing sample "real world" devices responding over these ranges
-# though they are not necessarily accurate for human vision.
+# Values based on latest Hue devices as of Nov. 2025.
 # Note that these defaults restrain the UI even if the device reports a wider range.
-DEFAULT_MAX_KELVIN = 8000
-DEFAULT_MIN_KELVIN = 500
+DEFAULT_MAX_KELVIN = 20000
+DEFAULT_MIN_KELVIN = 1000
 
 # there's a bug in (at least) Espressif's implementation of light transitions
 # on devices based on Matter 1.0. Mark potential devices with this issue.
