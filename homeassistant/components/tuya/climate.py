@@ -27,8 +27,11 @@ from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, DPType
 from .entity import TuyaEntity
 from .models import IntegerTypeData
-from .tuya_device_handlers import TUYA_QUIRKS_REGISTRY, TuyaClimateDefinition
-from .tuya_device_handlers.conversion import TuyaIntegerConversionFunction
+from .tuya_device_handlers import TUYA_QUIRKS_REGISTRY
+from .tuya_device_handlers.builder import (
+    TuyaClimateDefinition,
+    TuyaIntegerConversionFunction,
+)
 from .util import get_dpcode
 
 TUYA_HVAC_TO_HA = {

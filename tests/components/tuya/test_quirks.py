@@ -11,9 +11,9 @@ from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.tuya.tuya_device_handlers import (
     TUYA_QUIRKS_REGISTRY,
     QuirksRegistry,
-    TuyaDeviceQuirk,
 )
-from homeassistant.components.tuya.tuya_device_handlers.base_quirk import (
+from homeassistant.components.tuya.tuya_device_handlers.builder import TuyaDeviceQuirk
+from homeassistant.components.tuya.tuya_device_handlers.builder.base_quirk import (
     BaseTuyaDefinition,
 )
 from homeassistant.components.tuya.tuya_device_handlers.devices import (

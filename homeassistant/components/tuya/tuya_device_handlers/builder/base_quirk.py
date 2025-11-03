@@ -2,22 +2,33 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 import inspect
 import pathlib
-from typing import TYPE_CHECKING, Self
+from typing import TYPE_CHECKING, Any, Self
 
-from .const import TuyaDeviceCategory, TuyaDPCode
-from .conversion import TuyaIntegerConversionFunction
-from .homeassistant import (
+from ..helpers import (
     TuyaClimateHVACMode,
     TuyaCoverDeviceClass,
+    TuyaDeviceCategory,
+    TuyaDPCode,
     TuyaEntityCategory,
     TuyaSensorDeviceClass,
 )
 
 if TYPE_CHECKING:
-    from .registry import QuirksRegistry
+    from ..registry import QuirksRegistry
+
+
+type TuyaIntegerConversionFunction = Callable[[Any, Any, Any], float]
+"""Start conversion function:
+
+    Args:
+        device: The Tuya device instance (CustomerDevice).
+        dptype: The DP type definition (TuyaIntegerTypeDefinition).
+        value: The value to convert.
+"""
 
 
 @dataclass
@@ -78,7 +89,7 @@ class TuyaDeviceQuirk:
 
     def __init__(self) -> None:
         """Initialize the quirk."""
-        self._applies_to: list[tuple[str, str]] = []
+        self._applies_to: list[tuple[TuyaDeviceCategory, str]] = []
         self.climate_definitions: list[TuyaClimateDefinition] = []
         self.cover_definitions: list[TuyaCoverDefinition] = []
         self.select_definitions: list[TuyaSelectDefinition] = []

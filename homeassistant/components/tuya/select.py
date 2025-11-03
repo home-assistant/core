@@ -13,7 +13,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, DPType
 from .entity import TuyaEntity
-from .tuya_device_handlers import TUYA_QUIRKS_REGISTRY, TuyaSelectDefinition, parse_enum
+from .tuya_device_handlers import TUYA_QUIRKS_REGISTRY
+from .tuya_device_handlers.builder import TuyaSelectDefinition
+from .tuya_device_handlers.helpers import parse_enum
 
 # All descriptions can be found here. Mostly the Enum data types in the
 # default instructions set of each category end up being a select.

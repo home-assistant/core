@@ -44,7 +44,9 @@ from .const import (
 )
 from .entity import TuyaEntity
 from .models import ComplexValue, ElectricityValue, EnumTypeData, IntegerTypeData
-from .tuya_device_handlers import TUYA_QUIRKS_REGISTRY, TuyaSensorDefinition, parse_enum
+from .tuya_device_handlers import TUYA_QUIRKS_REGISTRY
+from .tuya_device_handlers.builder import TuyaSensorDefinition
+from .tuya_device_handlers.helpers import parse_enum
 from .util import get_dptype
 
 _WIND_DIRECTIONS = {

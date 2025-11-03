@@ -2,9 +2,14 @@
 
 from __future__ import annotations
 
-from ... import TUYA_QUIRKS_REGISTRY, TuyaDeviceQuirk
-from ...const import TuyaDeviceCategory, TuyaDPCode
-from ...homeassistant import TuyaCoverDeviceClass, TuyaEntityCategory
+from ... import TUYA_QUIRKS_REGISTRY
+from ...builder import TuyaDeviceQuirk
+from ...helpers import (
+    TuyaCoverDeviceClass,
+    TuyaDeviceCategory,
+    TuyaDPCode,
+    TuyaEntityCategory,
+)
 
 (
     # This model has percent_control / percent_state / situation_set

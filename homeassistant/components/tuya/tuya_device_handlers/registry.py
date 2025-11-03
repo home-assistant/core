@@ -5,10 +5,11 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Self
 
-from tuya_sharing import CustomerDevice
-
 if TYPE_CHECKING:
-    from .base_quirk import TuyaDeviceQuirk
+    from tuya_sharing import CustomerDevice
+
+    from .builder import TuyaDeviceQuirk
+    from .helpers import TuyaDeviceCategory
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +31,12 @@ class QuirksRegistry:
         """Initialize the registry."""
         self._quirks = {}
 
-    def register(self, category: str, product_id: str, quirk: TuyaDeviceQuirk) -> None:
+    def register(
+        self,
+        category: TuyaDeviceCategory,
+        product_id: str,
+        quirk: TuyaDeviceQuirk,
+    ) -> None:
         """Register a quirk for a specific device type."""
         self._quirks.setdefault(category, {})[product_id] = quirk
 

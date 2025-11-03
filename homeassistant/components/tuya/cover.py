@@ -23,7 +23,9 @@ from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, DPType
 from .entity import TuyaEntity
 from .models import EnumTypeData, IntegerTypeData
-from .tuya_device_handlers import TUYA_QUIRKS_REGISTRY, TuyaCoverDefinition, parse_enum
+from .tuya_device_handlers import TUYA_QUIRKS_REGISTRY
+from .tuya_device_handlers.builder import TuyaCoverDefinition
+from .tuya_device_handlers.helpers import parse_enum
 from .util import get_dpcode
 
 

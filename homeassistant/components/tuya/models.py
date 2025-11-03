@@ -9,44 +9,13 @@ import struct
 from typing import Self
 
 from .const import DPCode
-from .tuya_device_handlers.conversion import TuyaIntegerDefinition
+from .tuya_device_handlers.helpers import TuyaIntegerTypeDefinition
 from .util import remap_value
 
 
 @dataclass
-class IntegerTypeData(TuyaIntegerDefinition):
+class IntegerTypeData(TuyaIntegerTypeDefinition):
     """Integer Type Data."""
-
-    dpcode: DPCode
-    min: int
-    max: int
-    scale: float
-    step: float
-    unit: str | None = None
-    type: str | None = None
-
-    @property
-    def max_scaled(self) -> float:
-        """Return the max scaled."""
-        return self.scale_value(self.max)
-
-    @property
-    def min_scaled(self) -> float:
-        """Return the min scaled."""
-        return self.scale_value(self.min)
-
-    @property
-    def step_scaled(self) -> float:
-        """Return the step scaled."""
-        return self.step / (10**self.scale)
-
-    def scale_value(self, value: float) -> float:
-        """Scale a value."""
-        return value / (10**self.scale)
-
-    def scale_value_back(self, value: float) -> int:
-        """Return raw value for scaled."""
-        return int(value * (10**self.scale))
 
     def remap_value_to(
         self,

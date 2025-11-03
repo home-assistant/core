@@ -2,9 +2,14 @@
 
 from __future__ import annotations
 
-from ... import TUYA_QUIRKS_REGISTRY, TuyaDeviceQuirk
-from ...const import TuyaDeviceCategory, TuyaDPCode
-from ...homeassistant import TuyaClimateHVACMode, TuyaEntityCategory
+from ... import TUYA_QUIRKS_REGISTRY
+from ...builder import TuyaDeviceQuirk
+from ...helpers import (
+    TuyaClimateHVACMode,
+    TuyaDeviceCategory,
+    TuyaDPCode,
+    TuyaEntityCategory,
+)
 
 (
     TuyaDeviceQuirk()
