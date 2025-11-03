@@ -19,6 +19,8 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
+
+from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -30,8 +32,6 @@ CONF_RECP_NR = "recipients"
 CONF_SIGNAL_CLI_REST_API = "url"
 CONF_MAX_ALLOWED_DOWNLOAD_SIZE_BYTES = 52428800
 CONF_BASIC_AUTH = "auth"
-CONF_BASIC_AUTH_USER = "user"
-CONF_BASIC_AUTH_PW = "password"
 ATTR_FILENAMES = "attachments"
 ATTR_URLS = "urls"
 ATTR_VERIFY_SSL = "verify_ssl"
@@ -67,8 +67,8 @@ DATA_SCHEMA = vol.Any(
 
 AUTH_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_BASIC_AUTH_USER): cv.string,
-        vol.Required(CONF_BASIC_AUTH_PW): cv.string,
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
     }
 )
 
@@ -99,7 +99,7 @@ def get_service(
 
     if basic_auth:
         auth = SignalCliRestApiHTTPBasicAuth(
-            basic_auth[CONF_BASIC_AUTH_USER], basic_auth[CONF_BASIC_AUTH_PW]
+            basic_auth[CONF_USERNAME], basic_auth[CONF_PASSWORD]
         )
 
     signal_cli_rest_api = SignalCliRestApi(signal_cli_rest_api_url, sender_nr, auth)
