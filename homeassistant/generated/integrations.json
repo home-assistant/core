@@ -2309,7 +2309,7 @@
       "name": "HomeLink",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "cloud_polling"
+      "iot_class": "cloud_push"
     },
     "geo_json_events": {
       "name": "GeoJSON",

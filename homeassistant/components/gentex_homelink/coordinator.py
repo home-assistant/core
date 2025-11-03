@@ -2,17 +2,18 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-import functools
+from functools import partial
 import logging
-from typing import TYPE_CHECKING, TypedDict
+from typing import TYPE_CHECKING, Any, TypedDict
 
 from homelink.model.device import Device
 from homelink.mqtt_provider import MQTTProvider
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.helpers.update_coordinator import BaseDataUpdateCoordinatorProtocol
 from homeassistant.util.ssl import get_default_context
 
 if TYPE_CHECKING:
@@ -41,10 +42,10 @@ class HomeLinkMQTTMessage(TypedDict):
     """HomeLink MQTT Event message."""
 
     type: str
-    data: dict | HomeLinkEventData
+    data: dict[str, HomeLinkEventData]  # Each key is a button id
 
 
-class HomeLinkCoordinator(DataUpdateCoordinator[dict | HomeLinkEventData]):
+class HomeLinkCoordinator(BaseDataUpdateCoordinatorProtocol):
     """HomeLink integration coordinator."""
 
     def __init__(
@@ -54,18 +55,48 @@ class HomeLinkCoordinator(DataUpdateCoordinator[dict | HomeLinkEventData]):
         config_entry: ConfigEntry[HomeLinkData],
     ) -> None:
         """Initialize my coordinator."""
-        super().__init__(
-            hass,
-            _LOGGER,
-            # Name of the data. For logging purposes.
-            name="HomeLink Coordinator",
-            config_entry=config_entry,
-        )
+        self.hass = hass
+        self.logger = _LOGGER
+        self.name = "HomeLinkCoordinator"
+        self.config_entry = config_entry
         self.provider = provider
         self.last_sync_timestamp = None
         self.last_sync_id = None
         self.device_data: list[Device] = []
         self.buttons: list[HomeLinkEventEntity] = []
+        self._listeners: dict[int, tuple[CALLBACK_TYPE, object | None]] = {}
+        self._last_listener_id: int = 0
+        self.data: dict[str, HomeLinkEventData] | None = None
+        self.last_update_success: bool = True
+
+    @callback
+    def async_add_listener(
+        self, update_callback: CALLBACK_TYPE, context: Any = None
+    ) -> Callable[[], None]:
+        """Listen for updates."""
+        self._last_listener_id += 1
+        self._listeners[self._last_listener_id] = (update_callback, context)
+        return partial(self.__async_remove_listener_internal, self._last_listener_id)
+
+    def __async_remove_listener_internal(self, listener_id: int):
+        self._listeners.pop(listener_id)
+
+    @callback
+    def async_set_updated_data(self, data: dict[str, HomeLinkEventData]):
+        """Manually update data and notify listeners."""
+        self.data = data
+        self.last_update_success = True
+        self.async_update_listeners()
+
+    @callback
+    def async_update_listeners(self) -> None:
+        """Update all registered listeners."""
+        for update_callback, _ in list(self._listeners.values()):
+            update_callback()
+
+    async def async_config_entry_first_refresh(self) -> None:
+        """Refresh data for the first time when a config entry is setup."""
+        await self._async_setup()
 
     async def async_on_unload(self, _event):
         """Disconnect and unregister when unloaded."""
@@ -74,30 +105,22 @@ class HomeLinkCoordinator(DataUpdateCoordinator[dict | HomeLinkEventData]):
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
         await self.provider.enable(get_default_context())
-
         await self.discover_devices()
-        callback = functools.partial(on_message, self)
-        self.provider.listen(callback)
+        self.provider.listen(self.on_message)
 
     async def discover_devices(self):
         """Discover devices and build the Entities."""
         self.device_data = await self.provider.discover()
 
-    async def _async_update_data(self) -> dict | HomeLinkEventData:
-        """Fetch data from API endpoint. We only use manual updates so just return an empty dict."""
-        return {}
-
-
-def on_message(
-    coordinator: HomeLinkCoordinator, _topic: str, message: HomeLinkMQTTMessage
-):
-    """MQTT Callback function."""
-
-    if message["type"] == "state":
-        coordinator.hass.add_job(coordinator.async_set_updated_data, message["data"])
-    if message["type"] == "requestSync":
-        if coordinator.config_entry:
-            coordinator.hass.add_job(
-                coordinator.hass.config_entries.async_reload,
-                coordinator.config_entry.entry_id,
-            )
+    def on_message(
+        self: HomeLinkCoordinator, _topic: str, message: HomeLinkMQTTMessage
+    ):
+        "MQTT Callback function."
+        if message["type"] == "state":
+            self.hass.add_job(self.async_set_updated_data, message["data"])
+        if message["type"] == "requestSync":
+            if self.config_entry:
+                self.hass.add_job(
+                    self.hass.config_entries.async_reload,
+                    self.config_entry.entry_id,
+                )

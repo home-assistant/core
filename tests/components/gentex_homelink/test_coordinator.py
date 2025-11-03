@@ -78,7 +78,7 @@ async def test_get_state_updates(
             "At least one state was not initialized as STATE_UNAVAILABLE"
         )
         buttons_unknown = [s.state == "unknown" for s in states]
-        assert all(buttons_unknown), (
+        assert buttons_unknown and all(buttons_unknown), (
             "At least one button state was not initialized to unknown"
         )
 
@@ -93,7 +93,9 @@ async def test_get_state_updates(
             "Some button became unavailable"
         )
         buttons_pressed = [s.attributes["event_type"] == EVENT_PRESSED for s in states]
-        assert all(buttons_pressed), "At least one button was not pressed"
+        assert buttons_pressed and all(buttons_pressed), (
+            "At least one button was not pressed"
+        )
 
 
 async def test_request_sync(hass: HomeAssistant) -> None:
