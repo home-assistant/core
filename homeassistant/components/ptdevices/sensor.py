@@ -202,6 +202,10 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
+
 class PTDevicesSensor(SensorEntity, CoordinatorEntity[PTDevicesCoordinator]):
     """Sensor entity for PTDevices Integration."""
 
