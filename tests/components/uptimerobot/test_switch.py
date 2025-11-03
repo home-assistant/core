@@ -3,7 +3,11 @@
 from unittest.mock import patch
 
 import pytest
-from pyuptimerobot import UptimeRobotAuthenticationException, UptimeRobotException
+from pyuptimerobot import (
+    API_PATH_MONITOR_DETAIL,
+    UptimeRobotAuthenticationException,
+    UptimeRobotException,
+)
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.uptimerobot.const import COORDINATOR_UPDATE_INTERVAL
@@ -55,7 +59,9 @@ async def test_switch_off(hass: HomeAssistant) -> None:
         ),
         patch(
             "pyuptimerobot.UptimeRobot.async_edit_monitor",
-            return_value=mock_uptimerobot_api_response(),
+            return_value=mock_uptimerobot_api_response(
+                api_path=API_PATH_MONITOR_DETAIL, data=MOCK_UPTIMEROBOT_MONITOR_PAUSED
+            ),
         ),
     ):
         assert await hass.config_entries.async_setup(mock_entry.entry_id)
@@ -85,7 +91,10 @@ async def test_switch_on(hass: HomeAssistant) -> None:
         ),
         patch(
             "pyuptimerobot.UptimeRobot.async_edit_monitor",
-            return_value=mock_uptimerobot_api_response(),
+            return_value=mock_uptimerobot_api_response(
+                api_path=API_PATH_MONITOR_DETAIL,
+                data=MOCK_UPTIMEROBOT_MONITOR,
+            ),
         ),
     ):
         assert await hass.config_entries.async_setup(mock_entry.entry_id)

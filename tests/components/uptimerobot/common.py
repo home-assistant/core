@@ -6,12 +6,7 @@ from enum import StrEnum
 from typing import Any
 from unittest.mock import patch
 
-from pyuptimerobot import (
-    UptimeRobotAccount,
-    UptimeRobotApiError,
-    UptimeRobotApiResponse,
-    UptimeRobotMonitor,
-)
+from pyuptimerobot import API_PATH_MONITORS, UptimeRobotApiResponse
 
 from homeassistant import config_entries
 from homeassistant.components.uptimerobot.const import DOMAIN
@@ -28,7 +23,7 @@ MOCK_UPTIMEROBOT_UNIQUE_ID = "1234567890"
 
 MOCK_UPTIMEROBOT_ACCOUNT = {
     "email": MOCK_UPTIMEROBOT_EMAIL,
-    "monitorscount": 1,
+    "monitorsCount": 1,
 }
 MOCK_UPTIMEROBOT_ERROR = {"message": "test error from API."}
 MOCK_UPTIMEROBOT_MONITOR = {
@@ -87,25 +82,21 @@ class MockApiResponseKey(StrEnum):
 
 
 def mock_uptimerobot_api_response(
-    data: list[dict[str, Any]]
-    | list[UptimeRobotMonitor]
-    | UptimeRobotAccount
-    | UptimeRobotApiError
-    | None = None,
-    key: MockApiResponseKey = MockApiResponseKey.MONITORS,
+    data: list[dict[str, Any]] | dict[str, Any],
+    api_path: str = API_PATH_MONITORS,
 ) -> UptimeRobotApiResponse:
     """Mock API response for UptimeRobot."""
+
+    if api_path == API_PATH_MONITORS:
+        data_dict = {"data": data}
+    elif isinstance(data, dict):
+        data_dict = data
+
     return UptimeRobotApiResponse.from_dict(
         {
             "_method": "GET",
-            "_api_path": f"/{key.value}",
-            "data": data
-            if data is not None
-            else {
-                **MOCK_UPTIMEROBOT_ACCOUNT,
-                "error": MOCK_UPTIMEROBOT_ERROR,
-                "monitors": [MOCK_UPTIMEROBOT_MONITOR],
-            }.get(key, {}),
+            "_api_path": api_path,
+            **data_dict,
         }
     )
 
