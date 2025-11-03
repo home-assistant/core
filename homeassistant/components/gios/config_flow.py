@@ -24,7 +24,7 @@ from .const import API_TIMEOUT, CONF_STATION_ID, DOMAIN
 class GiosFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow for GIOS."""
 
-    VERSION = 1
+    VERSION = 2
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

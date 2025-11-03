@@ -20,7 +20,7 @@
       ]),
       'title': 'Home',
       'unique_id': '123',
-      'version': 1,
+      'version': 2,
     }),
     'coordinator_data': dict({
       'aqi': dict({

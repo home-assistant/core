@@ -37,6 +37,7 @@ async def init_integration(
         unique_id="123",
         data={"station_id": 123},
         entry_id="86129426118ae32020417a53712d6eef",
+        version=2,
     )
 
     indexes = await async_load_json_object_fixture(hass, "indexes.json", DOMAIN)

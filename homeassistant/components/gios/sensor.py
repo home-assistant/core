@@ -233,8 +233,11 @@ class GiosSensor(CoordinatorEntity[GiosDataUpdateCoordinator], SensorEntity):
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, str(station_id))},
             manufacturer=MANUFACTURER,
-            name=coordinator.gios.measurement_stations[station_id].name,
             configuration_url=URL.format(station_id=station_id),
+            translation_key="station",
+            translation_placeholders={
+                "station_name": coordinator.gios.measurement_stations[station_id].name,
+            },
         )
         if description.subkey:
             self._attr_unique_id = (
