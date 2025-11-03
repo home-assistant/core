@@ -530,7 +530,7 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SELECT,
         entity_description=MatterSelectEntityDescription(
-            key="OccupancySensorBooleanStateConfigurationCurrentSensitivityLevel",
+            key="AqaraOccupancySensorBooleanStateConfigurationCurrentSensitivityLevel",
             entity_category=EntityCategory.CONFIG,
             translation_key="sensitivity_level",
             options=["low", "standard", "high"],
@@ -549,7 +549,35 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.BooleanStateConfiguration.Attributes.CurrentSensitivityLevel,
         ),
-        vendor_id=(4447, 4619),
-        product_id=(8197, 8195, 4097),
+        vendor_id=(4447,),
+        product_id=(
+            8197,
+            8195,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SELECT,
+        entity_description=MatterSelectEntityDescription(
+            key="HeimanOccupancySensorBooleanStateConfigurationCurrentSensitivityLevel",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="sensitivity_level",
+            options=["low", "standard", "high"],
+            device_to_ha={
+                0: "low",
+                1: "standard",
+                2: "high",
+            }.get,
+            ha_to_device={
+                "low": 0,
+                "standard": 1,
+                "high": 2,
+            }.get,
+        ),
+        entity_class=MatterAttributeSelectEntity,
+        required_attributes=(
+            clusters.BooleanStateConfiguration.Attributes.CurrentSensitivityLevel,
+        ),
+        vendor_id=(4619,),
+        product_id=(4097,),
     ),
 ]

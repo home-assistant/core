@@ -95,7 +95,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sensitivity_level',
-    'unique_id': '00000000000004D2-0000000000000053-MatterNodeDevice-1-OccupancySensorBooleanStateConfigurationCurrentSensitivityLevel-128-0',
+    'unique_id': '00000000000004D2-0000000000000053-MatterNodeDevice-1-AqaraOccupancySensorBooleanStateConfigurationCurrentSensitivityLevel-128-0',
     'unit_of_measurement': None,
   })
 # ---
@@ -154,7 +154,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sensitivity_level',
-    'unique_id': '00000000000004D2-00000000000000CD-MatterNodeDevice-1-OccupancySensorBooleanStateConfigurationCurrentSensitivityLevel-128-0',
+    'unique_id': '00000000000004D2-00000000000000CD-MatterNodeDevice-1-AqaraOccupancySensorBooleanStateConfigurationCurrentSensitivityLevel-128-0',
     'unit_of_measurement': None,
   })
 # ---
@@ -1374,7 +1374,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sensitivity_level',
-    'unique_id': '00000000000004D2-0000000000000058-MatterNodeDevice-1-OccupancySensorBooleanStateConfigurationCurrentSensitivityLevel-128-0',
+    'unique_id': '00000000000004D2-0000000000000058-MatterNodeDevice-1-HeimanOccupancySensorBooleanStateConfigurationCurrentSensitivityLevel-128-0',
     'unit_of_measurement': None,
   })
 # ---
