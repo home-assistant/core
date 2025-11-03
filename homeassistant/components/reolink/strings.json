@@ -445,6 +445,9 @@
       "alarm_volume": {
         "name": "Alarm volume"
       },
+      "audio_noise_reduction": {
+        "name": "Audio noise reduction"
+      },
       "auto_quick_reply_time": {
         "name": "Auto quick reply time"
       },
