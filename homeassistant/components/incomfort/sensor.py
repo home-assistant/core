@@ -32,7 +32,6 @@ class IncomfortSensorEntityDescription(SensorEntityDescription):
     value_key: str
     extra_key: str | None = None
     entity_category = EntityCategory.DIAGNOSTIC
-    value_fn: Callable[[float], float] | None = None
 
 
 SENSOR_TYPES: tuple[IncomfortSensorEntityDescription, ...] = (
