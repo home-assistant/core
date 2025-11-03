@@ -75,6 +75,7 @@ class ZBT2FirmwareMixin(ConfigEntryBaseFlow, FirmwareInstallFlowProtocol):
 
     context: ConfigFlowContext
     BOOTLOADER_RESET_METHODS = [ResetTarget.RTS_DTR]
+    ZIGBEE_BAUDRATE = 460800
 
     async def async_step_install_zigbee_firmware(
         self, user_input: dict[str, Any] | None = None
@@ -112,7 +113,6 @@ class HomeAssistantConnectZBT2ConfigFlow(
 
     VERSION = 1
     MINOR_VERSION = 1
-    ZIGBEE_BAUDRATE = 460800
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the config flow."""
