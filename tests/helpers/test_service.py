@@ -469,6 +469,7 @@ async def test_service_call(hass: HomeAssistant) -> None:
         "floor_id": ["test-floor-id"],
     }
 
+    # Templated strings in target fields
     config = {
         "action": "{{ 'test_domain.test_service' }}",
         "target": {
@@ -489,6 +490,7 @@ async def test_service_call(hass: HomeAssistant) -> None:
         "floor_id": ["floor-first", "floor-second"],
     }
 
+    # Templated dict as target
     config = {
         "action": "{{ 'test_domain.test_service' }}",
         "target": "{{ var_target }}",
@@ -511,6 +513,7 @@ async def test_service_call(hass: HomeAssistant) -> None:
         "entity_id": ["light.static"],
     }
 
+    # Templated lists as target fields
     config = {
         "action": "{{ 'test_domain.test_service' }}",
         "target": {
