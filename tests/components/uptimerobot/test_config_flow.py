@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 from pyuptimerobot import (
-    UptimeRobotAccount,
+    API_PATH_USER_ME,
     UptimeRobotAuthenticationException,
     UptimeRobotConnectionException,
     UptimeRobotException,
@@ -22,7 +22,6 @@ from .common import (
     MOCK_UPTIMEROBOT_API_KEY_READ_ONLY,
     MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA,
     MOCK_UPTIMEROBOT_EMAIL,
-    MockApiResponseKey,
     mock_uptimerobot_api_response,
 )
 
@@ -42,8 +41,7 @@ async def test_user(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.uptimerobot.config_flow.UptimeRobot.async_get_account_details",
             return_value=mock_uptimerobot_api_response(
-                key=MockApiResponseKey.ACCOUNT,
-                data=UptimeRobotAccount.from_dict(MOCK_UPTIMEROBOT_ACCOUNT),
+                api_path=API_PATH_USER_ME, data=MOCK_UPTIMEROBOT_ACCOUNT
             ),
         ),
         patch(
@@ -75,7 +73,10 @@ async def test_user_key_read_only(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.uptimerobot.config_flow.UptimeRobot.async_get_account_details",
-        return_value=mock_uptimerobot_api_response(key=MockApiResponseKey.ACCOUNT),
+        return_value=mock_uptimerobot_api_response(
+            api_path=API_PATH_USER_ME,
+            data=MOCK_UPTIMEROBOT_ACCOUNT,
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -152,8 +153,8 @@ async def test_user_unique_id_already_exists(
         patch(
             "homeassistant.components.uptimerobot.config_flow.UptimeRobot.async_get_account_details",
             return_value=mock_uptimerobot_api_response(
-                key=MockApiResponseKey.ACCOUNT,
-                data=UptimeRobotAccount.from_dict(MOCK_UPTIMEROBOT_ACCOUNT),
+                api_path=API_PATH_USER_ME,
+                data=MOCK_UPTIMEROBOT_ACCOUNT,
             ),
         ),
         patch(
@@ -189,8 +190,8 @@ async def test_reauthentication(
         patch(
             "homeassistant.components.uptimerobot.config_flow.UptimeRobot.async_get_account_details",
             return_value=mock_uptimerobot_api_response(
-                key=MockApiResponseKey.ACCOUNT,
-                data=UptimeRobotAccount.from_dict(MOCK_UPTIMEROBOT_ACCOUNT),
+                api_path=API_PATH_USER_ME,
+                data=MOCK_UPTIMEROBOT_ACCOUNT,
             ),
         ),
         patch(
@@ -262,8 +263,8 @@ async def test_reauthentication_failure_no_existing_entry(
         patch(
             "homeassistant.components.uptimerobot.config_flow.UptimeRobot.async_get_account_details",
             return_value=mock_uptimerobot_api_response(
-                key=MockApiResponseKey.ACCOUNT,
-                data=UptimeRobotAccount.from_dict(MOCK_UPTIMEROBOT_ACCOUNT),
+                api_path=API_PATH_USER_ME,
+                data=MOCK_UPTIMEROBOT_ACCOUNT,
             ),
         ),
         patch(
@@ -298,13 +299,11 @@ async def test_reauthentication_failure_account_not_matching(
         patch(
             "homeassistant.components.uptimerobot.config_flow.UptimeRobot.async_get_account_details",
             return_value=mock_uptimerobot_api_response(
-                key=MockApiResponseKey.ACCOUNT,
-                data=UptimeRobotAccount.from_dict(
-                    {
-                        "email": "wrong_account",
-                        "monitorscount": 1,
-                    }
-                ),
+                api_path=API_PATH_USER_ME,
+                data={
+                    "email": "wrong_account",
+                    "monitorsCount": 1,
+                },
             ),
         ),
         patch(
@@ -345,8 +344,7 @@ async def test_reconfigure_successful(
         patch(
             "homeassistant.components.uptimerobot.config_flow.UptimeRobot.async_get_account_details",
             return_value=mock_uptimerobot_api_response(
-                key=MockApiResponseKey.ACCOUNT,
-                data=UptimeRobotAccount.from_dict(MOCK_UPTIMEROBOT_ACCOUNT),
+                api_path=API_PATH_USER_ME, data=MOCK_UPTIMEROBOT_ACCOUNT
             ),
         ),
         patch(
@@ -408,8 +406,7 @@ async def test_reconfigure_failed(
         patch(
             "homeassistant.components.uptimerobot.config_flow.UptimeRobot.async_get_account_details",
             return_value=mock_uptimerobot_api_response(
-                key=MockApiResponseKey.ACCOUNT,
-                data=UptimeRobotAccount.from_dict(MOCK_UPTIMEROBOT_ACCOUNT),
+                api_path=API_PATH_USER_ME, data=MOCK_UPTIMEROBOT_ACCOUNT
             ),
         ),
         patch(

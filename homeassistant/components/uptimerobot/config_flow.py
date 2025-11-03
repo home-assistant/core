@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING, Any
 from pyuptimerobot import (
     UptimeRobot,
     UptimeRobotAccount,
-    UptimeRobotApiError,
     UptimeRobotApiResponse,
     UptimeRobotAuthenticationException,
     UptimeRobotException,
@@ -34,7 +33,7 @@ class UptimeRobotConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> tuple[dict[str, str], UptimeRobotAccount | None]:
         """Validate the user input allows us to connect."""
         errors: dict[str, str] = {}
-        response: UptimeRobotApiResponse | UptimeRobotApiError | None = None
+        response: UptimeRobotApiResponse | None = None
         key: str = data[CONF_API_KEY]
         if key.startswith(("ur", "m")):
             LOGGER.error("Wrong API key type detected, use the 'main' API key")

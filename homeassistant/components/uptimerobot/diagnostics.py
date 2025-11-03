@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
-from pyuptimerobot import UptimeRobotAccount, UptimeRobotException
+from pyuptimerobot import UptimeRobotException
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
@@ -27,8 +27,6 @@ async def async_get_config_entry_diagnostics(
         account = str(err)
     else:
         if (details := response.data) is not None:
-            if TYPE_CHECKING:
-                assert isinstance(details, UptimeRobotAccount)
             account = {
                 "monitorsCount": details.monitorsCount,
                 "email": details.email,
