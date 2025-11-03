@@ -22,7 +22,7 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 async def async_migrate_entry(hass: HomeAssistant, entry: PooldoseConfigEntry) -> bool:
     """Migrate old entry."""
-    # Version 1.0 -> 1.1: Migrate entity unique IDs
+    # Version 1.1 -> 1.2: Migrate entity unique IDs
     # - ofa_orp_value -> ofa_orp_time
     # - ofa_ph_value -> ofa_ph_time
     if entry.version == 1 and entry.minor_version < 2:
