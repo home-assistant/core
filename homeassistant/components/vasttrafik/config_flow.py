@@ -74,7 +74,9 @@ async def search_stations(
     return [], "no_stations_found"
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
+async def validate_api_credentials(
+    hass: HomeAssistant, data: dict[str, Any]
+) -> dict[str, Any]:
     """Validate that the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
@@ -136,7 +138,7 @@ class VasttrafikConfigFlow(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
 
             try:
-                await validate_input(self.hass, user_input)
+                await validate_api_credentials(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -160,7 +162,7 @@ class VasttrafikConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             try:
-                await validate_input(self.hass, user_input)
+                await validate_api_credentials(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -197,7 +199,7 @@ class VasttrafikConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         try:
-            await validate_input(self.hass, import_data)
+            await validate_api_credentials(self.hass, import_data)
         except CannotConnect:
             return self.async_abort(reason="cannot_connect")
         except InvalidAuth:
