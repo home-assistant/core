@@ -1,0 +1,7 @@
+{
+  "services": {
+    "custom_cleaning": {
+      "service": "mdi:broom"
+    }
+  }
+}
