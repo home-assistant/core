@@ -7,6 +7,7 @@ import logging
 import os
 from subprocess import PIPE
 import sys
+from types import SimpleNamespace
 from unittest.mock import MagicMock, Mock, call, patch
 
 import pytest
@@ -401,26 +402,64 @@ def test_get_is_installed() -> None:
     assert not package.is_installed(f"{installed_package}<{installed_version}")
 
 
-def test_vcs_is_installed() -> None:
-    """Test is_installed can parse VCS requirements."""
-    assert (
-        package.is_installed(
-            "homeassistant@git+https://github.com/home-assistant/core@2025.5.0"
-        )
-        is False
+@pytest.mark.parametrize(
+    ("requirement_str", "expected"),
+    [
+        # Tag match hash
+        (
+            "homeassistant@git+https://github.com/home-assistant/core@2025.5.0",
+            False,
+        ),
+        # Branch match hash
+        (
+            "homeassistant@git+https://github.com/home-assistant/core@dev",
+            False,
+        ),
+        # Full hash matches exactly
+        (
+            "homeassistant@git+https://github.com/home-assistant/core@e8bdc7286e8dd18c24e0b57720795d0d20c955bd",
+            True,
+        ),
+        # Short hash match
+        (
+            "homeassistant@git+https://github.com/home-assistant/core@e8bdc72",
+            True,
+        ),
+        # Hash does not match
+        (
+            "homeassistant@git+https://github.com/home-assistant/core@60b8392",
+            False,
+        ),
+    ],
+)
+def test_is_installed_vcs_commit(requirement_str, expected) -> None:
+    """Test is_installed with homeassistant and various aiohttp VCS commit IDs."""
+    fake_vcs_info = SimpleNamespace(
+        commit_id="e8bdc7286e8dd18c24e0b57720795d0d20c955bd"
     )
-    assert (
-        package.is_installed(
-            "homeassistant@git+https://github.com/home-assistant/core@dev"
-        )
-        is False
-    )
-    assert (
-        package.is_installed(
-            "homeassistant@git+https://github.com/home-assistant/core@60b8392"
-        )
-        is False
-    )
+    fake_origin = SimpleNamespace(vcs_info=fake_vcs_info)
+    fake_dist = MagicMock(origin=fake_origin)
+    with (
+        patch(
+            "homeassistant.util.package.Distribution.from_name", return_value=fake_dist
+        ),
+        patch("homeassistant.util.package.version", return_value="2025.5.0"),
+    ):
+        assert package.is_installed(requirement_str) is expected
+
+
+def test_is_installed_non_vcs_commit() -> None:
+    """Test is_installed with homeassistant and no VCS info present (simulate dir install)."""
+    requirement_str = "homeassistant@git+https://github.com/home-assistant/core@e8bdc72"
+    fake_origin = SimpleNamespace(dir_info=True)
+    fake_dist = MagicMock(origin=fake_origin)
+    with (
+        patch(
+            "homeassistant.util.package.Distribution.from_name", return_value=fake_dist
+        ),
+        patch("homeassistant.util.package.version", return_value="2025.5.0"),
+    ):
+        assert package.is_installed(requirement_str) is False
 
 
 def test_check_package_previous_failed_install() -> None:

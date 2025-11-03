@@ -87,14 +87,24 @@ def is_installed(requirement_str: str) -> bool:
             )
             return False
         if req.url:
-            if (origin := Distribution.from_name(req.name).origin) is not None:
-                # If hash matches the installed vcs commit id
-                # then it is the latest version
-                return origin.vcs_info.commit_id[:7] in req.url
-            return False
-        return req.specifier.contains(installed_version, prereleases=True)
+            # If hash matches the installed vcs commit id
+            # then it is the latest version
+            # Branch and tag returns False
+            if (origin := Distribution.from_name(req.name).origin) is None:
+                return False
+            if getattr(origin, "vcs_info", None) is None:
+                # If existing package is a specifier we can't match with vcs
+                _LOGGER.error(
+                    "Invalid requirement '%s'. Current installation is not VCS format",
+                    requirement_str,
+                )
+                return False
+
+            return origin.vcs_info.commit_id[:7] in req.url
     except PackageNotFoundError:
         return False
+
+    return req.specifier.contains(installed_version, prereleases=True)
 
 
 _UV_ENV_PYTHON_VARS = (
