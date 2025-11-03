@@ -146,6 +146,15 @@
   "exceptions": {
     "malformed_response_missing_key": {
       "message": "The response from PTDevices was missing the key(s) `{missing_keys}`"
+    },
+    "cannot_connect": {
+      "message": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "invalid_auth": {
+      "message": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "invalid_access_token": {
+      "message": "[%key:common::config_flow::error::invalid_access_token%]"
     }
   }
 }

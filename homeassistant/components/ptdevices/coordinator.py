@@ -91,7 +91,7 @@ class PTDevicesCoordinator(DataUpdateCoordinator[PTDevicesResponse]):
         except aioptdevices.PTDevicesUnauthorizedError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
-                translation_key="invalid_api_key",
+                translation_key="invalid_access_token",
                 translation_placeholders={"error": repr(err)},
             ) from err
         except aioptdevices.PTDevicesForbiddenError as err:
@@ -109,7 +109,6 @@ class PTDevicesCoordinator(DataUpdateCoordinator[PTDevicesResponse]):
         ]
         if missing_keys:
             raise UpdateFailed(
-                # "Test Error {key}",
                 translation_domain=DOMAIN,
                 translation_key="malformed_response_missing_key",
                 translation_placeholders={
