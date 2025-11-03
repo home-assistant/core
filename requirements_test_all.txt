@@ -2120,6 +2120,9 @@ python-technove==2.0.0
 # homeassistant.components.telegram_bot
 python-telegram-bot[socks]==22.1
 
+# homeassistant.components.xbox
+python-xbox==0.1.0
+
 # homeassistant.components.uptime_kuma
 pythonkuma==0.3.1
 
@@ -2605,9 +2608,6 @@ wsdot==0.0.1
 
 # homeassistant.components.wyoming
 wyoming==1.7.2
-
-# homeassistant.components.xbox
-xbox-webapi==2.1.0
 
 # homeassistant.components.xiaomi_ble
 xiaomi-ble==1.2.0
