@@ -80,7 +80,7 @@ class HomematicipGenericEntity(Entity):
     def __init__(
         self,
         hap: HomematicipHAP,
-        device,
+        device: Group | Device,
         post: str | None = None,
         channel: int | None = None,
         is_multi_channel: bool | None = False,
@@ -89,7 +89,7 @@ class HomematicipGenericEntity(Entity):
         """Initialize the generic entity."""
         self._hap = hap
         self._home: AsyncHome = hap.home
-        self._device: Device = device
+        self._device: Group | Device = device
         self._post: str | None = post
         self._channel: int | None = channel
 
@@ -111,17 +111,19 @@ class HomematicipGenericEntity(Entity):
         """Return device specific attributes."""
         # Only physical devices should be HA devices.
         if isinstance(self._device, Device):
+            device_id = getattr(self._device, "id", "unknown")
+            home_id = getattr(self._device, "homeId", "unknown")
             return DeviceInfo(
                 identifiers={
                     # Serial numbers of Homematic IP device
-                    (DOMAIN, self._device.id)
+                    (DOMAIN, device_id)
                 },
                 manufacturer=self._device.oem,
                 model=self._device.modelType,
                 name=self._device.label,
                 sw_version=self._device.firmwareVersion,
                 # Link to the homematic ip access point.
-                via_device=(DOMAIN, self._device.homeId),
+                via_device=(DOMAIN, home_id),
             )
         return None
 
@@ -195,25 +197,31 @@ class HomematicipGenericEntity(Entity):
     def name(self) -> str:
         """Return the name of the generic entity."""
 
-        name = None
+        name = ""
         # Try to get a label from a channel.
-        if hasattr(self._device, "functionalChannels") and self.functional_channel:
+        functional_channels = getattr(self._device, "functionalChannels", None)
+        if functional_channels and self.functional_channel:
             if self._is_multi_channel:
-                name = str(self.functional_channel.label)
-            elif len(self._device.functionalChannels) > 1:
-                name = str(self._device.functionalChannels[1].label)
+                label = getattr(self.functional_channel, "label", None)
+                if label:
+                    name = str(label)
+            elif len(functional_channels) > 1:
+                label = getattr(functional_channels[1], "label", None)
+                if label:
+                    name = str(label)
 
         # Use device label, if name is not defined by channel label.
         if not name:
-            name = self._device.label
+            name = self._device.label or ""
             if self._post:
                 name = f"{name} {self._post}"
             elif self._is_multi_channel:
                 name = f"{name} Channel{self.get_channel_index()}"
 
         # Add a prefix to the name if the homematic ip home has a name.
-        if name and self._home.name:
-            name = f"{self._home.name} {name}"
+        home_name = getattr(self._home, "name", None)
+        if name and home_name:
+            name = f"{home_name} {name}"
 
         return name
 
@@ -261,24 +269,25 @@ class HomematicipGenericEntity(Entity):
 
         return state_attr
 
-    def get_current_channel(self) -> FunctionalChannel:
+    def get_current_channel(self) -> FunctionalChannel | None:
         """Return the FunctionalChannel for device."""
-        if hasattr(self._device, "functionalChannels"):
+        functional_channels = getattr(self._device, "functionalChannels", None)
+        if functional_channels:
             if self._is_multi_channel:
                 if self._channel_real_index is not None:
                     return next(
                         (
                             channel
-                            for channel in self._device.functionalChannels
+                            for channel in functional_channels
                             if channel.index == self._channel_real_index
                         ),
                         None,
                     )
 
-                return self._device.functionalChannels[self._channel]
+                return functional_channels[self._channel]
 
-            if len(self._device.functionalChannels) > 1:
-                return self._device.functionalChannels[1]
+            if len(functional_channels) > 1:
+                return functional_channels[1]
 
         return None
 
