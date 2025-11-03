@@ -5,7 +5,11 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from pysignalclirestapi import SignalCliRestApi, SignalCliRestApiHTTPBasicAuth, SignalCliRestApiError
+from pysignalclirestapi import (
+    SignalCliRestApi,
+    SignalCliRestApiError,
+    SignalCliRestApiHTTPBasicAuth,
+)
 import requests
 import voluptuous as vol
 
@@ -73,9 +77,10 @@ PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
         vol.Required(CONF_SENDER_NR): cv.string,
         vol.Required(CONF_SIGNAL_CLI_REST_API): cv.string,
         vol.Required(CONF_RECP_NR): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_BASIC_AUTH): AUTH_SCHEMA
+        vol.Optional(CONF_BASIC_AUTH): AUTH_SCHEMA,
     }
 )
+
 
 def get_service(
     hass: HomeAssistant,
@@ -90,12 +95,14 @@ def get_service(
 
     basic_auth = config.get(CONF_BASIC_AUTH)
 
-    signal_cli_rest_api = SignalCliRestApi(signal_cli_rest_api_url, sender_nr)
+    auth = None
 
     if basic_auth:
-        user = basic_auth.get(CONF_BASIC_AUTH_USER)
-        password = basic_auth.get(CONF_BASIC_AUTH_PW)
-        signal_cli_rest_api._auth = SignalCliRestApiHTTPBasicAuth(user, password)
+        auth = SignalCliRestApiHTTPBasicAuth(
+            basic_auth[CONF_BASIC_AUTH_USER], basic_auth[CONF_BASIC_AUTH_PW]
+        )
+
+    signal_cli_rest_api = SignalCliRestApi(signal_cli_rest_api_url, sender_nr, auth)
 
     return SignalNotificationService(hass, recp_nrs, signal_cli_rest_api)
 
