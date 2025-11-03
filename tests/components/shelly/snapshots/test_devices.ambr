@@ -1612,7 +1612,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'overvoltage',
     'unique_id': '123456789ABC-switch:1-overvoltage',
     'unit_of_measurement': None,
   })
@@ -1661,7 +1661,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'overcurrent',
     'unique_id': '123456789ABC-switch:3-overcurrent',
     'unit_of_measurement': None,
   })
@@ -1710,7 +1710,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'overheating',
     'unique_id': '123456789ABC-switch:3-overtemp',
     'unit_of_measurement': None,
   })
@@ -1759,7 +1759,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'overpowering',
     'unique_id': '123456789ABC-switch:3-overpower',
     'unit_of_measurement': None,
   })
@@ -1808,7 +1808,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'overvoltage',
     'unique_id': '123456789ABC-switch:3-overvoltage',
     'unit_of_measurement': None,
   })
@@ -1857,7 +1857,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'cloud',
     'unique_id': '123456789ABC-cloud-cloud',
     'unit_of_measurement': None,
   })
@@ -1955,7 +1955,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'overcurrent',
     'unique_id': '123456789ABC-switch:0-overcurrent',
     'unit_of_measurement': None,
   })
@@ -2151,7 +2151,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'overcurrent',
     'unique_id': '123456789ABC-switch:2-overcurrent',
     'unit_of_measurement': None,
   })
@@ -2200,7 +2200,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'overheating',
     'unique_id': '123456789ABC-switch:2-overtemp',
     'unit_of_measurement': None,
   })
@@ -2249,7 +2249,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'overpowering',
     'unique_id': '123456789ABC-switch:2-overpower',
     'unit_of_measurement': None,
   })
@@ -2298,7 +2298,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'overvoltage',
     'unique_id': '123456789ABC-switch:2-overvoltage',
     'unit_of_measurement': None,
   })
@@ -4425,7 +4425,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'cloud',
     'unique_id': '123456789ABC-cloud-cloud',
     'unit_of_measurement': None,
   })
@@ -4474,7 +4474,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'occupancy_with_channel_name',
     'unique_id': '123456789ABC-presencezone:201-presencezone_state',
     'unit_of_measurement': None,
   })
@@ -4523,7 +4523,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'occupancy_with_channel_name',
     'unique_id': '123456789ABC-presencezone:202-presencezone_state',
     'unit_of_measurement': None,
   })
@@ -4621,7 +4621,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'occupancy_with_channel_name',
     'unique_id': '123456789ABC-presencezone:200-presencezone_state',
     'unit_of_measurement': None,
   })
@@ -6078,7 +6078,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'cloud',
     'unique_id': '123456789ABC-cloud-cloud',
     'unit_of_measurement': None,
   })
@@ -6323,7 +6323,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'overpowering',
     'unique_id': '123456789ABC-cover:0-overpower',
     'unit_of_measurement': None,
   })
@@ -7132,7 +7132,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'cloud',
     'unique_id': '123456789ABC-cloud-cloud',
     'unit_of_measurement': None,
   })
@@ -7328,7 +7328,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'overcurrent',
     'unique_id': '123456789ABC-switch:0-overcurrent',
     'unit_of_measurement': None,
   })
@@ -7671,7 +7671,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'overvoltage',
     'unique_id': '123456789ABC-switch:1-overvoltage',
     'unit_of_measurement': None,
   })
@@ -9003,7 +9003,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'cloud',
     'unique_id': '123456789ABC-cloud-cloud',
     'unit_of_measurement': None,
   })
