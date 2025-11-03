@@ -55,7 +55,7 @@
     'state': '1.86',
   })
 # ---
-# name: test_setup_platform[sensor.boiler_signal_strength-entry]
+# name: test_setup_platform[sensor.boiler_rssi-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -70,7 +70,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.boiler_signal_strength',
+    'entity_id': 'sensor.boiler_rssi',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -80,33 +80,31 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
+    'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Signal strength',
+    'original_name': 'RSSI',
     'platform': 'incomfort',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'rf_message_rssi',
     'unique_id': 'c0ffeec0ffee_rf_message_rssi',
-    'unit_of_measurement': 'dB',
+    'unit_of_measurement': None,
   })
 # ---
-# name: test_setup_platform[sensor.boiler_signal_strength-state]
+# name: test_setup_platform[sensor.boiler_rssi-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Boiler Signal strength',
+      'friendly_name': 'Boiler RSSI',
       'rfstatus_cntr': 0,
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.boiler_signal_strength',
+    'entity_id': 'sensor.boiler_rssi',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '-80',
+    'state': '30',
   })
 # ---
 # name: test_setup_platform[sensor.boiler_tap_temperature-entry]
