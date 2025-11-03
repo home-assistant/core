@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+import asyncio
 import collections
 from contextlib import suppress
 from enum import StrEnum
@@ -38,7 +39,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.data_entry_flow import AbortFlow, progress_step
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.selector import FileSelector, FileSelectorConfig
@@ -188,6 +189,7 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
 
         self._hass = None  # type: ignore[assignment]
         self._radio_mgr = ZhaRadioManager()
+        self._restore_backup_task: asyncio.Task[None] | None = None
 
     @property
     def hass(self) -> HomeAssistant:
@@ -460,6 +462,7 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         self._radio_mgr.chosen_backup = self._radio_mgr.backups[0]
         return await self.async_step_maybe_reset_old_radio()
 
+    @progress_step()
     async def async_step_maybe_reset_old_radio(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -606,6 +609,7 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         # This step exists only for translations, it does nothing new
         return await self.async_step_form_new_network(user_input)
 
+    @progress_step()
     async def async_step_form_new_network(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -695,49 +699,81 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm restore for EZSP radios that require permanent IEEE writes."""
-        if user_input is not None:
-            if user_input[OVERWRITE_COORDINATOR_IEEE]:
-                # On confirmation, overwrite destructively
-                try:
-                    await self._radio_mgr.restore_backup(overwrite_ieee=True)
-                except HomeAssistantError:
-                    # User unplugged the new adapter, allow retry
-                    return await self.async_step_plug_in_new_radio()
-                except CannotWriteNetworkSettings as exc:
-                    return self.async_abort(
-                        reason="cannot_restore_backup",
-                        description_placeholders={"error": str(exc)},
-                    )
 
-                return await self._async_create_radio_entry()
+        if self._restore_backup_task is None:
+            self._restore_backup_task = self.hass.async_create_task(
+                self._radio_mgr.restore_backup()
+            )
 
-            # On rejection, explain why we can't restore
-            return self.async_abort(reason="cannot_restore_backup_no_ieee_confirm")
+        if not self._restore_backup_task.done():
+            return self.async_show_progress(
+                step_id="maybe_confirm_ezsp_restore",
+                progress_action="try_restore_backup",
+                progress_task=self._restore_backup_task,
+            )
 
-        # On first attempt, just try to restore nondestructively
         try:
-            await self._radio_mgr.restore_backup()
+            await self._restore_backup_task
         except DestructiveWriteNetworkSettings:
-            # Restore cannot happen automatically, we need to ask for permission
-            pass
+            # If we cannot restore without overwriting the IEEE, ask for confirmation
+            return self.async_show_progress_done(
+                next_step_id="confirm_ezsp_ieee_overwrite"
+            )
         except HomeAssistantError:
             # User unplugged the new adapter, allow retry
-            return await self.async_step_plug_in_new_radio()
+            return self.async_show_progress_done(
+                next_step_id="step_plug_in_new_radio"
+            )
         except CannotWriteNetworkSettings as exc:
             return self.async_abort(
                 reason="cannot_restore_backup",
                 description_placeholders={"error": str(exc)},
             )
-        else:
-            return await self._async_create_radio_entry()
+        finally:
+            self._restore_backup_task = None
 
-        # If it fails, show the form
-        return self.async_show_form(
-            step_id="maybe_confirm_ezsp_restore",
-            data_schema=vol.Schema(
-                {vol.Required(OVERWRITE_COORDINATOR_IEEE, default=True): bool}
-            ),
-        )
+        # Otherwise, proceed to entry creation
+        return self.async_show_progress_done(next_step_id="create_entry")
+
+    async def async_step_confirm_ezsp_ieee_overwrite(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Show confirmation form for EZSP IEEE address overwrite."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="confirm_ezsp_ieee_overwrite",
+                data_schema=vol.Schema(
+                    {vol.Required(OVERWRITE_COORDINATOR_IEEE, default=True): bool}
+                ),
+            )
+
+        if not user_input[OVERWRITE_COORDINATOR_IEEE]:
+            return self.async_abort(reason="cannot_restore_backup_no_ieee_confirm")
+
+        return await self.async_step_restore_backup()
+
+    @progress_step()
+    async def async_step_restore_backup(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Restore backup to adapter."""
+        try:
+            await self._radio_mgr.restore_backup(overwrite_ieee=True)
+        except CannotWriteNetworkSettings as exc:
+            raise AbortFlow(
+                reason="cannot_restore_backup",
+                description_placeholders={"error": str(exc)},
+            ) from exc
+
+        return await self._async_create_radio_entry()
+
+    async def async_step_create_entry(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Create the config entry after successful setup/migration."""
+
+        # This step only exists so that we can create entries from other steps
+        return await self._async_create_radio_entry()
 
 
 class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):

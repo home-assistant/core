@@ -16,6 +16,12 @@
       "invalid_backup_json": "Invalid backup JSON"
     },
     "flow_title": "{name}",
+    "progress": {
+      "form_new_network": "Forming Zigbee network",
+      "maybe_reset_old_radio": "Resetting old adapter",
+      "restore_backup": "Writing backup to adapter",
+      "try_restore_backup": "Restoring network backup"
+    },
     "step": {
       "choose_automatic_backup": {
         "data": {
@@ -75,6 +81,13 @@
       },
       "confirm": {
         "description": "Do you want to set up {name}?"
+      },
+      "confirm_ezsp_ieee_overwrite": {
+        "data": {
+          "overwrite_coordinator_ieee": "Permanently replace the adapter IEEE address"
+        },
+        "description": "Your backup has a different IEEE address than your adapter. For your network to function properly, the IEEE address of your adapter should also be changed.\n\nThis is a permanent operation.",
+        "title": "Overwrite adapter IEEE address"
       },
       "confirm_hardware": {
         "description": "Do you want to set up {name}?"
