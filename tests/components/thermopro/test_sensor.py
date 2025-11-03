@@ -191,17 +191,7 @@ async def test_triggers_rediscovery_on_unavailable(hass: HomeAssistant) -> None:
 
 
 async def test_entities_restore_and_update(hass: HomeAssistant) -> None:
-    """Test that entities are created and can be updated with new data.
-
-    This test verifies the basic functionality and data update behavior:
-    1. Device broadcasts and entities are created
-    2. Device broadcasts updated data and entities update accordingly
-
-    Note: Entity data is persisted to storage via PassiveBluetoothProcessorCoordinator.
-    When SensorEntityDescription is passed to async_register_processor, entity data
-    will be restored on restart, preventing entities from appearing unavailable
-    until the device broadcasts again.
-    """
+    """Test entities are created on first broadcast and update with new data."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="4125DDBA-2774-4851-9889-6AADDD4CAC3D",
