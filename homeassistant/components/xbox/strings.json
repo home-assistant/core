@@ -40,8 +40,20 @@
         "state_attributes": {
           "bio": { "name": "Bio" },
           "display_name": { "name": "Display name" },
+          "location": { "name": "Location" },
           "real_name": { "name": "Real name" }
         }
+      }
+    },
+    "image": {
+      "avatar": {
+        "name": "Avatar"
+      },
+      "gamerpic": {
+        "name": "Gamerpic"
+      },
+      "now_playing": {
+        "name": "[%key:component::xbox::entity::sensor::now_playing::name%]"
       }
     },
     "sensor": {
