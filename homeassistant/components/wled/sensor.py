@@ -26,8 +26,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 
-from . import WLEDConfigEntry
-from .coordinator import WLEDDataUpdateCoordinator
+from .coordinator import WLEDConfigEntry, WLEDDataUpdateCoordinator
 from .entity import WLEDEntity
 
 # Coordinator is used to centralize the data updates
