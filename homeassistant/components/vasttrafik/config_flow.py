@@ -284,17 +284,13 @@ class VasttrafikSubentryFlow(ConfigSubentryFlow):
             errors=errors,
         )
 
-    async def async_step_select_station(self, user_input=None):
+    async def async_step_select_station(self, user_input: dict[str, str] | None = None):
         """Select station and configure departure sensor."""
         errors = {}
 
         if user_input is not None:
-            selected_station = user_input.get("station")
-            if not selected_station:
-                errors["base"] = "station_required"
-            else:
-                self._selected_station = selected_station
-                return await self.async_step_configure()
+            self._selected_station = user_input["station"]
+            return await self.async_step_configure()
 
         station_options = {
             station["value"]: station["label"] for station in self._search_results
