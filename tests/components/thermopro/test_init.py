@@ -8,12 +8,13 @@ import pytest
 
 from homeassistant.components.thermopro import __init__ as thermopro
 from homeassistant.components.thermopro.const import DOMAIN
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from tests.common import MockConfigEntry
 
 
-async def test_setup_waits_for_bluetooth_scanner(hass) -> None:
+async def test_setup_waits_for_bluetooth_scanner(hass: HomeAssistant) -> None:
     """Ensure setup waits for Bluetooth scanners to become available."""
     entry = MockConfigEntry(domain=DOMAIN, unique_id="aa:bb:cc:dd:ee:ff")
     entry.add_to_hass(hass)
