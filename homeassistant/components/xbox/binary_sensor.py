@@ -53,6 +53,7 @@ def profile_attributes(person: Person, _: Title | None) -> dict[str, Any]:
     attributes["display_name"] = person.display_name
     attributes["real_name"] = person.real_name or None
     attributes["bio"] = person.detail.bio if person.detail else None
+    attributes["location"] = person.detail.location if person.detail else None
     return attributes
 
 
