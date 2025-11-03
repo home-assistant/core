@@ -12,10 +12,12 @@ from homeassistant.components.tuya.tuya_device_handlers import (
     TUYA_QUIRKS_REGISTRY,
     QuirksRegistry,
     TuyaDeviceQuirk,
-    register_tuya_quirks,
 )
 from homeassistant.components.tuya.tuya_device_handlers.base_quirk import (
     BaseTuyaDefinition,
+)
+from homeassistant.components.tuya.tuya_device_handlers.devices import (
+    register_tuya_quirks,
 )
 from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant

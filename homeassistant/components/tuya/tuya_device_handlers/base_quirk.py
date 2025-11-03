@@ -38,7 +38,9 @@ class TuyaClimateDefinition(BaseTuyaDefinition):
 
     switch_only_hvac_mode: TuyaClimateHVACMode
 
+    current_temperature_dp_code: TuyaDPCode | None = None
     current_temperature_state_conversion: TuyaIntegerConversionFunction | None = None
+    target_temperature_dp_code: TuyaDPCode | None = None
     target_temperature_state_conversion: TuyaIntegerConversionFunction | None = None
     target_temperature_command_conversion: TuyaIntegerConversionFunction | None = None
 
@@ -108,8 +110,10 @@ class TuyaDeviceQuirk:
         key: str,
         # Climate specific
         switch_only_hvac_mode: TuyaClimateHVACMode,
+        current_temperature_dp_code: TuyaDPCode | None = None,
         current_temperature_state_conversion: TuyaIntegerConversionFunction
         | None = None,
+        target_temperature_dp_code: TuyaDPCode | None = None,
         target_temperature_state_conversion: TuyaIntegerConversionFunction
         | None = None,
         target_temperature_command_conversion: TuyaIntegerConversionFunction
@@ -120,7 +124,9 @@ class TuyaDeviceQuirk:
             TuyaClimateDefinition(
                 key=key,
                 switch_only_hvac_mode=switch_only_hvac_mode,
+                current_temperature_dp_code=current_temperature_dp_code,
                 current_temperature_state_conversion=current_temperature_state_conversion,
+                target_temperature_dp_code=target_temperature_dp_code,
                 target_temperature_state_conversion=target_temperature_state_conversion,
                 target_temperature_command_conversion=target_temperature_command_conversion,
             )

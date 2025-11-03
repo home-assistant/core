@@ -12,7 +12,9 @@ class TuyaDPCode(StrEnum):
     CONTROL = "control"
     CONTROL_BACK_MODE = "control_back_mode"
     PERCENT_CONTROL = "percent_control"
+    TEMP_SET = "temp_set"
     TIME_TOTAL = "time_total"
+    UPPER_TEMP = "upper_temp"
 
 
 class TuyaDeviceCategory(StrEnum):
