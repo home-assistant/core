@@ -324,7 +324,7 @@
         "data": {
           "curtain_slow_mode": "Use slow curtain movement",
           "lock_force_nightlatch": "Force Nightlatch operation mode",
-          "retry_count": "Retry count",
+          "retry_count": "Retry count"
         },
         "data_description": {
           "curtain_slow_mode": "Run curtains with slow open and close speeds",
