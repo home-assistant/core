@@ -996,10 +996,14 @@ async def test_supervisor_issue_addon_boot_fail(
     supervisor_client.resolution.apply_suggestion.assert_called_once_with(sugg_uuid)
 
 
+# Test disabled for now until repair can be re-enabled. First we need a repair
+# specifically for the OTBR add-on to make migration to ZHA easy rather then
+# having this repair encourage uninstall of that add-on and make migration hard.
 @pytest.mark.parametrize(
     "all_setup_requests", [{"include_addons": True}], indirect=True
 )
 @pytest.mark.usefixtures("all_setup_requests")
+@pytest.mark.skip
 async def test_supervisor_issue_deprecated_addon(
     hass: HomeAssistant,
     supervisor_client: AsyncMock,
