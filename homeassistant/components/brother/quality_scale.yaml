@@ -36,51 +36,41 @@ rules:
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
-  reauthentication-flow: done
-  test-coverage:
-    status: todo
-    comment: Patch NextDns object instead of functions.
+  reauthentication-flow:
+    status: exempt
+    comment: SNMP doesn't return error identifying an authentication problem, to change the SNMP community (simple password) the user should use reconfigure flow.
+  test-coverage: done
 
   # Gold
   devices: done
   diagnostics: done
-  discovery-update-info:
-    status: exempt
-    comment: The integration is a cloud service and thus does not support discovery.
-  discovery:
-    status: exempt
-    comment: The integration is a cloud service and thus does not support discovery.
-  docs-data-update: todo
-  docs-examples: todo
-  docs-known-limitations:
-    status: todo
-    comment: Add info that there are no known limitations.
-  docs-supported-devices:
-    status: exempt
-    comment: This is a service, which doesn't integrate with any devices.
-  docs-supported-functions: todo
+  discovery-update-info: done
+  discovery: done
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
   docs-troubleshooting:
     status: exempt
     comment: No known issues that could be resolved by the user.
-  docs-use-cases: todo
+  docs-use-cases: done
   dynamic-devices:
     status: exempt
-    comment: This integration has a fixed single service.
+    comment: This integration has a fixed single device.
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow:
-    status: todo
-    comment: Allow API key to be changed in the re-configure flow.
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: This integration doesn't have any cases where raising an issue is needed.
   stale-devices:
     status: exempt
-    comment: This integration has a fixed single service.
+    comment: This integration has a fixed single device.
 
   # Platinum
   async-dependency: done
