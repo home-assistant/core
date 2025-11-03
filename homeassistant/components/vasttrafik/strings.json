@@ -77,8 +77,8 @@
           "data_description": {
             "name": "Custom name for this departure board",
             "heading": "Filter departures to this destination only",
-            "lines": "Enter line numbers separated by commas (e.g. 1, 2, 55)",
-            "tracks": "Enter track/platform numbers separated by commas (e.g. A, B, 1, 2)",
+            "lines": "Enter line numbers",
+            "tracks": "Enter track/platform numbers",
             "delay": "Show departures starting from this many minutes in the future (0 = now)"
           }
         },
@@ -95,8 +95,8 @@
           "data_description": {
             "name": "Custom name for this departure board",
             "heading": "Filter departures to this destination only",
-            "lines": "Enter line numbers separated by commas (e.g. 1, 2, 55)",
-            "tracks": "Enter track/platform numbers separated by commas (e.g. A, B, 1, 2)",
+            "lines": "Enter line numbers",
+            "tracks": "Enter track/platform numbers",
             "delay": "Show departures starting from this many minutes in the future (0 = now)"
           }
         }

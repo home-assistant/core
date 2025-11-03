@@ -19,6 +19,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_DELAY, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.selector import TextSelector, TextSelectorConfig
 
 from .const import (
     CONF_DEPARTURES,
@@ -38,6 +39,16 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_KEY): str,
         vol.Required(CONF_SECRET): str,
+    }
+)
+
+CONFIGURE_DEPARTURE_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_NAME): str,
+        vol.Optional(CONF_HEADING): str,
+        vol.Optional(CONF_LINES): TextSelector(TextSelectorConfig(multiple=True)),
+        vol.Optional(CONF_TRACKS): TextSelector(TextSelectorConfig(multiple=True)),
+        vol.Optional(CONF_DELAY, default=DEFAULT_DELAY): vol.Coerce(int),
     }
 )
 
@@ -271,22 +282,6 @@ class VasttrafikSubentryFlow(ConfigSubentryFlow):
         errors = {}
 
         if user_input is not None:
-            lines = []
-            if user_input.get(CONF_LINES):
-                lines = [
-                    line.strip()
-                    for line in user_input[CONF_LINES].split(",")
-                    if line.strip()
-                ]
-
-            tracks = []
-            if user_input.get(CONF_TRACKS):
-                tracks = [
-                    track.strip()
-                    for track in user_input[CONF_TRACKS].split(",")
-                    if track.strip()
-                ]
-
             station_name = self._selected_station
             unique_id = f"departure_{station_name.lower().replace(' ', '_')}"
 
@@ -296,8 +291,8 @@ class VasttrafikSubentryFlow(ConfigSubentryFlow):
                 CONF_HEADING: user_input.get(
                     CONF_HEADING, ""
                 ),  # Keep for backward compatibility
-                CONF_LINES: lines,
-                CONF_TRACKS: tracks,
+                CONF_LINES: user_input.get(CONF_LINES, []),
+                CONF_TRACKS: user_input.get(CONF_TRACKS, []),
                 CONF_DELAY: user_input.get(CONF_DELAY, DEFAULT_DELAY),
             }
 
@@ -307,19 +302,9 @@ class VasttrafikSubentryFlow(ConfigSubentryFlow):
                 unique_id=unique_id,
             )
 
-        configure_schema = vol.Schema(
-            {
-                vol.Optional(CONF_NAME): str,
-                vol.Optional(CONF_HEADING): str,
-                vol.Optional(CONF_LINES): str,
-                vol.Optional(CONF_TRACKS): str,
-                vol.Optional(CONF_DELAY, default=DEFAULT_DELAY): vol.Coerce(int),
-            }
-        )
-
         return self.async_show_form(
             step_id="configure",
-            data_schema=configure_schema,
+            data_schema=CONFIGURE_DEPARTURE_SCHEMA,
             errors=errors,
             description_placeholders={
                 "station_name": self._selected_station,
@@ -333,28 +318,12 @@ class VasttrafikSubentryFlow(ConfigSubentryFlow):
         subentry = self._get_reconfigure_subentry()
 
         if user_input is not None:
-            lines = []
-            if user_input.get(CONF_LINES):
-                lines = [
-                    line.strip()
-                    for line in user_input[CONF_LINES].split(",")
-                    if line.strip()
-                ]
-
-            tracks = []
-            if user_input.get(CONF_TRACKS):
-                tracks = [
-                    track.strip()
-                    for track in user_input[CONF_TRACKS].split(",")
-                    if track.strip()
-                ]
-
             new_data = {
                 CONF_FROM: subentry.data[CONF_FROM],  # Keep original station
                 CONF_NAME: user_input.get(CONF_NAME, subentry.data[CONF_NAME]),
                 CONF_HEADING: user_input.get(CONF_HEADING, ""),
-                CONF_LINES: lines,
-                CONF_TRACKS: tracks,
+                CONF_LINES: user_input.get(CONF_LINES, []),
+                CONF_TRACKS: user_input.get(CONF_TRACKS, []),
                 CONF_DELAY: user_input.get(CONF_DELAY, DEFAULT_DELAY),
             }
 
@@ -365,31 +334,12 @@ class VasttrafikSubentryFlow(ConfigSubentryFlow):
                 title=f"Departure: {new_data[CONF_NAME]}",
             )
 
-        current_data = subentry.data
-        current_lines = current_data.get(CONF_LINES, [])
-        current_tracks = current_data.get(CONF_TRACKS, [])
-
-        lines_str = ", ".join(current_lines) if current_lines else ""
-        tracks_str = ", ".join(current_tracks) if current_tracks else ""
-
-        configure_schema = vol.Schema(
-            {
-                vol.Optional(CONF_NAME, default=current_data.get(CONF_NAME, "")): str,
-                vol.Optional(
-                    CONF_HEADING, default=current_data.get(CONF_HEADING, "")
-                ): str,
-                vol.Optional(CONF_LINES, default=lines_str): str,
-                vol.Optional(CONF_TRACKS, default=tracks_str): str,
-                vol.Optional(
-                    CONF_DELAY, default=current_data.get(CONF_DELAY, DEFAULT_DELAY)
-                ): vol.Coerce(int),
-            }
-        )
-
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=configure_schema,
+            data_schema=self.add_suggested_values_to_schema(
+                CONFIGURE_DEPARTURE_SCHEMA, user_input or subentry.data
+            ),
             description_placeholders={
-                "station_name": current_data.get(CONF_FROM, "Unknown"),
+                "station_name": subentry.data.get(CONF_FROM, "Unknown"),
             },
         )
