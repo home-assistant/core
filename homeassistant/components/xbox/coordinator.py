@@ -4,28 +4,26 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import timedelta
+from http import HTTPStatus
 import logging
 
 from httpx import HTTPStatusError, RequestError, TimeoutException
 from xbox.webapi.api.client import XboxLiveClient
 from xbox.webapi.api.provider.catalog.const import SYSTEM_PFN_ID_MAP
 from xbox.webapi.api.provider.catalog.models import AlternateIdType, Product
-from xbox.webapi.api.provider.people.models import (
-    PeopleResponse,
-    Person,
-    PresenceDetail,
-)
+from xbox.webapi.api.provider.people.models import Person
 from xbox.webapi.api.provider.smartglass.models import (
     SmartglassConsoleList,
     SmartglassConsoleStatus,
 )
+from xbox.webapi.api.provider.titlehub.models import Title
 from xbox.webapi.common.signed_session import SignedSession
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow, device_registry as dr
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from . import api
 from .const import DOMAIN
@@ -44,28 +42,12 @@ class ConsoleData:
 
 
 @dataclass
-class PresenceData:
-    """Xbox user presence data."""
-
-    xuid: str
-    gamertag: str
-    display_pic: str
-    online: bool
-    status: str
-    in_party: bool
-    in_game: bool
-    in_multiplayer: bool
-    gamer_score: str
-    gold_tenure: str | None
-    account_tier: str
-
-
-@dataclass
 class XboxData:
     """Xbox dataclass for update coordinator."""
 
     consoles: dict[str, ConsoleData] = field(default_factory=dict)
-    presence: dict[str, PresenceData] = field(default_factory=dict)
+    presence: dict[str, Person] = field(default_factory=dict)
+    title_info: dict[str, Title] = field(default_factory=dict)
 
 
 class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
@@ -103,7 +85,6 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="request_exception",
-                translation_placeholders={"error": str(e)},
             ) from e
 
         session = config_entry_oauth2_flow.OAuth2Session(
@@ -125,7 +106,6 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="request_exception",
-                translation_placeholders={"error": str(e)},
             ) from e
 
         _LOGGER.debug(
@@ -139,11 +119,20 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
         # Update Console Status
         new_console_data: dict[str, ConsoleData] = {}
         for console in self.consoles.result:
-            current_state: ConsoleData | None = self.data.consoles.get(console.id)
-            status: SmartglassConsoleStatus = (
-                await self.client.smartglass.get_console_status(console.id)
-            )
-
+            current_state = self.data.consoles.get(console.id)
+            try:
+                status = await self.client.smartglass.get_console_status(console.id)
+            except TimeoutException as e:
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="timeout_exception",
+                ) from e
+            except (RequestError, HTTPStatusError) as e:
+                _LOGGER.debug("Xbox exception:", exc_info=True)
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="request_exception",
+                ) from e
             _LOGGER.debug(
                 "%s status: %s",
                 console.name,
@@ -165,13 +154,26 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
                     if app_id in SYSTEM_PFN_ID_MAP:
                         id_type = AlternateIdType.LEGACY_XBOX_PRODUCT_ID
                         app_id = SYSTEM_PFN_ID_MAP[app_id][id_type]
-                    catalog_result = (
-                        await self.client.catalog.get_product_from_alternate_id(
-                            app_id, id_type
+                    try:
+                        catalog_result = (
+                            await self.client.catalog.get_product_from_alternate_id(
+                                app_id, id_type
+                            )
                         )
-                    )
-                    if catalog_result and catalog_result.products:
-                        app_details = catalog_result.products[0]
+                    except TimeoutException as e:
+                        raise UpdateFailed(
+                            translation_domain=DOMAIN,
+                            translation_key="timeout_exception",
+                        ) from e
+                    except (RequestError, HTTPStatusError) as e:
+                        _LOGGER.debug("Xbox exception:", exc_info=True)
+                        raise UpdateFailed(
+                            translation_domain=DOMAIN,
+                            translation_key="request_exception",
+                        ) from e
+                    else:
+                        if catalog_result.products:
+                            app_details = catalog_result.products[0]
             else:
                 app_details = None
 
@@ -180,35 +182,76 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
             )
 
         # Update user presence
-        presence_data: dict[str, PresenceData] = {}
-        batch: PeopleResponse = await self.client.people.get_friends_own_batch(
-            [self.client.xuid]
-        )
-        own_presence: Person = batch.people[0]
-        presence_data[own_presence.xuid] = _build_presence_data(own_presence)
+        try:
+            batch = await self.client.people.get_friends_own_batch([self.client.xuid])
+            friends = await self.client.people.get_friends_own()
+        except TimeoutException as e:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="timeout_exception",
+            ) from e
+        except (RequestError, HTTPStatusError) as e:
+            _LOGGER.debug("Xbox exception:", exc_info=True)
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="request_exception",
+            ) from e
+        else:
+            presence_data = {self.client.xuid: batch.people[0]}
+            presence_data.update(
+                {friend.xuid: friend for friend in friends.people if friend.is_favorite}
+            )
 
-        friends: PeopleResponse = await self.client.people.get_friends_own()
-        for friend in friends.people:
-            if not friend.is_favorite:
-                continue
-
-            presence_data[friend.xuid] = _build_presence_data(friend)
+        # retrieve title details
+        title_data: dict[str, Title] = {}
+        for person in presence_data.values():
+            if presence_detail := next(
+                (
+                    d
+                    for d in person.presence_details or []
+                    if d.state == "Active" and d.title_id and d.is_game and d.is_primary
+                ),
+                None,
+            ):
+                try:
+                    title = await self.client.titlehub.get_title_info(
+                        presence_detail.title_id
+                    )
+                except TimeoutException as e:
+                    raise UpdateFailed(
+                        translation_domain=DOMAIN,
+                        translation_key="timeout_exception",
+                    ) from e
+                except HTTPStatusError as e:
+                    _LOGGER.debug("Xbox exception:", exc_info=True)
+                    if e.response.status_code == HTTPStatus.NOT_FOUND:
+                        continue
+                    raise UpdateFailed(
+                        translation_domain=DOMAIN,
+                        translation_key="request_exception",
+                    ) from e
+                except RequestError as e:
+                    _LOGGER.debug("Xbox exception:", exc_info=True)
+                    raise UpdateFailed(
+                        translation_domain=DOMAIN,
+                        translation_key="request_exception",
+                    ) from e
+                title_data[person.xuid] = title.titles[0]
 
         if (
-            self.current_friends
-            - (new_friends := {x.xuid for x in presence_data.values()})
+            self.current_friends - (new_friends := set(presence_data))
             or not self.current_friends
         ):
-            self.remove_stale_devices(presence_data)
+            self.remove_stale_devices(new_friends)
         self.current_friends = new_friends
 
-        return XboxData(new_console_data, presence_data)
+        return XboxData(new_console_data, presence_data, title_data)
 
-    def remove_stale_devices(self, presence_data: dict[str, PresenceData]) -> None:
+    def remove_stale_devices(self, xuids: set[str]) -> None:
         """Remove stale devices from registry."""
 
         device_reg = dr.async_get(self.hass)
-        identifiers = {(DOMAIN, person.xuid) for person in presence_data.values()} | {
+        identifiers = {(DOMAIN, xuid) for xuid in xuids} | {
             (DOMAIN, console.id) for console in self.consoles.result
         }
 
@@ -220,30 +263,3 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
                 device_reg.async_update_device(
                     device.id, remove_config_entry_id=self.config_entry.entry_id
                 )
-
-
-def _build_presence_data(person: Person) -> PresenceData:
-    """Build presence data from a person."""
-    active_app: PresenceDetail | None = None
-
-    active_app = next(
-        (presence for presence in person.presence_details if presence.is_primary),
-        None,
-    )
-    in_game = (
-        active_app is not None and active_app.is_game and active_app.state == "Active"
-    )
-
-    return PresenceData(
-        xuid=person.xuid,
-        gamertag=person.gamertag,
-        display_pic=person.display_pic_raw,
-        online=person.presence_state == "Online",
-        status=person.presence_text,
-        in_party=person.multiplayer_summary.in_party > 0,
-        in_game=in_game,
-        in_multiplayer=person.multiplayer_summary.in_multiplayer_session,
-        gamer_score=person.gamer_score,
-        gold_tenure=person.detail.tenure,
-        account_tier=person.detail.account_tier,
-    )

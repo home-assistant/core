@@ -116,6 +116,30 @@ send_photo:
       example: "http://example.org/path/to/the/image.png"
       selector:
         text:
+    url_options:
+      collapsed: true
+      fields:
+        verify_ssl:
+          default: true
+          selector:
+            boolean:
+        authentication:
+          selector:
+            select:
+              options:
+                - "basic"
+                - "digest"
+                - "bearer_token"
+              translation_key: "authentication"
+        username:
+          example: myuser
+          selector:
+            text:
+        password:
+          example: myuser_pwd
+          selector:
+            text:
+              type: password
     file:
       example: "/path/to/the/image.png"
       selector:
@@ -124,23 +148,6 @@ send_photo:
       example: "My image"
       selector:
         text:
-    authentication:
-      selector:
-        select:
-          options:
-            - "basic"
-            - "digest"
-            - "bearer_token"
-          translation_key: "authentication"
-    username:
-      example: myuser
-      selector:
-        text:
-    password:
-      example: myuser_pwd
-      selector:
-        text:
-          type: password
     target:
       example: "[12345, 67890] or 12345"
       selector:
@@ -156,9 +163,6 @@ send_photo:
             - "plain_text"
           translation_key: "parse_mode"
     disable_notification:
-      selector:
-        boolean:
-    verify_ssl:
       selector:
         boolean:
     timeout:
@@ -201,6 +205,30 @@ send_sticker:
       example: "http://example.org/path/to/the/sticker.webp"
       selector:
         text:
+    url_options:
+      collapsed: true
+      fields:
+        verify_ssl:
+          default: true
+          selector:
+            boolean:
+        authentication:
+          selector:
+            select:
+              options:
+                - "basic"
+                - "digest"
+                - "bearer_token"
+              translation_key: "authentication"
+        username:
+          example: myuser
+          selector:
+            text:
+        password:
+          example: myuser_pwd
+          selector:
+            text:
+              type: password
     file:
       example: "/path/to/the/sticker.webp"
       selector:
@@ -209,32 +237,12 @@ send_sticker:
       example: CAACAgIAAxkBAAEDDldhZD-hqWclr6krLq-FWSfCrGNmOQAC9gAD9HsZAAFeYY-ltPYnrCEE
       selector:
         text:
-    authentication:
-      selector:
-        select:
-          options:
-            - "basic"
-            - "digest"
-            - "bearer_token"
-          translation_key: "authentication"
-    username:
-      example: myuser
-      selector:
-        text:
-    password:
-      example: myuser_pwd
-      selector:
-        text:
-          type: password
     target:
       example: "[12345, 67890] or 12345"
       selector:
         text:
           multiple: true
     disable_notification:
-      selector:
-        boolean:
-    verify_ssl:
       selector:
         boolean:
     timeout:
@@ -277,6 +285,30 @@ send_animation:
       example: "http://example.org/path/to/the/animation.gif"
       selector:
         text:
+    url_options:
+      collapsed: true
+      fields:
+        verify_ssl:
+          default: true
+          selector:
+            boolean:
+        authentication:
+          selector:
+            select:
+              options:
+                - "basic"
+                - "digest"
+                - "bearer_token"
+              translation_key: "authentication"
+        username:
+          example: myuser
+          selector:
+            text:
+        password:
+          example: myuser_pwd
+          selector:
+            text:
+              type: password
     file:
       example: "/path/to/the/animation.gif"
       selector:
@@ -285,23 +317,6 @@ send_animation:
       example: "My animation"
       selector:
         text:
-    authentication:
-      selector:
-        select:
-          options:
-            - "basic"
-            - "digest"
-            - "bearer_token"
-          translation_key: "authentication"
-    username:
-      example: myuser
-      selector:
-        text:
-    password:
-      example: myuser_pwd
-      selector:
-        text:
-          type: password
     target:
       example: "[12345, 67890] or 12345"
       selector:
@@ -317,9 +332,6 @@ send_animation:
             - "plain_text"
           translation_key: "parse_mode"
     disable_notification:
-      selector:
-        boolean:
-    verify_ssl:
       selector:
         boolean:
     timeout:
@@ -362,6 +374,30 @@ send_video:
       example: "http://example.org/path/to/the/video.mp4"
       selector:
         text:
+    url_options:
+      collapsed: true
+      fields:
+        verify_ssl:
+          default: true
+          selector:
+            boolean:
+        authentication:
+          selector:
+            select:
+              options:
+                - "basic"
+                - "digest"
+                - "bearer_token"
+              translation_key: "authentication"
+        username:
+          example: myuser
+          selector:
+            text:
+        password:
+          example: myuser_pwd
+          selector:
+            text:
+              type: password
     file:
       example: "/path/to/the/video.mp4"
       selector:
@@ -370,23 +406,6 @@ send_video:
       example: "My video"
       selector:
         text:
-    authentication:
-      selector:
-        select:
-          options:
-            - "basic"
-            - "digest"
-            - "bearer_token"
-          translation_key: "authentication"
-    username:
-      example: myuser
-      selector:
-        text:
-    password:
-      example: myuser_pwd
-      selector:
-        text:
-          type: password
     target:
       example: "[12345, 67890] or 12345"
       selector:
@@ -402,9 +421,6 @@ send_video:
             - "plain_text"
           translation_key: "parse_mode"
     disable_notification:
-      selector:
-        boolean:
-    verify_ssl:
       selector:
         boolean:
     timeout:
@@ -447,6 +463,30 @@ send_voice:
       example: "http://example.org/path/to/the/voice.opus"
       selector:
         text:
+    url_options:
+      collapsed: true
+      fields:
+        verify_ssl:
+          default: true
+          selector:
+            boolean:
+        authentication:
+          selector:
+            select:
+              options:
+                - "basic"
+                - "digest"
+                - "bearer_token"
+              translation_key: "authentication"
+        username:
+          example: myuser
+          selector:
+            text:
+        password:
+          example: myuser_pwd
+          selector:
+            text:
+              type: password
     file:
       example: "/path/to/the/voice.opus"
       selector:
@@ -455,32 +495,12 @@ send_voice:
       example: "My microphone recording"
       selector:
         text:
-    authentication:
-      selector:
-        select:
-          options:
-            - "basic"
-            - "digest"
-            - "bearer_token"
-          translation_key: "authentication"
-    username:
-      example: myuser
-      selector:
-        text:
-    password:
-      example: myuser_pwd
-      selector:
-        text:
-          type: password
     target:
       example: "[12345, 67890] or 12345"
       selector:
         text:
           multiple: true
     disable_notification:
-      selector:
-        boolean:
-    verify_ssl:
       selector:
         boolean:
     timeout:
@@ -523,6 +543,30 @@ send_document:
       example: "http://example.org/path/to/the/document.odf"
       selector:
         text:
+    url_options:
+      collapsed: true
+      fields:
+        verify_ssl:
+          default: true
+          selector:
+            boolean:
+        authentication:
+          selector:
+            select:
+              options:
+                - "basic"
+                - "digest"
+                - "bearer_token"
+              translation_key: "authentication"
+        username:
+          example: myuser
+          selector:
+            text:
+        password:
+          example: myuser_pwd
+          selector:
+            text:
+              type: password
     file:
       example: "/tmp/whatever.odf"
       selector:
@@ -531,23 +575,6 @@ send_document:
       example: Document Title xy
       selector:
         text:
-    authentication:
-      selector:
-        select:
-          options:
-            - "basic"
-            - "digest"
-            - "bearer_token"
-          translation_key: "authentication"
-    username:
-      example: myuser
-      selector:
-        text:
-    password:
-      example: myuser_pwd
-      selector:
-        text:
-          type: password
     target:
       example: "[12345, 67890] or 12345"
       selector:
@@ -563,9 +590,6 @@ send_document:
             - "plain_text"
           translation_key: "parse_mode"
     disable_notification:
-      selector:
-        boolean:
-    verify_ssl:
       selector:
         boolean:
     timeout:
@@ -674,10 +698,13 @@ send_poll:
       selector:
         text:
     options:
+      example: '["Option 1", "Option 2", "Option 3"]'
       required: true
       selector:
-        object:
+        text:
+          multiple: true
     is_anonymous:
+      default: true
       selector:
         boolean:
     allows_multiple_answers:
@@ -698,10 +725,6 @@ send_poll:
           min: 1
           max: 3600
           unit_of_measurement: seconds
-    message_tag:
-      example: "msg_to_edit"
-      selector:
-        text:
     reply_to_message_id:
       selector:
         number:
@@ -790,6 +813,30 @@ edit_message_media:
       example: "http://example.org/path/to/the/image.png"
       selector:
         text:
+    url_options:
+      collapsed: true
+      fields:
+        verify_ssl:
+          default: true
+          selector:
+            boolean:
+        authentication:
+          selector:
+            select:
+              options:
+                - "basic"
+                - "digest"
+                - "bearer_token"
+              translation_key: "authentication"
+        username:
+          example: myuser
+          selector:
+            text:
+        password:
+          example: myuser_pwd
+          selector:
+            text:
+              type: password
     file:
       example: "/path/to/the/image.png"
       selector:
@@ -798,26 +845,6 @@ edit_message_media:
       example: Document Title xy
       selector:
         text:
-    authentication:
-      selector:
-        select:
-          options:
-            - "basic"
-            - "digest"
-            - "bearer_token"
-          translation_key: "authentication"
-    username:
-      example: myuser
-      selector:
-        text:
-    password:
-      example: myuser_pwd
-      selector:
-        text:
-          type: password
-    verify_ssl:
-      selector:
-        boolean:
     inline_keyboard:
       example:
         '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"],
