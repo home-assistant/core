@@ -50,7 +50,7 @@
     'unique_id': 'switchable_output_1',
   })
 # ---
-# name: test_unique_id_migration_from_single_config[alarm_control_panel-satel_alarm_panel_1-SATEL_INTEGRA_CONFIG_ENTRY_1_alarm_panel_1]
+# name: test_unique_id_migration_from_single_config[alarm_control_panel-satel_alarm_panel_1-1234567890_alarm_panel_1]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -81,11 +81,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'SATEL_INTEGRA_CONFIG_ENTRY_1_alarm_panel_1',
+    'unique_id': '1234567890_alarm_panel_1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_unique_id_migration_from_single_config[binary_sensor-satel_output_1-SATEL_INTEGRA_CONFIG_ENTRY_1_output_1]
+# name: test_unique_id_migration_from_single_config[binary_sensor-satel_output_1-1234567890_output_1]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -116,11 +116,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'SATEL_INTEGRA_CONFIG_ENTRY_1_output_1',
+    'unique_id': '1234567890_output_1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_unique_id_migration_from_single_config[binary_sensor-satel_zone_1-SATEL_INTEGRA_CONFIG_ENTRY_1_zone_1]
+# name: test_unique_id_migration_from_single_config[binary_sensor-satel_zone_1-1234567890_zone_1]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -151,11 +151,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'SATEL_INTEGRA_CONFIG_ENTRY_1_zone_1',
+    'unique_id': '1234567890_zone_1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_unique_id_migration_from_single_config[switch-satel_switch_1-SATEL_INTEGRA_CONFIG_ENTRY_1_switch_1]
+# name: test_unique_id_migration_from_single_config[switch-satel_switch_1-1234567890_switch_1]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -186,7 +186,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'SATEL_INTEGRA_CONFIG_ENTRY_1_switch_1',
+    'unique_id': '1234567890_switch_1',
     'unit_of_measurement': None,
   })
 # ---
