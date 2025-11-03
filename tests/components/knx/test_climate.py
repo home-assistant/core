@@ -1016,8 +1016,28 @@ async def test_climate_ui_load(knx: KNXTestKit) -> None:
     knx.assert_state(
         "climate.direct_indi_op_heat_cool",
         HVACMode.HEAT,
+        current_temperature=20.0,
+        command_value=None,
+        min_temp=10.0,
+        max_temp=24.0,
+        target_temp_step=0.1,
+        preset_modes=["comfort", "standby", "economy", "building_protection"],
+        preset_mode="comfort",
+        hvac_modes=["cool", "heat", "off"],
+        hvac_action="heating",
+        supported_features=401,
     )
     knx.assert_state(
         "climate.sps_op_mode_contr_mode",
         HVACMode.COOL,
+        current_temperature=20.0,
+        command_value=13,
+        min_temp=14.0,
+        max_temp=30.0,
+        target_temp_step=0.5,
+        preset_modes=["comfort", "standby", "economy", "building_protection"],
+        preset_mode="comfort",
+        hvac_modes=["auto", "cool", "dry", "fan_only", "heat", "off"],
+        hvac_action="cooling",
+        supported_features=953,
     )
