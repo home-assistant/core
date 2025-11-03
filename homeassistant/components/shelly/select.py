@@ -12,9 +12,10 @@ from homeassistant.components.select import (
     SelectEntity,
     SelectEntityDescription,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import ROLE_GENERIC
 from .coordinator import ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     RpcEntityDescription,
@@ -44,7 +45,7 @@ RPC_SELECT_ENTITIES: Final = {
         removal_condition=lambda config, _status, key: not is_view_for_platform(
             config, key, SELECT_PLATFORM
         ),
-        role="generic",
+        role=ROLE_GENERIC,
     ),
 }
 
@@ -54,28 +55,40 @@ async def async_setup_entry(
     config_entry: ShellyConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up selectors for device."""
+    """Set up select entities."""
     if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
-        coordinator = config_entry.runtime_data.rpc
-        assert coordinator
+        return _async_setup_rpc_entry(hass, config_entry, async_add_entities)
 
-        async_setup_entry_rpc(
-            hass, config_entry, async_add_entities, RPC_SELECT_ENTITIES, RpcSelect
-        )
+    return None
 
-        # the user can remove virtual components from the device configuration, so
-        # we need to remove orphaned entities
-        virtual_text_ids = get_virtual_component_ids(
-            coordinator.device.config, SELECT_PLATFORM
-        )
-        async_remove_orphaned_entities(
-            hass,
-            config_entry.entry_id,
-            coordinator.mac,
-            SELECT_PLATFORM,
-            virtual_text_ids,
-            "enum",
-        )
+
+@callback
+def _async_setup_rpc_entry(
+    hass: HomeAssistant,
+    config_entry: ShellyConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up entities for RPC device."""
+    coordinator = config_entry.runtime_data.rpc
+    assert coordinator
+
+    async_setup_entry_rpc(
+        hass, config_entry, async_add_entities, RPC_SELECT_ENTITIES, RpcSelect
+    )
+
+    # the user can remove virtual components from the device configuration, so
+    # we need to remove orphaned entities
+    virtual_text_ids = get_virtual_component_ids(
+        coordinator.device.config, SELECT_PLATFORM
+    )
+    async_remove_orphaned_entities(
+        hass,
+        config_entry.entry_id,
+        coordinator.mac,
+        SELECT_PLATFORM,
+        virtual_text_ids,
+        "enum",
+    )
 
 
 class RpcSelect(ShellyRpcAttributeEntity, SelectEntity):
