@@ -1311,7 +1311,6 @@ def test_temperature_convert_with_interval(
     """Test conversion to other units."""
     expected = pytest.approx(expected)
     assert TemperatureConverter.convert_interval(value, from_unit, to_unit) == expected
-    assert "The deprecated function 
     assert (
         "The deprecated function convert_interval was called. It will be removed "
         "in HA Core 2026.12.0. Use TemperatureDeltaConverter.convert instead"
