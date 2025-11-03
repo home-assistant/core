@@ -8,7 +8,6 @@ from gios import ApiError
 from homeassistant.components.gios import config_flow
 from homeassistant.components.gios.const import CONF_STATION_ID, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -17,7 +16,6 @@ from . import STATIONS
 from tests.common import async_load_fixture
 
 CONFIG = {
-    CONF_NAME: "Foo",
     CONF_STATION_ID: "123",
 }
 

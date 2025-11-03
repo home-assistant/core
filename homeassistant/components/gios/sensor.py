@@ -228,12 +228,16 @@ class GiosSensor(CoordinatorEntity[GiosDataUpdateCoordinator], SensorEntity):
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
+
+        station_id = coordinator.gios.station_id
+        assert station_id is not None
+
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, str(coordinator.gios.station_id))},
+            identifiers={(DOMAIN, str(station_id))},
             manufacturer=MANUFACTURER,
-            name=name,
-            configuration_url=URL.format(station_id=coordinator.gios.station_id),
+            name=coordinator.gios.measurement_stations[station_id].name,
+            configuration_url=URL.format(station_id=station_id),
         )
         if description.subkey:
             self._attr_unique_id = (

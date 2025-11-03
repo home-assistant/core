@@ -19,7 +19,7 @@ async def test_async_setup_entry(hass: HomeAssistant) -> None:
     """Test a successful setup entry."""
     await init_integration(hass)
 
-    state = hass.states.get("sensor.home_pm2_5")
+    state = hass.states.get("sensor.test_name_1_pm2_5")
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
     assert state.state == "4"
@@ -31,7 +31,7 @@ async def test_config_not_ready(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         title="Home",
         unique_id=123,
-        data={"station_id": 123, "name": "Home"},
+        data={"station_id": 123},
     )
 
     with patch(
@@ -65,10 +65,7 @@ async def test_migrate_device_and_config_entry(
         domain=DOMAIN,
         title="Home",
         unique_id=123,
-        data={
-            "station_id": 123,
-            "name": "Home",
-        },
+        data={"station_id": 123},
     )
 
     indexes = json.loads(await async_load_fixture(hass, "indexes.json", DOMAIN))
@@ -116,11 +113,11 @@ async def test_remove_air_quality_entities(
         AIR_QUALITY_PLATFORM,
         DOMAIN,
         "123",
-        suggested_object_id="home",
+        suggested_object_id="test_name_1",
         disabled_by=None,
     )
 
     await init_integration(hass)
 
-    entry = entity_registry.async_get("air_quality.home")
+    entry = entity_registry.async_get("air_quality.test_name_1")
     assert entry is None
