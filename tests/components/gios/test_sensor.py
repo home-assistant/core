@@ -9,14 +9,14 @@ from gios.model import GiosSensors
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.gios.const import SCAN_INTERVAL
+from homeassistant.components.gios.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+from . import setup_integration
 
-pytestmark = pytest.mark.usefixtures("init_integration")
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -26,6 +26,7 @@ def override_platforms() -> Generator[None]:
         yield
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_sensor(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -36,6 +37,7 @@ async def test_sensor(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_availability(hass: HomeAssistant) -> None:
     """Ensure that we mark the entities unavailable correctly when service causes an error."""
     state = hass.states.get("sensor.home_pm2_5")
@@ -51,6 +53,7 @@ async def test_availability(hass: HomeAssistant) -> None:
     assert state.state == "good"
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_availability_api_error(
     hass: HomeAssistant,
     mock_gios: MagicMock,
@@ -124,3 +127,25 @@ async def test_availability_api_error(
     state = hass.states.get("sensor.home_air_quality_index")
     assert state
     assert state.state == "good"
+
+
+async def test_unique_id_migration(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_gios: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test states of the unique_id migration."""
+    entity_registry.async_get_or_create(
+        Platform.SENSOR,
+        DOMAIN,
+        "123-pm2.5",
+        suggested_object_id="home_pm2_5",
+        disabled_by=None,
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    entry = entity_registry.async_get("sensor.home_pm2_5")
+    assert entry
+    assert entry.unique_id == "123-pm25"

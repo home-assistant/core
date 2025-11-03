@@ -5,11 +5,9 @@ from unittest.mock import MagicMock
 from homeassistant.components.air_quality import DOMAIN as AIR_QUALITY_PLATFORM
 from homeassistant.components.gios.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from . import setup_integration
 
 from tests.common import MockConfigEntry
 
@@ -96,25 +94,3 @@ async def test_remove_air_quality_entities(
 
     entry = entity_registry.async_get("air_quality.home")
     assert entry is None
-
-
-async def test_unique_id_migration(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    mock_gios: MagicMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test states of the unique_id migration."""
-    entity_registry.async_get_or_create(
-        Platform.SENSOR,
-        DOMAIN,
-        "123-pm2.5",
-        suggested_object_id="home_pm2_5",
-        disabled_by=None,
-    )
-
-    await setup_integration(hass, mock_config_entry)
-
-    entry = entity_registry.async_get("sensor.home_pm2_5")
-    assert entry
-    assert entry.unique_id == "123-pm25"

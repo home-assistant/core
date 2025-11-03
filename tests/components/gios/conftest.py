@@ -9,6 +9,8 @@ import pytest
 from homeassistant.components.gios.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
+from . import setup_integration
+
 from tests.common import MockConfigEntry
 
 
@@ -47,7 +49,7 @@ GIOS_STATIONS = {
 
 @pytest.fixture
 async def mock_gios(hass: HomeAssistant) -> AsyncGenerator[MagicMock]:
-    """Return a mocked GIOS client."""
+    """Yield a mocked GIOS client."""
     with (
         patch("homeassistant.components.gios.Gios") as mock_gios,
         patch("homeassistant.components.gios.coordinator.Gios", mock_gios),
@@ -73,8 +75,6 @@ async def init_integration(
     mock_gios: MagicMock,
 ) -> MockConfigEntry:
     """Set up the GIOS integration for testing."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry)
 
     return mock_config_entry
