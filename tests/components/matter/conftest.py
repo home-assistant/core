@@ -103,6 +103,7 @@ async def integration_fixture(
         "generic_switch",
         "generic_switch_multi",
         "haojai_switch",
+        "heiman_motion_sensor_m1",
         "humidity_sensor",
         "inovelli_vtm30",
         "laundry_dryer",
