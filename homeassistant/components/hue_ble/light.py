@@ -47,7 +47,6 @@ class HueBLELight(LightEntity):
         """Initialize the light object. Does not connect."""
 
         self._api = light
-        self._address = light.address
         self._attr_unique_id = light.address
         self._attr_min_color_temp_kelvin = (
             color_util.color_temperature_mired_to_kelvin(light.maximum_mireds)
