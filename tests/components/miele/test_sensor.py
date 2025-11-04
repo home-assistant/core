@@ -722,6 +722,17 @@ async def test_elapsed_time_sensor_restored(
                     "native_unit_of_measurement": "min",
                 },
             ),
+            (
+                State(
+                    entity_id_abs,
+                    restore_state_abs,
+                    {"device_class": "timestamp"},
+                ),
+                {
+                    "native_value": datetime(2025, 5, 31, 14, 15, tzinfo=UTC),
+                    "native_unit_of_measurement": None,
+                },
+            ),
         ],
     )
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
@@ -731,3 +742,8 @@ async def test_elapsed_time_sensor_restored(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "12"
+
+    # check that absolute time is the one restored and not the value reported by API
+    state = hass.states.get(entity_id_abs)
+    assert state is not None
+    assert state.state == "2025-05-31T14:15:00+00:00"
