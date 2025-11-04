@@ -44,12 +44,12 @@
       "forestdry": {
         "name": "Fuel drying",
         "state": {
-          "1": "Very wet",
-          "2": "Wet",
-          "3": "Moderate wet",
-          "4": "Dry",
-          "5": "Very dry",
-          "6": "Extemely dry"
+          "dry": "Dry",
+          "extremely_dry": "Extemely dry",
+          "moderate_wet": "Moderate wet",
+          "very_dry": "Very dry",
+          "very_wet": "Very wet",
+          "wet": "Wet"
         }
       },
       "frozen_precipitation": {
@@ -61,23 +61,23 @@
       "fwiindex": {
         "name": "FWI-index",
         "state": {
-          "1": "Very low risk",
-          "2": "Low risk",
-          "3": "Moderate risk",
-          "4": "High risk",
-          "5": "Very high risk",
-          "6": "Extremely high risk"
+          "extreme": "Extremely high risk",
+          "high": "High risk",
+          "low": "Low risk",
+          "moderate": "Moderate risk",
+          "very_high": "Very high risk",
+          "very_low": "Very low risk"
         }
       },
       "grassfire": {
         "name": "Highest grass fire risk",
         "state": {
-          "1": "Snow cover",
-          "2": "Grass fire season over",
-          "3": "Low",
-          "4": "Moderate",
-          "5": "High",
-          "6": "Very high"
+          "high": "High",
+          "low": "Low",
+          "moderate": "Moderate",
+          "season_over": "Grass fire season over",
+          "snow_cover": "Snow cover",
+          "very_high": "Very high"
         }
       },
       "high_cloud": {
