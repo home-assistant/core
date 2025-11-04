@@ -114,7 +114,7 @@ class DropboxClient:
         self._property_template_id = new_template_id
         return new_template_id
 
-    async def async_ensure_folder_exists(self) -> None:
+    async def _async_ensure_folder_exists(self) -> None:
         """Ensure the folder exists."""
         try:
             metadata = await self._api.get_metadata(f"/{FOLDER_NAME}")
@@ -123,32 +123,40 @@ class DropboxClient:
             return
 
         if not metadata.is_folder:
-            raise HomeAssistantError("Home Assistant exists as a file, not a folder")
+            raise HomeAssistantError(
+                "The path 'Home Assistant' exists as a file in Dropbox, but a folder is required."
+            )
 
-    async def async_list_backups(self) -> list[AgentBackup]:
-        """List backups."""
-        await self.async_ensure_folder_exists()
-
+    async def _async_get_backups(self) -> list[tuple[AgentBackup, str]]:
+        """Get backups and their corresponding file names."""
         property_template_id = await self.async_get_property_template_id()
 
         files = await self._api.list_folder(
             f"/{FOLDER_NAME}", include_property_groups=[property_template_id]
         )
 
-        backups: list[AgentBackup] = []
+        backups: list[tuple[AgentBackup, str]] = []
         for file in files:
             if file.property_groups is not None:
-                # Check if any property group matches the template_id
                 for property_group in file.property_groups:
                     if property_group.template_id == property_template_id:
                         backups.append(
-                            AgentBackup.from_dict(
-                                json.loads(property_group.fields[0].value)
+                            (
+                                AgentBackup.from_dict(
+                                    json.loads(property_group.fields[0].value)
+                                ),
+                                file.name,
                             )
                         )
                         break  # Found matching template, no need to check other groups
 
         return backups
+
+    async def async_list_backups(self) -> list[AgentBackup]:
+        """List backups."""
+        await self._async_ensure_folder_exists()
+
+        return [backup for backup, _ in await self._async_get_backups()]
 
     async def async_upload_backup(
         self,
@@ -156,7 +164,7 @@ class DropboxClient:
         backup: AgentBackup,
     ) -> None:
         """Upload a backup."""
-        await self.async_ensure_folder_exists()
+        await self._async_ensure_folder_exists()
 
         property_template_id = await self.async_get_property_template_id()
 
@@ -179,47 +187,23 @@ class DropboxClient:
 
     async def async_download_backup(self, backup_id: str) -> AsyncIterator[bytes]:
         """Download a backup."""
-        await self.async_ensure_folder_exists()
+        await self._async_ensure_folder_exists()
 
-        property_template_id = await self.async_get_property_template_id()
-
-        files = await self._api.list_folder(
-            f"/{FOLDER_NAME}", include_property_groups=[property_template_id]
-        )
-
-        for file in files:
-            if file.property_groups is not None:
-                for property_group in file.property_groups:
-                    if property_group.template_id == property_template_id:
-                        backup = AgentBackup.from_dict(
-                            json.loads(property_group.fields[0].value)
-                        )
-                        if backup.backup_id == backup_id:
-                            return self._api.download_file(
-                                f"/{FOLDER_NAME}/{file.name}"
-                            )
+        backups = await self._async_get_backups()
+        for backup, filename in backups:
+            if backup.backup_id == backup_id:
+                return self._api.download_file(f"/{FOLDER_NAME}/{filename}")
 
         raise BackupNotFound(f"Backup {backup_id} not found")
 
     async def async_delete_backup(self, backup_id: str) -> None:
         """Delete a backup."""
-        await self.async_ensure_folder_exists()
+        await self._async_ensure_folder_exists()
 
-        property_template_id = await self.async_get_property_template_id()
-
-        files = await self._api.list_folder(
-            f"/{FOLDER_NAME}", include_property_groups=[property_template_id]
-        )
-
-        for file in files:
-            if file.property_groups is not None:
-                for property_group in file.property_groups:
-                    if property_group.template_id == property_template_id:
-                        backup = AgentBackup.from_dict(
-                            json.loads(property_group.fields[0].value)
-                        )
-                        if backup.backup_id == backup_id:
-                            await self._api.delete_file(f"/{FOLDER_NAME}/{file.name}")
-                            return
+        backups = await self._async_get_backups()
+        for backup, filename in backups:
+            if backup.backup_id == backup_id:
+                await self._api.delete_file(f"/{FOLDER_NAME}/{filename}")
+                return
 
         raise BackupNotFound(f"Backup {backup_id} not found")

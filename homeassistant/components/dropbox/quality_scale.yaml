@@ -34,41 +34,83 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions: todo
-  config-entry-unloading: todo
-  docs-configuration-parameters: todo
-  docs-installation-parameters: todo
-  entity-unavailable: todo
-  integration-owner: todo
+  action-exceptions:
+    status: exempt
+    comment: Integration does not register any actions.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: Integration does not have any configuration parameters.
+  docs-installation-parameters:
+    status: exempt
+    comment: Integration does not have any installation parameters.
+  entity-unavailable:
+    status: exempt
+    comment: Integration does not have any entities.
+  integration-owner: done
   log-when-unavailable: todo
-  parallel-updates: todo
-  reauthentication-flow: todo
+  parallel-updates:
+    status: exempt
+    comment: Integration does not make any entity updates.
+  reauthentication-flow: done
   test-coverage: todo
 
   # Gold
-  devices: todo
-  diagnostics: todo
-  discovery-update-info: todo
-  discovery: todo
-  docs-data-update: todo
-  docs-examples: todo
+  devices:
+    status: exempt
+    comment: Integration does not have any entities.
+  diagnostics:
+    status: exempt
+    comment: Integration does not have any data to diagnose.
+  discovery-update-info:
+    status: exempt
+    comment: Integration does not use discovery.
+  discovery:
+    status: exempt
+    comment: Integration does not use discovery.
+  docs-data-update:
+    status: exempt
+    comment: Integration does not update any data.
+  docs-examples:
+    status: exempt
+    comment: Integration only provides backup functionality.
   docs-known-limitations: todo
-  docs-supported-devices: todo
-  docs-supported-functions: todo
+  docs-supported-devices:
+    status: exempt
+    comment: Integration does not support any devices.
+  docs-supported-functions: done
   docs-troubleshooting: todo
-  docs-use-cases: todo
-  dynamic-devices: todo
-  entity-category: todo
-  entity-device-class: todo
-  entity-disabled-by-default: todo
-  entity-translations: todo
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: Integration does not use any devices.
+  entity-category:
+    status: exempt
+    comment: Integration does not have any entities.
+  entity-device-class:
+    status: exempt
+    comment: Integration does not have any entities.
+  entity-disabled-by-default:
+    status: exempt
+    comment: Integration does not have any entities.
+  entity-translations:
+    status: exempt
+    comment: Integration does not have any entities.
   exception-translations: todo
-  icon-translations: todo
-  reconfiguration-flow: todo
-  repair-issues: todo
-  stale-devices: todo
+  icon-translations:
+    status: exempt
+    comment: Integration does not have any entities.
+  reconfiguration-flow:
+    status: exempt
+    comment: Integration does not have any configuration options.
+  repair-issues:
+    status: exempt
+    comment: Integration does not have any repairs.
+  stale-devices:
+    status: exempt
+    comment: Integration does not have any devices.
 
   # Platinum
-  async-dependency: todo
-  inject-websession: todo
-  strict-typing: todo
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done
