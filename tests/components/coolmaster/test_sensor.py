@@ -45,6 +45,7 @@ async def test_retry_with_no_error(
         assert errors == 0
 
 
+@patch("homeassistant.components.coolmaster.coordinator.BACKOFF_BASE_DELAY", new=0)
 async def test_retry_with_less_than_max_errors(
     hass: HomeAssistant,
     config_entry_with_errors: ConfigEntry,
@@ -68,6 +69,7 @@ async def test_retry_with_less_than_max_errors(
         assert debugs == MAX_RETRIES - 1
 
 
+@patch("homeassistant.components.coolmaster.coordinator.BACKOFF_BASE_DELAY", new=0)
 async def test_retry_with_more_than_max_errors(
     hass: HomeAssistant,
     config_entry_with_errors: ConfigEntry,
@@ -93,6 +95,7 @@ async def test_retry_with_more_than_max_errors(
         assert debugs == MAX_RETRIES - 1
 
 
+@patch("homeassistant.components.coolmaster.coordinator.BACKOFF_BASE_DELAY", new=0)
 async def test_retry_with_empty_status(
     hass: HomeAssistant,
     config_entry_with_empty_status: ConfigEntry,
