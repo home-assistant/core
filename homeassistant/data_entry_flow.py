@@ -811,7 +811,6 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
                     "abort_description_placeholders"
                 ],
             )
-        progress_step_data["next_step_result"] = None
         return next_step_result
 
     @callback
