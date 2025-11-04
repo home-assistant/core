@@ -367,21 +367,30 @@ DISCOVERY_SCHEMAS = [
     ),
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
-        entity_description=MatterNumberEntityDescription(
+        entity_description=MatterRangeNumberEntityDescription(
             key="speaker_setpoint",
             translation_key="speaker_setpoint",
             native_unit_of_measurement=PERCENTAGE,
-            native_max_value=100,
+            command=lambda value: clusters.LevelControl.Commands.MoveToLevel(
+                level=int(value)
+            ),
             native_min_value=0,
+            native_max_value=100,
             native_step=1,
-            device_to_ha=lambda x: None
-            if x is None
-            else round(min(x, 254) * 100 / 254),  # Linear mapping: 0→0%, 254→100%
-            ha_to_device=lambda x: round(min(x * 254 / 100, 254)),  # HA range 0–100%
+            device_to_ha=lambda x: None if x is None else x,
+            ha_to_device=lambda x: x,
+            format_min_value=lambda x: 0,  # Always map device min to 0%
+            format_max_value=lambda x: 100,  # Always map device max to 100%
+            min_attribute=clusters.LevelControl.Attributes.MinLevel,
+            max_attribute=clusters.LevelControl.Attributes.MaxLevel,
             mode=NumberMode.SLIDER,
         ),
-        entity_class=MatterLevelControlNumber,
-        required_attributes=(clusters.LevelControl.Attributes.CurrentLevel,),
+        entity_class=MatterRangeNumber,
+        required_attributes=(
+            clusters.LevelControl.Attributes.CurrentLevel,
+            clusters.LevelControl.Attributes.MinLevel,
+            clusters.LevelControl.Attributes.MaxLevel,
+        ),
         device_type=(device_types.Speaker,),
     ),
     MatterDiscoverySchema(
