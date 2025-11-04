@@ -2,37 +2,21 @@
   "config": {
     "abort": {
       "access_not_configured": "Please read the below message we got from Google:\n\n{message}",
-      "no_device": "Please create a Hinen Device to be able to use the integration",
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "no_device": "Please create a Hinen Device to be able to use the integration",
       "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
-      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
       "wrong_account": "Wrong account: please authenticate with the right account."
     },
     "error": {
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
     "step": {
-      "user": {
-        "title": "Add Hinen Power integration settings",
-        "description": "",
-        "data": {
-          "page_language": "Certification page language",
-          "region_code": "Region",
-          "client_id": "OAuth Client ID",
-          "client_secret": "OAuth Client Secret"
-        },
-        "data_description": {
-          "page_language": "",
-          "region_code": "",
-          "client_id": "",
-          "client_secret": ""
-        }
-      },
       "devices": {
         "data": {
           "devices": "Hinen devices"
@@ -45,6 +29,48 @@
       "reauth_confirm": {
         "description": "The Hinen integration needs to re-authenticate your account",
         "title": "Authentication expired for {name}"
+      },
+      "user": {
+        "data": {
+          "client_id": "OAuth Client ID",
+          "client_secret": "OAuth Client Secret",
+          "page_language": "Certification page language",
+          "region_code": "Region"
+        },
+        "data_description": {
+          "client_id": "",
+          "client_secret": "",
+          "page_language": "",
+          "region_code": ""
+        },
+        "description": "",
+        "title": "Add Hinen Power integration settings"
+      }
+    }
+  },
+
+  "entity": {
+    "sensor": {
+      "alert_status": {
+        "name": "Alert Status"
+      },
+      "cumulative_consumption": {
+        "name": "Cumulative Consumption"
+      },
+      "cumulative_grid_feed_in": {
+        "name": "Cumulative Grid Feedin"
+      },
+      "cumulative_production_active": {
+        "name": "Cumulative Production Active"
+      },
+      "status": {
+        "name": "Status"
+      },
+      "total_charging_energy": {
+        "name": "Total Charging Energy"
+      },
+      "total_discharging_energy": {
+        "name": "Total Discharging Energy"
       }
     }
   },
@@ -54,38 +80,13 @@
     },
     "step": {
       "init": {
-        "description": "[%key:component::hinen_power::config::step::devices::description%]",
         "data": {
           "devices": "[%key:component::hinen_power::config::step::devices::data::devices%]"
         },
         "data_description": {
           "devices": ""
-        }
-      }
-    }
-  },
-  "entity": {
-    "sensor": {
-      "alert_status": {
-        "name": "Alert Status"
-      },
-      "status": {
-        "name": "Status"
-      },
-      "cumulative_consumption": {
-        "name": "Cumulative Consumption"
-      },
-      "cumulative_production_active": {
-        "name": "Cumulative Production Active"
-      },
-      "cumulative_grid_feed_in": {
-        "name": "Cumulative Grid Feedin"
-      },
-      "total_charging_energy": {
-        "name": "Total Charging Energy"
-      },
-      "total_discharging_energy": {
-        "name": "Total Discharging Energy"
+        },
+        "description": "[%key:component::hinen_power::config::step::devices::description%]"
       }
     }
   }
