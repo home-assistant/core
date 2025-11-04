@@ -179,12 +179,14 @@ class XboxSource(MediaSource):
                     translation_domain=DOMAIN,
                     translation_key="request_exception",
                 ) from e
-
             if images is not None:
-                return PlayMedia(
-                    images[int(identifier.media_id)].url,
-                    MIME_TYPE_MAP[ATTR_SCREENSHOTS],
-                )
+                try:
+                    return PlayMedia(
+                        images[int(identifier.media_id)].url,
+                        MIME_TYPE_MAP[ATTR_SCREENSHOTS],
+                    )
+                except (ValueError, IndexError):
+                    pass
 
         raise Unresolvable(
             translation_domain=DOMAIN,
@@ -214,7 +216,7 @@ class XboxSource(MediaSource):
             )
 
         identifier = XboxMediaSourceIdentifier(item)
-        if len(entries) == 1:
+        if not identifier.xuid and len(entries) == 1:
             if TYPE_CHECKING:
                 assert entries[0].unique_id
             identifier.xuid = entries[0].unique_id
@@ -335,7 +337,7 @@ class XboxSource(MediaSource):
 
         return BrowseMediaSource(
             domain=DOMAIN,
-            identifier=f"{identifier}/{game.title_id}",
+            identifier=str(identifier),
             media_class=MediaClass.GAME,
             media_content_type=MediaClass.GAME,
             title=f"Xbox / {entry.title} / {game.name}",
@@ -519,7 +521,7 @@ def gamerpic(config_entry: XboxConfigEntry) -> str | None:
     coordinator = config_entry.runtime_data
     if TYPE_CHECKING:
         assert config_entry.unique_id
-    person = coordinator.data.presence[config_entry.unique_id]
+    person = coordinator.data.presence[coordinator.client.xuid]
     return profile_pic(person)
 
 

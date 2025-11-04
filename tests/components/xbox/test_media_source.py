@@ -1,0 +1,472 @@
+"""Tests for the Xbox media source platform."""
+
+import httpx
+import pytest
+from pythonxbox.api.provider.people.models import PeopleResponse
+
+from homeassistant.components.media_player import BrowseError
+from homeassistant.components.media_source import (
+    URI_SCHEME,
+    Unresolvable,
+    async_browse_media,
+    async_resolve_media,
+)
+from homeassistant.components.xbox.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
+from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
+
+from tests.common import AsyncMock, MockConfigEntry, async_load_json_object_fixture
+from tests.typing import MagicMock
+
+
+@pytest.mark.usefixtures("xbox_live_client")
+@pytest.mark.freeze_time("2017-11-10T17:12:27")
+async def test_browse_media(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test browsing media."""
+
+    await async_setup_component(hass, "media_source", {})
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}")
+
+    assert browse.domain == DOMAIN
+    assert browse.identifier == "271958441785640"
+    assert browse.title == "Xbox / GSR Ae"
+    assert browse.children
+    assert [(child.identifier, child.title) for child in browse.children] == [
+        ("271958441785640/1297287135", "Blue Dragon"),
+        ("271958441785640/1560034050", "Assassin's Creed® Syndicate"),
+    ]
+
+    browse = await async_browse_media(
+        hass, f"{URI_SCHEME}{DOMAIN}/271958441785640/1297287135"
+    )
+
+    assert browse.identifier == "271958441785640/1297287135"
+    assert browse.title == "Xbox / GSR Ae / Blue Dragon"
+    assert browse.children
+    assert [(child.identifier, child.title) for child in browse.children] == [
+        ("271958441785640/1297287135/gameclips", "Gameclips"),
+        ("271958441785640/1297287135/screenshots", "Screenshots"),
+        ("271958441785640/1297287135/game_media", "Game media"),
+    ]
+
+    browse = await async_browse_media(
+        hass, f"{URI_SCHEME}{DOMAIN}/271958441785640/1297287135/gameclips"
+    )
+
+    assert browse.identifier == "271958441785640/1297287135/gameclips"
+    assert browse.title == "Xbox / GSR Ae / Blue Dragon / Gameclips"
+    assert browse.children
+
+    assert [(child.identifier, child.title) for child in browse.children] == [
+        (
+            "271958441785640/1297287135/gameclips/44b7e94d-b3e9-4b97-be73-417be9091e93",
+            "11 hours",
+        ),
+        (
+            "271958441785640/1297287135/gameclips/f87cc6ac-c291-4998-9124-d8b36c059b6a",
+            "1 year",
+        ),
+    ]
+
+    browse = await async_browse_media(
+        hass, f"{URI_SCHEME}{DOMAIN}/271958441785640/1297287135/screenshots"
+    )
+
+    assert browse.identifier == "271958441785640/1297287135/screenshots"
+    assert browse.title == "Xbox / GSR Ae / Blue Dragon / Screenshots"
+    assert browse.children
+
+    assert [(child.identifier, child.title) for child in browse.children] == [
+        (
+            "271958441785640/1297287135/screenshots/41593644-be22-43d6-b224-c7bebe14076e",
+            "2 years | 1080p",
+        ),
+    ]
+
+    browse = await async_browse_media(
+        hass, f"{URI_SCHEME}{DOMAIN}/271958441785640/1297287135/game_media"
+    )
+
+    assert browse.identifier == "271958441785640/1297287135/game_media"
+    assert browse.title == "Xbox / GSR Ae / Blue Dragon / Game media"
+    assert browse.children
+    assert len(browse.children) == 24
+
+    assert browse.children[0].identifier == "271958441785640/1297287135/game_media/0"
+    assert browse.children[0].title == "Screenshot"
+
+
+async def test_browse_media_accounts(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    xbox_live_client: AsyncMock,
+) -> None:
+    """Test browsing media we get account view if more than 1 account is configured."""
+
+    await async_setup_component(hass, "media_source", {})
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    xbox_live_client.people.get_friends_by_xuid.return_value = PeopleResponse(
+        **(await async_load_json_object_fixture(hass, "people_batch2.json", DOMAIN))  # type: ignore[reportArgumentType]
+    )
+
+    config_entry2 = MockConfigEntry(
+        domain=DOMAIN,
+        title="Iqnavs",
+        data={
+            "auth_implementation": "cloud",
+            "token": {
+                "access_token": "1234567890",
+                "expires_at": 1760697327.7298331,
+                "expires_in": 3600,
+                "refresh_token": "0987654321",
+                "scope": "XboxLive.signin XboxLive.offline_access",
+                "service": "xbox",
+                "token_type": "bearer",
+                "user_id": "AAAAAAAAAAAAAAAAAAAAA",
+            },
+        },
+        unique_id="277923030577271",
+        minor_version=2,
+    )
+    config_entry2.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry2.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry2.state is ConfigEntryState.LOADED
+
+    assert len(hass.config_entries.async_loaded_entries(DOMAIN)) == 2
+
+    browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}")
+
+    assert browse.domain == DOMAIN
+    assert browse.identifier is None
+    assert browse.title == "Xbox Game Media"
+    assert browse.children
+    assert [(child.identifier, child.title) for child in browse.children] == [
+        ("271958441785640", "GSR Ae"),
+        ("277923030577271", "Iqnavs"),
+    ]
+
+
+@pytest.mark.parametrize(
+    ("media_content_id", "provider", "method"),
+    [
+        ("", "titlehub", "get_title_history"),
+        ("/271958441785640", "titlehub", "get_title_history"),
+        ("/271958441785640/1297287135", "titlehub", "get_title_info"),
+        (
+            "/271958441785640/1297287135/gameclips",
+            "gameclips",
+            "get_recent_clips_by_xuid",
+        ),
+        (
+            "/271958441785640/1297287135/screenshots",
+            "screenshots",
+            "get_recent_screenshots_by_xuid",
+        ),
+        (
+            "/271958441785640/1297287135/game_media",
+            "titlehub",
+            "get_title_info",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "exception",
+    [
+        httpx.HTTPStatusError("", request=MagicMock(), response=httpx.Response(500)),
+        httpx.RequestError(""),
+        httpx.TimeoutException(""),
+    ],
+)
+async def test_browse_media_exceptions(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    xbox_live_client: AsyncMock,
+    media_content_id: str,
+    provider: str,
+    method: str,
+    exception: Exception,
+) -> None:
+    """Test browsing media exceptions."""
+
+    await async_setup_component(hass, "media_source", {})
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    provider = getattr(xbox_live_client, provider)
+    getattr(provider, method).side_effect = exception
+
+    with pytest.raises(BrowseError):
+        await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}{media_content_id}")
+
+
+@pytest.mark.usefixtures("xbox_live_client")
+async def test_browse_media_not_configured_exception(
+    hass: HomeAssistant,
+) -> None:
+    """Test browsing media integration not configured exception."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Mock title",
+        data={
+            "auth_implementation": "cloud",
+            "token": {
+                "access_token": "1234567890",
+                "expires_at": 1760697327.7298331,
+                "expires_in": 3600,
+                "refresh_token": "0987654321",
+                "scope": "XboxLive.signin XboxLive.offline_access",
+                "service": "xbox",
+                "token_type": "bearer",
+                "user_id": "AAAAAAAAAAAAAAAAAAAAA",
+            },
+        },
+        unique_id="2533274838782903",
+        disabled_by=ConfigEntryDisabler.USER,
+        minor_version=2,
+    )
+    await async_setup_component(hass, "media_source", {})
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+    with pytest.raises(BrowseError, match="The Xbox integration is not configured"):
+        await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}")
+
+
+@pytest.mark.usefixtures("xbox_live_client")
+async def test_browse_media_account_not_configured_exception(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test browsing media account not configured exception."""
+
+    await async_setup_component(hass, "media_source", {})
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    with pytest.raises(BrowseError):
+        await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/2533274838782903")
+
+
+@pytest.mark.parametrize(
+    ("media_content_id", "url", "mime_type"),
+    [
+        (
+            "/271958441785640/1297287135/screenshots/41593644-be22-43d6-b224-c7bebe14076e",
+            "https://screenshotscontent-d5001.xboxlive.com/00097bbbbbbbbb23-41593644-be22-43d6-b224-c7bebe14076e/Screenshot-Original.png?sv=2015-12-11&sr=b&si=DefaultAccess&sig=ALKo3DE2HXqBTlpdyynIrH6RPKIECOF7zwotH%2Bb30Ts%3D",
+            "image/png",
+        ),
+        (
+            "/271958441785640/1297287135/gameclips/f87cc6ac-c291-4998-9124-d8b36c059b6a",
+            "https://gameclipscontent-d2015.xboxlive.com/asset-d5448dbd-f45e-46ab-ae4e-a2e205a70e7c/GameClip-Original.MP4?sv=2015-12-11&sr=b&si=DefaultAccess&sig=ArSoLvy9EnQeBthGW6%2FbasedHHk0Jb6iXjI3EMq8oh8%3D&__gda__=1522241341_69f67a7a3533626ae90b52845664dc0c",
+            "video/mp4",
+        ),
+        (
+            "/271958441785640/1297287135/game_media/0",
+            "http://store-images.s-microsoft.com/image/apps.35725.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.c4bf34f8-ad40-4af3-914e-a85e75a76bed",
+            "image/png",
+        ),
+    ],
+    ids=["screenshot", "gameclips", "game_media"],
+)
+@pytest.mark.usefixtures("xbox_live_client")
+async def test_resolve_media(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    media_content_id: str,
+    url: str,
+    mime_type: str,
+) -> None:
+    """Test resolve media."""
+
+    await async_setup_component(hass, "media_source", {})
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    media = await async_resolve_media(
+        hass,
+        f"{URI_SCHEME}{DOMAIN}{media_content_id}",
+        None,
+    )
+    assert media.url == url
+    assert media.mime_type == mime_type
+
+
+@pytest.mark.parametrize(
+    ("media_content_id", "provider", "method"),
+    [
+        (
+            "/271958441785640/1297287135/screenshots/41593644-be22-43d6-b224-c7bebe14076e",
+            "screenshots",
+            "get_recent_screenshots_by_xuid",
+        ),
+        (
+            "/271958441785640/1297287135/gameclips/f87cc6ac-c291-4998-9124-d8b36c059b6a",
+            "gameclips",
+            "get_recent_clips_by_xuid",
+        ),
+        (
+            "/271958441785640/1297287135/game_media/0",
+            "titlehub",
+            "get_title_info",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "exception",
+    [
+        httpx.HTTPStatusError("", request=MagicMock(), response=httpx.Response(500)),
+        httpx.RequestError(""),
+        httpx.TimeoutException(""),
+    ],
+)
+async def test_resolve_media_exceptions(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    xbox_live_client: AsyncMock,
+    media_content_id: str,
+    provider: str,
+    method: str,
+    exception: Exception,
+) -> None:
+    """Test resolve media exceptions."""
+
+    await async_setup_component(hass, "media_source", {})
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    provider = getattr(xbox_live_client, provider)
+    getattr(provider, method).side_effect = exception
+
+    with pytest.raises(Unresolvable):
+        await async_resolve_media(
+            hass,
+            f"{URI_SCHEME}{DOMAIN}{media_content_id}",
+            None,
+        )
+
+
+@pytest.mark.parametrize(("media_type"), ["screenshots", "gameclips", "game_media"])
+@pytest.mark.usefixtures("xbox_live_client")
+async def test_resolve_media_not_found_exceptions(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    media_type: str,
+) -> None:
+    """Test resolve media not found exceptions."""
+
+    await async_setup_component(hass, "media_source", {})
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    with pytest.raises(Unresolvable, match="The requested media could not be found"):
+        await async_resolve_media(
+            hass,
+            f"{URI_SCHEME}{DOMAIN}/271958441785640/1297287135/{media_type}/12345",
+            None,
+        )
+
+
+@pytest.mark.usefixtures("xbox_live_client")
+async def test_resolve_media_not_configured(
+    hass: HomeAssistant,
+) -> None:
+    """Test resolve media integration not configured exception."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Mock title",
+        data={
+            "auth_implementation": "cloud",
+            "token": {
+                "access_token": "1234567890",
+                "expires_at": 1760697327.7298331,
+                "expires_in": 3600,
+                "refresh_token": "0987654321",
+                "scope": "XboxLive.signin XboxLive.offline_access",
+                "service": "xbox",
+                "token_type": "bearer",
+                "user_id": "AAAAAAAAAAAAAAAAAAAAA",
+            },
+        },
+        unique_id="2533274838782903",
+        disabled_by=ConfigEntryDisabler.USER,
+    )
+    await async_setup_component(hass, "media_source", {})
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+    with pytest.raises(Unresolvable, match="The Xbox integration is not configured"):
+        await async_resolve_media(
+            hass,
+            f"{URI_SCHEME}{DOMAIN}/2533274838782903",
+            None,
+        )
+
+
+@pytest.mark.usefixtures("xbox_live_client")
+async def test_resolve_media_account_not_configured(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test resolve media account not configured exception."""
+
+    await async_setup_component(hass, "media_source", {})
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    with pytest.raises(Unresolvable, match="The Xbox account is not configured"):
+        await async_resolve_media(
+            hass,
+            f"{URI_SCHEME}{DOMAIN}/2533274838782903",
+            None,
+        )

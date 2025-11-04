@@ -6,7 +6,9 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from pythonxbox.api.provider.catalog.models import CatalogResponse
+from pythonxbox.api.provider.gameclips.models import GameclipsResponse
 from pythonxbox.api.provider.people.models import PeopleResponse
+from pythonxbox.api.provider.screenshots.models import ScreenshotResponse
 from pythonxbox.api.provider.smartglass.models import (
     SmartglassConsoleList,
     SmartglassConsoleStatus,
@@ -124,6 +126,19 @@ def mock_xbox_live_client() -> Generator[AsyncMock]:
         client.titlehub = AsyncMock()
         client.titlehub.get_title_info.return_value = TitleHubResponse(
             **load_json_object_fixture("titlehub_titleinfo.json", DOMAIN)
+        )
+        client.titlehub.get_title_history.return_value = TitleHubResponse(
+            **load_json_object_fixture("titlehub_titlehistory.json", DOMAIN)
+        )
+        client.gameclips = AsyncMock()
+        client.gameclips.get_recent_clips_by_xuid.return_value = GameclipsResponse(
+            **load_json_object_fixture("gameclips_recent_xuid.json", DOMAIN)
+        )
+        client.screenshots = AsyncMock()
+        client.screenshots.get_recent_screenshots_by_xuid.return_value = (
+            ScreenshotResponse(
+                **load_json_object_fixture("screenshots_recent_xuid.json", DOMAIN)
+            )
         )
 
         client.xuid = "271958441785640"
