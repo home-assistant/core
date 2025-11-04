@@ -99,6 +99,12 @@ ZEROCONF_PROPERTIES_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+# USB devices to ignore in serial port selection (non-Zigbee devices)
+# Format: (manufacturer, description)
+IGNORED_USB_DEVICES = {
+    ("Nabu Casa", "ZWA-2"),
+}
+
 
 class OptionsMigrationIntent(StrEnum):
     """Zigbee options flow intents."""
@@ -165,7 +171,12 @@ async def list_serial_ports(hass: HomeAssistant) -> list[ListPortInfo]:
             addon_port.manufacturer = "Nabu Casa"
             ports.append(addon_port)
 
-    return ports
+    # Filter out ignored USB devices
+    return [
+        port
+        for port in ports
+        if (port.manufacturer, port.description) not in IGNORED_USB_DEVICES
+    ]
 
 
 class BaseZhaFlow(ConfigEntryBaseFlow):
