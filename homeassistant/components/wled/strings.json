@@ -140,6 +140,9 @@
       "init": {
         "data": {
           "keep_master_light": "Add 'Main' control even with single LED segment"
+        },
+        "data_description": {
+          "keep_master_light": "Ensures the main light control is always available when you are dynamically adding and removing segments through automation."
         }
       }
     }
