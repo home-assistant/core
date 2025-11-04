@@ -14,6 +14,11 @@ from .const import DOMAIN
 from .coordinator import RejseplanenConfigEntry, RejseplanenDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
+
+# Set py_rejseplan library to WARNING level by default to reduce log noise
+# Users can override in configuration.yaml with: py_rejseplan: debug
+logging.getLogger("py_rejseplan").setLevel(logging.WARNING)
+
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
