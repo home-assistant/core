@@ -219,4 +219,4 @@ async def test_fail_when_other_device(
     assert entry is not None
     assert entry.state == ConfigEntryState.SETUP_ERROR
     assert entry.reason
-    assert "MAC address mismatch." in entry.reason
+    assert "MAC address does not match the configured device." in entry.reason
