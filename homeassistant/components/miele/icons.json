@@ -41,6 +41,9 @@
       "energy_forecast": {
         "default": "mdi:lightning-bolt-outline"
       },
+      "finish": {
+        "default": "mdi:clock-end"
+      },
       "plate": {
         "default": "mdi:circle-outline",
         "state": {
@@ -83,6 +86,9 @@
       "spin_speed": {
         "default": "mdi:sync"
       },
+      "start": {
+        "default": "mdi:clock-start"
+      },
       "start_time": {
         "default": "mdi:clock-start"
       },
@@ -91,12 +97,6 @@
       },
       "water_forecast": {
         "default": "mdi:water-outline"
-      },
-      "start": {
-        "default": "mdi:clock-start"
-      },
-      "finish": {
-        "default": "mdi:clock-end"
       }
     },
     "switch": {
