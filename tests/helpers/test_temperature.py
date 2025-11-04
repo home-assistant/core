@@ -43,6 +43,15 @@ def test_fahrenheit_wholes(hass: HomeAssistant) -> None:
     assert display_temp(hass, TEMP, UnitOfTemperature.FAHRENHEIT, PRECISION_WHOLE) == -4
 
 
+def test_temperature_interval_not_a_number(hass: HomeAssistant) -> None:
+    """Test that temperature is a number."""
+    temp = "Temperature"
+    with pytest.raises(TypeError) as exception:
+        display_temp_interval(hass, temp, UnitOfTemperature.CELSIUS, PRECISION_HALVES)
+
+    assert f"Temperature interval is not a number: {temp}" in str(exception.value)
+
+
 @pytest.mark.parametrize(
     ("unit_system", "unit", "results"),
     [
