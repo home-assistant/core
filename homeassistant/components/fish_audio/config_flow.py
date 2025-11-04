@@ -4,11 +4,12 @@ from __future__ import annotations
 
 from functools import partial
 import logging
-from typing import Any, cast
+from typing import Any, TypedDict, cast
 
 from fish_audio_sdk import Session
 from fish_audio_sdk.exceptions import HttpCodeErr
 from fish_audio_sdk.schemas import APICreditEntity
+import voluptuous as vol
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -19,9 +20,17 @@ from homeassistant.config_entries import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow
-from homeassistant.helpers.selector import SelectOptionDict
+from homeassistant.helpers.selector import (
+    LanguageSelector,
+    LanguageSelectorConfig,
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 
 from .const import (
+    BACKEND_MODELS,
     CONF_API_KEY,
     CONF_BACKEND,
     CONF_LANGUAGE,
@@ -31,6 +40,9 @@ from .const import (
     CONF_USER_ID,
     CONF_VOICE_ID,
     DOMAIN,
+    SIGNUP_URL,
+    SORT_BY_OPTIONS,
+    TTS_SUPPORTED_LANGUAGES,
 )
 from .error import (
     CannotConnectError,
@@ -38,20 +50,109 @@ from .error import (
     InvalidAuthError,
     UnexpectedError,
 )
-from .schemas import (
-    get_api_key_schema,
-    get_filter_schema,
-    get_model_selection_schema,
-    get_name_schema,
-)
-from .types import (
-    SubentryInitUserInput,
-    SubentryModelUserInput,
-    SubentryNameUserInput,
-    TTSConfigData,
-)
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class TTSConfigData(TypedDict, total=False):
+    """Fish Audio TTS subentry configuration data."""
+
+    voice_id: str
+    backend: str
+    language: str
+    self_only: bool
+    sort_by: str
+    name: str
+
+
+class SubentryInitUserInput(TypedDict, total=False):
+    """User input for the Fish Audio subentry init step."""
+
+    name: str
+    language: str
+    self_only: bool
+    sort_by: str
+
+
+class SubentryModelUserInput(TypedDict):
+    """User input for the Fish Audio subentry model step."""
+
+    voice_id: str
+    backend: str
+
+
+class SubentryNameUserInput(TypedDict):
+    """User input for the Fish Audio subentry name step."""
+
+    name: str
+
+
+def get_api_key_schema(default: str | None = None) -> vol.Schema:
+    """Return the schema for API key input."""
+    return vol.Schema(
+        {vol.Required(CONF_API_KEY, default=default or vol.UNDEFINED): str}
+    )
+
+
+def get_filter_schema(options: TTSConfigData) -> vol.Schema:
+    """Return the schema for the filter step."""
+    return vol.Schema(
+        {
+            vol.Optional(
+                CONF_SELF_ONLY, default=options.get(CONF_SELF_ONLY, False)
+            ): bool,
+            vol.Optional(
+                CONF_LANGUAGE, default=options.get(CONF_LANGUAGE, "en")
+            ): LanguageSelector(
+                LanguageSelectorConfig(
+                    languages=TTS_SUPPORTED_LANGUAGES,
+                )
+            ),
+            vol.Optional(
+                CONF_SORT_BY, default=options.get(CONF_SORT_BY, "score")
+            ): SelectSelector(
+                SelectSelectorConfig(
+                    options=SORT_BY_OPTIONS, mode=SelectSelectorMode.DROPDOWN
+                )
+            ),
+        }
+    )
+
+
+def get_model_selection_schema(
+    options: TTSConfigData, model_options: list[SelectOptionDict]
+) -> vol.Schema:
+    """Return the schema for the model selection step."""
+    return vol.Schema(
+        {
+            vol.Required(
+                CONF_VOICE_ID,
+                default=options.get(CONF_VOICE_ID, ""),
+            ): SelectSelector(
+                SelectSelectorConfig(
+                    options=model_options,
+                    mode=SelectSelectorMode.DROPDOWN,
+                    custom_value=True,
+                )
+            ),
+            vol.Required(
+                CONF_BACKEND,
+                default=options.get(CONF_BACKEND, "s1"),
+            ): SelectSelector(
+                SelectSelectorConfig(
+                    options=[
+                        SelectOptionDict(value=opt, label=opt) for opt in BACKEND_MODELS
+                    ],
+                    mode=SelectSelectorMode.DROPDOWN,
+                )
+            ),
+        }
+    )
+
+
+def get_name_schema(options: TTSConfigData, default: str | None = None) -> vol.Schema:
+    """Return the schema for the name input."""
+    return vol.Schema({vol.Required(CONF_NAME, default=default or vol.UNDEFINED): str})
 
 
 async def _validate_api_key(
@@ -90,7 +191,10 @@ class FishAudioConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(
-                step_id="user", data_schema=get_api_key_schema(), errors={}
+                step_id="user",
+                data_schema=get_api_key_schema(),
+                errors={},
+                description_placeholders={"signup_url": SIGNUP_URL},
             )
 
         errors: dict[str, str] = {}
@@ -99,8 +203,6 @@ class FishAudioConfigFlow(ConfigFlow, domain=DOMAIN):
             credit_info, self.session = await _validate_api_key(
                 self.hass, user_input[CONF_API_KEY]
             )
-            await self.async_set_unique_id(credit_info.user_id)
-            self._abort_if_unique_id_configured()
         except AbortFlow:
             raise
         except InvalidAuthError:
@@ -110,6 +212,9 @@ class FishAudioConfigFlow(ConfigFlow, domain=DOMAIN):
         except UnexpectedError:
             errors["base"] = "unknown"
         else:
+            await self.async_set_unique_id(credit_info.user_id)
+            self._abort_if_unique_id_configured()
+
             data: dict[str, Any] = {
                 CONF_API_KEY: user_input[CONF_API_KEY],
                 CONF_USER_ID: credit_info.user_id,
@@ -121,7 +226,10 @@ class FishAudioConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         return self.async_show_form(
-            step_id="user", data_schema=get_api_key_schema(), errors=errors
+            step_id="user",
+            data_schema=get_api_key_schema(),
+            errors=errors,
+            description_placeholders={"signup_url": SIGNUP_URL},
         )
 
     @classmethod
@@ -147,17 +255,17 @@ class FishAudioSubentryFlowHandler(ConfigSubentryFlow):
         self, self_only: bool, language: str | None, sort_by: str
     ) -> list[SelectOptionDict]:
         """Get the available models."""
+        func = partial(
+            self.session.list_models,
+            self_only=self_only,
+            language=language,
+            sort_by=sort_by,
+        )
         try:
-            func = partial(
-                self.session.list_models,
-                self_only=self_only,
-                language=language,
-                sort_by=sort_by,
-            )
             models_response = await self.hass.async_add_executor_job(func)
-            models = models_response.items
         except Exception as exc:
             raise CannotGetModelsError(exc) from exc
+        models = models_response.items
 
         return [
             SelectOptionDict(value=model.id, label=model.title)
@@ -189,13 +297,15 @@ class FishAudioSubentryFlowHandler(ConfigSubentryFlow):
         self, user_input: SubentryInitUserInput | None = None
     ) -> SubentryFlowResult:
         """Manage initial options."""
+        api_key = self._get_entry().data[CONF_API_KEY]
         try:
-            self.session = Session(self._get_entry().data[CONF_API_KEY])
-            await self.hass.async_add_executor_job(self.session.get_api_credit)
+            _, self.session = await _validate_api_key(self.hass, api_key)
         except InvalidAuthError:
             return self.async_abort(reason="invalid_auth")
         except CannotConnectError:
             return self.async_abort(reason="cannot_connect")
+        except UnexpectedError:
+            return self.async_abort(reason="unknown")
 
         if user_input is not None:
             self.config_data.update(user_input)
