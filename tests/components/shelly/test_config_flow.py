@@ -2066,14 +2066,7 @@ async def test_bluetooth_wifi_scan_success(
         context={"source": config_entries.SOURCE_BLUETOOTH},
     )
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {},
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "wifi_scan"
-
+    # Confirm BLE provisioning and trigger wifi scan
     with patch(
         "homeassistant.components.shelly.config_flow.async_scan_wifi_networks",
         return_value=[
@@ -2118,9 +2111,13 @@ async def test_bluetooth_wifi_scan_success(
             {CONF_PASSWORD: "my_password"},
         )
 
+        # Provisioning shows progress
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
         await hass.async_block_till_done()
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
+    # Provisioning done
+    assert result["type"] is FlowResultType.SHOW_PROGRESS_DONE
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -2144,11 +2141,7 @@ async def test_bluetooth_wifi_scan_failure(
         context={"source": config_entries.SOURCE_BLUETOOTH},
     )
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {},
-    )
-
+    # Confirm and trigger wifi scan that fails
     with patch(
         "homeassistant.components.shelly.config_flow.async_scan_wifi_networks",
         side_effect=DeviceConnectionError,
@@ -2202,9 +2195,13 @@ async def test_bluetooth_wifi_scan_failure(
             {CONF_PASSWORD: "my_password"},
         )
 
+        # Provisioning shows progress
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
         await hass.async_block_till_done()
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
+    # Provisioning done
+    assert result["type"] is FlowResultType.SHOW_PROGRESS_DONE
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -2226,11 +2223,7 @@ async def test_bluetooth_wifi_scan_ble_not_permitted(
         context={"source": config_entries.SOURCE_BLUETOOTH},
     )
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {},
-    )
-
+    # Confirm and trigger wifi scan that fails with permission error
     with patch(
         "homeassistant.components.shelly.config_flow.async_scan_wifi_networks",
         side_effect=DeviceConnectionError("Writing is not permitted"),
@@ -2260,13 +2253,7 @@ async def test_bluetooth_wifi_credentials_and_provision_success(
         context={"source": config_entries.SOURCE_BLUETOOTH},
     )
 
-    # Confirm BLE provisioning
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {},
-    )
-
-    # Scan for WiFi networks
+    # Confirm BLE provisioning and scan for WiFi networks
     with patch(
         "homeassistant.components.shelly.config_flow.async_scan_wifi_networks",
         return_value=[
@@ -2358,8 +2345,6 @@ async def test_bluetooth_wifi_provision_failure(
     )
 
     # Confirm and scan
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-
     with patch(
         "homeassistant.components.shelly.config_flow.async_scan_wifi_networks",
         return_value=[{"ssid": "MyNetwork", "rssi": -50, "auth": 2}],
@@ -2388,9 +2373,12 @@ async def test_bluetooth_wifi_provision_failure(
             {CONF_PASSWORD: "my_password"},
         )
 
+        # Provisioning shows progress
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
         await hass.async_block_till_done()
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
+    # Provisioning done
     assert result["type"] is FlowResultType.SHOW_PROGRESS_DONE
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
@@ -2435,9 +2423,13 @@ async def test_bluetooth_wifi_provision_failure(
             {CONF_PASSWORD: "my_password"},
         )
 
+        # Provisioning shows progress
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
         await hass.async_block_till_done()
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
+    # Provisioning done
+    assert result["type"] is FlowResultType.SHOW_PROGRESS_DONE
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
