@@ -41,6 +41,8 @@ from .pipeline import (
     async_setup_pipeline_store,
     async_update_pipeline,
 )
+from .select import AssistPipelineSelect, VadSensitivitySelect
+from .vad import VadSensitivity
 from .websocket_api import async_register_websocket_api
 
 __all__ = (
@@ -51,16 +53,18 @@ __all__ = (
     "SAMPLE_CHANNELS",
     "SAMPLE_RATE",
     "SAMPLE_WIDTH",
+    "AssistPipelineSelect",
     "AudioSettings",
     "Pipeline",
     "PipelineEvent",
     "PipelineEventType",
     "PipelineNotFound",
+    "VadSensitivity",
+    "VadSensitivitySelect",
     "WakeWordSettings",
     "async_create_default_pipeline",
     "async_get_pipelines",
     "async_pipeline_from_audio_stream",
-    "async_setup",
     "async_update_pipeline",
 )
 

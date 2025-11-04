@@ -26,17 +26,9 @@
   },
   "entity": {
     "sensor": {
-      "toner_black": {
-        "name": "Black toner level"
-      },
-      "toner_cyan": {
-        "name": "Cyan toner level"
-      },
-      "toner_magenta": {
-        "name": "Magenta toner level"
-      },
-      "toner_yellow": {
-        "name": "Yellow toner level"
+      "active_alerts": {
+        "name": "Active alerts",
+        "unit_of_measurement": "alerts"
       },
       "drum_black": {
         "name": "Black drum level"
@@ -50,21 +42,29 @@
       "drum_yellow": {
         "name": "Yellow drum level"
       },
-      "tray_mp": {
-        "name": "Multi-purpose tray"
+      "output_tray": {
+        "name": "Output tray {tray_number}"
       },
-      "tray_manual": {
-        "name": "Manual feed tray"
+      "toner_black": {
+        "name": "Black toner level"
+      },
+      "toner_cyan": {
+        "name": "Cyan toner level"
+      },
+      "toner_magenta": {
+        "name": "Magenta toner level"
+      },
+      "toner_yellow": {
+        "name": "Yellow toner level"
       },
       "tray": {
         "name": "Input tray {tray_number}"
       },
-      "output_tray": {
-        "name": "Output tray {tray_number}"
+      "tray_manual": {
+        "name": "Manual feed tray"
       },
-      "active_alerts": {
-        "name": "Active alerts",
-        "unit_of_measurement": "alerts"
+      "tray_mp": {
+        "name": "Multi-purpose tray"
       }
     }
   }

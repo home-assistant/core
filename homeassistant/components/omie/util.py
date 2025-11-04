@@ -9,10 +9,6 @@ from pyomie.util import localize_quarter_hourly_data
 
 CET: Final = ZoneInfo("CET")
 
-_OMIE_PUBLISH_TIME_CET = dt.time(hour=13, minute=30)
-"""The time by which day-ahead market results (for the next day) will have been published to omie.es."""
-
-
 def current_quarter_hour_cet() -> dt.datetime:
     """Returns the current quarter-hour in CET with seconds and microseconds equal to 0."""
     now = dt.datetime.now(CET)
@@ -35,12 +31,3 @@ def pick_series_cet(
         dt.datetime.fromisoformat(dt_str).astimezone(CET): v
         for dt_str, v in localize_quarter_hourly_data(market_date, series_data).items()
     }
-
-
-def get_market_dates(local_time: dt.datetime) -> set[dt.date]:
-    """Returns the intraday market date(s) for a given local time.
-
-    :param local_time the datetime at which the calculation is made
-    """
-
-    return {local_time.astimezone(CET).date()}

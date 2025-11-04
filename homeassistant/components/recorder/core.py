@@ -56,7 +56,6 @@ from .const import (
     DEFAULT_MAX_BIND_VARS,
     DOMAIN,
     KEEPALIVE_TIME,
-    LAST_REPORTED_SCHEMA_VERSION,
     MARIADB_PYMYSQL_URL_PREFIX,
     MARIADB_URL_PREFIX,
     MAX_QUEUE_BACKLOG_MIN_VALUE,
@@ -79,13 +78,7 @@ from .db_schema import (
     StatisticsShortTerm,
 )
 from .executor import DBInterruptibleThreadPoolExecutor
-from .models import (
-    DatabaseEngine,
-    StatisticData,
-    StatisticMeanType,
-    StatisticMetaData,
-    UnsupportedDialect,
-)
+from .models import DatabaseEngine, StatisticData, StatisticMetaData, UnsupportedDialect
 from .pool import POOL_SIZE, MutexPool, RecorderPool
 from .table_managers.event_data import EventDataManager
 from .table_managers.event_types import EventTypeManager
@@ -575,13 +568,18 @@ class Recorder(threading.Thread):
         statistic_id: str,
         *,
         new_statistic_id: str | UndefinedType = UNDEFINED,
+        new_unit_class: str | None | UndefinedType = UNDEFINED,
         new_unit_of_measurement: str | None | UndefinedType = UNDEFINED,
         on_done: Callable[[], None] | None = None,
     ) -> None:
         """Update statistics metadata for a statistic_id."""
         self.queue_task(
             UpdateStatisticsMetadataTask(
-                on_done, statistic_id, new_statistic_id, new_unit_of_measurement
+                on_done,
+                statistic_id,
+                new_statistic_id,
+                new_unit_class,
+                new_unit_of_measurement,
             )
         )
 
@@ -617,17 +615,6 @@ class Recorder(threading.Thread):
         table: type[Statistics | StatisticsShortTerm],
     ) -> None:
         """Schedule import of statistics."""
-        if "mean_type" not in metadata:
-            # Backwards compatibility for old metadata format
-            # Can be removed after 2026.4
-            metadata["mean_type"] = (  # type: ignore[unreachable]
-                StatisticMeanType.ARITHMETIC
-                if metadata.get("has_mean")
-                else StatisticMeanType.NONE
-            )
-        # Remove deprecated has_mean as it's not needed anymore in core
-        metadata.pop("has_mean", None)
-
         self.queue_task(ImportStatisticsTask(metadata, stats, table))
 
     @callback
@@ -806,6 +793,10 @@ class Recorder(threading.Thread):
 
         # Catch up with missed statistics
         self._schedule_compile_missing_statistics()
+
+        # Kick off live migrations
+        migration.migrate_data_live(self, self.get_session, schema_status)
+
         _LOGGER.debug("Recorder processing the queue")
         self._adjust_lru_size()
         self.hass.add_job(self._async_set_recorder_ready_migration_done)
@@ -821,8 +812,6 @@ class Recorder(threading.Thread):
             # herd of queries to find the statistics meta data if
             # there are a lot of statistics graphs on the frontend.
             self.statistics_meta_manager.load(session)
-
-        migration.migrate_data_live(self, self.get_session, schema_status)
 
         # We must only set the db ready after we have set the table managers
         # to active if there is no data to migrate.
@@ -1224,7 +1213,7 @@ class Recorder(threading.Thread):
         if (
             pending_last_reported
             := self.states_manager.get_pending_last_reported_timestamp()
-        ) and self.schema_version >= LAST_REPORTED_SCHEMA_VERSION:
+        ):
             with session.no_autoflush:
                 session.execute(
                     update(States),

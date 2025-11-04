@@ -18,7 +18,7 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import UnitOfTemperature
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -352,7 +352,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
                 {
                     "code": self._set_temperature.dpcode,
                     "value": round(
-                        self._set_temperature.scale_value_back(kwargs["temperature"])
+                        self._set_temperature.scale_value_back(kwargs[ATTR_TEMPERATURE])
                     ),
                 }
             ]

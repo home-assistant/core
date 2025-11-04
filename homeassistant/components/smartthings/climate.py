@@ -109,6 +109,8 @@ PRESET_MODE_TO_HA = {
     "quiet": "quiet",
     "longWind": "long_wind",
     "smart": "smart",
+    "motionIndirect": "motion_indirect",
+    "motionDirect": "motion_direct",
 }
 
 HA_MODE_TO_PRESET_MODE = {v: k for k, v in PRESET_MODE_TO_HA.items()}
