@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from enum import Enum
 import logging
 from typing import Any
 
@@ -16,7 +17,6 @@ from homeassistant.components.bluetooth.api import (
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_MAC, CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN, URL_PAIRING_MODE
@@ -24,8 +24,8 @@ from .const import DOMAIN, URL_PAIRING_MODE
 _LOGGER = logging.getLogger(__name__)
 
 
-async def validate_input(hass: HomeAssistant, address: str) -> None:
-    """Validate that we can connect."""
+async def validate_input(hass: HomeAssistant, address: str) -> Error | None:
+    """Return error if cannot connect and validate."""
 
     ble_device = async_ble_device_from_address(hass, address.upper(), connectable=True)
 
@@ -34,8 +34,8 @@ async def validate_input(hass: HomeAssistant, address: str) -> None:
         _LOGGER.debug("Count of BLE scanners in HA bt: %i", count_scanners)
 
         if count_scanners < 1:
-            raise ScannerNotAvailable
-        raise NotFound
+            return Error.NO_SCANNERS
+        return Error.NOT_FOUND
 
     try:
         light = HueBleLight(ble_device)
@@ -47,14 +47,19 @@ async def validate_input(hass: HomeAssistant, address: str) -> None:
                 "Unable to determine if light authenticated, proceeding anyway"
             )
         elif not light.authenticated:
-            raise InvalidAuth
+            return Error.INVALID_AUTH
 
         if not light.connected:
-            raise CannotConnect
+            return Error.CANNOT_CONNECT
 
         _, errors = await light.poll_state()
-        if not len(errors) == 0:
-            raise CannotConnect
+        if len(errors) != 0:
+            return Error.CANNOT_CONNECT
+        else:  # noqa: RET505
+            return None
+    except Exception as e:  # noqa: BLE001
+        _LOGGER.error("Unexpected error validating light connection: %s", e)
+        return Error.UNKNOWN
     finally:
         await light.disconnect()
 
@@ -98,23 +103,12 @@ class HueBleConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            try:
-                unique_id = dr.format_mac(self._discovery_info.address)
-                await self.async_set_unique_id(unique_id)
-                self._abort_if_unique_id_configured()
-                await validate_input(self.hass, unique_id)
-
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            except ScannerNotAvailable:
-                errors["base"] = "no_scanners"
-            except NotFound:
-                errors["base"] = "not_found"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+            unique_id = dr.format_mac(self._discovery_info.address)
+            await self.async_set_unique_id(unique_id)
+            self._abort_if_unique_id_configured()
+            error = await validate_input(self.hass, unique_id)
+            if error:
+                errors["base"] = error.value
             else:
                 return self.async_create_entry(title=self._discovery_info.name, data={})
 
@@ -130,17 +124,20 @@ class HueBleConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class CannotConnect(HomeAssistantError):
+class Error(Enum):
+    """Potential validation errors when attempting to connect."""
+
+    CANNOT_CONNECT = "cannot_connect"
     """Error to indicate we cannot connect."""
 
-
-class InvalidAuth(HomeAssistantError):
+    INVALID_AUTH = "invalid_auth"
     """Error to indicate there is invalid auth."""
 
-
-class ScannerNotAvailable(HomeAssistantError):
+    NO_SCANNERS = "no_scanners"
     """Error to indicate no bluetooth scanners are available."""
 
-
-class NotFound(HomeAssistantError):
+    NOT_FOUND = "not_found"
     """Error to indicate the light could not be found."""
+
+    UNKNOWN = "unknown"
+    """Error to indicate that the issue is unknown."""

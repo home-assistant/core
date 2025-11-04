@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, PropertyMock, patch
 import pytest
 
 from homeassistant import config_entries
+from homeassistant.components.hue_ble.config_flow import Error
 from homeassistant.components.hue_ble.const import DOMAIN, URL_PAIRING_MODE
 from homeassistant.config_entries import SOURCE_BLUETOOTH
 from homeassistant.const import CONF_MAC, CONF_NAME
@@ -124,11 +125,11 @@ async def test_bluetooth_form(
         "mock_authenticated",
         "mock_connected",
         "mock_poll_state",
-        "error_message",
+        "error",
     ),
     [
-        (None, 0, True, True, True, (True, []), "no_scanners"),
-        (None, 1, True, True, True, (True, []), "not_found"),
+        (None, 0, True, True, True, (True, []), Error.NO_SCANNERS),
+        (None, 1, True, True, True, (True, []), Error.NOT_FOUND),
         (
             generate_ble_device(TEST_DEVICE_NAME, TEST_DEVICE_MAC),
             1,
@@ -136,7 +137,7 @@ async def test_bluetooth_form(
             False,
             True,
             (True, []),
-            "invalid_auth",
+            Error.INVALID_AUTH,
         ),
         (
             generate_ble_device(TEST_DEVICE_NAME, TEST_DEVICE_MAC),
@@ -145,7 +146,7 @@ async def test_bluetooth_form(
             True,
             False,
             (True, []),
-            "cannot_connect",
+            Error.CANNOT_CONNECT,
         ),
         (
             generate_ble_device(TEST_DEVICE_NAME, TEST_DEVICE_MAC),
@@ -154,7 +155,7 @@ async def test_bluetooth_form(
             True,
             True,
             (True, ["ERROR!"]),
-            "cannot_connect",
+            Error.CANNOT_CONNECT,
         ),
         (
             generate_ble_device(TEST_DEVICE_NAME, TEST_DEVICE_MAC),
@@ -163,7 +164,7 @@ async def test_bluetooth_form(
             None,
             True,
             (True, []),
-            "unknown",
+            Error.UNKNOWN,
         ),
     ],
     ids=[
@@ -184,7 +185,7 @@ async def test_bluetooth_form_exception(
     mock_authenticated: bool | None,
     mock_connected: bool,
     mock_poll_state: Exception | tuple[bool, list[Exception]],
-    error_message: str,
+    error: Error,
 ) -> None:
     """Test bluetooth discovery form with errors."""
 
@@ -231,7 +232,7 @@ async def test_bluetooth_form_exception(
         await hass.async_block_till_done()
 
         assert form_confirm["type"] is FlowResultType.FORM
-        assert form_confirm["errors"] == {"base": error_message}
+        assert form_confirm["errors"] == {"base": error.value}
 
 
 async def test_user_form_exception(
