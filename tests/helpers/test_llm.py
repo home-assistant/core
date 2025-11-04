@@ -1132,6 +1132,19 @@ async def test_selector_serializer(
         },
         "required": ["media_content_id", "media_content_type"],
     }
+    assert selector_serializer(selector.MediaSelector({"multiple": True})) == {
+        "type": "array",
+        "items": {
+            "type": "object",
+            "properties": {
+                "entity_id": {"type": "string"},
+                "media_content_id": {"type": "string"},
+                "media_content_type": {"type": "string"},
+                "metadata": {"type": "object", "additionalProperties": True},
+            },
+            "required": ["media_content_id", "media_content_type"],
+        },
+    }
     assert selector_serializer(selector.NumberSelector({"mode": "box"})) == {
         "type": "number"
     }
