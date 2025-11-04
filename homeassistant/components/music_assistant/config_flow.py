@@ -79,22 +79,17 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(
-                    self.server_info.server_id, raise_on_progress=False
-                )
-                self._abort_if_unique_id_configured(
-                    updates={CONF_URL: self.server_info.base_url},
-                    reload_on_update=True,
-                )
                 return self.async_create_entry(
                     title=DEFAULT_TITLE,
                     data={
                         CONF_URL: user_input[CONF_URL],
                     },
                 )
+
             return self.async_show_form(
                 step_id="user", data_schema=get_manual_schema(user_input), errors=errors
             )
+
         return self.async_show_form(step_id="user", data_schema=get_manual_schema({}))
 
     async def async_step_zeroconf(
