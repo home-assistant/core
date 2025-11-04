@@ -1195,7 +1195,7 @@ async def test_bad_code_attempt_event_fired(hass: HomeAssistant) -> None:
 
     assert len(events) == 1
     assert events[0].get("entity_id") == entity_id
-    assert events[0].get("action") == AlarmControlPanelState.DISARMED
+    assert events[0].get("target_state") == AlarmControlPanelState.DISARMED
     assert events[0].get("user_id") == mock_user_id
 
 
