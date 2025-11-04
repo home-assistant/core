@@ -39,8 +39,6 @@ class AirthingsBLEDataUpdateCoordinator(DataUpdateCoordinator[AirthingsDevice]):
             _LOGGER, hass.config.units is METRIC_SYSTEM
         )
 
-        # Set scan interval based on device model
-        # Use default interval for migration case (will be updated in _async_setup)
         device_model = entry.data.get("device_model")
         if device_model == AirthingsDeviceType.CORENTIUM_HOME_2.value:
             interval = RADON_SCAN_INTERVAL
