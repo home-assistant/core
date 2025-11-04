@@ -199,8 +199,13 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
             ) from e
         else:
             presence_data = {self.client.xuid: batch.people[0]}
+            configured_xuids = self.configured_as_entry()
             presence_data.update(
-                {friend.xuid: friend for friend in friends.people if friend.is_favorite}
+                {
+                    friend.xuid: friend
+                    for friend in friends.people
+                    if friend.is_favorite and friend.xuid not in configured_xuids
+                }
             )
 
         # retrieve title details
@@ -252,9 +257,11 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
         """Remove stale devices from registry."""
 
         device_reg = dr.async_get(self.hass)
-        identifiers = {(DOMAIN, xuid) for xuid in xuids} | {
-            (DOMAIN, console.id) for console in self.consoles.result
-        }
+        identifiers = (
+            {(DOMAIN, xuid) for xuid in xuids}
+            | {(DOMAIN, console.id) for console in self.consoles.result}
+            | self.configured_as_entry()
+        )
 
         for device in dr.async_entries_for_config_entry(
             device_reg, self.config_entry.entry_id
@@ -264,3 +271,12 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
                 device_reg.async_update_device(
                     device.id, remove_config_entry_id=self.config_entry.entry_id
                 )
+
+    def configured_as_entry(self) -> set[str]:
+        """Get xuids of configured entries."""
+
+        return {
+            entry.unique_id
+            for entry in self.hass.config_entries.async_entries(DOMAIN)
+            if entry.unique_id is not None
+        }
