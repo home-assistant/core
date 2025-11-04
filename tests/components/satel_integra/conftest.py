@@ -11,6 +11,7 @@ from homeassistant.components.satel_integra.const import DOMAIN
 from . import (
     MOCK_CONFIG_DATA,
     MOCK_CONFIG_OPTIONS,
+    MOCK_ENTRY_ID,
     MOCK_OUTPUT_SUBENTRY,
     MOCK_PARTITION_SUBENTRY,
     MOCK_SWITCHABLE_OUTPUT_SUBENTRY,
@@ -58,9 +59,9 @@ def mock_config_entry() -> MockConfigEntry:
         title="192.168.0.2",
         data=MOCK_CONFIG_DATA,
         options=MOCK_CONFIG_OPTIONS,
-        entry_id="SATEL_INTEGRA_CONFIG_ENTRY_1",
-        version=1,
-        minor_version=2,
+        entry_id=MOCK_ENTRY_ID,
+        version=2,
+        minor_version=1,
     )
 
 

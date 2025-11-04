@@ -1,69 +1,192 @@
 # serializer version: 1
-# name: test_config_flow_migration_version_1_2
-  ConfigEntrySnapshot({
+# name: test_config_flow_migration_version_1_2[original0-partition_number]
+  dict({
     'data': dict({
-      'host': '192.168.0.2',
-      'port': 7094,
+      'arm_home_mode': 1,
+      'name': 'Home',
+      'partition_number': 1,
     }),
+    'subentry_id': 'ID_PARTITION',
+    'subentry_type': 'partition',
+    'title': 'Home (1) (1)',
+    'unique_id': 'partition_1',
+  })
+# ---
+# name: test_config_flow_migration_version_1_2[original1-zone_number]
+  dict({
+    'data': dict({
+      'name': 'Zone',
+      'type': <BinarySensorDeviceClass.MOTION: 'motion'>,
+      'zone_number': 1,
+    }),
+    'subentry_id': 'ID_ZONE',
+    'subentry_type': 'zone',
+    'title': 'Zone (1) (1)',
+    'unique_id': 'zone_1',
+  })
+# ---
+# name: test_config_flow_migration_version_1_2[original2-output_number]
+  dict({
+    'data': dict({
+      'name': 'Output',
+      'output_number': 1,
+      'type': <BinarySensorDeviceClass.SAFETY: 'safety'>,
+    }),
+    'subentry_id': 'ID_OUTPUT',
+    'subentry_type': 'output',
+    'title': 'Output (1) (1)',
+    'unique_id': 'output_1',
+  })
+# ---
+# name: test_config_flow_migration_version_1_2[original3-switchable_output_number]
+  dict({
+    'data': dict({
+      'name': 'Switchable Output',
+      'switchable_output_number': 1,
+    }),
+    'subentry_id': 'ID_SWITCHABLE_OUTPUT',
+    'subentry_type': 'switchable_output',
+    'title': 'Switchable Output (1) (1)',
+    'unique_id': 'switchable_output_1',
+  })
+# ---
+# name: test_unique_id_migration_from_single_config[alarm_control_panel-satel_alarm_panel_1-1234567890_alarm_panel_1]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
     'disabled_by': None,
-    'discovery_keys': dict({
+    'domain': 'alarm_control_panel',
+    'entity_category': None,
+    'entity_id': 'alarm_control_panel.satel_integra_satel_alarm_panel_1',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
     }),
-    'domain': 'satel_integra',
-    'entry_id': <ANY>,
-    'minor_version': 2,
+    'name': None,
     'options': dict({
-      'code': '1234',
     }),
-    'pref_disable_new_entities': False,
-    'pref_disable_polling': False,
-    'source': 'user',
-    'subentries': list([
-      dict({
-        'data': dict({
-          'arm_home_mode': 1,
-          'name': 'Home',
-          'partition_number': 1,
-        }),
-        'subentry_id': 'ID_PARTITION',
-        'subentry_type': 'partition',
-        'title': 'Home (1) (1)',
-        'unique_id': 'partition_1',
-      }),
-      dict({
-        'data': dict({
-          'name': 'Zone',
-          'type': <BinarySensorDeviceClass.MOTION: 'motion'>,
-          'zone_number': 1,
-        }),
-        'subentry_id': 'ID_ZONE',
-        'subentry_type': 'zone',
-        'title': 'Zone (1) (1)',
-        'unique_id': 'zone_1',
-      }),
-      dict({
-        'data': dict({
-          'name': 'Output',
-          'output_number': 1,
-          'type': <BinarySensorDeviceClass.SAFETY: 'safety'>,
-        }),
-        'subentry_id': 'ID_OUTPUT',
-        'subentry_type': 'output',
-        'title': 'Output (1) (1)',
-        'unique_id': 'output_1',
-      }),
-      dict({
-        'data': dict({
-          'name': 'Switchable Output',
-          'switchable_output_number': 1,
-        }),
-        'subentry_id': 'ID_SWITCHABLE_OUTPUT',
-        'subentry_type': 'switchable_output',
-        'title': 'Switchable Output (1) (1)',
-        'unique_id': 'switchable_output_1',
-      }),
-    ]),
-    'title': '192.168.0.2',
-    'unique_id': None,
-    'version': 1,
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'satel_integra',
+    'previous_unique_id': 'satel_alarm_panel_1',
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '1234567890_alarm_panel_1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_unique_id_migration_from_single_config[binary_sensor-satel_output_1-1234567890_output_1]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.satel_integra_satel_output_1',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'satel_integra',
+    'previous_unique_id': 'satel_output_1',
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '1234567890_output_1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_unique_id_migration_from_single_config[binary_sensor-satel_zone_1-1234567890_zone_1]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.satel_integra_satel_zone_1',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'satel_integra',
+    'previous_unique_id': 'satel_zone_1',
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '1234567890_zone_1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_unique_id_migration_from_single_config[switch-satel_switch_1-1234567890_switch_1]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.satel_integra_satel_switch_1',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'satel_integra',
+    'previous_unique_id': 'satel_switch_1',
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '1234567890_switch_1',
+    'unit_of_measurement': None,
   })
 # ---
