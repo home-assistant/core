@@ -5,8 +5,8 @@ from unittest.mock import AsyncMock, patch
 
 from nhc.cover import NHCCover
 from nhc.light import NHCLight
-from nhc.thermostat import NHCThermostat
 from nhc.scene import NHCScene
+from nhc.thermostat import NHCThermostat
 import pytest
 
 from homeassistant.components.niko_home_control.const import DOMAIN
@@ -96,7 +96,8 @@ def mock_niko_home_control_connection(
     light: NHCLight,
     dimmable_light: NHCLight,
     cover: NHCCover,
-    climate: NHCThermostat,, scene: NHCScene
+    climate: NHCThermostat,
+    scene: NHCScene,
 ) -> Generator[AsyncMock]:
     """Mock a NHC client."""
     with (
