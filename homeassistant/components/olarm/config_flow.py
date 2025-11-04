@@ -106,10 +106,14 @@ class OlarmOauth2FlowHandler(
             if self._oauth_data is None:
                 return self.async_abort(reason="oauth_data_missing")
 
+            # Find next available client_id_suffix
+            client_id_suffix = self._get_next_client_id_suffix()
+
             # load device details into config
             data = {
                 "user_id": self._user_id,
                 "device_id": self._device_id,
+                "client_id_suffix": client_id_suffix,
                 "auth_implementation": self._oauth_data["auth_implementation"],
                 "token": self._oauth_data["token"],
             }
@@ -140,6 +144,21 @@ class OlarmOauth2FlowHandler(
         )
 
         return self.async_show_form(step_id="device", data_schema=schema, errors=errors)
+
+    def _get_next_client_id_suffix(self) -> str:
+        """Get next available client_id_suffix."""
+        used_suffixes = {
+            int(entry.data.get("client_id_suffix", 0))
+            for entry in self.hass.config_entries.async_entries(DOMAIN)
+            if entry.data.get("client_id_suffix")
+        }
+
+        for suffix in range(1, 101):
+            if suffix not in used_suffixes:
+                return str(suffix)
+
+        # If all are used, cycle back to 1
+        return "1"
 
 
 class CannotConnect(HomeAssistantError):

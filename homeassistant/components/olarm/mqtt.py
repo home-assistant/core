@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from contextlib import suppress
 import logging
 from typing import Any, Literal
 
@@ -47,8 +46,8 @@ class OlarmFlowClientMQTT:
         # olarm connect client
         self._olarm_flow_client: OlarmFlowClient = olarm_client
 
-        # Track the assigned client ID suffix for this instance
-        self.client_id_suffix: str | None = None
+        # get the assigned client ID suffix from config (default to "1" for backward compatibility)
+        self.client_id_suffix: str = str(entry.data.get("client_id_suffix", "1"))
 
     def _mqtt_status_callback(
         self,
@@ -68,6 +67,10 @@ class OlarmFlowClientMQTT:
         elif status == "disconnected":
             reason = info.get("reason", "Unknown reason")
             _LOGGER.error("MQTT disconnected from Olarm service: %s", reason)
+            # Use refresh token to fetch new access tokens if expired
+            asyncio.run_coroutine_threadsafe(
+                self._coordinator.async_ensure_token_valid(), self._hass.loop
+            )
             # Create repair issue for disconnection
             ir.async_create_issue(
                 self._hass,
@@ -81,7 +84,7 @@ class OlarmFlowClientMQTT:
         elif status == "reconnecting":
             reason = info.get("reason", "Unknown reason")
             _LOGGER.debug("MQTT reconnecting to Olarm service: %s", reason)
-            # Trigger token refresh for authentication-related reconnections
+            # Use refresh token to fetch new access tokens if expired
             asyncio.run_coroutine_threadsafe(
                 self._coordinator.async_ensure_token_valid(), self._hass.loop
             )
@@ -97,9 +100,6 @@ class OlarmFlowClientMQTT:
         try:
             # Ensure token is valid before connecting to MQTT
             await self._coordinator.async_ensure_token_valid()
-
-            # Get a unique client ID suffix for this connection
-            self.client_id_suffix = self._get_unique_client_id_suffix()
 
             # Startup MQTT
             await self._olarm_flow_client.start_mqtt_async(
@@ -138,39 +138,7 @@ class OlarmFlowClientMQTT:
             except Exception as e:  # noqa: BLE001
                 _LOGGER.warning("Error stopping MQTT client: %s", e)
             finally:
-                # Release the client ID suffix for reuse
-                self.client_id_suffix = None
                 # Clean up any repair issues
                 ir.async_delete_issue(
                     self._hass, DOMAIN, f"mqtt_disconnected_{self.device_id}"
                 )
-
-    def _get_unique_client_id_suffix(self) -> str:
-        """Determine a unique client ID suffix for this MQTT connection."""
-
-        # Collect all suffixes currently in use by running entries
-        used_suffixes: set[int] = set()
-
-        for entry in self._hass.config_entries.async_entries(DOMAIN):
-            # Only check entries that are loaded and have runtime data
-            if hasattr(entry, "runtime_data") and entry.runtime_data is not None:
-                mqtt_client = entry.runtime_data.mqtt_client
-                if mqtt_client.client_id_suffix is not None:
-                    # Skip if suffix is not a valid integer
-                    with suppress(ValueError, AttributeError):
-                        used_suffixes.add(int(mqtt_client.client_id_suffix))
-
-        # Find the lowest available suffix starting from 1
-        suffix_num = 1
-        while suffix_num in used_suffixes:
-            suffix_num += 1
-
-        client_id_suffix = str(suffix_num)
-
-        _LOGGER.debug(
-            "Using %s as client_id_suffix for MQTT connection for device_id=%s",
-            client_id_suffix,
-            self.device_id,
-        )
-
-        return client_id_suffix
