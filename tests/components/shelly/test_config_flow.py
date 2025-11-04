@@ -1915,6 +1915,7 @@ async def test_zeroconf_wrong_device_name(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_bluetooth_discovery(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
@@ -1989,6 +1990,7 @@ async def test_bluetooth_discovery(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_bluetooth_discovery_no_rpc_over_ble(
     hass: HomeAssistant,
 ) -> None:
@@ -2003,6 +2005,7 @@ async def test_bluetooth_discovery_no_rpc_over_ble(
     assert result["reason"] == "invalid_discovery_info"
 
 
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_bluetooth_discovery_invalid_name(
     hass: HomeAssistant,
 ) -> None:
@@ -2017,7 +2020,7 @@ async def test_bluetooth_discovery_invalid_name(
     assert result["reason"] == "invalid_discovery_info"
 
 
-@pytest.mark.usefixtures("mock_rpc_device")
+@pytest.mark.usefixtures("mock_rpc_device", "mock_zeroconf")
 async def test_bluetooth_discovery_already_configured(
     hass: HomeAssistant,
 ) -> None:
@@ -2047,6 +2050,7 @@ async def test_bluetooth_discovery_already_configured(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_bluetooth_discovery_no_ble_device(
     hass: HomeAssistant,
 ) -> None:
@@ -2061,6 +2065,7 @@ async def test_bluetooth_discovery_no_ble_device(
     assert result["reason"] == "cannot_connect"
 
 
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_bluetooth_wifi_scan_success(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
@@ -2140,6 +2145,7 @@ async def test_bluetooth_wifi_scan_success(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_bluetooth_wifi_scan_failure(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
@@ -2228,7 +2234,7 @@ async def test_bluetooth_wifi_scan_failure(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.usefixtures("mock_rpc_device")
+@pytest.mark.usefixtures("mock_rpc_device", "mock_zeroconf")
 async def test_bluetooth_wifi_scan_ble_not_permitted(
     hass: HomeAssistant,
 ) -> None:
@@ -2256,6 +2262,7 @@ async def test_bluetooth_wifi_scan_ble_not_permitted(
     assert result["reason"] == "ble_not_permitted"
 
 
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_bluetooth_wifi_credentials_and_provision_success(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
@@ -2337,6 +2344,7 @@ async def test_bluetooth_wifi_credentials_and_provision_success(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_bluetooth_wifi_provision_failure(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
@@ -2475,6 +2483,7 @@ async def test_bluetooth_wifi_scan_unexpected_exception(
     assert result["reason"] == "unknown"
 
 
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_bluetooth_provision_unexpected_exception(
     hass: HomeAssistant,
 ) -> None:
@@ -2528,7 +2537,7 @@ async def test_bluetooth_provision_unexpected_exception(
         assert result["reason"] == "unknown"
 
 
-@pytest.mark.usefixtures("mock_rpc_device")
+@pytest.mark.usefixtures("mock_rpc_device", "mock_zeroconf")
 async def test_bluetooth_provision_device_connection_error_after_wifi(
     hass: HomeAssistant,
 ) -> None:
@@ -2593,7 +2602,7 @@ async def test_bluetooth_provision_device_connection_error_after_wifi(
     assert result["reason"] == "unknown"
 
 
-@pytest.mark.usefixtures("mock_rpc_device")
+@pytest.mark.usefixtures("mock_rpc_device", "mock_zeroconf")
 async def test_bluetooth_provision_requires_auth(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
@@ -2677,6 +2686,7 @@ async def test_bluetooth_provision_requires_auth(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_bluetooth_provision_validate_input_fails(
     hass: HomeAssistant,
 ) -> None:
@@ -2745,6 +2755,7 @@ async def test_bluetooth_provision_validate_input_fails(
     assert result["reason"] == "unknown"
 
 
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_bluetooth_provision_firmware_not_fully_provisioned(
     hass: HomeAssistant,
 ) -> None:
