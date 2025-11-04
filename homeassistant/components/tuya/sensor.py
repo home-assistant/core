@@ -6,6 +6,9 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
+from tuya_device_handlers import TUYA_QUIRKS_REGISTRY
+from tuya_device_handlers.builder import TuyaSensorDefinition
+from tuya_device_handlers.helpers import parse_enum
 from tuya_sharing import CustomerDevice, Manager
 from tuya_sharing.device import DeviceStatusRange
 
@@ -44,9 +47,6 @@ from .const import (
 )
 from .entity import TuyaEntity
 from .models import ComplexValue, ElectricityValue, EnumTypeData, IntegerTypeData
-from .tuya_device_handlers import TUYA_QUIRKS_REGISTRY
-from .tuya_device_handlers.builder import TuyaSensorDefinition
-from .tuya_device_handlers.helpers import parse_enum
 from .util import get_dptype
 
 _WIND_DIRECTIONS = {

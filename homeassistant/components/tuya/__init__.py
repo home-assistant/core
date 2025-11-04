@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any, NamedTuple
 
+from tuya_device_handlers.devices import register_tuya_quirks
 from tuya_sharing import (
     CustomerDevice,
     Manager,
@@ -31,7 +32,6 @@ from .const import (
     TUYA_DISCOVERY_NEW,
     TUYA_HA_SIGNAL_UPDATE_ENTITY,
 )
-from .tuya_device_handlers.devices import register_tuya_quirks
 
 # Suppress logs from the library, it logs unneeded on error
 logging.getLogger("tuya_sharing").setLevel(logging.CRITICAL)

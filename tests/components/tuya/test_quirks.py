@@ -5,20 +5,14 @@ from __future__ import annotations
 from enum import StrEnum
 
 import pytest
+from tuya_device_handlers import TUYA_QUIRKS_REGISTRY
+from tuya_device_handlers.builder import TuyaDeviceQuirk
+from tuya_device_handlers.builder.base_quirk import BaseTuyaDefinition
+from tuya_device_handlers.devices import register_tuya_quirks
+from tuya_device_handlers.registry import QuirksRegistry
 
 from homeassistant.components.cover import CoverDeviceClass
 from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.components.tuya.tuya_device_handlers import (
-    TUYA_QUIRKS_REGISTRY,
-    QuirksRegistry,
-)
-from homeassistant.components.tuya.tuya_device_handlers.builder import TuyaDeviceQuirk
-from homeassistant.components.tuya.tuya_device_handlers.builder.base_quirk import (
-    BaseTuyaDefinition,
-)
-from homeassistant.components.tuya.tuya_device_handlers.devices import (
-    register_tuya_quirks,
-)
 from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import translation

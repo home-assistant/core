@@ -8,8 +8,9 @@ import json
 import struct
 from typing import Self
 
+from tuya_device_handlers.helpers import TuyaIntegerTypeDefinition
+
 from .const import DPCode
-from .tuya_device_handlers.helpers import TuyaIntegerTypeDefinition
 from .util import remap_value
 
 

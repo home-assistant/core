@@ -5,6 +5,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
+from tuya_device_handlers import TUYA_QUIRKS_REGISTRY
+from tuya_device_handlers.builder import (
+    TuyaClimateDefinition,
+    TuyaIntegerConversionFunction,
+)
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.climate import (
@@ -27,11 +32,6 @@ from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, DPType
 from .entity import TuyaEntity
 from .models import IntegerTypeData
-from .tuya_device_handlers import TUYA_QUIRKS_REGISTRY
-from .tuya_device_handlers.builder import (
-    TuyaClimateDefinition,
-    TuyaIntegerConversionFunction,
-)
 from .util import get_dpcode
 
 TUYA_HVAC_TO_HA = {

@@ -5,6 +5,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from tuya_device_handlers import TUYA_QUIRKS_REGISTRY
+from tuya_device_handlers.builder import TuyaSwitchDefinition
+from tuya_device_handlers.helpers import parse_enum
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.switch import (
@@ -27,9 +30,6 @@ from homeassistant.helpers.issue_registry import (
 from . import TuyaConfigEntry
 from .const import DOMAIN, TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
-from .tuya_device_handlers import TUYA_QUIRKS_REGISTRY
-from .tuya_device_handlers.builder import TuyaSwitchDefinition
-from .tuya_device_handlers.helpers import parse_enum
 
 
 @dataclass(frozen=True, kw_only=True)
