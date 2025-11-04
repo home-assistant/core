@@ -21,7 +21,10 @@ from aioshelly.exceptions import (
 from aioshelly.rpc_device import RpcDevice
 from bleak.backends.device import BLEDevice
 import voluptuous as vol
+from zeroconf import IPVersion
+from zeroconf.asyncio import AsyncServiceInfo
 
+from homeassistant.components import zeroconf
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_ble_device_from_address,
@@ -514,15 +517,36 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                 state.host,
             )
         except TimeoutError:
-            LOGGER.debug(
-                "Timeout waiting for zeroconf discovery after WiFi provisioning"
-            )
-            # Device didn't appear on network - likely wrong password or network
-            # Move to retry step
-            return self.async_show_form(
-                step_id="provision_failed",
-                description_placeholders={"ssid": self.selected_ssid},
-            )
+            LOGGER.debug("Timeout waiting for zeroconf discovery, trying active lookup")
+            # Maybe we just missed the discovery broadcast - try active lookup
+            # Use the original device name from Bluetooth discovery
+            device_name = self.context["title_placeholders"]["name"]
+            service_name = f"{device_name}._http._tcp.local."
+
+            aiozc = await zeroconf.async_get_async_instance(self.hass)
+            service_info = AsyncServiceInfo("_http._tcp.local.", service_name)
+
+            if await service_info.async_request(aiozc.zeroconf, 3000):
+                # Found the device!
+                addresses = service_info.parsed_addresses(IPVersion.V4Only)
+                if addresses:
+                    state.host = addresses[0]
+                    LOGGER.debug(
+                        "Found device via active zeroconf lookup at %s",
+                        state.host,
+                    )
+                else:
+                    # No IPv4 address found
+                    return self.async_show_form(
+                        step_id="provision_failed",
+                        description_placeholders={"ssid": self.selected_ssid},
+                    )
+            else:
+                # Device didn't respond to lookup - wrong password or network
+                return self.async_show_form(
+                    step_id="provision_failed",
+                    description_placeholders={"ssid": self.selected_ssid},
+                )
 
         # Device discovered via zeroconf - get device info and continue to confirmation
         assert state.host is not None
