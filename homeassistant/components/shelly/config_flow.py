@@ -532,10 +532,6 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         # try to connect right away, causing false failures before device is ready.
         try:
             await asyncio.wait_for(state.event.wait(), timeout=PROVISIONING_TIMEOUT)
-            LOGGER.debug(
-                "Zeroconf discovered device after WiFi provisioning at %s",
-                state.host,
-            )
         except TimeoutError:
             LOGGER.debug("Timeout waiting for zeroconf discovery, trying active lookup")
             # No new discovery received - device may have stale zeroconf data
@@ -551,6 +547,11 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                 return None
 
             state.host, state.port = result
+        else:
+            LOGGER.debug(
+                "Zeroconf discovery received for device after WiFi provisioning at %s",
+                state.host,
+            )
 
         # Device discovered via zeroconf - get device info and set up directly
         assert state.host is not None
