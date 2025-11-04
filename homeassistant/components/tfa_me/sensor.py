@@ -95,8 +95,6 @@ class TFAmeSensorEntity(CoordinatorEntity, SensorEntity):
             self.host = coordinator.host
             self.name_with_station_id = coordinator.name_with_station_id
             self.entity_id = entity_id  # User can edit this entity ID
-            # if self.unique_id:
-
             self.uid: str = entity_id
             self.gateway_id = self.coordinator.data[self.uid]["gateway_id"]
 
@@ -123,8 +121,8 @@ class TFAmeSensorEntity(CoordinatorEntity, SensorEntity):
                 "model": self.format_string_tfa_type(
                     sensor_id
                 ),  # 'Sensor/Station type XX'
-                "via_device": self.gateway_id,
             }
+
             # Optional histories for rain
             if "rain_hour" in self.uid:
                 self.rain_history: SensorHistory = SensorHistory(max_age_minutes=60)
@@ -262,6 +260,11 @@ class TFAmeSensorEntity(CoordinatorEntity, SensorEntity):
 
                 # Is this rain sensor last hour ?
                 if "rain_hour" in self.uid:
+                    reset_rain = self.coordinator.data[self.uid]["reset_rain"]
+                    if reset_rain:
+                        self.rain_history = SensorHistory(max_age_minutes=60)
+                        self.coordinator.data[self.uid]["reset_rain"] = False
+
                     measurement_value = float(0)
                     if len(self.rain_history.data) >= 2:
                         oldest, newest = self.rain_history.get_oldest_and_newest()
@@ -270,6 +273,11 @@ class TFAmeSensorEntity(CoordinatorEntity, SensorEntity):
 
                 # Is this rain sensor last 24 hours ?
                 if "rain_24hours" in self.uid:
+                    reset_rain = self.coordinator.data[self.uid]["reset_rain"]
+                    if reset_rain:
+                        self.rain_history_24 = SensorHistory(max_age_minutes=(24 * 60))
+                        self.coordinator.data[self.uid]["reset_rain"] = False
+
                     measurement_value = float(0)
                     if len(self.rain_history_24.data) >= 2:
                         oldest, newest = self.rain_history_24.get_oldest_and_newest()

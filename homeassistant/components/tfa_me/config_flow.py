@@ -73,7 +73,7 @@ class TFAmeConfigFlow(ConfigFlow, domain=DOMAIN):
         self.name_with_station_id = multi_ent
 
         # Get IP or mDNS host name
-        ip_host_str = user_input.get("ip_address")
+        ip_host_str = user_input.get(CONF_IP_ADDRESS)
 
         # If user_input is not None:
         validator = TFAmeValidator()
@@ -85,8 +85,8 @@ class TFAmeConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 client = TFAmeData(user_input[CONF_IP_ADDRESS])
                 identifier = await client.get_identifier()
-            except TFAmeException as error:
-                errors["base"] = str(error)  #  "host_empty"
+            except TFAmeException:
+                errors["base"] = "host_empty"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -97,7 +97,7 @@ class TFAmeConfigFlow(ConfigFlow, domain=DOMAIN):
                 # Create a TFA.me device entry
                 return self.async_create_entry(title=title_str, data=user_input)
 
-        # Update error list
+        # Update error list: invalid IP or host
         errors[CONF_IP_ADDRESS] = "invalid_ip_host"
 
         # Error, validation failed
@@ -150,7 +150,6 @@ class OptionsFlowHandler(OptionsFlow):
         if user_input is not None:
             if user_input["select_option"] == "action_rain":
                 coordinator = self.hass.data[DOMAIN][self.config_entry.entry_id]
-                coordinator.reset_rain_sensors = True
                 # Store in options
                 self.hass.config_entries.async_update_entry(
                     self.config_entry,
@@ -159,13 +158,14 @@ class OptionsFlowHandler(OptionsFlow):
                 await coordinator.async_refresh()
                 # Update all entities on dashboard
                 cordy: TFAmeDataCoordinator = coordinator
-                for number in range(1, len(cordy.sensor_entity_list)):
-                    entity = coordinator.sensor_entity_list[number]
-                    msg_reset = f"{entity} reset"
-                    _LOGGER.info(msg_reset)
-                    await self.hass.services.async_call(
-                        "homeassistant", "update_entity", {"entity_id": entity}
-                    )
+                for entity in cordy.sensor_entity_list:
+                    if "_rain_" in entity:
+                        coordinator.data[entity]["reset_rain"] = True
+                        msg_reset = f"{entity} rain reset"
+                        _LOGGER.info(msg_reset)
+                        await self.hass.services.async_call(
+                            "homeassistant", "update_entity", {"entity_id": entity}
+                        )
 
                 return self.async_create_entry(
                     title="action_rain", data=self.config_entry.options

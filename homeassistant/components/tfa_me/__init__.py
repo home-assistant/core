@@ -8,7 +8,7 @@ from homeassistant.const import CONF_IP_ADDRESS, Platform
 from homeassistant.core import HomeAssistant
 
 from .const import CONF_NAME_WITH_STATION_ID, DOMAIN, LOCAL_POLL_INTERVAL
-from .coordinator import TFAmeConfigEntry, TFAmeDataCoordinator
+from .coordinator import TFAmeConfigEntry, TFAmeDataCoordinator, async_update_listener
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
@@ -56,15 +56,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id, None)
     return unload_ok
-
-
-async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
-    """Will be called when options are changed via UI."""
-
-    reset_rain = entry.options.get("action_rain", False)
-    msg: str = "Options 'reset rain': " + str(reset_rain)
-    _LOGGER.info(msg)
-
-    coordinator = hass.data[DOMAIN][entry.entry_id]
-
-    await coordinator.async_refresh()

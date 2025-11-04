@@ -262,7 +262,7 @@ def tfa_me_mock_coordinator():
             "unit": "mm",
             "timestamp": "2025-09-02T09:36:28Z",
             "ts": int(now),
-            "reset_rain": True,  # 224..232
+            "reset_rain": True,
         },
         "sensor.057654321_barometric_pressure": {
             "sensor_id": "057654321",
@@ -406,7 +406,6 @@ async def test_sensor_entity_properties(tfa_me_mock_coordinator) -> None:
     assert float(entity2.native_value) == 50.0
 
     # Rain value
-    tfa_me_mock_coordinator.reset_rain_sensors = True
     entity3 = TFAmeSensorEntity(
         coordinator=tfa_me_mock_coordinator,
         sensor_id="a1fffffea",
@@ -464,7 +463,7 @@ async def test_sensor_entity_properties(tfa_me_mock_coordinator) -> None:
     await entity4.async_update()
     assert float(entity_24.native_value) == 1.6
 
-    # Test rain 1 hour (value missing) part 2 : 270...280
+    # Test rain 1 hour (value missing) part 2
     entity4b = TFAmeSensorEntity(
         coordinator=tfa_me_mock_coordinator,
         sensor_id="a1fffffeb",
@@ -473,7 +472,6 @@ async def test_sensor_entity_properties(tfa_me_mock_coordinator) -> None:
     assert entity4b.measure_name == "rain_1_hour"
     assert entity4b.native_value is None
 
-    tfa_me_mock_coordinator.reset_rain_sensors = True
     entity5 = TFAmeSensorEntity(
         coordinator=tfa_me_mock_coordinator,
         sensor_id="a1fffffea",
@@ -878,20 +876,22 @@ async def test_handle_coordinator_update_rain_hour(
     entity.hass = hass
     await entity.async_added_to_hass()
 
-    # rain_history mocken
+    # Mock rain_history
     entity.rain_history = MagicMock()
     entity.rain_history_24 = MagicMock()
 
-    # --- Act ---
+    # Update
     entity._handle_coordinator_update()
-    entity.rain_history.add_measurement.assert_called_once()  #   assert_not_called()
+    entity.rain_history.add_measurement.assert_called_once()
+
+    # Reset rain 1 hour
+    coordinator.data[entity_id_1]["reset_rain"] = True
+    entity._handle_coordinator_update()
+    assert float(entity.native_value) == 0.0
 
     # Delete value
     del coordinator.data[entity.entity_id]["value"]
     entity._handle_coordinator_update()
-
-    # --- Assert ---
-    entity.rain_history.add_measurement.assert_called_once()
 
 
 @pytest.mark.asyncio

@@ -43,7 +43,6 @@ class TFAmeDataCoordinator(DataUpdateCoordinator):
         self.ha = hass
         self.config_entry = config_entry
         self.sensor_entity_list: list[str] = []  # [Entity ID strings]
-        self.reset_rain_sensors = False
         self.name_with_station_id = (
             name_with_station_id  # from config_entry.data[CONF_NAME_WITH_STATION_ID]
         )
@@ -122,7 +121,6 @@ class TFAmeDataCoordinator(DataUpdateCoordinator):
             raise UpdateFailed(f"Unexpected error: {err}") from err
 
         else:
-            self.reset_rain_sensors = False
             if self.first_init < 2:
                 self.first_init += 1
 
@@ -135,3 +133,15 @@ class TFAmeDataCoordinator(DataUpdateCoordinator):
             return socket.gethostbyname(host_str)  # Resolve: name to IP
         except socket.gaierror:
             return host_str  # Error, just return original string
+
+
+async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
+    """Will be called when options are changed via UI."""
+
+    reset_rain = entry.options.get("action_rain", False)
+    msg: str = "Options 'reset rain': " + str(reset_rain)
+    _LOGGER.info(msg)
+
+    coordinator = hass.data[DOMAIN][entry.entry_id]
+
+    await coordinator.async_refresh()
