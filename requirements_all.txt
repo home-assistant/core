@@ -252,7 +252,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==42.5.0
+aioesphomeapi==42.6.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -1181,10 +1181,10 @@ hole==0.9.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.83
+holidays==0.84
 
 # homeassistant.components.frontend
-home-assistant-frontend==20251029.1
+home-assistant-frontend==20251104.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.10.28
@@ -2283,7 +2283,7 @@ pyplaato==0.0.19
 pypoint==3.0.0
 
 # homeassistant.components.portainer
-pyportainer==1.0.12
+pyportainer==1.0.13
 
 # homeassistant.components.probe_plus
 pyprobeplus==1.1.2
@@ -2537,7 +2537,7 @@ python-ripple-api==0.0.3
 python-roborock==3.7.0
 
 # homeassistant.components.smarttub
-python-smarttub==0.0.44
+python-smarttub==0.0.45
 
 # homeassistant.components.snoo
 python-snoo==0.8.3
@@ -2694,7 +2694,7 @@ renault-api==0.5.0
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.16.3
+reolink-aio==0.16.4
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
@@ -2942,7 +2942,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==1.2.3
+tesla-fleet-api==1.2.5
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.2
@@ -3222,7 +3222,7 @@ zeroconf==0.148.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.75
+zha==0.0.77
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.13
