@@ -2302,18 +2302,12 @@ async def test_bluetooth_wifi_credentials_and_provision_success(
 
         # Should show progress
         assert result["type"] is FlowResultType.SHOW_PROGRESS
-        assert result["step_id"] == "do_provision"
 
         # Wait for provision task to complete
         await hass.async_block_till_done()
 
+        # Complete provisioning
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
-
-    # Should show provision done
-    assert result["type"] is FlowResultType.SHOW_PROGRESS_DONE
-    assert result["step_id"] == "provision_done"
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     # Should create entry
     assert result["type"] is FlowResultType.CREATE_ENTRY
