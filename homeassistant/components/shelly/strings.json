@@ -93,6 +93,9 @@
           "ssid": "WiFi network"
         },
         "description": "Select a WiFi network from the list or enter a custom SSID for hidden networks."
+      },
+      "wifi_scan_failed": {
+        "description": "Failed to scan for WiFi networks via Bluetooth. The device may be out of range or Bluetooth connection failed. Would you like to try again?"
       }
     }
   },

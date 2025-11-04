@@ -410,8 +410,6 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Scan for WiFi networks via BLE."""
-        errors: dict[str, str] = {}
-
         if user_input is not None:
             self.selected_ssid = user_input[CONF_SSID]
             return await self.async_step_wifi_credentials()
@@ -426,16 +424,10 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             # and BLE provisioning is disabled - user must use Shelly app
             if "Writing is not permitted" in str(err):
                 return self.async_abort(reason="ble_not_permitted")
-            errors["base"] = "cannot_connect"
+            return await self.async_step_wifi_scan_failed()
         except Exception:  # noqa: BLE001
             LOGGER.exception("Unexpected exception during WiFi scan")
-            errors["base"] = "unknown"
-
-        if errors:
-            return self.async_show_form(
-                step_id="wifi_scan",
-                errors=errors,
-            )
+            return await self.async_step_wifi_scan_failed()
 
         # Create list of SSIDs for selection
         # If no networks found, still allow custom SSID entry
@@ -454,8 +446,17 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                     ),
                 }
             ),
-            errors=errors,
         )
+
+    async def async_step_wifi_scan_failed(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle failed WiFi scan - allow retry."""
+        if user_input is not None:
+            # User wants to retry - go back to wifi_scan
+            return await self.async_step_wifi_scan()
+
+        return self.async_show_form(step_id="wifi_scan_failed")
 
     @asynccontextmanager
     async def _async_provision_context(
