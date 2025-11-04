@@ -378,7 +378,6 @@ DISCOVERY_SCHEMAS = [
             native_max_value=100,
             native_step=1,
             device_to_ha=lambda x: None if x is None else x,
-            ha_to_device=lambda x: x,
             min_attribute=clusters.LevelControl.Attributes.MinLevel,
             max_attribute=clusters.LevelControl.Attributes.MaxLevel,
             mode=NumberMode.SLIDER,
