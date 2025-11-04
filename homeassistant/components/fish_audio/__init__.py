@@ -28,12 +28,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: FishAudioConfigEntry) ->
     except HttpCodeErr as exc:
         if exc.status == 401:
             raise ConfigEntryAuthFailed(f"Invalid API key: {exc.message}") from exc
-        raise ConfigEntryNotReady(
-            f"Failed to connect to Fish Audio API: {exc}"
-        ) from exc
-    except Exception as exc:
-        _LOGGER.exception("Unexpected error while setting up Fish Audio")
-        raise ConfigEntryNotReady("Unexpected error during setup") from exc
+        if exc.status == 422:
+            raise ConfigEntryNotReady(f"Invalid API key: {exc.message}") from exc
+        raise ConfigEntryNotReady(f"Unknown error: {exc.message}") from exc
 
     entry.runtime_data = session
 
