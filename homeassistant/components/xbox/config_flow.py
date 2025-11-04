@@ -3,10 +3,10 @@
 import logging
 from typing import Any
 
-from xbox.webapi.api.client import XboxLiveClient
-from xbox.webapi.authentication.manager import AuthenticationManager
-from xbox.webapi.authentication.models import OAuth2TokenResponse
-from xbox.webapi.common.signed_session import SignedSession
+from pythonxbox.api.client import XboxLiveClient
+from pythonxbox.authentication.manager import AuthenticationManager
+from pythonxbox.authentication.models import OAuth2TokenResponse
+from pythonxbox.common.signed_session import SignedSession
 
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -54,7 +54,7 @@ class OAuth2FlowHandler(
 
             client = XboxLiveClient(auth)
 
-            me = await client.people.get_friends_own_batch([client.xuid])
+            me = await client.people.get_friends_by_xuid(client.xuid)
 
         await self.async_set_unique_id(client.xuid)
         return self.async_create_entry(title=me.people[0].gamertag, data=data)
