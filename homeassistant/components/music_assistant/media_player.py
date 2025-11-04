@@ -115,13 +115,6 @@ QUEUE_OPTION_MAP = {
     MediaPlayerEnqueue.REPLACE: QueueOption.REPLACE,
 }
 
-REPEAT_MODE_MAPPING_TO_HA = {
-    MassRepeatMode.OFF: RepeatMode.OFF,
-    MassRepeatMode.ONE: RepeatMode.ONE,
-    MassRepeatMode.ALL: RepeatMode.ALL,
-    # UNKNOWN is intentionally not mapped - will return None
-}
-
 SERVICE_PLAY_MEDIA_ADVANCED = "play_media"
 SERVICE_PLAY_ANNOUNCEMENT = "play_announcement"
 SERVICE_TRANSFER_QUEUE = "transfer_queue"
