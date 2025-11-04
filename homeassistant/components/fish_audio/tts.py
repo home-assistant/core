@@ -13,7 +13,6 @@ from homeassistant.components.tts import TextToSpeechEntity, TtsAudioType
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -106,19 +105,10 @@ class FishAudioTTSEntity(TextToSpeechEntity):
             response = await self.hass.async_add_executor_job(func)
         except HttpCodeErr as err:
             if err.code == 402:
-                ir.async_create_issue(
-                    self.hass,
-                    DOMAIN,
-                    "payment_required",
-                    is_fixable=False,
-                    severity=ir.IssueSeverity.CRITICAL,
-                    translation_key="payment_required",
-                )
-            _LOGGER.exception("Fish Audio TTS request failed")
-            raise HomeAssistantError(str(err)) from err
+                _LOGGER.exception("Fish Audio TTS request failed")
+                raise HomeAssistantError(str(err)) from err
         except Exception:
             _LOGGER.exception("Fish Audio TTS request failed")
             return None, None
 
-        ir.async_delete_issue(self.hass, DOMAIN, "payment_required")
         return "mp3", b"".join(response)
