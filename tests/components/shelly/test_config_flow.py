@@ -2016,7 +2016,7 @@ async def test_bluetooth_discovery_already_configured(
 
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="c049ef8873e8",
+        unique_id="c0:49:ef:88:73:e8",  # MAC from device name with colons
         data={
             CONF_HOST: "1.1.1.1",
             CONF_MODEL: MODEL_PLUS_2PM,
