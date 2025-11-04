@@ -418,7 +418,7 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
             {
                 "entity_id": self.entity_id,
                 "user_id": user_id_from_context,
-                "action": state,
+                "target_state": state,
             },
         )
 
