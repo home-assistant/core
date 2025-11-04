@@ -9,6 +9,7 @@ from pyomie.util import localize_quarter_hourly_data
 
 CET: Final = ZoneInfo("CET")
 
+
 def current_quarter_hour_cet() -> dt.datetime:
     """Returns the current quarter-hour in CET with seconds and microseconds equal to 0."""
     now = dt.datetime.now(CET)
