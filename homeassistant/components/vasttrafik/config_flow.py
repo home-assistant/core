@@ -18,7 +18,13 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_DELAY, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.selector import TextSelector, TextSelectorConfig
+from homeassistant.helpers.selector import (
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
+    TextSelector,
+    TextSelectorConfig,
+)
 
 from .const import (
     CONF_DEPARTURES,
@@ -54,7 +60,7 @@ CONFIGURE_DEPARTURE_SCHEMA = vol.Schema(
 
 async def search_stations(
     hass: HomeAssistant, config_entry: ConfigEntry, query: str
-) -> tuple[list[dict[str, str]], str | None]:
+) -> tuple[list[SelectOptionDict], str | None]:
     """Search for stations using the Västtrafik API.
 
     Returns (stations_list, error_code).
@@ -72,7 +78,7 @@ async def search_stations(
         _LOGGER.exception("Unexpected error in search_stations")
         return [], "api_error"
 
-    stations = []
+    stations: list[SelectOptionDict] = []
     for result in results:
         name = result.get("name", "")
         gid = result.get("gid", "")
@@ -211,7 +217,7 @@ class VasttrafikSubentryFlow(ConfigSubentryFlow):
     def __init__(self) -> None:
         """Initialize the subentry flow."""
         super().__init__()
-        self._search_results: list[dict] = []
+        self._search_results: list[SelectOptionDict] = []
         self._selected_station: str = ""
 
     async def async_step_user(
@@ -262,13 +268,11 @@ class VasttrafikSubentryFlow(ConfigSubentryFlow):
             self._selected_station = user_input["station"]
             return await self.async_step_configure()
 
-        station_options = {
-            station["value"]: station["label"] for station in self._search_results
-        }
-
         station_schema = vol.Schema(
             {
-                vol.Required("station"): vol.In(station_options),
+                vol.Required("station"): SelectSelector(
+                    SelectSelectorConfig(options=self._search_results)
+                ),
             }
         )
 
