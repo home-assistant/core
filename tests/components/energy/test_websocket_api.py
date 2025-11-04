@@ -139,7 +139,7 @@ async def test_save_preferences(
                 ],
                 "power": [
                     {
-                        "stat_power": "sensor.grid_power",
+                        "stat_rate": "sensor.grid_power",
                     }
                 ],
                 "cost_adjustment_day": 1.2,
@@ -147,14 +147,14 @@ async def test_save_preferences(
             {
                 "type": "solar",
                 "stat_energy_from": "my_solar_production",
-                "stat_power": "my_solar_power",
+                "stat_rate": "my_solar_power",
                 "config_entry_solar_forecast": ["predicted_config_entry"],
             },
             {
                 "type": "battery",
                 "stat_energy_from": "my_battery_draining",
                 "stat_energy_to": "my_battery_charging",
-                "stat_power": "my_battery_power",
+                "stat_rate": "my_battery_power",
             },
         ],
         "device_consumption": [
@@ -162,7 +162,7 @@ async def test_save_preferences(
                 "stat_consumption": "some_device_usage",
                 "name": "My Device",
                 "included_in_stat": "sensor.some_other_device",
-                "stat_power": "sensor.some_device_power",
+                "stat_rate": "sensor.some_device_power",
             }
         ],
     }

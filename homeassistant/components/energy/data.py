@@ -63,7 +63,7 @@ class GridPowerSourceType(TypedDict):
 
     # statistic_id of a power meter (kW)
     # negative values indicate grid return
-    stat_power: str
+    stat_rate: str
 
 
 class GridSourceType(TypedDict):
@@ -84,7 +84,7 @@ class SolarSourceType(TypedDict):
     type: Literal["solar"]
 
     stat_energy_from: str
-    stat_power: NotRequired[str]
+    stat_rate: NotRequired[str]
     config_entry_solar_forecast: list[str] | None
 
 
@@ -96,7 +96,7 @@ class BatterySourceType(TypedDict):
     stat_energy_from: str
     stat_energy_to: str
     # positive when discharging, negative when charging
-    stat_power: NotRequired[str]
+    stat_rate: NotRequired[str]
 
 
 class GasSourceType(TypedDict):
@@ -148,8 +148,8 @@ class DeviceConsumption(TypedDict):
     # This is an ever increasing value
     stat_consumption: str
 
-    # optional power meter
-    stat_power: NotRequired[str]
+    # Instantaneous rate of flow: W, L/min or m³/h
+    stat_rate: NotRequired[str]
 
     # An optional custom name for display in energy graphs
     name: str | None
@@ -211,7 +211,7 @@ FLOW_TO_GRID_SOURCE_SCHEMA = vol.Schema(
 
 GRID_POWER_SOURCE_SCHEMA = vol.Schema(
     {
-        vol.Required("stat_power"): str,
+        vol.Required("stat_rate"): str,
     }
 )
 
@@ -247,7 +247,7 @@ GRID_SOURCE_SCHEMA = vol.Schema(
         ),
         vol.Optional("power"): vol.All(
             [GRID_POWER_SOURCE_SCHEMA],
-            _generate_unique_value_validator("stat_power"),
+            _generate_unique_value_validator("stat_rate"),
         ),
         vol.Required("cost_adjustment_day"): vol.Coerce(float),
     }
@@ -256,7 +256,7 @@ SOLAR_SOURCE_SCHEMA = vol.Schema(
     {
         vol.Required("type"): "solar",
         vol.Required("stat_energy_from"): str,
-        vol.Optional("stat_power"): str,
+        vol.Optional("stat_rate"): str,
         vol.Optional("config_entry_solar_forecast"): vol.Any([str], None),
     }
 )
@@ -265,7 +265,7 @@ BATTERY_SOURCE_SCHEMA = vol.Schema(
         vol.Required("type"): "battery",
         vol.Required("stat_energy_from"): str,
         vol.Required("stat_energy_to"): str,
-        vol.Optional("stat_power"): str,
+        vol.Optional("stat_rate"): str,
     }
 )
 GAS_SOURCE_SCHEMA = vol.Schema(
@@ -321,7 +321,7 @@ ENERGY_SOURCE_SCHEMA = vol.All(
 DEVICE_CONSUMPTION_SCHEMA = vol.Schema(
     {
         vol.Required("stat_consumption"): str,
-        vol.Optional("stat_power"): str,
+        vol.Optional("stat_rate"): str,
         vol.Optional("name"): str,
         vol.Optional("included_in_stat"): str,
     }

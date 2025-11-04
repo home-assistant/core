@@ -512,13 +512,13 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
                     )
 
             for power_stat in source.get("power", []):
-                wanted_statistics_metadata.add(power_stat["stat_power"])
+                wanted_statistics_metadata.add(power_stat["stat_rate"])
                 validate_calls.append(
                     functools.partial(
                         _async_validate_power_stat,
                         hass,
                         statistics_metadata,
-                        power_stat["stat_power"],
+                        power_stat["stat_rate"],
                         POWER_USAGE_DEVICE_CLASSES,
                         POWER_USAGE_UNITS,
                         POWER_UNIT_ERROR,

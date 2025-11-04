@@ -31,7 +31,7 @@ async def test_validation_grid_power_valid(
                     "flow_to": [],
                     "power": [
                         {
-                            "stat_power": "sensor.grid_power",
+                            "stat_rate": "sensor.grid_power",
                         }
                     ],
                     "cost_adjustment_day": 0.0,
@@ -69,7 +69,7 @@ async def test_validation_grid_power_wrong_unit(
                     "flow_to": [],
                     "power": [
                         {
-                            "stat_power": "sensor.grid_power",
+                            "stat_rate": "sensor.grid_power",
                         }
                     ],
                     "cost_adjustment_day": 0.0,
@@ -115,7 +115,7 @@ async def test_validation_grid_power_wrong_state_class(
                     "flow_to": [],
                     "power": [
                         {
-                            "stat_power": "sensor.grid_power",
+                            "stat_rate": "sensor.grid_power",
                         }
                     ],
                     "cost_adjustment_day": 0.0,
@@ -161,7 +161,7 @@ async def test_validation_grid_power_entity_missing(
                     "flow_to": [],
                     "power": [
                         {
-                            "stat_power": "sensor.missing_power",
+                            "stat_rate": "sensor.missing_power",
                         }
                     ],
                     "cost_adjustment_day": 0.0,
@@ -203,7 +203,7 @@ async def test_validation_grid_power_entity_unavailable(
                     "flow_to": [],
                     "power": [
                         {
-                            "stat_power": "sensor.unavailable_power",
+                            "stat_rate": "sensor.unavailable_power",
                         }
                     ],
                     "cost_adjustment_day": 0.0,
@@ -241,7 +241,7 @@ async def test_validation_grid_power_entity_non_numeric(
                     "flow_to": [],
                     "power": [
                         {
-                            "stat_power": "sensor.non_numeric_power",
+                            "stat_rate": "sensor.non_numeric_power",
                         }
                     ],
                     "cost_adjustment_day": 0.0,
@@ -287,7 +287,7 @@ async def test_validation_grid_power_wrong_device_class(
                     "flow_to": [],
                     "power": [
                         {
-                            "stat_power": "sensor.wrong_device_class_power",
+                            "stat_rate": "sensor.wrong_device_class_power",
                         }
                     ],
                     "cost_adjustment_day": 0.0,
@@ -335,10 +335,10 @@ async def test_validation_grid_power_different_units(
                     "flow_to": [],
                     "power": [
                         {
-                            "stat_power": "sensor.power_watt",
+                            "stat_rate": "sensor.power_watt",
                         },
                         {
-                            "stat_power": "sensor.power_milliwatt",
+                            "stat_rate": "sensor.power_milliwatt",
                         },
                     ],
                     "cost_adjustment_day": 0.0,
@@ -387,7 +387,7 @@ async def test_validation_grid_power_external_statistics(
                     "flow_to": [],
                     "power": [
                         {
-                            "stat_power": "external:power_stat",
+                            "stat_rate": "external:power_stat",
                         }
                     ],
                     "cost_adjustment_day": 0.0,
@@ -426,7 +426,7 @@ async def test_validation_grid_power_recorder_untracked(
                     "flow_to": [],
                     "power": [
                         {
-                            "stat_power": "sensor.untracked_power",
+                            "stat_rate": "sensor.untracked_power",
                         }
                     ],
                     "cost_adjustment_day": 0.0,
