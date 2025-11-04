@@ -14,12 +14,7 @@ from homeassistant.components.select import (
 )
 from homeassistant.components.shelly.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceRegistry
@@ -292,6 +287,7 @@ async def test_rpc_cury_mode_select(
         "bedroom",
         "living_room",
         "lavatory_room",
+        "none",
         "reception",
         "workplace",
     ]
@@ -323,4 +319,4 @@ async def test_rpc_cury_mode_select(
     mock_rpc_device.mock_update()
 
     assert (state := hass.states.get(entity_id))
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == "none"
