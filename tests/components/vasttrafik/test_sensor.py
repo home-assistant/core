@@ -171,7 +171,7 @@ async def test_departure_sensor_setup_with_subentry(
     mock_vasttrafik_planner,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
-):
+) -> None:
     """Test that departure sensor is created properly from subentry."""
     # Create subentry data for departure board
     subentry_data = ConfigSubentryData(
@@ -242,7 +242,7 @@ async def test_departure_sensor_device_naming_with_filters(
     hass: HomeAssistant,
     mock_vasttrafik_planner,
     device_registry: dr.DeviceRegistry,
-):
+) -> None:
     """Test that departure sensor devices have descriptive names with filters."""
     # Create subentry with multiple filters
     subentry_data = ConfigSubentryData(
@@ -300,7 +300,7 @@ async def test_departure_sensor_with_no_filters(
     hass: HomeAssistant,
     mock_vasttrafik_planner,
     device_registry: dr.DeviceRegistry,
-):
+) -> None:
     """Test departure sensor device naming with no filters."""
     # Create subentry with no filters
     subentry_data = ConfigSubentryData(
@@ -348,7 +348,7 @@ async def test_departure_sensor_with_no_filters(
 async def test_departure_sensor_state_and_attributes(
     hass: HomeAssistant,
     mock_vasttrafik_planner,
-):
+) -> None:
     """Test departure sensor state and attributes processing."""
     # Create subentry
     subentry_data = ConfigSubentryData(
@@ -406,7 +406,7 @@ async def test_departure_sensor_state_and_attributes(
 
 async def test_departure_sensor_api_error(
     hass: HomeAssistant,
-):
+) -> None:
     """Test departure sensor handles API errors gracefully."""
     # Set up mock planner that throws API error
     error_planner = MagicMock(spec=vasttrafik.JournyPlanner)
@@ -473,8 +473,8 @@ async def test_yaml_platform_import(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.vasttrafik.config_flow.validate_input",
-            side_effect=Exception("Test error"),
+            "homeassistant.components.vasttrafik.config_flow.validate_api_credentials",
+            return_value={"base": "unknown"},
         ),
         patch(
             "homeassistant.components.vasttrafik.async_setup_entry",
