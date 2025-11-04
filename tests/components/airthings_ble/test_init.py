@@ -1,8 +1,14 @@
 """Test the Airthings BLE integration init."""
 
+from datetime import timedelta
+
 import pytest
 
-from homeassistant.components.airthings_ble.const import DOMAIN
+from homeassistant.components.airthings_ble.const import (
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    RADON_SCAN_INTERVAL,
+)
 from homeassistant.core import HomeAssistant
 
 from . import (
@@ -80,3 +86,62 @@ async def test_no_migration_when_device_model_exists(
     # Should have only 1 call for initial refresh (no migration call)
     assert mock_update.call_count == 1
     assert entry.data["device_model"] == WAVE_DEVICE_INFO.model.value
+
+
+async def test_scan_interval_corentium_home_2(
+    hass: HomeAssistant,
+) -> None:
+    """Test that coordinator uses radon scan interval for Corentium Home 2."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=WAVE_SERVICE_INFO.address,
+        data={"device_model": CORENTIUM_HOME_2_DEVICE_INFO.model.value},
+    )
+    entry.add_to_hass(hass)
+
+    inject_bluetooth_service_info(hass, WAVE_SERVICE_INFO)
+
+    with (
+        patch_async_ble_device_from_address(WAVE_SERVICE_INFO.device),
+        patch_airthings_ble(CORENTIUM_HOME_2_DEVICE_INFO),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Coordinator should have radon scan interval
+    coordinator = entry.runtime_data
+    assert coordinator.update_interval == timedelta(seconds=RADON_SCAN_INTERVAL)
+
+
+@pytest.mark.parametrize(
+    ("service_info", "device_info"),
+    [
+        (WAVE_SERVICE_INFO, WAVE_DEVICE_INFO),
+        (WAVE_ENHANCE_SERVICE_INFO, WAVE_ENHANCE_DEVICE_INFO),
+    ],
+)
+async def test_coordinator_default_scan_interval(
+    hass: HomeAssistant,
+    service_info,
+    device_info,
+) -> None:
+    """Test that coordinator uses default scan interval."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=service_info.address,
+        data={"device_model": device_info.model.value},
+    )
+    entry.add_to_hass(hass)
+
+    inject_bluetooth_service_info(hass, service_info)
+
+    with (
+        patch_async_ble_device_from_address(service_info.device),
+        patch_airthings_ble(device_info),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Coordinator should have default scan interval
+    coordinator = entry.runtime_data
+    assert coordinator.update_interval == timedelta(seconds=DEFAULT_SCAN_INTERVAL)
