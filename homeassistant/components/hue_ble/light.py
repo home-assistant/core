@@ -1,4 +1,4 @@
-"""light platform."""
+"""Hue BLE light platform."""
 
 from __future__ import annotations
 
