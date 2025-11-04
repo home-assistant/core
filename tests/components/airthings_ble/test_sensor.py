@@ -28,6 +28,8 @@ from . import (
     WAVE_ENHANCE_DEVICE_INFO,
     WAVE_ENHANCE_SERVICE_INFO,
     WAVE_SERVICE_INFO,
+    AirthingsDevice,
+    BluetoothServiceInfoBleak,
     create_device,
     create_entry,
     patch_airthings_ble,
@@ -323,30 +325,39 @@ async def test_scan_interval_migration_radon_device(
         assert mock_update.call_count == 3
 
 
-async def test_scan_interval_migration_non_radon_device(
+@pytest.mark.parametrize(
+    ("service_info", "device_info"),
+    [
+        (WAVE_SERVICE_INFO, WAVE_DEVICE_INFO),
+        (WAVE_ENHANCE_SERVICE_INFO, WAVE_ENHANCE_DEVICE_INFO),
+    ],
+)
+async def test_default_scan_interval_migration(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
+    service_info: BluetoothServiceInfoBleak,
+    device_info: AirthingsDevice,
 ) -> None:
     """Test that non-radon device migration uses default 5-minute scan interval."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id=WAVE_ENHANCE_SERVICE_INFO.address,
+        unique_id=service_info.address,
         data={},
     )
     entry.add_to_hass(hass)
 
-    inject_bluetooth_service_info(hass, WAVE_ENHANCE_SERVICE_INFO)
+    inject_bluetooth_service_info(hass, service_info)
 
     with (
-        patch_async_ble_device_from_address(WAVE_ENHANCE_SERVICE_INFO.device),
-        patch_airthings_ble(WAVE_ENHANCE_DEVICE_INFO) as mock_update,
+        patch_async_ble_device_from_address(service_info.device),
+        patch_airthings_ble(device_info) as mock_update,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
         # Migration should have added device_model to entry data
         assert "device_model" in entry.data
-        assert entry.data["device_model"] == WAVE_ENHANCE_DEVICE_INFO.model.value
+        assert entry.data["device_model"] == device_info.model.value
 
         # Coordinator should have been configured with default scan interval
         coordinator = entry.runtime_data
