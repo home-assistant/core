@@ -664,7 +664,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         # player has an MA queue active (either its own queue or some group queue)
         self._attr_app_id = DOMAIN
         self._attr_shuffle = queue.shuffle_enabled
-        self._attr_repeat = REPEAT_MODE_MAPPING_TO_HA.get(queue.repeat_mode)
+        self._attr_repeat = queue.repeat_mode.value
         if not (cur_item := queue.current_item):
             # queue is empty
             return
