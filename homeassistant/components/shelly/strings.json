@@ -5,6 +5,7 @@
       "already_on_wifi": "Device is already connected to WiFi and was discovered via the network.",
       "another_device": "Re-configuration was unsuccessful, the IP address/hostname of another Shelly device was used.",
       "ble_not_permitted": "Device is bound to a Shelly cloud account and cannot be provisioned via Bluetooth. Please use the Shelly app to provision WiFi credentials, then add the device when it appears on your network.",
+      "cannot_connect": "Failed to connect to the device. Ensure the device is powered on and within range.",
       "firmware_not_fully_provisioned": "Device not fully provisioned. Please contact Shelly support",
       "invalid_discovery_info": "Invalid Bluetooth discovery information.",
       "ipv6_not_supported": "IPv6 is not supported.",
