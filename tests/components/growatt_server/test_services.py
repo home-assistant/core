@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 import growattServer
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.growatt_server.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -18,6 +19,7 @@ async def test_read_time_segments_single_device(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test reading time segments for single device."""
     mock_config_entry.add_to_hass(hass)
@@ -45,10 +47,7 @@ async def test_read_time_segments_single_device(
         return_response=True,
     )
 
-    assert response is not None
-    assert "time_segments" in response
-    assert isinstance(response["time_segments"], list)
-    assert len(response["time_segments"]) == 9  # Returns all 9 segments (1-9)
+    assert response == snapshot
 
 
 async def test_update_time_segment_charge_mode(
