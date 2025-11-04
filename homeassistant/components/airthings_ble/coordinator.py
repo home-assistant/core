@@ -20,7 +20,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, RADON_SCAN_INTERVAL
+from .const import DEFAULT_SCAN_INTERVAL, DEVICE_MODEL, DOMAIN, RADON_SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,7 +39,7 @@ class AirthingsBLEDataUpdateCoordinator(DataUpdateCoordinator[AirthingsDevice]):
             _LOGGER, hass.config.units is METRIC_SYSTEM
         )
 
-        device_model = entry.data.get("device_model")
+        device_model = entry.data.get(DEVICE_MODEL)
         if device_model == AirthingsDeviceType.CORENTIUM_HOME_2.value:
             interval = RADON_SCAN_INTERVAL
         else:
@@ -69,18 +69,18 @@ class AirthingsBLEDataUpdateCoordinator(DataUpdateCoordinator[AirthingsDevice]):
             )
         self.ble_device = ble_device
 
-        if "device_model" not in self.config_entry.data:
+        if DEVICE_MODEL not in self.config_entry.data:
+            _LOGGER.debug("Fetching device info for migration")
             try:
-                _LOGGER.debug("Fetching device info for migration")
                 data = await self.airthings.update_device(self.ble_device)
             except Exception as err:
-                raise ConfigEntryNotReady(
+                raise UpdateFailed(
                     f"Unable to fetch data for migration: {err}"
                 ) from err
 
             self.hass.config_entries.async_update_entry(
                 self.config_entry,
-                data={**self.config_entry.data, "device_model": data.model.value},
+                data={**self.config_entry.data, DEVICE_MODEL: data.model.value},
             )
             if data.model == AirthingsDeviceType.CORENTIUM_HOME_2:
                 self.update_interval = timedelta(seconds=RADON_SCAN_INTERVAL)
