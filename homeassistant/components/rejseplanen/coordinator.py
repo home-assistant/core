@@ -59,6 +59,11 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard]):
                 "Type error fetching data for stop %s: %s", self._stop_ids, error
             )
             raise UpdateFailed(error) from error
+        except Exception as error:  # Catch any other unexpected errors
+            _LOGGER.error(
+                "Unexpected error fetching data for stop %s: %s", self._stop_ids, error
+            )
+            raise UpdateFailed(error) from error
 
         self.last_update_success_time = dt_util.now()
         return board

@@ -3,6 +3,8 @@
 
 from unittest.mock import MagicMock, patch
 
+from requests.exceptions import HTTPError
+
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -38,25 +40,19 @@ async def test_coordinator_successful_update(
 
 async def test_coordinator_update_failed(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    init_integration: MockConfigEntry,
 ) -> None:
-    """Test coordinator handles API errors."""
-    mock_config_entry.add_to_hass(hass)
+    """Test coordinator handles API errors during refresh."""
+    coordinator = init_integration.runtime_data
 
-    # Mock API failure
-    with patch(
-        "homeassistant.components.rejseplanen.coordinator.DeparturesAPIClient"
-    ) as mock_api_class:
-        mock_api = MagicMock()
-        mock_api.get_departures.side_effect = Exception("API Error")
-        mock_api_class.return_value = mock_api
-
-        # Setup should fail with UpdateFailed
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    # Mock API failure for the coordinator's update
+    with patch.object(coordinator, "_fetch_data", side_effect=Exception("API Error")):
+        # Trigger a refresh that should fail
+        await coordinator.async_refresh()
         await hass.async_block_till_done()
 
-    # Entry should be in retry state
-    assert mock_config_entry.state.name == "SETUP_RETRY"
+    # Coordinator should indicate update failure
+    assert not coordinator.last_update_success
 
 
 async def test_coordinator_add_remove_stop_id(
@@ -93,22 +89,18 @@ async def test_coordinator_add_remove_stop_id(
 
 async def test_coordinator_auth_failed(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    init_integration: MockConfigEntry,
 ) -> None:
-    """Test coordinator handles authentication failures."""
-    mock_config_entry.add_to_hass(hass)
+    """Test coordinator handles authentication failures during refresh."""
+    coordinator = init_integration.runtime_data
 
-    # Mock authentication error
-    with patch(
-        "homeassistant.components.rejseplanen.coordinator.DeparturesAPIClient"
-    ) as mock_api_class:
-        mock_api = MagicMock()
-        # Simulate auth failure that coordinator converts to ConfigEntryAuthFailed
-        mock_api.get_departures.side_effect = Exception("401 Unauthorized")
-        mock_api_class.return_value = mock_api
-
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    # Mock auth failure during coordinator update
+    with patch.object(
+        coordinator, "_fetch_data", side_effect=HTTPError("401 Unauthorized")
+    ):
+        # Trigger a refresh that should fail with auth error
+        await coordinator.async_refresh()
         await hass.async_block_till_done()
 
-    # Entry should be in appropriate error state
-    assert mock_config_entry.state.name in ("SETUP_ERROR", "SETUP_RETRY")
+    # Coordinator should indicate update failure
+    assert not coordinator.last_update_success
