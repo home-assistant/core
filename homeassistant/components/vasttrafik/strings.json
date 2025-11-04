@@ -1,21 +1,16 @@
 {
   "config": {
+    "abort": {
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "single_instance_allowed": "Only one Västtrafik integration is allowed"
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to Västtrafik API",
+      "invalid_auth": "Invalid API credentials",
+      "unknown": "Unexpected error occurred"
+    },
     "step": {
-      "user": {
-        "title": "Set up Västtrafik",
-        "description": "Enter your Västtrafik API credentials",
-        "data": {
-          "key": "[%key:common::config_flow::data::api_key%]",
-          "secret": "API secret"
-        },
-        "data_description": {
-          "key": "Your Västtrafik API key",
-          "secret": "Your Västtrafik API secret"
-        }
-      },
       "reconfigure": {
-        "title": "Reconfigure Västtrafik API",
-        "description": "Update your Västtrafik API credentials",
         "data": {
           "key": "[%key:common::config_flow::data::api_key%]",
           "secret": "API secret"
@@ -23,107 +18,101 @@
         "data_description": {
           "key": "Your updated Västtrafik API key",
           "secret": "Your updated Västtrafik API secret"
-        }
+        },
+        "description": "Update your Västtrafik API credentials",
+        "title": "Reconfigure Västtrafik API"
+      },
+      "user": {
+        "data": {
+          "key": "[%key:common::config_flow::data::api_key%]",
+          "secret": "API secret"
+        },
+        "data_description": {
+          "key": "Your Västtrafik API key",
+          "secret": "Your Västtrafik API secret"
+        },
+        "description": "Enter your Västtrafik API credentials",
+        "title": "Set up Västtrafik"
       }
-    },
-    "error": {
-      "cannot_connect": "Failed to connect to Västtrafik API",
-      "invalid_auth": "Invalid API credentials",
-      "unknown": "Unexpected error occurred"
-    },
-    "abort": {
-      "single_instance_allowed": "Only one Västtrafik integration is allowed",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
   "config_subentries": {
     "departure_board": {
-      "initiate_flow": {
-        "user": "Add departure board",
-        "reconfigure": "Reconfigure departure board"
+      "abort": {
+        "already_configured": "This departure board is already configured",
+        "parent_entry_not_found": "Parent Västtrafik integration not found",
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
       },
       "entry_type": "Departure board",
+      "error": {
+        "api_error": "API error occurred. Please try again or check your credentials.",
+        "no_stations_found": "No stations found matching your search",
+        "search_required": "Please enter a search query",
+        "search_too_short": "Search query must be at least 2 characters",
+        "station_required": "Please select a station"
+      },
+      "initiate_flow": {
+        "reconfigure": "Reconfigure departure board",
+        "user": "Add departure board"
+      },
       "step": {
-        "user": {
-          "title": "Add departure board",
-          "description": "Search for a station to add as a departure board",
+        "configure": {
           "data": {
-            "search_query": "Station name"
+            "delay": "Time offset in minutes",
+            "heading": "Direction filter (optional)",
+            "lines": "Line numbers (optional)",
+            "name": "Board name (optional)",
+            "tracks": "Track/Platform filter (optional)"
           },
           "data_description": {
-            "search_query": "Enter at least 2 characters to search for stations (e.g. 'Central', 'Götaplatsen', 'Frölunda')"
-          }
+            "delay": "Show departures starting from this many minutes in the future (0 = now)",
+            "heading": "Filter departures to this destination only",
+            "lines": "Enter line numbers",
+            "name": "Custom name for this departure board",
+            "tracks": "Enter track/platform numbers"
+          },
+          "description": "Configure departure board for {station_name}",
+          "title": "Configure departure board"
+        },
+        "reconfigure": {
+          "data": {
+            "delay": "Time offset in minutes",
+            "heading": "Destination filter (optional)",
+            "lines": "Line numbers (optional)",
+            "name": "Board name (optional)",
+            "tracks": "Track/Platform filter (optional)"
+          },
+          "data_description": {
+            "delay": "Show departures starting from this many minutes in the future (0 = now)",
+            "heading": "Filter departures to this destination only",
+            "lines": "Enter line numbers",
+            "name": "Custom name for this departure board",
+            "tracks": "Enter track/platform numbers"
+          },
+          "description": "Update settings for departure board at {station_name}",
+          "title": "Configure departure board"
         },
         "select_station": {
-          "title": "Select station",
-          "description": "Choose a station from the search results",
           "data": {
             "station": "Station"
           },
           "data_description": {
             "station": "Select the station for your departure board"
-          }
+          },
+          "description": "Choose a station from the search results",
+          "title": "Select station"
         },
-        "configure": {
-          "title": "Configure departure board",
-          "description": "Configure departure board for {station_name}",
+        "user": {
           "data": {
-            "name": "Board name (optional)",
-            "heading": "Direction filter (optional)",
-            "lines": "Line numbers (optional)",
-            "tracks": "Track/Platform filter (optional)",
-            "delay": "Time offset in minutes"
+            "search_query": "Station name"
           },
           "data_description": {
-            "name": "Custom name for this departure board",
-            "heading": "Filter departures to this destination only",
-            "lines": "Enter line numbers",
-            "tracks": "Enter track/platform numbers",
-            "delay": "Show departures starting from this many minutes in the future (0 = now)"
-          }
-        },
-        "reconfigure": {
-          "title": "Configure departure board",
-          "description": "Update settings for departure board at {station_name}",
-          "data": {
-            "name": "Board name (optional)",
-            "heading": "Destination filter (optional)",
-            "lines": "Line numbers (optional)",
-            "tracks": "Track/Platform filter (optional)",
-            "delay": "Time offset in minutes"
+            "search_query": "Enter at least 2 characters to search for stations (e.g. 'Central', 'Götaplatsen', 'Frölunda')"
           },
-          "data_description": {
-            "name": "Custom name for this departure board",
-            "heading": "Filter departures to this destination only",
-            "lines": "Enter line numbers",
-            "tracks": "Enter track/platform numbers",
-            "delay": "Show departures starting from this many minutes in the future (0 = now)"
-          }
+          "description": "Search for a station to add as a departure board",
+          "title": "Add departure board"
         }
-      },
-      "error": {
-        "search_required": "Please enter a search query",
-        "search_too_short": "Search query must be at least 2 characters",
-        "no_stations_found": "No stations found matching your search",
-        "station_required": "Please select a station",
-        "api_error": "API error occurred. Please try again or check your credentials."
-      },
-      "abort": {
-        "already_configured": "This departure board is already configured",
-        "parent_entry_not_found": "Parent Västtrafik integration not found",
-        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
       }
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "title": "Configure Västtrafik",
-        "description": "The main Västtrafik integration settings cannot be changed. Use subentries to add departure boards."
-      }
-    },
-    "abort": {
-      "not_configurable": "The main integration is not configurable via options"
     }
   },
   "entity": {
@@ -134,17 +123,28 @@
     }
   },
   "issues": {
-    "deprecated_yaml_import_issue_invalid_auth": {
-      "title": "Västtrafik YAML configuration deprecated",
-      "description": "Configuring Västtrafik using YAML sensor platform is deprecated.\n\nWhile importing your configuration, invalid API credentials were found. Please update your YAML configuration with valid credentials, or remove the existing YAML configuration and set the integration up via the UI."
-    },
     "deprecated_yaml_import_issue_cannot_connect": {
-      "title": "[%key:component::vasttrafik::issues::deprecated_yaml_import_issue_invalid_auth::title%]",
-      "description": "Configuring Västtrafik using YAML sensor platform is deprecated.\n\nWhile importing your configuration, Home Assistant could not connect to the Västtrafik API. Please check your internet connection and the status of the Västtrafik API, then restart Home Assistant to try again, or remove the existing YAML configuration and set the integration up via the UI."
+      "description": "Configuring Västtrafik using YAML sensor platform is deprecated.\n\nWhile importing your configuration, Home Assistant could not connect to the Västtrafik API. Please check your internet connection and the status of the Västtrafik API, then restart Home Assistant to try again, or remove the existing YAML configuration and set the integration up via the UI.",
+      "title": "[%key:component::vasttrafik::issues::deprecated_yaml_import_issue_invalid_auth::title%]"
+    },
+    "deprecated_yaml_import_issue_invalid_auth": {
+      "description": "Configuring Västtrafik using YAML sensor platform is deprecated.\n\nWhile importing your configuration, invalid API credentials were found. Please update your YAML configuration with valid credentials, or remove the existing YAML configuration and set the integration up via the UI.",
+      "title": "Västtrafik YAML configuration deprecated"
     },
     "deprecated_yaml_import_issue_unknown": {
-      "title": "[%key:component::vasttrafik::issues::deprecated_yaml_import_issue_invalid_auth::title%]",
-      "description": "Configuring Västtrafik using YAML sensor platform is deprecated.\n\nWhile importing your configuration, an unknown error occurred. Please restart Home Assistant to try again, or remove the existing YAML configuration and set the integration up via the UI."
+      "description": "Configuring Västtrafik using YAML sensor platform is deprecated.\n\nWhile importing your configuration, an unknown error occurred. Please restart Home Assistant to try again, or remove the existing YAML configuration and set the integration up via the UI.",
+      "title": "[%key:component::vasttrafik::issues::deprecated_yaml_import_issue_invalid_auth::title%]"
+    }
+  },
+  "options": {
+    "abort": {
+      "not_configurable": "The main integration is not configurable via options"
+    },
+    "step": {
+      "init": {
+        "description": "The main Västtrafik integration settings cannot be changed. Use subentries to add departure boards.",
+        "title": "Configure Västtrafik"
+      }
     }
   }
 }
