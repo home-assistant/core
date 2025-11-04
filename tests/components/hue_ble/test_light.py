@@ -30,15 +30,5 @@ async def test_lights() -> None:
     )
     mock_light.set_colour_xy.assert_called_with(10, 10)
 
-    kwargs_off = {
-        ATTR_BRIGHTNESS: 50,
-        ATTR_COLOR_TEMP_KELVIN: 3500,
-        ATTR_XY_COLOR: (0.5, 0.5),
-    }
-    await light.async_turn_off(**kwargs_off)
+    await light.async_turn_off()
     mock_light.set_power.assert_called_with(False)
-    mock_light.set_brightness.assert_called_with(50)
-    mock_light.set_colour_temp.assert_called_with(
-        color_util.color_temperature_kelvin_to_mired(3500)
-    )
-    mock_light.set_colour_xy.assert_called_with(0.5, 0.5)

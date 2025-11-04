@@ -138,24 +138,7 @@ class HueBLELight(LightEntity):
         """Turn light off then set properties."""
 
         _LOGGER.debug("Turning light %s off with args %s", self.name, kwargs)
-
         await self._api.set_power(False)
-
-        if ATTR_BRIGHTNESS in kwargs:
-            brightness = kwargs[ATTR_BRIGHTNESS]
-            _LOGGER.debug("Setting brightness of %s to %s", self.name, brightness)
-            await self._api.set_brightness(brightness)
-
-        if ATTR_COLOR_TEMP_KELVIN in kwargs:
-            color_temp_kelvin = kwargs[ATTR_COLOR_TEMP_KELVIN]
-            mireds = color_util.color_temperature_kelvin_to_mired(color_temp_kelvin)
-            _LOGGER.debug("Setting color temp of %s to %s", self.name, mireds)
-            await self._api.set_colour_temp(mireds)
-
-        if ATTR_XY_COLOR in kwargs:
-            xy_color = kwargs[ATTR_XY_COLOR]
-            _LOGGER.debug("Setting XY color of %s to %s", self.name, xy_color)
-            await self._api.set_colour_xy(xy_color[0], xy_color[1])
 
     @property
     def color_mode(self) -> ColorMode | None:
