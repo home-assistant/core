@@ -93,6 +93,9 @@
         "data": {
           "ssid": "WiFi network"
         },
+        "data_description": {
+          "ssid": "Select a WiFi network from the list or enter a custom SSID for hidden networks."
+        },
         "description": "Select a WiFi network from the list or enter a custom SSID for hidden networks."
       },
       "wifi_scan_failed": {
