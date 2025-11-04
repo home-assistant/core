@@ -2,7 +2,6 @@
 
 from unittest.mock import MagicMock, patch
 
-from py_rejseplan.dataclasses.departure import DepartureType as Departure
 from py_rejseplan.dataclasses.departure_board import DepartureBoard
 from py_rejseplan.enums import TransportClass
 
@@ -13,9 +12,10 @@ from homeassistant.components.rejseplanen.const import (
     CONF_STOP_ID,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER, ConfigSubentry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -109,48 +109,90 @@ async def test_sensor_with_filters(
 
 async def test_sensor_extra_state_attributes(
     hass: HomeAssistant,
+    setup_integration_with_stop: tuple[MockConfigEntry, ConfigSubentry],
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test sensor extra state attributes are populated."""
-    # Create integration with multiple departure types
-    departures = []
-    for i, transport_type in enumerate(
-        [TransportClass.BUS, TransportClass.METRO, TransportClass.S_TOG]
-    ):
-        dep = MagicMock(spec=Departure)
-        dep.name = f"Line {i}"
-        dep.type = transport_type
-        dep.direction = f"Direction {i}"
-        dep.time = f"{12 + i}:00"
-        dep.date = "2024-11-04"
-        dep.cancelled = False
-        departures.append(dep)
+    _main_entry, subentry = setup_integration_with_stop
 
-    main_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={"api_key": "test", "name": "Test"},
-        unique_id="test",
+    # Verify the sensor entity was created
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, f"{subentry.subentry_id}_next_departure"
     )
-    main_entry.add_to_hass(hass)
+    assert entity_id is not None
 
+    # Verify the entity has a state
+    state = hass.states.get(entity_id)
+    assert state is not None
+
+    # Verify state attributes structure exists
+    attributes = state.attributes
+    assert "stop_id" in attributes
+    assert "attribution" in attributes
+
+
+async def test_sensor_unavailable_when_no_data(
+    hass: HomeAssistant, setup_main_integration: MockConfigEntry
+) -> None:
+    """Test sensor is unavailable when there is no departure data."""
+    main_entry = setup_main_integration
+
+    # Create a sub-entry but mock the API to return no departures
     with patch(
         "homeassistant.components.rejseplanen.coordinator.DeparturesAPIClient"
     ) as mock_api_class:
         mock_api = MagicMock()
         mock_board = MagicMock(spec=DepartureBoard)
-        mock_board.departures = departures
+        mock_board.departures = []
         mock_api.get_departures.return_value = (mock_board, [])
         mock_api_class.return_value = mock_api
 
-        await hass.config_entries.async_setup(main_entry.entry_id)
+        result = await hass.config_entries.subentries.async_init(
+            (main_entry.entry_id, "stop"), context={"source": SOURCE_USER}
+        )
+        await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_STOP_ID: "654321",
+                CONF_NAME: "Unavailable Stop",
+            },
+        )
         await hass.async_block_till_done()
 
-    # Check sensor states
-    states = hass.states.async_all()
-    sensor_states = [s for s in states if s.entity_id.startswith("sensor.")]
+    # Get the created subentry
+    assert len(main_entry.subentries) == 1
+    subentry_id = list(main_entry.subentries.keys())[0]
 
-    # Main integration without subentries won't have sensors
-    assert len(sensor_states) >= 0
+    entity_registry = er.async_get(hass)
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, f"{subentry_id}_next_departure"
+    )
+    assert entity_id is not None
 
-    # Check that any existing sensors have attributes
-    for state in sensor_states:
-        assert state.attributes is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    # When there are no departures, the sensor returns "unknown" state
+    assert state.state == "unknown"
+
+
+async def test_device_info_on_subentry_sensor(
+    hass: HomeAssistant,
+    setup_integration_with_stop: tuple[MockConfigEntry, ConfigSubentry],
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that device info is correctly assigned to a sub-entry sensor."""
+    _main_entry, subentry = setup_integration_with_stop
+
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, f"{subentry.subentry_id}_next_departure"
+    )
+    assert entity_id is not None
+
+    entity = entity_registry.async_get(entity_id)
+    assert entity is not None
+    assert entity.device_id is not None
+
+    device = device_registry.async_get(entity.device_id)
+    assert device is not None
+    assert device.name == "Test Stop"

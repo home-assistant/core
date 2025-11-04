@@ -319,108 +319,7 @@ async def async_setup_entry(
     entities = []
     device_registry = dr.async_get(hass)
 
-    _LOGGER.debug(
-        "Setting up sensor platform - Entry ID: %s, has CONF_STOP_ID: %s, subentries count: %d",
-        config_entry.entry_id,
-        CONF_STOP_ID in config_entry.data,
-        len(config_entry.subentries),
-    )
-
-    # Debug: Log all existing devices for this config entry
-    existing_devices = [
-        device
-        for device in device_registry.devices.values()
-        if config_entry.entry_id in device.config_entries
-    ]
-    _LOGGER.debug(
-        "Existing devices for entry %s: %d",
-        config_entry.entry_id,
-        len(existing_devices),
-    )
-    for device in existing_devices:
-        _LOGGER.debug(
-            "  Device: %s, identifiers: %s, subentries: %s",
-            device.name,
-            device.identifiers,
-            device.config_entries_subentries.get(config_entry.entry_id, set()),
-        )
-
-    # ✅ Check if this is a legacy direct entry (only if no subentries exist)
-    if CONF_STOP_ID in config_entry.data and not config_entry.subentries:
-        config = config_entry.data
-        name = config.get(CONF_NAME, DEFAULT_STOP_NAME)
-        stop_id = int(config[CONF_STOP_ID])
-        route = config.get(CONF_ROUTE, [])
-        direction = config.get(CONF_DIRECTION, [])
-        departure_type = config.get(CONF_DEPARTURE_TYPE, [])
-
-        # Register stop with coordinator
-        coordinator.add_stop_id(stop_id)
-
-        # Create device for legacy direct entry (no subentry_id)
-        device_identifier = f"{config_entry.entry_id}-stop-{stop_id}"
-        device = device_registry.async_get_or_create(
-            config_entry_id=config_entry.entry_id,
-            identifiers={(DOMAIN, device_identifier)},
-            name=name or f"Stop {stop_id}",
-            manufacturer="Rejseplanen",
-            model="Public transport stop",
-        )
-
-        entities.extend(
-            [
-                RejseplanenTransportSensor(
-                    coordinator=coordinator,
-                    entity_description=description,
-                    stop_id=stop_id,
-                    entry_id=config_entry.entry_id,
-                    name=name,
-                    route=route,
-                    direction=direction,
-                    departure_type=departure_type,
-                    subentry_id=config_entry.entry_id,  # Use entry_id for legacy entries
-                    device_id=device.id,  # Pass the device ID to associate with created device
-                )
-                for description in SENSORS
-            ]
-        )
-
-    # ✅ Clean up ALL orphaned stop devices (not just when both legacy and subentries exist)
-    # This handles any devices that were created without proper subentry linking
-    devices_to_remove = []
-    for device in device_registry.devices.values():
-        if config_entry.entry_id not in device.config_entries:
-            continue
-
-        # Skip the main service device (has entry_id as identifier)
-        if (DOMAIN, config_entry.entry_id) in device.identifiers:
-            continue
-
-        # Check if this is a stop device that doesn't belong to any subentry
-        has_stop_identifier = any(
-            identifier.startswith(config_entry.entry_id)
-            and ("-stop-" in identifier or "-subentry-" in identifier)
-            for domain, identifier in device.identifiers
-            if domain == DOMAIN
-        )
-
-        if has_stop_identifier:
-            # If device has no subentry association, it's orphaned
-            subentries_for_device = device.config_entries_subentries.get(
-                config_entry.entry_id, set()
-            )
-            if not subentries_for_device:
-                _LOGGER.info(
-                    "Found orphaned stop device without subentry: %s", device.name
-                )
-                devices_to_remove.append(device.id)
-
-    # Remove orphaned devices
-    for device_id in devices_to_remove:
-        _LOGGER.info("Removing orphaned device: %s", device_id)
-        device_registry.async_remove_device(device_id)
-
-    # ✅ Process all subentries (stop configurations)
+    # Process all subentries (stop configurations)
     for subentry_id, subentry in config_entry.subentries.items():
         if subentry.subentry_type != "stop":
             continue
@@ -512,19 +411,15 @@ class RejseplanenTransportSensor(RejseplanenEntity, SensorEntity):
         entity_description: RejseplanenSensorEntityDescription,
         stop_id: int,
         entry_id: str,
+        subentry_id: str,
         name: str | None,
         route: list[str],
         direction: list[str],
         departure_type: list[str],
-        subentry_id: str | None = None,
         device_id: str | None = None,
     ) -> None:
         """Initialize the sensor."""
-        # ✅ Use subentry_id if available, otherwise use entry_id
-        effective_subentry_id = subentry_id or entry_id
-        super().__init__(
-            coordinator, stop_id, entry_id, effective_subentry_id, name, device_id
-        )
+        super().__init__(coordinator, stop_id, entry_id, subentry_id, name, device_id)
 
         self.entity_description = entity_description
         self._route = route
@@ -533,8 +428,7 @@ class RejseplanenTransportSensor(RejseplanenEntity, SensorEntity):
         self._departure_cleanup_unsubscribe: CALLBACK_TYPE | None = None
         self._last_cleanup_time: datetime | None = None
 
-        # ✅ Use effective subentry_id for unique_id
-        self._attr_unique_id = f"{effective_subentry_id}_{entity_description.key}"
+        self._attr_unique_id = f"{subentry_id}_{entity_description.key}"
 
         # Calculate bitflag for filtering
         self._departure_type_bitflag = coordinator.api.calculate_departure_type_bitflag(
