@@ -65,6 +65,10 @@
         "name": "Following",
         "unit_of_measurement": "people"
       },
+      "friends": {
+        "name": "Friends",
+        "unit_of_measurement": "[%key:component::xbox::entity::sensor::following::unit_of_measurement%]"
+      },
       "gamer_score": {
         "name": "Gamerscore",
         "unit_of_measurement": "points"
