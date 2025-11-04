@@ -43,7 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: VasttrafikConfigEntry) -
 
 async def async_reload_entry(hass: HomeAssistant, entry: VasttrafikConfigEntry) -> None:
     """Reload entry when subentries change."""
-    await hass.config_entries.async_reload(entry.entry_id)
+    hass.config_entries.async_schedule_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: VasttrafikConfigEntry) -> bool:
