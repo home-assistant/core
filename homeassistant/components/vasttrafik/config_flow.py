@@ -136,8 +136,6 @@ class VasttrafikConfigFlow(ConfigFlow, domain=DOMAIN):
 
         errors: dict[str, str] | None = {}
         if user_input is not None:
-            await self.async_set_unique_id(DOMAIN)
-            self._abort_if_unique_id_configured()
 
             if not (errors := await validate_api_credentials(self.hass, user_input)):
                 return self.async_create_entry(title="Västtrafik", data=user_input)
