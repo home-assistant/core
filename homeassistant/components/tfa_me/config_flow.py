@@ -155,7 +155,7 @@ class OptionsFlowHandler(OptionsFlow):
                     self.config_entry,
                     options={**self.config_entry.options, "action_rain": True},
                 )
-                await coordinator.async_refresh()
+                # await coordinator.async_refresh()
                 # Update all entities on dashboard
                 cordy: TFAmeDataCoordinator = coordinator
                 for entity in cordy.sensor_entity_list:
@@ -163,9 +163,9 @@ class OptionsFlowHandler(OptionsFlow):
                         coordinator.data[entity]["reset_rain"] = True
                         msg_reset = f"{entity} rain reset"
                         _LOGGER.info(msg_reset)
-                        await self.hass.services.async_call(
-                            "homeassistant", "update_entity", {"entity_id": entity}
-                        )
+
+                # Update UI
+                coordinator.async_set_updated_data(coordinator.data)
 
                 return self.async_create_entry(
                     title="action_rain", data=self.config_entry.options

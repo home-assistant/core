@@ -133,15 +133,3 @@ class TFAmeDataCoordinator(DataUpdateCoordinator):
             return socket.gethostbyname(host_str)  # Resolve: name to IP
         except socket.gaierror:
             return host_str  # Error, just return original string
-
-
-async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
-    """Will be called when options are changed via UI."""
-
-    reset_rain = entry.options.get("action_rain", False)
-    msg: str = "Options 'reset rain': " + str(reset_rain)
-    _LOGGER.info(msg)
-
-    coordinator = hass.data[DOMAIN][entry.entry_id]
-
-    await coordinator.async_refresh()
