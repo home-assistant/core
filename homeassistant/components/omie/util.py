@@ -36,12 +36,3 @@ def pick_series_cet(
         dt.datetime.fromisoformat(dt_str).astimezone(CET): v
         for dt_str, v in localize_quarter_hourly_data(market_date, series_data).items()
     }
-
-
-def get_market_dates(local_time: dt.datetime) -> set[dt.date]:
-    """Returns the intraday market date(s) for a given local time.
-
-    :param local_time the datetime at which the calculation is made
-    """
-
-    return {local_time.astimezone(CET).date()}
