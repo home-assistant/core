@@ -407,7 +407,12 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         assert self.ble_device is not None
         try:
             self.wifi_networks = await async_scan_wifi_networks(self.ble_device)
-        except (DeviceConnectionError, RpcCallError):
+        except (DeviceConnectionError, RpcCallError) as err:
+            LOGGER.debug("Failed to scan WiFi networks via BLE: %s", err)
+            # "Writing is not permitted" error means device is bound to Shelly cloud
+            # and BLE provisioning is disabled - user must use Shelly app
+            if "Writing is not permitted" in str(err):
+                return self.async_abort(reason="ble_not_permitted")
             errors["base"] = "cannot_connect"
         except Exception:  # noqa: BLE001
             LOGGER.exception("Unexpected exception during WiFi scan")
