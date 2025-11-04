@@ -71,7 +71,6 @@ class AirthingsBLEDataUpdateCoordinator(DataUpdateCoordinator[AirthingsDevice]):
             )
         self.ble_device = ble_device
 
-        # Migrate existing config entries to include device_model
         if "device_model" not in self.config_entry.data:
             try:
                 _LOGGER.debug("Fetching device info for migration")
@@ -94,5 +93,4 @@ class AirthingsBLEDataUpdateCoordinator(DataUpdateCoordinator[AirthingsDevice]):
             data = await self.airthings.update_device(self.ble_device)
         except Exception as err:
             raise UpdateFailed(f"Unable to fetch data: {err}") from err
-
         return data

@@ -321,7 +321,6 @@ async def test_scan_interval_migration_radon_device(
         freezer.tick(RADON_SCAN_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
-        # Should now have 3 calls: migration + initial refresh + scheduled update
         assert mock_update.call_count == 3
 
 
@@ -370,5 +369,4 @@ async def test_default_scan_interval_migration(
         freezer.tick(DEFAULT_SCAN_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
-        # Should now have 3 calls: migration + initial refresh + scheduled update
         assert mock_update.call_count == 3
