@@ -5,6 +5,7 @@ import logging
 from unittest.mock import patch
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.humidifier import (
     ATTR_HUMIDITY,
@@ -29,20 +30,61 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .common import (
+    ALL_DEVICE_NAMES,
     ENTITY_HUMIDIFIER,
     ENTITY_HUMIDIFIER_HUMIDITY,
     ENTITY_HUMIDIFIER_MIST_LEVEL,
+    mock_devices_response,
 )
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 NoException = nullcontext()
 
 
+@pytest.mark.parametrize("device_name", ALL_DEVICE_NAMES)
 async def test_humidifier_state(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    aioclient_mock: AiohttpClientMocker,
+    device_name: str,
+) -> None:
+    """Test the resulting setup state is as expected for the platform."""
+
+    # Configure the API devices call for device_name
+    mock_devices_response(aioclient_mock, device_name)
+
+    # setup platform - only including the named device
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Check device registry
+    devices = dr.async_entries_for_config_entry(device_registry, config_entry.entry_id)
+    assert devices == snapshot(name="devices")
+
+    # Check entity registry
+    entities = [
+        entity
+        for entity in er.async_entries_for_config_entry(
+            entity_registry, config_entry.entry_id
+        )
+        if entity.domain == HUMIDIFIER_DOMAIN
+    ]
+    assert entities == snapshot(name="entities")
+
+    # Check states
+    for entity in entities:
+        assert hass.states.get(entity.entity_id) == snapshot(name=entity.entity_id)
+
+
+async def test_humidifier_state_assert(
     hass: HomeAssistant, humidifier_config_entry: MockConfigEntry
 ) -> None:
     """Test the resulting setup state is as expected for the platform."""
