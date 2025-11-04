@@ -10,6 +10,7 @@ from thermopro_ble import SensorUpdate, ThermoProBluetoothDeviceData, ThermoProD
 
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
+    async_address_present,
     async_ble_device_from_address,
     async_track_unavailable,
 )
@@ -130,6 +131,11 @@ class ThermoProButtonEntity(ButtonEntity):
     async def async_added_to_hass(self) -> None:
         """Connect availability dispatcher."""
         await super().async_added_to_hass()
+        # Initialize availability based on current device presence to prevent
+        # logging unavailability message on startup if device is not present
+        self._attr_available = async_address_present(
+            self.hass, self._address, connectable=True
+        )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
