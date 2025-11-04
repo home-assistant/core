@@ -502,13 +502,10 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         assert self.ble_device is not None
         try:
             await async_provision_wifi(self.ble_device, self.selected_ssid, password)
-        except (DeviceConnectionError, RpcCallError):
-            return self.async_show_form(
-                step_id="wifi_credentials",
-                data_schema=vol.Schema({vol.Required(CONF_PASSWORD): str}),
-                description_placeholders={"ssid": self.selected_ssid},
-                errors={"base": "cannot_connect"},
-            )
+        except (DeviceConnectionError, RpcCallError) as err:
+            LOGGER.debug("Failed to provision WiFi via BLE: %s", err)
+            # BLE connection/communication failed - allow retry from network selection
+            return None
         except Exception:  # noqa: BLE001
             LOGGER.exception("Unexpected exception during WiFi provisioning")
             return self.async_abort(reason="unknown")
