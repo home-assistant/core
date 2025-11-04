@@ -718,6 +718,15 @@ async def test_elapsed_time_sensor_restored(
                     "native_unit_of_measurement": "min",
                 },
             ),
+            (
+                State(
+                    entity_id_abs,
+                    restore_state,
+                ),
+                {
+                    "native_value": datetime(2025, 5, 31, 14, 15, tzinfo=UTC),
+                },
+            ),
         ],
     )
 

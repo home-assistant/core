@@ -4,8 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta
-from decimal import Decimal
+from datetime import datetime, timedelta
 import logging
 from typing import Any, Final, cast
 
@@ -144,14 +143,8 @@ def _convert_finish_timestamp(
 class MieleSensorDescription(SensorEntityDescription):
     """Class describing Miele sensor entities."""
 
-    value_fn: Callable[[MieleDevice], StateType | date | datetime | Decimal]
-    end_value_fn: (
-        Callable[
-            [StateType | date | datetime | Decimal],
-            StateType | date | datetime | Decimal,
-        ]
-        | None
-    ) = None
+    value_fn: Callable[[MieleDevice], StateType | datetime]
+    end_value_fn: Callable[[StateType | datetime], StateType | datetime] | None = None
     extra_attributes: dict[str, Callable[[MieleDevice], StateType]] | None = None
     zone: int | None = None
     unique_id_fn: Callable[[str, MieleSensorDescription], str] | None = None
@@ -843,7 +836,7 @@ class MieleSensor(MieleEntity, SensorEntity):
             self._attr_unique_id = description.unique_id_fn(device_id, description)
 
     @property
-    def native_value(self) -> StateType | date | datetime | Decimal:
+    def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.device)
 
@@ -861,7 +854,7 @@ class MieleSensor(MieleEntity, SensorEntity):
 class MieleRestorableSensor(MieleSensor, RestoreSensor):
     """Representation of a Sensor whose internal state can be restored."""
 
-    _attr_native_value: StateType
+    _attr_native_value: StateType | datetime
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
@@ -873,7 +866,7 @@ class MieleRestorableSensor(MieleSensor, RestoreSensor):
             self._attr_native_value = last_data.native_value  # type: ignore[assignment]
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the state of the sensor.
 
         It is necessary to override `native_value` to fall back to the default
@@ -1037,7 +1030,7 @@ class MieleTimeSensor(MieleRestorableSensor):
 class MieleAbsoluteTimeSensor(MieleRestorableSensor):
     """Representation of absolute time sensors handling precision correctness."""
 
-    _previous_value: StateType | date | datetime | Decimal = None
+    _previous_value: StateType | datetime = None
 
     def _update_native_value(self) -> None:
         """Update the last value of the sensor."""
