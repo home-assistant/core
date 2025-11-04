@@ -28,6 +28,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PAYLOAD,
     CONF_RESOURCE,
+    CONF_SCAN_INTERVAL,
     CONF_TIMEOUT,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
@@ -133,6 +134,7 @@ async def test_form_with_post(
                 CONF_NAME: "Current version",
                 CONF_SELECT: ".current-version h1",
                 CONF_INDEX: 0.0,
+                CONF_SCAN_INTERVAL: 60,
             },
         )
         await hass.async_block_till_done()
@@ -145,6 +147,7 @@ async def test_form_with_post(
         CONF_PAYLOAD: "POST",
         CONF_VERIFY_SSL: True,
         CONF_TIMEOUT: 10.0,
+        CONF_SCAN_INTERVAL: 60,
         CONF_ENCODING: "UTF-8",
         "sensor": [
             {

@@ -40,6 +40,7 @@
           "payload": "Payload",
           "resource": "Resource",
           "timeout": "Timeout",
+          "scan_interval": "Update Interval",
           "username": "[%key:common::config_flow::data::username%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
@@ -50,6 +51,7 @@
           "payload": "Payload to use when method is POST.",
           "resource": "The URL to the website that contains the value.",
           "timeout": "Timeout for connection to website.",
+          "scan_interval": "Update interval in seconds, minimum 30",
           "verify_ssl": "Enables/disables verification of SSL/TLS certificate, for example if it is self-signed."
         }
       }
