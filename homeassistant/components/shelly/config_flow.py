@@ -26,12 +26,7 @@ from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_ble_device_from_address,
 )
-from homeassistant.config_entries import (
-    ConfigFlow,
-    ConfigFlowResult,
-    FlowType,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
@@ -53,7 +48,7 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from .ble_provisioning import (
     ProvisioningState,
     async_get_provisioning_registry,
-    async_register_zeroconf_flow,
+    async_register_zeroconf_discovery,
 )
 from .const import (
     CONF_BLE_SCANNER_MODE,
@@ -322,11 +317,11 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_handle_zeroconf_mac_discovery(self, mac: str, host: str) -> None:
         """Handle MAC address discovery from zeroconf.
 
-        Registers flow for BLE handoff and aborts idle BLE flows.
+        Registers discovery info for BLE handoff and aborts idle BLE flows.
         """
-        # Register this zeroconf flow with BLE provisioning in case
+        # Register this zeroconf discovery with BLE provisioning in case
         # this device was just provisioned via BLE
-        async_register_zeroconf_flow(self.hass, mac, self.flow_id)
+        async_register_zeroconf_discovery(self.hass, mac, host)
 
         # Check for idle BLE provisioning flows and abort them since
         # device is already on WiFi (discovered via zeroconf)
@@ -511,39 +506,48 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             if flow["flow_id"] != self.flow_id and self.unique_id == flow_unique_id:
                 self.hass.config_entries.flow.async_abort(flow["flow_id"])
 
-        # Wait for zeroconf to discover and register its flow
+        # Wait for zeroconf to discover the device
         try:
             await asyncio.wait_for(state.event.wait(), timeout=PROVISIONING_TIMEOUT)
+            LOGGER.debug(
+                "Zeroconf discovered device after WiFi provisioning at %s",
+                state.host,
+            )
         except TimeoutError:
             LOGGER.debug(
                 "Timeout waiting for zeroconf discovery after WiFi provisioning"
             )
+            return self.async_abort(
+                reason="wifi_provisioned",
+                description_placeholders={
+                    "name": self.context["title_placeholders"]["name"],
+                    "ssid": self.selected_ssid,
+                },
+            )
 
-        next_flow_id = state.flow_id
+        # Device discovered via zeroconf - get device info and continue to confirmation
+        assert state.host is not None
+        self.host = state.host
+        self.port = DEFAULT_HTTP_PORT
 
-        if next_flow_id:
-            LOGGER.debug("Received zeroconf flow ID: %s", next_flow_id)
-            # Try to chain to zeroconf flow, but it might have already completed
-            try:
-                return self.async_abort(
-                    reason="wifi_provisioned",
-                    next_flow=(FlowType.CONFIG_FLOW, next_flow_id),
-                    description_placeholders={
-                        "name": self.context["title_placeholders"]["name"],
-                        "ssid": self.selected_ssid,
-                    },
-                )
-            except Exception:  # noqa: BLE001
-                LOGGER.debug("Zeroconf flow %s no longer valid, aborting", next_flow_id)
+        try:
+            self.info = await self._async_get_info(self.host, self.port)
+        except DeviceConnectionError:
+            return self.async_abort(reason="cannot_connect")
 
-        # No zeroconf flow found or flow already completed, just abort with success message
-        return self.async_abort(
-            reason="wifi_provisioned",
-            description_placeholders={
-                "name": self.context["title_placeholders"]["name"],
-                "ssid": self.selected_ssid,
-            },
-        )
+        if get_info_auth(self.info):
+            # Device requires authentication - show credentials step
+            return await self.async_step_credentials()
+
+        try:
+            self.device_info = await validate_input(
+                self.hass, self.host, self.port, self.info, {}
+            )
+        except DeviceConnectionError:
+            return self.async_abort(reason="cannot_connect")
+
+        # Continue to confirmation step
+        return await self.async_step_confirm_discovery()
 
     async def _do_provision(self, password: str) -> None:
         """Provision WiFi credentials to device via BLE."""

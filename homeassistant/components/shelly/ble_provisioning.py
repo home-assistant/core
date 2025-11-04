@@ -17,10 +17,10 @@ _LOGGER = logging.getLogger(__name__)
 
 @dataclass
 class ProvisioningState:
-    """State for tracking zeroconf flow during BLE provisioning."""
+    """State for tracking zeroconf discovery during BLE provisioning."""
 
     event: asyncio.Event = field(default_factory=asyncio.Event)
-    flow_id: str | None = None
+    host: str | None = None
 
 
 @callback
@@ -38,12 +38,12 @@ def async_get_provisioning_registry(
 
 
 @callback
-def async_register_zeroconf_flow(hass: HomeAssistant, mac: str, flow_id: str) -> None:
-    """Register a zeroconf flow for a device that was provisioned via BLE.
+def async_register_zeroconf_discovery(hass: HomeAssistant, mac: str, host: str) -> None:
+    """Register a zeroconf discovery for a device that was provisioned via BLE.
 
     Called by zeroconf discovery when it finds a device that may have been
     provisioned via BLE. If BLE provisioning is waiting for this device,
-    the flow_id will be stored (replacing any previous flow_id).
+    the host will be stored (replacing any previous host).
 
     Multiple zeroconf discoveries can happen (Shelly service, HTTP service, etc.)
     and the last one wins.
@@ -51,7 +51,7 @@ def async_register_zeroconf_flow(hass: HomeAssistant, mac: str, flow_id: str) ->
     Args:
         hass: Home Assistant instance
         mac: Device MAC address (will be normalized)
-        flow_id: Config flow ID to chain to
+        host: Device IP address/hostname from zeroconf
 
     """
     registry = async_get_provisioning_registry(hass)
@@ -60,18 +60,18 @@ def async_register_zeroconf_flow(hass: HomeAssistant, mac: str, flow_id: str) ->
     state = registry.get(normalized_mac)
     if not state:
         _LOGGER.debug(
-            "No BLE provisioning state found for %s (flow_id %s)",
+            "No BLE provisioning state found for %s (host %s)",
             normalized_mac,
-            flow_id,
+            host,
         )
         return
 
     _LOGGER.debug(
-        "Registering zeroconf flow for %s with flow_id %s (replacing previous)",
+        "Registering zeroconf discovery for %s at %s (replacing previous)",
         normalized_mac,
-        flow_id,
+        host,
     )
 
-    # Store flow_id (replacing any previous value) and signal the event
-    state.flow_id = flow_id
+    # Store host (replacing any previous value) and signal the event
+    state.host = host
     state.event.set()
