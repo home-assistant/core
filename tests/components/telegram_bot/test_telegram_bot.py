@@ -1557,9 +1557,15 @@ async def test_download_file(
             AsyncMock(return_value=telegram_file),
         ) as get_file_mock,
         patch(
-            "telegram.File.download_to_drive",
-            AsyncMock(return_value=f"/custom/path/{telegram_file_name}"),
-        ) as download_to_drive_mock,
+            "telegram.File.download_as_bytearray",
+            AsyncMock(
+                return_value=f"This is the file content of {telegram_file_name}".encode()
+            ),
+        ) as download_as_bytearray_mock,
+        patch(
+            "homeassistant.components.telegram_bot.bot.asyncio.to_thread",
+            AsyncMock(return_value=None),
+        ) as to_thread_mock,
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -1570,7 +1576,11 @@ async def test_download_file(
 
     await hass.async_block_till_done()
     get_file_mock.assert_called_once_with(file_id=file_id)
-    download_to_drive_mock.assert_called_once_with(custom_path=expected_path)
+    download_as_bytearray_mock.assert_called_once()
+    to_thread_mock.assert_called()
+    args, _ = to_thread_mock.call_args
+    assert str(args[0].__self__) == expected_path
+    assert args[1] == f"This is the file content of {telegram_file_name}".encode()
 
 
 async def test_download_file_when_bot_failed_to_get_file(

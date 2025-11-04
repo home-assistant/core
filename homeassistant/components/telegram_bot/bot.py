@@ -6,6 +6,7 @@ from collections.abc import Callable, Sequence
 import io
 import logging
 import os
+from pathlib import Path
 from ssl import SSLContext
 from types import MappingProxyType
 from typing import Any, cast
@@ -1075,7 +1076,8 @@ class TelegramNotificationService:
             await self.hass.async_add_executor_job(mkdir)
         _LOGGER.debug("Download file %s to %s", file_id, custom_path)
         try:
-            await file.download_to_drive(custom_path=custom_path)
+            file_content = await file.download_as_bytearray()
+            await asyncio.to_thread(Path(custom_path).write_bytes, file_content)
         except Exception as exc:
             _LOGGER.error("Error downloading file to %s: %s", custom_path, exc)
             raise HomeAssistantError(
