@@ -10,16 +10,14 @@ from pytest_codspeed import BenchmarkFixture
 # Import both Rust and Python implementations
 from homeassistant.rust_core import (
     RUST_AVAILABLE,
-    fast_attributes_equal,
-    split_entity_id,
-    valid_domain,
-    valid_entity_id,
-)
-from homeassistant.rust_core import (
     _python_fast_attributes_equal,
     _python_split_entity_id,
     _python_valid_domain,
     _python_valid_entity_id,
+    fast_attributes_equal,
+    split_entity_id,
+    valid_domain,
+    valid_entity_id,
 )
 
 # Test data

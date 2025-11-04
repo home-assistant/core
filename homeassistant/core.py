@@ -69,7 +69,6 @@ from .const import (
     EVENT_STATE_CHANGED,
     EVENT_STATE_REPORTED,
     MATCH_ALL,
-    MAX_EXPECTED_ENTITY_IDS,
     MAX_LENGTH_EVENT_EVENT_TYPE,
     MAX_LENGTH_STATE_STATE,
     STATE_UNKNOWN,
@@ -2320,7 +2319,9 @@ class StateMachine:
             same_state = old_state.state == new_state and not force_update
             # Use Rust-optimized attribute comparison for performance
             # This is ~2-10x faster than Python dict comparison
-            same_attr = rust_core.fast_attributes_equal(old_state.attributes, attributes)
+            same_attr = rust_core.fast_attributes_equal(
+                old_state.attributes, attributes
+            )
             last_changed = old_state.last_changed if same_state else None
 
         # It is much faster to convert a timestamp to a utc datetime object

@@ -7,14 +7,14 @@ Rust extension is not available.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import functools
 import re
-from collections.abc import Mapping
 from typing import Any
 
 # Try to import the Rust extension
 try:
-    from .rust_core import (  # type: ignore[import-not-found]
+    from .rust_core import (
         fast_attributes_equal as _rust_fast_attributes_equal,
         split_entity_id as _rust_split_entity_id,
         valid_domain as _rust_valid_domain,
@@ -68,10 +68,10 @@ def _python_fast_attributes_equal(
 
 # Export the best available implementation
 if RUST_AVAILABLE:
-    valid_entity_id = _rust_valid_entity_id  # type: ignore[assignment]
-    valid_domain = _rust_valid_domain  # type: ignore[assignment]
-    split_entity_id = _rust_split_entity_id  # type: ignore[assignment]
-    fast_attributes_equal = _rust_fast_attributes_equal  # type: ignore[assignment]
+    valid_entity_id = _rust_valid_entity_id
+    valid_domain = _rust_valid_domain
+    split_entity_id = _rust_split_entity_id
+    fast_attributes_equal = _rust_fast_attributes_equal
 else:
     valid_entity_id = _python_valid_entity_id
     valid_domain = _python_valid_domain
@@ -81,8 +81,8 @@ else:
 
 __all__ = [
     "RUST_AVAILABLE",
-    "valid_entity_id",
-    "valid_domain",
-    "split_entity_id",
     "fast_attributes_equal",
+    "split_entity_id",
+    "valid_domain",
+    "valid_entity_id",
 ]
