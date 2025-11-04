@@ -9,10 +9,6 @@ from pyomie.util import localize_quarter_hourly_data
 
 CET: Final = ZoneInfo("CET")
 
-_OMIE_PUBLISH_TIME_CET = dt.time(hour=13, minute=30)
-"""The time by which day-ahead market results (for the next day) will have been published to omie.es."""
-
-
 def current_quarter_hour_cet() -> dt.datetime:
     """Returns the current quarter-hour in CET with seconds and microseconds equal to 0."""
     # to work out the start of the current hour we truncate from minutes downwards
