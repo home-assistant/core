@@ -170,6 +170,14 @@ BLE_DISCOVERY_INFO_NO_DEVICE = BluetoothServiceInfoBleak(
     tx_power=-127,
 )
 
+# Mock device info returned by get_info for BLE provisioned devices
+MOCK_DEVICE_INFO = {
+    "mac": "C049EF8873E8",
+    "model": MODEL_PLUS_2PM,
+    "auth": False,
+    "gen": 2,
+}
+
 
 @pytest.mark.parametrize(
     ("gen", "model", "port"),
@@ -1951,12 +1959,7 @@ async def test_bluetooth_discovery(
         ),
         patch(
             "homeassistant.components.shelly.config_flow.get_info",
-            return_value={
-                "mac": "C049EF8873E8",
-                "model": MODEL_PLUS_2PM,
-                "auth": False,
-                "gen": 2,
-            },
+            return_value=MOCK_DEVICE_INFO,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -2005,9 +2008,9 @@ async def test_bluetooth_discovery_invalid_name(
     assert result["reason"] == "invalid_discovery_info"
 
 
+@pytest.mark.usefixtures("mock_rpc_device")
 async def test_bluetooth_discovery_already_configured(
     hass: HomeAssistant,
-    mock_rpc_device: Mock,
 ) -> None:
     """Test bluetooth discovery when device is already configured."""
     # Inject BLE device so it's available in the bluetooth scanner
@@ -2099,12 +2102,7 @@ async def test_bluetooth_wifi_scan_success(
         ),
         patch(
             "homeassistant.components.shelly.config_flow.get_info",
-            return_value={
-                "mac": "C049EF8873E8",
-                "model": MODEL_PLUS_2PM,
-                "auth": False,
-                "gen": 2,
-            },
+            return_value=MOCK_DEVICE_INFO,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -2183,12 +2181,7 @@ async def test_bluetooth_wifi_scan_failure(
         ),
         patch(
             "homeassistant.components.shelly.config_flow.get_info",
-            return_value={
-                "mac": "C049EF8873E8",
-                "model": MODEL_PLUS_2PM,
-                "auth": False,
-                "gen": 2,
-            },
+            return_value=MOCK_DEVICE_INFO,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -2208,9 +2201,9 @@ async def test_bluetooth_wifi_scan_failure(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_rpc_device")
 async def test_bluetooth_wifi_scan_ble_not_permitted(
     hass: HomeAssistant,
-    mock_rpc_device: Mock,
 ) -> None:
     """Test WiFi scan when BLE is not permitted (cloud bound device)."""
     # Inject BLE device so it's available in the bluetooth scanner
@@ -2284,12 +2277,7 @@ async def test_bluetooth_wifi_credentials_and_provision_success(
         ),
         patch(
             "homeassistant.components.shelly.config_flow.get_info",
-            return_value={
-                "mac": "C049EF8873E8",
-                "model": MODEL_PLUS_2PM,
-                "auth": False,
-                "gen": 2,
-            },
+            return_value=MOCK_DEVICE_INFO,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -2403,12 +2391,7 @@ async def test_bluetooth_wifi_provision_failure(
         ),
         patch(
             "homeassistant.components.shelly.config_flow.get_info",
-            return_value={
-                "mac": "C049EF8873E8",
-                "model": MODEL_PLUS_2PM,
-                "auth": False,
-                "gen": 2,
-            },
+            return_value=MOCK_DEVICE_INFO,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
