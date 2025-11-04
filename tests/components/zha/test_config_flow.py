@@ -3106,3 +3106,111 @@ async def test_plug_in_old_radio_retry(hass: HomeAssistant, backup, mock_app) ->
 
     # Verify reset was attempted twice: initial + retry
     assert mock_temp_radio_mgr.async_reset_adapter.call_count == 2
+
+
+@patch(f"zigpy_znp.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
+@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+async def test_plug_in_old_radio_config_entry_removed(
+    hass: HomeAssistant, backup, mock_app
+) -> None:
+    """Test plug_in_old_radio step when old config entry is removed before retrying."""
+    entry = MockConfigEntry(
+        version=config_flow.ZhaConfigFlowHandler.VERSION,
+        domain=DOMAIN,
+        data={
+            CONF_DEVICE: {
+                CONF_DEVICE_PATH: "/dev/ttyUSB0",
+                CONF_BAUDRATE: 115200,
+                CONF_FLOW_CONTROL: None,
+            },
+            CONF_RADIO_TYPE: "ezsp",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    discovery_info = UsbServiceInfo(
+        device="/dev/ttyZIGBEE",
+        pid="AAAA",
+        vid="AAAA",
+        serial_number="1234",
+        description="zigbee radio",
+        manufacturer="test",
+    )
+
+    # Mock radio manager for the old radio that is unplugged during reset
+    mock_temp_radio_mgr = AsyncMock()
+    mock_temp_radio_mgr.async_reset_adapter = AsyncMock(
+        side_effect=HomeAssistantError(
+            "Failed to connect to Zigbee adapter: [Errno 2] No such file or directory"
+        )
+    )
+
+    with (
+        patch(
+            "homeassistant.components.zha.radio_manager.ZhaRadioManager._async_read_backups_from_database",
+            return_value=[backup],
+        ),
+        patch(
+            "homeassistant.components.zha.config_flow.ZhaRadioManager",
+            side_effect=[
+                ZhaRadioManager(),  # for initial new radio setup
+                mock_temp_radio_mgr,  # for failing reset of old radio
+            ],
+        ),
+    ):
+        result_init = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USB}, data=discovery_info
+        )
+
+        result_confirm = await hass.config_entries.flow.async_configure(
+            result_init["flow_id"], user_input={}
+        )
+
+        assert result_confirm["step_id"] == "choose_migration_strategy"
+
+        result_recommended = await hass.config_entries.flow.async_configure(
+            result_confirm["flow_id"],
+            user_input={"next_step_id": config_flow.MIGRATION_STRATEGY_RECOMMENDED},
+        )
+
+    # Prompt user to plug old adapter back in when reset fails
+    assert result_recommended["type"] is FlowResultType.MENU
+    assert result_recommended["step_id"] == "plug_in_old_radio"
+    assert (
+        result_recommended["description_placeholders"]["device_path"] == "/dev/ttyUSB0"
+    )
+    assert result_recommended["menu_options"] == [
+        "retry_old_radio",
+        "skip_reset_old_radio",
+    ]
+
+    # Verify reset was attempted once on old radio
+    assert mock_temp_radio_mgr.async_reset_adapter.call_count == 1
+
+    # Remove the config entry before retrying
+    await hass.config_entries.async_remove(entry.entry_id)
+
+    with patch(
+        "homeassistant.components.zha.radio_manager.ZhaRadioManager.restore_backup",
+    ) as mock_restore_backup:
+        # Retry after entry removed, should skip to maybe_confirm_ezsp_restore
+        result_retry = await hass.config_entries.flow.async_configure(
+            result_recommended["flow_id"],
+            user_input={"next_step_id": "retry_old_radio"},
+        )
+
+    # Since config entry was removed, flow skipped to maybe_confirm_ezsp_restore
+    # and restored backup, creating a new entry in the end
+    assert result_retry["type"] is FlowResultType.CREATE_ENTRY
+    assert result_retry["title"] == "zigbee radio"
+    assert result_retry["data"] == {
+        "device": {
+            "baudrate": 115200,
+            "flow_control": None,
+            "path": "/dev/ttyZIGBEE",
+        },
+        CONF_RADIO_TYPE: "znp",
+    }
+
+    # Verify restore was called on new radio after old entry was removed
+    assert mock_restore_backup.call_count == 1
