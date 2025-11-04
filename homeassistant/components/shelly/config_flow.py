@@ -548,7 +548,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                     description_placeholders={"ssid": self.selected_ssid},
                 )
 
-        # Device discovered via zeroconf - get device info and continue to confirmation
+        # Device discovered via zeroconf - get device info and set up directly
         assert state.host is not None
         self.host = state.host
         self.port = DEFAULT_HTTP_PORT
@@ -563,14 +563,25 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self.async_step_credentials()
 
         try:
-            self.device_info = await validate_input(
+            device_info = await validate_input(
                 self.hass, self.host, self.port, self.info, {}
             )
         except DeviceConnectionError:
             return self.async_abort(reason="cannot_connect")
 
-        # Continue to confirmation step
-        return await self.async_step_confirm_discovery()
+        if not device_info[CONF_MODEL]:
+            return self.async_abort(reason="firmware_not_fully_provisioned")
+
+        # User just provisioned this device - create entry directly without confirmation
+        return self.async_create_entry(
+            title=device_info["title"],
+            data={
+                CONF_HOST: self.host,
+                CONF_SLEEP_PERIOD: device_info[CONF_SLEEP_PERIOD],
+                CONF_MODEL: device_info[CONF_MODEL],
+                CONF_GEN: device_info[CONF_GEN],
+            },
+        )
 
     async def _do_provision(self, password: str) -> None:
         """Provision WiFi credentials to device via BLE."""
