@@ -650,7 +650,7 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
     @property
     def _progress_step_data(self) -> ProgressStepData[_FlowResultT]:
         """Return progress step data.
-        
+
         A property is used instead of a simple attribute as derived classes
         do not call super().__init__.
         The property makes sure that the dict is initialized if needed.
