@@ -3137,7 +3137,6 @@ async def test_plug_in_old_radio_config_entry_removed(
         manufacturer="test",
     )
 
-    # Mock radio manager for the old radio that is unplugged during reset
     mock_temp_radio_mgr = AsyncMock()
     mock_temp_radio_mgr.async_reset_adapter = AsyncMock(
         side_effect=HomeAssistantError(
