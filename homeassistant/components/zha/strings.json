@@ -113,7 +113,6 @@
         "title": "Serial port settings"
       },
       "maybe_reset_old_radio": {
-        "description": "A backup was created earlier and your old adapter is being reset as part of the migration.",
         "title": "Resetting old adapter"
       },
       "plug_in_new_radio": {
@@ -131,6 +130,9 @@
           "skip_reset_old_radio": "Skip reset"
         },
         "title": "Old adapter not found"
+      },
+      "restore_backup": {
+        "title": "Restoring network to new adapter"
       },
       "upload_manual_backup": {
         "data": {
