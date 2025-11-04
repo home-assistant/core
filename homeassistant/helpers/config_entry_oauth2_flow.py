@@ -22,6 +22,7 @@ import time
 from typing import Any, cast
 
 from aiohttp import ClientError, ClientResponseError, client, web
+from aiohttp_retry import ExponentialRetry, RetryClient
 from habluetooth import BluetoothServiceInfoBleak
 import jwt
 import voluptuous as vol
@@ -29,6 +30,7 @@ from yarl import URL
 
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.loader import async_get_application_credentials
 from homeassistant.util.hass_dict import HassKey
 
@@ -207,41 +209,78 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
 
     async def _async_refresh_token(self, token: dict) -> dict:
         """Refresh tokens."""
-        new_token = await self._token_request(
-            {
-                "grant_type": "refresh_token",
-                "client_id": self.client_id,
-                "refresh_token": token["refresh_token"],
-            }
-        )
+        try:
+            new_token = await self._token_request(
+                {
+                    "grant_type": "refresh_token",
+                    "client_id": self.client_id,
+                    "refresh_token": token["refresh_token"],
+                }
+            )
+        except ClientResponseError as err:
+            # I have doubts if this is right exception to raise here. Let's find out in a review. :)
+            raise ConfigEntryAuthFailed("Refresh token failed") from err
         return {**token, **new_token}
 
     async def _token_request(self, data: dict) -> dict:
-        """Make a token request."""
+        """Make a token request.
+
+        Retries only HTTP 429 responses (respecting exponential backoff).
+        Any other HTTP status >= 400 is not treated as they were.
+        """
         session = async_get_clientsession(self.hass)
 
         data["client_id"] = self.client_id
-
         if self.client_secret:
             data["client_secret"] = self.client_secret
 
         _LOGGER.debug("Sending token request to %s", self.token_url)
-        resp = await session.post(self.token_url, data=data)
-        if resp.status >= 400:
-            try:
-                error_response = await resp.json()
-            except (ClientError, JSONDecodeError):
-                error_response = {}
-            error_code = error_response.get("error", "unknown")
-            error_description = error_response.get("error_description", "unknown error")
-            _LOGGER.error(
-                "Token request for %s failed (%s): %s",
-                self.domain,
-                error_code,
-                error_description,
-            )
-        resp.raise_for_status()
-        return cast(dict, await resp.json())
+
+        retry_opts = ExponentialRetry(
+            attempts=5,
+            factor=1.0,
+            max_timeout=30,
+            statuses={429},
+            exceptions={ClientError, asyncio.TimeoutError},
+            retry_all_server_errors=False,
+        )
+
+        async with (
+            RetryClient(
+                client_session=session,
+                retry_options=retry_opts,
+                raise_for_status=False,  # Use manual error handling, for now. This way we can log it
+            ) as retry_client
+        ):
+            resp = await retry_client.post(self.token_url, data=data)
+
+            if resp.status == 429:
+                # Some extra logging to detect issues with rate limiting... For debugging
+                _LOGGER.error(
+                    "Token request for %s failed: Rate limit exceeded. Tried %d times",
+                    self.domain,
+                    retry_opts.attempts,
+                )
+            if resp.status >= 400:
+                _LOGGER.error(
+                    "Token request for %s failed: %s", self.domain, resp.status
+                )
+                try:
+                    error_response = await resp.json()
+                except (ClientError, JSONDecodeError):
+                    error_response = {}
+
+                error_code = error_response.get("error", "unknown")
+                error_description = error_response.get("error_description", "unknown")
+                _LOGGER.error(
+                    "Token request for %s failed (%s): %s",
+                    self.domain,
+                    error_code,
+                    error_description,
+                )
+
+            resp.raise_for_status()
+            return cast(dict, await resp.json())
 
 
 class LocalOAuth2ImplementationWithPkce(LocalOAuth2Implementation):
@@ -448,6 +487,12 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
             return self.async_abort(reason="oauth_timeout")
         except (ClientResponseError, ClientError) as err:
             _LOGGER.error("Error resolving OAuth token: %s", err)
+            if (
+                isinstance(err, ClientResponseError)
+                and err.status == HTTPStatus.TOO_MANY_REQUESTS
+            ):
+                _LOGGER.debug("Rate limited trying to get token")
+                return self.async_abort(reason="oauth_failed")
             if (
                 isinstance(err, ClientResponseError)
                 and err.status == HTTPStatus.UNAUTHORIZED
