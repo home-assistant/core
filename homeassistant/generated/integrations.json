@@ -7194,7 +7194,8 @@
       "name": "V\u00e4sttrafik",
       "integration_type": "service",
       "config_flow": true,
-      "iot_class": "cloud_polling"
+      "iot_class": "cloud_polling",
+      "single_config_entry": true
     },
     "vegehub": {
       "integration_type": "hub",
