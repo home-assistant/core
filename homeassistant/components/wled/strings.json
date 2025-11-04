@@ -135,6 +135,9 @@
     },
     "invalid_response_wled_error": {
       "message": "Invalid response from WLED API: {error}"
+    },
+    "mac_address_mismatch": {
+      "message": "MAC address does not match the configured device. Expected to connect to device with MAC: {expected_mac}, but connected to device with MAC: {actual_mac}."
     }
   },
   "options": {

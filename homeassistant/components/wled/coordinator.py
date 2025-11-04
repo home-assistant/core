@@ -124,9 +124,12 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
 
         if device.info.mac_address != self.config_entry.unique_id:
             raise ConfigEntryError(
-                f"MAC address mismatch. "
-                f"Expected to connect to device with MAC: {format_mac(self.config_entry.unique_id)}, "
-                f"but connected to device with MAC: {format_mac(device.info.mac_address)}"
+                translation_domain=DOMAIN,
+                translation_key="mac_address_mismatch",
+                translation_placeholders={
+                    "expected_mac": format_mac(self.config_entry.unique_id),
+                    "actual_mac": format_mac(device.info.mac_address),
+                },
             )
 
         # If the device supports a WebSocket, try activating it.
