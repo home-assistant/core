@@ -7,6 +7,8 @@ from collections.abc import AsyncIterator, Mapping
 from contextlib import asynccontextmanager
 from typing import Any, Final
 
+from aioshelly.ble.manufacturer_data import has_rpc_over_ble
+from aioshelly.ble.provisioning import async_provision_wifi, async_scan_wifi_networks
 from aioshelly.block_device import BlockDevice
 from aioshelly.common import ConnectionOptions, get_info
 from aioshelly.const import BLOCK_GENERATIONS, DEFAULT_HTTP_PORT, RPC_GENERATIONS
@@ -19,6 +21,7 @@ from aioshelly.exceptions import (
     RpcCallError,
 )
 from aioshelly.rpc_device import RpcDevice
+from aioshelly.zeroconf import async_lookup_device_by_name
 from bleak.backends.device import BLEDevice
 import voluptuous as vol
 
@@ -46,7 +49,6 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .ble_manufacturer_data import has_rpc_over_ble
 from .ble_provisioning import (
     ProvisioningState,
     async_get_provisioning_registry,
@@ -63,7 +65,6 @@ from .const import (
     BLEScannerMode,
 )
 from .coordinator import ShellyConfigEntry, async_reconnect_soon
-from .provision_wifi import async_provision_wifi, async_scan_wifi_networks
 from .utils import (
     get_block_device_sleep_period,
     get_coap_context,
@@ -76,7 +77,6 @@ from .utils import (
     get_ws_context,
     mac_address_from_name,
 )
-from .zeroconf_helpers import async_lookup_device_by_name
 
 CONFIG_SCHEMA: Final = vol.Schema(
     {
