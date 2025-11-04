@@ -445,6 +445,9 @@
       "alarm_volume": {
         "name": "Alarm volume"
       },
+      "audio_noise_reduction": {
+        "name": "Audio noise reduction"
+      },
       "auto_quick_reply_time": {
         "name": "Auto quick reply time"
       },
@@ -529,6 +532,9 @@
       "motion_sensitivity": {
         "name": "Motion sensitivity"
       },
+      "pir_interval": {
+        "name": "PIR interval"
+      },
       "pir_sensitivity": {
         "name": "PIR sensitivity"
       },
@@ -599,6 +605,15 @@
           "alwaysonatnight": "Auto & always on at night",
           "auto": "[%key:common::state::auto%]",
           "stayoff": "Stay off"
+        }
+      },
+      "exposure": {
+        "name": "Image exposure mode",
+        "state": {
+          "antismearing": "Anti-smearing",
+          "auto": "[%key:common::state::auto%]",
+          "lownoise": "Low noise",
+          "manual": "Manual"
         }
       },
       "floodlight_event_mode": {

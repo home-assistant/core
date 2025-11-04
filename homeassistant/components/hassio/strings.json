@@ -3,6 +3,9 @@
     "binary_sensor": {
       "state": {
         "name": "Running"
+      },
+      "mount": {
+        "name": "Connected"
       }
     },
     "sensor": {
