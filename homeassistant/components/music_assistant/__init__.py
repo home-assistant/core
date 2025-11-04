@@ -238,9 +238,7 @@ async def _client_listen(
         hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
 
 
-async def async_unload_entry(
-    hass: HomeAssistant, entry: MusicAssistantConfigEntry
-) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
