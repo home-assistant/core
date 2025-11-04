@@ -1,58 +1,86 @@
 navigate_url:
-  target:
-    device:
-      integration: kiosker
   fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: kiosker
     url:
       required: true
       selector:
         text:
 
 navigate_refresh:
-  target:
-    device:
-      integration: kiosker
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: kiosker
 
 navigate_home:
-  target:
-    device:
-      integration: kiosker
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: kiosker
 
 navigate_backward:
-  target:
-    device:
-      integration: kiosker
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: kiosker
 
 navigate_forward:
-  target:
-    device:
-      integration: kiosker
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: kiosker
 
 print:
-  target:
-    device:
-      integration: kiosker
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: kiosker
 
 clear_cookies:
-  target:
-    device:
-      integration: kiosker
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: kiosker
 
 clear_cache:
-  target:
-    device:
-      integration: kiosker
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: kiosker
 
 screensaver_interact:
-  target:
-    device:
-      integration: kiosker
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: kiosker
 
 blackout_set:
-  target:
-    device:
-      integration: kiosker
   fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: kiosker
     visible:
       default: true
       selector:
@@ -94,6 +122,17 @@ blackout_set:
         text:
 
 blackout_clear:
-  target:
-    device:
-      integration: kiosker
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: kiosker
+
+update:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: kiosker

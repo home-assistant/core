@@ -904,3 +904,55 @@ async def test_navigate_url_validation(
         assert exc_info.value.translation_key == "failed_to_parse_url"
         # Should not call the API
         mock_api.navigate_url.assert_not_called()
+
+
+async def test_update_service(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test update service."""
+    with patch("homeassistant.components.kiosker.KioskerAPI") as mock_api_class:
+        # Setup mock API
+        mock_api = MagicMock()
+        mock_api.host = "10.0.1.5"
+        mock_api_class.return_value = mock_api
+
+        # Setup mock data
+        mock_status = MagicMock()
+        mock_status.device_id = "A98BE1CE-5FE7-4A8D-B2C3-123456789ABC"
+        mock_status.model = "iPad Pro"
+        mock_status.os_version = "18.0"
+        mock_status.app_name = "Kiosker"
+        mock_status.app_version = "25.1.1"
+
+        mock_api.status.return_value = mock_status
+
+        # Add the config entry and setup integration
+        mock_config_entry.add_to_hass(hass)
+
+        with patch(
+            "homeassistant.components.kiosker.coordinator.KioskerDataUpdateCoordinator._async_update_data"
+        ) as mock_update:
+            mock_update.return_value = {"status": mock_status}
+            assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+            await hass.async_block_till_done()
+
+        # Get device ID for targeting
+        device_registry = dr.async_get(hass)
+        devices = list(device_registry.devices.values())
+        assert len(devices) == 1
+        device_id = devices[0].id
+
+        # Mock the coordinator's async_request_refresh method
+        coordinator = mock_config_entry.runtime_data
+        with patch.object(coordinator, "async_request_refresh") as mock_refresh:
+            # Call the service
+            await hass.services.async_call(
+                DOMAIN,
+                "update",
+                {},
+                target={"device_id": device_id},
+                blocking=True,
+            )
+
+            # Verify coordinator refresh was called
+            mock_refresh.assert_called_once()

@@ -44,6 +44,7 @@ from .const import (
     SERVICE_NAVIGATE_URL,
     SERVICE_PRINT,
     SERVICE_SCREENSAVER_INTERACT,
+    SERVICE_UPDATE,
 )
 from .coordinator import KioskerDataUpdateCoordinator
 
@@ -293,6 +294,13 @@ async def _blackout_clear_handler(hass: HomeAssistant, call: ServiceCall) -> Non
         await coordinator.async_request_refresh()
 
 
+async def _update_handler(hass: HomeAssistant, call: ServiceCall) -> None:
+    """Update device status service."""
+    coordinators = await _get_target_coordinators(hass, call)
+    for coordinator in coordinators:
+        await coordinator.async_request_refresh()
+
+
 async def _register_services(hass: HomeAssistant) -> None:
     """Register Kiosker services."""
 
@@ -346,6 +354,9 @@ async def _register_services(hass: HomeAssistant) -> None:
     )
     hass.services.async_register(
         DOMAIN, SERVICE_BLACKOUT_CLEAR, make_service_handler(_blackout_clear_handler)
+    )
+    hass.services.async_register(
+        DOMAIN, SERVICE_UPDATE, make_service_handler(_update_handler)
     )
 
 
@@ -406,6 +417,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: KioskerConfigEntry) -> b
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
+    # Start the polling cycle immediately to avoid initial delay
+    await coordinator.async_refresh()
+
     # Register services globally (only once) - use lock to prevent race conditions
     async with _SERVICE_REGISTRATION_LOCK:
         if not hass.services.has_service(DOMAIN, SERVICE_NAVIGATE_URL):
@@ -442,6 +456,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: KioskerConfigEntry) -> 
             SERVICE_SCREENSAVER_INTERACT,
             SERVICE_BLACKOUT_SET,
             SERVICE_BLACKOUT_CLEAR,
+            SERVICE_UPDATE,
         ]
 
         # Remove each service safely
