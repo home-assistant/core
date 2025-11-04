@@ -331,7 +331,6 @@ async def test_zeroconf_discovery(
         user_input={"next_step_id": config_flow.SETUP_STRATEGY_RECOMMENDED},
     )
 
-    # Consume progress flow for form_new_network
     result_form = await consume_progress_flow(
         hass,
         flow_id=result_setup["flow_id"],
@@ -392,7 +391,6 @@ async def test_legacy_zeroconf_discovery_zigate(
         user_input={"next_step_id": config_flow.SETUP_STRATEGY_RECOMMENDED},
     )
 
-    # Consume progress flow for form_new_network
     result_form = await consume_progress_flow(
         hass,
         flow_id=result_setup["flow_id"],
@@ -534,7 +532,6 @@ async def test_discovery_via_usb(hass: HomeAssistant) -> None:
             user_input={"next_step_id": config_flow.SETUP_STRATEGY_RECOMMENDED},
         )
 
-        # Consume progress flow for form_new_network
         result3 = await consume_progress_flow(
             hass,
             flow_id=result_setup["flow_id"],
@@ -673,7 +670,6 @@ async def test_migration_strategy_recommended(
             user_input={"next_step_id": config_flow.MIGRATION_STRATEGY_RECOMMENDED},
         )
 
-        # Consume progress steps
         result_recommended = await consume_progress_flow(
             hass,
             flow_id=result_migrate["flow_id"],
@@ -731,7 +727,6 @@ async def test_migration_strategy_recommended_cannot_write(
             user_input={"next_step_id": config_flow.MIGRATION_STRATEGY_RECOMMENDED},
         )
 
-        # Consume progress steps - should abort during restore_backup
         result_recommended = await consume_progress_flow(
             hass,
             flow_id=result_migrate["flow_id"],
@@ -1090,7 +1085,6 @@ async def test_user_flow(hass: HomeAssistant) -> None:
             user_input={"next_step_id": config_flow.SETUP_STRATEGY_RECOMMENDED},
         )
 
-        # Consume progress flow for form_new_network
         result2 = await consume_progress_flow(
             hass,
             flow_id=result_setup["flow_id"],
@@ -1298,7 +1292,6 @@ async def test_user_port_config(probe_mock, hass: HomeAssistant) -> None:
         user_input={"next_step_id": config_flow.SETUP_STRATEGY_RECOMMENDED},
     )
 
-    # Consume progress flow for form_new_network
     result2 = await consume_progress_flow(
         hass,
         flow_id=result_setup["flow_id"],
@@ -1333,7 +1326,6 @@ async def test_hardware_not_onboarded(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": config_entries.SOURCE_HARDWARE}, data=data
         )
 
-        # Consume progress flow for form_new_network
         result_create = await consume_progress_flow(
             hass,
             flow_id=result_init["flow_id"],
@@ -1388,7 +1380,6 @@ async def test_hardware_no_flow_strategy(hass: HomeAssistant) -> None:
         user_input={"next_step_id": config_flow.SETUP_STRATEGY_RECOMMENDED},
     )
 
-    # Consume progress flow for form_new_network
     result_create = await consume_progress_flow(
         hass,
         flow_id=result_setup["flow_id"],
@@ -1443,7 +1434,6 @@ async def test_hardware_flow_strategy_advanced(hass: HomeAssistant) -> None:
         user_input={"next_step_id": "form_new_network"},
     )
 
-    # Consume progress flow for form_new_network
     result_create = await consume_progress_flow(
         hass,
         flow_id=result_form["flow_id"],
@@ -1491,7 +1481,6 @@ async def test_hardware_flow_strategy_recommended(hass: HomeAssistant) -> None:
         user_input={},
     )
 
-    # Consume progress flow for form_new_network
     result_create = await consume_progress_flow(
         hass,
         flow_id=result_confirm["flow_id"],
@@ -1578,7 +1567,6 @@ async def test_hardware_migration_flow_strategy_advanced(
             user_input={"next_step_id": "form_new_network"},
         )
 
-        # Consume progress flow for form_new_network
         result_formation_strategy = await consume_progress_flow(
             hass,
             flow_id=result_form["flow_id"],
@@ -1651,7 +1639,6 @@ async def test_hardware_migration_flow_strategy_recommended(
             result_hardware["flow_id"], user_input={}
         )
 
-        # Consume progress steps
         result_confirm = await consume_progress_flow(
             hass,
             flow_id=result_migrate["flow_id"],
@@ -1768,7 +1755,6 @@ async def test_formation_strategy_form_new_network(
         user_input={"next_step_id": config_flow.FORMATION_FORM_NEW_NETWORK},
     )
 
-    # Consume progress flow for form_new_network
     result2 = await consume_progress_flow(
         hass,
         flow_id=result_form["flow_id"],
@@ -1801,7 +1787,6 @@ async def test_formation_strategy_form_initial_network(
         user_input={"next_step_id": config_flow.FORMATION_FORM_INITIAL_NETWORK},
     )
 
-    # Consume progress flow for form_new_network
     result2 = await consume_progress_flow(
         hass,
         flow_id=result_form["flow_id"],
@@ -1847,7 +1832,6 @@ async def test_onboarding_auto_formation_new_hardware(
             DOMAIN, context={"source": SOURCE_USB}, data=discovery_info
         )
 
-        # Consume progress flow for form_new_network
         result = await consume_progress_flow(
             hass,
             flow_id=result_init["flow_id"],
@@ -1927,7 +1911,6 @@ async def test_formation_strategy_restore_manual_backup_non_ezsp(
             user_input={config_flow.UPLOADED_BACKUP_FILE: str(uuid.uuid4())},
         )
 
-        # Consume progress flow for restore_backup
         result3 = await consume_progress_flow(
             hass,
             flow_id=result_upload["flow_id"],
@@ -1979,7 +1962,6 @@ async def test_formation_strategy_restore_manual_backup_overwrite_ieee_ezsp(
             user_input={config_flow.UPLOADED_BACKUP_FILE: str(uuid.uuid4())},
         )
 
-        # Consume progress flow for restore_backup
         result3 = await consume_progress_flow(
             hass,
             flow_id=result_upload["flow_id"],
@@ -1999,15 +1981,8 @@ async def test_formation_strategy_restore_manual_backup_overwrite_ieee_ezsp(
             user_input={config_flow.OVERWRITE_COORDINATOR_IEEE: True},
         )
 
-        # Wait for background tasks to complete
-        await hass.async_block_till_done()
-
-        # The flow manager auto-completes the restore_backup step after confirmation
-        # result_confirm is already the final CREATE_ENTRY result
-        result4 = result_confirm
-
-    assert result4["type"] is FlowResultType.CREATE_ENTRY
-    assert result4["data"][CONF_RADIO_TYPE] == "ezsp"
+    assert result_confirm["type"] is FlowResultType.CREATE_ENTRY
+    assert result_confirm["data"][CONF_RADIO_TYPE] == "ezsp"
 
     assert mock_restore_backup.call_count == 1
     assert mock_restore_backup.mock_calls[0].kwargs["overwrite_ieee"] is True
@@ -2050,7 +2025,6 @@ async def test_formation_strategy_restore_manual_backup_ezsp(
             user_input={config_flow.UPLOADED_BACKUP_FILE: str(uuid.uuid4())},
         )
 
-        # Consume progress flow for restore_backup
         result3 = await consume_progress_flow(
             hass,
             flow_id=result_upload["flow_id"],
@@ -2160,7 +2134,6 @@ async def test_formation_strategy_restore_automatic_backup_ezsp(
         },
     )
 
-    # Consume progress flow for restore_backup
     result3 = await consume_progress_flow(
         hass,
         flow_id=result_backup["flow_id"],
@@ -2229,7 +2202,6 @@ async def test_formation_strategy_restore_automatic_backup_non_ezsp(
         },
     )
 
-    # Consume progress flow for restore_backup
     result3 = await consume_progress_flow(
         hass,
         flow_id=result_backup["flow_id"],
@@ -2679,7 +2651,6 @@ async def test_options_flow_migration_reset_old_adapter(
             },
         )
 
-        # Consume progress steps
         result_strategy = await consume_progress_flow(
             hass,
             flow_id=result_migrate_start["flow_id"],
@@ -2780,7 +2751,6 @@ async def test_options_flow_reconfigure_no_reset(
             },
         )
 
-        # Consume progress steps
         result_strategy = await consume_progress_flow(
             hass,
             flow_id=result_migrate_start["flow_id"],
@@ -3025,7 +2995,6 @@ async def test_migration_resets_old_radio(
             user_input={"next_step_id": config_flow.MIGRATION_STRATEGY_RECOMMENDED},
         )
 
-        # Consume progress steps
         result_recommended = await consume_progress_flow(
             hass,
             flow_id=result_migrate["flow_id"],
@@ -3117,7 +3086,6 @@ async def test_formation_strategy_restore_manual_backup_overwrite_ieee_ezsp_writ
             user_input={config_flow.UPLOADED_BACKUP_FILE: str(uuid.uuid4())},
         )
 
-        # Consume progress flow for restore_backup
         confirm_restore_result = await consume_progress_flow(
             hass,
             flow_id=result_upload["flow_id"],
@@ -3132,17 +3100,10 @@ async def test_formation_strategy_restore_manual_backup_overwrite_ieee_ezsp_writ
         assert confirm_restore_result["type"] is FlowResultType.FORM
         assert confirm_restore_result["step_id"] == "confirm_ezsp_ieee_overwrite"
 
-        result_confirm = await hass.config_entries.flow.async_configure(
+        final_result = await hass.config_entries.flow.async_configure(
             confirm_restore_result["flow_id"],
             user_input={config_flow.OVERWRITE_COORDINATOR_IEEE: True},
         )
-
-        # Wait for background tasks to complete
-        await hass.async_block_till_done()
-
-        # The flow manager auto-completes the restore_backup step after confirmation
-        # result_confirm is already the final ABORT result (due to write failure)
-        final_result = result_confirm
 
     assert final_result["type"] is FlowResultType.ABORT
     assert final_result["reason"] == "cannot_restore_backup"
