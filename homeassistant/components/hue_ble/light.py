@@ -15,6 +15,7 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import color as color_util
@@ -75,7 +76,7 @@ class HueBLELight(LightEntity):
         if light.supports_on_off and len(self._attr_supported_color_modes) == 0:
             self._attr_supported_color_modes.add(ColorMode.ONOFF)
         if len(self._attr_supported_color_modes) == 0:
-            self._attr_supported_color_modes.add(ColorMode.UNKNOWN)
+            raise HomeAssistantError("Light does not support any known color modes")
         self._update_updatable_attributes()
 
     async def async_added_to_hass(self) -> None:
@@ -140,7 +141,7 @@ class HueBLELight(LightEntity):
         await self._api.set_power(False)
 
     @property
-    def color_mode(self) -> ColorMode | None:
+    def color_mode(self) -> ColorMode:
         """Color mode of the light."""
 
         if self._api.supports_colour_xy:
@@ -151,7 +152,4 @@ class HueBLELight(LightEntity):
         if self._api.supports_brightness:
             return ColorMode.BRIGHTNESS
 
-        if self._api.supports_on_off:
-            return ColorMode.ONOFF
-
-        return ColorMode.UNKNOWN
+        return ColorMode.ONOFF
