@@ -12,10 +12,16 @@ from homeassistant.components.update import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import WLED_KEY, WLEDConfigEntry
-from .coordinator import WLEDDataUpdateCoordinator, WLEDReleasesDataUpdateCoordinator
+from . import WLED_KEY
+from .coordinator import (
+    WLEDConfigEntry,
+    WLEDDataUpdateCoordinator,
+    WLEDReleasesDataUpdateCoordinator,
+)
 from .entity import WLEDEntity
 from .helpers import wled_exception_handler
+
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(

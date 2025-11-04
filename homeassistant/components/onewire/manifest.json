@@ -7,6 +7,7 @@
   "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["aio_ownet"],
+  "quality_scale": "silver",
   "requirements": ["aio-ownet==0.0.4"],
   "zeroconf": ["_owserver._tcp.local."]
 }

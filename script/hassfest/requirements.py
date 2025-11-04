@@ -170,11 +170,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # pyhive-integration > unasync > setuptools
         "unasync": {"setuptools"}
     },
-    "homeassistant_hardware": {
-        # https://github.com/zigpy/zigpy/issues/1604
-        # universal-silabs-flasher > zigpy > pyserial-asyncio
-        "zigpy": {"pyserial-asyncio"},
-    },
     "homewizard": {"python-homewizard-energy": {"async-timeout"}},
     "imeon_inverter": {"imeon-inverter-api": {"async-timeout"}},
     "influxdb": {
@@ -234,11 +229,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # pyopnsense > pbr > setuptools
         "pbr": {"setuptools"}
     },
-    "opower": {
-        # https://github.com/arrow-py/arrow/issues/1169 (fixed not yet released)
-        # opower > arrow > types-python-dateutil
-        "arrow": {"types-python-dateutil"}
-    },
     "pvpc_hourly_pricing": {"aiopvpc": {"async-timeout"}},
     "remote_rpi_gpio": {
         # https://github.com/waveform80/colorzero/issues/9
@@ -247,7 +237,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     },
     "ring": {"ring-doorbell": {"async-timeout"}},
     "rmvtransport": {"pyrmvtransport": {"async-timeout"}},
-    "roborock": {"python-roborock": {"async-timeout"}},
     "samsungtv": {"async-upnp-client": {"async-timeout"}},
     "screenlogic": {"screenlogicpy": {"async-timeout"}},
     "sense": {"sense-energy": {"async-timeout"}},
@@ -273,9 +262,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # https://github.com/waveform80/colorzero/issues/9
         # zha > zigpy-zigate > gpiozero > colorzero > setuptools
         "colorzero": {"setuptools"},
-        # https://github.com/zigpy/zigpy/issues/1604
-        # zha > zigpy > pyserial-asyncio
-        "zigpy": {"pyserial-asyncio"},
     },
 }
 
@@ -319,8 +305,6 @@ FORBIDDEN_PACKAGE_FILES_EXCEPTIONS = {
     "lyric": {"homeassistant": {"aiolyric"}},
     # https://github.com/microBeesTech/pythonSDK/
     "microbees": {"homeassistant": {"microbeespy"}},
-    # https://github.com/tiagocoutinho/async_modbus
-    "nibe_heatpump": {"nibe": {"async-modbus"}},
     # https://github.com/ejpenney/pyobihai
     "obihai": {"homeassistant": {"pyobihai"}},
     # https://github.com/iamkubi/pydactyl
