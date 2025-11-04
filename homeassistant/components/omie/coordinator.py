@@ -10,6 +10,7 @@ from zoneinfo import ZoneInfo
 import pyomie.main as pyomie
 from pyomie.model import OMIEResults, SpotData
 
+from homeassistant import util
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -43,7 +44,7 @@ class OMIECoordinator(DataUpdateCoordinator[Mapping[dt.date, OMIEResults[SpotDat
 
     async def _async_update_data(self) -> Mapping[dt.date, OMIEResults[SpotData]]:
         """Update OMIE data, fetching data as needed and available."""
-        now = dt.datetime.now(ZoneInfo(self.hass.config.time_zone))
+        now = util.dt.now(ZoneInfo(self.hass.config.time_zone))
         market_dates = {now.astimezone(CET).date()}
 
         # seed new data with previously-fetched days. these are immutable once fetched.
