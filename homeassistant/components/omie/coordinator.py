@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Mapping
 import datetime as dt
 import logging
-from zoneinfo import ZoneInfo
 
 import pyomie.main as pyomie
 from pyomie.model import OMIEResults, SpotData
@@ -43,22 +42,11 @@ class OMIECoordinator(DataUpdateCoordinator[Mapping[dt.date, OMIEResults[SpotDat
         self._client_session = async_get_clientsession(hass)
 
     async def _async_update_data(self) -> Mapping[dt.date, OMIEResults[SpotData]]:
-        """Update OMIE data, fetching data as needed and available."""
-        now = util.dt.now(ZoneInfo(self.hass.config.time_zone))
-        market_dates = {now.astimezone(CET).date()}
+        """Update OMIE data, fetching the current CET day."""
+        cet_today = util.dt.now().astimezone(CET).date()
+        spot_data = self.data.get(cet_today) or await self.__spot_price(cet_today)
 
-        # seed new data with previously-fetched days. these are immutable once fetched.
-        data = {
-            date: results for date, results in self.data.items() if date in market_dates
-        }
-
-        # fetch missing days from OMIE
-        for date in {d for d in market_dates if d not in data}:
-            _LOGGER.debug("Fetching OMIE data for %s", date)
-            if results := await pyomie.spot_price(self._client_session, date):
-                _LOGGER.debug("pyomie.spot_price returned: %s", results)
-                data.update({date: results})
-
+        data = {cet_today: spot_data} if spot_data else {}
         self._set_update_interval()
         _LOGGER.debug("Received data: %s", data)
         return data
@@ -73,3 +61,9 @@ class OMIECoordinator(DataUpdateCoordinator[Mapping[dt.date, OMIEResults[SpotDat
         self.update_interval = refresh_at - now
 
         _LOGGER.debug("Next refresh at %s", refresh_at.astimezone())
+
+    async def __spot_price(self, date: dt.date) -> OMIEResults[SpotData] | None:
+        _LOGGER.debug("Fetching OMIE data for %s", date)
+        spot_data = await pyomie.spot_price(self._client_session, date)
+        _LOGGER.debug("pyomie.spot_price returned: %s", spot_data)
+        return spot_data
