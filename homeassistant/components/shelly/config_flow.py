@@ -46,6 +46,7 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
+from .ble_manufacturer_data import has_rpc_over_ble
 from .ble_provisioning import (
     ProvisioningState,
     async_get_provisioning_registry,
@@ -361,6 +362,14 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle bluetooth discovery."""
         # Parse MAC address from the Bluetooth device name
         if not (mac := mac_address_from_name(discovery_info.name)):
+            return self.async_abort(reason="invalid_discovery_info")
+
+        # Check if RPC-over-BLE is enabled - required for WiFi provisioning
+        if not has_rpc_over_ble(discovery_info.manufacturer_data):
+            LOGGER.debug(
+                "Device %s does not have RPC-over-BLE enabled, skipping provisioning",
+                discovery_info.name,
+            )
             return self.async_abort(reason="invalid_discovery_info")
 
         # Check if already configured - abort if device is already set up
