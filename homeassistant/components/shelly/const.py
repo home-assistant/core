@@ -38,7 +38,7 @@ LOGGER: Logger = getLogger(__package__)
 
 # BLE provisioning
 PROVISIONING_FUTURES: Final = "shelly_provisioning_futures"
-PROVISIONING_TIMEOUT: Final = 30  # 30 seconds to wait for device to connect to WiFi
+PROVISIONING_TIMEOUT: Final = 35  # 35 seconds to wait for device to connect to WiFi
 CONF_SSID: Final = "ssid"
 
 CONF_COAP_PORT: Final = "coap_port"

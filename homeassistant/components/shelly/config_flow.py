@@ -21,8 +21,6 @@ from aioshelly.exceptions import (
 from aioshelly.rpc_device import RpcDevice
 from bleak.backends.device import BLEDevice
 import voluptuous as vol
-from zeroconf import IPVersion
-from zeroconf.asyncio import AsyncServiceInfo
 
 from homeassistant.components import zeroconf
 from homeassistant.components.bluetooth import (
@@ -77,6 +75,7 @@ from .utils import (
     get_ws_context,
     mac_address_from_name,
 )
+from .zeroconf_helpers import async_lookup_device_by_name
 
 CONFIG_SCHEMA: Final = vol.Schema(
     {
@@ -170,6 +169,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     info: dict[str, Any] = {}
     device_info: dict[str, Any] = {}
     ble_device: BLEDevice | None = None
+    device_name: str = ""
     wifi_networks: list[dict[str, Any]] = []
     selected_ssid: str = ""
     _provision_task: asyncio.Task | None = None
@@ -317,14 +317,16 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
                 self.hass.config_entries.flow.async_abort(flow["flow_id"])
 
-    async def _async_handle_zeroconf_mac_discovery(self, mac: str, host: str) -> None:
+    async def _async_handle_zeroconf_mac_discovery(
+        self, mac: str, host: str, port: int
+    ) -> None:
         """Handle MAC address discovery from zeroconf.
 
         Registers discovery info for BLE handoff and aborts idle BLE flows.
         """
         # Register this zeroconf discovery with BLE provisioning in case
         # this device was just provisioned via BLE
-        async_register_zeroconf_discovery(self.hass, mac, host)
+        async_register_zeroconf_discovery(self.hass, mac, host, port)
 
         # Check for idle BLE provisioning flows and abort them since
         # device is already on WiFi (discovered via zeroconf)
@@ -363,13 +365,14 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(mac)
         self._abort_if_unique_id_configured()
 
-        # Store BLE device for WiFi provisioning
+        # Store BLE device and name for WiFi provisioning
         self.ble_device = async_ble_device_from_address(
             self.hass, discovery_info.address, connectable=True
         )
         if not self.ble_device:
             return self.async_abort(reason="cannot_connect")
 
+        self.device_name = discovery_info.name
         self.context.update(
             {
                 "title_placeholders": {"name": discovery_info.name},
@@ -518,40 +521,26 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         except TimeoutError:
             LOGGER.debug("Timeout waiting for zeroconf discovery, trying active lookup")
-            # Maybe we just missed the discovery broadcast - try active lookup
-            # Use the original device name from Bluetooth discovery
-            device_name = self.context["title_placeholders"]["name"]
-            service_name = f"{device_name}._http._tcp.local."
+            # Device may be slow to connect - try active lookup
 
             aiozc = await zeroconf.async_get_async_instance(self.hass)
-            service_info = AsyncServiceInfo("_http._tcp.local.", service_name)
+            result = await async_lookup_device_by_name(aiozc, self.device_name)
 
-            if await service_info.async_request(aiozc.zeroconf, 3000):
-                # Found the device!
-                addresses = service_info.parsed_addresses(IPVersion.V4Only)
-                if addresses:
-                    state.host = addresses[0]
-                    LOGGER.debug(
-                        "Found device via active zeroconf lookup at %s",
-                        state.host,
-                    )
-                else:
-                    # No IPv4 address found
-                    return self.async_show_form(
-                        step_id="provision_failed",
-                        description_placeholders={"ssid": self.selected_ssid},
-                    )
-            else:
-                # Device didn't respond to lookup - wrong password or network
+            # If we still don't have a host, provisioning failed
+            if not result:
+                LOGGER.debug("Active lookup failed - provisioning unsuccessful")
                 return self.async_show_form(
                     step_id="provision_failed",
                     description_placeholders={"ssid": self.selected_ssid},
                 )
 
+            state.host, state.port = result
+
         # Device discovered via zeroconf - get device info and set up directly
         assert state.host is not None
+        assert state.port is not None
         self.host = state.host
-        self.port = DEFAULT_HTTP_PORT
+        self.port = state.port
 
         try:
             self.info = await self._async_get_info(self.host, self.port)
@@ -577,6 +566,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             title=device_info["title"],
             data={
                 CONF_HOST: self.host,
+                CONF_PORT: self.port,
                 CONF_SLEEP_PERIOD: device_info[CONF_SLEEP_PERIOD],
                 CONF_MODEL: device_info[CONF_MODEL],
                 CONF_GEN: device_info[CONF_GEN],
@@ -647,16 +637,17 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         if discovery_info.ip_address.version == 6:
             return self.async_abort(reason="ipv6_not_supported")
         host = discovery_info.host
+        port = discovery_info.port or DEFAULT_HTTP_PORT
         # First try to get the mac address from the name
         # so we can avoid making another connection to the
         # device if we already have it configured
         if mac := mac_address_from_name(discovery_info.name):
-            await self._async_handle_zeroconf_mac_discovery(mac, host)
+            await self._async_handle_zeroconf_mac_discovery(mac, host, port)
 
         try:
             # Devices behind range extender doesn't generate zeroconf packets
             # so port is always the default one
-            self.info = await self._async_get_info(host, DEFAULT_HTTP_PORT)
+            self.info = await self._async_get_info(host, port)
         except DeviceConnectionError:
             return self.async_abort(reason="cannot_connect")
 
@@ -664,7 +655,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             # We could not get the mac address from the name
             # so need to check here since we just got the info
             mac = self.info[CONF_MAC]
-            await self._async_handle_zeroconf_mac_discovery(mac, host)
+            await self._async_handle_zeroconf_mac_discovery(mac, host, port)
 
         self.host = host
         self.context.update(
