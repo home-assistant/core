@@ -19,6 +19,8 @@ CONF_BYTESIZE = "bytesize"
 CONF_CLIMATES = "climates"
 CONF_BRIGHTNESS_REGISTER = "brightness_address"
 CONF_COLOR_TEMP_REGISTER = "color_temp_address"
+CONF_CURRENT_TEMP_OFFSET = "current_temp_offset"
+CONF_CURRENT_TEMP_SCALE = "current_temp_scale"
 CONF_DATA_TYPE = "data_type"
 CONF_DEVICE_ADDRESS = "device_address"
 CONF_FANS = "fans"
@@ -48,6 +50,8 @@ CONF_SWAP_BYTE = "byte"
 CONF_SWAP_WORD = "word"
 CONF_SWAP_WORD_BYTE = "word_byte"
 CONF_TARGET_TEMP = "target_temp_register"
+CONF_TARGET_TEMP_OFFSET = "target_temp_offset"
+CONF_TARGET_TEMP_SCALE = "target_temp_scale"
 CONF_TARGET_TEMP_WRITE_REGISTERS = "target_temp_write_registers"
 CONF_FAN_MODE_REGISTER = "fan_mode_register"
 CONF_FAN_MODE_ON = "state_fan_on"
@@ -180,5 +184,8 @@ LIGHT_MAX_BRIGHTNESS = 255
 LIGHT_MODBUS_SCALE_MIN = 0
 LIGHT_MODBUS_SCALE_MAX = 100
 LIGHT_MODBUS_INVALID_VALUE = 0xFFFF
+
+DEFAULT_SCALE = 1.0
+DEFAULT_OFFSET = 0
 
 _LOGGER = logging.getLogger(__package__)
