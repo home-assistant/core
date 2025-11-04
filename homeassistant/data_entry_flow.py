@@ -1078,6 +1078,10 @@ def progress_step[
                 # Clean up task reference
                 progress_step_data["tasks"].pop(step_id, None)
 
+            # If the result type is FlowResultType.SHOW_PROGRESS_DONE
+            # an earlier show progress step has already been run and stored its result.
+            # In this case we should not overwrite the result,
+            # but just use the stored one.
             if progress_task_result["type"] != FlowResultType.SHOW_PROGRESS_DONE:
                 progress_step_data["next_step_result"] = progress_task_result
 
