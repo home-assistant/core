@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 import logging
+from typing import Any
 
 import vasttrafik
 import voluptuous as vol
@@ -158,14 +159,14 @@ class VasttrafikDepartureSensor(SensorEntity):
             self._attr_translation_placeholders = {"station": departure}
         self._departure_name = departure
         self._heading_name = heading
-        self._departure = None  # Will be resolved on first update
-        self._heading = None  # Will be resolved on first update
+        self._departure: dict[str, str] | None = None  # Will be resolved on first update
+        self._heading: dict[str, str] | None = None  # Will be resolved on first update
         self._lines = lines if lines else None
         self._tracks = tracks if tracks else None
         self._delay = timedelta(minutes=delay)
-        self._departureboard = None
-        self._state = None
-        self._attributes = None
+        self._departureboard: Any = None
+        self._state: str | None = None
+        self._attributes: dict[str, Any] | None = None
 
         # Create device info for departure board subentries (similar to Ollama pattern)
         if subentry_id:
@@ -207,7 +208,7 @@ class VasttrafikDepartureSensor(SensorEntity):
             safe_departure = departure.lower().replace(" ", "_")
             self._attr_unique_id = f"{config_entry_id}_{safe_departure}_departures"
 
-    def get_station_id(self, location):
+    def get_station_id(self, location) -> dict[str, str]:
         """Get the station ID."""
         if location.isdecimal():
             station_info = {"station_name": location, "station_id": location}
@@ -217,7 +218,7 @@ class VasttrafikDepartureSensor(SensorEntity):
         return station_info
 
     @property
-    def extra_state_attributes(self) -> dict[str, any] | None:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         return self._attributes
 
@@ -237,6 +238,8 @@ class VasttrafikDepartureSensor(SensorEntity):
             self._heading = await self.hass.async_add_executor_job(
                 self.get_station_id, self._heading_name
             )
+
+        assert self._departure is not None  # Guaranteed to be set above
 
         try:
             self._departureboard = await self.hass.async_add_executor_job(
