@@ -116,7 +116,7 @@
         "title": "New adapter not found"
       },
       "plug_in_old_radio": {
-        "description": "Your old adapter at `{device_path}` was not found. You can retry after plugging it back in, or skip resetting the old adapter.\n\nIf you skip resetting the old adapter, please make sure it is permanently unavailable, as plugging it back in later will cause network issues.",
+        "description": "Your old adapter at `{device_path}` was not found. You can retry after plugging it back in, or skip resetting the old adapter.\n\n**Warning:** If you skip resetting the old adapter, ensure it remains permanently disconnected. Plugging it back in later will cause network issues.",
         "menu_option_descriptions": {
           "retry_old_radio": "Retry connecting to the old adapter to reset it as part of the migration.",
           "skip_reset_old_radio": "Skip resetting the old adapter and continue with the migration."
