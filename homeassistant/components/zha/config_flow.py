@@ -489,7 +489,8 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
             DOMAIN, include_ignore=False
         )
 
-        # config entry should always exist here, skip if not
+        # Unless the user removes the config entry whilst we try to reset the old radio
+        # for a few seconds and then also unplugs it, we will basically never hit this
         if not config_entries:
             return await self.async_step_maybe_confirm_ezsp_restore()
 
