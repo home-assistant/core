@@ -3090,15 +3090,15 @@ async def test_plug_in_old_radio_retry(hass: HomeAssistant, backup, mock_app) ->
             user_input={"next_step_id": "retry_old_radio"},
         )
 
-        # Prompt user again to plug old adapter back in
-        assert result_retry["type"] is FlowResultType.MENU
-        assert result_retry["step_id"] == "plug_in_old_radio"
+    # Prompt user again to plug old adapter back in
+    assert result_retry["type"] is FlowResultType.MENU
+    assert result_retry["step_id"] == "plug_in_old_radio"
 
-        # Skip resetting the old adapter
-        result_skip = await hass.config_entries.flow.async_configure(
-            result_retry["flow_id"],
-            user_input={"next_step_id": "skip_reset_old_radio"},
-        )
+    # Skip resetting the old adapter
+    result_skip = await hass.config_entries.flow.async_configure(
+        result_retry["flow_id"],
+        user_input={"next_step_id": "skip_reset_old_radio"},
+    )
 
     # Entry created successfully after skipping reset
     assert result_skip["type"] is FlowResultType.ABORT
