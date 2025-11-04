@@ -51,7 +51,8 @@ from homeassistant.helpers.selector import (
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .ble_provisioning import (
-    async_get_provisioning_futures,
+    ProvisioningState,
+    async_get_provisioning_registry,
     async_register_zeroconf_flow,
 )
 from .const import (
@@ -447,16 +448,16 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     @asynccontextmanager
     async def _async_provision_context(
         self, mac: str
-    ) -> AsyncIterator[asyncio.Future[str]]:
-        """Context manager to register and cleanup provisioning future."""
-        future = self.hass.loop.create_future()
-        provisioning_futures = async_get_provisioning_futures(self.hass)
+    ) -> AsyncIterator[ProvisioningState]:
+        """Context manager to register and cleanup provisioning state."""
+        state = ProvisioningState()
+        provisioning_registry = async_get_provisioning_registry(self.hass)
         normalized_mac = format_mac(mac)
-        provisioning_futures[normalized_mac] = future
+        provisioning_registry[normalized_mac] = state
         try:
-            yield future
+            yield state
         finally:
-            provisioning_futures.pop(normalized_mac, None)
+            provisioning_registry.pop(normalized_mac, None)
 
     async def async_step_wifi_credentials(
         self, user_input: dict[str, Any] | None = None
@@ -478,7 +479,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def _async_provision_wifi_and_wait_for_zeroconf(
-        self, mac: str, password: str, future: asyncio.Future[str]
+        self, mac: str, password: str, state: ProvisioningState
     ) -> ConfigFlowResult:
         """Provision WiFi credentials via BLE and wait for zeroconf discovery.
 
@@ -511,26 +512,31 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.hass.config_entries.flow.async_abort(flow["flow_id"])
 
         # Wait for zeroconf to discover and register its flow
-        next_flow_id: str | None = None
         try:
-            next_flow_id = await asyncio.wait_for(future, timeout=PROVISIONING_TIMEOUT)
+            await asyncio.wait_for(state.event.wait(), timeout=PROVISIONING_TIMEOUT)
         except TimeoutError:
             LOGGER.debug(
                 "Timeout waiting for zeroconf discovery after WiFi provisioning"
             )
 
+        next_flow_id = state.flow_id
+
         if next_flow_id:
             LOGGER.debug("Received zeroconf flow ID: %s", next_flow_id)
-            return self.async_abort(
-                reason="wifi_provisioned",
-                next_flow=(FlowType.CONFIG_FLOW, next_flow_id),
-                description_placeholders={
-                    "name": self.context["title_placeholders"]["name"],
-                    "ssid": self.selected_ssid,
-                },
-            )
+            # Try to chain to zeroconf flow, but it might have already completed
+            try:
+                return self.async_abort(
+                    reason="wifi_provisioned",
+                    next_flow=(FlowType.CONFIG_FLOW, next_flow_id),
+                    description_placeholders={
+                        "name": self.context["title_placeholders"]["name"],
+                        "ssid": self.selected_ssid,
+                    },
+                )
+            except Exception:  # noqa: BLE001
+                LOGGER.debug("Zeroconf flow %s no longer valid, aborting", next_flow_id)
 
-        # No zeroconf flow found, just abort with success message
+        # No zeroconf flow found or flow already completed, just abort with success message
         return self.async_abort(
             reason="wifi_provisioned",
             description_placeholders={
@@ -546,10 +552,10 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         mac = self.unique_id
         assert mac is not None
 
-        async with self._async_provision_context(mac) as future:
+        async with self._async_provision_context(mac) as state:
             self._provision_result = (
                 await self._async_provision_wifi_and_wait_for_zeroconf(
-                    mac, password, future
+                    mac, password, state
                 )
             )
 
