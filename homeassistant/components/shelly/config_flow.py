@@ -492,10 +492,10 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _async_provision_wifi_and_wait_for_zeroconf(
         self, mac: str, password: str, state: ProvisioningState
-    ) -> ConfigFlowResult:
+    ) -> ConfigFlowResult | None:
         """Provision WiFi credentials via BLE and wait for zeroconf discovery.
 
-        Returns the flow result to be stored in self._provision_result.
+        Returns the flow result to be stored in self._provision_result, or None if failed.
         """
         # Provision WiFi via BLE
         assert self.ble_device is not None
@@ -555,10 +555,8 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             # If we still don't have a host, provisioning failed
             if not result:
                 LOGGER.debug("Active lookup failed - provisioning unsuccessful")
-                return self.async_show_form(
-                    step_id="provision_failed",
-                    description_placeholders={"ssid": self.selected_ssid},
-                )
+                # Store failure info and return None - provision_done will handle redirect
+                return None
 
             state.host, state.port = result
 
@@ -651,9 +649,13 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Show the result of the provision step."""
-        assert self._provision_result is not None
         result = self._provision_result
         self._provision_result = None
+
+        # If provisioning failed, redirect to provision_failed step
+        if result is None:
+            return await self.async_step_provision_failed()
+
         return result
 
     async def async_step_zeroconf(
