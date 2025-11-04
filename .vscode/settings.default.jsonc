@@ -10,16 +10,16 @@
   // Pyright is too pedantic for Home Assistant
   "python.analysis.typeCheckingMode": "basic",
   "[python]": {
-    "editor.defaultFormatter": "charliermarsh.ruff"
+    "editor.defaultFormatter": "charliermarsh.ruff",
   },
   "[json][jsonc][yaml]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
   },
   "json.schemas": [
     {
       "fileMatch": ["homeassistant/components/*/manifest.json"],
       // This value differs between working with devcontainer and locally, therefore this value should NOT be in sync!
-      "url": "./script/json_schemas/manifest_schema.json"
-    }
-  ]
+      "url": "./script/json_schemas/manifest_schema.json",
+    },
+  ],
 }

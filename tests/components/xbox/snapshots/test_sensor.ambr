@@ -97,6 +97,55 @@
     'state': '12',
   })
 # ---
+# name: test_sensors[sensor.erics273_friends-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.erics273_friends',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Friends',
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <XboxSensor.FRIENDS: 'friends'>,
+    'unique_id': '2533274913657542_friends',
+    'unit_of_measurement': 'people',
+  })
+# ---
+# name: test_sensors[sensor.erics273_friends-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'erics273 Friends',
+      'unit_of_measurement': 'people',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.erics273_friends',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '150',
+  })
+# ---
 # name: test_sensors[sensor.erics273_gamerscore-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -193,6 +242,63 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2020-10-08T04:19:58+00:00',
+  })
+# ---
+# name: test_sensors[sensor.erics273_now_playing-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.erics273_now_playing',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Now playing',
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <XboxSensor.NOW_PLAYING: 'now_playing'>,
+    'unique_id': '2533274913657542_now_playing',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.erics273_now_playing-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'achievements': None,
+      'developer': None,
+      'friendly_name': 'erics273 Now playing',
+      'gamerscore': None,
+      'genres': None,
+      'min_age': None,
+      'progress': None,
+      'publisher': None,
+      'release_date': None,
+      'short_description': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.erics273_now_playing',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.erics273_status-entry]
@@ -341,6 +447,55 @@
     'state': '121',
   })
 # ---
+# name: test_sensors[sensor.gsr_ae_friends-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.gsr_ae_friends',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Friends',
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <XboxSensor.FRIENDS: 'friends'>,
+    'unique_id': '271958441785640_friends',
+    'unit_of_measurement': 'people',
+  })
+# ---
+# name: test_sensors[sensor.gsr_ae_friends-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'GSR Ae Friends',
+      'unit_of_measurement': 'people',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gsr_ae_friends',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '150',
+  })
+# ---
 # name: test_sensors[sensor.gsr_ae_gamerscore-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -437,6 +592,64 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2020-10-09T00:12:27+00:00',
+  })
+# ---
+# name: test_sensors[sensor.gsr_ae_now_playing-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.gsr_ae_now_playing',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Now playing',
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <XboxSensor.NOW_PLAYING: 'now_playing'>,
+    'unique_id': '271958441785640_now_playing',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.gsr_ae_now_playing-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'achievements': '2 / 43',
+      'developer': 'Mistwalker / Artoon',
+      'entity_picture': 'http://store-images.s-microsoft.com/image/apps.35072.13670972585585116.70570f0d-17aa-4f97-b692-5412fa183673.25a97451-9369-4f6b-b66b-3427913235eb',
+      'friendly_name': 'GSR Ae Now playing',
+      'gamerscore': '10 / 1000',
+      'genres': 'Role Playing',
+      'min_age': 13,
+      'progress': '1 %',
+      'publisher': 'Microsoft',
+      'release_date': datetime.date(2016, 12, 14),
+      'short_description': 'Hironobu Sakaguchi, the Father of the Final Fantasy series, and Artoon present the world of Blue Dragon on Xbox 360. Featuring the character design of Akira Toriyama, the Father of "Dragon Ball Z", and music by Nobuo Uematsu, the composer for Final Fantasy, Blue Dragon is an epic role-playing game (RPG) centered on five youngsters who possess miraculous strength and magical power to control shadow creatures that mirror the actions of their masters.',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gsr_ae_now_playing',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Blue Dragon',
   })
 # ---
 # name: test_sensors[sensor.gsr_ae_status-entry]
@@ -585,6 +798,55 @@
     'state': '73',
   })
 # ---
+# name: test_sensors[sensor.ikken_hissatsuu_friends-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ikken_hissatsuu_friends',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Friends',
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <XboxSensor.FRIENDS: 'friends'>,
+    'unique_id': '2533274838782903_friends',
+    'unit_of_measurement': 'people',
+  })
+# ---
+# name: test_sensors[sensor.ikken_hissatsuu_friends-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Ikken Hissatsuu Friends',
+      'unit_of_measurement': 'people',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ikken_hissatsuu_friends',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '150',
+  })
+# ---
 # name: test_sensors[sensor.ikken_hissatsuu_gamerscore-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -677,6 +939,63 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ikken_hissatsuu_last_online',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.ikken_hissatsuu_now_playing-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ikken_hissatsuu_now_playing',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Now playing',
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <XboxSensor.NOW_PLAYING: 'now_playing'>,
+    'unique_id': '2533274838782903_now_playing',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.ikken_hissatsuu_now_playing-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'achievements': None,
+      'developer': None,
+      'friendly_name': 'Ikken Hissatsuu Now playing',
+      'gamerscore': None,
+      'genres': None,
+      'min_age': None,
+      'progress': None,
+      'publisher': None,
+      'release_date': None,
+      'short_description': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ikken_hissatsuu_now_playing',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
