@@ -2582,6 +2582,16 @@ async def test_bluetooth_provision_device_connection_error_after_wifi(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "provision_failed"
 
+    # User retries but BLE device raises unhandled exception
+    with patch(
+        "homeassistant.components.shelly.config_flow.async_scan_wifi_networks",
+        side_effect=RuntimeError("BLE device unavailable"),
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unknown"
+
 
 @pytest.mark.usefixtures("mock_rpc_device")
 async def test_bluetooth_provision_requires_auth(
@@ -2723,6 +2733,16 @@ async def test_bluetooth_provision_validate_input_fails(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "provision_failed"
+
+    # User retries but BLE device raises unhandled exception
+    with patch(
+        "homeassistant.components.shelly.config_flow.async_scan_wifi_networks",
+        side_effect=RuntimeError("BLE device unavailable"),
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unknown"
 
 
 async def test_bluetooth_provision_firmware_not_fully_provisioned(
