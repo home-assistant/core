@@ -638,7 +638,9 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle failed provisioning - allow retry."""
         if user_input is not None:
-            # User wants to retry - go back to wifi_scan
+            # User wants to retry - clear state and go back to wifi_scan
+            self.selected_ssid = ""
+            self.wifi_networks = []
             return await self.async_step_wifi_scan()
 
         return self.async_show_form(
