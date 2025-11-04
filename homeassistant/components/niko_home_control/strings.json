@@ -34,8 +34,8 @@
           "preset_mode": {
             "state": {
               "day": "Day",
-              "night": "Night",
               "eco": "Eco",
+              "night": "Night",
               "prog1": "Program 1",
               "prog2": "Program 2",
               "prog3": "Program 3"
