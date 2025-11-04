@@ -1,8 +1,30 @@
 {
   "entity": {
+    "binary_sensor": {
+      "has_game_pass": {
+        "default": "mdi:microsoft-xbox"
+      },
+      "in_game": {
+        "default": "mdi:microsoft-xbox-controller"
+      },
+      "online": {
+        "default": "mdi:account"
+      }
+    },
+    "media_player": {
+      "xbox": {
+        "default": "mdi:microsoft-xbox"
+      }
+    },
     "sensor": {
-      "status": {
-        "default": "mdi:message-text-outline"
+      "follower": {
+        "default": "mdi:account-arrow-left"
+      },
+      "following": {
+        "default": "mdi:account-arrow-right"
+      },
+      "friends": {
+        "default": "mdi:account-heart"
       },
       "gamer_score": {
         "default": "mdi:alpha-g-circle"
@@ -10,22 +32,15 @@
       "last_online": {
         "default": "mdi:account-clock"
       },
-      "follower": {
-        "default": "mdi:account-arrow-left"
+      "now_playing": {
+        "default": "mdi:microsoft-xbox-controller",
+        "state": {
+          "unavailable": "mdi:microsoft-xbox-controller-off",
+          "unknown": "mdi:microsoft-xbox-controller-off"
+        }
       },
-      "following": {
-        "default": "mdi:account-arrow-right"
-      }
-    },
-    "binary_sensor": {
-      "online": {
-        "default": "mdi:account"
-      },
-      "in_game": {
-        "default": "mdi:microsoft-xbox-controller"
-      },
-      "has_game_pass": {
-        "default": "mdi:microsoft-xbox"
+      "status": {
+        "default": "mdi:message-text-outline"
       }
     }
   }
