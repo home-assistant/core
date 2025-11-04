@@ -566,8 +566,10 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             self.info = await self._async_get_info(self.host, self.port)
-        except DeviceConnectionError:
-            return self.async_abort(reason="cannot_connect")
+        except DeviceConnectionError as err:
+            LOGGER.debug("Failed to connect to device after WiFi provisioning: %s", err)
+            # Device appeared on network but can't connect - allow retry
+            return None
 
         if get_info_auth(self.info):
             # Device requires authentication - show credentials step
@@ -577,8 +579,10 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             device_info = await validate_input(
                 self.hass, self.host, self.port, self.info, {}
             )
-        except DeviceConnectionError:
-            return self.async_abort(reason="cannot_connect")
+        except DeviceConnectionError as err:
+            LOGGER.debug("Failed to validate device after WiFi provisioning: %s", err)
+            # Device info validation failed - allow retry
+            return None
 
         if not device_info[CONF_MODEL]:
             return self.async_abort(reason="firmware_not_fully_provisioned")
