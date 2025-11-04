@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Coroutine, Iterable
+from collections.abc import Awaitable, Callable, Coroutine, Iterable, Mapping
 from contextvars import ContextVar
 from datetime import timedelta
 from logging import Logger, getLogger
@@ -1081,6 +1081,7 @@ class EntityPlatform:
         supports_response: SupportsResponse = SupportsResponse.NONE,
         *,
         entity_device_classes: Iterable[str | None] | None = None,
+        description_placeholders: Mapping[str, str] | None = None,
     ) -> None:
         """Register an entity service.
 
@@ -1100,6 +1101,7 @@ class EntityPlatform:
             required_features=required_features,
             schema=schema,
             supports_response=supports_response,
+            description_placeholders=description_placeholders,
         )
 
     async def _async_update_entity_states(self) -> None:
