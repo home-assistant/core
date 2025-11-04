@@ -632,6 +632,9 @@ async def test_laundry_dry_scenario(
 
 
 @pytest.mark.parametrize("restore_state", ["45", STATE_UNKNOWN, STATE_UNAVAILABLE])
+@pytest.mark.parametrize(
+    "restore_state_abs", ["2025-05-31T13:19:00+00:00", STATE_UNKNOWN, STATE_UNAVAILABLE]
+)
 @pytest.mark.parametrize("load_device_file", ["laundry.json"])
 @pytest.mark.parametrize("platforms", [(SENSOR_DOMAIN,)])
 async def test_elapsed_time_sensor_restored(
@@ -642,6 +645,7 @@ async def test_elapsed_time_sensor_restored(
     device_fixture: MieleDevices,
     freezer: FrozenDateTimeFactory,
     restore_state,
+    restore_state_abs,
 ) -> None:
     """Test that elapsed time returns the restored value when program ended."""
 
@@ -689,7 +693,7 @@ async def test_elapsed_time_sensor_restored(
     device_fixture["DummyWasher"]["state"]["elapsedTime"][0] = 0
     device_fixture["DummyWasher"]["state"]["elapsedTime"][1] = 0
 
-    freezer.move_to(datetime(2025, 5, 31, 12, 35, tzinfo=UTC))
+    freezer.move_to(datetime(2025, 5, 31, 14, 20, tzinfo=UTC))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -718,18 +722,8 @@ async def test_elapsed_time_sensor_restored(
                     "native_unit_of_measurement": "min",
                 },
             ),
-            (
-                State(
-                    entity_id_abs,
-                    restore_state,
-                ),
-                {
-                    "native_value": datetime(2025, 5, 31, 14, 15, tzinfo=UTC),
-                },
-            ),
         ],
     )
-
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -737,8 +731,3 @@ async def test_elapsed_time_sensor_restored(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "12"
-
-    # check that absolute time is the one restored and not the value reported by API
-    state = hass.states.get(entity_id_abs)
-    assert state is not None
-    assert state.state == "2025-05-31T14:15:00+00:00"
