@@ -427,7 +427,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self.async_step_wifi_scan_failed()
         except Exception:  # noqa: BLE001
             LOGGER.exception("Unexpected exception during WiFi scan")
-            return await self.async_step_wifi_scan_failed()
+            return self.async_abort(reason="unknown")
 
         # Create list of SSIDs for selection
         # If no networks found, still allow custom SSID entry

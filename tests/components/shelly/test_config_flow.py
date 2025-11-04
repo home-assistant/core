@@ -2446,3 +2446,222 @@ async def test_bluetooth_wifi_provision_failure(
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_bluetooth_wifi_scan_unexpected_exception(
+    hass: HomeAssistant,
+) -> None:
+    """Test unexpected exception during WiFi scan."""
+    # Inject BLE device so it's available in the bluetooth scanner
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        data=BLE_DISCOVERY_INFO,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+    )
+
+    # Confirm and trigger wifi scan that raises unexpected exception
+    with patch(
+        "homeassistant.components.shelly.config_flow.async_scan_wifi_networks",
+        side_effect=RuntimeError("Unexpected error"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unknown"
+
+
+async def test_bluetooth_provision_unexpected_exception(
+    hass: HomeAssistant,
+) -> None:
+    """Test unexpected exception during provisioning."""
+    # Inject BLE device so it's available in the bluetooth scanner
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        data=BLE_DISCOVERY_INFO,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+    )
+
+    # Confirm and scan
+    with patch(
+        "homeassistant.components.shelly.config_flow.async_scan_wifi_networks",
+        return_value=[{"ssid": "MyNetwork", "rssi": -50, "auth": 2}],
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    # Select network
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_SSID: "MyNetwork"},
+    )
+
+    # Provision raises unexpected exception in background task
+    with (
+        patch(
+            "homeassistant.components.shelly.config_flow.async_provision_wifi",
+            side_effect=RuntimeError("Unexpected error"),
+        ),
+        patch(
+            "homeassistant.components.shelly.config_flow.async_lookup_device_by_name",
+            return_value=None,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_PASSWORD: "my_password"},
+        )
+
+        # Provisioning shows progress
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        await hass.async_block_till_done()
+
+        # Exception in background task causes abort
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "unknown"
+
+
+@pytest.mark.usefixtures("mock_rpc_device")
+async def test_bluetooth_provision_device_connection_error_after_wifi(
+    hass: HomeAssistant,
+) -> None:
+    """Test device connection error after WiFi provisioning."""
+    # Inject BLE device so it's available in the bluetooth scanner
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        data=BLE_DISCOVERY_INFO,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+    )
+
+    # Confirm and scan
+    with patch(
+        "homeassistant.components.shelly.config_flow.async_scan_wifi_networks",
+        return_value=[{"ssid": "MyNetwork", "rssi": -50, "auth": 2}],
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    # Select network
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_SSID: "MyNetwork"},
+    )
+
+    # Provision but get_info fails
+    with (
+        patch("homeassistant.components.shelly.config_flow.async_provision_wifi"),
+        patch(
+            "homeassistant.components.shelly.config_flow.async_lookup_device_by_name",
+            return_value=("1.1.1.1", 80),
+        ),
+        patch(
+            "homeassistant.components.shelly.config_flow.get_info",
+            side_effect=DeviceConnectionError,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_PASSWORD: "my_password"},
+        )
+
+        # Provisioning shows progress
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        await hass.async_block_till_done()
+
+        # Provisioning failed due to connection error
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "provision_failed"
+
+
+@pytest.mark.usefixtures("mock_rpc_device")
+async def test_bluetooth_provision_requires_auth(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_setup: AsyncMock,
+) -> None:
+    """Test device requires authentication after WiFi provisioning."""
+    # Inject BLE device so it's available in the bluetooth scanner
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        data=BLE_DISCOVERY_INFO,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+    )
+
+    # Confirm and scan
+    with patch(
+        "homeassistant.components.shelly.config_flow.async_scan_wifi_networks",
+        return_value=[{"ssid": "MyNetwork", "rssi": -50, "auth": 2}],
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    # Select network
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_SSID: "MyNetwork"},
+    )
+
+    # Provision but device requires auth
+    with (
+        patch("homeassistant.components.shelly.config_flow.async_provision_wifi"),
+        patch(
+            "homeassistant.components.shelly.config_flow.async_lookup_device_by_name",
+            return_value=("1.1.1.1", 80),
+        ),
+        patch(
+            "homeassistant.components.shelly.config_flow.get_info",
+            return_value={
+                "mac": "C049EF8873E8",
+                "model": MODEL_PLUS_2PM,
+                "auth": True,  # Auth required
+                "gen": 2,
+            },
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_PASSWORD: "my_password"},
+        )
+
+        # Provisioning shows progress
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        await hass.async_block_till_done()
+
+        # Complete provisioning, should go to credentials step
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    # Should show credentials form
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "credentials"
+
+    # Provide credentials and complete
+    with patch(
+        "homeassistant.components.shelly.config_flow.validate_input",
+        return_value={
+            "title": "Test name",
+            "mac": "C049EF8873E8",
+            CONF_HOST: "1.1.1.1",
+            CONF_PORT: 80,
+            CONF_MODEL: MODEL_PLUS_2PM,
+            CONF_SLEEP_PERIOD: 0,
+            CONF_GEN: 2,
+        },
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_USERNAME: "admin", CONF_PASSWORD: "password"},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "C049EF8873E8"
