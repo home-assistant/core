@@ -15,10 +15,9 @@ _OMIE_PUBLISH_TIME_CET = dt.time(hour=13, minute=30)
 
 def current_quarter_hour_cet() -> dt.datetime:
     """Returns the current quarter-hour in CET with seconds and microseconds equal to 0."""
-    # to work out the start of the current hour we truncate from minutes downwards
-    # rather than create a new datetime to ensure correctness across DST boundaries
     now = dt.datetime.now(CET)
-    return now.replace(minute=now.minute // 15 * 15, second=0, microsecond=0)
+    floored_minute = now.minute // 15 * 15
+    return now.replace(minute=floored_minute, second=0, microsecond=0)
 
 
 def pick_series_cet(
