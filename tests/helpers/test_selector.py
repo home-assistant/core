@@ -1164,8 +1164,100 @@ def test_media_selector_schema(schema, valid_selections, invalid_selections) -> 
 
     def drop_metadata(data):
         """Drop metadata key from the input."""
+        if isinstance(data, list):
+            return [drop_metadata(item) for item in data]
         data.pop("metadata", None)
         return data
+
+    _test_selector(
+        "media",
+        schema,
+        valid_selections,
+        invalid_selections,
+        drop_metadata,
+    )
+
+
+@pytest.mark.parametrize(
+    ("schema", "valid_selections", "invalid_selections"),
+    [
+        (
+            {"multiple": True},
+            (
+                [
+                    {
+                        "entity_id": "sensor.abc",
+                        "media_content_id": "abc",
+                        "media_content_type": "def",
+                    },
+                    {
+                        "entity_id": "sensor.def",
+                        "media_content_id": "ghi",
+                        "media_content_type": "jkl",
+                    },
+                ],
+                # Not a list is automatically converted to a list
+                {
+                    "entity_id": "sensor.abc",
+                    "media_content_id": "abc",
+                    "media_content_type": "def",
+                },
+            ),
+            (
+                None,
+                # Missing required key in one item
+                [
+                    {
+                        "entity_id": "sensor.abc",
+                        "media_content_id": "abc",
+                        "media_content_type": "def",
+                    },
+                    {
+                        "entity_id": "sensor.def",
+                        "media_content_id": "ghi",
+                    },
+                ],
+            ),
+        ),
+        (
+            {"multiple": True, "accept": ["image/*"]},
+            (
+                [
+                    {
+                        "media_content_id": "abc",
+                        "media_content_type": "def",
+                    },
+                    {
+                        "media_content_id": "ghi",
+                        "media_content_type": "jkl",
+                    },
+                ],
+            ),
+            (
+                None,
+                # entity_id not allowed when accept is set
+                [
+                    {
+                        "entity_id": "sensor.abc",
+                        "media_content_id": "abc",
+                        "media_content_type": "def",
+                    }
+                ],
+            ),
+        ),
+    ],
+)
+def test_media_selector_schema_multiple(
+    schema, valid_selections, invalid_selections
+) -> None:
+    """Test media selector with multiple selections."""
+
+    def drop_metadata(data, root=True):
+        if isinstance(data, list):
+            return [drop_metadata(item, False) for item in data]
+        data.pop("metadata", None)
+        # Multiple=true wraps single values in list.
+        return [data] if root and schema.get("multiple") else data
 
     _test_selector(
         "media",
