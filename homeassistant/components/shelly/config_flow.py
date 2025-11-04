@@ -93,6 +93,10 @@ BLE_SCANNER_OPTIONS = [
 
 INTERNAL_WIFI_AP_IP = "192.168.33.1"
 
+# BLE provisioning flow steps that are in the finishing state
+# Used to determine if a BLE flow should be aborted when zeroconf discovers the device
+BLUETOOTH_FINISHING_STEPS = {"do_provision", "provision_done"}
+
 
 async def validate_input(
     hass: HomeAssistant,
@@ -300,15 +304,13 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         as they're waiting for zeroconf handoff.
         """
         normalized_mac = format_mac(mac)
-        # Don't abort flows that are actively provisioning and waiting for zeroconf
-        finishing_steps = {"do_provision", "provision_done"}
 
         for flow in self._async_in_progress(include_uninitialized=True):
             if (
                 flow["flow_id"] != self.flow_id
                 and flow["context"].get("unique_id") == normalized_mac
                 and flow["context"].get("source") == "bluetooth"
-                and flow.get("step_id") not in finishing_steps
+                and flow.get("step_id") not in BLUETOOTH_FINISHING_STEPS
             ):
                 LOGGER.debug(
                     "Aborting idle BLE flow %s for %s (device discovered via zeroconf)",
@@ -512,7 +514,21 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             if flow["flow_id"] != self.flow_id and self.unique_id == flow_unique_id:
                 self.hass.config_entries.flow.async_abort(flow["flow_id"])
 
-        # Wait for zeroconf to discover the device
+        # Two-phase device discovery after WiFi provisioning:
+        #
+        # Phase 1: Wait for zeroconf discovery callback (via event)
+        # - Callback only fires on NEW zeroconf advertisements
+        # - If device appears on network, we get notified immediately
+        # - This is the fast path for successful provisioning
+        #
+        # Phase 2: Active lookup on timeout (poll)
+        # - Handles case where device was factory reset and has stale zeroconf data
+        # - Factory reset devices don't send zeroconf goodbye, leaving stale records
+        # - The timeout ensures device has enough time to connect to WiFi
+        # - Active poll forces fresh lookup, ignoring stale cached data
+        #
+        # Why not just poll? If we polled immediately, we'd get stale data and
+        # try to connect right away, causing false failures before device is ready.
         try:
             await asyncio.wait_for(state.event.wait(), timeout=PROVISIONING_TIMEOUT)
             LOGGER.debug(
@@ -521,7 +537,8 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         except TimeoutError:
             LOGGER.debug("Timeout waiting for zeroconf discovery, trying active lookup")
-            # Device may be slow to connect - try active lookup
+            # No new discovery received - device may have stale zeroconf data
+            # Do active lookup to force fresh resolution
 
             aiozc = await zeroconf.async_get_async_instance(self.hass)
             result = await async_lookup_device_by_name(aiozc, self.device_name)
