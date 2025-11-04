@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections import deque
 from io import DEFAULT_BUFFER_SIZE, BytesIO
 import logging
+import math
 import os
 from typing import TYPE_CHECKING
 
@@ -76,7 +77,7 @@ class RecorderOutput(StreamOutput):
         # units which seem to be defined inversely to how stream time_bases are defined
         running_duration = 0
 
-        last_sequence = float("-inf")
+        last_sequence = -math.inf
 
         def write_segment(segment: Segment) -> None:
             """Write a segment to output."""

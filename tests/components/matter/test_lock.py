@@ -204,7 +204,7 @@ async def test_lock_with_unbolt(
     matter_node: MatterNode,
 ) -> None:
     """Test door lock."""
-    state = hass.states.get("lock.mock_door_lock")
+    state = hass.states.get("lock.mock_door_lock_with_unbolt")
     assert state
     assert state.state == LockState.LOCKED
     assert state.attributes["supported_features"] & LockEntityFeature.OPEN
@@ -213,7 +213,7 @@ async def test_lock_with_unbolt(
         "lock",
         "unlock",
         {
-            "entity_id": "lock.mock_door_lock",
+            "entity_id": "lock.mock_door_lock_with_unbolt",
         },
         blocking=True,
     )
@@ -231,7 +231,7 @@ async def test_lock_with_unbolt(
         "lock",
         "open",
         {
-            "entity_id": "lock.mock_door_lock",
+            "entity_id": "lock.mock_door_lock_with_unbolt",
         },
         blocking=True,
     )
@@ -244,20 +244,20 @@ async def test_lock_with_unbolt(
     )
 
     await hass.async_block_till_done()
-    state = hass.states.get("lock.mock_door_lock")
+    state = hass.states.get("lock.mock_door_lock_with_unbolt")
     assert state
     assert state.state == LockState.OPENING
 
     set_node_attribute(matter_node, 1, 257, 0, 0)
     await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get("lock.mock_door_lock")
+    state = hass.states.get("lock.mock_door_lock_with_unbolt")
     assert state
     assert state.state == LockState.UNLOCKED
 
     set_node_attribute(matter_node, 1, 257, 0, 3)
     await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get("lock.mock_door_lock")
+    state = hass.states.get("lock.mock_door_lock_with_unbolt")
     assert state
     assert state.state == LockState.OPEN

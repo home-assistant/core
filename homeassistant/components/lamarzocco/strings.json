@@ -1,74 +1,62 @@
 {
   "config": {
     "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "machine_not_found": "Discovered machine not found in given account",
-      "no_machines": "No machines found in account",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+      "no_machines": "No machines found in account"
     },
     "step": {
-      "user": {
-        "data": {
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
-        },
-        "data_description": {
-          "username": "Your username from the La Marzocco app",
-          "password": "Your password from the La Marzocco app"
-        }
-      },
       "bluetooth_selection": {
-        "description": "Select your device from available Bluetooth devices.",
         "data": {
           "mac": "[%key:common::config_flow::data::device%]"
         },
         "data_description": {
           "mac": "Select the Bluetooth device that is your machine"
-        }
+        },
+        "description": "Select your device from available Bluetooth devices."
       },
       "machine_selection": {
-        "description": "Select the machine you want to integrate.",
         "data": {
           "machine": "Machine"
         },
         "data_description": {
           "machine": "Select the machine you want to integrate"
-        }
+        },
+        "description": "Select the machine you want to integrate."
       },
       "reauth_confirm": {
-        "description": "Re-authentication required. Please enter your password again.",
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
           "password": "[%key:component::lamarzocco::config::step::user::data_description::password%]"
-        }
+        },
+        "description": "Re-authentication required. Please enter your password again."
       },
       "reconfigure": {
         "data": {
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
-          "username": "[%key:component::lamarzocco::config::step::user::data_description::username%]",
-          "password": "[%key:component::lamarzocco::config::step::user::data_description::password%]"
+          "password": "[%key:component::lamarzocco::config::step::user::data_description::password%]",
+          "username": "[%key:component::lamarzocco::config::step::user::data_description::username%]"
         }
-      }
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
+      },
+      "user": {
         "data": {
-          "use_bluetooth": "Use Bluetooth"
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
-          "use_bluetooth": "Should the integration try to use Bluetooth to control the machine?"
+          "password": "Your password from the La Marzocco app",
+          "username": "Your username from the La Marzocco app"
         }
       }
     }
@@ -102,17 +90,17 @@
       "coffee_temp": {
         "name": "Coffee target temperature"
       },
-      "smart_standby_time": {
-        "name": "Smart standby time"
-      },
-      "preinfusion_time": {
-        "name": "Preinfusion time"
+      "prebrew_time_off": {
+        "name": "Prebrew off time"
       },
       "prebrew_time_on": {
         "name": "Prebrew on time"
       },
-      "prebrew_time_off": {
-        "name": "Prebrew off time"
+      "preinfusion_time": {
+        "name": "Preinfusion time"
+      },
+      "smart_standby_time": {
+        "name": "Smart standby time"
       }
     },
     "select": {
@@ -141,14 +129,17 @@
       }
     },
     "sensor": {
+      "brewing_start_time": {
+        "name": "Brewing start time"
+      },
       "coffee_boiler_ready_time": {
         "name": "Coffee boiler ready time"
       },
+      "last_cleaning_time": {
+        "name": "Last cleaning time"
+      },
       "steam_boiler_ready_time": {
         "name": "Steam boiler ready time"
-      },
-      "brewing_start_time": {
-        "name": "Brewing start time"
       },
       "total_coffees_made": {
         "name": "Total coffees made",
@@ -157,9 +148,6 @@
       "total_flushes_done": {
         "name": "Total flushes done",
         "unit_of_measurement": "flushes"
-      },
-      "last_cleaning_time": {
-        "name": "Last cleaning time"
       }
     },
     "switch": {
@@ -174,18 +162,12 @@
       }
     },
     "update": {
-      "machine_firmware": {
-        "name": "Machine firmware"
-      },
       "gateway_firmware": {
         "name": "Gateway firmware"
+      },
+      "machine_firmware": {
+        "name": "Machine firmware"
       }
-    }
-  },
-  "issues": {
-    "unsupported_gateway_firmware": {
-      "title": "Unsupported gateway firmware",
-      "description": "Gateway firmware {gateway_version} is no longer supported by this integration, please update."
     }
   },
   "exceptions": {
@@ -207,14 +189,32 @@
     "select_option_error": {
       "message": "Error while setting select option {option} for {key}"
     },
-    "switch_on_error": {
-      "message": "Error while turning on switch {key}"
-    },
     "switch_off_error": {
       "message": "Error while turning off switch {key}"
     },
+    "switch_on_error": {
+      "message": "Error while turning on switch {key}"
+    },
     "update_failed": {
       "message": "Error while updating {key}"
+    }
+  },
+  "issues": {
+    "unsupported_gateway_firmware": {
+      "description": "Gateway firmware {gateway_version} is no longer supported by this integration, please update.",
+      "title": "Unsupported gateway firmware"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "use_bluetooth": "Use Bluetooth"
+        },
+        "data_description": {
+          "use_bluetooth": "Should the integration try to use Bluetooth to control the machine?"
+        }
+      }
     }
   }
 }

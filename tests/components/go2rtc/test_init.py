@@ -21,6 +21,9 @@ import pytest
 from webrtc_models import RTCIceCandidateInit
 
 from homeassistant.components.camera import (
+    DATA_CAMERA_PREFS,
+    CameraPreferences,
+    DynamicStreamSettings,
     StreamType,
     WebRTCAnswer as HAWebRTCAnswer,
     WebRTCCandidate as HAWebRTCCandidate,
@@ -28,11 +31,6 @@ from homeassistant.components.camera import (
     WebRTCMessage,
     WebRTCSendMessage,
     async_get_image,
-)
-from homeassistant.components.camera.const import DATA_CAMERA_PREFS
-from homeassistant.components.camera.prefs import (
-    CameraPreferences,
-    DynamicStreamSettings,
 )
 from homeassistant.components.default_config import DOMAIN as DEFAULT_CONFIG_DOMAIN
 from homeassistant.components.go2rtc import HomeAssistant, WebRTCProvider

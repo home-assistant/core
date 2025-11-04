@@ -14,7 +14,7 @@ rules:
     comment: See if we can catch more specific exceptions in get_device_info.
   dependency-transparency:
     status: todo
-    comment: huawei-lte-api and stringcase are not built and published to PyPI from a public CI pipeline.
+    comment: stringcase is not built and published to PyPI from a public CI pipeline. huawei-lte-api is from https://gitlab.salamek.cz/Mirrors/huawei-lte-api, see https://github.com/Salamek/huawei-lte-api/issues/253
   docs-actions: done
   docs-high-level-description: done
   docs-installation-instructions: done
@@ -41,7 +41,7 @@ rules:
   reauthentication-flow: done
   test-coverage:
     status: todo
-    comment: Get percentage up there, add missing actual action press invocations in button tests' suspended state tests, rename test_switch.py to test_switch.py + make its functions receive hass as first parameter where applicable.
+    comment: Get percentage up there, add missing actual action press invocations in button tests' suspended state tests.
 
   # Gold
   devices: done

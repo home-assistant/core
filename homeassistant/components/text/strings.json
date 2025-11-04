@@ -1,5 +1,4 @@
 {
-  "title": "Text",
   "device_automation": {
     "action_type": {
       "set_value": "Set value for {entity_name}"
@@ -21,8 +20,8 @@
         "mode": {
           "name": "[%key:common::config_flow::data::mode%]",
           "state": {
-            "text": "Text",
-            "password": "[%key:common::config_flow::data::password%]"
+            "password": "[%key:common::config_flow::data::password%]",
+            "text": "Text"
           }
         },
         "pattern": {
@@ -33,14 +32,15 @@
   },
   "services": {
     "set_value": {
-      "name": "Set value",
       "description": "Sets the value.",
       "fields": {
         "value": {
-          "name": "Value",
-          "description": "Enter your text."
+          "description": "Enter your text.",
+          "name": "Value"
         }
-      }
+      },
+      "name": "Set value"
     }
-  }
+  },
+  "title": "Text"
 }

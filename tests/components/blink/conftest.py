@@ -71,8 +71,6 @@ def blink_api_fixture(camera) -> MagicMock:
 def blink_auth_api_fixture() -> MagicMock:
     """Set up Blink API fixture."""
     mock_blink_auth_api = create_autospec(blinkpy.auth.Auth, instance=True)
-    mock_blink_auth_api.check_key_required.return_value = False
-    mock_blink_auth_api.send_auth_key = AsyncMock(return_value=True)
 
     with patch("homeassistant.components.blink.Auth", autospec=True) as class_mock:
         class_mock.return_value = mock_blink_auth_api

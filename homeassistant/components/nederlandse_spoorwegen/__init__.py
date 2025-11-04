@@ -4,45 +4,39 @@ from __future__ import annotations
 
 import logging
 
-from ns_api import NSAPI, RequestParametersError
-import requests
-
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+
+from .const import SUBENTRY_TYPE_ROUTE
+from .coordinator import NSConfigEntry, NSDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-
-type NSConfigEntry = ConfigEntry[NSAPI]
 
 PLATFORMS = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: NSConfigEntry) -> bool:
     """Set up Nederlandse Spoorwegen from a config entry."""
-    api_key = entry.data[CONF_API_KEY]
+    coordinators: dict[str, NSDataUpdateCoordinator] = {}
 
-    client = NSAPI(api_key)
+    # Set up coordinators for all existing routes
+    for subentry_id, subentry in entry.subentries.items():
+        if subentry.subentry_type == SUBENTRY_TYPE_ROUTE:
+            coordinator = NSDataUpdateCoordinator(
+                hass,
+                entry,
+                subentry_id,
+                subentry,
+            )
+            coordinators[subentry_id] = coordinator
+            await coordinator.async_config_entry_first_refresh()
 
-    try:
-        await hass.async_add_executor_job(client.get_stations)
-    except (
-        requests.exceptions.ConnectionError,
-        requests.exceptions.HTTPError,
-    ) as error:
-        _LOGGER.error("Could not connect to the internet: %s", error)
-        raise ConfigEntryNotReady from error
-    except RequestParametersError as error:
-        _LOGGER.error("Could not fetch stations, please check configuration: %s", error)
-        raise ConfigEntryNotReady from error
-
-    entry.runtime_data = client
+    entry.runtime_data = coordinators
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
-
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
     return True
 
 

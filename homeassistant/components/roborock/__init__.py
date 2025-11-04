@@ -15,7 +15,7 @@ from roborock import (
     RoborockInvalidUserAgreement,
     RoborockNoUserAgreement,
 )
-from roborock.containers import DeviceData, HomeDataDevice, HomeDataProduct, UserData
+from roborock.data import DeviceData, HomeDataDevice, HomeDataProduct, UserData
 from roborock.version_1_apis.roborock_mqtt_client_v1 import RoborockMqttClientV1
 from roborock.version_a01_apis import RoborockMqttClientA01
 from roborock.web_api import RoborockApiClient

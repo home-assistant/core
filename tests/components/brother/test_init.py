@@ -1,6 +1,6 @@
 """Test init of Brother integration."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from brother import SnmpError
 import pytest
@@ -45,14 +45,16 @@ async def test_config_not_ready(
 
 @pytest.mark.parametrize("exc", [(SnmpError("SNMP Error")), (ConnectionError)])
 async def test_error_on_init(
-    hass: HomeAssistant, exc: Exception, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    exc: Exception,
+    mock_config_entry: MockConfigEntry,
+    mock_brother: AsyncMock,
+    mock_brother_client: AsyncMock,
 ) -> None:
     """Test for error on init."""
-    with patch(
-        "homeassistant.components.brother.Brother.create",
-        new=AsyncMock(side_effect=exc),
-    ):
-        await init_integration(hass, mock_config_entry)
+    mock_brother.create.side_effect = exc
+
+    await init_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 

@@ -1,0 +1,359 @@
+{
+  "config": {
+    "ble": {
+      "enable": false,
+      "rpc": {
+        "enable": false
+      }
+    },
+    "bthome": {},
+    "cloud": {
+      "enable": false,
+      "server": "iot.shelly.cloud:6012/jrpc"
+    },
+    "knx": {
+      "enable": false,
+      "ia": "15.15.255",
+      "routing": {
+        "addr": "224.0.23.12:3671"
+      }
+    },
+    "matter": {
+      "enable": false
+    },
+    "mqtt": {
+      "client_id": "shellypstripg4-aabbccddeeff",
+      "enable": false,
+      "enable_control": true,
+      "enable_rpc": true,
+      "rpc_ntf": true,
+      "server": "mqtt.test.server",
+      "ssl_ca": null,
+      "status_ntf": true,
+      "topic_prefix": "shellypstripg4-aabbccddeeff",
+      "use_client_cert": false,
+      "user": "mqtt_user"
+    },
+    "powerstrip_ui": {
+      "controls": {
+        "switch:0": {
+          "in_mode": "momentary"
+        },
+        "switch:1": {
+          "in_mode": "momentary"
+        },
+        "switch:2": {
+          "in_mode": "momentary"
+        },
+        "switch:3": {
+          "in_mode": "momentary"
+        }
+      },
+      "leds": {
+        "colors": {
+          "power": {
+            "brightness": 10.0
+          },
+          "switch:0": {
+            "off": {
+              "brightness": 100.0,
+              "rgb": [100.0, 0.0, 0.0]
+            },
+            "on": {
+              "brightness": 100.0,
+              "rgb": [0.0, 100.0, 0.0]
+            }
+          }
+        },
+        "mode": "off",
+        "night_mode": {
+          "active_between": [],
+          "brightness": 100.0,
+          "enable": false
+        }
+      }
+    },
+    "switch:0": {
+      "auto_off": false,
+      "auto_off_delay": 60.0,
+      "auto_on": false,
+      "auto_on_delay": 60.0,
+      "autorecover_voltage_errors": false,
+      "current_limit": 12.0,
+      "id": 0,
+      "initial_state": "on",
+      "name": null,
+      "power_limit": 3360,
+      "reverse": false,
+      "voltage_limit": 280
+    },
+    "switch:1": {
+      "auto_off": false,
+      "auto_off_delay": 60.0,
+      "auto_on": false,
+      "auto_on_delay": 60.0,
+      "autorecover_voltage_errors": false,
+      "current_limit": 12.0,
+      "id": 1,
+      "initial_state": "on",
+      "name": "Switch 1 name",
+      "power_limit": 3360,
+      "reverse": false,
+      "voltage_limit": 280
+    },
+    "switch:2": {
+      "auto_off": false,
+      "auto_off_delay": 60.0,
+      "auto_on": false,
+      "auto_on_delay": 60.0,
+      "autorecover_voltage_errors": false,
+      "current_limit": 12.0,
+      "id": 2,
+      "initial_state": "restore_last",
+      "name": null,
+      "power_limit": 3360,
+      "reverse": false,
+      "voltage_limit": 280
+    },
+    "switch:3": {
+      "auto_off": false,
+      "auto_off_delay": 60.0,
+      "auto_on": false,
+      "auto_on_delay": 60.0,
+      "autorecover_voltage_errors": false,
+      "current_limit": 12.0,
+      "id": 3,
+      "initial_state": "on",
+      "name": "Switch 3 name",
+      "power_limit": 3360,
+      "reverse": false,
+      "voltage_limit": 280
+    },
+    "sys": {
+      "cfg_rev": 31,
+      "debug": {
+        "file_level": null,
+        "file_log": {
+          "enable": false
+        },
+        "level": 2,
+        "mqtt": {
+          "enable": false
+        },
+        "udp": {
+          "addr": "35.205.173.252:8910"
+        },
+        "websocket": {
+          "enable": false
+        }
+      },
+      "device": {
+        "discoverable": true,
+        "eco_mode": true,
+        "fw_id": "20250804-114929/gc6a6e5c",
+        "mac": "AABBCCDDEEFF",
+        "name": "Test Name",
+        "tls_check_cert_validity_time": true
+      },
+      "location": {
+        "lat": 99.6601,
+        "lon": 12.3621,
+        "tz": "Europe/Warsaw"
+      },
+      "rpc_udp": {
+        "dst_addr": null,
+        "listen_port": null
+      },
+      "sntp": {
+        "server": "sntp.test.server"
+      },
+      "ui_data": {
+        "consumption_types": ["", "", "light"]
+      }
+    },
+    "wifi": {
+      "ap": {
+        "enable": false,
+        "is_open": true,
+        "range_extender": {
+          "enable": false
+        },
+        "ssid": "ShellyPStripG4-AABBCCDDEEFF"
+      },
+      "roam": {
+        "interval": 60,
+        "rssi_thr": -80
+      },
+      "sta": {
+        "enable": true,
+        "gw": null,
+        "ip": null,
+        "ipv4mode": "dhcp",
+        "is_open": false,
+        "nameserver": null,
+        "netmask": null,
+        "ssid": "Wifi-Network-Name"
+      },
+      "sta1": {
+        "enable": false,
+        "gw": null,
+        "ip": null,
+        "ipv4mode": "dhcp",
+        "is_open": true,
+        "nameserver": null,
+        "netmask": null,
+        "ssid": null
+      }
+    },
+    "ws": {
+      "enable": false,
+      "server": null,
+      "ssl_ca": "ca.pem"
+    }
+  },
+  "shelly": {
+    "app": "PowerStrip",
+    "auth_domain": "shellypstripg4-aabbccddeeff",
+    "auth_en": true,
+    "fw_id": "20250804-114929/gc6a6e5c",
+    "gen": 4,
+    "id": "shellypstripg4-aabbccddeeff",
+    "mac": "AABBCCDDEEFF",
+    "matter": false,
+    "model": "S4PL-00416EU",
+    "name": "Test Name",
+    "slot": 1,
+    "ver": "1.8.99-dev134818"
+  },
+  "status": {
+    "ble": {},
+    "bthome": {
+      "errors": ["bluetooth_disabled"]
+    },
+    "cloud": {
+      "connected": false
+    },
+    "knx": {},
+    "matter": {
+      "commissionable": false,
+      "num_fabrics": 0
+    },
+    "mqtt": {
+      "connected": false
+    },
+    "powerstrip_ui": {},
+    "switch:0": {
+      "aenergy": {
+        "by_minute": [15.068, 15.429, 15.504],
+        "minute_ts": 1762082640,
+        "total": 6468.282
+      },
+      "apower": 0.0,
+      "current": 0.017,
+      "freq": 50.0,
+      "id": 0,
+      "output": true,
+      "pf": 0.0,
+      "ret_aenergy": {
+        "by_minute": [0.0, 0.0, 0.0],
+        "minute_ts": 1762082640,
+        "total": 0.0
+      },
+      "source": "init",
+      "voltage": 232.5
+    },
+    "switch:1": {
+      "aenergy": {
+        "by_minute": [29.614, 29.598, 29.736],
+        "minute_ts": 1762082640,
+        "total": 4227.56
+      },
+      "apower": 1.7,
+      "current": 0.017,
+      "freq": 50.0,
+      "id": 1,
+      "output": true,
+      "pf": 0.42,
+      "ret_aenergy": {
+        "by_minute": [0.0, 0.0, 0.0],
+        "minute_ts": 1762082640,
+        "total": 0.0
+      },
+      "source": "WS_in",
+      "voltage": 232.6
+    },
+    "switch:2": {
+      "aenergy": {
+        "by_minute": [0.0, 0.0, 0.0],
+        "minute_ts": 1762082640,
+        "total": 336.76
+      },
+      "apower": 0.0,
+      "current": 0.0,
+      "freq": 50.0,
+      "id": 2,
+      "output": false,
+      "pf": 0.0,
+      "ret_aenergy": {
+        "by_minute": [0.0, 0.0, 0.0],
+        "minute_ts": 1762082640,
+        "total": 0.0
+      },
+      "source": "WS_in",
+      "voltage": 231.2
+    },
+    "switch:3": {
+      "aenergy": {
+        "by_minute": [271.136, 271.151, 271.243],
+        "minute_ts": 1762082640,
+        "total": 18440.297
+      },
+      "apower": 15.4,
+      "current": 0.169,
+      "freq": 50.0,
+      "id": 3,
+      "output": true,
+      "pf": 0.62,
+      "ret_aenergy": {
+        "by_minute": [0.0, 0.0, 0.0],
+        "minute_ts": 1762082640,
+        "total": 0.0
+      },
+      "source": "init",
+      "voltage": 231.2
+    },
+    "sys": {
+      "available_updates": {},
+      "bthc_rev": 0,
+      "btrelay_rev": 0,
+      "cfg_rev": 31,
+      "fs_free": 438272,
+      "fs_size": 917504,
+      "kvs_rev": 0,
+      "last_sync_ts": 1762080853,
+      "mac": "AABBCCDDEEFF",
+      "ram_free": 190296,
+      "ram_min_free": 164384,
+      "ram_size": 339084,
+      "reset_reason": 3,
+      "restart_required": false,
+      "schedule_rev": 0,
+      "time": "12:24",
+      "unixtime": 1762082665,
+      "uptime": 4658036,
+      "utc_offset": 3600,
+      "webhook_rev": 1
+    },
+    "wifi": {
+      "bssid": "aa:bb:cc:dd:dd:c9",
+      "rssi": -68,
+      "ssid": "Wifi-Network-Name",
+      "sta_ip": "192.168.2.165",
+      "sta_ip6": ["fe80::7e2c:aabb:ccdd:eeff"],
+      "status": "got ip"
+    },
+    "ws": {
+      "connected": false
+    }
+  }
+}

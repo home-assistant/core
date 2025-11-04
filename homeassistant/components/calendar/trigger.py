@@ -169,7 +169,7 @@ class CalendarEventListener:
     def __init__(
         self,
         hass: HomeAssistant,
-        job: HassJob[..., Coroutine[Any, Any, None]],
+        job: HassJob[..., Coroutine[Any, Any, None] | Any],
         trigger_data: dict[str, Any],
         fetcher: QueuedEventFetcher,
     ) -> None:

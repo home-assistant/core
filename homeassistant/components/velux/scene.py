@@ -5,24 +5,23 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.scene import Scene
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from . import VeluxConfigEntry
 
 PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigEntry,
+    config: VeluxConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the scenes for Velux platform."""
-    module = hass.data[DOMAIN][config.entry_id]
+    pyvlx = config.runtime_data
 
-    entities = [VeluxScene(scene) for scene in module.pyvlx.scenes]
+    entities = [VeluxScene(scene) for scene in pyvlx.scenes]
     async_add_entities(entities)
 
 

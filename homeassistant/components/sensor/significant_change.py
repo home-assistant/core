@@ -45,16 +45,19 @@ def async_check_significant_change(
 
     absolute_change: float | None = None
     percentage_change: float | None = None
-    if device_class == SensorDeviceClass.TEMPERATURE:
+    if device_class in (
+        SensorDeviceClass.TEMPERATURE,
+        SensorDeviceClass.TEMPERATURE_DELTA,
+    ):
         if new_attrs.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.FAHRENHEIT:
             absolute_change = 1.0
         else:
             absolute_change = 0.5
 
-    if device_class in (SensorDeviceClass.BATTERY, SensorDeviceClass.HUMIDITY):
+    elif device_class in (SensorDeviceClass.BATTERY, SensorDeviceClass.HUMIDITY):
         absolute_change = 1.0
 
-    if device_class in (
+    elif device_class in (
         SensorDeviceClass.AQI,
         SensorDeviceClass.CO,
         SensorDeviceClass.CO2,

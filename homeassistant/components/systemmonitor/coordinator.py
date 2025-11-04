@@ -8,7 +8,7 @@ import logging
 import os
 from typing import TYPE_CHECKING, Any, NamedTuple
 
-from psutil import AccessDenied, NoSuchProcess, Process
+from psutil import Process
 from psutil._common import sdiskusage, shwtemp, snetio, snicaddr, sswap
 import psutil_home_assistant as ha_psutil
 
@@ -67,7 +67,7 @@ class SensorData:
             "boot_time": str(self.boot_time),
             "processes": str(self.processes),
             "temperatures": temperatures,
-            "process_fds": str(self.process_fds),
+            "process_fds": self.process_fds,
         }
 
 
@@ -212,6 +212,7 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
             _LOGGER.debug("boot time: %s", self.boot_time)
 
         selected_processes: list[Process] = []
+        process_fds: dict[str, int] = {}
         if self.update_subscribers[("processes", "")] or self._initial_update:
             processes = self._psutil.process_iter()
             _LOGGER.debug("processes: %s", processes)
@@ -220,8 +221,12 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
             ).get(CONF_PROCESS, [])
             for process in processes:
                 try:
-                    if process.name() in user_options:
+                    if (process_name := process.name()) in user_options:
                         selected_processes.append(process)
+                        process_fds[process_name] = (
+                            process_fds.get(process_name, 0) + process.num_fds()
+                        )
+
                 except PROCESS_ERRORS as err:
                     if not hasattr(err, "pid") or not hasattr(err, "name"):
                         _LOGGER.warning(
@@ -235,28 +240,12 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
                             err.name,
                         )
                     continue
-
-        # Collect file descriptor counts only for selected processes
-        process_fds: dict[str, int] = {}
-        for proc in selected_processes:
-            try:
-                process_name = proc.name()
-                # Our sensors are a per-process name aggregation. Not ideal, but the only
-                # way to do it without user specifying PIDs which are not static.
-                process_fds[process_name] = (
-                    process_fds.get(process_name, 0) + proc.num_fds()
-                )
-            except (NoSuchProcess, AccessDenied):
-                _LOGGER.warning(
-                    "Failed to get file descriptor count for process %s: access denied or process not found",
-                    proc.pid,
-                )
-            except OSError as err:
-                _LOGGER.warning(
-                    "OS error getting file descriptor count for process %s: %s",
-                    proc.pid,
-                    err,
-                )
+                except OSError as err:
+                    _LOGGER.warning(
+                        "OS error getting file descriptor count for process %s: %s",
+                        process.pid if hasattr(process, "pid") else "unknown",
+                        err,
+                    )
 
         temps: dict[str, list[shwtemp]] = {}
         if self.update_subscribers[("temperatures", "")] or self._initial_update:

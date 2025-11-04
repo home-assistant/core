@@ -474,7 +474,7 @@ async def test_web_search(
 
     assert mock_create_stream.mock_calls[0][2]["tools"] == [
         {
-            "type": "web_search_preview",
+            "type": "web_search",
             "search_context_size": "low",
             "user_location": {
                 "type": "approximate",

@@ -19,7 +19,14 @@ import wave
 import hass_nabucasa
 import voluptuous as vol
 
-from homeassistant.components import conversation, stt, tts, wake_word, websocket_api
+from homeassistant.components import (
+    conversation,
+    media_player,
+    stt,
+    tts,
+    wake_word,
+    websocket_api,
+)
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, MATCH_ALL
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -130,7 +137,10 @@ SAVE_DELAY = 10
 @callback
 def _async_local_fallback_intent_filter(result: RecognizeResult) -> bool:
     """Filter out intents that are not local fallback."""
-    return result.intent.name in (intent.INTENT_GET_STATE)
+    return result.intent.name in (
+        intent.INTENT_GET_STATE,
+        media_player.INTENT_MEDIA_SEARCH_AND_PLAY,
+    )
 
 
 @callback

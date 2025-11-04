@@ -14,13 +14,16 @@ from homeassistant.config_entries import (
     OptionsFlowWithReload,
 )
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import section
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import VolDictType
 
 from .const import (
     _LOGGER,
+    ALL_MATCH_REGEX,
     CONF_AREA_FILTER,
+    CONF_FILTERS,
     CONF_HEADLINE_FILTER,
     CONF_MESSAGE_SLOTS,
     CONF_REGIONS,
@@ -87,6 +90,7 @@ class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for NINA."""
 
     VERSION: int = 1
+    MINOR_VERSION: int = 3
 
     def __init__(self) -> None:
         """Initialize."""
@@ -126,8 +130,8 @@ class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
                 if group_input := user_input.get(group):
                     user_input[CONF_REGIONS] += group_input
 
-            if not user_input[CONF_HEADLINE_FILTER]:
-                user_input[CONF_HEADLINE_FILTER] = NO_MATCH_REGEX
+            if not user_input[CONF_FILTERS][CONF_HEADLINE_FILTER]:
+                user_input[CONF_FILTERS][CONF_HEADLINE_FILTER] = NO_MATCH_REGEX
 
             if user_input[CONF_REGIONS]:
                 return self.async_create_entry(
@@ -150,7 +154,18 @@ class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_MESSAGE_SLOTS, default=5): vol.All(
                         int, vol.Range(min=1, max=20)
                     ),
-                    vol.Optional(CONF_HEADLINE_FILTER, default=""): cv.string,
+                    vol.Required(CONF_FILTERS): section(
+                        vol.Schema(
+                            {
+                                vol.Optional(
+                                    CONF_HEADLINE_FILTER, default=NO_MATCH_REGEX
+                                ): cv.string,
+                                vol.Optional(
+                                    CONF_AREA_FILTER, default=ALL_MATCH_REGEX
+                                ): cv.string,
+                            }
+                        )
+                    ),
                 }
             ),
             errors=errors,
@@ -259,14 +274,20 @@ class OptionsFlowHandler(OptionsFlowWithReload):
                 CONF_MESSAGE_SLOTS,
                 default=self.data[CONF_MESSAGE_SLOTS],
             ): vol.All(int, vol.Range(min=1, max=20)),
-            vol.Optional(
-                CONF_HEADLINE_FILTER,
-                default=self.data[CONF_HEADLINE_FILTER],
-            ): cv.string,
-            vol.Optional(
-                CONF_AREA_FILTER,
-                default=self.data[CONF_AREA_FILTER],
-            ): cv.string,
+            vol.Required(CONF_FILTERS): section(
+                vol.Schema(
+                    {
+                        vol.Optional(
+                            CONF_HEADLINE_FILTER,
+                            default=self.data[CONF_FILTERS][CONF_HEADLINE_FILTER],
+                        ): cv.string,
+                        vol.Optional(
+                            CONF_AREA_FILTER,
+                            default=self.data[CONF_FILTERS][CONF_AREA_FILTER],
+                        ): cv.string,
+                    }
+                )
+            ),
         }
 
         return self.async_show_form(

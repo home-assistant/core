@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock
 
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.light import ATTR_BRIGHTNESS, DOMAIN as LIGHT_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -47,7 +47,6 @@ async def test_turn_on_off(
     mock_lunatone_devices: AsyncMock,
     mock_lunatone_info: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the light can be turned on and off."""
     await setup_integration(hass, mock_config_entry)
@@ -77,3 +76,59 @@ async def test_turn_on_off(
 
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.state == STATE_OFF
+
+
+async def test_turn_on_off_with_brightness(
+    hass: HomeAssistant,
+    mock_lunatone_devices: AsyncMock,
+    mock_lunatone_info: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the light can be turned on with brightness."""
+    expected_brightness = 128
+    brightness_percentages = iter([50.0, 0.0, 50.0])
+
+    mock_lunatone_devices.set_is_dimmable(True)
+
+    await setup_integration(hass, mock_config_entry)
+
+    async def fake_update():
+        brightness = next(brightness_percentages)
+        device = mock_lunatone_devices.data.devices[0]
+        device.features.switchable.status = brightness > 0
+        device.features.dimmable.status = brightness
+
+    mock_lunatone_devices.async_update.side_effect = fake_update
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID, ATTR_BRIGHTNESS: expected_brightness},
+        blocking=True,
+    )
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_ON
+    assert state.attributes["brightness"] == expected_brightness
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        blocking=True,
+    )
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_OFF
+    assert not state.attributes["brightness"]
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        blocking=True,
+    )
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_ON
+    assert state.attributes["brightness"] == expected_brightness

@@ -130,12 +130,15 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the WAQI sensor."""
-    coordinator = entry.runtime_data
-    async_add_entities(
-        WaqiSensor(coordinator, sensor)
-        for sensor in SENSORS
-        if sensor.available_fn(coordinator.data)
-    )
+    for subentry_id, coordinator in entry.runtime_data.items():
+        async_add_entities(
+            (
+                WaqiSensor(coordinator, sensor)
+                for sensor in SENSORS
+                if sensor.available_fn(coordinator.data)
+            ),
+            config_subentry_id=subentry_id,
+        )
 
 
 class WaqiSensor(CoordinatorEntity[WAQIDataUpdateCoordinator], SensorEntity):

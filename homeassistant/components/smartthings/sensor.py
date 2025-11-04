@@ -530,7 +530,6 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ],
     },
-    # Haven't seen at devices yet
     Capability.ILLUMINANCE_MEASUREMENT: {
         Attribute.ILLUMINANCE: [
             SmartThingsSensorEntityDescription(
@@ -842,7 +841,6 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
-    # Haven't seen at devices yet
     Capability.SIGNAL_STRENGTH: {
         Attribute.LQI: [
             SmartThingsSensorEntityDescription(
@@ -1001,7 +999,6 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ],
     },
-    # Haven't seen at devices yet
     Capability.TVOC_MEASUREMENT: {
         Attribute.TVOC_LEVEL: [
             SmartThingsSensorEntityDescription(
@@ -1012,7 +1009,6 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
-    # Haven't seen at devices yet
     Capability.ULTRAVIOLET_INDEX: {
         Attribute.ULTRAVIOLET_INDEX: [
             SmartThingsSensorEntityDescription(

@@ -74,7 +74,10 @@ from .const import (
     StreamType,
 )
 from .helper import get_camera_from_entity_id
-from .img_util import scale_jpeg_camera_image
+from .img_util import (
+    TurboJPEGSingleton,  # noqa: F401
+    scale_jpeg_camera_image,
+)
 from .prefs import (
     CameraPreferences,
     DynamicStreamSettings,  # noqa: F401

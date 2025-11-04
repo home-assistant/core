@@ -42,6 +42,7 @@ async def test_constructor_loads_info_from_config(hass: HomeAssistant) -> None:
                     "cognito_client_id": "test-cognito_client_id",
                     "user_pool_id": "test-user_pool_id",
                     "region": "test-region",
+                    "api_server": "test-api-server",
                     "relayer_server": "test-relayer-server",
                     "accounts_server": "test-acounts-server",
                     "acme_server": "test-acme-server",
@@ -60,6 +61,7 @@ async def test_constructor_loads_info_from_config(hass: HomeAssistant) -> None:
     assert cl.iot.ws_server_url == "wss://test-relayer-server/websocket"
     assert cl.accounts_server == "test-acounts-server"
     assert cl.acme_server == "test-acme-server"
+    assert cl.api_server == "test-api-server"
     assert cl.remotestate_server == "test-remotestate-server"
 
 
@@ -139,6 +141,7 @@ async def test_setup_existing_cloud_user(
                     "user_pool_id": "test-user_pool_id",
                     "region": "test-region",
                     "relayer_server": "test-relayer-serer",
+                    "api_server": "test-api-server",
                 },
             },
         )

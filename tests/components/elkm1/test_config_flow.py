@@ -10,6 +10,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.elkm1.const import CONF_AUTO_CONFIGURE, DOMAIN
+from homeassistant.config_entries import SOURCE_IGNORE
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_HOST,
@@ -2338,3 +2339,51 @@ async def test_reconfigure_preserves_existing_config_entry_fields(
     assert updated_entry.data[CONF_PREFIX] == "oldprefix"
     assert updated_entry.data["extra_field"] == "should_be_preserved"
     assert updated_entry.data["another_field"] == 42
+
+
+async def test_user_setup_replaces_ignored_device(hass: HomeAssistant) -> None:
+    """Test the user flow can replace an ignored device."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=dr.format_mac(MOCK_MAC),
+        source=SOURCE_IGNORE,
+        data={},
+    )
+    entry.add_to_hass(hass)
+
+    with _patch_discovery():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    # Verify the ignored device is in the dropdown
+    assert dr.format_mac(MOCK_MAC) in result["data_schema"].schema["device"].container
+
+    mocked_elk = mock_elk(invalid_auth=False, sync_complete=True)
+    with (
+        _patch_discovery(),
+        _patch_elk(mocked_elk),
+        patch(f"{MODULE}.async_setup", return_value=True),
+        patch(f"{MODULE}.async_setup_entry", return_value=True),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"device": dr.format_mac(MOCK_MAC)},
+        )
+        await hass.async_block_till_done()
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                CONF_USERNAME: "test",
+                CONF_PASSWORD: "test",
+                CONF_PROTOCOL: "secure",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+    assert result3["result"].unique_id == dr.format_mac(MOCK_MAC)

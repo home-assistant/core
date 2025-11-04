@@ -1,8 +1,25 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "[%key:component::transmission::config::step::user::data_description::password%]"
+        },
+        "description": "The password for {username} is invalid.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
       "user": {
-        "title": "Set up Transmission client",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "password": "[%key:common::config_flow::data::password%]",
@@ -12,72 +29,53 @@
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
-          "path": "The RPC request target path. E.g. `/transmission/rpc`"
-        }
-      },
-      "reauth_confirm": {
-        "description": "The password for {username} is invalid.",
-        "title": "[%key:common::config_flow::title::reauth%]",
-        "data": {
-          "password": "[%key:common::config_flow::data::password%]"
-        }
-      }
-    },
-    "error": {
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "limit": "Limit",
-          "order": "Order"
-        }
+          "host": "The hostname or IP address of the Transmission instance.",
+          "password": "The password to authenticate with the Transmission instance, if set.",
+          "path": "The RPC request target path, for example, `/transmission/rpc`.",
+          "port": "The port number of the Transmission instance.",
+          "ssl": "Whether to verify SSL certificates. Disable this for self-signed certificates.",
+          "username": "The username to authenticate with the Transmission instance, if set."
+        },
+        "title": "Set up Transmission client"
       }
     }
   },
   "entity": {
     "sensor": {
-      "download_speed": {
-        "name": "Download speed"
-      },
-      "upload_speed": {
-        "name": "Upload speed"
-      },
-      "transmission_status": {
-        "name": "Status",
-        "state": {
-          "idle": "[%key:common::state::idle%]",
-          "up_down": "Up/Down",
-          "seeding": "Seeding",
-          "downloading": "Downloading"
-        }
-      },
       "active_torrents": {
         "name": "Active torrents",
         "unit_of_measurement": "torrents"
       },
+      "completed_torrents": {
+        "name": "Completed torrents",
+        "unit_of_measurement": "[%key:component::transmission::entity::sensor::active_torrents::unit_of_measurement%]"
+      },
+      "download_speed": {
+        "name": "Download speed"
+      },
       "paused_torrents": {
         "name": "Paused torrents",
+        "unit_of_measurement": "[%key:component::transmission::entity::sensor::active_torrents::unit_of_measurement%]"
+      },
+      "started_torrents": {
+        "name": "Started torrents",
         "unit_of_measurement": "[%key:component::transmission::entity::sensor::active_torrents::unit_of_measurement%]"
       },
       "total_torrents": {
         "name": "Total torrents",
         "unit_of_measurement": "[%key:component::transmission::entity::sensor::active_torrents::unit_of_measurement%]"
       },
-      "completed_torrents": {
-        "name": "Completed torrents",
-        "unit_of_measurement": "[%key:component::transmission::entity::sensor::active_torrents::unit_of_measurement%]"
+      "transmission_status": {
+        "name": "Status",
+        "state": {
+          "downloading": "Downloading",
+          "idle": "[%key:common::state::idle%]",
+          "seeding": "Seeding",
+          "up_down": "Up/Down"
+        }
       },
-      "started_torrents": {
-        "name": "Started torrents",
-        "unit_of_measurement": "[%key:component::transmission::entity::sensor::active_torrents::unit_of_measurement%]"
+      "upload_speed": {
+        "name": "Upload speed"
       }
     },
     "switch": {
@@ -89,70 +87,94 @@
       }
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "limit": "Limit",
+          "order": "Order"
+        },
+        "data_description": {
+          "limit": "Maximum number of torrents to show in the torrent info attributes.",
+          "order": "Order in which torrents are listed in the torrent info attributes."
+        }
+      }
+    }
+  },
+  "selector": {
+    "order": {
+      "options": {
+        "best_ratio_first": "Best ratio first",
+        "newest_first": "Newest first",
+        "oldest_first": "Oldest first",
+        "worst_ratio_first": "Worst ratio first"
+      }
+    }
+  },
   "services": {
     "add_torrent": {
-      "name": "Add torrent",
       "description": "Adds a new torrent to download (URL, magnet link or Base64 encoded).",
       "fields": {
+        "download_path": {
+          "description": "Optional path to specify where the torrent should be downloaded. If not specified, the default download directory is used.",
+          "name": "Download path"
+        },
         "entry_id": {
-          "name": "Transmission entry",
-          "description": "ID of the config entry to use."
+          "description": "ID of the config entry to use.",
+          "name": "Transmission entry"
         },
         "torrent": {
-          "name": "Torrent",
-          "description": "URL, magnet link or Base64 encoded file."
-        },
-        "download_path": {
-          "name": "Download path",
-          "description": "Optional path to specify where the torrent should be downloaded. If not specified, the default download directory is used."
+          "description": "URL, magnet link or Base64 encoded file.",
+          "name": "Torrent"
         }
-      }
+      },
+      "name": "Add torrent"
     },
     "remove_torrent": {
-      "name": "Remove torrent",
       "description": "Removes a torrent.",
       "fields": {
+        "delete_data": {
+          "description": "Delete torrent data.",
+          "name": "Delete data"
+        },
         "entry_id": {
-          "name": "[%key:component::transmission::services::add_torrent::fields::entry_id::name%]",
-          "description": "[%key:component::transmission::services::add_torrent::fields::entry_id::description%]"
+          "description": "[%key:component::transmission::services::add_torrent::fields::entry_id::description%]",
+          "name": "[%key:component::transmission::services::add_torrent::fields::entry_id::name%]"
         },
         "id": {
-          "name": "ID",
-          "description": "ID of a torrent."
-        },
-        "delete_data": {
-          "name": "Delete data",
-          "description": "Delete torrent data."
+          "description": "ID of a torrent.",
+          "name": "ID"
         }
-      }
+      },
+      "name": "Remove torrent"
     },
     "start_torrent": {
-      "name": "Start torrent",
       "description": "Starts a torrent.",
       "fields": {
         "entry_id": {
-          "name": "[%key:component::transmission::services::add_torrent::fields::entry_id::name%]",
-          "description": "[%key:component::transmission::services::add_torrent::fields::entry_id::description%]"
+          "description": "[%key:component::transmission::services::add_torrent::fields::entry_id::description%]",
+          "name": "[%key:component::transmission::services::add_torrent::fields::entry_id::name%]"
         },
         "id": {
-          "name": "ID",
-          "description": "[%key:component::transmission::services::remove_torrent::fields::id::description%]"
+          "description": "[%key:component::transmission::services::remove_torrent::fields::id::description%]",
+          "name": "ID"
         }
-      }
+      },
+      "name": "Start torrent"
     },
     "stop_torrent": {
-      "name": "Stop torrent",
       "description": "Stops a torrent.",
       "fields": {
         "entry_id": {
-          "name": "[%key:component::transmission::services::add_torrent::fields::entry_id::name%]",
-          "description": "[%key:component::transmission::services::add_torrent::fields::entry_id::description%]"
+          "description": "[%key:component::transmission::services::add_torrent::fields::entry_id::description%]",
+          "name": "[%key:component::transmission::services::add_torrent::fields::entry_id::name%]"
         },
         "id": {
-          "name": "ID",
-          "description": "[%key:component::transmission::services::remove_torrent::fields::id::description%]"
+          "description": "[%key:component::transmission::services::remove_torrent::fields::id::description%]",
+          "name": "ID"
         }
-      }
+      },
+      "name": "Stop torrent"
     }
   }
 }

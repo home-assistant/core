@@ -18,7 +18,11 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import AmazonConfigEntry
 from .entity import AmazonEntity
-from .utils import alexa_api_call, async_update_unique_id
+from .utils import (
+    alexa_api_call,
+    async_remove_dnd_from_virtual_group,
+    async_update_unique_id,
+)
 
 PARALLEL_UPDATES = 1
 
@@ -29,7 +33,9 @@ class AmazonSwitchEntityDescription(SwitchEntityDescription):
 
     is_on_fn: Callable[[AmazonDevice], bool]
     is_available_fn: Callable[[AmazonDevice, str], bool] = lambda device, key: (
-        device.online and device.sensors[key].error is False
+        device.online
+        and (sensor := device.sensors.get(key)) is not None
+        and sensor.error is False
     )
     method: str
 
@@ -57,6 +63,9 @@ async def async_setup_entry(
     await async_update_unique_id(
         hass, coordinator, SWITCH_DOMAIN, "do_not_disturb", "dnd"
     )
+
+    # Remove DND switch from virtual groups
+    await async_remove_dnd_from_virtual_group(hass, coordinator)
 
     known_devices: set[str] = set()
 

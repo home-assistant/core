@@ -15,11 +15,11 @@
     'sensors': dict({
       'dnd': dict({
         '__type': "<class 'aioamazondevices.api.AmazonDeviceSensor'>",
-        'repr': "AmazonDeviceSensor(name='dnd', value=False, error=False, scale=None)",
+        'repr': "AmazonDeviceSensor(name='dnd', value=False, error=False, error_type=None, error_msg=None, scale=None)",
       }),
       'temperature': dict({
         '__type': "<class 'aioamazondevices.api.AmazonDeviceSensor'>",
-        'repr': "AmazonDeviceSensor(name='temperature', value='22.5', error=False, scale='CELSIUS')",
+        'repr': "AmazonDeviceSensor(name='temperature', value='22.5', error=False, error_type=None, error_msg=None, scale='CELSIUS')",
       }),
     }),
     'serial number': 'echo_test_serial_number',
@@ -45,11 +45,11 @@
           'sensors': dict({
             'dnd': dict({
               '__type': "<class 'aioamazondevices.api.AmazonDeviceSensor'>",
-              'repr': "AmazonDeviceSensor(name='dnd', value=False, error=False, scale=None)",
+              'repr': "AmazonDeviceSensor(name='dnd', value=False, error=False, error_type=None, error_msg=None, scale=None)",
             }),
             'temperature': dict({
               '__type': "<class 'aioamazondevices.api.AmazonDeviceSensor'>",
-              'repr': "AmazonDeviceSensor(name='temperature', value='22.5', error=False, scale='CELSIUS')",
+              'repr': "AmazonDeviceSensor(name='temperature', value='22.5', error=False, error_type=None, error_msg=None, scale='CELSIUS')",
             }),
           }),
           'serial number': 'echo_test_serial_number',

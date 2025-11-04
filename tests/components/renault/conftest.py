@@ -131,6 +131,11 @@ def _get_fixtures(vehicle_type: str) -> MappingProxyType:
             if "res_state" in mock_vehicle["endpoints"]
             else load_fixture("renault/no_data.json")
         ).get_attributes(schemas.KamereonVehicleResStateDataSchema),
+        "pressure": schemas.KamereonVehicleDataResponseSchema.loads(
+            load_fixture(f"renault/{mock_vehicle['endpoints']['pressure']}")
+            if "pressure" in mock_vehicle["endpoints"]
+            else load_fixture("renault/no_data.json")
+        ).get_attributes(schemas.KamereonVehicleTyrePressureDataSchema),
     }
 
 
@@ -157,6 +162,9 @@ def patch_get_vehicle_data() -> Generator[dict[str, AsyncMock]]:
         patch(
             "renault_api.renault_vehicle.RenaultVehicle.get_res_state"
         ) as get_res_state,
+        patch(
+            "renault_api.renault_vehicle.RenaultVehicle.get_tyre_pressure"
+        ) as get_tyre_pressure,
     ):
         yield {
             "battery_status": get_battery_status,
@@ -166,6 +174,7 @@ def patch_get_vehicle_data() -> Generator[dict[str, AsyncMock]]:
             "location": get_location,
             "lock_status": get_lock_status,
             "res_state": get_res_state,
+            "pressure": get_tyre_pressure,
         }
 
 

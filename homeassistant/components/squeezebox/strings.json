@@ -1,7 +1,34 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_server_found": "No LMS found."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "no_server_found": "Could not automatically discover server.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
     "flow_title": "{host}",
     "step": {
+      "edit": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "https": "Connect over HTTPS (requires reverse proxy)",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "host": "[%key:component::squeezebox::config::step::user::data_description::host%]",
+          "https": "Connect to the LMS over HTTPS (requires reverse proxy).",
+          "password": "The password from LMS Advanced Security (if defined).",
+          "port": "The web interface port on the LMS. The default is 9000.",
+          "username": "The username from LMS Advanced Security (if defined)."
+        },
+        "title": "Edit connection information"
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
@@ -9,102 +36,42 @@
         "data_description": {
           "host": "The hostname or IP address of your Lyrion Music Server."
         }
-      },
-      "edit": {
-        "title": "Edit connection information",
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "port": "[%key:common::config_flow::data::port%]",
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]",
-          "https": "Connect over HTTPS (requires reverse proxy)"
-        },
-        "data_description": {
-          "host": "[%key:component::squeezebox::config::step::user::data_description::host%]",
-          "port": "The web interface port on the LMS. The default is 9000.",
-          "username": "The username from LMS Advanced Security (if defined).",
-          "password": "The password from LMS Advanced Security (if defined).",
-          "https": "Connect to the LMS over HTTPS (requires reverse proxy)."
-        }
-      }
-    },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]",
-      "no_server_found": "Could not automatically discover server."
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "no_server_found": "No LMS found."
-    }
-  },
-  "services": {
-    "call_method": {
-      "name": "Call method",
-      "description": "Calls a custom Squeezebox JSONRPC API.",
-      "fields": {
-        "command": {
-          "name": "Command",
-          "description": "Command to pass to Lyrion Music Server (p0 in the CLI documentation)."
-        },
-        "parameters": {
-          "name": "Parameters",
-          "description": "Array of additional parameters to pass to Lyrion Music Server (p1, ..., pN in the CLI documentation)."
-        }
-      }
-    },
-    "call_query": {
-      "name": "Call query",
-      "description": "Calls a custom Squeezebox JSONRPC API. Result will be stored in 'query_result' attribute of the Squeezebox entity.",
-      "fields": {
-        "command": {
-          "name": "Command",
-          "description": "[%key:component::squeezebox::services::call_method::fields::command::description%]"
-        },
-        "parameters": {
-          "name": "Parameters",
-          "description": "[%key:component::squeezebox::services::call_method::fields::parameters::description%]"
-        }
       }
     }
   },
   "entity": {
+    "binary_sensor": {
+      "needsrestart": {
+        "name": "Needs restart"
+      },
+      "rescan": {
+        "name": "Library rescan"
+      }
+    },
     "button": {
-      "preset": {
-        "name": "Preset {index}"
-      },
-      "brightness_up": {
-        "name": "Brightness up"
-      },
-      "brightness_down": {
-        "name": "Brightness down"
+      "bass_down": {
+        "name": "Bass down"
       },
       "bass_up": {
         "name": "Bass up"
       },
-      "bass_down": {
-        "name": "Bass down"
+      "brightness_down": {
+        "name": "Brightness down"
       },
-      "treble_up": {
-        "name": "Treble up"
+      "brightness_up": {
+        "name": "Brightness up"
+      },
+      "preset": {
+        "name": "Preset {index}"
       },
       "treble_down": {
         "name": "Treble down"
-      }
-    },
-    "binary_sensor": {
-      "rescan": {
-        "name": "Library rescan"
       },
-      "needsrestart": {
-        "name": "Needs restart"
+      "treble_up": {
+        "name": "Treble up"
       }
     },
     "sensor": {
-      "lastscan": {
-        "name": "Last scan"
-      },
       "info_total_albums": {
         "name": "Total albums",
         "unit_of_measurement": "albums"
@@ -124,13 +91,16 @@
         "name": "Total songs",
         "unit_of_measurement": "songs"
       },
-      "player_count": {
-        "name": "Player count",
-        "unit_of_measurement": "players"
+      "lastscan": {
+        "name": "Last scan"
       },
       "other_player_count": {
         "name": "Player count off service",
         "unit_of_measurement": "[%key:component::squeezebox::entity::sensor::player_count::unit_of_measurement%]"
+      },
+      "player_count": {
+        "name": "Player count",
+        "unit_of_measurement": "players"
       }
     },
     "switch": {
@@ -142,32 +112,35 @@
       }
     },
     "update": {
-      "newversion": {
-        "name": "Lyrion Music Server"
-      },
       "newplugins": {
         "name": "Updated plugins"
-      }
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "title": "LMS Configuration",
-        "data": {
-          "browse_limit": "Browse limit",
-          "volume_step": "Volume step"
-        },
-        "data_description": {
-          "browse_limit": "Maximum number of items when browsing or in a playlist.",
-          "volume_step": "Amount to adjust the volume when turning volume up or down."
-        }
+      },
+      "newversion": {
+        "name": "Lyrion Music Server"
       }
     }
   },
   "exceptions": {
-    "init_timeout": {
-      "message": "Timeout connecting to LMS {host}."
+    "browse_media_not_found": {
+      "message": "Media not found: {type} / {id}."
+    },
+    "browse_media_type_not_supported": {
+      "message": "Media type not supported: {media_type}."
+    },
+    "call_method_failed": {
+      "message": "Failed to call method {command}."
+    },
+    "call_query_failed": {
+      "message": "Failed to query method {command}."
+    },
+    "clear_playlist_failed": {
+      "message": "Failed to clear the playlist."
+    },
+    "coordinator_no_data": {
+      "message": "No data from status poll."
+    },
+    "generate_image_url_failed": {
+      "message": "Failed to generate image URL for track ID {track_id}."
     },
     "init_auth_failed": {
       "message": "Authentication failed with {host}."
@@ -178,14 +151,20 @@
     "init_missing_uuid": {
       "message": "LMS {host} status response missing essential data (UUID)."
     },
+    "init_timeout": {
+      "message": "Timeout connecting to LMS {host}."
+    },
     "invalid_announce_media_type": {
       "message": "Only type 'music' can be played as announcement (received type {media_type})."
+    },
+    "invalid_announce_timeout": {
+      "message": "{announce_timeout} must be a number greater than 0."
     },
     "invalid_announce_volume": {
       "message": "{announce_volume} must be a number greater than 0 and less than or equal to 1."
     },
-    "invalid_announce_timeout": {
-      "message": "{announce_timeout} must be a number greater than 0."
+    "invalid_search_media_content_type": {
+      "message": "If specified, Media content type must be one of {media_content_type}"
     },
     "join_cannot_find_other_player": {
       "message": "Could not find player with entity_id {other_player_entity_id}."
@@ -193,20 +172,104 @@
     "join_cannot_join_unknown_player": {
       "message": "Could not join unknown player {other_player_entity_id}."
     },
-    "coordinator_no_data": {
-      "message": "No data from status poll."
+    "load_playlist_failed": {
+      "message": "Failed to load playlist with command {cmd}."
     },
-    "browse_media_not_found": {
-      "message": "Media not found: {type} / {id}."
+    "load_url_failed": {
+      "message": "Failed to load media URL {media_id} with command {cmd}."
     },
-    "browse_media_type_not_supported": {
-      "message": "Media type not supported: {media_type}."
+    "next_track_failed": {
+      "message": "Failed to skip to the next track."
+    },
+    "pause_failed": {
+      "message": "Failed to pause playback."
+    },
+    "play_failed": {
+      "message": "Failed to start playback."
+    },
+    "play_pause_failed": {
+      "message": "Failed to toggle play/pause."
+    },
+    "press_failed": {
+      "message": "Failed to execute button action {action}."
+    },
+    "previous_track_failed": {
+      "message": "Failed to return to the previous track."
+    },
+    "seek_failed": {
+      "message": "Failed to seek to position {position} seconds."
+    },
+    "set_mute_failed": {
+      "message": "Failed to mute/unmute the player."
+    },
+    "set_repeat_failed": {
+      "message": "Failed to set repeat mode."
+    },
+    "set_shuffle_failed": {
+      "message": "Failed to set shuffle mode."
+    },
+    "set_volume_failed": {
+      "message": "Failed to set volume to {volume}%."
+    },
+    "stop_failed": {
+      "message": "Failed to stop playback."
+    },
+    "turn_off_failed": {
+      "message": "Failed to turn off the player."
+    },
+    "turn_on_failed": {
+      "message": "Failed to turn on the player."
+    },
+    "unjoin_failed": {
+      "message": "Failed to unsync the player."
     },
     "update_restart_failed": {
       "message": "Error trying to update LMS Plugins: Restart failed."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "browse_limit": "Browse limit",
+          "volume_step": "Volume step"
+        },
+        "data_description": {
+          "browse_limit": "Maximum number of items when browsing or in a playlist.",
+          "volume_step": "Amount to adjust the volume when turning volume up or down."
+        },
+        "title": "LMS Configuration"
+      }
+    }
+  },
+  "services": {
+    "call_method": {
+      "description": "Calls a custom Squeezebox JSONRPC API.",
+      "fields": {
+        "command": {
+          "description": "Command to pass to Lyrion Music Server (p0 in the CLI documentation).",
+          "name": "Command"
+        },
+        "parameters": {
+          "description": "Array of additional parameters to pass to Lyrion Music Server (p1, ..., pN in the CLI documentation).",
+          "name": "Parameters"
+        }
+      },
+      "name": "Call method"
     },
-    "invalid_search_media_content_type": {
-      "message": "If specified, Media content type must be one of {media_content_type}"
+    "call_query": {
+      "description": "Calls a custom Squeezebox JSONRPC API. Result will be stored in 'query_result' attribute of the Squeezebox entity.",
+      "fields": {
+        "command": {
+          "description": "[%key:component::squeezebox::services::call_method::fields::command::description%]",
+          "name": "Command"
+        },
+        "parameters": {
+          "description": "[%key:component::squeezebox::services::call_method::fields::parameters::description%]",
+          "name": "Parameters"
+        }
+      },
+      "name": "Call query"
     }
   }
 }

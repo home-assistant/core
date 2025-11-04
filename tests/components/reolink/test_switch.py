@@ -226,3 +226,68 @@ async def test_chime_switch(
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
+
+
+async def test_rule_switch(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    reolink_host: MagicMock,
+) -> None:
+    """Test reolink switch entity with extra index."""
+    reolink_host.baichuan.rule_ids.return_value = [1]
+    reolink_host.baichuan.rule_name.return_value = "Test"
+    reolink_host.baichuan.rule_enabled.return_value = True
+
+    with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SWITCH]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    entity_id = f"{Platform.SWITCH}.{TEST_CAM_NAME}_surveillance_rule_test"
+    assert hass.states.get(entity_id).state == STATE_ON
+
+    reolink_host.baichuan.rule_enabled.return_value = False
+    freezer.tick(DEVICE_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    # test switch turn on
+    reolink_host.baichuan.set_rule_enabled = AsyncMock()
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    reolink_host.baichuan.set_rule_enabled.assert_called_with(0, 1, True)
+
+    reolink_host.baichuan.set_rule_enabled.side_effect = ReolinkError("Test error")
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+    # test switch turn off
+    reolink_host.baichuan.set_rule_enabled.reset_mock(side_effect=True)
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    reolink_host.baichuan.set_rule_enabled.assert_called_with(0, 1, False)
+
+    reolink_host.baichuan.set_rule_enabled.side_effect = ReolinkError("Test error")
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )

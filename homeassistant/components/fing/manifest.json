@@ -1,0 +1,10 @@
+{
+  "domain": "fing",
+  "name": "Fing",
+  "codeowners": ["@Lorenzo-Gasparini"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/fing",
+  "iot_class": "local_polling",
+  "quality_scale": "bronze",
+  "requirements": ["fing_agent_api==1.0.3"]
+}

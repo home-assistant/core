@@ -1,26 +1,26 @@
 {
   "entity": {
     "binary_sensor": {
-      "dryer_wrinkle_prevent_active": {
-        "default": "mdi:tumble-dryer",
-        "state": {
-          "on": "mdi:tumble-dryer-alert"
-        }
-      },
-      "remote_control": {
-        "default": "mdi:remote-off",
-        "state": {
-          "on": "mdi:remote"
-        }
-      },
       "child_lock": {
         "default": "mdi:lock-open",
         "state": {
           "on": "mdi:lock"
         }
       },
+      "dryer_wrinkle_prevent_active": {
+        "default": "mdi:tumble-dryer",
+        "state": {
+          "on": "mdi:tumble-dryer-alert"
+        }
+      },
       "keep_fresh_mode": {
         "default": "mdi:creation"
+      },
+      "remote_control": {
+        "default": "mdi:remote-off",
+        "state": {
+          "on": "mdi:remote"
+        }
       }
     },
     "button": {
@@ -38,38 +38,49 @@
             "state": {
               "turbo": "mdi:wind-power"
             }
+          },
+          "preset_mode": {
+            "state": {
+              "long_wind": "mdi:weather-windy",
+              "motion_direct": "mdi:account-arrow-left",
+              "motion_indirect": "mdi:account-arrow-right",
+              "quiet": "mdi:volume-off",
+              "smart": "mdi:leaf",
+              "wind_free": "mdi:weather-dust",
+              "wind_free_sleep": "mdi:sleep"
+            }
           }
         }
       }
     },
     "number": {
-      "washer_rinse_cycles": {
-        "default": "mdi:waves-arrow-up"
-      },
       "freezer_temperature": {
         "default": "mdi:snowflake-thermometer"
+      },
+      "washer_rinse_cycles": {
+        "default": "mdi:waves-arrow-up"
       }
     },
     "select": {
-      "operating_state": {
-        "state": {
-          "run": "mdi:play",
-          "pause": "mdi:pause",
-          "stop": "mdi:stop"
-        }
-      },
-      "lamp": {
-        "default": "mdi:lightbulb",
-        "state": {
-          "on": "mdi:lightbulb-on",
-          "off": "mdi:lightbulb-off"
-        }
-      },
       "detergent_amount": {
         "default": "mdi:car-coolant-level"
       },
       "flexible_detergent_amount": {
         "default": "mdi:car-coolant-level"
+      },
+      "lamp": {
+        "default": "mdi:lightbulb",
+        "state": {
+          "off": "mdi:lightbulb-off",
+          "on": "mdi:lightbulb-on"
+        }
+      },
+      "operating_state": {
+        "state": {
+          "pause": "mdi:pause",
+          "run": "mdi:play",
+          "stop": "mdi:stop"
+        }
       },
       "spin_level": {
         "default": "mdi:rotate-right"
@@ -79,10 +90,10 @@
       "cooktop_operating_state": {
         "default": "mdi:stove",
         "state": {
-          "ready": "mdi:play-speed",
-          "run": "mdi:play",
+          "finished": "mdi:food-turkey",
           "paused": "mdi:pause",
-          "finished": "mdi:food-turkey"
+          "ready": "mdi:play-speed",
+          "run": "mdi:play"
         }
       },
       "diverter_valve_position": {
@@ -91,26 +102,32 @@
           "tank": "mdi:water-boiler"
         }
       },
+      "heating_mode": {
+        "state": {
+          "boost": "mdi:flash",
+          "defrost": "mdi:car-defrost-rear",
+          "keep_warm": "mdi:fire",
+          "manual": "mdi:cog",
+          "melt": "mdi:snowflake-melt",
+          "off": "mdi:power",
+          "quick_preheat": "mdi:heat-wave",
+          "simmer": "mdi:fire"
+        }
+      },
       "manual_level": {
         "default": "mdi:radiator",
         "state": {
           "0": "mdi:radiator-off"
         }
-      },
-      "heating_mode": {
-        "state": {
-          "off": "mdi:power",
-          "manual": "mdi:cog",
-          "boost": "mdi:flash",
-          "keep_warm": "mdi:fire",
-          "quick_preheat": "mdi:heat-wave",
-          "defrost": "mdi:car-defrost-rear",
-          "melt": "mdi:snowflake-melt",
-          "simmer": "mdi:fire"
-        }
       }
     },
     "switch": {
+      "auto_cycle_link": {
+        "default": "mdi:link-off",
+        "state": {
+          "on": "mdi:link"
+        }
+      },
       "bubble_soak": {
         "default": "mdi:water-off",
         "state": {
@@ -120,21 +137,15 @@
       "display_lighting": {
         "default": "mdi:lightbulb",
         "state": {
-          "on": "mdi:lightbulb-on",
-          "off": "mdi:lightbulb-off"
+          "off": "mdi:lightbulb-off",
+          "on": "mdi:lightbulb-on"
         }
-      },
-      "wrinkle_prevent": {
-        "default": "mdi:tumble-dryer",
-        "state": {
-          "off": "mdi:tumble-dryer-off"
-        }
-      },
-      "keep_fresh_mode": {
-        "default": "mdi:creation"
       },
       "ice_maker": {
         "default": "mdi:delete-variant"
+      },
+      "keep_fresh_mode": {
+        "default": "mdi:creation"
       },
       "power_cool": {
         "default": "mdi:snowflake-alert"
@@ -145,10 +156,10 @@
       "sanitize": {
         "default": "mdi:lotion"
       },
-      "auto_cycle_link": {
-        "default": "mdi:link-off",
+      "wrinkle_prevent": {
+        "default": "mdi:tumble-dryer",
         "state": {
-          "on": "mdi:link"
+          "off": "mdi:tumble-dryer-off"
         }
       }
     }

@@ -154,6 +154,7 @@
         987,
       ),
       dict({
+        'max_retries': 20,
         'timeout': dict({
           'ceil_threshold': 5,
           'connect': None,
@@ -226,6 +227,7 @@
         987,
       ),
       dict({
+        'max_retries': 20,
         'timeout': dict({
           'ceil_threshold': 5,
           'connect': None,

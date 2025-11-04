@@ -76,6 +76,28 @@ SWITCHES: dict[DeviceCategory, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    DeviceCategory.CJKG: (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_1,
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "1"},
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_2,
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "2"},
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_3,
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "3"},
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_4,
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "4"},
+        ),
+    ),
     DeviceCategory.CL: (
         SwitchEntityDescription(
             key=DPCode.CONTROL_BACK,

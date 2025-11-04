@@ -1,22 +1,21 @@
 {
-  "title": "Fan",
   "device_automation": {
-    "condition_type": {
-      "is_on": "[%key:common::device_automation::condition_type::is_on%]",
-      "is_off": "[%key:common::device_automation::condition_type::is_off%]"
-    },
-    "trigger_type": {
-      "changed_states": "[%key:common::device_automation::trigger_type::changed_states%]",
-      "turned_on": "[%key:common::device_automation::trigger_type::turned_on%]",
-      "turned_off": "[%key:common::device_automation::trigger_type::turned_off%]"
-    },
     "action_type": {
       "toggle": "[%key:common::device_automation::action_type::toggle%]",
-      "turn_on": "[%key:common::device_automation::action_type::turn_on%]",
-      "turn_off": "[%key:common::device_automation::action_type::turn_off%]"
+      "turn_off": "[%key:common::device_automation::action_type::turn_off%]",
+      "turn_on": "[%key:common::device_automation::action_type::turn_on%]"
+    },
+    "condition_type": {
+      "is_off": "[%key:common::device_automation::condition_type::is_off%]",
+      "is_on": "[%key:common::device_automation::condition_type::is_on%]"
     },
     "extra_fields": {
       "for": "[%key:common::device_automation::extra_fields::for%]"
+    },
+    "trigger_type": {
+      "changed_states": "[%key:common::device_automation::trigger_type::changed_states%]",
+      "turned_off": "[%key:common::device_automation::trigger_type::turned_off%]",
+      "turned_on": "[%key:common::device_automation::trigger_type::turned_on%]"
     }
   },
   "entity_component": {
@@ -37,8 +36,8 @@
         "oscillating": {
           "name": "Oscillating",
           "state": {
-            "true": "[%key:common::state::yes%]",
-            "false": "[%key:common::state::no%]"
+            "false": "[%key:common::state::no%]",
+            "true": "[%key:common::state::yes%]"
           }
         },
         "percentage": {
@@ -47,97 +46,18 @@
         "percentage_step": {
           "name": "Speed step"
         },
-        "preset_modes": {
-          "name": "Available preset modes"
-        },
         "preset_mode": {
           "name": "Preset mode"
+        },
+        "preset_modes": {
+          "name": "Available preset modes"
         }
       }
     }
   },
-  "services": {
-    "set_preset_mode": {
-      "name": "Set preset mode",
-      "description": "Sets preset fan mode.",
-      "fields": {
-        "preset_mode": {
-          "name": "Preset mode",
-          "description": "Preset fan mode."
-        }
-      }
-    },
-    "set_percentage": {
-      "name": "Set speed",
-      "description": "Sets the speed of a fan.",
-      "fields": {
-        "percentage": {
-          "name": "Percentage",
-          "description": "Speed of the fan."
-        }
-      }
-    },
-    "turn_on": {
-      "name": "[%key:common::action::turn_on%]",
-      "description": "Turns fan on.",
-      "fields": {
-        "percentage": {
-          "name": "[%key:component::fan::services::set_percentage::fields::percentage::name%]",
-          "description": "[%key:component::fan::services::set_percentage::fields::percentage::description%]"
-        },
-        "preset_mode": {
-          "name": "[%key:component::fan::services::set_preset_mode::fields::preset_mode::name%]",
-          "description": "[%key:component::fan::services::set_preset_mode::fields::preset_mode::description%]"
-        }
-      }
-    },
-    "turn_off": {
-      "name": "[%key:common::action::turn_off%]",
-      "description": "Turns fan off."
-    },
-    "oscillate": {
-      "name": "Oscillate",
-      "description": "Controls the oscillation of a fan.",
-      "fields": {
-        "oscillating": {
-          "name": "Oscillating",
-          "description": "Turns oscillation on/off."
-        }
-      }
-    },
-    "toggle": {
-      "name": "[%key:common::action::toggle%]",
-      "description": "Toggles a fan on/off."
-    },
-    "set_direction": {
-      "name": "Set direction",
-      "description": "Sets a fan's rotation direction.",
-      "fields": {
-        "direction": {
-          "name": "Direction",
-          "description": "Direction of the fan rotation."
-        }
-      }
-    },
-    "increase_speed": {
-      "name": "Increase speed",
-      "description": "Increases the speed of a fan.",
-      "fields": {
-        "percentage_step": {
-          "name": "Increment",
-          "description": "Percentage step by which the speed should be increased."
-        }
-      }
-    },
-    "decrease_speed": {
-      "name": "Decrease speed",
-      "description": "Decreases the speed of a fan.",
-      "fields": {
-        "percentage_step": {
-          "name": "Decrement",
-          "description": "Percentage step by which the speed should be decreased."
-        }
-      }
+  "exceptions": {
+    "not_valid_preset_mode": {
+      "message": "Preset mode {preset_mode} is not valid, valid preset modes are: {preset_modes}."
     }
   },
   "selector": {
@@ -148,9 +68,89 @@
       }
     }
   },
-  "exceptions": {
-    "not_valid_preset_mode": {
-      "message": "Preset mode {preset_mode} is not valid, valid preset modes are: {preset_modes}."
+  "services": {
+    "decrease_speed": {
+      "description": "Decreases the speed of a fan.",
+      "fields": {
+        "percentage_step": {
+          "description": "Percentage step by which the speed should be decreased.",
+          "name": "Decrement"
+        }
+      },
+      "name": "Decrease speed"
+    },
+    "increase_speed": {
+      "description": "Increases the speed of a fan.",
+      "fields": {
+        "percentage_step": {
+          "description": "Percentage step by which the speed should be increased.",
+          "name": "Increment"
+        }
+      },
+      "name": "Increase speed"
+    },
+    "oscillate": {
+      "description": "Controls the oscillation of a fan.",
+      "fields": {
+        "oscillating": {
+          "description": "Turns oscillation on/off.",
+          "name": "Oscillating"
+        }
+      },
+      "name": "Oscillate"
+    },
+    "set_direction": {
+      "description": "Sets a fan's rotation direction.",
+      "fields": {
+        "direction": {
+          "description": "Direction of the fan rotation.",
+          "name": "Direction"
+        }
+      },
+      "name": "Set direction"
+    },
+    "set_percentage": {
+      "description": "Sets the speed of a fan.",
+      "fields": {
+        "percentage": {
+          "description": "Speed of the fan.",
+          "name": "Percentage"
+        }
+      },
+      "name": "Set speed"
+    },
+    "set_preset_mode": {
+      "description": "Sets preset fan mode.",
+      "fields": {
+        "preset_mode": {
+          "description": "Preset fan mode.",
+          "name": "Preset mode"
+        }
+      },
+      "name": "Set preset mode"
+    },
+    "toggle": {
+      "description": "Toggles a fan on/off.",
+      "name": "[%key:common::action::toggle%]"
+    },
+    "turn_off": {
+      "description": "Turns fan off.",
+      "name": "[%key:common::action::turn_off%]"
+    },
+    "turn_on": {
+      "description": "Turns fan on.",
+      "fields": {
+        "percentage": {
+          "description": "[%key:component::fan::services::set_percentage::fields::percentage::description%]",
+          "name": "[%key:component::fan::services::set_percentage::fields::percentage::name%]"
+        },
+        "preset_mode": {
+          "description": "[%key:component::fan::services::set_preset_mode::fields::preset_mode::description%]",
+          "name": "[%key:component::fan::services::set_preset_mode::fields::preset_mode::name%]"
+        }
+      },
+      "name": "[%key:common::action::turn_on%]"
     }
-  }
+  },
+  "title": "Fan"
 }

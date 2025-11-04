@@ -1,24 +1,24 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_account": "Account ID should be a 9 digit number",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
     "step": {
       "user": {
         "data": {
           "id": "Account ID",
-          "username": "[%key:common::config_flow::data::username%]",
+          "is_tou": "Is Time-of-Use Price Plan",
           "password": "[%key:common::config_flow::data::password%]",
-          "is_tou": "Is Time-of-Use Price Plan"
+          "username": "[%key:common::config_flow::data::username%]"
         }
       }
-    },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "invalid_account": "Account ID should be a 9 digit number",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
   "entity": {

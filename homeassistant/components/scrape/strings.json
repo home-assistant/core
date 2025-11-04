@@ -7,131 +7,131 @@
       "resource_error": "Could not update rest data. Verify your configuration"
     },
     "step": {
-      "user": {
-        "data": {
-          "resource": "Resource",
-          "authentication": "Select authentication method",
-          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]",
-          "headers": "Headers",
-          "method": "Method",
-          "payload": "Payload",
-          "timeout": "Timeout",
-          "encoding": "Character encoding"
-        },
-        "data_description": {
-          "resource": "The URL to the website that contains the value.",
-          "authentication": "Type of the HTTP authentication. Either basic or digest.",
-          "verify_ssl": "Enables/disables verification of SSL/TLS certificate, for example if it is self-signed.",
-          "headers": "Headers to use for the web request.",
-          "timeout": "Timeout for connection to website.",
-          "encoding": "Character encoding to use. Defaults to UTF-8.",
-          "payload": "Payload to use when method is POST."
-        }
-      },
       "sensor": {
         "data": {
-          "name": "[%key:common::config_flow::data::name%]",
           "attribute": "Attribute",
-          "index": "Index",
-          "select": "Select",
-          "value_template": "Value template",
           "availability": "Availability template",
           "device_class": "Device class",
+          "index": "Index",
+          "name": "[%key:common::config_flow::data::name%]",
+          "select": "Select",
           "state_class": "State class",
-          "unit_of_measurement": "Unit of measurement"
+          "unit_of_measurement": "Unit of measurement",
+          "value_template": "Value template"
         },
         "data_description": {
-          "select": "Defines what tag to search for. Check Beautifulsoup CSS selectors for details.",
           "attribute": "Get value of an attribute on the selected tag.",
-          "index": "Defines which of the elements returned by the CSS selector to use.",
-          "value_template": "Defines a template to get the state of the sensor.",
           "availability": "Defines a template to get the availability of the sensor.",
           "device_class": "The type/class of the sensor to set the icon in the frontend.",
+          "index": "Defines which of the elements returned by the CSS selector to use.",
+          "select": "Defines what tag to search for. Check Beautifulsoup CSS selectors for details.",
           "state_class": "The state_class of the sensor.",
-          "unit_of_measurement": "Choose unit of measurement or create your own."
+          "unit_of_measurement": "Choose unit of measurement or create your own.",
+          "value_template": "Defines a template to get the state of the sensor."
+        }
+      },
+      "user": {
+        "data": {
+          "authentication": "Select authentication method",
+          "encoding": "Character encoding",
+          "headers": "Headers",
+          "method": "Method",
+          "password": "[%key:common::config_flow::data::password%]",
+          "payload": "Payload",
+          "resource": "Resource",
+          "timeout": "Timeout",
+          "username": "[%key:common::config_flow::data::username%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "authentication": "Type of the HTTP authentication. Either basic or digest.",
+          "encoding": "Character encoding to use. Defaults to UTF-8.",
+          "headers": "Headers to use for the web request.",
+          "payload": "Payload to use when method is POST.",
+          "resource": "The URL to the website that contains the value.",
+          "timeout": "Timeout for connection to website.",
+          "verify_ssl": "Enables/disables verification of SSL/TLS certificate, for example if it is self-signed."
         }
       }
     }
   },
   "options": {
     "step": {
-      "init": {
-        "menu_options": {
-          "add_sensor": "Add sensor",
-          "select_edit_sensor": "Configure sensor",
-          "remove_sensor": "Remove sensor",
-          "resource": "Configure resource"
-        }
-      },
       "add_sensor": {
         "data": {
-          "name": "[%key:common::config_flow::data::name%]",
           "attribute": "[%key:component::scrape::config::step::sensor::data::attribute%]",
-          "index": "[%key:component::scrape::config::step::sensor::data::index%]",
-          "select": "[%key:component::scrape::config::step::sensor::data::select%]",
-          "value_template": "[%key:component::scrape::config::step::sensor::data::value_template%]",
           "availability": "[%key:component::scrape::config::step::sensor::data::availability%]",
           "device_class": "[%key:component::scrape::config::step::sensor::data::device_class%]",
+          "index": "[%key:component::scrape::config::step::sensor::data::index%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "select": "[%key:component::scrape::config::step::sensor::data::select%]",
           "state_class": "[%key:component::scrape::config::step::sensor::data::state_class%]",
-          "unit_of_measurement": "[%key:component::scrape::config::step::sensor::data::unit_of_measurement%]"
+          "unit_of_measurement": "[%key:component::scrape::config::step::sensor::data::unit_of_measurement%]",
+          "value_template": "[%key:component::scrape::config::step::sensor::data::value_template%]"
         },
         "data_description": {
-          "select": "[%key:component::scrape::config::step::sensor::data_description::select%]",
           "attribute": "[%key:component::scrape::config::step::sensor::data_description::attribute%]",
-          "index": "[%key:component::scrape::config::step::sensor::data_description::index%]",
-          "value_template": "[%key:component::scrape::config::step::sensor::data_description::value_template%]",
           "availability": "[%key:component::scrape::config::step::sensor::data_description::availability%]",
           "device_class": "[%key:component::scrape::config::step::sensor::data_description::device_class%]",
+          "index": "[%key:component::scrape::config::step::sensor::data_description::index%]",
+          "select": "[%key:component::scrape::config::step::sensor::data_description::select%]",
           "state_class": "[%key:component::scrape::config::step::sensor::data_description::state_class%]",
-          "unit_of_measurement": "[%key:component::scrape::config::step::sensor::data_description::unit_of_measurement%]"
+          "unit_of_measurement": "[%key:component::scrape::config::step::sensor::data_description::unit_of_measurement%]",
+          "value_template": "[%key:component::scrape::config::step::sensor::data_description::value_template%]"
         }
       },
       "edit_sensor": {
         "data": {
-          "name": "[%key:common::config_flow::data::name%]",
           "attribute": "[%key:component::scrape::config::step::sensor::data::attribute%]",
-          "index": "[%key:component::scrape::config::step::sensor::data::index%]",
-          "select": "[%key:component::scrape::config::step::sensor::data::select%]",
-          "value_template": "[%key:component::scrape::config::step::sensor::data::value_template%]",
           "availability": "[%key:component::scrape::config::step::sensor::data::availability%]",
           "device_class": "[%key:component::scrape::config::step::sensor::data::device_class%]",
+          "index": "[%key:component::scrape::config::step::sensor::data::index%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "select": "[%key:component::scrape::config::step::sensor::data::select%]",
           "state_class": "[%key:component::scrape::config::step::sensor::data::state_class%]",
-          "unit_of_measurement": "[%key:component::scrape::config::step::sensor::data::unit_of_measurement%]"
+          "unit_of_measurement": "[%key:component::scrape::config::step::sensor::data::unit_of_measurement%]",
+          "value_template": "[%key:component::scrape::config::step::sensor::data::value_template%]"
         },
         "data_description": {
-          "select": "[%key:component::scrape::config::step::sensor::data_description::select%]",
           "attribute": "[%key:component::scrape::config::step::sensor::data_description::attribute%]",
-          "index": "[%key:component::scrape::config::step::sensor::data_description::index%]",
-          "value_template": "[%key:component::scrape::config::step::sensor::data_description::value_template%]",
           "availability": "[%key:component::scrape::config::step::sensor::data_description::availability%]",
           "device_class": "[%key:component::scrape::config::step::sensor::data_description::device_class%]",
+          "index": "[%key:component::scrape::config::step::sensor::data_description::index%]",
+          "select": "[%key:component::scrape::config::step::sensor::data_description::select%]",
           "state_class": "[%key:component::scrape::config::step::sensor::data_description::state_class%]",
-          "unit_of_measurement": "[%key:component::scrape::config::step::sensor::data_description::unit_of_measurement%]"
+          "unit_of_measurement": "[%key:component::scrape::config::step::sensor::data_description::unit_of_measurement%]",
+          "value_template": "[%key:component::scrape::config::step::sensor::data_description::value_template%]"
+        }
+      },
+      "init": {
+        "menu_options": {
+          "add_sensor": "Add sensor",
+          "remove_sensor": "Remove sensor",
+          "resource": "Configure resource",
+          "select_edit_sensor": "Configure sensor"
         }
       },
       "resource": {
         "data": {
-          "resource": "[%key:component::scrape::config::step::user::data::resource%]",
-          "method": "[%key:component::scrape::config::step::user::data::method%]",
-          "payload": "[%key:component::scrape::config::step::user::data::payload%]",
           "authentication": "[%key:component::scrape::config::step::user::data::authentication%]",
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]",
+          "encoding": "[%key:component::scrape::config::step::user::data::encoding%]",
           "headers": "[%key:component::scrape::config::step::user::data::headers%]",
-          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
+          "method": "[%key:component::scrape::config::step::user::data::method%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "payload": "[%key:component::scrape::config::step::user::data::payload%]",
+          "resource": "[%key:component::scrape::config::step::user::data::resource%]",
           "timeout": "[%key:component::scrape::config::step::user::data::timeout%]",
-          "encoding": "[%key:component::scrape::config::step::user::data::encoding%]"
+          "username": "[%key:common::config_flow::data::username%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
-          "resource": "[%key:component::scrape::config::step::user::data_description::resource%]",
           "authentication": "[%key:component::scrape::config::step::user::data_description::authentication%]",
-          "headers": "[%key:component::scrape::config::step::user::data_description::headers%]",
-          "verify_ssl": "[%key:component::scrape::config::step::user::data_description::verify_ssl%]",
-          "timeout": "[%key:component::scrape::config::step::user::data_description::timeout%]",
           "encoding": "[%key:component::scrape::config::step::user::data_description::encoding%]",
-          "payload": "[%key:component::scrape::config::step::user::data_description::payload%]"
+          "headers": "[%key:component::scrape::config::step::user::data_description::headers%]",
+          "payload": "[%key:component::scrape::config::step::user::data_description::payload%]",
+          "resource": "[%key:component::scrape::config::step::user::data_description::resource%]",
+          "timeout": "[%key:component::scrape::config::step::user::data_description::timeout%]",
+          "verify_ssl": "[%key:component::scrape::config::step::user::data_description::verify_ssl%]"
         }
       }
     }
@@ -171,9 +171,9 @@
         "ozone": "[%key:component::sensor::entity_component::ozone::name%]",
         "ph": "[%key:component::sensor::entity_component::ph::name%]",
         "pm1": "[%key:component::sensor::entity_component::pm1::name%]",
-        "pm4": "[%key:component::sensor::entity_component::pm4::name%]",
         "pm10": "[%key:component::sensor::entity_component::pm10::name%]",
         "pm25": "[%key:component::sensor::entity_component::pm25::name%]",
+        "pm4": "[%key:component::sensor::entity_component::pm4::name%]",
         "power": "[%key:component::sensor::entity_component::power::name%]",
         "power_factor": "[%key:component::sensor::entity_component::power_factor::name%]",
         "precipitation": "[%key:component::sensor::entity_component::precipitation::name%]",

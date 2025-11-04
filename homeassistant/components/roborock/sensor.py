@@ -6,12 +6,15 @@ from collections.abc import Callable
 from dataclasses import dataclass
 import datetime
 
-from roborock.code_mappings import DyadError, RoborockDyadStateCode, ZeoError, ZeoState
-from roborock.containers import (
+from roborock.data import (
+    DyadError,
     RoborockDockErrorCode,
     RoborockDockTypeCode,
+    RoborockDyadStateCode,
     RoborockErrorCode,
     RoborockStateCode,
+    ZeoError,
+    ZeoState,
 )
 from roborock.roborock_message import (
     RoborockDataProtocol,
@@ -76,6 +79,7 @@ def _dock_error_value_fn(properties: DeviceProp) -> str | None:
 SENSOR_DESCRIPTIONS = [
     RoborockSensorDescription(
         native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
         key="main_brush_time_left",
         device_class=SensorDeviceClass.DURATION,
         translation_key="main_brush_time_left",
@@ -85,6 +89,7 @@ SENSOR_DESCRIPTIONS = [
     ),
     RoborockSensorDescription(
         native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
         key="side_brush_time_left",
         device_class=SensorDeviceClass.DURATION,
         translation_key="side_brush_time_left",
@@ -94,6 +99,7 @@ SENSOR_DESCRIPTIONS = [
     ),
     RoborockSensorDescription(
         native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
         key="filter_time_left",
         device_class=SensorDeviceClass.DURATION,
         translation_key="filter_time_left",
@@ -102,7 +108,26 @@ SENSOR_DESCRIPTIONS = [
         protocol_listener=RoborockDataProtocol.FILTER_WORK_TIME,
     ),
     RoborockSensorDescription(
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        key="cleaning_brush_time_left",
+        device_class=SensorDeviceClass.DURATION,
+        translation_key="cleaning_brush_time_left",
+        value_fn=lambda data: data.consumable.cleaning_brush_time_left,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        is_dock_entity=True,
+    ),
+    RoborockSensorDescription(
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        key="strainer_time_left",
+        device_class=SensorDeviceClass.DURATION,
+        translation_key="strainer_time_left",
+        value_fn=lambda data: data.consumable.strainer_time_left,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        is_dock_entity=True,
+    ),
+    RoborockSensorDescription(
         native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
         key="sensor_time_left",
         device_class=SensorDeviceClass.DURATION,
         translation_key="sensor_time_left",
@@ -111,6 +136,7 @@ SENSOR_DESCRIPTIONS = [
     ),
     RoborockSensorDescription(
         native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.MINUTES,
         key="cleaning_time",
         translation_key="cleaning_time",
         device_class=SensorDeviceClass.DURATION,
@@ -119,6 +145,7 @@ SENSOR_DESCRIPTIONS = [
     ),
     RoborockSensorDescription(
         native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
         key="total_cleaning_time",
         translation_key="total_cleaning_time",
         device_class=SensorDeviceClass.DURATION,
@@ -239,6 +266,7 @@ A01_SENSOR_DESCRIPTIONS: list[RoborockSensorDescriptionA01] = [
     RoborockSensorDescriptionA01(
         key="filter_time_left",
         data_protocol=RoborockDyadDataProtocol.MESH_LEFT,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         device_class=SensorDeviceClass.DURATION,
         translation_key="filter_time_left",
@@ -248,6 +276,7 @@ A01_SENSOR_DESCRIPTIONS: list[RoborockSensorDescriptionA01] = [
         key="brush_remaining",
         data_protocol=RoborockDyadDataProtocol.BRUSH_LEFT,
         native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
         device_class=SensorDeviceClass.DURATION,
         translation_key="brush_remaining",
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -263,6 +292,7 @@ A01_SENSOR_DESCRIPTIONS: list[RoborockSensorDescriptionA01] = [
     RoborockSensorDescriptionA01(
         key="total_cleaning_time",
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
         data_protocol=RoborockDyadDataProtocol.TOTAL_RUN_TIME,
         device_class=SensorDeviceClass.DURATION,
         translation_key="total_cleaning_time",

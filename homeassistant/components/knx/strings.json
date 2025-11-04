@@ -1,141 +1,5 @@
 {
   "config": {
-    "step": {
-      "reconfigure": {
-        "title": "KNX connection settings",
-        "menu_options": {
-          "connection_type": "Reconfigure KNX connection",
-          "secure_knxkeys": "Import KNX keyring file"
-        }
-      },
-      "connection_type": {
-        "title": "KNX connection",
-        "description": "'Automatic' performs a gateway scan on start, to find a KNX IP interface. It will connect via a tunnel. (Not available if a gateway scan was not successful.)\n\n'Tunneling' will connect to a specific KNX IP interface over a tunnel.\n\n'Routing' will use Multicast to communicate with KNX IP routers.",
-        "data": {
-          "connection_type": "KNX connection type"
-        },
-        "data_description": {
-          "connection_type": "Please select the connection type you want to use for your KNX connection."
-        }
-      },
-      "tunnel": {
-        "title": "Tunnel",
-        "data": {
-          "gateway": "Please select a gateway from the list."
-        },
-        "data_description": {
-          "gateway": "Select a KNX tunneling interface you want use for the connection."
-        }
-      },
-      "tcp_tunnel_endpoint": {
-        "title": "Tunnel endpoint",
-        "data": {
-          "tunnel_endpoint_ia": "Select the tunnel endpoint used for the connection."
-        },
-        "data_description": {
-          "tunnel_endpoint_ia": "'Automatic' selects a free tunnel endpoint for you when connecting. If you're unsure, this is the best option."
-        }
-      },
-      "manual_tunnel": {
-        "title": "Tunnel settings",
-        "description": "Please enter the connection information of your tunneling device.",
-        "data": {
-          "tunneling_type": "KNX tunneling type",
-          "host": "[%key:common::config_flow::data::host%]",
-          "port": "[%key:common::config_flow::data::port%]",
-          "route_back": "Route back / NAT mode",
-          "local_ip": "Local IP interface"
-        },
-        "data_description": {
-          "tunneling_type": "Select the tunneling type of your KNX/IP tunneling device. Older interfaces may only support `UDP`.",
-          "host": "IP address or hostname of the KNX/IP tunneling device.",
-          "port": "Port used by the KNX/IP tunneling device.",
-          "route_back": "Enable if your KNXnet/IP tunneling server is behind NAT. Only applies for UDP connections.",
-          "local_ip": "Local IP or interface name used for the connection from Home Assistant. Leave blank to use auto-discovery."
-        }
-      },
-      "secure_key_source_menu_tunnel": {
-        "title": "KNX IP Secure",
-        "description": "How do you want to configure KNX/IP Secure?",
-        "menu_options": {
-          "secure_knxkeys": "Use a `.knxkeys` file providing IP Secure keys",
-          "secure_tunnel_manual": "Configure IP Secure credentials manually"
-        }
-      },
-      "secure_key_source_menu_routing": {
-        "title": "[%key:component::knx::config::step::secure_key_source_menu_tunnel::title%]",
-        "description": "[%key:component::knx::config::step::secure_key_source_menu_tunnel::description%]",
-        "menu_options": {
-          "secure_knxkeys": "[%key:component::knx::config::step::secure_key_source_menu_tunnel::menu_options::secure_knxkeys%]",
-          "secure_routing_manual": "Configure IP Secure backbone key manually"
-        }
-      },
-      "secure_knxkeys": {
-        "title": "Import KNX Keyring",
-        "description": "The keyring is used to encrypt and decrypt KNX IP Secure communication. You can import a new keyring file or re-import to update existing keys if your configuration has changed.",
-        "data": {
-          "knxkeys_file": "Keyring file",
-          "knxkeys_password": "Keyring password"
-        },
-        "data_description": {
-          "knxkeys_file": "Select a `.knxkeys` file. This can be exported from ETS.",
-          "knxkeys_password": "The password to open the `.knxkeys` file was set when exporting."
-        }
-      },
-      "knxkeys_tunnel_select": {
-        "title": "[%key:component::knx::config::step::tcp_tunnel_endpoint::title%]",
-        "data": {
-          "tunnel_endpoint_ia": "[%key:component::knx::config::step::tcp_tunnel_endpoint::data::tunnel_endpoint_ia%]"
-        },
-        "data_description": {
-          "tunnel_endpoint_ia": "[%key:component::knx::config::step::tcp_tunnel_endpoint::data_description::tunnel_endpoint_ia%]"
-        }
-      },
-      "secure_tunnel_manual": {
-        "title": "Secure tunneling",
-        "description": "Please enter your IP Secure information.",
-        "data": {
-          "user_id": "User ID",
-          "user_password": "User password",
-          "device_authentication": "Device authentication password"
-        },
-        "data_description": {
-          "user_id": "This usually is tunnel number +1. So first tunnel in the list presented in ETS would have User-ID `2`.",
-          "user_password": "Password for the specific tunnel connection set in the 'Properties' panel of the tunnel in ETS.",
-          "device_authentication": "This is set in the 'IP' panel of the interface in ETS."
-        }
-      },
-      "secure_routing_manual": {
-        "title": "Secure routing",
-        "description": "[%key:component::knx::config::step::secure_tunnel_manual::description%]",
-        "data": {
-          "backbone_key": "Backbone key",
-          "sync_latency_tolerance": "Network latency tolerance"
-        },
-        "data_description": {
-          "backbone_key": "Can be seen in the 'Security' report of your ETS project. Eg. `00112233445566778899AABBCCDDEEFF`",
-          "sync_latency_tolerance": "Should be equal to the backbone configuration of your ETS project. Default is `1000`"
-        }
-      },
-      "routing": {
-        "title": "Routing",
-        "description": "Please configure the routing options.",
-        "data": {
-          "individual_address": "Individual address",
-          "routing_secure": "KNX IP Secure Routing",
-          "multicast_group": "Multicast group",
-          "multicast_port": "Multicast port",
-          "local_ip": "[%key:component::knx::config::step::manual_tunnel::data::local_ip%]"
-        },
-        "data_description": {
-          "individual_address": "KNX address to be used by Home Assistant, e.g. `0.0.4`",
-          "routing_secure": "Select if your installation uses encrypted communication according to the KNX IP Secure standard. This setting requires compatible devices and configuration. You'll be prompted for credentials in the next step.",
-          "multicast_group": "Multicast group used by your installation. Default is `224.0.23.12`",
-          "multicast_port": "Multicast port used by your installation. Default is `3671`",
-          "local_ip": "[%key:component::knx::config::step::manual_tunnel::data_description::local_ip%]"
-        }
-      }
-    },
     "abort": {
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
@@ -151,37 +15,570 @@
       "no_router_discovered": "No KNXnet/IP router was discovered on the network.",
       "no_tunnel_discovered": "Could not find a KNX tunneling server on your network.",
       "unsupported_tunnel_type": "Selected tunneling type not supported by gateway."
-    }
-  },
-  "exceptions": {
-    "integration_not_loaded": {
-      "message": "KNX integration is not loaded."
     },
-    "service_exposure_remove_not_found": {
-      "message": "Could not find exposure for `{group_address}` to remove."
-    },
-    "service_send_invalid_payload": {
-      "message": "Invalid payload for `knx.send` service. {error}"
-    },
-    "service_send_invalid_type": {
-      "message": "Invalid type for `knx.send` service: {type}"
-    }
-  },
-  "options": {
     "step": {
-      "communication_settings": {
-        "title": "Communication settings",
+      "connection_type": {
         "data": {
-          "state_updater": "State updater",
-          "rate_limit": "Rate limit",
-          "telegram_log_size": "Telegram history limit"
+          "connection_type": "KNX connection type"
         },
         "data_description": {
-          "state_updater": "Sets the default behavior for reading state addresses from the KNX Bus.\nWhen enabled, Home Assistant will monitor each group address and read it from the bus if no value has been received for one hour.\nWhen disabled, state addresses will only be read once after a bus connection is established.\nThis behavior can be overridden for individual entities using the `sync_state` option.",
-          "rate_limit": "Maximum outgoing telegrams per second.\n`0` to disable limit. Recommended: `0` or between `20` and `40`",
-          "telegram_log_size": "Telegrams to keep in memory for KNX panel group monitor. Maximum: {telegram_log_size_max}"
+          "connection_type": "Please select the connection type you want to use for your KNX connection."
+        },
+        "description": "'Automatic' performs a gateway scan on start, to find a KNX IP interface. It will connect via a tunnel. (Not available if a gateway scan was not successful.)\n\n'Tunneling' will connect to a specific KNX IP interface over a tunnel.\n\n'Routing' will use Multicast to communicate with KNX IP routers.",
+        "title": "KNX connection"
+      },
+      "knxkeys_tunnel_select": {
+        "data": {
+          "tunnel_endpoint_ia": "[%key:component::knx::config::step::tcp_tunnel_endpoint::data::tunnel_endpoint_ia%]"
+        },
+        "data_description": {
+          "tunnel_endpoint_ia": "[%key:component::knx::config::step::tcp_tunnel_endpoint::data_description::tunnel_endpoint_ia%]"
+        },
+        "title": "[%key:component::knx::config::step::tcp_tunnel_endpoint::title%]"
+      },
+      "manual_tunnel": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "local_ip": "Local IP interface",
+          "port": "[%key:common::config_flow::data::port%]",
+          "route_back": "Route back / NAT mode",
+          "tunneling_type": "KNX tunneling type"
+        },
+        "data_description": {
+          "host": "IP address or hostname of the KNX/IP tunneling device.",
+          "local_ip": "Local IP or interface name used for the connection from Home Assistant. Leave blank to use auto-discovery.",
+          "port": "Port used by the KNX/IP tunneling device.",
+          "route_back": "Enable if your KNXnet/IP tunneling server is behind NAT. Only applies for UDP connections.",
+          "tunneling_type": "Select the tunneling type of your KNX/IP tunneling device. Older interfaces may only support `UDP`."
+        },
+        "description": "Please enter the connection information of your tunneling device.",
+        "title": "Tunnel settings"
+      },
+      "reconfigure": {
+        "menu_options": {
+          "connection_type": "Reconfigure KNX connection",
+          "secure_knxkeys": "Import KNX keyring file"
+        },
+        "title": "KNX connection settings"
+      },
+      "routing": {
+        "data": {
+          "individual_address": "Individual address",
+          "local_ip": "[%key:component::knx::config::step::manual_tunnel::data::local_ip%]",
+          "multicast_group": "Multicast group",
+          "multicast_port": "Multicast port",
+          "routing_secure": "KNX IP Secure Routing"
+        },
+        "data_description": {
+          "individual_address": "KNX address to be used by Home Assistant, e.g. `0.0.4`",
+          "local_ip": "[%key:component::knx::config::step::manual_tunnel::data_description::local_ip%]",
+          "multicast_group": "Multicast group used by your installation. Default is `224.0.23.12`",
+          "multicast_port": "Multicast port used by your installation. Default is `3671`",
+          "routing_secure": "Select if your installation uses encrypted communication according to the KNX IP Secure standard. This setting requires compatible devices and configuration. You'll be prompted for credentials in the next step."
+        },
+        "description": "Please configure the routing options.",
+        "title": "Routing"
+      },
+      "secure_key_source_menu_routing": {
+        "description": "[%key:component::knx::config::step::secure_key_source_menu_tunnel::description%]",
+        "menu_options": {
+          "secure_knxkeys": "[%key:component::knx::config::step::secure_key_source_menu_tunnel::menu_options::secure_knxkeys%]",
+          "secure_routing_manual": "Configure IP Secure backbone key manually"
+        },
+        "title": "[%key:component::knx::config::step::secure_key_source_menu_tunnel::title%]"
+      },
+      "secure_key_source_menu_tunnel": {
+        "description": "How do you want to configure KNX/IP Secure?",
+        "menu_options": {
+          "secure_knxkeys": "Use a `.knxkeys` file providing IP Secure keys",
+          "secure_tunnel_manual": "Configure IP Secure credentials manually"
+        },
+        "title": "KNX IP Secure"
+      },
+      "secure_knxkeys": {
+        "data": {
+          "knxkeys_file": "Keyring file",
+          "knxkeys_password": "Keyring password"
+        },
+        "data_description": {
+          "knxkeys_file": "Select a `.knxkeys` file. This can be exported from ETS.",
+          "knxkeys_password": "The password to open the `.knxkeys` file was set when exporting."
+        },
+        "description": "The keyring is used to encrypt and decrypt KNX IP Secure communication. You can import a new keyring file or re-import to update existing keys if your configuration has changed.",
+        "title": "Import KNX Keyring"
+      },
+      "secure_routing_manual": {
+        "data": {
+          "backbone_key": "Backbone key",
+          "sync_latency_tolerance": "Network latency tolerance"
+        },
+        "data_description": {
+          "backbone_key": "Can be seen in the 'Security' report of your ETS project. Eg. `00112233445566778899AABBCCDDEEFF`",
+          "sync_latency_tolerance": "Should be equal to the backbone configuration of your ETS project. Default is `1000`"
+        },
+        "description": "[%key:component::knx::config::step::secure_tunnel_manual::description%]",
+        "title": "Secure routing"
+      },
+      "secure_tunnel_manual": {
+        "data": {
+          "device_authentication": "Device authentication password",
+          "user_id": "User ID",
+          "user_password": "User password"
+        },
+        "data_description": {
+          "device_authentication": "This is set in the 'IP' panel of the interface in ETS.",
+          "user_id": "This usually is tunnel number +1. So first tunnel in the list presented in ETS would have User-ID `2`.",
+          "user_password": "Password for the specific tunnel connection set in the 'Properties' panel of the tunnel in ETS."
+        },
+        "description": "Please enter your IP Secure information.",
+        "title": "Secure tunneling"
+      },
+      "tcp_tunnel_endpoint": {
+        "data": {
+          "tunnel_endpoint_ia": "Select the tunnel endpoint used for the connection."
+        },
+        "data_description": {
+          "tunnel_endpoint_ia": "'Automatic' selects a free tunnel endpoint for you when connecting. If you're unsure, this is the best option."
+        },
+        "title": "Tunnel endpoint"
+      },
+      "tunnel": {
+        "data": {
+          "gateway": "Please select a gateway from the list."
+        },
+        "data_description": {
+          "gateway": "Select a KNX tunneling interface you want use for the connection."
+        },
+        "title": "Tunnel"
+      }
+    }
+  },
+  "config_panel": {
+    "entities": {
+      "create": {
+        "_": {
+          "entity": {
+            "description": "Home Assistant specific settings.",
+            "device_description": "A device allows to group multiple entities. Select the device this entity belongs to or create a new one.",
+            "entity_category_description": "Classification of a non-primary entity. Leave empty for standard behavior.",
+            "entity_category_title": "Entity category",
+            "entity_description": "Optional if a device is selected, otherwise required. If the entity is assigned to a device, the device name is used as prefix.",
+            "entity_label": "Entity name",
+            "name_description": "Define how the entity should be named in Home Assistant.",
+            "name_title": "Device and entity name",
+            "title": "Entity configuration"
+          },
+          "knx": {
+            "knx_group_address": {
+              "dpt": "Datapoint type",
+              "passive_addresses": "Passive addresses",
+              "send_address": "Send address",
+              "state_address": "State address",
+              "valid_dpts": "Valid DPTs"
+            },
+            "sync_state": {
+              "description": "Actively request state updates from KNX bus for state addresses.",
+              "options": {
+                "every": "Scheduled every",
+                "expire": "Expire after last value update",
+                "false": "Never",
+                "init": "Once when connection established",
+                "true": "Use integration default"
+              },
+              "strategy": "Strategy",
+              "title": "State updater"
+            },
+            "title": "KNX configuration"
+          }
+        },
+        "binary_sensor": {
+          "description": "Read-only entity for binary datapoints. Window or door states etc.",
+          "knx": {
+            "context_timeout": {
+              "description": "The time in seconds between multiple identical telegram payloads would count towards an internal counter. This can be used to automate on multi-clicks of a button. `0` to disable this feature.",
+              "label": "Context timeout"
+            },
+            "ga_sensor": {
+              "description": "Group address representing a binary state.",
+              "label": "State"
+            },
+            "ignore_internal_state": {
+              "description": "Write each update to the state machine, even if the data is the same.",
+              "label": "Force update"
+            },
+            "invert": {
+              "description": "Invert payload before processing.",
+              "label": "Invert"
+            },
+            "reset_after": {
+              "description": "Reset back to “off” state after specified seconds.",
+              "label": "Reset after"
+            },
+            "section_advanced_options": {
+              "description": "Properties of the binary sensor state.",
+              "title": "State properties"
+            }
+          }
+        },
+        "climate": {
+          "description": "The KNX climate platform is used as an interface to heating actuators, HVAC gateways, etc.",
+          "knx": {
+            "default_controller_mode": {
+              "description": "Climate mode to be set on initialization.",
+              "label": "Default mode"
+            },
+            "fan_max_step": {
+              "description": "The maximum amount of steps for the fan.",
+              "label": "Fan steps"
+            },
+            "fan_zero_mode": {
+              "description": "Set the mode that represents fan speed `0`.",
+              "label": "Zero fan speed mode",
+              "options": {
+                "auto": "[%key:common::state::auto%]",
+                "off": "[%key:common::state::off%]"
+              }
+            },
+            "ga_active": {
+              "description": "Binary value indicating if the device is active or idle. If configured, this takes precedence over valve position.",
+              "label": "Active"
+            },
+            "ga_controller_mode": {
+              "label": "Controller mode"
+            },
+            "ga_controller_status": {
+              "description": "HVAC controller mode and preset status. Eberle Status octet (KNX AN 097/07 rev 3) non-standardized DPT.",
+              "label": "Controller status"
+            },
+            "ga_fan_speed": {
+              "description": "Set the current fan speed.",
+              "label": "Fan speed",
+              "options": {
+                "5_001": "Percent",
+                "5_010": "Steps"
+              }
+            },
+            "ga_fan_swing": {
+              "description": "Toggle (vertical) fan swing mode. Use this if only one direction is supported.",
+              "label": "Fan swing"
+            },
+            "ga_fan_swing_horizontal": {
+              "description": "Toggle horizontal fan swing mode.",
+              "label": "Fan horizontal swing"
+            },
+            "ga_heat_cool": {
+              "label": "Heating/Cooling"
+            },
+            "ga_humidity_current": {
+              "label": "Current humidity"
+            },
+            "ga_on_off": {
+              "label": "On/Off"
+            },
+            "ga_operation_mode": {
+              "description": "Current operation mode.",
+              "label": "Operation mode"
+            },
+            "ga_operation_mode_comfort": {
+              "label": "Comfort mode"
+            },
+            "ga_operation_mode_economy": {
+              "label": "Economy mode"
+            },
+            "ga_operation_mode_protection": {
+              "label": "Building protection mode"
+            },
+            "ga_operation_mode_standby": {
+              "label": "Standby mode"
+            },
+            "ga_temperature_current": {
+              "label": "Current temperature"
+            },
+            "ga_valve": {
+              "description": "Current control value / valve position in percent. `0` sets the climate entity to idle.",
+              "label": "Valve position"
+            },
+            "ignore_auto_mode": {
+              "description": "Enable when your controller doesn't support `auto` mode. It will be ignored by the integration then.",
+              "label": "Ignore auto mode"
+            },
+            "on_off_invert": {
+              "description": "[%key:component::knx::config_panel::entities::create::binary_sensor::knx::invert::description%]",
+              "label": "[%key:component::knx::config_panel::entities::create::binary_sensor::knx::invert::label%]"
+            },
+            "section_activity": {
+              "description": "Determine if the device is active or idle.",
+              "title": "Activity"
+            },
+            "section_controller_mode": {
+              "description": "Set the mode of the climate device.",
+              "title": "Controller mode"
+            },
+            "section_fan": {
+              "description": "Configuration for fan control (AC units).",
+              "title": "Fan"
+            },
+            "section_heat_cool": {
+              "description": "Set whether the device is in heating or cooling mode.",
+              "title": "Heating/Cooling"
+            },
+            "section_on_off": {
+              "description": "Turn the device on or off.",
+              "title": "On/Off"
+            },
+            "section_operation_mode": {
+              "description": "Set the preset mode of the device.",
+              "title": "Operation mode"
+            },
+            "section_operation_mode_individual": {
+              "description": "Set the preset mode of the device using individual group addresses.",
+              "title": "Individual operation modes"
+            },
+            "target_temperature": {
+              "description": "Set the target temperature.",
+              "ga_setpoint_shift": {
+                "description": "Target temperature deviation from a base setpoint.",
+                "label": "Setpoint shift"
+              },
+              "ga_temperature_target": {
+                "description": "Current absolute target temperature.",
+                "label": "Target temperature"
+              },
+              "max_temp": {
+                "description": "Maximum temperature that can be set.",
+                "label": "Maximum temperature"
+              },
+              "min_temp": {
+                "description": "Minimum temperature that can be set.",
+                "label": "Minimum temperature"
+              },
+              "options": {
+                "group_direct_temp": {
+                  "description": "Set the target temperature by an absolute value.",
+                  "label": "Absolute setpoint"
+                },
+                "group_setpoint_shift": {
+                  "description": "Shift the target temperature from a base setpoint.",
+                  "label": "Setpoint shift"
+                }
+              },
+              "setpoint_shift_max": {
+                "description": "Highest allowed deviation from the base setpoint.",
+                "label": "Maximum setpoint shift"
+              },
+              "setpoint_shift_min": {
+                "description": "Lowest allowed deviation from the base setpoint.",
+                "label": "Minimum setpoint shift"
+              },
+              "temperature_step": {
+                "description": "Smallest step size to change the temperature. For setpoint shift configurations this sets the scale factor of the shift value.",
+                "label": "Temperature step"
+              },
+              "title": "Target temperature"
+            }
+          }
+        },
+        "cover": {
+          "description": "The KNX cover platform is used as an interface to shutter actuators.",
+          "knx": {
+            "ga_angle": {
+              "label": "Tilt angle"
+            },
+            "ga_position_set": {
+              "description": "Group addresses for setting a new absolute position.",
+              "label": "Set position"
+            },
+            "ga_position_state": {
+              "description": "Group addresses reporting the current position.",
+              "label": "Current position"
+            },
+            "ga_step": {
+              "description": "Group addresses for stepwise movement. Used to stop the cover when no dedicated stop address is available.",
+              "label": "Stepwise move"
+            },
+            "ga_stop": {
+              "description": "Group addresses for stopping movement.",
+              "label": "Stop"
+            },
+            "ga_up_down": {
+              "description": "Group addresses triggering a full movement.",
+              "label": "Open/Close control"
+            },
+            "invert_angle": {
+              "description": "[%key:component::knx::config_panel::entities::create::cover::knx::invert_position::description%]",
+              "label": "Invert angle"
+            },
+            "invert_position": {
+              "description": "Invert telegram payload before processing. Enable if KNX reports 0% as fully closed.",
+              "label": "Invert position"
+            },
+            "invert_updown": {
+              "description": "Default is UP (0) to open a cover and DOWN (1) to close a cover. Enable this to invert the open/close commands from/to your KNX actuator.",
+              "label": "Invert open/close"
+            },
+            "section_position_control": {
+              "description": "Control cover position.",
+              "title": "Position"
+            },
+            "section_tilt_control": {
+              "description": "Control slat tilt angle.",
+              "title": "Tilt"
+            },
+            "section_travel_time": {
+              "description": "Used to calculate intermediate positions of the cover while traveling.",
+              "title": "Travel time"
+            },
+            "travelling_time_down": {
+              "description": "Time in seconds the cover needs to fully close.",
+              "label": "Time for closing"
+            },
+            "travelling_time_up": {
+              "description": "Time in seconds the cover needs to fully open.",
+              "label": "Time for opening"
+            }
+          }
+        },
+        "header": "Create new entity",
+        "light": {
+          "description": "The KNX light platform is used as an interface to dimming actuators, LED controllers, DALI gateways and similar.",
+          "knx": {
+            "color": {
+              "description": "Control the color of the light.",
+              "ga_blue_brightness": {
+                "description": "[%key:component::knx::config_panel::entities::create::light::knx::color::ga_red_brightness::description%]",
+                "label": "Blue brightness"
+              },
+              "ga_blue_switch": {
+                "description": "[%key:component::knx::config_panel::entities::create::light::knx::color::ga_red_switch::description%]",
+                "label": "Blue switch"
+              },
+              "ga_color": {
+                "label": "Color addresses",
+                "options": {
+                  "232_600": "RGB",
+                  "242_600": "XYY",
+                  "251_600": "RGBW"
+                }
+              },
+              "ga_green_brightness": {
+                "description": "[%key:component::knx::config_panel::entities::create::light::knx::color::ga_red_brightness::description%]",
+                "label": "Green brightness"
+              },
+              "ga_green_switch": {
+                "description": "[%key:component::knx::config_panel::entities::create::light::knx::color::ga_red_switch::description%]",
+                "label": "Green switch"
+              },
+              "ga_hue": {
+                "description": "Controls the light's hue.",
+                "label": "Hue"
+              },
+              "ga_red_brightness": {
+                "description": "Group address to control the brightness of the color channel. Required.",
+                "label": "Red brightness"
+              },
+              "ga_red_switch": {
+                "description": "Group address to switch the color channel on/off.",
+                "label": "Red switch"
+              },
+              "ga_saturation": {
+                "description": "Controls the light's saturation.",
+                "label": "Saturation"
+              },
+              "ga_white_brightness": {
+                "description": "Group address to control the brightness of the color channel.",
+                "label": "White brightness"
+              },
+              "ga_white_switch": {
+                "description": "[%key:component::knx::config_panel::entities::create::light::knx::color::ga_red_switch::description%]",
+                "label": "White switch"
+              },
+              "options": {
+                "hsv_addresses": {
+                  "description": "Hue, saturation and brightness controlled by individual group addresses.",
+                  "label": "HSV"
+                },
+                "individual_addresses": {
+                  "description": "RGB(W) using individual group addresses for each color channel's state and brightness.",
+                  "label": "Individual addresses"
+                },
+                "single_address": {
+                  "description": "RGB, RGBW or XYY color controlled by a single group address.",
+                  "label": "Single address"
+                }
+              },
+              "title": "Color"
+            },
+            "color_temp_max": {
+              "label": "Coldest possible color temperature"
+            },
+            "color_temp_min": {
+              "label": "Warmest possible color temperature"
+            },
+            "ga_brightness": {
+              "description": "Control the absolute brightness of the light.",
+              "label": "Brightness"
+            },
+            "ga_color_temp": {
+              "label": "Color temperature addresses",
+              "options": {
+                "5_001": "Percent",
+                "7_600": "Kelvin",
+                "9": "2-byte floating point"
+              }
+            },
+            "ga_switch": {
+              "description": "Turn the light on/off.",
+              "label": "Switch"
+            },
+            "section_color_temp": {
+              "description": "Control the color temperature of the light.",
+              "title": "Color temperature"
+            }
+          }
+        },
+        "switch": {
+          "description": "The KNX switch platform is used as an interface to switching actuators.",
+          "knx": {
+            "ga_switch": {
+              "description": "Group address to switch the device on/off.",
+              "label": "Switch"
+            },
+            "invert": {
+              "description": "Invert payloads before processing or sending.",
+              "label": "Invert"
+            },
+            "respond_to_read": {
+              "description": "Respond to GroupValueRead telegrams received to the configured send address.",
+              "label": "Respond to read"
+            }
+          }
+        },
+        "type_selection": {
+          "header": "Create KNX entity",
+          "title": "Select entity type"
         }
       }
+    }
+  },
+  "device_automation": {
+    "extra_fields": {
+      "destination": "Group addresses",
+      "group_value_read": "GroupValueRead",
+      "group_value_response": "GroupValueResponse",
+      "group_value_write": "GroupValueWrite",
+      "incoming": "Incoming",
+      "outgoing": "Outgoing"
+    },
+    "extra_fields_descriptions": {
+      "destination": "The trigger will listen to telegrams sent or received on these group addresses. If no address is selected, the trigger will fire for every group address.",
+      "group_value_read": "Listen on GroupValueRead telegrams.",
+      "group_value_response": "Listen on GroupValueResponse telegrams.",
+      "group_value_write": "Listen on GroupValueWrite telegrams.",
+      "incoming": "Listen on incoming telegrams.",
+      "outgoing": "Listen on outgoing telegrams."
+    },
+    "trigger_type": {
+      "telegram": "Telegram"
     }
   },
   "entity": {
@@ -202,14 +599,18 @@
       }
     },
     "sensor": {
-      "individual_address": {
-        "name": "[%key:component::knx::config::step::routing::data::individual_address%]"
-      },
       "connected_since": {
         "name": "Connection established"
       },
       "connection_type": {
         "name": "Connection type"
+      },
+      "individual_address": {
+        "name": "[%key:component::knx::config::step::routing::data::individual_address%]"
+      },
+      "telegram_count": {
+        "name": "Telegrams",
+        "unit_of_measurement": "telegrams"
       },
       "telegrams_incoming": {
         "name": "Incoming telegrams",
@@ -226,388 +627,124 @@
       "telegrams_outgoing_error": {
         "name": "Outgoing telegram errors",
         "unit_of_measurement": "[%key:component::knx::entity::sensor::telegrams_incoming_error::unit_of_measurement%]"
-      },
-      "telegram_count": {
-        "name": "Telegrams",
-        "unit_of_measurement": "telegrams"
       }
     }
   },
-  "device_automation": {
-    "trigger_type": {
-      "telegram": "Telegram"
+  "exceptions": {
+    "integration_not_loaded": {
+      "message": "KNX integration is not loaded."
     },
-    "extra_fields": {
-      "destination": "Group addresses",
-      "group_value_write": "GroupValueWrite",
-      "group_value_read": "GroupValueRead",
-      "group_value_response": "GroupValueResponse",
-      "incoming": "Incoming",
-      "outgoing": "Outgoing"
+    "service_exposure_remove_not_found": {
+      "message": "Could not find exposure for `{group_address}` to remove."
     },
-    "extra_fields_descriptions": {
-      "destination": "The trigger will listen to telegrams sent or received on these group addresses. If no address is selected, the trigger will fire for every group address.",
-      "group_value_write": "Listen on GroupValueWrite telegrams.",
-      "group_value_read": "Listen on GroupValueRead telegrams.",
-      "group_value_response": "Listen on GroupValueResponse telegrams.",
-      "incoming": "Listen on incoming telegrams.",
-      "outgoing": "Listen on outgoing telegrams."
+    "service_send_invalid_payload": {
+      "message": "Invalid payload for `knx.send` service. {error}"
+    },
+    "service_send_invalid_type": {
+      "message": "Invalid type for `knx.send` service: {type}"
+    }
+  },
+  "options": {
+    "step": {
+      "communication_settings": {
+        "data": {
+          "rate_limit": "Rate limit",
+          "state_updater": "State updater",
+          "telegram_log_size": "Telegram history limit"
+        },
+        "data_description": {
+          "rate_limit": "Maximum outgoing telegrams per second.\n`0` to disable limit. Recommended: `0` or between `20` and `40`",
+          "state_updater": "Sets the default behavior for reading state addresses from the KNX Bus.\nWhen enabled, Home Assistant will monitor each group address and read it from the bus if no value has been received for one hour.\nWhen disabled, state addresses will only be read once after a bus connection is established.\nThis behavior can be overridden for individual entities using the `sync_state` option.",
+          "telegram_log_size": "Telegrams to keep in memory for KNX panel group monitor. Maximum: {telegram_log_size_max}"
+        },
+        "title": "Communication settings"
+      }
     }
   },
   "services": {
-    "send": {
-      "name": "Send to KNX bus",
-      "description": "Sends arbitrary data directly to the KNX bus.",
-      "fields": {
-        "address": {
-          "name": "Group address",
-          "description": "Group address(es) to write to. Lists will send to multiple group addresses successively."
-        },
-        "payload": {
-          "name": "Payload",
-          "description": "Payload to send to the bus. Integers are treated as DPT 1/2/3 payloads. For DPTs > 6 bits send a list. Each value represents 1 octet (0-255). Pad with 0 to DPT byte length."
-        },
-        "type": {
-          "name": "Value type",
-          "description": "If set, the payload will not be sent as raw bytes, but encoded as given DPT. KNX sensor types are valid values (see https://www.home-assistant.io/integrations/knx/#value-types)."
-        },
-        "response": {
-          "name": "Send as Response",
-          "description": "Whether the telegram should be sent as a `GroupValueResponse` instead of a `GroupValueWrite`."
-        }
-      }
-    },
-    "read": {
-      "name": "Read from KNX bus",
-      "description": "Sends GroupValueRead requests to the KNX bus. Response can be used from `knx_event` and will be processed in KNX entities.",
-      "fields": {
-        "address": {
-          "name": "[%key:component::knx::services::send::fields::address::name%]",
-          "description": "Group address(es) to send read request to. Lists will read multiple group addresses."
-        }
-      }
-    },
     "event_register": {
-      "name": "Register knx_event",
       "description": "Adds or removes group addresses to knx_event filter for triggering `knx_event`s. Only addresses added with this action can be removed.",
       "fields": {
         "address": {
-          "name": "[%key:component::knx::services::send::fields::address::name%]",
-          "description": "Group address(es) that shall be added or removed. Lists are allowed."
-        },
-        "type": {
-          "name": "Value type",
-          "description": "If set, the payload will be decoded as given DPT in the event data `value` key. KNX sensor types are valid values (see https://www.home-assistant.io/integrations/knx/#value-types)."
+          "description": "Group address(es) that shall be added or removed. Lists are allowed.",
+          "name": "[%key:component::knx::services::send::fields::address::name%]"
         },
         "remove": {
-          "name": "Remove event registration",
-          "description": "Whether the group address(es) will be removed."
+          "description": "Whether the group address(es) will be removed.",
+          "name": "Remove event registration"
+        },
+        "type": {
+          "description": "If set, the payload will be decoded as given DPT in the event data `value` key. KNX sensor types are valid values (see https://www.home-assistant.io/integrations/knx/#value-types).",
+          "name": "Value type"
         }
-      }
+      },
+      "name": "Register knx_event"
     },
     "exposure_register": {
-      "name": "Expose to KNX bus",
       "description": "Adds or removes exposures to KNX bus. Only exposures added with this action can be removed.",
       "fields": {
         "address": {
-          "name": "[%key:component::knx::services::send::fields::address::name%]",
-          "description": "Group address state or attribute updates will be sent to. GroupValueRead requests will be answered. Per address only one exposure can be registered."
-        },
-        "type": {
-          "name": "Value type",
-          "description": "Telegrams will be encoded as given DPT. 'binary' and all KNX sensor types are valid values (see https://www.home-assistant.io/integrations/knx/#value-types)."
-        },
-        "entity_id": {
-          "name": "Entity",
-          "description": "Entity ID whose state or attribute shall be exposed."
+          "description": "Group address state or attribute updates will be sent to. GroupValueRead requests will be answered. Per address only one exposure can be registered.",
+          "name": "[%key:component::knx::services::send::fields::address::name%]"
         },
         "attribute": {
-          "name": "Entity attribute",
-          "description": "Attribute of the entity that shall be sent to the KNX bus. If not set the state will be sent. Eg. for a light the state is eigther “on” or “off” - with attribute you can expose its “brightness”."
+          "description": "Attribute of the entity that shall be sent to the KNX bus. If not set the state will be sent. Eg. for a light the state is eigther “on” or “off” - with attribute you can expose its “brightness”.",
+          "name": "Entity attribute"
         },
         "default": {
-          "name": "Default value",
-          "description": "Default value to send to the bus if the state or attribute value is None. Eg. a light with state “off” has no brightness attribute so a default value of 0 could be used. If not set (or None) no value would be sent to the bus and a GroupReadRequest to the address would return the last known value."
+          "description": "Default value to send to the bus if the state or attribute value is None. Eg. a light with state “off” has no brightness attribute so a default value of 0 could be used. If not set (or None) no value would be sent to the bus and a GroupReadRequest to the address would return the last known value.",
+          "name": "Default value"
+        },
+        "entity_id": {
+          "description": "Entity ID whose state or attribute shall be exposed.",
+          "name": "Entity"
         },
         "remove": {
-          "name": "Remove exposure",
-          "description": "Whether the exposure should be removed. Only the 'Address' field is required for removal."
+          "description": "Whether the exposure should be removed. Only the 'Address' field is required for removal.",
+          "name": "Remove exposure"
+        },
+        "type": {
+          "description": "Telegrams will be encoded as given DPT. 'binary' and all KNX sensor types are valid values (see https://www.home-assistant.io/integrations/knx/#value-types).",
+          "name": "Value type"
         }
-      }
+      },
+      "name": "Expose to KNX bus"
+    },
+    "read": {
+      "description": "Sends GroupValueRead requests to the KNX bus. Response can be used from `knx_event` and will be processed in KNX entities.",
+      "fields": {
+        "address": {
+          "description": "Group address(es) to send read request to. Lists will read multiple group addresses.",
+          "name": "[%key:component::knx::services::send::fields::address::name%]"
+        }
+      },
+      "name": "Read from KNX bus"
     },
     "reload": {
-      "name": "[%key:common::action::reload%]",
-      "description": "Reloads the KNX integration."
-    }
-  },
-  "config_panel": {
-    "entities": {
-      "create": {
-        "type_selection": {
-          "title": "Select entity type",
-          "header": "Create KNX entity"
+      "description": "Reloads the KNX integration.",
+      "name": "[%key:common::action::reload%]"
+    },
+    "send": {
+      "description": "Sends arbitrary data directly to the KNX bus.",
+      "fields": {
+        "address": {
+          "description": "Group address(es) to write to. Lists will send to multiple group addresses successively.",
+          "name": "Group address"
         },
-        "header": "Create new entity",
-        "_": {
-          "entity": {
-            "title": "Entity configuration",
-            "description": "Home Assistant specific settings.",
-            "name_title": "Device and entity name",
-            "name_description": "Define how the entity should be named in Home Assistant.",
-            "device_description": "A device allows to group multiple entities. Select the device this entity belongs to or create a new one.",
-            "entity_label": "Entity name",
-            "entity_description": "Optional if a device is selected, otherwise required. If the entity is assigned to a device, the device name is used as prefix.",
-            "entity_category_title": "Entity category",
-            "entity_category_description": "Classification of a non-primary entity. Leave empty for standard behaviour."
-          },
-          "knx": {
-            "title": "KNX configuration",
-            "knx_group_address": {
-              "dpt": "Datapoint type",
-              "send_address": "Send address",
-              "state_address": "State address",
-              "passive_addresses": "Passive addresses",
-              "valid_dpts": "Valid DPTs"
-            },
-            "sync_state": {
-              "title": "State updater",
-              "description": "Actively request state updates from KNX bus for state addresses.",
-              "strategy": "Strategy",
-              "options": {
-                "true": "Use integration default",
-                "false": "Never",
-                "init": "Once when connection established",
-                "expire": "Expire after last value update",
-                "every": "Scheduled every"
-              }
-            }
-          }
+        "payload": {
+          "description": "Payload to send to the bus. Integers are treated as DPT 1/2/3 payloads. For DPTs > 6 bits send a list. Each value represents 1 octet (0-255). Pad with 0 to DPT byte length.",
+          "name": "Payload"
         },
-        "binary_sensor": {
-          "description": "Read-only entity for binary datapoints. Window or door states etc.",
-          "knx": {
-            "section_binary_sensor": {
-              "title": "Binary sensor",
-              "description": "DPT 1 group addresses representing binary states."
-            },
-            "invert": {
-              "label": "Invert",
-              "description": "Invert payload before processing."
-            },
-            "section_advanced_options": {
-              "title": "State properties",
-              "description": "Properties of the binary sensor state."
-            },
-            "ignore_internal_state": {
-              "label": "Force update",
-              "description": "Write each update to the state machine, even if the data is the same."
-            },
-            "context_timeout": {
-              "label": "Context timeout",
-              "description": "The time in seconds between multiple identical telegram payloads would count towards an internal counter. This can be used to automate on multi-clicks of a button. `0` to disable this feature."
-            },
-            "reset_after": {
-              "label": "Reset after",
-              "description": "Reset back to “off” state after specified seconds."
-            }
-          }
+        "response": {
+          "description": "Whether the telegram should be sent as a `GroupValueResponse` instead of a `GroupValueWrite`.",
+          "name": "Send as Response"
         },
-        "cover": {
-          "description": "The KNX cover platform is used as an interface to shutter actuators.",
-          "knx": {
-            "section_binary_control": {
-              "title": "Open/Close control",
-              "description": "DPT 1 group addresses triggering full movement."
-            },
-            "ga_up_down": {
-              "label": "Open/Close"
-            },
-            "invert_updown": {
-              "label": "Invert",
-              "description": "Default is UP (0) to open a cover and DOWN (1) to close a cover. Enable this to invert the open/close commands from/to your KNX actuator."
-            },
-            "section_stop_control": {
-              "title": "Stop",
-              "description": "DPT 1 group addresses for stopping movement."
-            },
-            "ga_stop": {
-              "label": "Stop"
-            },
-            "ga_step": {
-              "label": "Stepwise move"
-            },
-            "section_position_control": {
-              "title": "Position",
-              "description": "DPT 5 group addresses for cover position."
-            },
-            "ga_position_set": {
-              "label": "Set position"
-            },
-            "ga_position_state": {
-              "label": "Current position"
-            },
-            "invert_position": {
-              "label": "Invert",
-              "description": "Invert payload before processing. Enable if KNX reports 0% as fully closed."
-            },
-            "section_tilt_control": {
-              "title": "Tilt",
-              "description": "DPT 5 group addresses for slat tilt angle."
-            },
-            "ga_angle": {
-              "label": "Tilt angle"
-            },
-            "invert_angle": {
-              "label": "[%key:component::knx::config_panel::entities::create::cover::knx::invert_position::label%]",
-              "description": "[%key:component::knx::config_panel::entities::create::cover::knx::invert_position::description%]"
-            },
-            "section_travel_time": {
-              "title": "Travel time",
-              "description": "Used to calculate intermediate positions of the cover while traveling."
-            },
-            "travelling_time_up": {
-              "label": "Travel time for opening",
-              "description": "Time the cover needs to fully open in seconds."
-            },
-            "travelling_time_down": {
-              "label": "Travel time for closing",
-              "description": "Time the cover needs to fully close in seconds."
-            }
-          }
-        },
-        "light": {
-          "description": "The KNX light platform is used as an interface to dimming actuators, LED controllers, DALI gateways and similar.",
-          "knx": {
-            "section_switch": {
-              "title": "Switch",
-              "description": "Turn the light on/off."
-            },
-            "ga_switch": {
-              "label": "Switch"
-            },
-            "section_brightness": {
-              "title": "Brightness",
-              "description": "Control the brightness of the light."
-            },
-            "ga_brightness": {
-              "label": "Brightness"
-            },
-            "section_color_temp": {
-              "title": "Color temperature",
-              "description": "Control the color temperature of the light."
-            },
-            "ga_color_temp": {
-              "label": "Color temperature",
-              "options": {
-                "5_001": "Percent",
-                "7_600": "Kelvin",
-                "9": "2-byte floating point"
-              }
-            },
-            "color_temp_min": {
-              "label": "Warmest possible color temperature"
-            },
-            "color_temp_max": {
-              "label": "Coldest possible color temperature"
-            },
-            "color": {
-              "title": "Color",
-              "description": "Control the color of the light.",
-              "options": {
-                "single_address": {
-                  "label": "Single address",
-                  "description": "RGB, RGBW or XYY color controlled by a single group address."
-                },
-                "individual_addresses": {
-                  "label": "Individual addresses",
-                  "description": "RGB(W) using individual state and brightness group addresses."
-                },
-                "hsv_addresses": {
-                  "label": "HSV",
-                  "description": "Hue, saturation and brightness using individual group addresses."
-                }
-              },
-              "ga_color": {
-                "label": "Color",
-                "options": {
-                  "232_600": "RGB",
-                  "242_600": "XYY",
-                  "251_600": "RGBW"
-                }
-              },
-              "section_red": {
-                "title": "Red",
-                "description": "Controls the light's red color component. Brightness group address is required."
-              },
-              "ga_red_switch": {
-                "label": "Red switch"
-              },
-              "ga_red_brightness": {
-                "label": "Red brightness"
-              },
-              "section_green": {
-                "title": "Green",
-                "description": "Controls the light's green color component. Brightness group address is required."
-              },
-              "ga_green_switch": {
-                "label": "Green switch"
-              },
-              "ga_green_brightness": {
-                "label": "Green brightness"
-              },
-              "section_blue": {
-                "title": "Blue",
-                "description": "Controls the light's blue color component. Brightness group address is required."
-              },
-              "ga_blue_switch": {
-                "label": "Blue switch"
-              },
-              "ga_blue_brightness": {
-                "label": "Blue brightness"
-              },
-              "section_white": {
-                "title": "White",
-                "description": "Controls the light's white color component. Brightness group address is required."
-              },
-              "ga_white_switch": {
-                "label": "White switch"
-              },
-              "ga_white_brightness": {
-                "label": "White brightness"
-              },
-              "ga_hue": {
-                "label": "Hue",
-                "description": "Controls the light's hue."
-              },
-              "ga_saturation": {
-                "label": "Saturation",
-                "description": "Controls the light's saturation."
-              }
-            }
-          }
-        },
-        "switch": {
-          "description": "The KNX switch platform is used as an interface to switching actuators.",
-          "knx": {
-            "section_switch": {
-              "title": "Switching",
-              "description": "DPT 1 group addresses controlling the switch function."
-            },
-            "ga_switch": {
-              "label": "Switch",
-              "description": "Group address to switch the device on/off."
-            },
-            "invert": {
-              "label": "Invert",
-              "description": "Invert payloads before processing or sending."
-            },
-            "respond_to_read": {
-              "label": "Respond to read",
-              "description": "Respond to GroupValueRead telegrams received to the configured send address."
-            }
-          }
+        "type": {
+          "description": "If set, the payload will not be sent as raw bytes, but encoded as given DPT. KNX sensor types are valid values (see https://www.home-assistant.io/integrations/knx/#value-types).",
+          "name": "Value type"
         }
-      }
+      },
+      "name": "Send to KNX bus"
     }
   }
 }

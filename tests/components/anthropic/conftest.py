@@ -6,7 +6,16 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.anthropic import CONF_CHAT_MODEL
-from homeassistant.components.anthropic.const import DEFAULT_CONVERSATION_NAME
+from homeassistant.components.anthropic.const import (
+    CONF_WEB_SEARCH,
+    CONF_WEB_SEARCH_CITY,
+    CONF_WEB_SEARCH_COUNTRY,
+    CONF_WEB_SEARCH_MAX_USES,
+    CONF_WEB_SEARCH_REGION,
+    CONF_WEB_SEARCH_TIMEZONE,
+    CONF_WEB_SEARCH_USER_LOCATION,
+    DEFAULT_CONVERSATION_NAME,
+)
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import llm
@@ -55,13 +64,36 @@ def mock_config_entry_with_assist(
 def mock_config_entry_with_extended_thinking(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> MockConfigEntry:
-    """Mock a config entry with assist."""
+    """Mock a config entry with extended thinking."""
     hass.config_entries.async_update_subentry(
         mock_config_entry,
         next(iter(mock_config_entry.subentries.values())),
         data={
             CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
             CONF_CHAT_MODEL: "claude-3-7-sonnet-latest",
+        },
+    )
+    return mock_config_entry
+
+
+@pytest.fixture
+def mock_config_entry_with_web_search(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> MockConfigEntry:
+    """Mock a config entry with server tools enabled."""
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        next(iter(mock_config_entry.subentries.values())),
+        data={
+            CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
+            CONF_CHAT_MODEL: "claude-sonnet-4-5",
+            CONF_WEB_SEARCH: True,
+            CONF_WEB_SEARCH_MAX_USES: 5,
+            CONF_WEB_SEARCH_USER_LOCATION: True,
+            CONF_WEB_SEARCH_CITY: "San Francisco",
+            CONF_WEB_SEARCH_REGION: "California",
+            CONF_WEB_SEARCH_COUNTRY: "US",
+            CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
         },
     )
     return mock_config_entry

@@ -376,6 +376,7 @@ US_CUSTOMARY_SYSTEM = UnitSystem(
         ("pressure", UnitOfPressure.MBAR): UnitOfPressure.PSI,
         ("pressure", UnitOfPressure.CBAR): UnitOfPressure.PSI,
         ("pressure", UnitOfPressure.BAR): UnitOfPressure.PSI,
+        ("pressure", UnitOfPressure.MILLIPASCAL): UnitOfPressure.PSI,
         ("pressure", UnitOfPressure.PA): UnitOfPressure.PSI,
         ("pressure", UnitOfPressure.HPA): UnitOfPressure.PSI,
         ("pressure", UnitOfPressure.KPA): UnitOfPressure.PSI,

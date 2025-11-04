@@ -13,9 +13,9 @@
   "requirements": ["rokuecp==0.19.5"],
   "ssdp": [
     {
-      "st": "roku:ecp",
+      "deviceType": "urn:roku-com:device:player:1-0",
       "manufacturer": "Roku",
-      "deviceType": "urn:roku-com:device:player:1-0"
+      "st": "roku:ecp"
     }
   ]
 }

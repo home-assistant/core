@@ -12,6 +12,7 @@ import voluptuous as vol
 from homeassistant.components import (
     assist_pipeline,
     conversation,
+    media_player,
     media_source,
     stt,
     tts,
@@ -675,6 +676,17 @@ def test_fallback_intent_filter() -> None:
         _async_local_fallback_intent_filter(
             RecognizeResult(
                 intent=Intent(intent.INTENT_GET_STATE),
+                intent_data=IntentData([]),
+                entities={},
+                entities_list=[],
+            )
+        )
+        is True
+    )
+    assert (
+        _async_local_fallback_intent_filter(
+            RecognizeResult(
+                intent=Intent(media_player.INTENT_MEDIA_SEARCH_AND_PLAY),
                 intent_data=IntentData([]),
                 entities={},
                 entities_list=[],

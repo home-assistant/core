@@ -24,9 +24,7 @@ from homeassistant.helpers.trigger import (
     DATA_PLUGGABLE_ACTIONS,
     PluggableAction,
     Trigger,
-    TriggerActionType,
-    TriggerConfig,
-    TriggerInfo,
+    TriggerActionRunner,
     _async_get_trigger_platform,
     async_initialize_triggers,
     async_validate_trigger_config,
@@ -449,7 +447,31 @@ async def test_pluggable_action(
     assert not plug_2
 
 
-async def test_platform_multiple_triggers(hass: HomeAssistant) -> None:
+class TriggerActionFunctionTypeHelper:
+    """Helper for testing different trigger action function types."""
+
+    def __init__(self) -> None:
+        """Init helper."""
+        self.action_calls = []
+
+    @callback
+    def cb_action(self, *args):
+        """Callback action."""
+        self.action_calls.append([*args])
+
+    def sync_action(self, *args):
+        """Sync action."""
+        self.action_calls.append([*args])
+
+    async def async_action(self, *args):
+        """Async action."""
+        self.action_calls.append([*args])
+
+
+@pytest.mark.parametrize("action_method", ["cb_action", "sync_action", "async_action"])
+async def test_platform_multiple_triggers(
+    hass: HomeAssistant, action_method: str
+) -> None:
     """Test a trigger platform with multiple trigger."""
 
     class MockTrigger(Trigger):
@@ -462,30 +484,23 @@ async def test_platform_multiple_triggers(hass: HomeAssistant) -> None:
             """Validate config."""
             return config
 
-        def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
-            """Initialize trigger."""
-
     class MockTrigger1(MockTrigger):
         """Mock trigger 1."""
 
-        async def async_attach(
-            self,
-            action: TriggerActionType,
-            trigger_info: TriggerInfo,
+        async def async_attach_runner(
+            self, run_action: TriggerActionRunner
         ) -> CALLBACK_TYPE:
             """Attach a trigger."""
-            action({"trigger": "test_trigger_1"})
+            run_action({"extra": "test_trigger_1"}, "trigger 1 desc")
 
     class MockTrigger2(MockTrigger):
         """Mock trigger 2."""
 
-        async def async_attach(
-            self,
-            action: TriggerActionType,
-            trigger_info: TriggerInfo,
+        async def async_attach_runner(
+            self, run_action: TriggerActionRunner
         ) -> CALLBACK_TYPE:
             """Attach a trigger."""
-            action({"trigger": "test_trigger_2"})
+            run_action({"extra": "test_trigger_2"}, "trigger 2 desc")
 
     async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
         return {
@@ -508,22 +523,41 @@ async def test_platform_multiple_triggers(hass: HomeAssistant) -> None:
 
     log_cb = MagicMock()
 
-    action_calls = []
+    action_helper = TriggerActionFunctionTypeHelper()
+    action_method = getattr(action_helper, action_method)
 
-    @callback
-    def cb_action(*args):
-        action_calls.append([*args])
+    await async_initialize_triggers(hass, config_1, action_method, "test", "", log_cb)
+    assert len(action_helper.action_calls) == 1
+    assert action_helper.action_calls[0][0] == {
+        "trigger": {
+            "alias": None,
+            "description": "trigger 1 desc",
+            "extra": "test_trigger_1",
+            "id": "0",
+            "idx": "0",
+            "platform": "test",
+        }
+    }
+    action_helper.action_calls.clear()
 
-    await async_initialize_triggers(hass, config_1, cb_action, "test", "", log_cb)
-    assert action_calls == [[{"trigger": "test_trigger_1"}]]
-    action_calls.clear()
-
-    await async_initialize_triggers(hass, config_2, cb_action, "test", "", log_cb)
-    assert action_calls == [[{"trigger": "test_trigger_2"}]]
-    action_calls.clear()
+    await async_initialize_triggers(hass, config_2, action_method, "test", "", log_cb)
+    assert len(action_helper.action_calls) == 1
+    assert action_helper.action_calls[0][0] == {
+        "trigger": {
+            "alias": None,
+            "description": "trigger 2 desc",
+            "extra": "test_trigger_2",
+            "id": "0",
+            "idx": "0",
+            "platform": "test.trig_2",
+        }
+    }
+    action_helper.action_calls.clear()
 
     with pytest.raises(KeyError):
-        await async_initialize_triggers(hass, config_3, cb_action, "test", "", log_cb)
+        await async_initialize_triggers(
+            hass, config_3, action_method, "test", "", log_cb
+        )
 
 
 async def test_platform_migrate_trigger(hass: HomeAssistant) -> None:

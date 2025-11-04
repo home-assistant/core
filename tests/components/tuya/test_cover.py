@@ -18,7 +18,13 @@ from homeassistant.components.cover import (
     SERVICE_SET_COVER_POSITION,
     SERVICE_SET_COVER_TILT_POSITION,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_CLOSED,
+    STATE_OPEN,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceNotSupported
 from homeassistant.helpers import entity_registry as er
@@ -311,3 +317,38 @@ async def test_clkg_wltqkykhni0papzj_action(
         mock_device.id,
         expected_commands,
     )
+
+
+@pytest.mark.parametrize(
+    "mock_device_code",
+    ["cl_n3xgr5pdmpinictg"],
+)
+@pytest.mark.parametrize(
+    ("initial_control", "expected_state"),
+    [
+        ("open", STATE_OPEN),
+        ("stop", STATE_UNKNOWN),
+        ("close", STATE_CLOSED),
+    ],
+)
+@patch("homeassistant.components.tuya.PLATFORMS", [Platform.COVER])
+async def test_cl_n3xgr5pdmpinictg_state(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    initial_control: str,
+    expected_state: str,
+) -> None:
+    """Test cover position for n3xgr5pdmpinictg device.
+
+    See https://github.com/home-assistant/core/issues/153537
+    """
+    entity_id = "cover.estore_sala_curtain"
+    mock_device.status["control"] = initial_control
+
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    state = hass.states.get(entity_id)
+    assert state is not None, f"{entity_id} does not exist"
+    assert state.state == expected_state

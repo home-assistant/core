@@ -11,6 +11,7 @@ from pynina import ApiError
 
 from homeassistant.components.nina.const import (
     CONF_AREA_FILTER,
+    CONF_FILTERS,
     CONF_HEADLINE_FILTER,
     CONF_MESSAGE_SLOTS,
     CONF_REGIONS,
@@ -39,8 +40,10 @@ DUMMY_DATA: dict[str, Any] = {
     CONST_REGION_M_TO_Q: ["071380000000_0", "071380000000_1"],
     CONST_REGION_R_TO_U: ["072320000000_0", "072320000000_1"],
     CONST_REGION_V_TO_Z: ["081270000000_0", "081270000000_1"],
-    CONF_HEADLINE_FILTER: ".*corona.*",
-    CONF_AREA_FILTER: ".*",
+    CONF_FILTERS: {
+        CONF_HEADLINE_FILTER: ".*corona.*",
+        CONF_AREA_FILTER: ".*",
+    },
 }
 
 DUMMY_RESPONSE_REGIONS: dict[str, Any] = json.loads(
@@ -112,6 +115,13 @@ async def test_step_user(hass: HomeAssistant) -> None:
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == "NINA"
+        assert result["data"] == deepcopy(DUMMY_DATA) | {
+            CONF_REGIONS: {
+                "095760000000": "Allersberg, M (Roth - Bayern) + Büchenbach (Roth - Bayern)"
+            }
+        }
+        assert result["version"] == 1
+        assert result["minor_version"] == 3
 
 
 async def test_step_user_no_selection(hass: HomeAssistant) -> None:
@@ -121,7 +131,9 @@ async def test_step_user_no_selection(hass: HomeAssistant) -> None:
         wraps=mocked_request_function,
     ):
         result: dict[str, Any] = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data={CONF_HEADLINE_FILTER: ""}
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={CONF_FILTERS: {CONF_HEADLINE_FILTER: ""}},
         )
 
         assert result["type"] is FlowResultType.FORM
@@ -135,7 +147,7 @@ async def test_step_user_already_configured(hass: HomeAssistant) -> None:
         "pynina.baseApi.BaseAPI._makeRequest",
         wraps=mocked_request_function,
     ):
-        result: dict[str, Any] = await hass.config_entries.flow.async_init(
+        await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=deepcopy(DUMMY_DATA)
         )
 
@@ -153,12 +165,13 @@ async def test_options_flow_init(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         title="NINA",
         data={
-            CONF_HEADLINE_FILTER: deepcopy(DUMMY_DATA[CONF_HEADLINE_FILTER]),
-            CONF_AREA_FILTER: deepcopy(DUMMY_DATA[CONF_AREA_FILTER]),
+            CONF_FILTERS: deepcopy(DUMMY_DATA[CONF_FILTERS]),
             CONF_MESSAGE_SLOTS: deepcopy(DUMMY_DATA[CONF_MESSAGE_SLOTS]),
             CONST_REGION_A_TO_D: deepcopy(DUMMY_DATA[CONST_REGION_A_TO_D]),
             CONF_REGIONS: {"095760000000": "Aach"},
         },
+        version=1,
+        minor_version=3,
     )
     config_entry.add_to_hass(hass)
 
@@ -186,6 +199,7 @@ async def test_options_flow_init(hass: HomeAssistant) -> None:
                 CONST_REGION_M_TO_Q: [],
                 CONST_REGION_R_TO_U: [],
                 CONST_REGION_V_TO_Z: [],
+                CONF_FILTERS: {},
             },
         )
 
@@ -193,8 +207,7 @@ async def test_options_flow_init(hass: HomeAssistant) -> None:
         assert result["data"] == {}
 
         assert dict(config_entry.data) == {
-            CONF_HEADLINE_FILTER: deepcopy(DUMMY_DATA[CONF_HEADLINE_FILTER]),
-            CONF_AREA_FILTER: deepcopy(DUMMY_DATA[CONF_AREA_FILTER]),
+            CONF_FILTERS: deepcopy(DUMMY_DATA[CONF_FILTERS]),
             CONF_MESSAGE_SLOTS: deepcopy(DUMMY_DATA[CONF_MESSAGE_SLOTS]),
             CONST_REGION_A_TO_D: ["072350000000_1"],
             CONST_REGION_E_TO_H: [],
@@ -214,6 +227,8 @@ async def test_options_flow_with_no_selection(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         title="NINA",
         data=deepcopy(DUMMY_DATA),
+        version=1,
+        minor_version=3,
     )
     config_entry.add_to_hass(hass)
 
@@ -241,7 +256,7 @@ async def test_options_flow_with_no_selection(hass: HomeAssistant) -> None:
                 CONST_REGION_M_TO_Q: [],
                 CONST_REGION_R_TO_U: [],
                 CONST_REGION_V_TO_Z: [],
-                CONF_HEADLINE_FILTER: "",
+                CONF_FILTERS: {CONF_HEADLINE_FILTER: ""},
             },
         )
 
@@ -256,6 +271,8 @@ async def test_options_flow_connection_error(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         title="NINA",
         data=deepcopy(DUMMY_DATA),
+        version=1,
+        minor_version=3,
     )
     config_entry.add_to_hass(hass)
 
@@ -284,6 +301,8 @@ async def test_options_flow_unexpected_exception(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         title="NINA",
         data=deepcopy(DUMMY_DATA),
+        version=1,
+        minor_version=3,
     )
     config_entry.add_to_hass(hass)
 
@@ -315,6 +334,8 @@ async def test_options_flow_entity_removal(
         domain=DOMAIN,
         title="NINA",
         data=deepcopy(DUMMY_DATA) | {CONF_REGIONS: {"095760000000": "Aach"}},
+        version=1,
+        minor_version=3,
     )
     config_entry.add_to_hass(hass)
 
@@ -339,6 +360,7 @@ async def test_options_flow_entity_removal(
                 CONST_REGION_M_TO_Q: [],
                 CONST_REGION_R_TO_U: [],
                 CONST_REGION_V_TO_Z: [],
+                CONF_FILTERS: {},
             },
         )
 
