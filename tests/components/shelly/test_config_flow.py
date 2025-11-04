@@ -2016,7 +2016,7 @@ async def test_bluetooth_discovery_already_configured(
 
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="c0:49:ef:88:73:e8",  # MAC from device name with colons
+        unique_id="C049EF8873E8",  # MAC from device name - uppercase no colons
         data={
             CONF_HOST: "1.1.1.1",
             CONF_MODEL: MODEL_PLUS_2PM,
@@ -2091,10 +2091,13 @@ async def test_bluetooth_wifi_scan_success(
     )
 
     with (
-        patch("homeassistant.components.shelly.config_flow.async_provision_wifi"),
+        patch(
+            "homeassistant.components.shelly.config_flow.async_provision_wifi",
+            new=AsyncMock(),
+        ),
         patch(
             "homeassistant.components.shelly.config_flow.async_lookup_device_by_name",
-            return_value=("1.1.1.1", 80),
+            new=AsyncMock(return_value=("1.1.1.1", 80)),
         ),
         patch(
             "homeassistant.components.shelly.config_flow.get_info",
@@ -2114,11 +2117,9 @@ async def test_bluetooth_wifi_scan_success(
         # Provisioning shows progress
         assert result["type"] is FlowResultType.SHOW_PROGRESS
         await hass.async_block_till_done()
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    # Provisioning done
-    assert result["type"] is FlowResultType.SHOW_PROGRESS_DONE
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        # Complete provisioning
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert len(mock_setup.mock_calls) == 1
@@ -2175,10 +2176,13 @@ async def test_bluetooth_wifi_scan_failure(
 
     # Complete provisioning
     with (
-        patch("homeassistant.components.shelly.config_flow.async_provision_wifi"),
+        patch(
+            "homeassistant.components.shelly.config_flow.async_provision_wifi",
+            new=AsyncMock(),
+        ),
         patch(
             "homeassistant.components.shelly.config_flow.async_lookup_device_by_name",
-            return_value=("1.1.1.1", 80),
+            new=AsyncMock(return_value=("1.1.1.1", 80)),
         ),
         patch(
             "homeassistant.components.shelly.config_flow.get_info",
@@ -2198,11 +2202,9 @@ async def test_bluetooth_wifi_scan_failure(
         # Provisioning shows progress
         assert result["type"] is FlowResultType.SHOW_PROGRESS
         await hass.async_block_till_done()
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    # Provisioning done
-    assert result["type"] is FlowResultType.SHOW_PROGRESS_DONE
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        # Complete provisioning
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert len(mock_setup.mock_calls) == 1
@@ -2361,11 +2363,11 @@ async def test_bluetooth_wifi_provision_failure(
     with (
         patch(
             "homeassistant.components.shelly.config_flow.async_provision_wifi",
-            side_effect=DeviceConnectionError,
+            new=AsyncMock(side_effect=DeviceConnectionError),
         ),
         patch(
             "homeassistant.components.shelly.config_flow.async_lookup_device_by_name",
-            return_value=None,
+            new=AsyncMock(return_value=None),
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -2376,11 +2378,9 @@ async def test_bluetooth_wifi_provision_failure(
         # Provisioning shows progress
         assert result["type"] is FlowResultType.SHOW_PROGRESS
         await hass.async_block_till_done()
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    # Provisioning done
-    assert result["type"] is FlowResultType.SHOW_PROGRESS_DONE
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        # Provisioning failed, get the result
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "provision_failed"
@@ -2403,10 +2403,13 @@ async def test_bluetooth_wifi_provision_failure(
 
     # Provision succeeds this time
     with (
-        patch("homeassistant.components.shelly.config_flow.async_provision_wifi"),
+        patch(
+            "homeassistant.components.shelly.config_flow.async_provision_wifi",
+            new=AsyncMock(),
+        ),
         patch(
             "homeassistant.components.shelly.config_flow.async_lookup_device_by_name",
-            return_value=("1.1.1.1", 80),
+            new=AsyncMock(return_value=("1.1.1.1", 80)),
         ),
         patch(
             "homeassistant.components.shelly.config_flow.get_info",
@@ -2426,11 +2429,9 @@ async def test_bluetooth_wifi_provision_failure(
         # Provisioning shows progress
         assert result["type"] is FlowResultType.SHOW_PROGRESS
         await hass.async_block_till_done()
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    # Provisioning done
-    assert result["type"] is FlowResultType.SHOW_PROGRESS_DONE
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        # Complete provisioning
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert len(mock_setup.mock_calls) == 1
