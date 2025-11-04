@@ -60,6 +60,8 @@ async def test_bluetooth_discovery(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Airthings Wave Plus (2930123456)"
     assert result["result"].unique_id == "cc:cc:cc:cc:cc:cc"
+    assert result["data"] == {"device_model": "2930"}
+    assert result["result"].data == {"device_model": "2930"}
 
 
 async def test_bluetooth_discovery_no_BLEDevice(hass: HomeAssistant) -> None:
@@ -158,6 +160,8 @@ async def test_user_setup(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Airthings Wave Plus (2930123456)"
     assert result["result"].unique_id == "cc:cc:cc:cc:cc:cc"
+    assert result["data"] == {"device_model": "2930"}
+    assert result["result"].data == {"device_model": "2930"}
 
 
 async def test_user_setup_replaces_ignored_device(hass: HomeAssistant) -> None:
@@ -208,6 +212,8 @@ async def test_user_setup_replaces_ignored_device(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Airthings Wave Plus (2930123456)"
     assert result["result"].unique_id == "cc:cc:cc:cc:cc:cc"
+    assert result["data"] == {"device_model": "2930"}
+    assert result["result"].data == {"device_model": "2930"}
 
 
 async def test_user_setup_no_device(hass: HomeAssistant) -> None:
