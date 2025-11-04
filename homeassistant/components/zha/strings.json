@@ -17,9 +17,9 @@
     },
     "flow_title": "{name}",
     "progress": {
-      "form_new_network": "Forming a new Zigbee network.\nWe scan for a clear network channel as part of this process, this can take a minute.",
-      "maybe_reset_old_radio": "Resetting old adapter.\nYour old adapter has been backed up and is being factory reset.",
-      "restore_backup": "Restoring network settings to new adapter.\nThis will take a minute."
+      "form_new_network": "Forming a new Zigbee network.\n\nWe scan for a clear network channel as part of this process, this can take a minute.",
+      "maybe_reset_old_radio": "Resetting old adapter.\n\nYour old adapter has been backed up and is being factory reset.",
+      "restore_backup": "Restoring network settings to new adapter.\n\nThis will take a minute."
     },
     "step": {
       "choose_automatic_backup": {
