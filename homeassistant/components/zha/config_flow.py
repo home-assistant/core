@@ -487,9 +487,62 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
             temp_radio_mgr.device_settings = config_entry.data[CONF_DEVICE]
             temp_radio_mgr.radio_type = RadioType[config_entry.data[CONF_RADIO_TYPE]]
 
-            await temp_radio_mgr.async_reset_adapter()
+            try:
+                await temp_radio_mgr.async_reset_adapter()
+            except HomeAssistantError:
+                # Old adapter not found or cannot connect, show prompt to plug back in
+                return await self.async_step_plug_in_old_radio()
 
         return await self.async_step_maybe_confirm_ezsp_restore()
+
+    async def async_step_plug_in_old_radio(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Prompt user to plug in the old radio if connection fails."""
+        config_entries = self.hass.config_entries.async_entries(
+            DOMAIN, include_ignore=False
+        )
+
+        # Unless the user removes the config entry whilst we try to reset the old radio
+        # for a few seconds and then also unplugs it, we will basically never hit this
+        if not config_entries:
+            return await self.async_step_maybe_confirm_ezsp_restore()
+
+        config_entry = config_entries[0]
+        old_device_path = config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
+
+        return self.async_show_menu(
+            step_id="plug_in_old_radio",
+            menu_options=["retry_old_radio", "skip_reset_old_radio"],
+            description_placeholders={"device_path": old_device_path},
+        )
+
+    async def async_step_retry_old_radio(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Retry connecting to the old radio."""
+        return await self.async_step_maybe_reset_old_radio()
+
+    async def async_step_skip_reset_old_radio(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Skip resetting the old radio and continue with migration."""
+        return await self.async_step_maybe_confirm_ezsp_restore()
+
+    async def async_step_plug_in_new_radio(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Prompt user to plug in the new radio if connection fails."""
+        if user_input is not None:
+            # User confirmed, retry now
+            return await self.async_step_maybe_confirm_ezsp_restore()
+
+        assert self._radio_mgr.device_path is not None
+
+        return self.async_show_form(
+            step_id="plug_in_new_radio",
+            description_placeholders={"device_path": self._radio_mgr.device_path},
+        )
 
     async def async_step_migration_strategy_advanced(
         self, user_input: dict[str, Any] | None = None
@@ -647,6 +700,9 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
                 # On confirmation, overwrite destructively
                 try:
                     await self._radio_mgr.restore_backup(overwrite_ieee=True)
+                except HomeAssistantError:
+                    # User unplugged the new adapter, allow retry
+                    return await self.async_step_plug_in_new_radio()
                 except CannotWriteNetworkSettings as exc:
                     return self.async_abort(
                         reason="cannot_restore_backup",
@@ -664,6 +720,9 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         except DestructiveWriteNetworkSettings:
             # Restore cannot happen automatically, we need to ask for permission
             pass
+        except HomeAssistantError:
+            # User unplugged the new adapter, allow retry
+            return await self.async_step_plug_in_new_radio()
         except CannotWriteNetworkSettings as exc:
             return self.async_abort(
                 reason="cannot_restore_backup",
