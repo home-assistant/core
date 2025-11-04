@@ -517,12 +517,11 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             LOGGER.debug(
                 "Timeout waiting for zeroconf discovery after WiFi provisioning"
             )
-            return self.async_abort(
-                reason="wifi_provisioned",
-                description_placeholders={
-                    "name": self.context["title_placeholders"]["name"],
-                    "ssid": self.selected_ssid,
-                },
+            # Device didn't appear on network - likely wrong password or network
+            # Move to retry step
+            return self.async_show_form(
+                step_id="provision_failed",
+                description_placeholders={"ssid": self.selected_ssid},
             )
 
         # Device discovered via zeroconf - get device info and continue to confirmation
@@ -583,6 +582,19 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self._provision_task = None
         return self.async_show_progress_done(next_step_id="provision_done")
+
+    async def async_step_provision_failed(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle failed provisioning - allow retry."""
+        if user_input is not None:
+            # User wants to retry - go back to wifi_scan
+            return await self.async_step_wifi_scan()
+
+        return self.async_show_form(
+            step_id="provision_failed",
+            description_placeholders={"ssid": self.selected_ssid},
+        )
 
     async def async_step_provision_done(
         self, user_input: dict[str, Any] | None = None

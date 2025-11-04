@@ -44,6 +44,9 @@
           "username": "Username for the device's web panel."
         }
       },
+      "provision_failed": {
+        "description": "The device did not connect to {ssid}. This may be due to an incorrect password or the network being out of range. Would you like to try again?"
+      },
       "reauth_confirm": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
