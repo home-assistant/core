@@ -22,7 +22,7 @@
           "url": "URL of the Music Assistant server"
         },
         "data_description": {
-          "url": "[%key:component::music_assistant::config::step::init::data_description::url%]"
+          "url": "URL of the Music Assistant server"
         }
       }
     }
