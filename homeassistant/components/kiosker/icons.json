@@ -32,6 +32,9 @@
     },
     "blackout_clear": {
       "service": "mdi:monitor"
+    },
+    "update": {
+      "service": "mdi:update"
     }
   }
 }

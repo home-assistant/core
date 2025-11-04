@@ -8,7 +8,7 @@ CONF_SSL = "ssl"
 CONF_SSL_VERIFY = "ssl_verify"
 # Default values
 DEFAULT_PORT = 8081
-POLL_INTERVAL = 30  # Fixed polling interval in seconds
+POLL_INTERVAL = 15
 DEFAULT_SSL = False
 DEFAULT_SSL_VERIFY = False
 
@@ -24,6 +24,7 @@ SERVICE_CLEAR_CACHE = "clear_cache"
 SERVICE_SCREENSAVER_INTERACT = "screensaver_interact"
 SERVICE_BLACKOUT_SET = "blackout_set"
 SERVICE_BLACKOUT_CLEAR = "blackout_clear"
+SERVICE_UPDATE = "update"
 
 # Attributes
 ATTR_URL = "url"

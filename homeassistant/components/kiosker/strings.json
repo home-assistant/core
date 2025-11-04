@@ -126,6 +126,10 @@
       "name": "Navigate to URL",
       "description": "Navigate to a specific URL",
       "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "The Kiosker device to control"
+        },
         "url": {
           "name": "URL",
           "description": "The URL to navigate to"
@@ -134,40 +138,92 @@
     },
     "navigate_refresh": {
       "name": "Refresh",
-      "description": "Refresh the current page"
+      "description": "Refresh the current page",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "The Kiosker device to control"
+        }
+      }
     },
     "navigate_home": {
       "name": "Navigate home",
-      "description": "Navigate to the home page"
+      "description": "Navigate to the home page",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "The Kiosker device to control"
+        }
+      }
     },
     "navigate_backward": {
       "name": "Navigate backward",
-      "description": "Navigate to the previous page in history"
+      "description": "Navigate to the previous page in history",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "The Kiosker device to control"
+        }
+      }
     },
     "navigate_forward": {
       "name": "Navigate forward",
-      "description": "Navigate to the next page in history"
+      "description": "Navigate to the next page in history",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "The Kiosker device to control"
+        }
+      }
     },
     "print": {
       "name": "Print",
-      "description": "Print the current page"
+      "description": "Print the current page",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "The Kiosker device to control"
+        }
+      }
     },
     "clear_cookies": {
       "name": "Clear cookies",
-      "description": "Clear all cookies"
+      "description": "Clear all cookies",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "The Kiosker device to control"
+        }
+      }
     },
     "clear_cache": {
       "name": "Clear cache",
-      "description": "Clear the browser cache"
+      "description": "Clear the browser cache",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "The Kiosker device to control"
+        }
+      }
     },
     "screensaver_interact": {
       "name": "Screensaver interact",
-      "description": "Interact with the screensaver"
+      "description": "Interact with the screensaver",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "The Kiosker device to control"
+        }
+      }
     },
     "blackout_set": {
       "name": "Set blackout",
       "description": "Set blackout screen with custom message",
       "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "The Kiosker device to control"
+        },
         "visible": {
           "name": "Visible",
           "description": "Whether the blackout is visible"
@@ -216,7 +272,23 @@
     },
     "blackout_clear": {
       "name": "Clear blackout",
-      "description": "Clear the blackout screen"
+      "description": "Clear the blackout screen",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "The Kiosker device to control"
+        }
+      }
+    },
+    "update": {
+      "name": "Update",
+      "description": "Force an immediate update of device status",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "The Kiosker device to control"
+        }
+      }
     }
   },
   "exceptions": {
