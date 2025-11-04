@@ -47,7 +47,6 @@ class FishAudioTTSEntity(TextToSpeechEntity):
     """Fish Audio TTS entity."""
 
     _attr_has_entity_name = True
-    _attr_name = None
     _attr_supported_options = [CONF_VOICE_ID, CONF_BACKEND]
 
     def __init__(self, entry: FishAudioConfigEntry, sub_entry: ConfigSubentry) -> None:
@@ -58,6 +57,7 @@ class FishAudioTTSEntity(TextToSpeechEntity):
         self._attr_unique_id = sub_entry.subentry_id
         title = sub_entry.title
         backend = sub_entry.data.get(CONF_BACKEND)
+        self._attr_name = title
         self.entity_id = f"tts.{title}_{backend}"
 
         self._attr_device_info = DeviceInfo(
