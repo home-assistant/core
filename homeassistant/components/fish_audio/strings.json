@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Connect to Fish Audio",
-        "description": "Enter your Fish Audio API key to begin.\n\nIf you don't have an account, you can sign up for a free one on [Fish Audio](https://fish.audio/?fpr=homeassistant).",
+        "description": "Enter your Fish Audio API key to begin.\n\nIf you don't have an account, you can sign up for a free one on [Fish Audio]({signup_url}).",
         "data": {
           "api_key": "API Key"
         },
@@ -20,23 +20,13 @@
         "data_description": {
           "api_key": "Your personal API key for accessing the Fish Audio service."
         }
-      },
-      "reauth_confirm": {
-        "title": "Reauthenticate Integration",
-        "description": "The API key for Fish Audio is no longer valid. Please enter it again.",
-        "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]"
-        },
-        "data_description": {
-          "api_key": "Your personal API key for accessing the Fish Audio service."
-        }
       }
     },
     "error": {
       "cannot_connect": "Failed to connect, please check your API key and network connection.",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_auth": "Invalid authentication. Please check your API key. You can get your API key from [Fish Audio API Keys]({api_keys_url}).",
       "reconfigure_wrong_account": "The provided API key belongs to a different user. Please use an API key from the original account."
     },
     "abort": {
@@ -56,7 +46,7 @@
       "entry_type": "TTS voice",
       "step": {
         "init": {
-          "title": "Voice Selection Filters",
+          "title": "Voice selection filters",
           "description": "Apply filters to narrow down the voice list, then click Submit to see the results.",
           "data": {
             "self_only": "Show only my private voices",
@@ -70,7 +60,7 @@
           }
         },
         "model": {
-          "title": "Choose Your Voice and Model",
+          "title": "Choose your voice and model",
           "description": "Select your preferred voice and the AI model to use for speech synthesis.",
           "data": {
             "voice_id": "Voice",
@@ -82,7 +72,7 @@
           }
         },
         "name": {
-          "title": "Name Your TTS Voice",
+          "title": "Name your TTS voice",
           "description": "Enter a unique name for this TTS voice to easily identify it in Home Assistant.",
           "data": {
             "name": "[%key:common::config_flow::data::name%]"
@@ -98,16 +88,6 @@
         "already_configured": "This TTS voice is already configured.",
         "reconfigure_successful": "Your TTS voice has been updated successfully. The integration will now reload with the new settings."
       }
-    }
-  },
-  "issues": {
-    "low_credit_balance": {
-      "title": "Fish Audio Credit Balance is Low",
-      "description": "Your Fish Audio credit balance is currently {balance}. Please top up your account to ensure the service continues to work without interruption."
-    },
-    "payment_required": {
-      "title": "Fish Audio Payment Required",
-      "description": "A request to the Fish Audio service failed because of a payment issue (e.g., no credit left). Please check your account billing details at [Fish Audio Billing](https://fish.audio/app/billing/) to ensure the service continues to work without interruption."
     }
   }
 }
