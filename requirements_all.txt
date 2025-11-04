@@ -389,7 +389,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==13.15.0
+aioshelly==13.16.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -1184,7 +1184,7 @@ hole==0.9.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.83
+holidays==0.84
 
 # homeassistant.components.frontend
 home-assistant-frontend==20251104.0
