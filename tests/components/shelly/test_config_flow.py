@@ -2645,23 +2645,23 @@ async def test_bluetooth_provision_requires_auth(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "credentials"
 
-    # Provide credentials and complete
-    with patch(
-        "homeassistant.components.shelly.config_flow.validate_input",
-        return_value={
-            "title": "Test name",
-            "mac": "C049EF8873E8",
-            CONF_HOST: "1.1.1.1",
-            CONF_PORT: 80,
-            CONF_MODEL: MODEL_PLUS_2PM,
-            CONF_SLEEP_PERIOD: 0,
-            CONF_GEN: 2,
-        },
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_USERNAME: "admin", CONF_PASSWORD: "password"},
-        )
+    # Provide password (username is automatically set to "admin" for RPC devices)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_PASSWORD: "password"},
+    )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == "C049EF8873E8"
+    assert result["title"] == "Test name"
+    assert result["data"] == {
+        CONF_HOST: "1.1.1.1",
+        CONF_PORT: 80,
+        CONF_USERNAME: "admin",  # Automatically added for RPC devices
+        CONF_PASSWORD: "password",
+        CONF_MODEL: MODEL_PLUS_2PM,
+        CONF_SLEEP_PERIOD: 0,
+        CONF_GEN: 2,
+    }
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
