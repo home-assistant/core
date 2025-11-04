@@ -1976,6 +1976,15 @@ async def test_bluetooth_discovery(
 
     # Provisioning should complete and create entry
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "C049EF8873E8"
+    assert result["title"] == "Test name"
+    assert result["data"] == {
+        CONF_HOST: "1.1.1.1",
+        CONF_PORT: 80,
+        CONF_MODEL: MODEL_PLUS_2PM,
+        CONF_SLEEP_PERIOD: 0,
+        CONF_GEN: 2,
+    }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -2118,6 +2127,15 @@ async def test_bluetooth_wifi_scan_success(
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "C049EF8873E8"
+    assert result["title"] == "Test name"
+    assert result["data"] == {
+        CONF_HOST: "1.1.1.1",
+        CONF_PORT: 80,
+        CONF_MODEL: MODEL_PLUS_2PM,
+        CONF_SLEEP_PERIOD: 0,
+        CONF_GEN: 2,
+    }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -2197,6 +2215,15 @@ async def test_bluetooth_wifi_scan_failure(
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "C049EF8873E8"
+    assert result["title"] == "Test name"
+    assert result["data"] == {
+        CONF_HOST: "1.1.1.1",
+        CONF_PORT: 80,
+        CONF_MODEL: MODEL_PLUS_2PM,
+        CONF_SLEEP_PERIOD: 0,
+        CONF_GEN: 2,
+    }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -2296,6 +2323,7 @@ async def test_bluetooth_wifi_credentials_and_provision_success(
 
     # Should create entry
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "C049EF8873E8"
     assert result["title"] == "Test name"
     assert result["data"] == {
         CONF_HOST: "1.1.1.1",
@@ -2407,5 +2435,14 @@ async def test_bluetooth_wifi_provision_failure(
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "C049EF8873E8"
+    assert result["title"] == "Test name"
+    assert result["data"] == {
+        CONF_HOST: "1.1.1.1",
+        CONF_PORT: 80,
+        CONF_MODEL: MODEL_PLUS_2PM,
+        CONF_SLEEP_PERIOD: 0,
+        CONF_GEN: 2,
+    }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
