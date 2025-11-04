@@ -2988,25 +2988,25 @@ async def test_plug_in_new_radio_retry(
         assert result4["step_id"] == "maybe_confirm_ezsp_restore"
 
         # Confirm destructive rewrite, but adapter is unplugged again
-        result4 = await hass.config_entries.flow.async_configure(
+        result5 = await hass.config_entries.flow.async_configure(
             result3["flow_id"],
             user_input={config_flow.OVERWRITE_COORDINATOR_IEEE: True},
         )
 
         # Prompt user to plug old adapter back in again
-        assert result4["type"] is FlowResultType.FORM
-        assert result4["step_id"] == "plug_in_new_radio"
-        assert result4["description_placeholders"] == {"device_path": "/dev/ttyUSB1234"}
+        assert result5["type"] is FlowResultType.FORM
+        assert result5["step_id"] == "plug_in_new_radio"
+        assert result5["description_placeholders"] == {"device_path": "/dev/ttyUSB1234"}
 
         # User confirms they plugged in the adapter
-        result5 = await hass.config_entries.flow.async_configure(
+        result6 = await hass.config_entries.flow.async_configure(
             result4["flow_id"],
             user_input={},
         )
 
     # Entry created successfully
-    assert result5["type"] is FlowResultType.CREATE_ENTRY
-    assert result5["data"][CONF_RADIO_TYPE] == "ezsp"
+    assert result6["type"] is FlowResultType.CREATE_ENTRY
+    assert result6["data"][CONF_RADIO_TYPE] == "ezsp"
 
     # Verify restore was attempted four times:
     # first fail + retry for destructive dialog + failed destructive + successful retry
