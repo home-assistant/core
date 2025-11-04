@@ -32,7 +32,8 @@ async def async_scan_wifi_networks(ble_device: BLEDevice) -> list[dict[str, Any]
 
     try:
         await device.initialize()
-        scan_result = await device.call_rpc("WiFi.Scan")
+        # WiFi scan can take up to 20 seconds - use 30s timeout to be safe
+        scan_result = await device.call_rpc("WiFi.Scan", timeout=30)
         return cast(list[dict[str, Any]], scan_result.get("results", []))
     finally:
         await device.shutdown()
