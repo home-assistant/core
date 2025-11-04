@@ -4,6 +4,7 @@ import asyncio.exceptions
 from typing import Any
 
 from flexit_bacnet import (
+    OPERATION_MODE_FIREPLACE,
     OPERATION_MODE_OFF,
     VENTILATION_MODE_AWAY,
     VENTILATION_MODE_HOME,
@@ -140,7 +141,12 @@ class FlexitClimateEntity(FlexitEntity, ClimateEntity):
                 # Use trigger method for fireplace mode
                 await self.device.trigger_fireplace_mode()
             else:
-                # Use ventilation mode for standard modes
+                # If currently in fireplace mode, toggle it off first
+                # trigger_fireplace_mode() acts as a toggle
+                if self.device.operation_mode == OPERATION_MODE_FIREPLACE:
+                    await self.device.trigger_fireplace_mode()
+
+                # Set the desired ventilation mode
                 ventilation_mode = PRESET_TO_VENTILATION_MODE_MAP[preset_mode]
                 await self.device.set_ventilation_mode(ventilation_mode)
         except (asyncio.exceptions.TimeoutError, ConnectionError, DecodingError) as exc:
