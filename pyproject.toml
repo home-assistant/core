@@ -101,6 +101,12 @@ include-package-data = true
 [tool.setuptools.packages.find]
 include = ["homeassistant*"]
 
+[[tool.setuptools-rust.ext-modules]]
+target = "homeassistant.rust_core.rust_core"
+path = "homeassistant/rust_core/Cargo.toml"
+binding = "PyO3"
+debug = false
+
 [tool.pylint.MAIN]
 py-version = "3.13"
 # Use a conservative default here; 2 should speed up most setups and not hurt
