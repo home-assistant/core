@@ -135,6 +135,27 @@ WAVE_ENHANCE_SERVICE_INFO = BluetoothServiceInfoBleak(
     tx_power=0,
 )
 
+CORENTIUM_HOME_2_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="cc-cc-cc-cc-cc-cc",
+    address="cc:cc:cc:cc:cc:cc",
+    device=generate_ble_device(
+        address="cc:cc:cc:cc:cc:cc",
+        name="Airthings Corentium Home 2",
+    ),
+    rssi=-61,
+    manufacturer_data={820: b"\xe4/\xa5\xae\t\x00"},
+    service_data={},
+    service_uuids=[],
+    source="local",
+    advertisement=generate_advertisement_data(
+        manufacturer_data={820: b"\xe4/\xa5\xae\t\x00"},
+        service_uuids=[],
+    ),
+    connectable=True,
+    time=0,
+    tx_power=0,
+)
+
 VIEW_PLUS_SERVICE_INFO = BluetoothServiceInfoBleak(
     name="cc-cc-cc-cc-cc-cc",
     address="cc:cc:cc:cc:cc:cc",
