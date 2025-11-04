@@ -148,7 +148,7 @@ class VasttrafikDepartureSensor(SensorEntity):
         config_entry_id,
         unique_suffix=None,
         subentry_id=None,
-    ):
+    ) -> None:
         """Initialize the sensor."""
         self._planner = planner
         if name:
@@ -217,12 +217,12 @@ class VasttrafikDepartureSensor(SensorEntity):
         return station_info
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, any] | None:
         """Return the state attributes."""
         return self._attributes
 
     @property
-    def native_value(self):
+    def native_value(self) -> str | None:
         """Return the next departure time."""
         return self._state
 
