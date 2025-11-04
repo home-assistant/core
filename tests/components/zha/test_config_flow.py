@@ -3221,7 +3221,7 @@ async def test_plug_in_new_radio_retry(
 
         # This adapter requires user confirmation for restore
         assert result4["type"] is FlowResultType.FORM
-        assert result4["step_id"] == "maybe_confirm_ezsp_restore"
+        assert result4["step_id"] == "confirm_ezsp_ieee_overwrite"
 
         # Confirm destructive rewrite, but adapter is unplugged again
         result5 = await hass.config_entries.flow.async_configure(
@@ -3331,9 +3331,15 @@ async def test_plug_in_old_radio_retry(hass: HomeAssistant, backup, mock_app) ->
     assert result_retry["step_id"] == "plug_in_old_radio"
 
     # Skip resetting the old adapter
-    result_skip = await hass.config_entries.flow.async_configure(
+    result_skip_progress = await hass.config_entries.flow.async_configure(
         result_retry["flow_id"],
         user_input={"next_step_id": "skip_reset_old_radio"},
+    )
+
+    result_skip = await consume_progress_flow(
+        hass,
+        flow_id=result_skip_progress["flow_id"],
+        valid_step_ids=("maybe_reset_old_radio", "restore_backup"),
     )
 
     # Entry created successfully after skipping reset

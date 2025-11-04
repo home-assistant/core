@@ -510,7 +510,7 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         # Unless the user removes the config entry whilst we try to reset the old radio
         # for a few seconds and then also unplugs it, we will basically never hit this
         if not config_entries:
-            return await self.async_step_maybe_confirm_ezsp_restore()
+            return await self.async_step_restore_backup()
 
         config_entry = config_entries[0]
         old_device_path = config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
@@ -531,7 +531,14 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Skip resetting the old radio and continue with migration."""
-        return await self.async_step_maybe_confirm_ezsp_restore()
+        return await self.async_step_restore_backup()
+
+    async def async_step_pre_plug_in_new_radio(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Strip user_input before showing "plug in new radio" form."""
+        # This step is necessary to prevent `user_input` from being passed through
+        return await self.async_step_plug_in_new_radio()
 
     async def async_step_plug_in_new_radio(
         self, user_input: dict[str, Any] | None = None
@@ -539,7 +546,7 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         """Prompt user to plug in the new radio if connection fails."""
         if user_input is not None:
             # User confirmed, retry now
-            return await self.async_step_maybe_confirm_ezsp_restore()
+            return await self.async_step_restore_backup()
 
         assert self._radio_mgr.device_path is not None
 
@@ -723,9 +730,7 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
             )
         except HomeAssistantError:
             # User unplugged the new adapter, allow retry
-            return self.async_show_progress_done(
-                next_step_id="step_plug_in_new_radio"
-            )
+            return self.async_show_progress_done(next_step_id="pre_plug_in_new_radio")
         except CannotWriteNetworkSettings as exc:
             return self.async_abort(
                 reason="cannot_restore_backup",
