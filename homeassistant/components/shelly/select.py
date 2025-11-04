@@ -40,6 +40,65 @@ class RpcSelectDescription(RpcEntityDescription, SelectEntityDescription):
     method: str
 
 
+class RpcSelect(ShellyRpcAttributeEntity, SelectEntity):
+    """Represent a RPC select entity."""
+
+    entity_description: RpcSelectDescription
+    _id: int
+
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        attribute: str,
+        description: RpcSelectDescription,
+    ) -> None:
+        """Initialize select."""
+        super().__init__(coordinator, key, attribute, description)
+
+        if self.option_map:
+            self._attr_options = list(self.option_map.values())
+
+    @property
+    def current_option(self) -> str | None:
+        """Return the selected entity option to represent the entity state."""
+        if not isinstance(self.attribute_value, str):
+            return None
+
+        if self.option_map:
+            return self.option_map[self.attribute_value]
+
+        return self.attribute_value
+
+    @rpc_call
+    async def async_select_option(self, option: str) -> None:
+        """Change the value."""
+        method = getattr(self.coordinator.device, self.entity_description.method)
+
+        if TYPE_CHECKING:
+            assert method is not None
+
+        if self.reversed_option_map:
+            await method(self._id, self.reversed_option_map[option])
+        else:
+            await method(self._id, option)
+
+
+class RpcCuryModeSelect(RpcSelect):
+    """Represent a RPC select entity for Cury modes."""
+
+    @property
+    def current_option(self) -> str | None:
+        """Return the selected entity option to represent the entity state."""
+        if self.attribute_value is None:
+            return "none"
+
+        if TYPE_CHECKING:
+            assert isinstance(self.attribute_value, str)
+
+        return self.attribute_value
+
+
 RPC_SELECT_ENTITIES: Final = {
     "cury_mode": RpcSelectDescription(
         key="cury",
@@ -51,11 +110,12 @@ RPC_SELECT_ENTITIES: Final = {
             "bedroom",
             "living_room",
             "lavatory_room",
+            "none",
             "reception",
             "workplace",
         ],
         method="cury_set_mode",
-        available=lambda status: status is not None,
+        entity_class=RpcCuryModeSelect,
     ),
     "enum_generic": RpcSelectDescription(
         key="enum",
@@ -108,47 +168,3 @@ def _async_setup_rpc_entry(
         virtual_text_ids,
         "enum",
     )
-
-
-class RpcSelect(ShellyRpcAttributeEntity, SelectEntity):
-    """Represent a RPC select entity."""
-
-    entity_description: RpcSelectDescription
-    _id: int
-
-    def __init__(
-        self,
-        coordinator: ShellyRpcCoordinator,
-        key: str,
-        attribute: str,
-        description: RpcSelectDescription,
-    ) -> None:
-        """Initialize select."""
-        super().__init__(coordinator, key, attribute, description)
-
-        if self.option_map:
-            self._attr_options = list(self.option_map.values())
-
-    @property
-    def current_option(self) -> str | None:
-        """Return the selected entity option to represent the entity state."""
-        if not isinstance(self.attribute_value, str):
-            return None
-
-        if self.option_map:
-            return self.option_map[self.attribute_value]
-
-        return self.attribute_value
-
-    @rpc_call
-    async def async_select_option(self, option: str) -> None:
-        """Change the value."""
-        method = getattr(self.coordinator.device, self.entity_description.method)
-
-        if TYPE_CHECKING:
-            assert method is not None
-
-        if self.reversed_option_map:
-            await method(self._id, self.reversed_option_map[option])
-        else:
-            await method(self._id, option)

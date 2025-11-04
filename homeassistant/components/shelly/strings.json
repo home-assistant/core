@@ -169,6 +169,7 @@
           "hall": "Hall",
           "lavatory_room": "Lavatory room",
           "living_room": "Living room",
+          "none": "None",
           "reception": "Reception",
           "workplace": "Workplace"
         }
