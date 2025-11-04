@@ -515,12 +515,6 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             mac,
         )
 
-        # Abort any other flows for this device
-        for flow in self._async_in_progress(include_uninitialized=True):
-            flow_unique_id = flow["context"].get("unique_id")
-            if flow["flow_id"] != self.flow_id and self.unique_id == flow_unique_id:
-                self.hass.config_entries.flow.async_abort(flow["flow_id"])
-
         # Two-phase device discovery after WiFi provisioning:
         #
         # Phase 1: Wait for zeroconf discovery callback (via event)
