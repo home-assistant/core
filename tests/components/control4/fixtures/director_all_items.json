@@ -1,0 +1,31 @@
+[
+  {
+    "id": 1,
+    "typeName": "room",
+    "name": "Living Room",
+    "roomHidden": false
+  },
+  {
+    "id": 2,
+    "typeName": "room",
+    "name": "Thermostat Room",
+    "roomHidden": false
+  },
+  {
+    "id": 100,
+    "name": "TV"
+  },
+  {
+    "id": 123,
+    "name": "Residential Thermostat V2",
+    "type": 7,
+    "parentId": 456,
+    "categories": ["comfort"]
+  },
+  {
+    "id": 456,
+    "manufacturer": "Control4",
+    "roomName": "Studio",
+    "model": "C4-TSTAT"
+  }
+]

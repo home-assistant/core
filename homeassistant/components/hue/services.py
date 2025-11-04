@@ -64,7 +64,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     hass.services.async_register(
         DOMAIN,
         SERVICE_HUE_ACTIVATE_SCENE,
-        verify_domain_control(hass, DOMAIN)(hue_activate_scene),
+        verify_domain_control(DOMAIN)(hue_activate_scene),
         schema=vol.Schema(
             {
                 vol.Required(ATTR_GROUP_NAME): cv.string,

@@ -2,8 +2,13 @@
 
 from deebot_client.command import Command
 from deebot_client.commands.json import SetWaterInfo
+from deebot_client.commands.json.auto_empty import SetAutoEmpty
 from deebot_client.event_bus import EventBus
+from deebot_client.events import auto_empty
+from deebot_client.events.map import CachedMapInfoEvent, MajorMapEvent, Map
 from deebot_client.events.water_info import WaterAmount, WaterAmountEvent
+from deebot_client.events.work_mode import WorkMode, WorkModeEvent
+from deebot_client.rs.map import RotationAngle  # pylint: disable=no-name-in-module
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -34,6 +39,25 @@ def platforms() -> Platform | list[Platform]:
 async def notify_events(hass: HomeAssistant, event_bus: EventBus):
     """Notify events."""
     event_bus.notify(WaterAmountEvent(WaterAmount.ULTRAHIGH))
+    event_bus.notify(WorkModeEvent(WorkMode.VACUUM))
+    event_bus.notify(
+        CachedMapInfoEvent(
+            {
+                Map(
+                    id="1", name="", using=False, built=False, angle=RotationAngle.DEG_0
+                ),
+                Map(
+                    id="2",
+                    name="Map 2",
+                    using=True,
+                    built=True,
+                    angle=RotationAngle.DEG_0,
+                ),
+            }
+        )
+    )
+    event_bus.notify(MajorMapEvent("2", [], requested=False))
+    event_bus.notify(auto_empty.AutoEmptyEvent(True, auto_empty.Frequency.AUTO))
     await block_till_done(hass, event_bus)
 
 
@@ -45,6 +69,23 @@ async def notify_events(hass: HomeAssistant, event_bus: EventBus):
             "yna5x1",
             [
                 "select.ozmo_950_water_flow_level",
+                "select.ozmo_950_active_map",
+            ],
+        ),
+        (
+            "qhe2o2",
+            [
+                "select.dusty_water_flow_level",
+                "select.dusty_auto_empty_frequency",
+                "select.dusty_active_map",
+            ],
+        ),
+        (
+            "n0vyif",
+            [
+                "select.x8_pro_omni_work_mode",
+                "select.x8_pro_omni_auto_empty_frequency",
+                "select.x8_pro_omni_active_map",
             ],
         ),
     ],
@@ -58,7 +99,7 @@ async def test_selects(
     entity_ids: list[str],
 ) -> None:
     """Test that select entity snapshots match."""
-    assert entity_ids == hass.states.async_entity_ids()
+    assert hass.states.async_entity_ids() == entity_ids
     for entity_id in entity_ids:
         assert (state := hass.states.get(entity_id)), f"State of {entity_id} is missing"
         assert state.state == STATE_UNKNOWN
@@ -87,6 +128,13 @@ async def test_selects(
             "ultrahigh",
             "low",
             SetWaterInfo(WaterAmount.LOW),
+        ),
+        (
+            "qhe2o2",
+            "select.dusty_auto_empty_frequency",
+            "auto",
+            "smart",
+            SetAutoEmpty(None, auto_empty.Frequency.SMART),
         ),
     ],
 )

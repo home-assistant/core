@@ -4,16 +4,12 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-import pytest
-import voluptuous as vol
-
 from homeassistant.components.recorder import CONF_DB_URL, Recorder
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     SensorDeviceClass,
     SensorStateClass,
 )
-from homeassistant.components.sql import validate_sql_select
 from homeassistant.components.sql.const import (
     CONF_ADVANCED_OPTIONS,
     CONF_COLUMN_NAME,
@@ -69,38 +65,6 @@ async def test_setup_invalid_config(
     ):
         assert not await async_setup_component(hass, DOMAIN, YAML_CONFIG_INVALID)
         await hass.async_block_till_done()
-
-
-async def test_invalid_query(hass: HomeAssistant) -> None:
-    """Test invalid query."""
-    with pytest.raises(vol.Invalid):
-        validate_sql_select("DROP TABLE *")
-
-    with pytest.raises(vol.Invalid):
-        validate_sql_select("SELECT5 as value")
-
-    with pytest.raises(vol.Invalid):
-        validate_sql_select(";;")
-
-
-async def test_query_no_read_only(hass: HomeAssistant) -> None:
-    """Test query no read only."""
-    with pytest.raises(vol.Invalid):
-        validate_sql_select("UPDATE states SET state = 999999 WHERE state_id = 11125")
-
-
-async def test_query_no_read_only_cte(hass: HomeAssistant) -> None:
-    """Test query no read only CTE."""
-    with pytest.raises(vol.Invalid):
-        validate_sql_select(
-            "WITH test AS (SELECT state FROM states) UPDATE states SET states.state = test.state;"
-        )
-
-
-async def test_multiple_queries(hass: HomeAssistant) -> None:
-    """Test multiple queries."""
-    with pytest.raises(vol.Invalid):
-        validate_sql_select("SELECT 5 as value; UPDATE states SET state = 10;")
 
 
 async def test_migration_from_future(
