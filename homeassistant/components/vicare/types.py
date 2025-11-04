@@ -105,3 +105,11 @@ class ViCareRequiredKeysMixinWithSet(ViCareRequiredKeysMixin):
     """Mixin for required keys with setter."""
 
     value_setter: Callable[[PyViCareDevice], bool]
+
+
+@dataclass(frozen=True)
+class ViCareRequiredKeysMixinWithSwitch(ViCareRequiredKeysMixin):
+    """Mixin for required keys with switch."""
+
+    enabler: Callable[[PyViCareDevice], bool]
+    disabler: Callable[[PyViCareDevice], bool]

@@ -522,6 +522,14 @@
         "name": "[%key:component::sensor::entity_component::signal_strength::name%]"
       }
     },
+    "switch": {
+      "ventilation_quickmode_boost": {
+        "name": "Ventilation boost mode"
+      },
+      "ventilation_quickmode_silent": {
+        "name": "Ventilation silent mode"
+      }
+    },
     "water_heater": {
       "domestic_hot_water": {
         "name": "Domestic hot water"

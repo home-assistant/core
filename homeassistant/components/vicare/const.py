@@ -13,6 +13,7 @@ PLATFORMS = [
     Platform.FAN,
     Platform.NUMBER,
     Platform.SENSOR,
+    Platform.SWITCH,
     Platform.WATER_HEATER,
 ]
 
