@@ -107,6 +107,7 @@ homeassistant.components.automation.*
 homeassistant.components.awair.*
 homeassistant.components.axis.*
 homeassistant.components.azure_storage.*
+homeassistant.components.backblaze_b2.*
 homeassistant.components.backup.*
 homeassistant.components.baf.*
 homeassistant.components.bang_olufsen.*
@@ -361,6 +362,7 @@ homeassistant.components.myuplink.*
 homeassistant.components.nam.*
 homeassistant.components.nanoleaf.*
 homeassistant.components.nasweb.*
+homeassistant.components.neato.*
 homeassistant.components.nest.*
 homeassistant.components.netatmo.*
 homeassistant.components.network.*

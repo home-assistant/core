@@ -124,6 +124,17 @@
       }
     }
   },
+  "exceptions": {
+    "connection_error": {
+      "message": "Error communicating with WLED API: {error}"
+    },
+    "invalid_response_github_error": {
+      "message": "Invalid response from GitHub API: {error}"
+    },
+    "invalid_response_wled_error": {
+      "message": "Invalid response from WLED API: {error}"
+    }
+  },
   "options": {
     "step": {
       "init": {

@@ -11,6 +11,11 @@
         "default": "mdi:account"
       }
     },
+    "media_player": {
+      "xbox": {
+        "default": "mdi:microsoft-xbox"
+      }
+    },
     "sensor": {
       "follower": {
         "default": "mdi:account-arrow-left"
