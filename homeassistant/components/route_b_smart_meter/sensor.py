@@ -72,7 +72,7 @@ SENSOR_DESCRIPTIONS = (
         key=ATTR_API_TOTAL_EXPORTED,
         translation_key=ATTR_API_TOTAL_EXPORTED,
         device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value_accessor=lambda data: data.total_exported,
     ),
