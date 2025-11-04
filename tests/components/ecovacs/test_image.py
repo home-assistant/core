@@ -1,6 +1,7 @@
 """Tests for Ecovacs image entities."""
 
 from datetime import timedelta
+from http import HTTPStatus
 from unittest.mock import Mock
 
 from deebot_client.events.map import CachedMapInfoEvent, MapChangedEvent, MapInfo
@@ -16,6 +17,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .util import notify_and_wait
+
+from tests.typing import ClientSessionGenerator
 
 pytestmark = [pytest.mark.usefixtures("init_integration")]
 
@@ -149,32 +152,36 @@ async def test_image_update_service(
     ("device_fixture", "entity_id"),
     [
         ("yna5x1", "image.ozmo_950_map"),
+        ("qhe2o2", "image.dusty_map"),
     ],
-    ids=["yna5x1"],
+    ids=["yna5x1", "qhe2o2"],
 )
 async def test_image_svg_content(
     hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
     controller: EcovacsController,
+    snapshot: SnapshotAssertion,
     entity_id: str,
 ) -> None:
-    """Test image returns SVG content."""
+    """Test image returns SVG content via image proxy."""
     device = controller.devices[0]
 
     # Mock the get_svg_map to return SVG content
     svg_content = '<svg><rect width="100" height="100" /></svg>'
     device.map.get_svg_map = Mock(return_value=svg_content)
 
-    # Get the entity
-    entity_obj = hass.states.get(entity_id)
-    assert entity_obj is not None
+    # Get the entity state
+    state = hass.states.get(entity_id)
+    assert state is not None
 
-    # Test that content_type is set correctly
-    entity_entry = er.async_get(hass).async_get(entity_id)
-    assert entity_entry
-
-    # Verify the image method returns encoded SVG
-    # Note: We can't directly call entity.image() from the test without accessing internals
-    # But we can verify the entity is set up correctly
+    # Retrieve image via the image proxy API
+    client = await hass_client()
+    resp = await client.get(f"/api/image_proxy/{entity_id}")
+    assert resp.status == HTTPStatus.OK
+    assert resp.content_type == "image/svg+xml"
+    body = await resp.read()
+    assert body == svg_content.encode()
+    assert body == snapshot
 
 
 @pytest.mark.parametrize(
@@ -186,15 +193,66 @@ async def test_image_svg_content(
 )
 async def test_image_no_svg_content(
     hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
     controller: EcovacsController,
     entity_id: str,
 ) -> None:
-    """Test image returns None when no SVG available."""
+    """Test image returns error when no SVG available."""
     device = controller.devices[0]
 
     # Mock the get_svg_map to return None
     device.map.get_svg_map = Mock(return_value=None)
 
-    # Get the entity
-    entity_obj = hass.states.get(entity_id)
-    assert entity_obj is not None
+    # Get the entity state
+    state = hass.states.get(entity_id)
+    assert state is not None
+
+    # Try to retrieve image via the image proxy API
+    client = await hass_client()
+    resp = await client.get(f"/api/image_proxy/{entity_id}")
+    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+
+
+@pytest.mark.parametrize(
+    ("device_fixture", "entity_id"),
+    [
+        ("yna5x1", "image.ozmo_950_map"),
+    ],
+    ids=["yna5x1"],
+)
+async def test_image_update_on_map_change(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    controller: EcovacsController,
+    freezer: FrozenDateTimeFactory,
+    entity_id: str,
+) -> None:
+    """Test image content changes when map is updated."""
+    device = controller.devices[0]
+    event_bus = device.events
+
+    # Set initial SVG content
+    svg_content_1 = '<svg><rect width="100" height="100" fill="red" /></svg>'
+    device.map.get_svg_map = Mock(return_value=svg_content_1)
+
+    # Retrieve initial image
+    client = await hass_client()
+    resp = await client.get(f"/api/image_proxy/{entity_id}")
+    assert resp.status == HTTPStatus.OK
+    body_1 = await resp.read()
+    assert body_1 == svg_content_1.encode()
+
+    # Update map with new content
+    svg_content_2 = '<svg><rect width="100" height="100" fill="blue" /></svg>'
+    device.map.get_svg_map = Mock(return_value=svg_content_2)
+
+    # Trigger map changed event
+    freezer.tick(timedelta(minutes=1))
+    await notify_and_wait(hass, event_bus, MapChangedEvent())
+
+    # Retrieve updated image
+    resp = await client.get(f"/api/image_proxy/{entity_id}")
+    assert resp.status == HTTPStatus.OK
+    body_2 = await resp.read()
+    assert body_2 == svg_content_2.encode()
+    assert body_2 != body_1
