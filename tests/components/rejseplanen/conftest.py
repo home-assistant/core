@@ -1,22 +1,24 @@
 """Fixtures for Rejseplanen tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
+from py_rejseplan.dataclasses.departure import DepartureType
+from py_rejseplan.dataclasses.departure_board import DepartureBoard
+from py_rejseplan.enums import TransportClass
 import pytest
 
 from homeassistant.components.rejseplanen.const import (
     CONF_API_KEY,
-    CONF_DEPARTURE_TYPE,
-    CONF_DIRECTION,
     CONF_NAME,
-    CONF_ROUTE,
     CONF_STOP_ID,
     DOMAIN,
 )
-from homeassistant.config_entries import ConfigSubentryData
+from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, patch
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -29,41 +31,207 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_rejseplan() -> Generator[AsyncMock]:
-    """Mock Rejseplanen."""
-
-    with (
-        patch(
-            "homeassistant.components.rejseplanen.RejseplanenDataUpdateCoordinator",
-            autospec=True,
-        ) as mock_client,
-    ):
-        client = mock_client.return_value
-        yield client
-
-
-@pytest.fixture(name="config_entry")
 def mock_config_entry() -> MockConfigEntry:
-    """Mock Rejseplanen configuration entry."""
+    """Return a mock config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        title="rejseplanen",
+        title="Rejseplanen",
         data={
-            CONF_API_KEY: "token",
+            CONF_API_KEY: "test_api_key",
+            CONF_NAME: "Rejseplanen",
         },
-        entry_id="123456789",
-        subentries_data=[
-            ConfigSubentryData(
-                data={
-                    CONF_STOP_ID: "123456",
-                    CONF_NAME: "mytopic",
-                    CONF_ROUTE: "myroute",
-                    CONF_DIRECTION: "mydirection",
-                    CONF_DEPARTURE_TYPE: "departure",
-                },
-                subentry_type="ABCDEF",
-                title="mytopic",
-                unique_id="ABDCDEF-123456",
-            )
-        ],
+        unique_id="rejseplanen_test",
     )
+
+
+@pytest.fixture
+def mock_departure_data() -> list[DepartureType]:
+    """Return mock departure data."""
+    mock_departure = MagicMock(spec=DepartureType)
+    mock_departure.name = "Test Line"
+    mock_departure.type = TransportClass.BUS
+    mock_departure.direction = "North"
+    mock_departure.stop = "Test Stop"
+    mock_departure.time = "12:00"
+    mock_departure.date = "2024-11-04"
+    mock_departure.track = "1"
+    mock_departure.final_stop = "Final Stop"
+    mock_departure.messages = []
+    mock_departure.rtTime = "12:01"
+    mock_departure.rtDate = "2024-11-04"
+    mock_departure.stopExtId = 123456  # Add missing stopExtId attribute
+    return [mock_departure]
+
+
+@pytest.fixture
+def mock_api() -> Generator[MagicMock]:
+    """Return a mocked Rejseplanen API client."""
+    with patch(
+        "homeassistant.components.rejseplanen.coordinator.DeparturesAPIClient"
+    ) as mock_api_class:
+        mock_api = MagicMock()
+        mock_departure_board = MagicMock(spec=DepartureBoard)
+        mock_departure_board.departures = []
+        mock_api.get_departures.return_value = (mock_departure_board, [])
+        mock_api_class.return_value = mock_api
+        yield mock_api
+
+
+@pytest.fixture
+def mock_rejseplan() -> MagicMock:
+    """Return a mocked Rejseplanen API client."""
+    mock_api = MagicMock()
+    mock_api.validate_auth_key = AsyncMock(return_value=True)
+    mock_api.get_departures = AsyncMock(return_value=[])
+    return mock_api
+
+
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Return platforms to load."""
+    return [Platform.SENSOR]
+
+
+@pytest.fixture
+async def init_integration(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> MockConfigEntry:
+    """Set up the integration for testing."""
+    mock_config_entry.add_to_hass(hass)
+
+    # Mock the API at the coordinator level since it's created internally
+    with patch(
+        "homeassistant.components.rejseplanen.coordinator.DeparturesAPIClient"
+    ) as mock_api_class:
+        mock_api = MagicMock()
+        mock_api.get_departures.return_value = ([], [])
+        mock_api_class.return_value = mock_api
+
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    return mock_config_entry
+
+
+@pytest.fixture
+async def setup_main_integration(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_departure_data: list[DepartureType],
+) -> MockConfigEntry:
+    """Set up main integration with departure data."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.rejseplanen.coordinator.DeparturesAPIClient"
+    ) as mock_api_class:
+        mock_api = MagicMock()
+
+        mock_departure_board = MagicMock(spec=DepartureBoard)
+        mock_departure_board.departures = mock_departure_data
+
+        mock_api.get_departures.return_value = (mock_departure_board, [])
+        mock_api_class.return_value = mock_api
+
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    return mock_config_entry
+
+
+@pytest.fixture
+async def setup_integration_with_stop(
+    hass: HomeAssistant,
+    mock_departure_data: list[DepartureType],
+) -> tuple[MockConfigEntry, MockConfigEntry]:
+    """Set up integration with a stop subentry using proper subentry flow."""
+    # Create and set up main entry
+    main_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Rejseplanen",
+        data={
+            CONF_API_KEY: "test_api_key",
+            CONF_NAME: "Rejseplanen",
+        },
+        unique_id="rejseplanen_test",
+    )
+    main_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.rejseplanen.coordinator.DeparturesAPIClient"
+    ) as mock_api_class:
+        mock_api = MagicMock()
+        mock_board = MagicMock(spec=DepartureBoard)
+        mock_board.departures = mock_departure_data
+        mock_api.get_departures.return_value = (mock_board, [])
+        mock_api_class.return_value = mock_api
+
+        await hass.config_entries.async_setup(main_entry.entry_id)
+        await hass.async_block_till_done()
+
+        # ✅ Create subentry through proper config flow
+        result = await hass.config_entries.subentries.async_init(
+            (main_entry.entry_id, "stop"), context={"source": SOURCE_USER}
+        )
+
+        with patch("homeassistant.components.rejseplanen.PLATFORMS", [Platform.SENSOR]):
+            result2 = await hass.config_entries.subentries.async_configure(
+                result["flow_id"],
+                user_input={
+                    CONF_STOP_ID: "123456",
+                    CONF_NAME: "Test Stop",
+                },
+            )
+            await hass.async_block_till_done()
+
+    # ✅ The subentry data should be in result2
+    # Create a mock config entry to represent the subentry for testing
+    stop_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=result2.get("title", "Test Stop"),
+        data=result2.get("data", {}),
+        unique_id="stop_123456",
+    )
+
+    # Note: stop_entry is a representation, actual subentry is managed internally
+    return main_entry, stop_entry
+
+
+@pytest.fixture
+async def setup_with_multiple_departures(hass: HomeAssistant) -> MockConfigEntry:
+    """Set up with multiple departure types."""
+    # Create departures of different types
+    departures = []
+    for i, transport_type in enumerate(
+        [TransportClass.BUS, TransportClass.METRO, TransportClass.S_TOG]
+    ):
+        dep = MagicMock(spec=DepartureType)
+        dep.name = f"Line {i}"
+        dep.type = transport_type
+        dep.direction = f"Direction {i}"
+        dep.time = f"{12 + i}:00"
+        dep.date = "2024-11-04"
+        dep.cancelled = False
+        departures.append(dep)
+
+    main_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_API_KEY: "test", CONF_NAME: "Test"},
+        unique_id="test",
+    )
+    main_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.rejseplanen.coordinator.DeparturesAPIClient"
+    ) as mock_api_class:
+        mock_api = MagicMock()
+        mock_board = MagicMock(spec=DepartureBoard)
+        mock_board.departures = departures
+        mock_api.get_departures.return_value = (mock_board, [])
+        mock_api_class.return_value = mock_api
+
+        await hass.config_entries.async_setup(main_entry.entry_id)
+        await hass.async_block_till_done()
+
+    return main_entry

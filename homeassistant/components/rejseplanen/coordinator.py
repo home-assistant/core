@@ -5,9 +5,10 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 import logging
 
-from py_rejseplan.api.departures import DepartureBoard, DeparturesAPIClient
+from py_rejseplan.api.departures import DeparturesAPIClient
 from py_rejseplan.dataclasses.departure import Departure
-from py_rejseplan.exceptions import api_error, connection_error, http_error
+from py_rejseplan.dataclasses.departure_board import DepartureBoard
+from py_rejseplan.exceptions import APIError, ConnectionError, HTTPError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -21,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 type RejseplanenConfigEntry = ConfigEntry[RejseplanenDataUpdateCoordinator]
 
 
-class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard | None]):
+class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard]):
     """Class to manage fetching data from the Rejseplanen API."""
 
     def __init__(
@@ -41,16 +42,16 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard | No
             config_entry=config_entry,
         )
 
-    async def _async_update_data(self) -> DepartureBoard | None:
+    async def _async_update_data(self) -> DepartureBoard:
         """Update data via library."""
         try:
             board = await self.hass.async_add_executor_job(self._fetch_data)
         except (
-            api_error.RPAPIError,
-            http_error.RPHTTPError,
+            APIError,
+            HTTPError,
         ) as error:  # runtime errors from the API
             raise UpdateFailed(error) from error
-        except connection_error.RPConnectionError as error:  # network errors
+        except ConnectionError as error:  # network errors
             _LOGGER.error("Connection error while fetching data: %s", error)
             raise UpdateFailed(error) from error
         except TypeError as error:
@@ -106,13 +107,19 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard | No
         """Remove a stop ID from the coordinator."""
         self._stop_ids.discard(stop_id)
 
-    def _fetch_data(self) -> DepartureBoard | None:
+    def _fetch_data(self) -> DepartureBoard:
         """Fetch data from Rejseplanen API."""
         if not self._stop_ids:
             _LOGGER.warning(
                 "No stops registered, Please add a stop through the UI configuration. Data not fetched"
             )
-            return None
+            return DepartureBoard(
+                serverVersion="N/A",
+                dialectVersion="N/A",
+                planRtTs=datetime.now(),
+                requestId="N/A",
+                departures=[],
+            )
         _LOGGER.debug("Fetching data for stop IDs: %s", self._stop_ids)
         # Get all departures for this stop
         departure_board, _ = self.api.get_departures(list(self._stop_ids))
@@ -129,10 +136,7 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard | No
         if not self.data:
             return []
 
-        if hasattr(self.data, "departures"):
-            departures = self.data.departures
-        else:
-            return []
+        departures = self.data.departures
 
         filtered_data = [
             departure for departure in departures if departure.stopExtId == stop_id

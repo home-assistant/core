@@ -1,0 +1,42 @@
+rules:
+  # Bronze (mandatory) - Basic requirements
+  action-setup:
+    status: exempt
+    comment: Integration does not register custom actions
+  appropriate-polling: done
+  brands:
+    status: exempt
+    comment: Integration uses generic public transport API without specific brands
+  common-modules: done
+  config-flow: done
+  config-flow-test-coverage: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: Integration does not provide custom actions
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver - Enhanced functionality
+  action-exceptions:
+    status: exempt
+    comment: Integration does not provide custom actions
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: Integration does not use authentication requiring reauth
+  test-coverage: done

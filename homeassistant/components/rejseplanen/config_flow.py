@@ -88,17 +88,23 @@ class RejseplanenConfigFlow(ConfigFlow, domain=DOMAIN):
                 description_placeholders={"name": "Rejseplanen"},
             )
 
-        self._async_abort_entries_match()
+        errors: dict[str, str] = {}
+        try:
+            auth_key = user_input[CONF_API_KEY]
+            api = Rejseplanen(
+                base_url="https://www.rejseplanen.dk/api/", auth_key=auth_key
+            )
+            result = await self.hass.async_add_executor_job(api.validate_auth_key)
+            if not result:
+                errors["base"] = "invalid_auth"
+        except (ConnectionError, TimeoutError, OSError):
+            errors["base"] = "cannot_connect"
 
-        # Validate authentication key
-        auth_key = user_input[CONF_API_KEY]
-        api = Rejseplanen(base_url="https://www.rejseplanen.dk/api/", auth_key=auth_key)
-        result = await self.hass.async_add_executor_job(api.validate_auth_key)
-        if not result:
+        if errors:
             return self.async_show_form(
                 step_id="user",
                 data_schema=CONFIG_SCHEMA,
-                errors={"base": "invalid_auth"},
+                errors=errors,
             )
 
         # Store the authentication key and name

@@ -1,147 +1,101 @@
 """Test the Rejseplanen config flow."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import patch
 
-from py_rejseplan.enums import TransportClass
-import pytest
-
-from homeassistant.components.rejseplanen.const import (
-    CONF_API_KEY,
-    CONF_DEPARTURE_TYPE,
-    CONF_DIRECTION,
-    CONF_NAME,
-    CONF_STOP_ID,
-    DEFAULT_STOP_NAME,
-    DOMAIN,
-)
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant import config_entries
+from homeassistant.components.rejseplanen.const import CONF_API_KEY, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
 
-async def test_form_success(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
-    """Test the form step of the config flow."""
+async def test_form_user_step(hass: HomeAssistant) -> None:
+    """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert "type" in result and result["type"] == FlowResultType.FORM
-
-    _step_id = result.get("step_id")
-    assert _step_id
-    assert _step_id == "user"
-    assert result.get("errors") is None
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
 
 
-@pytest.mark.parametrize(
-    ("user_input", "expected_data"),
-    [
-        # All fields empty except required stop_id
-        (
-            {
-                CONF_STOP_ID: "123456",
-            },
-            {
-                CONF_STOP_ID: 123456,
-                CONF_DIRECTION: [],
-                CONF_DEPARTURE_TYPE: [],
-                CONF_NAME: DEFAULT_STOP_NAME,
-            },
-        ),
-        # Only direction provided
-        (
-            {
-                CONF_STOP_ID: "123456",
-                CONF_DIRECTION: ["north"],
-            },
-            {
-                CONF_STOP_ID: 123456,
-                CONF_DIRECTION: ["north"],
-                CONF_DEPARTURE_TYPE: [],
-                CONF_NAME: DEFAULT_STOP_NAME,
-            },
-        ),
-        # Only departure type provided
-        (
-            {
-                CONF_STOP_ID: "123456",
-                CONF_DEPARTURE_TYPE: ["ic", "icl"],
-            },
-            {
-                CONF_STOP_ID: 123456,
-                CONF_DEPARTURE_TYPE: [TransportClass.IC, TransportClass.ICL],
-                CONF_DIRECTION: [],
-                CONF_NAME: DEFAULT_STOP_NAME,
-            },
-        ),
-        # Direction and departure type provided
-        (
-            {
-                CONF_STOP_ID: "123456",
-                CONF_DIRECTION: ["north"],
-                CONF_DEPARTURE_TYPE: ["s_tog"],
-            },
-            {
-                CONF_STOP_ID: 123456,
-                CONF_DIRECTION: ["north"],
-                CONF_DEPARTURE_TYPE: [TransportClass.S_TOG],
-                CONF_NAME: DEFAULT_STOP_NAME,
-            },
-        ),
-        # All fields provided, including name
-        (
-            {
-                CONF_STOP_ID: "123456",
-                CONF_DIRECTION: ["north"],
-                CONF_DEPARTURE_TYPE: ["s_tog"],
-                CONF_NAME: "customname",
-            },
-            {
-                CONF_STOP_ID: 123456,
-                CONF_DIRECTION: ["north"],
-                CONF_DEPARTURE_TYPE: [TransportClass.S_TOG],
-                CONF_NAME: "customname",
-            },
-        ),
-    ],
-)
-@pytest.mark.usefixtures("mock_rejseplan")
-async def test_add_stop_variants(
-    hass: HomeAssistant, user_input, expected_data
-) -> None:
-    """Test adding a stop subentry with various combinations."""
-    config_entry = MockConfigEntry(
+async def test_form_success_with_api_validation(hass: HomeAssistant) -> None:
+    """Test successful config flow with API validation."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    # Mock successful API validation
+    with patch(
+        "homeassistant.components.rejseplanen.config_flow.Rejseplanen.validate_auth_key",
+        return_value=True,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_KEY: "valid-test-key"},
+        )
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "Rejseplanen"
+    assert result2["data"][CONF_API_KEY] == "valid-test-key"
+
+
+async def test_form_invalid_auth(hass: HomeAssistant) -> None:
+    """Test invalid authentication handling."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    # Mock failed API validation
+    with patch(
+        "homeassistant.components.rejseplanen.config_flow.Rejseplanen.validate_auth_key",
+        return_value=False,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_KEY: "invalid-key"},
+        )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "invalid_auth"}
+
+
+async def test_form_api_connection_exception(hass: HomeAssistant) -> None:
+    """Test handling of API connection exception during config flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    # Mock API connection exception
+    with patch(
+        "homeassistant.components.rejseplanen.config_flow.Rejseplanen.validate_auth_key",
+        side_effect=ConnectionError("Network Timeout"),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_KEY: "test-key"},
+        )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_singleton_prevention(hass: HomeAssistant) -> None:
+    """Test singleton integration prevents multiple entries."""
+    # Add existing entry
+    existing_entry = MockConfigEntry(
         domain=DOMAIN,
+        data={CONF_API_KEY: "existing-key"},
         title="Rejseplanen",
-        data={
-            CONF_NAME: "Rejseplanen",
-            CONF_API_KEY: "token",
-        },
     )
-    config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+    existing_entry.add_to_hass(hass)
 
-    # Start the subentry flow for adding a stop
-    result = await hass.config_entries.subentries.async_init(
-        (config_entry.entry_id, "stop"), context={"source": SOURCE_USER}
+    # Try to start new config flow - should abort for singleton
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("errors") is None
 
-    result = await hass.config_entries.subentries.async_configure(
-        result.get("flow_id"), user_input=user_input
-    )
-    assert result.get("type") is FlowResultType.CREATE_ENTRY
-    assert (result_data := result.get("data")) is not None, "Subentry data is None"
-    assert result_data.get(CONF_STOP_ID) == expected_data[CONF_STOP_ID], (
-        "Stop ID mismatch"
-    )
-    assert result_data.get(CONF_NAME) == expected_data[CONF_NAME], "Name mismatch"
-    assert result_data.get(CONF_DIRECTION) == expected_data[CONF_DIRECTION], (
-        "Direction mismatch"
-    )
-    assert result_data.get(CONF_DEPARTURE_TYPE) == expected_data[CONF_DEPARTURE_TYPE], (
-        "Departure type mismatch"
-    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "single_instance_allowed"

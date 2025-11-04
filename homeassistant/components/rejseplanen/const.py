@@ -29,7 +29,13 @@ ATTR_REAL_TIME_AT = "real_time_at"
 ATTR_TRACK = "track"
 ATTR_NEXT_UP = "next_departures"
 
-SCAN_INTERVAL_MINUTES = 5
+# Additional attribute constants for departure details
+ATTR_PLANNED_TIME = "planned_time"
+ATTR_REALTIME_TIME = "realtime_time"
+ATTR_IS_CANCELLED = "cancelled"
+ATTR_DELAY_MINUTES = "delay_minutes"
+
+SCAN_INTERVAL_MINUTES = 2
 
 # User-friendly names for config flow - use string keys for cv.multi_select
 DEPARTURE_TYPE_OPTIONS = {
