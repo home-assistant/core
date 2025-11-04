@@ -98,12 +98,10 @@ class RedgtechDataUpdateCoordinator(DataUpdateCoordinator[list[RedgtechDevice]])
             device_type = display_categories[0].lower()
 
             device = RedgtechDevice(
-                {
-                    "endpointId": item["endpointId"],
-                    "friendlyName": item["friendlyName"],
-                    "value": item["value"],
-                    "type": device_type,
-                }
+                unique_id=item["endpointId"],
+                name=item["friendlyName"],
+                state=item["value"],
+                type=device_type,
             )
             _LOGGER.debug("Processing device: %s", device)
             devices.append(device)
