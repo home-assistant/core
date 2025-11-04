@@ -413,7 +413,7 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
         )
         user_id_from_context = current_context.user_id if current_context else None
 
-        self.hass.bus.fire(
+        self.hass.bus.async_fire(
             "manual_alarm_bad_code_attempt",
             {
                 "entity_id": self.entity_id,
