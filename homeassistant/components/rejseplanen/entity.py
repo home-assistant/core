@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import RejseplanenDataUpdateCoordinator
@@ -35,21 +35,19 @@ class RejseplanenEntity(CoordinatorEntity[RejseplanenDataUpdateCoordinator]):
         self._subentry_id = subentry_id
         self._unavailable_logged = False
 
-        # If device_id is provided, use it directly for device association
-        if device_id:
-            # Set the device_id to associate with the pre-created device
-            self._attr_device_id = device_id
-        else:
-            # Only create DeviceInfo if no device_id was provided (legacy fallback)
-            self._attr_device_info = DeviceInfo(
-                identifiers={
-                    (
-                        "rejseplanen",
-                        f"{entry_id}-subentry-{subentry_id}"
-                        if subentry_id != entry_id
-                        else f"{entry_id}-stop-{stop_id}",
-                    )
-                },
+        # Store device_id for proper association during entity registry
+        self._target_device_id = device_id
+
+    async def async_internal_added_to_hass(self) -> None:
+        """Handle entity being added to hass - override for device association."""
+        # First, call parent to handle normal entity registration
+        await super().async_internal_added_to_hass()
+
+        # If we have a target device_id, update the entity registry to associate with device
+        if self._target_device_id and self.registry_entry:
+            entity_registry = er.async_get(self.hass)
+            entity_registry.async_update_entity(
+                self.registry_entry.entity_id, device_id=self._target_device_id
             )
 
     async def async_added_to_hass(self) -> None:
