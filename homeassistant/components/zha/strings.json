@@ -88,9 +88,6 @@
         "description": "Your backup has a different IEEE address than your adapter. For your network to function properly, the IEEE address of your adapter should also be changed.\n\nThis is a permanent operation.",
         "title": "Overwrite adapter IEEE address"
       },
-      "confirm_hardware": {
-        "description": "Do you want to set up {name}?"
-      },
       "manual_pick_radio_type": {
         "data": {
           "radio_type": "Adapter type"
@@ -1937,6 +1934,13 @@
         "description": "[%key:component::zha::config::step::choose_serial_port::description%]",
         "title": "[%key:component::zha::config::step::choose_serial_port::title%]"
       },
+      "confirm_ezsp_ieee_overwrite": {
+        "data": {
+          "overwrite_coordinator_ieee": "[%key:component::zha::config::step::confirm_ezsp_ieee_overwrite::data::overwrite_coordinator_ieee%]"
+        },
+        "description": "[%key:component::zha::config::step::confirm_ezsp_ieee_overwrite::description%]",
+        "title": "[%key:component::zha::config::step::confirm_ezsp_ieee_overwrite::title%]"
+      },
       "init": {
         "description": "A backup will be performed and ZHA will be stopped. Do you wish to continue?",
         "title": "Reconfigure ZHA"
@@ -1960,13 +1964,6 @@
         },
         "description": "[%key:component::zha::config::step::manual_port_config::description%]",
         "title": "[%key:component::zha::config::step::manual_port_config::title%]"
-      },
-      "maybe_confirm_ezsp_restore": {
-        "data": {
-          "overwrite_coordinator_ieee": "[%key:component::zha::config::step::maybe_confirm_ezsp_restore::data::overwrite_coordinator_ieee%]"
-        },
-        "description": "[%key:component::zha::config::step::maybe_confirm_ezsp_restore::description%]",
-        "title": "[%key:component::zha::config::step::maybe_confirm_ezsp_restore::title%]"
       },
       "plug_in_new_radio": {
         "description": "[%key:component::zha::config::step::plug_in_new_radio::description%]",
