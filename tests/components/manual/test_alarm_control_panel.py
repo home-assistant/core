@@ -1154,18 +1154,28 @@ async def test_bad_code_attempt_event_fired(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == AlarmControlPanelState.ARMED_AWAY
 
-    event_data_captured = {}
-
-    @callback
-    def event_listener(event):
-        event_data_captured.update(event.data)
-
-    hass.bus.async_listen_once("manual_alarm_bad_code_attempt", event_listener)
-
     bad_code = "0000"
 
     mock_user_id = "test_user_id_123"
     test_context = Context(user_id=mock_user_id)
+    
+    events = []
+
+    @callback
+    def event_listener(event):
+        events.append(event.data)
+
+    hass.bus.async_listen("manual_alarm_bad_code_attempt", event_listener)
+
+    await hass.services.async_call(
+        ALARM_DOMAIN,
+        "alarm_disarm",
+        {"entity_id": entity_id, "code": "1234"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    assert len(events) == 0
 
     with patch("homeassistant.auth.AuthManager.async_get_user") as mock_get_user:
         mock_user = MagicMock(spec=User)
@@ -1183,10 +1193,10 @@ async def test_bad_code_attempt_event_fired(hass: HomeAssistant) -> None:
 
     await hass.async_block_till_done()
 
-    assert event_data_captured.get("entity_id") == entity_id
-    assert event_data_captured.get("action") == AlarmControlPanelState.DISARMED
-
-    assert event_data_captured.get("user_id") == mock_user_id
+    assert len(events) == 1
+    assert events[0].get("entity_id") == entity_id
+    assert events[0].get("action") == AlarmControlPanelState.DISARMED
+    assert events[0].get("user_id") == mock_user_id
 
 
 async def test_disarm_with_template_code(hass: HomeAssistant) -> None:
