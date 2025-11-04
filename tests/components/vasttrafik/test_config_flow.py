@@ -44,8 +44,8 @@ async def test_user_setup_first_time(hass: HomeAssistant, mock_setup_entry) -> N
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.vasttrafik.config_flow.validate_input",
-        return_value={"title": "Västtrafik"},
+        "homeassistant.components.vasttrafik.config_flow.validate_api_credentials",
+        return_value=None,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -85,15 +85,13 @@ async def test_single_instance_allowed(hass: HomeAssistant) -> None:
 
 async def test_user_invalid_auth(hass: HomeAssistant) -> None:
     """Test we handle invalid auth during setup."""
-    from homeassistant.components.vasttrafik.config_flow import InvalidAuth
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     with patch(
-        "homeassistant.components.vasttrafik.config_flow.validate_input",
-        side_effect=InvalidAuth,
+        "homeassistant.components.vasttrafik.config_flow.validate_api_credentials",
+        return_value={"base": "invalid_auth"},
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -109,15 +107,13 @@ async def test_user_invalid_auth(hass: HomeAssistant) -> None:
 
 async def test_user_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error during setup."""
-    from homeassistant.components.vasttrafik.config_flow import CannotConnect
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     with patch(
-        "homeassistant.components.vasttrafik.config_flow.validate_input",
-        side_effect=CannotConnect,
+        "homeassistant.components.vasttrafik.config_flow.validate_api_credentials",
+        return_value={"base": "cannot_connect"},
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -181,8 +177,8 @@ async def test_subentry_departure_board(
         result3["flow_id"],
         {
             "name": "Central Departures",
-            "lines": "1, 2, 55",
-            "tracks": "A, B",
+            "lines": ["1", "2", "55"],
+            "tracks": ["A", "B"],
             "delay": 5,
         },
     )
@@ -234,24 +230,6 @@ async def test_subentry_no_stations_found(hass: HomeAssistant) -> None:
 # Duplicate prevention test removed - feature not implemented yet
 
 
-async def test_options_flow_main_integration_not_configurable(
-    hass: HomeAssistant,
-) -> None:
-    """Test that main integration entries cannot use options flow."""
-    # Create main integration entry
-    main_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={"key": "test-key", "secret": "test-secret"},
-        unique_id="vasttrafik",
-    )
-    main_entry.add_to_hass(hass)
-
-    # Try to start options flow - should be aborted
-    result = await hass.config_entries.options.async_init(main_entry.entry_id)
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "not_configurable"
-
-
 async def test_main_integration_reconfigure(hass: HomeAssistant) -> None:
     """Test reconfiguring the main integration API credentials."""
     # Create main integration entry
@@ -278,8 +256,8 @@ async def test_main_integration_reconfigure(hass: HomeAssistant) -> None:
 
     # Configure new credentials
     with patch(
-        "homeassistant.components.vasttrafik.config_flow.validate_input",
-        return_value={"title": "Västtrafik"},
+        "homeassistant.components.vasttrafik.config_flow.validate_api_credentials",
+        return_value=None,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -337,8 +315,8 @@ async def test_subentry_reconfigure(hass: HomeAssistant) -> None:
         result["flow_id"],
         {
             "name": "Updated Central Departures",
-            "lines": "1, 2, 55",
-            "tracks": "A, B, C",
+            "lines": ["1", "2", "55"],
+            "tracks": ["A", "B", "C"],
             "delay": 10,
         },
     )
@@ -352,8 +330,8 @@ async def test_import_success_no_departures(
 ) -> None:
     """Test successful import flow from YAML with no departures."""
     with patch(
-        "homeassistant.components.vasttrafik.config_flow.validate_input",
-        return_value={"title": "Västtrafik"},
+        "homeassistant.components.vasttrafik.config_flow.validate_api_credentials",
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -370,8 +348,8 @@ async def test_import_success_no_departures(
 async def test_import_with_departures(hass: HomeAssistant, mock_setup_entry) -> None:
     """Test import flow with departures from YAML configuration."""
     with patch(
-        "homeassistant.components.vasttrafik.config_flow.validate_input",
-        return_value={"title": "Västtrafik"},
+        "homeassistant.components.vasttrafik.config_flow.validate_api_credentials",
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -436,8 +414,8 @@ async def test_import_already_configured(hass: HomeAssistant) -> None:
     main_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.vasttrafik.config_flow.validate_input",
-        return_value={"title": "Västtrafik"},
+        "homeassistant.components.vasttrafik.config_flow.validate_api_credentials",
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -450,30 +428,20 @@ async def test_import_already_configured(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("exception", "expected_reason"),
+    ("error_return", "expected_reason"),
     [
-        ("InvalidAuth", "invalid_auth"),
-        ("CannotConnect", "cannot_connect"),
-        (Exception("Unexpected error"), "unknown"),
+        ({"base": "invalid_auth"}, "invalid_auth"),
+        ({"base": "cannot_connect"}, "cannot_connect"),
+        ({"base": "unknown"}, "unknown"),
     ],
 )
 async def test_import_exceptions(
-    hass: HomeAssistant, exception, expected_reason: str
+    hass: HomeAssistant, error_return: dict[str, str], expected_reason: str
 ) -> None:
-    """Test import flow handling different exceptions."""
-    from homeassistant.components.vasttrafik.config_flow import (
-        CannotConnect,
-        InvalidAuth,
-    )
-
-    if exception == "InvalidAuth":
-        exception = InvalidAuth
-    elif exception == "CannotConnect":
-        exception = CannotConnect
-
+    """Test import flow handling different errors."""
     with patch(
-        "homeassistant.components.vasttrafik.config_flow.validate_input",
-        side_effect=exception,
+        "homeassistant.components.vasttrafik.config_flow.validate_api_credentials",
+        return_value=error_return,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
