@@ -1944,11 +1944,10 @@ async def test_bluetooth_discovery(
     with (
         patch(
             "homeassistant.components.shelly.config_flow.async_provision_wifi",
-            new=AsyncMock(),
         ),
         patch(
             "homeassistant.components.shelly.config_flow.async_lookup_device_by_name",
-            new=AsyncMock(return_value=("1.1.1.1", 80)),
+            return_value=("1.1.1.1", 80),
         ),
         patch(
             "homeassistant.components.shelly.config_flow.get_info",
@@ -2093,11 +2092,10 @@ async def test_bluetooth_wifi_scan_success(
     with (
         patch(
             "homeassistant.components.shelly.config_flow.async_provision_wifi",
-            new=AsyncMock(),
         ),
         patch(
             "homeassistant.components.shelly.config_flow.async_lookup_device_by_name",
-            new=AsyncMock(return_value=("1.1.1.1", 80)),
+            return_value=("1.1.1.1", 80),
         ),
         patch(
             "homeassistant.components.shelly.config_flow.get_info",
@@ -2178,11 +2176,10 @@ async def test_bluetooth_wifi_scan_failure(
     with (
         patch(
             "homeassistant.components.shelly.config_flow.async_provision_wifi",
-            new=AsyncMock(),
         ),
         patch(
             "homeassistant.components.shelly.config_flow.async_lookup_device_by_name",
-            new=AsyncMock(return_value=("1.1.1.1", 80)),
+            return_value=("1.1.1.1", 80),
         ),
         patch(
             "homeassistant.components.shelly.config_flow.get_info",
@@ -2357,11 +2354,11 @@ async def test_bluetooth_wifi_provision_failure(
     with (
         patch(
             "homeassistant.components.shelly.config_flow.async_provision_wifi",
-            new=AsyncMock(side_effect=DeviceConnectionError),
+            side_effect=DeviceConnectionError,
         ),
         patch(
             "homeassistant.components.shelly.config_flow.async_lookup_device_by_name",
-            new=AsyncMock(return_value=None),
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -2399,11 +2396,10 @@ async def test_bluetooth_wifi_provision_failure(
     with (
         patch(
             "homeassistant.components.shelly.config_flow.async_provision_wifi",
-            new=AsyncMock(),
         ),
         patch(
             "homeassistant.components.shelly.config_flow.async_lookup_device_by_name",
-            new=AsyncMock(return_value=("1.1.1.1", 80)),
+            return_value=("1.1.1.1", 80),
         ),
         patch(
             "homeassistant.components.shelly.config_flow.get_info",
