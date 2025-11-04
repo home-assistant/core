@@ -1,10 +1,16 @@
 """Test the Airthings Wave sensor."""
 
+from datetime import timedelta
 import logging
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.airthings_ble.const import DOMAIN
+from homeassistant.components.airthings_ble.const import (
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    RADON_SCAN_INTERVAL,
+)
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -12,6 +18,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from . import (
     CO2_V1,
     CO2_V2,
+    CORENTIUM_HOME_2_DEVICE_INFO,
     HUMIDITY_V2,
     TEMPERATURE_V1,
     VOC_V1,
@@ -29,6 +36,7 @@ from . import (
     patch_async_discovered_service_info,
 )
 
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.bluetooth import inject_bluetooth_service_info
 
 _LOGGER = logging.getLogger(__name__)
@@ -267,3 +275,89 @@ async def test_translation_keys(
 
     expected_name = f"Airthings Wave Enhance (123456) {expected_sensor_name}"
     assert state.attributes.get("friendly_name") == expected_name
+
+
+async def test_scan_interval_migration_radon_device(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that radon device migration uses 30-minute scan interval."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=WAVE_SERVICE_INFO.address,
+        data={},
+    )
+    entry.add_to_hass(hass)
+
+    inject_bluetooth_service_info(hass, WAVE_SERVICE_INFO)
+
+    with (
+        patch_async_ble_device_from_address(WAVE_SERVICE_INFO.device),
+        patch_airthings_ble(CORENTIUM_HOME_2_DEVICE_INFO) as mock_update,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        # Migration should have added device_model to entry data
+        assert "device_model" in entry.data
+        assert entry.data["device_model"] == CORENTIUM_HOME_2_DEVICE_INFO.model.value
+
+        # Coordinator should have been configured with radon scan interval
+        coordinator = entry.runtime_data
+        assert coordinator.update_interval == timedelta(seconds=RADON_SCAN_INTERVAL)
+
+        # Should have 2 calls: 1 for migration + 1 for initial refresh
+        assert mock_update.call_count == 2
+
+        # Fast forward by default interval (300s) - should NOT trigger update
+        freezer.tick(DEFAULT_SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert mock_update.call_count == 2
+
+        # Fast forward to radon interval (1800s) - should trigger update
+        freezer.tick(RADON_SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        # Should now have 3 calls: migration + initial refresh + scheduled update
+        assert mock_update.call_count == 3
+
+
+async def test_scan_interval_migration_non_radon_device(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that non-radon device migration uses default 5-minute scan interval."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=WAVE_ENHANCE_SERVICE_INFO.address,
+        data={},
+    )
+    entry.add_to_hass(hass)
+
+    inject_bluetooth_service_info(hass, WAVE_ENHANCE_SERVICE_INFO)
+
+    with (
+        patch_async_ble_device_from_address(WAVE_ENHANCE_SERVICE_INFO.device),
+        patch_airthings_ble(WAVE_ENHANCE_DEVICE_INFO) as mock_update,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        # Migration should have added device_model to entry data
+        assert "device_model" in entry.data
+        assert entry.data["device_model"] == WAVE_ENHANCE_DEVICE_INFO.model.value
+
+        # Coordinator should have been configured with default scan interval
+        coordinator = entry.runtime_data
+        assert coordinator.update_interval == timedelta(seconds=DEFAULT_SCAN_INTERVAL)
+
+        # Should have 2 calls: 1 for migration + 1 for initial refresh
+        assert mock_update.call_count == 2
+
+        # Fast forward by default interval (300s) - SHOULD trigger update
+        freezer.tick(DEFAULT_SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        # Should now have 3 calls: migration + initial refresh + scheduled update
+        assert mock_update.call_count == 3
