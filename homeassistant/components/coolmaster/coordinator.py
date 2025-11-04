@@ -50,16 +50,9 @@ class CoolmasterDataUpdateCoordinator(
         retries_left = MAX_RETRIES
         status: dict[str, CoolMasterNetUnit] = {}
         while retries_left > 0 and not status:
+            retries_left -= 1
             try:
-                retries_left -= 1
                 status = await self._coolmaster.status()
-                if status:
-                    return status
-
-                _LOGGER.debug(
-                    "Error communicating with coolmaster: empty status received (%d retries left)",
-                    retries_left,
-                )
             except OSError as error:
                 if retries_left == 0:
                     raise UpdateFailed(
@@ -70,6 +63,15 @@ class CoolmasterDataUpdateCoordinator(
                     retries_left,
                     str(error),
                 )
+            else:
+                if status:
+                    return status
+
+                _LOGGER.debug(
+                    "Error communicating with coolmaster: empty status received (%d retries left)",
+                    retries_left,
+                )
+
             backoff = BACKOFF_BASE_DELAY ** (MAX_RETRIES - retries_left)
             await asyncio.sleep(backoff)
 
