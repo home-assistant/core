@@ -16,10 +16,8 @@ from homeassistant.components.cover import (
     CoverState,
 )
 from homeassistant.components.switchbot.const import (
-    CONF_CURTAIN_SLOW_MODE,
+    CONF_CURTAIN_SPEED,
     CONF_RETRY_COUNT,
-    CURTAIN_SPEED_FAST,
-    CURTAIN_SPEED_SLOW,
     DEFAULT_RETRY_COUNT,
 )
 from homeassistant.const import (
@@ -121,7 +119,7 @@ async def test_curtain3_controlling(
         )
         await hass.async_block_till_done()
 
-        mock_open.assert_awaited_once_with(CURTAIN_SPEED_FAST)
+        mock_open.assert_awaited_once_with(255)  # Default speed
         state = hass.states.get(entity_id)
         assert state.state == CoverState.OPEN
         assert state.attributes[ATTR_CURRENT_POSITION] == 95
@@ -139,7 +137,7 @@ async def test_curtain3_controlling(
         )
         await hass.async_block_till_done()
 
-        mock_close.assert_awaited_once_with(CURTAIN_SPEED_FAST)
+        mock_close.assert_awaited_once_with(255)  # Default speed
         state = hass.states.get(entity_id)
         assert state.state == CoverState.CLOSED
         assert state.attributes[ATTR_CURRENT_POSITION] == 12
@@ -178,10 +176,10 @@ async def test_curtain3_controlling(
         assert state.attributes[ATTR_CURRENT_POSITION] == 60
 
 
-async def test_curtain3_slow_mode_controlling(
+async def test_curtain3_custom_speed_controlling(
     hass: HomeAssistant, mock_entry_factory: Callable[[str], MockConfigEntry]
 ) -> None:
-    """Test Curtain3 controlling when slow mode is enabled."""
+    """Test Curtain3 controlling with custom speed."""
     inject_bluetooth_service_info(hass, WOCURTAIN3_SERVICE_INFO)
 
     entry = mock_entry_factory(sensor_type="curtain")
@@ -192,7 +190,7 @@ async def test_curtain3_slow_mode_controlling(
         entry,
         options={
             CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT,
-            CONF_CURTAIN_SLOW_MODE: True,
+            CONF_CURTAIN_SPEED: 50,
         },
     )
 
@@ -215,7 +213,7 @@ async def test_curtain3_slow_mode_controlling(
             COVER_DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: entity_id}, blocking=True
         )
         await hass.async_block_till_done()
-        mock_open.assert_awaited_once_with(CURTAIN_SPEED_SLOW)
+        mock_open.assert_awaited_once_with(50)
 
         await hass.services.async_call(
             COVER_DOMAIN,
@@ -224,7 +222,7 @@ async def test_curtain3_slow_mode_controlling(
             blocking=True,
         )
         await hass.async_block_till_done()
-        mock_close.assert_awaited_once_with(CURTAIN_SPEED_SLOW)
+        mock_close.assert_awaited_once_with(50)
 
 
 async def test_blindtilt_setup(
