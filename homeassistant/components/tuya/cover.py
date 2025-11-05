@@ -183,7 +183,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
     _current_state: DPCode | None = None
     _set_position: IntegerTypeData | None = None
     _tilt: IntegerTypeData | None = None
-    _motor_reverse_mode: EnumTypeData | None = None
+    _motor_reverse_mode_enum: EnumTypeData | None = None
     entity_description: TuyaCoverEntityDescription
 
     def __init__(
@@ -256,7 +256,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
                 prefer_function=True,
             )
         ):
-            self._motor_reverse_mode = enum_type
+            self._motor_reverse_mode_enum = enum_type
 
     @property
     def _is_position_reversed(self) -> bool:
@@ -264,8 +264,8 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         # The default is True
         # Having motor_reverse_mode == "back" cancels the inversion
         return not (
-            self._motor_reverse_mode
-            and self._motor_reverse_mode.read_device_value(self.device) == "back"
+            self._motor_reverse_mode_enum
+            and self._motor_reverse_mode_enum.read_device_value(self.device) == "back"
         )
 
     @property
