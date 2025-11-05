@@ -40,11 +40,18 @@ async def async_setup_entry(
 ) -> bool:
     """Set up myUplink from a config entry."""
 
-    implementation = (
-        await config_entry_oauth2_flow.async_get_config_entry_implementation(
-            hass, config_entry
+    try:
+        implementation = (
+            await config_entry_oauth2_flow.async_get_config_entry_implementation(
+                hass, config_entry
+            )
         )
-    )
+    except config_entry_oauth2_flow.ImplementationUnavailableError as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="implementation_unavailable",
+        ) from err
+
     session = config_entry_oauth2_flow.OAuth2Session(hass, config_entry, implementation)
     auth = AsyncConfigEntryAuth(aiohttp_client.async_get_clientsession(hass), session)
 

@@ -2,7 +2,7 @@
 
 import http
 import time
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from aiohttp import ClientConnectionError
 import pytest
@@ -11,7 +11,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.myuplink.const import DOMAIN, OAUTH2_TOKEN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_entry_oauth2_flow, device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from . import setup_integration
@@ -37,6 +37,27 @@ async def test_load_unload_entry(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_oauth2_implementation_unavailable(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test OAuth2 implementation unavailable error."""
+
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        (
+            "homeassistant.components.myuplink.config_flow."
+            "config_entry_oauth2_flow.async_get_config_entry_implementation"
+        ),
+        side_effect=config_entry_oauth2_flow.ImplementationUnavailableError,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.parametrize(
