@@ -142,7 +142,6 @@ class VasttrafikConfigFlow(ConfigFlow, domain=DOMAIN):
 
         errors: dict[str, str] | None = {}
         if user_input is not None:
-
             if not (errors := await validate_api_credentials(self.hass, user_input)):
                 return self.async_create_entry(title="Västtrafik", data=user_input)
 

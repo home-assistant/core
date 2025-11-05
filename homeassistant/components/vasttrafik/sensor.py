@@ -159,7 +159,9 @@ class VasttrafikDepartureSensor(SensorEntity):
             self._attr_translation_placeholders = {"station": departure}
         self._departure_name = departure
         self._heading_name = heading
-        self._departure: dict[str, str] | None = None  # Will be resolved on first update
+        self._departure: dict[str, str] | None = (
+            None  # Will be resolved on first update
+        )
         self._heading: dict[str, str] | None = None  # Will be resolved on first update
         self._lines = lines if lines else None
         self._tracks = tracks if tracks else None
