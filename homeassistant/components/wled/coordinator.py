@@ -114,7 +114,11 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
         try:
             device = await self.wled.update()
         except WLEDError as error:
-            raise UpdateFailed(f"Invalid response from API: {error}") from error
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_response_wled_error",
+                translation_placeholders={"error": str(error)},
+            ) from error
 
         # If the device supports a WebSocket, try activating it.
         if (
@@ -146,4 +150,8 @@ class WLEDReleasesDataUpdateCoordinator(DataUpdateCoordinator[Releases]):
         try:
             return await self.wled.releases()
         except WLEDError as error:
-            raise UpdateFailed(f"Invalid response from GitHub API: {error}") from error
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_response_github_error",
+                translation_placeholders={"error": str(error)},
+            ) from error
