@@ -161,7 +161,6 @@ class VasttrafikConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_update_and_abort(
                     entry,
                     data=user_input,
-                    reload_even_if_entry_is_unchanged=False,
                 )
 
         return self.async_show_form(
