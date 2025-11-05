@@ -1,4 +1,4 @@
-"""Test the Dali Center integration initialization."""
+"""Test the Sunricher DALI integration initialization."""
 
 from unittest.mock import MagicMock
 
