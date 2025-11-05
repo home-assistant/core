@@ -40,7 +40,7 @@ def _setup_entities(
     devices: list[VeSyncBaseDevice],
     async_add_entities: AddConfigEntryEntitiesCallback,
     coordinator: VeSyncDataCoordinator,
-):
+) -> None:
     """Check if device is a light and add entity."""
 
     async_add_entities(
@@ -55,7 +55,6 @@ def _setup_entities(
 class VeSyncDeviceUpdate(VeSyncBaseEntity, UpdateEntity):
     """Representation of a VeSync device update entity."""
 
-    _attr_name = None
     _attr_device_class = UpdateDeviceClass.FIRMWARE
 
     @property
