@@ -10,13 +10,13 @@ import logging
 
 from propcache.api import cached_property
 from roborock import HomeDataRoom
-from roborock.code_mappings import RoborockCategory
-from roborock.containers import (
+from roborock.data import (
     DeviceData,
     HomeDataDevice,
     HomeDataProduct,
     HomeDataScene,
     NetworkInfo,
+    RoborockCategory,
     UserData,
 )
 from roborock.exceptions import RoborockException
@@ -38,6 +38,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util, slugify
@@ -274,6 +279,9 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             try:
                 await self.api.async_connect()
                 await self.api.ping()
+                async_delete_issue(
+                    self.hass, DOMAIN, f"cloud_api_used_{self.duid_slug}"
+                )
             except RoborockException:
                 _LOGGER.warning(
                     "Using the cloud API for device %s. This is not recommended as it can lead to rate limiting. We recommend making your vacuum accessible by your Home Assistant instance",
@@ -284,6 +292,19 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
                 self.api = self.cloud_api
                 self.update_interval = V1_CLOUD_NOT_CLEANING_INTERVAL
                 self._is_cloud_api = True
+                async_create_issue(
+                    self.hass,
+                    DOMAIN,
+                    f"cloud_api_used_{self.duid_slug}",
+                    is_fixable=False,
+                    severity=IssueSeverity.WARNING,
+                    translation_key="cloud_api_used",
+                    translation_placeholders={
+                        "device_name": self.roborock_device_info.device.name
+                    },
+                    learn_more_url="https://www.home-assistant.io/integrations/roborock/#the-integration-tells-me-it-cannot-reach-my-vacuum-and-is-using-the-cloud-api-and-that-this-is-not-supported-or-i-am-having-any-networking-issues",
+                )
+
                 # Right now this should never be called if the cloud api is the primary api,
                 # but in the future if it is, a new else should be added.
 
@@ -418,14 +439,36 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             # If we don't have a cur map(shouldn't happen) just
             # return as we can't do anything.
             return
-        map_flags = sorted(self.maps, key=lambda data: data == cur_map, reverse=True)
+        if self.data.status.in_cleaning:
+            # If the vacuum is cleaning, we cannot change maps
+            # as it will interrupt the cleaning.
+            _LOGGER.info(
+                "Vacuum is cleaning, not switching to other maps to fetch rooms"
+            )
+            # Since this is hitting the cloud api, we want to be careful and will just
+            # stop here rather than retrying in the future.
+            map_flags = [cur_map]
+        else:
+            map_flags = sorted(
+                self.maps, key=lambda data: data == cur_map, reverse=True
+            )
         for map_flag in map_flags:
             if map_flag != cur_map:
                 # Only change the map and sleep if we have multiple maps.
-                await self.cloud_api.load_multi_map(map_flag)
-                self.current_map = map_flag
+                try:
+                    await self.cloud_api.load_multi_map(map_flag)
+                except RoborockException as ex:
+                    _LOGGER.debug(
+                        "Failed to change to map %s when refreshing maps: %s",
+                        map_flag,
+                        ex,
+                    )
+                    continue
+                else:
+                    self.current_map = map_flag
                 # We cannot get the map until the roborock servers fully process the
-                # map change.
+                # map change. If the above command fails, we should still sleep, just
+                # in case it executes delayed.
                 await asyncio.sleep(MAP_SLEEP)
             tasks = [self.set_current_map_rooms()]
             # The image is set within async_setup, so if it exists, we have it here.
@@ -436,11 +479,18 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             # If either of these fail, we don't care, and we want to continue.
             await asyncio.gather(*tasks, return_exceptions=True)
 
-        if len(self.maps) > 1:
+        if len(self.maps) > 1 and not self.data.status.in_cleaning:
             # Set the map back to the map the user previously had selected so that it
             # does not change the end user's app.
             # Only needs to happen when we changed maps above.
-            await self.cloud_api.load_multi_map(cur_map)
+            try:
+                await self.cloud_api.load_multi_map(cur_map)
+            except RoborockException as ex:
+                _LOGGER.warning(
+                    "Failed to change back to map %s when refreshing maps: %s",
+                    cur_map,
+                    ex,
+                )
             self.current_map = cur_map
 
 

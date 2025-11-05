@@ -1,0 +1,24 @@
+{
+  "networkId": "TEST",
+  "devices": [
+    {
+      "mac": "00:00:00:00:00:01",
+      "ip": ["192.168.50.1"],
+      "state": "UP",
+      "name": "FreeBSD router",
+      "type": "FIREWALL",
+      "make": "OPNsense",
+      "first_seen": "2024-08-26T13:28:57.927Z"
+    },
+    {
+      "mac": "54:44:A3:5F:D0:38",
+      "ip": ["192.168.50.10"],
+      "state": "UP",
+      "name": "Samsung",
+      "type": "LOUDSPEAKER",
+      "make": "Samsung",
+      "model": "HW-S800B",
+      "first_seen": "2024-08-26T13:28:57.927Z"
+    }
+  ]
+}

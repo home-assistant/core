@@ -5,9 +5,6 @@ build_from:
   armhf: "ghcr.io/home-assistant/armhf-homeassistant:"
   amd64: "ghcr.io/home-assistant/amd64-homeassistant:"
   i386: "ghcr.io/home-assistant/i386-homeassistant:"
-codenotary:
-  signer: notary@home-assistant.io
-  base_image: notary@home-assistant.io
 cosign:
   base_identity: https://github.com/home-assistant/core/.*
   identity: https://github.com/home-assistant/core/.*

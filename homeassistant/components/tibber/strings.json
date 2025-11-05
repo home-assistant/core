@@ -1,113 +1,12 @@
 {
-  "entity": {
-    "sensor": {
-      "electricity_price": {
-        "name": "Electricity price"
-      },
-      "month_cost": {
-        "name": "Monthly cost"
-      },
-      "peak_hour": {
-        "name": "Monthly peak hour consumption"
-      },
-      "peak_hour_time": {
-        "name": "Time of max hour consumption"
-      },
-      "month_cons": {
-        "name": "Monthly net consumption"
-      },
-      "average_power": {
-        "name": "Average power"
-      },
-      "power": {
-        "name": "Power"
-      },
-      "power_production": {
-        "name": "Power production"
-      },
-      "min_power": {
-        "name": "Min power"
-      },
-      "max_power": {
-        "name": "Max power"
-      },
-      "accumulated_consumption": {
-        "name": "Accumulated consumption"
-      },
-      "accumulated_consumption_last_hour": {
-        "name": "Accumulated consumption current hour"
-      },
-      "estimated_hour_consumption": {
-        "name": "Estimated consumption current hour"
-      },
-      "accumulated_production": {
-        "name": "Accumulated production"
-      },
-      "accumulated_production_last_hour": {
-        "name": "Accumulated production current hour"
-      },
-      "last_meter_consumption": {
-        "name": "Last meter consumption"
-      },
-      "last_meter_production": {
-        "name": "Last meter production"
-      },
-      "voltage_phase1": {
-        "name": "Voltage phase1"
-      },
-      "voltage_phase2": {
-        "name": "Voltage phase2"
-      },
-      "voltage_phase3": {
-        "name": "Voltage phase3"
-      },
-      "current_l1": {
-        "name": "Current L1"
-      },
-      "current_l2": {
-        "name": "Current L2"
-      },
-      "current_l3": {
-        "name": "Current L3"
-      },
-      "signal_strength": {
-        "name": "Signal strength"
-      },
-      "accumulated_reward": {
-        "name": "Accumulated reward"
-      },
-      "accumulated_cost": {
-        "name": "Accumulated cost"
-      },
-      "power_factor": {
-        "name": "Power factor"
-      }
-    }
-  },
-  "services": {
-    "get_prices": {
-      "name": "Get energy prices",
-      "description": "Fetches hourly energy prices including price level.",
-      "fields": {
-        "start": {
-          "name": "Start",
-          "description": "Specifies the date and time from which to retrieve prices. Defaults to today if omitted."
-        },
-        "end": {
-          "name": "End",
-          "description": "Specifies the date and time until which to retrieve prices. Defaults to the last hour of today if omitted."
-        }
-      }
-    }
-  },
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     },
     "error": {
-      "timeout": "[%key:common::config_flow::error::timeout_connect%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]"
+      "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]",
+      "timeout": "[%key:common::config_flow::error::timeout_connect%]"
     },
     "step": {
       "user": {
@@ -118,12 +17,113 @@
       }
     }
   },
+  "entity": {
+    "sensor": {
+      "accumulated_consumption": {
+        "name": "Accumulated consumption"
+      },
+      "accumulated_consumption_last_hour": {
+        "name": "Accumulated consumption current hour"
+      },
+      "accumulated_cost": {
+        "name": "Accumulated cost"
+      },
+      "accumulated_production": {
+        "name": "Accumulated production"
+      },
+      "accumulated_production_last_hour": {
+        "name": "Accumulated production current hour"
+      },
+      "accumulated_reward": {
+        "name": "Accumulated reward"
+      },
+      "average_power": {
+        "name": "Average power"
+      },
+      "current_l1": {
+        "name": "Current L1"
+      },
+      "current_l2": {
+        "name": "Current L2"
+      },
+      "current_l3": {
+        "name": "Current L3"
+      },
+      "electricity_price": {
+        "name": "Electricity price"
+      },
+      "estimated_hour_consumption": {
+        "name": "Estimated consumption current hour"
+      },
+      "last_meter_consumption": {
+        "name": "Last meter consumption"
+      },
+      "last_meter_production": {
+        "name": "Last meter production"
+      },
+      "max_power": {
+        "name": "Max power"
+      },
+      "min_power": {
+        "name": "Min power"
+      },
+      "month_cons": {
+        "name": "Monthly net consumption"
+      },
+      "month_cost": {
+        "name": "Monthly cost"
+      },
+      "peak_hour": {
+        "name": "Monthly peak hour consumption"
+      },
+      "peak_hour_time": {
+        "name": "Time of max hour consumption"
+      },
+      "power": {
+        "name": "Power"
+      },
+      "power_factor": {
+        "name": "Power factor"
+      },
+      "power_production": {
+        "name": "Power production"
+      },
+      "signal_strength": {
+        "name": "Signal strength"
+      },
+      "voltage_phase1": {
+        "name": "Voltage phase1"
+      },
+      "voltage_phase2": {
+        "name": "Voltage phase2"
+      },
+      "voltage_phase3": {
+        "name": "Voltage phase3"
+      }
+    }
+  },
   "exceptions": {
     "invalid_date": {
       "message": "Invalid datetime provided {date}"
     },
     "send_message_timeout": {
       "message": "Timeout sending message with Tibber"
+    }
+  },
+  "services": {
+    "get_prices": {
+      "description": "Fetches hourly energy prices including price level.",
+      "fields": {
+        "end": {
+          "description": "Specifies the date and time until which to retrieve prices. Defaults to the last hour of today if omitted.",
+          "name": "End"
+        },
+        "start": {
+          "description": "Specifies the date and time from which to retrieve prices. Defaults to today if omitted.",
+          "name": "Start"
+        }
+      },
+      "name": "Get energy prices"
     }
   }
 }

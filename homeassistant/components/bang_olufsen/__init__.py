@@ -73,10 +73,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: BangOlufsenConfigEntry) 
     # Add the websocket and API client
     entry.runtime_data = BangOlufsenData(websocket, client)
 
-    # Start WebSocket connection
-    await client.connect_notifications(remote_control=True, reconnect=True)
-
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    # Start WebSocket connection once the platforms have been loaded.
+    # This ensures that the initial WebSocket notifications are dispatched to entities
+    await client.connect_notifications(remote_control=True, reconnect=True)
 
     return True
 

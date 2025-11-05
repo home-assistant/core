@@ -5,13 +5,16 @@ from __future__ import annotations
 import pytest
 import voluptuous as vol
 
+from homeassistant.components.template import DOMAIN
 from homeassistant.components.template.config import (
     CONFIG_SECTION_SCHEMA,
     async_validate_config_section,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.script_variables import ScriptVariables
 from homeassistant.helpers.template import Template
+from homeassistant.setup import async_setup_component
 
 
 @pytest.mark.parametrize(
@@ -97,6 +100,120 @@ async def test_invalid_default_entity_id(
     }
     with pytest.raises(vol.Invalid):
         CONFIG_SECTION_SCHEMA(config)
+
+
+@pytest.mark.parametrize(
+    ("config", "expected_error"),
+    [
+        (
+            {
+                "trigger": {"trigger": "event", "event_type": "my_event"},
+                "binary_sensor": {
+                    "state": "{{ states('binary_sensor.test') }}",
+                    "unique_id": "test",
+                    "name": "test",
+                    "auto_off": "00:00:01",
+                },
+            },
+            None,
+        ),
+        (
+            {
+                "binary_sensor": {
+                    "state": "{{ states('binary_sensor.test') }}",
+                    "name": "test",
+                },
+            },
+            None,
+        ),
+        (
+            {
+                "binary_sensor": {
+                    "state": "{{ states('binary_sensor.test') }}",
+                    "auto_off": "00:00:01",
+                },
+            },
+            "The auto_off option for template binary sensor: name: Template Binary Sensor",
+        ),
+        (
+            {
+                "binary_sensor": {
+                    "state": "{{ states('binary_sensor.test') }}",
+                    "name": "test",
+                    "auto_off": "00:00:01",
+                },
+            },
+            "The auto_off option for template binary sensor: name: test",
+        ),
+        (
+            {
+                "binary_sensor": {
+                    "state": "{{ states('binary_sensor.test') }}",
+                    "unique_id": "test_unique_id",
+                    "auto_off": "00:00:01",
+                },
+            },
+            "The auto_off option for template binary sensor: unique_id: test_unique_id",
+        ),
+        (
+            {
+                "binary_sensor": {
+                    "state": "{{ states('binary_sensor.test') }}",
+                    "name": "test",
+                    "unique_id": "test_unique_id",
+                    "auto_off": "00:00:01",
+                },
+            },
+            "The auto_off option for template binary sensor: name: test",
+        ),
+        (
+            {
+                "binary_sensor": {
+                    "state": "{{ states('binary_sensor.test') }}",
+                    "default_entity_id": "binary_sensor.test_entity_id",
+                    "auto_off": "00:00:01",
+                },
+            },
+            "The auto_off option for template binary sensor: default_entity_id: binary_sensor.test_entity_id",
+        ),
+        (
+            {
+                "binary_sensor": {
+                    "state": "{{ states('binary_sensor.test') }}",
+                    "name": "test",
+                    "unique_id": "test_unique_id",
+                    "default_entity_id": "binary_sensor.test_entity_id",
+                    "auto_off": "00:00:01",
+                },
+            },
+            "The auto_off option for template binary sensor: name: test",
+        ),
+        (
+            {
+                "binary_sensor": {
+                    "state": "{{ states('binary_sensor.test') }}",
+                    "unique_id": "test_unique_id",
+                    "default_entity_id": "binary_sensor.test_entity_id",
+                    "auto_off": "00:00:01",
+                },
+            },
+            "The auto_off option for template binary sensor: default_entity_id: binary_sensor.test_entity_id",
+        ),
+    ],
+)
+async def test_invalid_binary_sensor_schema_with_auto_off(
+    hass: HomeAssistant,
+    config: dict,
+    expected_error: str | None,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid config schemas create issue and log warning."""
+
+    await async_setup_component(hass, "template", {"template": [config]})
+
+    assert (
+        expected_error is None and "ERROR" not in caplog.text
+    ) or expected_error in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -256,3 +373,105 @@ async def test_combined_trigger_variables(
     assert root_variables.as_dict() == expected_root
     variables: ScriptVariables = validated["binary_sensor"][0].get("variables", empty)
     assert variables.as_dict() == expected_entity
+
+
+async def test_state_init_attribute_variables(
+    hass: HomeAssistant,
+) -> None:
+    """Test a state based template entity initializes icon, name, and picture with variables."""
+    source = "switch.foo"
+    entity_id = "sensor.foo"
+
+    hass.states.async_set(source, "on", {"friendly_name": "Foo"})
+    config = {
+        "template": [
+            {
+                "variables": {
+                    "switch": "switch.foo",
+                    "on_icon": "mdi:lightbulb",
+                    "on_picture": "on.png",
+                },
+                "sensor": {
+                    "variables": {
+                        "off_icon": "mdi:lightbulb-off",
+                        "off_picture": "off.png",
+                    },
+                    "name": "{{ state_attr(switch, 'friendly_name') }}",
+                    "icon": "{{ on_icon if is_state(switch, 'on') else off_icon }}",
+                    "picture": "{{ on_picture if is_state(switch, 'on') else off_picture }}",
+                    "state": "{{ is_state(switch, 'on') }}",
+                },
+            }
+        ],
+    }
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        config,
+    )
+    await hass.async_block_till_done()
+
+    # Check initial state
+    sensor = hass.states.get(entity_id)
+    assert sensor
+    assert sensor.state == "True"
+    assert sensor.attributes["icon"] == "mdi:lightbulb"
+    assert sensor.attributes["entity_picture"] == "on.png"
+    assert sensor.attributes["friendly_name"] == "Foo"
+
+    hass.states.async_set(source, "off", {"friendly_name": "Foo"})
+    await hass.async_block_till_done()
+
+    # Check to see that the template light works
+    sensor = hass.states.get(entity_id)
+    assert sensor
+    assert sensor.state == "False"
+    assert sensor.attributes["icon"] == "mdi:lightbulb-off"
+    assert sensor.attributes["entity_picture"] == "off.png"
+    assert sensor.attributes["friendly_name"] == "Foo"
+
+
+@pytest.mark.parametrize(
+    ("config", "expected_warning"),
+    [
+        (
+            {
+                "trigger": {"trigger": "event", "event_type": "my_event"},
+            },
+            "Invalid template configuration found, trigger option is missing matching domain",
+        ),
+        (
+            {
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {"caller": "{{ this.entity_id }}"},
+                },
+                "sensor": {
+                    "state": "{{ states('sensor.test') }}",
+                    "unique_id": "test",
+                    "name": "test",
+                    "icon": "mdi:test",
+                },
+            },
+            "Invalid template configuration found, action option requires a trigger",
+        ),
+    ],
+)
+async def test_invalid_schema_raises_issue(
+    hass: HomeAssistant,
+    config: dict,
+    expected_warning: str,
+    issue_registry: ir.IssueRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid config schemas create issue and log warning."""
+
+    await async_setup_component(hass, "template", {"template": [config]})
+
+    assert expected_warning in caplog.text
+
+    assert len(issue_registry.issues) == 1
+    issue = next(iter(issue_registry.issues.values()))
+
+    assert issue.domain == "template"
+    assert issue.severity == ir.IssueSeverity.WARNING

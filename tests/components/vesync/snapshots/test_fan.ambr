@@ -82,7 +82,6 @@
       'display_status': 'on',
       'friendly_name': 'Air Purifier 131s',
       'mode': 'sleep',
-      'night_light': None,
       'percentage': None,
       'percentage_step': 33.333333333333336,
       'preset_mode': 'sleep',
@@ -182,7 +181,7 @@
       'display_status': 'on',
       'friendly_name': 'Air Purifier 200s',
       'mode': 'manual',
-      'night_light': <DeviceStatus.OFF: 'off'>,
+      'night_light': 'off',
       'percentage': 33,
       'percentage_step': 33.333333333333336,
       'preset_mode': None,
@@ -282,7 +281,7 @@
       'display_status': 'on',
       'friendly_name': 'Air Purifier 400s',
       'mode': 'manual',
-      'night_light': <DeviceStatus.OFF: 'off'>,
+      'night_light': 'off',
       'percentage': 25,
       'percentage_step': 25.0,
       'preset_mode': None,
@@ -383,7 +382,7 @@
       'display_status': 'on',
       'friendly_name': 'Air Purifier 600s',
       'mode': 'manual',
-      'night_light': <DeviceStatus.OFF: 'off'>,
+      'night_light': 'off',
       'percentage': 25,
       'percentage_step': 25.0,
       'preset_mode': None,
@@ -509,6 +508,43 @@
   ])
 # ---
 # name: test_fan_state[Humidifier 200s][entities]
+  list([
+  ])
+# ---
+# name: test_fan_state[Humidifier 6000s][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          '6000s',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'LEH-S601S-WUS',
+      'model_id': None,
+      'name': 'Humidifier 6000s',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_fan_state[Humidifier 6000s][entities]
   list([
   ])
 # ---
@@ -656,7 +692,7 @@
       'platform': 'vesync',
       'previous_unique_id': None,
       'suggested_object_id': None,
-      'supported_features': <FanEntityFeature: 57>,
+      'supported_features': <FanEntityFeature: 59>,
       'translation_key': 'vesync',
       'unique_id': 'smarttowerfan',
       'unit_of_measurement': None,
@@ -670,6 +706,7 @@
       'display_status': 'off',
       'friendly_name': 'SmartTowerFan',
       'mode': 'normal',
+      'oscillating': True,
       'percentage': 0,
       'percentage_step': 8.333333333333334,
       'preset_mode': 'normal',
@@ -679,7 +716,7 @@
         'normal',
         'turbo',
       ]),
-      'supported_features': <FanEntityFeature: 57>,
+      'supported_features': <FanEntityFeature: 59>,
     }),
     'context': <ANY>,
     'entity_id': 'fan.smarttowerfan',

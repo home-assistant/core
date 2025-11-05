@@ -88,7 +88,7 @@ SERVICE_ADD_TORRENT_SCHEMA = vol.All(
     SERVICE_BASE_SCHEMA.extend(
         {
             vol.Required(ATTR_TORRENT): cv.string,
-            vol.Optional(ATTR_DOWNLOAD_PATH, default=None): cv.string,
+            vol.Optional(ATTR_DOWNLOAD_PATH): cv.string,
         }
     ),
 )

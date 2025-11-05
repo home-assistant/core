@@ -1,38 +1,27 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
     "flow_title": "{name}",
     "step": {
+      "link": {
+        "description": "Do you want to set up {name} ({host})?",
+        "title": "[%key:component::harmony::config::step::user::title%]"
+      },
       "user": {
-        "title": "Set up Logitech Harmony Hub",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "name": "Hub Name"
         },
         "data_description": {
           "host": "The hostname or IP address of your Logitech Harmony Hub."
-        }
-      },
-      "link": {
-        "title": "[%key:component::harmony::config::step::user::title%]",
-        "description": "Do you want to set up {name} ({host})?"
-      }
-    },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "description": "Adjust Harmony Hub options",
-        "data": {
-          "activity": "The default activity to execute when none is specified.",
-          "delay_secs": "The delay between sending commands."
-        }
+        },
+        "title": "Set up Logitech Harmony Hub"
       }
     }
   },
@@ -46,20 +35,31 @@
       }
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "activity": "The default activity to execute when none is specified.",
+          "delay_secs": "The delay between sending commands."
+        },
+        "description": "Adjust Harmony Hub options"
+      }
+    }
+  },
   "services": {
-    "sync": {
-      "name": "Sync",
-      "description": "Syncs the remote's configuration."
-    },
     "change_channel": {
-      "name": "Change channel",
       "description": "Sends a change channel command to the Harmony Hub.",
       "fields": {
         "channel": {
-          "name": "Channel",
-          "description": "Channel number to change to."
+          "description": "Channel number to change to.",
+          "name": "Channel"
         }
-      }
+      },
+      "name": "Change channel"
+    },
+    "sync": {
+      "description": "Syncs the remote's configuration.",
+      "name": "Sync"
     }
   }
 }

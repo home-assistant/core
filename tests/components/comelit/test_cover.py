@@ -14,10 +14,6 @@ from homeassistant.components.cover import (
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
     SERVICE_STOP_COVER,
-    STATE_CLOSED,
-    STATE_CLOSING,
-    STATE_OPEN,
-    STATE_OPENING,
     CoverState,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
@@ -79,7 +75,7 @@ async def test_cover_open(
     mock_serial_bridge.set_device_status.assert_called()
 
     assert (state := hass.states.get(ENTITY_ID))
-    assert state.state == STATE_OPENING
+    assert state.state == CoverState.OPENING
 
     # Finish opening, update status
     mock_serial_bridge.get_all_devices.return_value[COVER] = {
@@ -102,7 +98,7 @@ async def test_cover_open(
     await hass.async_block_till_done()
 
     assert (state := hass.states.get(ENTITY_ID))
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
 
 
 async def test_cover_close(
@@ -128,7 +124,7 @@ async def test_cover_close(
     mock_serial_bridge.set_device_status.assert_called()
 
     assert (state := hass.states.get(ENTITY_ID))
-    assert state.state == STATE_CLOSING
+    assert state.state == CoverState.CLOSING
 
     # Stop cover
     await hass.services.async_call(
@@ -140,7 +136,7 @@ async def test_cover_close(
     mock_serial_bridge.set_device_status.assert_called()
 
     assert (state := hass.states.get(ENTITY_ID))
-    assert state.state == STATE_CLOSED
+    assert state.state == CoverState.CLOSED
 
 
 async def test_cover_stop_if_stopped(

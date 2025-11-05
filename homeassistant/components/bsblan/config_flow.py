@@ -180,10 +180,7 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle reauth confirmation flow."""
-        existing_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
-        assert existing_entry
+        existing_entry = self._get_reauth_entry()
 
         if user_input is None:
             # Preserve existing values as defaults

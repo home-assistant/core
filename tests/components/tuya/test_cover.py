@@ -321,7 +321,7 @@ async def test_clkg_wltqkykhni0papzj_action(
 
 @pytest.mark.parametrize(
     "mock_device_code",
-    ["cl_rD7uqAAgQOpSA2Rx"],
+    ["cl_n3xgr5pdmpinictg"],
 )
 @pytest.mark.parametrize(
     ("initial_control", "expected_state"),
@@ -332,7 +332,7 @@ async def test_clkg_wltqkykhni0papzj_action(
     ],
 )
 @patch("homeassistant.components.tuya.PLATFORMS", [Platform.COVER])
-async def test_cl_rD7uqAAgQOpSA2Rx_state(
+async def test_cl_n3xgr5pdmpinictg_state(
     hass: HomeAssistant,
     mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
@@ -344,7 +344,7 @@ async def test_cl_rD7uqAAgQOpSA2Rx_state(
 
     See https://github.com/home-assistant/core/issues/153537
     """
-    entity_id = "cover.kit_blinds_curtain"
+    entity_id = "cover.estore_sala_curtain"
     mock_device.status["control"] = initial_control
 
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)

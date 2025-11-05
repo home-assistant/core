@@ -7,7 +7,7 @@ import pytest
 
 from homeassistant.components.probe_plus.const import DOMAIN
 from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_USER
-from homeassistant.const import CONF_ADDRESS
+from homeassistant.const import CONF_ADDRESS, CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
@@ -57,7 +57,7 @@ async def test_user_config_flow_creates_entry(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == "aa:bb:cc:dd:ee:ff"
     assert result["title"] == "FM210 aa:bb:cc:dd:ee:ff"
-    assert result["data"] == {CONF_ADDRESS: "aa:bb:cc:dd:ee:ff"}
+    assert result["data"] == {CONF_ADDRESS: "aa:bb:cc:dd:ee:ff", CONF_MODEL: "FM210"}
 
 
 async def test_user_flow_already_configured(
@@ -97,9 +97,7 @@ async def test_bluetooth_discovery(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "FM210 aa:bb:cc:dd:ee:ff"
     assert result["result"].unique_id == "aa:bb:cc:dd:ee:ff"
-    assert result["data"] == {
-        CONF_ADDRESS: service_info.address,
-    }
+    assert result["data"] == {CONF_ADDRESS: service_info.address, CONF_MODEL: "FM210"}
 
 
 async def test_already_configured_bluetooth_discovery(

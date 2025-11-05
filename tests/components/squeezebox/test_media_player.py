@@ -65,20 +65,25 @@ from homeassistant.const import (
     SERVICE_VOLUME_UP,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.util.dt import utcnow
 
-from .conftest import (
-    FAKE_VALID_ITEM_ID,
-    TEST_MAC,
-    TEST_VOLUME_STEP,
-    configure_squeezebox_media_player_platform,
-)
+from .conftest import FAKE_VALID_ITEM_ID, TEST_MAC, TEST_VOLUME_STEP
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+
+
+@pytest.fixture(autouse=True)
+def squeezebox_media_player_platform():
+    """Only set up the media_player platform for squeezebox tests."""
+    with patch(
+        "homeassistant.components.squeezebox.PLATFORMS", [Platform.MEDIA_PLAYER]
+    ):
+        yield
 
 
 async def test_entity_registry(
@@ -98,10 +103,11 @@ async def test_squeezebox_new_player_discovery(
     lms: MagicMock,
     player_factory: MagicMock,
     freezer: FrozenDateTimeFactory,
+    setup_squeezebox: MockConfigEntry,
 ) -> None:
     """Test discovery of a new squeezebox player."""
     # Initial setup with one player (from the 'lms' fixture)
-    await configure_squeezebox_media_player_platform(hass, config_entry, lms)
+    # await setup_squeezebox
     await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get("media_player.test_player") is not None
     assert hass.states.get("media_player.test_player_2") is None

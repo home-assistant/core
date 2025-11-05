@@ -16,8 +16,8 @@
         "state_attributes": {
           "preset_mode": {
             "state": {
-              "manual": "mdi:hand-back-left",
               "auto": "mdi:auto-mode",
+              "manual": "mdi:hand-back-left",
               "summer": "mdi:sun-thermometer-outline"
             }
           }
@@ -39,11 +39,11 @@
       }
     },
     "switch": {
-      "watchdog": {
-        "default": "mdi:dog"
-      },
       "manual_operation": {
         "default": "mdi:hand-back-left"
+      },
+      "watchdog": {
+        "default": "mdi:dog"
       }
     }
   }

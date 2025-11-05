@@ -26,8 +26,31 @@ def ha_datetime_to_fakedatetime(datetime) -> freezegun.api.FakeDatetime:  # type
     )
 
 
-class HAFakeDatetime(freezegun.api.FakeDatetime):  # type: ignore[name-defined]
-    """Modified to include https://github.com/spulec/freezegun/pull/424."""
+class HAFakeDateMeta(freezegun.api.FakeDateMeta):
+    """Modified to override the string representation."""
+
+    def __str__(cls) -> str:  # noqa: N805 (ruff doesn't know this is a metaclass)
+        """Return the string representation of the class."""
+        return "<class 'datetime.date'>"
+
+
+class HAFakeDate(freezegun.api.FakeDate, metaclass=HAFakeDateMeta):  # type: ignore[name-defined]
+    """Modified to improve class str."""
+
+
+class HAFakeDatetimeMeta(freezegun.api.FakeDatetimeMeta):
+    """Modified to override the string representation."""
+
+    def __str__(cls) -> str:  # noqa: N805 (ruff doesn't know this is a metaclass)
+        """Return the string representation of the class."""
+        return "<class 'datetime.datetime'>"
+
+
+class HAFakeDatetime(freezegun.api.FakeDatetime, metaclass=HAFakeDatetimeMeta):  # type: ignore[name-defined]
+    """Modified to include basic fold support and improve class str.
+
+    Fold support submitted to upstream in https://github.com/spulec/freezegun/pull/424.
+    """
 
     @classmethod
     def now(cls, tz=None):

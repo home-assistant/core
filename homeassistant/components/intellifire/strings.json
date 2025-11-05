@@ -1,84 +1,84 @@
 {
   "config": {
-    "flow_title": "{serial}",
-    "step": {
-      "pick_cloud_device": {
-        "title": "Configure fireplace",
-        "description": "Select fireplace by serial number:"
-      },
-      "cloud_api": {
-        "description": "Authenticate against IntelliFire cloud",
-        "data_description": {
-          "username": "Your IntelliFire app username",
-          "password": "Your IntelliFire app password"
-        },
-        "data": {
-          "username": "[%key:common::config_flow::data::email%]",
-          "password": "[%key:common::config_flow::data::password%]"
-        }
-      }
+    "abort": {
+      "no_available_devices": "All available devices have already been configured.",
+      "not_intellifire_device": "Not an IntelliFire device.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
       "api_error": "Login failed"
     },
-    "abort": {
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "not_intellifire_device": "Not an IntelliFire device.",
-      "no_available_devices": "All available devices have already been configured."
+    "flow_title": "{serial}",
+    "step": {
+      "cloud_api": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::email%]"
+        },
+        "data_description": {
+          "password": "Your IntelliFire app password",
+          "username": "Your IntelliFire app username"
+        },
+        "description": "Authenticate against IntelliFire cloud"
+      },
+      "pick_cloud_device": {
+        "description": "Select fireplace by serial number:",
+        "title": "Configure fireplace"
+      }
     }
   },
   "entity": {
     "binary_sensor": {
-      "flame": {
-        "name": "Flame"
-      },
-      "timer_on": {
-        "name": "Timer on"
-      },
-      "pilot_light_on": {
-        "name": "Pilot light on"
-      },
-      "thermostat_on": {
-        "name": "Thermostat on"
-      },
-      "pilot_flame_error": {
-        "name": "Pilot flame error"
-      },
-      "flame_error": {
-        "name": "Flame error"
-      },
-      "fan_delay_error": {
-        "name": "Fan delay error"
-      },
-      "maintenance_error": {
-        "name": "Maintenance error"
-      },
-      "disabled_error": {
-        "name": "Disabled error"
-      },
-      "fan_error": {
-        "name": "Fan error"
-      },
-      "lights_error": {
-        "name": "Lights error"
-      },
       "accessory_error": {
         "name": "Accessory error"
-      },
-      "soft_lock_out_error": {
-        "name": "Soft lock out error"
-      },
-      "ecm_offline_error": {
-        "name": "ECM offline error"
-      },
-      "offline_error": {
-        "name": "Offline error"
       },
       "cloud_connectivity": {
         "name": "Cloud connectivity"
       },
+      "disabled_error": {
+        "name": "Disabled error"
+      },
+      "ecm_offline_error": {
+        "name": "ECM offline error"
+      },
+      "fan_delay_error": {
+        "name": "Fan delay error"
+      },
+      "fan_error": {
+        "name": "Fan error"
+      },
+      "flame": {
+        "name": "Flame"
+      },
+      "flame_error": {
+        "name": "Flame error"
+      },
+      "lights_error": {
+        "name": "Lights error"
+      },
       "local_connectivity": {
         "name": "Local connectivity"
+      },
+      "maintenance_error": {
+        "name": "Maintenance error"
+      },
+      "offline_error": {
+        "name": "Offline error"
+      },
+      "pilot_flame_error": {
+        "name": "Pilot flame error"
+      },
+      "pilot_light_on": {
+        "name": "Pilot light on"
+      },
+      "soft_lock_out_error": {
+        "name": "Soft lock out error"
+      },
+      "thermostat_on": {
+        "name": "Thermostat on"
+      },
+      "timer_on": {
+        "name": "Timer on"
       }
     },
     "fan": {
@@ -97,32 +97,32 @@
       }
     },
     "sensor": {
-      "flame_height": {
-        "name": "Flame height"
-      },
-      "target_temp": {
-        "name": "Target temperature"
-      },
-      "fan_speed": {
-        "name": "Fan speed"
-      },
-      "timer_end_timestamp": {
-        "name": "Timer end"
+      "connection_quality": {
+        "name": "Connection quality"
       },
       "downtime": {
         "name": "Downtime"
       },
-      "uptime": {
-        "name": "Uptime"
-      },
-      "connection_quality": {
-        "name": "Connection quality"
-      },
       "ecm_latency": {
         "name": "ECM latency"
       },
+      "fan_speed": {
+        "name": "Fan speed"
+      },
+      "flame_height": {
+        "name": "Flame height"
+      },
       "ipv4_address": {
         "name": "IP address"
+      },
+      "target_temp": {
+        "name": "Target temperature"
+      },
+      "timer_end_timestamp": {
+        "name": "Timer end"
+      },
+      "uptime": {
+        "name": "Uptime"
       }
     },
     "switch": {

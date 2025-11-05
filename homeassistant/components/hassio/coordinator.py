@@ -56,6 +56,7 @@ from .const import (
     SupervisorEntityModel,
 )
 from .handler import HassioAPIError, get_supervisor_client
+from .jobs import SupervisorJobs
 
 if TYPE_CHECKING:
     from .issues import SupervisorIssues
@@ -311,6 +312,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
             lambda: defaultdict(set)
         )
         self.supervisor_client = get_supervisor_client(hass)
+        self.jobs = SupervisorJobs(hass)
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
@@ -485,6 +487,9 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
                 )
             )
 
+        # Refresh jobs data
+        await self.jobs.refresh_data(first_update)
+
     async def _update_addon_stats(self, slug: str) -> tuple[str, dict[str, Any] | None]:
         """Update single addon stats."""
         try:
@@ -558,3 +563,8 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
                     self.async_set_updated_data(data)
         except SupervisorError as err:
             _LOGGER.warning("Could not refresh info for %s: %s", addon_slug, err)
+
+    @callback
+    def unload(self) -> None:
+        """Clean up when config entry unloaded."""
+        self.jobs.unload()

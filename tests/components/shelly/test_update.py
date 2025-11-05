@@ -29,6 +29,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
@@ -39,11 +40,19 @@ from . import (
     init_integration,
     inject_rpc_device_event,
     mock_rest_update,
+    patch_platforms,
     register_device,
     register_entity,
 )
 
 from tests.common import mock_restore_cache
+
+
+@pytest.fixture(autouse=True)
+def fixture_platforms():
+    """Limit platforms under test."""
+    with patch_platforms([Platform.UPDATE]):
+        yield
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

@@ -1,7 +1,5 @@
 set_vacation:
   target:
-    device:
-      integration: google_mail
     entity:
       integration: google_mail
   fields:

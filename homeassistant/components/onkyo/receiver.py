@@ -124,13 +124,10 @@ class ReceiverManager:
         self.callbacks.clear()
 
 
-async def async_interview(host: str) -> ReceiverInfo | None:
+async def async_interview(host: str) -> ReceiverInfo:
     """Interview the receiver."""
-    info: ReceiverInfo | None = None
-    with contextlib.suppress(asyncio.TimeoutError):
-        async with asyncio.timeout(DEVICE_INTERVIEW_TIMEOUT):
-            info = await aioonkyo.interview(host)
-    return info
+    async with asyncio.timeout(DEVICE_INTERVIEW_TIMEOUT):
+        return await aioonkyo.interview(host)
 
 
 async def async_discover(hass: HomeAssistant) -> Iterable[ReceiverInfo]:

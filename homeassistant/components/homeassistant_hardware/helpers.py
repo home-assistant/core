@@ -6,17 +6,31 @@ from collections import defaultdict
 from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
 import logging
-from typing import TYPE_CHECKING, Protocol
+from typing import TYPE_CHECKING, Protocol, TypedDict
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.usb import (
+    USBDevice,
+    async_get_usb_matchers_for_device,
+    usb_device_from_path,
+)
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
 
 from . import DATA_COMPONENT
+from .const import HARDWARE_INTEGRATION_DOMAINS
 
 if TYPE_CHECKING:
     from .util import FirmwareInfo
 
+
 _LOGGER = logging.getLogger(__name__)
+
+
+class HardwareFirmwareDiscoveryInfo(TypedDict):
+    """Data for triggering hardware integration discovery via firmware notification."""
+
+    usb_device: USBDevice | None
+    firmware_info: FirmwareInfo
 
 
 class SyncHardwareFirmwareInfoModule(Protocol):
@@ -44,6 +58,23 @@ class AsyncHardwareFirmwareInfoModule(Protocol):
 type HardwareFirmwareInfoModule = (
     SyncHardwareFirmwareInfoModule | AsyncHardwareFirmwareInfoModule
 )
+
+
+@hass_callback
+def async_get_hardware_domain_for_usb_device(
+    hass: HomeAssistant, usb_device: USBDevice
+) -> str | None:
+    """Identify which hardware domain should handle a USB device."""
+    matched = async_get_usb_matchers_for_device(hass, usb_device)
+    hw_domains = {match["domain"] for match in matched} & HARDWARE_INTEGRATION_DOMAINS
+
+    if not hw_domains:
+        return None
+
+    # We can never have two hardware integrations overlap in discovery
+    assert len(hw_domains) == 1
+
+    return list(hw_domains)[0]
 
 
 class HardwareInfoDispatcher:
@@ -94,13 +125,55 @@ class HardwareInfoDispatcher:
             "Received firmware info notification from %r: %s", domain, firmware_info
         )
 
-        for callback in self._notification_callbacks.get(firmware_info.device, []):
+        for callback in list(self._notification_callbacks[firmware_info.device]):
             try:
                 callback(firmware_info)
             except Exception:
                 _LOGGER.exception(
                     "Error while notifying firmware info listener %s", callback
                 )
+
+        await self._async_trigger_hardware_discovery(firmware_info)
+
+    async def _async_trigger_hardware_discovery(
+        self, firmware_info: FirmwareInfo
+    ) -> None:
+        """Trigger hardware integration config flows from firmware info.
+
+        Identifies which hardware integration should handle the device based on
+        USB matchers, then triggers an import flow for only that integration.
+        """
+
+        usb_device = await self.hass.async_add_executor_job(
+            usb_device_from_path, firmware_info.device
+        )
+
+        if usb_device is None:
+            _LOGGER.debug("Cannot find USB for path %s", firmware_info.device)
+            return
+
+        hardware_domain = async_get_hardware_domain_for_usb_device(
+            self.hass, usb_device
+        )
+
+        if hardware_domain is None:
+            _LOGGER.debug("No hardware integration found for device %s", usb_device)
+            return
+
+        _LOGGER.debug(
+            "Triggering %s import flow for device %s",
+            hardware_domain,
+            firmware_info.device,
+        )
+
+        await self.hass.config_entries.flow.async_init(
+            hardware_domain,
+            context={"source": SOURCE_IMPORT},
+            data=HardwareFirmwareDiscoveryInfo(
+                usb_device=usb_device,
+                firmware_info=firmware_info,
+            ),
+        )
 
     async def iter_firmware_info(self) -> AsyncIterator[FirmwareInfo]:
         """Iterate over all firmware information for all hardware."""

@@ -13,6 +13,7 @@ from homeassistant.components.media_player import (
     SERVICE_MEDIA_PREVIOUS_TRACK,
     SERVICE_PLAY_MEDIA,
     SERVICE_SEARCH_MEDIA,
+    SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
     BrowseMedia,
     MediaClass,
@@ -262,6 +263,88 @@ async def test_volume_media_player_intent(hass: HomeAssistant) -> None:
             "test",
             media_player_intent.INTENT_SET_VOLUME,
             {"volume_level": {"value": 50}},
+        )
+
+
+async def test_media_player_mute_intent(hass: HomeAssistant) -> None:
+    """Test HassMediaPlayerMute intent for media players."""
+    await media_player_intent.async_setup_intents(hass)
+
+    entity_id = f"{DOMAIN}.test_media_player"
+    attributes = {ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature.VOLUME_MUTE}
+
+    hass.states.async_set(entity_id, STATE_PLAYING, attributes=attributes)
+    calls = async_mock_service(hass, DOMAIN, SERVICE_VOLUME_MUTE)
+
+    response = await intent.async_handle(
+        hass,
+        "test",
+        media_player_intent.INTENT_PLAYER_MUTE,
+        {},
+    )
+    await hass.async_block_till_done()
+
+    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert len(calls) == 1
+    call = calls[0]
+    assert call.domain == DOMAIN
+    assert call.service == SERVICE_VOLUME_MUTE
+    assert call.data == {"entity_id": entity_id, "is_volume_muted": True}
+
+    # Test feature not supported
+    hass.states.async_set(
+        entity_id,
+        STATE_PLAYING,
+        attributes={ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature(0)},
+    )
+
+    with pytest.raises(intent.MatchFailedError):
+        response = await intent.async_handle(
+            hass,
+            "test",
+            media_player_intent.INTENT_PLAYER_MUTE,
+            {},
+        )
+
+
+async def test_media_player_unmute_intent(hass: HomeAssistant) -> None:
+    """Test HassMediaPlayerMute intent for media players."""
+    await media_player_intent.async_setup_intents(hass)
+
+    entity_id = f"{DOMAIN}.test_media_player"
+    attributes = {ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature.VOLUME_MUTE}
+
+    hass.states.async_set(entity_id, STATE_PLAYING, attributes=attributes)
+    calls = async_mock_service(hass, DOMAIN, SERVICE_VOLUME_MUTE)
+
+    response = await intent.async_handle(
+        hass,
+        "test",
+        media_player_intent.INTENT_PLAYER_UNMUTE,
+        {},
+    )
+    await hass.async_block_till_done()
+
+    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert len(calls) == 1
+    call = calls[0]
+    assert call.domain == DOMAIN
+    assert call.service == SERVICE_VOLUME_MUTE
+    assert call.data == {"entity_id": entity_id, "is_volume_muted": False}
+
+    # Test feature not supported
+    hass.states.async_set(
+        entity_id,
+        STATE_PLAYING,
+        attributes={ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature(0)},
+    )
+
+    with pytest.raises(intent.MatchFailedError):
+        response = await intent.async_handle(
+            hass,
+            "test",
+            media_player_intent.INTENT_PLAYER_UNMUTE,
+            {},
         )
 
 

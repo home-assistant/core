@@ -1,0 +1,44 @@
+# serializer version: 1
+# name: test_get_config_entry_diagnostics
+  dict({
+    'config_entry': dict({
+      'data': dict({
+        'api_key': '**REDACTED**',
+        'url': '**REDACTED**',
+        'verify_ssl': True,
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'firefly_iii',
+      'entry_id': 'firefly_iii_test_entry_123',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': 'Firefly III test',
+      'unique_id': 'firefly_iii_test_unique_id_123',
+      'version': 1,
+    }),
+    'data': dict({
+      'primary_currency': dict({
+        'attributes': dict({
+          'code': 'AMS',
+          'decimal_places': 2,
+          'default': False,
+          'enabled': True,
+          'name': 'Ankh-Morpork dollar',
+          'native': False,
+          'symbol': 'AM$',
+          'updated_at': '2018-09-17T12:46:47+01:00',
+        }),
+        'id': '2',
+        'type': 'currencies',
+      }),
+    }),
+  })
+# ---

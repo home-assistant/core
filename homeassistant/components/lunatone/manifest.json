@@ -1,0 +1,11 @@
+{
+  "domain": "lunatone",
+  "name": "Lunatone",
+  "codeowners": ["@MoonDevLT"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/lunatone",
+  "integration_type": "hub",
+  "iot_class": "local_polling",
+  "quality_scale": "silver",
+  "requirements": ["lunatone-rest-api-client==0.5.3"]
+}

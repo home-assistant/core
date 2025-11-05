@@ -1,5 +1,4 @@
 {
-  "title": "Geolocation",
   "entity_component": {
     "_": {
       "name": "[%key:component::geo_location::title%]",
@@ -15,5 +14,6 @@
         }
       }
     }
-  }
+  },
+  "title": "Geolocation"
 }

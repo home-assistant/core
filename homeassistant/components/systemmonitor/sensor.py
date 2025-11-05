@@ -37,7 +37,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
 from . import SystemMonitorConfigEntry
-from .const import DOMAIN, NET_IO_TYPES
+from .binary_sensor import BINARY_SENSOR_DOMAIN
+from .const import CONF_PROCESS, DOMAIN, NET_IO_TYPES
 from .coordinator import SystemMonitorCoordinator
 from .util import get_all_disk_mounts, get_all_network_interfaces, read_cpu_temperature
 
@@ -59,6 +60,7 @@ SENSORS_WITH_ARG = {
     "disk_": "disk_arguments",
     "ipv": "network_arguments",
     **dict.fromkeys(NET_IO_TYPES, "network_arguments"),
+    "process_num_fds": "processes",
 }
 
 
@@ -123,6 +125,12 @@ def get_ip_address(
                     continue
                 return addr.address
     return None
+
+
+def get_process_num_fds(entity: SystemMonitorSensor) -> int | None:
+    """Return the number of file descriptors opened by the process."""
+    process_fds = entity.coordinator.data.process_fds
+    return process_fds.get(entity.argument)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -376,6 +384,16 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         value_fn=lambda entity: entity.coordinator.data.swap.percent,
         add_to_update=lambda entity: ("swap", ""),
     ),
+    "process_num_fds": SysMonitorSensorEntityDescription(
+        key="process_num_fds",
+        translation_key="process_num_fds",
+        placeholder="process",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+        mandatory_arg=True,
+        value_fn=get_process_num_fds,
+        add_to_update=lambda entity: ("processes", ""),
+    ),
 }
 
 
@@ -427,6 +445,9 @@ async def async_setup_entry(
 
     startup_arguments = await hass.async_add_executor_job(get_arguments)
     startup_arguments["cpu_temperature"] = cpu_temperature
+    startup_arguments["processes"] = entry.options.get(BINARY_SENSOR_DOMAIN, {}).get(
+        CONF_PROCESS, []
+    )
 
     _LOGGER.debug("Setup from options %s", entry.options)
     for _type, sensor_description in SENSOR_TYPES.items():

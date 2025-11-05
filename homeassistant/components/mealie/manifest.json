@@ -6,6 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/mealie",
   "integration_type": "service",
   "iot_class": "local_polling",
-  "quality_scale": "silver",
-  "requirements": ["aiomealie==0.10.2"]
+  "quality_scale": "platinum",
+  "requirements": ["aiomealie==1.0.1"]
 }

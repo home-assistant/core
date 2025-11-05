@@ -1,27 +1,103 @@
 {
   "config": {
+    "abort": {
+      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    },
+    "create_entry": {
+      "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    },
     "step": {
+      "oauth_discovery": {
+        "description": "Home Assistant has found an Xbox device on your network. Press **Submit** to continue setting up the Xbox integration.",
+        "title": "Discovered Xbox device"
+      },
       "pick_implementation": {
-        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]",
         "data": {
           "implementation": "[%key:common::config_flow::data::implementation%]"
         },
         "data_description": {
           "implementation": "[%key:common::config_flow::description::implementation%]"
+        },
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "has_game_pass": {
+        "name": "Subscribed to Xbox Game Pass"
+      },
+      "in_game": {
+        "name": "In game"
+      },
+      "online": {
+        "state_attributes": {
+          "bio": { "name": "Bio" },
+          "display_name": { "name": "Display name" },
+          "real_name": { "name": "Real name" }
         }
       }
     },
-    "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
-      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
-      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
-      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
-      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
-      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
-      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]"
+    "image": {
+      "avatar": {
+        "name": "Avatar"
+      },
+      "gamerpic": {
+        "name": "Gamerpic"
+      },
+      "now_playing": {
+        "name": "[%key:component::xbox::entity::sensor::now_playing::name%]"
+      }
     },
-    "create_entry": {
-      "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    "sensor": {
+      "follower": {
+        "name": "Follower",
+        "unit_of_measurement": "[%key:component::xbox::entity::sensor::following::unit_of_measurement%]"
+      },
+      "following": {
+        "name": "Following",
+        "unit_of_measurement": "people"
+      },
+      "gamer_score": {
+        "name": "Gamerscore",
+        "unit_of_measurement": "points"
+      },
+      "last_online": {
+        "name": "Last online"
+      },
+      "now_playing": {
+        "name": "Now playing",
+        "state_attributes": {
+          "achievements": { "name": "Achievements" },
+          "developer": { "name": "Developer" },
+          "gamerscore": {
+            "name": "[%key:component::xbox::entity::sensor::gamer_score::name%]"
+          },
+          "genres": { "name": "Genres" },
+          "min_age": { "name": "Minimum age" },
+          "progress": { "name": "Progress" },
+          "publisher": { "name": "Publisher" },
+          "release_date": { "name": "Release date" },
+          "short_description": { "name": "Short description" }
+        }
+      },
+      "status": {
+        "name": "Status"
+      }
+    }
+  },
+  "exceptions": {
+    "request_exception": {
+      "message": "Failed to connect to Xbox Network"
+    },
+    "timeout_exception": {
+      "message": "Failed to connect to Xbox Network due to a connection timeout"
     }
   }
 }

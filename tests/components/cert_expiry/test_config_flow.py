@@ -115,3 +115,13 @@ async def test_abort_on_socket_failed(hass: HomeAssistant) -> None:
         )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {CONF_HOST: "connection_refused"}
+
+    with patch(
+        "homeassistant.components.cert_expiry.helper.async_get_cert",
+        side_effect=ConnectionResetError,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_HOST: HOST}
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_HOST: "connection_reset"}

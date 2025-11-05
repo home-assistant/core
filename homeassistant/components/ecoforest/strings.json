@@ -1,70 +1,57 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
-        },
-        "data_description": {
-          "host": "The hostname or IP address of your Ecoforest device."
-        }
-      }
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Ecoforest device."
+        }
+      }
     }
   },
   "entity": {
+    "number": {
+      "power_level": {
+        "name": "Power level"
+      }
+    },
     "sensor": {
-      "cpu_temperature": {
-        "name": "CPU temperature"
-      },
-      "gas_temperature": {
-        "name": "Gas temperature"
-      },
-      "ntc_temperature": {
-        "name": "NTC probe temperature"
-      },
-      "status": {
-        "name": "Status",
-        "state": {
-          "off": "[%key:common::state::off%]",
-          "starting": "Starting",
-          "pre_heating": "Pre-heating",
-          "on": "[%key:common::state::on%]",
-          "shutting_down": "Shutting down",
-          "stand_by": "[%key:common::state::standby%]",
-          "alarm": "Alarm"
-        }
-      },
       "alarm": {
         "name": "Alarm",
         "state": {
           "air_depression": "Air depression",
-          "pellets": "Pellets",
           "cpu_overheating": "CPU overheating",
-          "unkownn": "Unknown alarm",
-          "none": "None"
+          "none": "None",
+          "pellets": "Pellets",
+          "unkownn": "Unknown alarm"
         }
+      },
+      "convector_air_flow": {
+        "name": "Convector air flow"
+      },
+      "cpu_temperature": {
+        "name": "CPU temperature"
       },
       "depression": {
         "name": "Depression"
       },
-      "working_hours": {
-        "name": "Working time"
+      "extractor": {
+        "name": "Extractor"
       },
-      "working_state": {
-        "name": "Working state"
-      },
-      "working_level": {
-        "name": "Working level"
+      "gas_temperature": {
+        "name": "Gas temperature"
       },
       "ignitions": {
         "name": "Ignitions"
@@ -72,19 +59,32 @@
       "live_pulse": {
         "name": "Live pulse"
       },
+      "ntc_temperature": {
+        "name": "NTC probe temperature"
+      },
       "pulse_offset": {
         "name": "Pulse offset"
       },
-      "extractor": {
-        "name": "Extractor"
+      "status": {
+        "name": "Status",
+        "state": {
+          "alarm": "Alarm",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]",
+          "pre_heating": "Pre-heating",
+          "shutting_down": "Shutting down",
+          "stand_by": "[%key:common::state::standby%]",
+          "starting": "Starting"
+        }
       },
-      "convector_air_flow": {
-        "name": "Convector air flow"
-      }
-    },
-    "number": {
-      "power_level": {
-        "name": "Power level"
+      "working_hours": {
+        "name": "Working time"
+      },
+      "working_level": {
+        "name": "Working level"
+      },
+      "working_state": {
+        "name": "Working state"
       }
     }
   }

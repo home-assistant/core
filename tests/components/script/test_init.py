@@ -627,9 +627,6 @@ async def test_service_descriptions(hass: HomeAssistant) -> None:
 
     assert descriptions[DOMAIN]["test_name"]["name"] == "ABC"
 
-    # Test 4: verify that names from YAML are taken into account as well
-    assert descriptions[DOMAIN]["turn_on"]["name"] == "Turn on"
-
 
 async def test_shared_context(hass: HomeAssistant) -> None:
     """Test that the shared context is passed down the chain."""

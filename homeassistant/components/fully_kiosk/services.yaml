@@ -1,8 +1,10 @@
 load_url:
-  target:
-    device:
-      integration: fully_kiosk
   fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: fully_kiosk
     url:
       example: "https://home-assistant.io"
       required: true
@@ -10,10 +12,12 @@ load_url:
         text:
 
 set_config:
-  target:
-    device:
-      integration: fully_kiosk
   fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: fully_kiosk
     key:
       example: "motionSensitivity"
       required: true
@@ -26,12 +30,14 @@ set_config:
         text:
 
 start_application:
-  target:
-    device:
-      integration: fully_kiosk
   fields:
     application:
       example: "de.ozerov.fully"
       required: true
       selector:
         text:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: fully_kiosk

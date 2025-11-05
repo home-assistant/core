@@ -3,12 +3,12 @@
   "name": "RuuviTag BLE",
   "bluetooth": [
     {
-      "manufacturer_id": 1177,
-      "connectable": false
+      "connectable": false,
+      "manufacturer_id": 1177
     },
     {
-      "local_name": "Ruuvi *",
-      "connectable": false
+      "connectable": false,
+      "local_name": "Ruuvi *"
     }
   ],
   "codeowners": ["@akx"],
@@ -16,5 +16,5 @@
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/ruuvitag_ble",
   "iot_class": "local_push",
-  "requirements": ["ruuvitag-ble==0.2.1"]
+  "requirements": ["ruuvitag-ble==0.3.0"]
 }

@@ -1,5 +1,6 @@
 """The tests for the Modbus sensor component."""
 
+import math
 import struct
 
 import pytest
@@ -738,8 +739,8 @@ async def test_all_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None:
             [
                 0x5102,
                 0x0304,
-                int.from_bytes(struct.pack(">f", float("nan"))[0:2]),
-                int.from_bytes(struct.pack(">f", float("nan"))[2:4]),
+                int.from_bytes(struct.pack(">f", math.nan)[0:2]),
+                int.from_bytes(struct.pack(">f", math.nan)[2:4]),
             ],
             False,
             ["34899771392.0", STATE_UNKNOWN],
@@ -753,8 +754,8 @@ async def test_all_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None:
             [
                 0x5102,
                 0x0304,
-                int.from_bytes(struct.pack(">f", float("nan"))[0:2]),
-                int.from_bytes(struct.pack(">f", float("nan"))[2:4]),
+                int.from_bytes(struct.pack(">f", math.nan)[0:2]),
+                int.from_bytes(struct.pack(">f", math.nan)[2:4]),
             ],
             False,
             ["34899771392.0", STATE_UNKNOWN],
@@ -1160,8 +1161,8 @@ async def test_wrong_unpack(hass: HomeAssistant, mock_do_cycle) -> None:
                 CONF_DATA_TYPE: DataType.FLOAT32,
             },
             [
-                int.from_bytes(struct.pack(">f", float("nan"))[0:2]),
-                int.from_bytes(struct.pack(">f", float("nan"))[2:4]),
+                int.from_bytes(struct.pack(">f", math.nan)[0:2]),
+                int.from_bytes(struct.pack(">f", math.nan)[2:4]),
             ],
             STATE_UNKNOWN,
         ),
@@ -1224,8 +1225,8 @@ async def test_unpack_ok(hass: HomeAssistant, mock_do_cycle, expected) -> None:
             # floats: nan, 10.600000381469727,
             #         1.000879611487865e-28, 10.566553115844727
             [
-                int.from_bytes(struct.pack(">f", float("nan"))[0:2]),
-                int.from_bytes(struct.pack(">f", float("nan"))[2:4]),
+                int.from_bytes(struct.pack(">f", math.nan)[0:2]),
+                int.from_bytes(struct.pack(">f", math.nan)[2:4]),
                 0x4129,
                 0x999A,
                 0x10FD,

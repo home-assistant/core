@@ -8,7 +8,7 @@ import logging
 from pyopenweathermap import create_owm_client
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_LANGUAGE, CONF_MODE, CONF_NAME
+from homeassistant.const import CONF_API_KEY, CONF_LANGUAGE, CONF_MODE
 from homeassistant.core import HomeAssistant
 
 from .const import CONFIG_FLOW_VERSION, DEFAULT_OWM_MODE, OWM_MODES, PLATFORMS
@@ -25,7 +25,6 @@ type OpenweathermapConfigEntry = ConfigEntry[OpenweathermapData]
 class OpenweathermapData:
     """Runtime data definition."""
 
-    name: str
     mode: str
     coordinator: OWMUpdateCoordinator
 
@@ -34,7 +33,6 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: OpenweathermapConfigEntry
 ) -> bool:
     """Set up OpenWeatherMap as config entry."""
-    name = entry.data[CONF_NAME]
     api_key = entry.data[CONF_API_KEY]
     language = entry.options[CONF_LANGUAGE]
     mode = entry.options[CONF_MODE]
@@ -51,7 +49,7 @@ async def async_setup_entry(
 
     entry.async_on_unload(entry.add_update_listener(async_update_options))
 
-    entry.runtime_data = OpenweathermapData(name, mode, owm_coordinator)
+    entry.runtime_data = OpenweathermapData(mode, owm_coordinator)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

@@ -6,10 +6,11 @@ from aiomealie import About, MealieAuthenticationError, MealieConnectionError
 import pytest
 
 from homeassistant.components.mealie.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_HASSIO, SOURCE_IGNORE, SOURCE_USER
 from homeassistant.const import CONF_API_TOKEN, CONF_HOST, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from . import setup_integration
 
@@ -125,6 +126,8 @@ async def test_ingress_host(
         ("v1.0.0beta-5"),
         ("v1.0.0-RC2"),
         ("v0.1.0"),
+        ("v1.9.0"),
+        ("v2.0.0beta-2"),
     ],
 )
 async def test_flow_version_error(
@@ -361,3 +364,137 @@ async def test_reconfigure_flow_exceptions(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
+
+
+async def test_hassio_success(
+    hass: HomeAssistant,
+    mock_mealie_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test successful Supervisor flow."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        data=HassioServiceInfo(
+            config={"addon": "Mealie", "host": "http://test", "port": 9090},
+            name="mealie",
+            slug="mealie",
+            uuid="1234",
+        ),
+        context={"source": SOURCE_HASSIO},
+    )
+
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "hassio_confirm"
+    assert result.get("description_placeholders") == {"addon": "Mealie"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_TOKEN: "token"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Mealie"
+    assert result["data"] == {
+        CONF_HOST: "http://test:9090",
+        CONF_API_TOKEN: "token",
+        CONF_VERIFY_SSL: True,
+    }
+    assert result["result"].unique_id == "bf1c62fe-4941-4332-9886-e54e88dbdba0"
+
+
+async def test_hassio_already_configured(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test we only allow a single config flow."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        data=HassioServiceInfo(
+            config={
+                "addon": "Mealie",
+                "host": "mock-mealie",
+                "port": "9090",
+            },
+            name="Mealie",
+            slug="mealie",
+            uuid="1234",
+        ),
+        context={"source": SOURCE_HASSIO},
+    )
+    assert result
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_hassio_ignored(hass: HomeAssistant) -> None:
+    """Test the supervisor discovered instance can be ignored."""
+    MockConfigEntry(domain=DOMAIN, source=SOURCE_IGNORE).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        data=HassioServiceInfo(
+            config={
+                "addon": "Mealie",
+                "host": "mock-mealie",
+                "port": "9090",
+            },
+            name="Mealie",
+            slug="mealie",
+            uuid="1234",
+        ),
+        context={"source": SOURCE_HASSIO},
+    )
+    assert result
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (MealieConnectionError, "cannot_connect"),
+        (MealieAuthenticationError, "invalid_auth"),
+        (Exception, "unknown"),
+    ],
+)
+async def test_hassio_connection_error(
+    hass: HomeAssistant,
+    mock_mealie_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    exception: Exception,
+    error: str,
+) -> None:
+    """Test flow errors."""
+    mock_mealie_client.get_user_info.side_effect = exception
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        data=HassioServiceInfo(
+            config={"addon": "Mealie", "host": "http://test", "port": 9090},
+            name="mealie",
+            slug="mealie",
+            uuid="1234",
+        ),
+        context={"source": SOURCE_HASSIO},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "hassio_confirm"
+    assert result["description_placeholders"] == {"addon": "Mealie"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_TOKEN: "token"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+
+    mock_mealie_client.get_user_info.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_TOKEN: "token"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY

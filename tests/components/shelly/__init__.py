@@ -1,16 +1,23 @@
 """Tests for the Shelly integration."""
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
+from contextlib import contextmanager
 from copy import deepcopy
 from datetime import timedelta
 from typing import Any
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from aioshelly.const import MODEL_25
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from syrupy.filters import props
 
+from homeassistant.components.shelly import (
+    BLOCK_SLEEPING_PLATFORMS,
+    PLATFORMS,
+    RPC_SLEEPING_PLATFORMS,
+)
 from homeassistant.components.shelly.const import (
     CONF_GEN,
     CONF_SLEEP_PERIOD,
@@ -19,7 +26,7 @@ from homeassistant.components.shelly.const import (
     RPC_SENSORS_POLLING_INTERVAL,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_MODEL
+from homeassistant.const import CONF_HOST, CONF_MODEL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import (
@@ -173,15 +180,27 @@ async def snapshot_device_entities(
     config_entry_id: str,
 ) -> None:
     """Snapshot all device entities."""
+
+    def sort_event_types(data: Any, path: Sequence[tuple[str, Any]]) -> Any:
+        """Sort the event_types list for event entity."""
+        if path and path[-1][0] == "event_types" and isinstance(data, list):
+            return sorted(data)
+
+        return data
+
     entity_entries = er.async_entries_for_config_entry(entity_registry, config_entry_id)
     assert entity_entries
 
     for entity_entry in entity_entries:
-        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
+        assert entity_entry == snapshot(
+            name=f"{entity_entry.entity_id}-entry", exclude=props("event_types")
+        )
         assert entity_entry.disabled_by is None, "Please enable all entities."
         state = hass.states.get(entity_entry.entity_id)
         assert state, f"State not found for {entity_entry.entity_id}"
-        assert state == snapshot(name=f"{entity_entry.entity_id}-state")
+        assert state == snapshot(
+            name=f"{entity_entry.entity_id}-state", matcher=sort_event_types
+        )
 
 
 async def force_uptime_value(
@@ -191,3 +210,23 @@ async def force_uptime_value(
     """Force time to a specific point."""
     await hass.config.async_set_time_zone("UTC")
     freezer.move_to("2025-05-26 16:04:00+00:00")
+
+
+@contextmanager
+def patch_platforms(platforms: list[Platform]):
+    """Only allow given platforms to be loaded."""
+    with (
+        patch(
+            "homeassistant.components.shelly.PLATFORMS",
+            list(set(PLATFORMS) & set(platforms)),
+        ),
+        patch(
+            "homeassistant.components.shelly.BLOCK_SLEEPING_PLATFORMS",
+            list(set(BLOCK_SLEEPING_PLATFORMS) & set(platforms)),
+        ),
+        patch(
+            "homeassistant.components.shelly.RPC_SLEEPING_PLATFORMS",
+            list(set(RPC_SLEEPING_PLATFORMS) & set(platforms)),
+        ),
+    ):
+        yield

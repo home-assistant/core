@@ -47,7 +47,13 @@ MOCK_UPTIMEROBOT_MONITOR_PAUSED = {
     "type": 1,
     "url": "http://example.com",
 }
-
+MOCK_UPTIMEROBOT_MONITOR_2 = {
+    "id": 5678,
+    "friendly_name": "Test monitor 2",
+    "status": 2,
+    "type": 1,
+    "url": "http://example2.com",
+}
 
 MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA = {
     "domain": DOMAIN,

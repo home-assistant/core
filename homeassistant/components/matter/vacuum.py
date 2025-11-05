@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from enum import IntEnum
 from typing import TYPE_CHECKING, Any
 
@@ -20,7 +21,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .entity import MatterEntity
+from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
@@ -58,6 +59,13 @@ async def async_setup_entry(
     matter.register_platform_handler(Platform.VACUUM, async_add_entities)
 
 
+@dataclass(frozen=True, kw_only=True)
+class MatterStateVacuumEntityDescription(
+    StateVacuumEntityDescription, MatterEntityDescription
+):
+    """Describe Matter Vacuum entities."""
+
+
 class MatterVacuum(MatterEntity, StateVacuumEntity):
     """Representation of a Matter Vacuum cleaner entity."""
 
@@ -65,7 +73,7 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
     _supported_run_modes: (
         dict[int, clusters.RvcRunMode.Structs.ModeOptionStruct] | None
     ) = None
-    entity_description: StateVacuumEntityDescription
+    entity_description: MatterStateVacuumEntityDescription
     _platform_translation_key = "vacuum"
 
     def _get_run_mode_by_tag(
@@ -212,7 +220,7 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
 DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.VACUUM,
-        entity_description=StateVacuumEntityDescription(
+        entity_description=MatterStateVacuumEntityDescription(
             key="MatterVacuumCleaner", name=None
         ),
         entity_class=MatterVacuum,

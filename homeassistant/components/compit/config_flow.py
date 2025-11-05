@@ -78,7 +78,10 @@ class CompitConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=STEP_USER_DATA_SCHEMA,
+            errors=errors,
+            description_placeholders={"compit_url": "https://inext.compit.pl/"},
         )
 
     async def async_step_reauth(self, data: Mapping[str, Any]) -> ConfigFlowResult:

@@ -33,10 +33,13 @@ repos:
     rev: v1.37.1
     hooks:
       - id: yamllint
-  - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v3.0.3
+  - repo: https://github.com/rbubley/mirrors-prettier
+    rev: v3.6.2
     hooks:
       - id: prettier
+        additional_dependencies:
+          - prettier@3.6.2
+          - prettier-plugin-sort-json@4.1.1
   - repo: https://github.com/cdce8p/python-typing-update
     rev: v0.6.0
     hooks:

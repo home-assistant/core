@@ -21,131 +21,131 @@
     "zha",
     "universal_silabs_flasher"
   ],
-  "requirements": ["zha==0.0.73"],
+  "requirements": ["zha==0.0.77"],
   "usb": [
     {
-      "vid": "10C4",
-      "pid": "EA60",
       "description": "*2652*",
-      "known_devices": ["slae.sh cc2652rb stick"]
+      "known_devices": ["slae.sh cc2652rb stick"],
+      "pid": "EA60",
+      "vid": "10C4"
     },
     {
-      "vid": "10C4",
-      "pid": "EA60",
       "description": "*slzb-07*",
-      "known_devices": ["smlight slzb-07"]
+      "known_devices": ["smlight slzb-07"],
+      "pid": "EA60",
+      "vid": "10C4"
     },
     {
-      "vid": "1A86",
+      "description": "*sonoff*plus*",
+      "known_devices": ["sonoff zigbee dongle plus v2"],
       "pid": "55D4",
+      "vid": "1A86"
+    },
+    {
       "description": "*sonoff*plus*",
-      "known_devices": ["sonoff zigbee dongle plus v2"]
-    },
-    {
-      "vid": "10C4",
+      "known_devices": ["sonoff zigbee dongle plus"],
       "pid": "EA60",
-      "description": "*sonoff*plus*",
-      "known_devices": ["sonoff zigbee dongle plus"]
+      "vid": "10C4"
     },
     {
-      "vid": "10C4",
+      "description": "*tubeszb*",
+      "known_devices": ["TubesZB Coordinator"],
       "pid": "EA60",
-      "description": "*tubeszb*",
-      "known_devices": ["TubesZB Coordinator"]
+      "vid": "10C4"
     },
     {
-      "vid": "1A86",
-      "pid": "7523",
       "description": "*tubeszb*",
-      "known_devices": ["TubesZB Coordinator"]
+      "known_devices": ["TubesZB Coordinator"],
+      "pid": "7523",
+      "vid": "1A86"
     },
     {
-      "vid": "1A86",
-      "pid": "7523",
       "description": "*zigstar*",
-      "known_devices": ["ZigStar Coordinators"]
+      "known_devices": ["ZigStar Coordinators"],
+      "pid": "7523",
+      "vid": "1A86"
     },
     {
-      "vid": "1CF1",
+      "description": "*conbee*",
+      "known_devices": ["Conbee II"],
       "pid": "0030",
-      "description": "*conbee*",
-      "known_devices": ["Conbee II"]
+      "vid": "1CF1"
     },
     {
-      "vid": "0403",
+      "description": "*conbee*",
+      "known_devices": ["Conbee III"],
       "pid": "6015",
-      "description": "*conbee*",
-      "known_devices": ["Conbee III"]
+      "vid": "0403"
     },
     {
-      "vid": "10C4",
-      "pid": "8A2A",
       "description": "*zigbee*",
-      "known_devices": ["Nortek HUSBZB-1"]
+      "known_devices": ["Nortek HUSBZB-1"],
+      "pid": "8A2A",
+      "vid": "10C4"
     },
     {
-      "vid": "0403",
+      "description": "*zigate*",
+      "known_devices": ["ZiGate+"],
       "pid": "6015",
-      "description": "*zigate*",
-      "known_devices": ["ZiGate+"]
+      "vid": "0403"
     },
     {
-      "vid": "10C4",
+      "description": "*zigate*",
+      "known_devices": ["ZiGate"],
       "pid": "EA60",
-      "description": "*zigate*",
-      "known_devices": ["ZiGate"]
+      "vid": "10C4"
     },
     {
-      "vid": "10C4",
-      "pid": "8B34",
       "description": "*bv 2010/10*",
-      "known_devices": ["Bitron Video AV2010/10"]
+      "known_devices": ["Bitron Video AV2010/10"],
+      "pid": "8B34",
+      "vid": "10C4"
     },
     {
-      "vid": "10C4",
-      "pid": "EA60",
       "description": "*sonoff*max*",
-      "known_devices": ["SONOFF Dongle Max MG24"]
+      "known_devices": ["SONOFF Dongle Max MG24"],
+      "pid": "EA60",
+      "vid": "10C4"
     },
     {
-      "vid": "10C4",
-      "pid": "EA60",
       "description": "*sonoff*lite*mg21*",
-      "known_devices": ["sonoff zigbee dongle lite mg21"]
+      "known_devices": ["sonoff zigbee dongle lite mg21"],
+      "pid": "EA60",
+      "vid": "10C4"
     }
   ],
   "zeroconf": [
     {
-      "type": "_esphomelib._tcp.local.",
-      "name": "tube*"
+      "name": "tube*",
+      "type": "_esphomelib._tcp.local."
     },
     {
-      "type": "_zigate-zigbee-gateway._tcp.local.",
-      "name": "*zigate*"
+      "name": "*zigate*",
+      "type": "_zigate-zigbee-gateway._tcp.local."
     },
     {
-      "type": "_zigstar_gw._tcp.local.",
-      "name": "*zigstar*"
+      "name": "*zigstar*",
+      "type": "_zigstar_gw._tcp.local."
     },
     {
-      "type": "_uzg-01._tcp.local.",
-      "name": "uzg-01*"
+      "name": "uzg-01*",
+      "type": "_uzg-01._tcp.local."
     },
     {
-      "type": "_slzb-06._tcp.local.",
-      "name": "slzb-06*"
+      "name": "slzb-06*",
+      "type": "_slzb-06._tcp.local."
     },
     {
-      "type": "_xzg._tcp.local.",
-      "name": "xzg*"
+      "name": "xzg*",
+      "type": "_xzg._tcp.local."
     },
     {
-      "type": "_czc._tcp.local.",
-      "name": "czc*"
+      "name": "czc*",
+      "type": "_czc._tcp.local."
     },
     {
-      "type": "_zigbee-coordinator._tcp.local.",
-      "name": "*"
+      "name": "*",
+      "type": "_zigbee-coordinator._tcp.local."
     }
   ]
 }

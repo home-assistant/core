@@ -7,11 +7,13 @@ from typing import Any
 
 from pooldose.client import PooldoseClient
 from pooldose.request_status import RequestStatus
+from pooldose.type_definitions import APIVersionResponse
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_MAC
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import DOMAIN
@@ -38,9 +40,9 @@ class PooldoseConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _validate_host(
         self, host: str
-    ) -> tuple[str | None, dict[str, str] | None, dict[str, str] | None]:
+    ) -> tuple[str | None, APIVersionResponse | None, dict[str, str] | None]:
         """Validate the host and return (serial_number, api_versions, errors)."""
-        client = PooldoseClient(host)
+        client = PooldoseClient(host, websession=async_get_clientsession(self.hass))
         client_status = await client.connect()
         if client_status == RequestStatus.HOST_UNREACHABLE:
             return None, None, {"base": "cannot_connect"}
@@ -124,7 +126,14 @@ class PooldoseConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id="user",
                 data_schema=SCHEMA_DEVICE,
                 errors=errors,
-                description_placeholders=api_versions,
+                # Handle API version info for error display; pass version info when available
+                # or None when api_versions is None to avoid displaying version details
+                description_placeholders={
+                    "api_version_is": api_versions.get("api_version_is") or "",
+                    "api_version_should": api_versions.get("api_version_should") or "",
+                }
+                if api_versions
+                else None,
             )
 
         await self.async_set_unique_id(serial_number, raise_on_progress=False)

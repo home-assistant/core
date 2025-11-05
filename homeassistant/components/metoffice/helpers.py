@@ -5,8 +5,9 @@ from __future__ import annotations
 import logging
 from typing import Any, Literal
 
-import datapoint
+from datapoint.exceptions import APIException
 from datapoint.Forecast import Forecast
+from datapoint.Manager import Manager
 from requests import HTTPError
 
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -16,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def fetch_data(
-    connection: datapoint.Manager,
+    connection: Manager,
     latitude: float,
     longitude: float,
     frequency: Literal["daily", "twice-daily", "hourly"],
@@ -26,7 +27,7 @@ def fetch_data(
         return connection.get_forecast(
             latitude, longitude, frequency, convert_weather_code=False
         )
-    except (ValueError, datapoint.exceptions.APIException) as err:
+    except (ValueError, APIException) as err:
         _LOGGER.error("Check Met Office connection: %s", err.args)
         raise UpdateFailed from err
     except HTTPError as err:

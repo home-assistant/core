@@ -1472,10 +1472,10 @@ class AlexaModeController(AlexaCapability):
             # Return state instead of position when using ModeController.
             mode = self.entity.state
             if mode in (
-                cover.STATE_OPEN,
-                cover.STATE_OPENING,
-                cover.STATE_CLOSED,
-                cover.STATE_CLOSING,
+                cover.CoverState.OPEN,
+                cover.CoverState.OPENING,
+                cover.CoverState.CLOSED,
+                cover.CoverState.CLOSING,
                 STATE_UNKNOWN,
             ):
                 return f"{cover.ATTR_POSITION}.{mode}"
@@ -1594,11 +1594,11 @@ class AlexaModeController(AlexaCapability):
                 ["Position", AlexaGlobalCatalog.SETTING_OPENING], False
             )
             self._resource.add_mode(
-                f"{cover.ATTR_POSITION}.{cover.STATE_OPEN}",
+                f"{cover.ATTR_POSITION}.{cover.CoverState.OPEN}",
                 [AlexaGlobalCatalog.VALUE_OPEN],
             )
             self._resource.add_mode(
-                f"{cover.ATTR_POSITION}.{cover.STATE_CLOSED}",
+                f"{cover.ATTR_POSITION}.{cover.CoverState.CLOSED}",
                 [AlexaGlobalCatalog.VALUE_CLOSE],
             )
             self._resource.add_mode(
@@ -1651,22 +1651,22 @@ class AlexaModeController(AlexaCapability):
                 raise_labels.append(AlexaSemantics.ACTION_OPEN)
                 self._semantics.add_states_to_value(
                     [AlexaSemantics.STATES_CLOSED],
-                    f"{cover.ATTR_POSITION}.{cover.STATE_CLOSED}",
+                    f"{cover.ATTR_POSITION}.{cover.CoverState.CLOSED}",
                 )
                 self._semantics.add_states_to_value(
                     [AlexaSemantics.STATES_OPEN],
-                    f"{cover.ATTR_POSITION}.{cover.STATE_OPEN}",
+                    f"{cover.ATTR_POSITION}.{cover.CoverState.OPEN}",
                 )
 
             self._semantics.add_action_to_directive(
                 lower_labels,
                 "SetMode",
-                {"mode": f"{cover.ATTR_POSITION}.{cover.STATE_CLOSED}"},
+                {"mode": f"{cover.ATTR_POSITION}.{cover.CoverState.CLOSED}"},
             )
             self._semantics.add_action_to_directive(
                 raise_labels,
                 "SetMode",
-                {"mode": f"{cover.ATTR_POSITION}.{cover.STATE_OPEN}"},
+                {"mode": f"{cover.ATTR_POSITION}.{cover.CoverState.OPEN}"},
             )
 
             return self._semantics.serialize_semantics()

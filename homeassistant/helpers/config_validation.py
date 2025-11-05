@@ -739,15 +739,7 @@ def template(value: Any | None) -> template_helper.Template:
     if isinstance(value, (list, dict, template_helper.Template)):
         raise vol.Invalid("template value should be a string")
     if not (hass := _async_get_hass_or_none()):
-        from .frame import ReportBehavior, report_usage  # noqa: PLC0415
-
-        report_usage(
-            (
-                "validates schema outside the event loop, "
-                "which will stop working in HA Core 2025.10"
-            ),
-            core_behavior=ReportBehavior.LOG,
-        )
+        raise vol.Invalid("Validates schema outside the event loop")
 
     template_value = template_helper.Template(str(value), hass)
 
@@ -1545,9 +1537,6 @@ STATE_CONDITION_BASE_SCHEMA = {
     ),
     vol.Optional(CONF_ATTRIBUTE): str,
     vol.Optional(CONF_FOR): positive_time_period_template,
-    # To support use_trigger_value in automation
-    # Deprecated 2016/04/25
-    vol.Optional("from"): str,
 }
 
 STATE_CONDITION_STATE_SCHEMA = vol.Schema(

@@ -8,5 +8,5 @@
   "iot_class": "cloud_push",
   "loggers": ["telegram"],
   "quality_scale": "bronze",
-  "requirements": ["python-telegram-bot[socks]==21.5"]
+  "requirements": ["python-telegram-bot[socks]==22.1"]
 }

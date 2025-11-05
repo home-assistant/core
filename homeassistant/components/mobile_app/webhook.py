@@ -28,7 +28,6 @@ from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.components.device_tracker import (
     ATTR_BATTERY,
     ATTR_GPS,
-    ATTR_GPS_ACCURACY,
     ATTR_LOCATION_NAME,
 )
 from homeassistant.components.frontend import MANIFEST_JSON
@@ -38,6 +37,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_ID,
     ATTR_DOMAIN,
+    ATTR_GPS_ACCURACY,
     ATTR_SERVICE,
     ATTR_SERVICE_DATA,
     ATTR_SUPPORTED_FEATURES,

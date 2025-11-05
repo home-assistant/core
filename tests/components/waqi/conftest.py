@@ -7,6 +7,7 @@ from aiowaqi import WAQIAirQuality
 import pytest
 
 from homeassistant.components.waqi.const import CONF_STATION_NUMBER, DOMAIN
+from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 
@@ -27,9 +28,18 @@ def mock_config_entry() -> MockConfigEntry:
     """Mock config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        unique_id="4584",
-        title="de Jongweg, Utrecht",
-        data={CONF_API_KEY: "asd", CONF_STATION_NUMBER: 4584},
+        title="WAQI",
+        data={CONF_API_KEY: "asd"},
+        version=2,
+        subentries_data=[
+            ConfigSubentryData(
+                data={CONF_STATION_NUMBER: 4585},
+                subentry_id="ABCDEF",
+                subentry_type="station",
+                title="de Jongweg, Utrecht",
+                unique_id="4585",
+            )
+        ],
     )
 
 

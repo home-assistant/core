@@ -44,6 +44,7 @@ from .const import (
 )
 from .entity import TuyaEntity
 from .models import ComplexValue, ElectricityValue, EnumTypeData, IntegerTypeData
+from .util import get_dptype
 
 _WIND_DIRECTIONS = {
     "north": 0.0,
@@ -759,6 +760,15 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.WEIGHT,
             state_class=SensorStateClass.MEASUREMENT,
         ),
+        TuyaSensorEntityDescription(
+            key=DPCode.EXCRETION_TIME_DAY,
+            translation_key="excretion_time_day",
+            device_class=SensorDeviceClass.DURATION,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.EXCRETION_TIMES_DAY,
+            translation_key="excretion_times_day",
+        ),
     ),
     DeviceCategory.MZJ: (
         TuyaSensorEntityDescription(
@@ -959,6 +969,30 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.WIND_DIRECTION,
             state_class=SensorStateClass.MEASUREMENT,
             state_conversion=lambda state: _WIND_DIRECTIONS.get(str(state)),
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.DEW_POINT_TEMP,
+            translation_key="dew_point_temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.FEELLIKE_TEMP,
+            translation_key="feels_like_temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.HEAT_INDEX,
+            translation_key="heat_index_temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.WINDCHILL_INDEX,
+            translation_key="wind_chill_index_temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
         *BATTERY_SENSORS,
     ),
@@ -1665,7 +1699,7 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             self._type_data = enum_type
             self._type = DPType.ENUM
         else:
-            self._type = self.get_dptype(DPCode(description.key))
+            self._type = get_dptype(self.device, DPCode(description.key))
 
         # Logic to ensure the set device class and API received Unit Of Measurement
         # match Home Assistants requirements.

@@ -1,6 +1,6 @@
 """The test for light device automation."""
 
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import attr
 import pytest
@@ -1088,7 +1088,7 @@ async def test_automation_with_dynamically_validated_condition(
 
     module_cache = hass.data[loader.DATA_COMPONENTS]
     module = module_cache["fake_integration.device_condition"]
-    module.async_validate_condition_config = AsyncMock()
+    module.async_validate_condition_config = AsyncMock(return_value=MagicMock())
 
     config_entry = MockConfigEntry(domain="fake_integration", data={})
     config_entry.mock_state(hass, ConfigEntryState.LOADED)

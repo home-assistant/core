@@ -273,15 +273,18 @@ async def test_subentry_creation(
     (
         "user_input",
         "subentry",
+        "number_property",
     ),
     [
         (
             {CONF_NAME: "New Home", CONF_ARM_HOME_MODE: 3},
             MOCK_PARTITION_SUBENTRY,
+            CONF_PARTITION_NUMBER,
         ),
         (
             {CONF_NAME: "Backdoor", CONF_ZONE_TYPE: BinarySensorDeviceClass.DOOR},
             MOCK_ZONE_SUBENTRY,
+            CONF_ZONE_NUMBER,
         ),
         (
             {
@@ -289,10 +292,12 @@ async def test_subentry_creation(
                 CONF_ZONE_TYPE: BinarySensorDeviceClass.PROBLEM,
             },
             MOCK_OUTPUT_SUBENTRY,
+            CONF_OUTPUT_NUMBER,
         ),
         (
             {CONF_NAME: "Gate Lock"},
             MOCK_SWITCHABLE_OUTPUT_SUBENTRY,
+            CONF_SWITCHABLE_OUTPUT_NUMBER,
         ),
     ],
 )
@@ -303,6 +308,7 @@ async def test_subentry_reconfigure(
     mock_config_entry_with_subentries: MockConfigEntry,
     user_input: dict[str, Any],
     subentry: ConfigSubentry,
+    number_property: str,
 ) -> None:
     """Test subentry reconfiguration."""
 
@@ -339,7 +345,7 @@ async def test_subentry_reconfigure(
     subentry_result = {
         **subentry.as_dict(),
         "data": {**subentry.data, **user_input},
-        "title": user_input.get(CONF_NAME),
+        "title": f"{user_input.get(CONF_NAME)} ({subentry.data[number_property]})",
     }
 
     assert mock_config_entry_with_subentries.subentries.get(
@@ -361,7 +367,7 @@ async def test_cannot_create_same_subentry(
     mock_satel: AsyncMock,
     mock_setup_entry: AsyncMock,
     mock_config_entry_with_subentries: MockConfigEntry,
-    subentry: dict[str, Any],
+    subentry: ConfigSubentry,
     error_field: str,
 ) -> None:
     """Test subentry reconfiguration."""

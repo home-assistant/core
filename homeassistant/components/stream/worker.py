@@ -9,6 +9,7 @@ from dataclasses import fields
 import datetime
 from io import SEEK_END, BytesIO
 import logging
+import math
 from threading import Event
 from typing import Any, Self, cast
 
@@ -46,7 +47,7 @@ from .fmp4utils import read_init
 from .hls import HlsStreamOutput
 
 _LOGGER = logging.getLogger(__name__)
-NEGATIVE_INF = float("-inf")
+NEGATIVE_INF = -math.inf
 
 
 def redact_av_error_string(err: av.FFmpegError) -> str:

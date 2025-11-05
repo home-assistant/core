@@ -31,7 +31,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, GET_DATA_WAIT_TIMEOUT, MODULES
 from .data import SystemBridgeData
@@ -198,7 +198,9 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
                     exception,
                 )
                 await self.clean_disconnect()
-                return self.data
+                raise UpdateFailed(
+                    f"Connection error occurred for {self.title}: {exception}"
+                ) from exception
 
             self.logger.debug("Registered data listener for %s", self.title)
 

@@ -17,20 +17,20 @@
   "requirements": ["velbus-aio==2025.8.0"],
   "usb": [
     {
-      "vid": "10CF",
-      "pid": "0B1B"
+      "pid": "0B1B",
+      "vid": "10CF"
     },
     {
-      "vid": "10CF",
-      "pid": "0516"
+      "pid": "0516",
+      "vid": "10CF"
     },
     {
-      "vid": "10CF",
-      "pid": "0517"
+      "pid": "0517",
+      "vid": "10CF"
     },
     {
-      "vid": "10CF",
-      "pid": "0518"
+      "pid": "0518",
+      "vid": "10CF"
     }
   ]
 }

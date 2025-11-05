@@ -99,6 +99,20 @@ CLEANING_MODE_OPTIONS = {
         "ConsumerProducts.CleaningRobot.EnumType.CleaningModes.Silent",
         "ConsumerProducts.CleaningRobot.EnumType.CleaningModes.Standard",
         "ConsumerProducts.CleaningRobot.EnumType.CleaningModes.Power",
+        "ConsumerProducts.CleaningRobot.EnumType.CleaningMode.IntelligentMode",
+        "ConsumerProducts.CleaningRobot.EnumType.CleaningMode.VacuumOnly",
+        "ConsumerProducts.CleaningRobot.EnumType.CleaningMode.MopOnly",
+        "ConsumerProducts.CleaningRobot.EnumType.CleaningMode.VacuumAndMop",
+        "ConsumerProducts.CleaningRobot.EnumType.CleaningMode.MopAfterVacuum",
+    )
+}
+
+SUCTION_POWER_OPTIONS = {
+    bsh_key_to_translation_key(option): option
+    for option in (
+        "ConsumerProducts.CleaningRobot.EnumType.SuctionPower.Silent",
+        "ConsumerProducts.CleaningRobot.EnumType.SuctionPower.Standard",
+        "ConsumerProducts.CleaningRobot.EnumType.SuctionPower.Max",
     )
 }
 
@@ -308,6 +322,10 @@ PROGRAM_ENUM_OPTIONS = {
         (
             OptionKey.CONSUMER_PRODUCTS_CLEANING_ROBOT_CLEANING_MODE,
             CLEANING_MODE_OPTIONS,
+        ),
+        (
+            OptionKey.CONSUMER_PRODUCTS_CLEANING_ROBOT_SUCTION_POWER,
+            SUCTION_POWER_OPTIONS,
         ),
         (OptionKey.CONSUMER_PRODUCTS_COFFEE_MAKER_BEAN_AMOUNT, BEAN_AMOUNT_OPTIONS),
         (

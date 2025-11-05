@@ -1,23 +1,5 @@
 {
   "config": {
-    "step": {
-      "pick_implementation": {
-        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]",
-        "data": {
-          "implementation": "[%key:common::config_flow::data::implementation%]"
-        },
-        "data_description": {
-          "implementation": "[%key:common::config_flow::description::implementation%]"
-        }
-      },
-      "auth": {
-        "title": "Link Fitbit"
-      },
-      "reauth_confirm": {
-        "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "The Fitbit integration needs to re-authenticate your account"
-      }
-    },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
@@ -26,27 +8,59 @@
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]",
-      "wrong_account": "The user credentials provided do not match this Fitbit account.",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
-      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "wrong_account": "The user credentials provided do not match this Fitbit account."
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    },
+    "step": {
+      "auth": {
+        "title": "Link Fitbit"
+      },
+      "pick_implementation": {
+        "data": {
+          "implementation": "[%key:common::config_flow::data::implementation%]"
+        },
+        "data_description": {
+          "implementation": "[%key:common::config_flow::description::implementation%]"
+        },
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      },
+      "reauth_confirm": {
+        "description": "The Fitbit integration needs to re-authenticate your account",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      }
+    }
+  },
+  "device": {
+    "tracker": {
+      "name": "{display_name} tracker"
     }
   },
   "entity": {
     "sensor": {
+      "activity_calories": {
+        "name": "Activity calories"
+      },
+      "awakenings_count": {
+        "name": "Awakenings count"
+      },
       "battery": {
         "name": "Battery"
       },
       "battery_level": {
         "name": "Battery level"
       },
-      "activity_calories": {
-        "name": "Activity calories"
+      "bmi": {
+        "name": "BMI"
+      },
+      "body_fat": {
+        "name": "Body fat"
       },
       "calories": {
         "name": "Calories"
@@ -54,14 +68,17 @@
       "calories_bmr": {
         "name": "Calories BMR"
       },
+      "calories_in": {
+        "name": "Calories in"
+      },
       "elevation": {
         "name": "Elevation"
       },
       "floors": {
         "name": "Floors"
       },
-      "resting_heart_rate": {
-        "name": "Resting heart rate"
+      "minutes_after_wakeup": {
+        "name": "Minutes after wakeup"
       },
       "minutes_fairly_active": {
         "name": "Minutes fairly active"
@@ -75,26 +92,11 @@
       "minutes_very_active": {
         "name": "Minutes very active"
       },
-      "sleep_start_time": {
-        "name": "Sleep start time"
-      },
-      "steps": {
-        "name": "Steps"
-      },
-      "bmi": {
-        "name": "BMI"
-      },
-      "body_fat": {
-        "name": "Body fat"
-      },
-      "awakenings_count": {
-        "name": "Awakenings count"
+      "resting_heart_rate": {
+        "name": "Resting heart rate"
       },
       "sleep_efficiency": {
         "name": "Sleep efficiency"
-      },
-      "minutes_after_wakeup": {
-        "name": "Minutes after wakeup"
       },
       "sleep_minutes_asleep": {
         "name": "Sleep minutes asleep"
@@ -105,21 +107,18 @@
       "sleep_minutes_to_fall_asleep": {
         "name": "Sleep minutes to fall asleep"
       },
+      "sleep_start_time": {
+        "name": "Sleep start time"
+      },
       "sleep_time_in_bed": {
         "name": "Sleep time in bed"
       },
-      "calories_in": {
-        "name": "Calories in"
+      "steps": {
+        "name": "Steps"
       },
       "water": {
         "name": "Water"
       }
-    }
-  },
-
-  "device": {
-    "tracker": {
-      "name": "{display_name} tracker"
     }
   }
 }

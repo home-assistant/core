@@ -5,7 +5,6 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-import sqlparse
 import voluptuous as vol
 
 from homeassistant.components.recorder import CONF_DB_URL, get_instance
@@ -40,21 +39,10 @@ from .const import (
     DOMAIN,
     PLATFORMS,
 )
-from .util import redact_credentials
+from .services import async_setup_services
+from .util import redact_credentials, validate_sql_select
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def validate_sql_select(value: str) -> str:
-    """Validate that value is a SQL SELECT query."""
-    if len(query := sqlparse.parse(value.lstrip().lstrip(";"))) > 1:
-        raise vol.Invalid("Multiple SQL queries are not supported")
-    if len(query) == 0 or (query_type := query[0].get_type()) == "UNKNOWN":
-        raise vol.Invalid("Invalid SQL query")
-    if query_type != "SELECT":
-        _LOGGER.debug("The SQL query %s is of type %s", query, query_type)
-        raise vol.Invalid("Only SELECT queries allowed")
-    return str(query[0])
 
 
 QUERY_SCHEMA = vol.Schema(
@@ -84,6 +72,8 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up SQL from yaml config."""
+    async_setup_services(hass)
+
     if (conf := config.get(DOMAIN)) is None:
         return True
 

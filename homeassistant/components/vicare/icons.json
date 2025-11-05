@@ -1,16 +1,13 @@
 {
   "entity": {
     "binary_sensor": {
-      "circulation_pump": {
-        "default": "mdi:pump"
-      },
-      "frost_protection": {
-        "default": "mdi:snowflake"
-      },
       "burner": {
         "default": "mdi:gas-burner"
       },
-      "solar_pump": {
+      "child_safety_lock_mode": {
+        "default": "mdi:lock"
+      },
+      "circulation_pump": {
         "default": "mdi:pump"
       },
       "domestic_hot_water_circulation_pump": {
@@ -19,8 +16,20 @@
       "domestic_hot_water_pump": {
         "default": "mdi:pump"
       },
+      "frost_protection": {
+        "default": "mdi:snowflake"
+      },
+      "mounting_mode": {
+        "default": "mdi:wrench"
+      },
       "one_time_charge": {
         "default": "mdi:shower-head"
+      },
+      "solar_pump": {
+        "default": "mdi:pump"
+      },
+      "valve": {
+        "default": "mdi:pipe-valve"
       }
     },
     "button": {
@@ -37,34 +46,13 @@
       }
     },
     "sensor": {
-      "volumetric_flow": {
-        "default": "mdi:gauge"
-      },
-      "ess_state_of_charge": {
-        "default": "mdi:home-battery"
-      },
-      "pcc_transfer_power_exchange": {
-        "default": "mdi:transmission-tower"
-      },
-      "pcc_energy_consumption": {
-        "default": "mdi:transmission-tower-export"
-      },
-      "pcc_energy_feed_in": {
-        "default": "mdi:transmission-tower-import"
-      },
-      "photovoltaic_energy_production_today": {
-        "default": "mdi:solar-power"
-      },
-      "burner_starts": {
-        "default": "mdi:counter"
-      },
       "burner_hours": {
         "default": "mdi:counter"
       },
       "burner_modulation": {
         "default": "mdi:percent"
       },
-      "compressor_starts": {
+      "burner_starts": {
         "default": "mdi:counter"
       },
       "compressor_hours": {
@@ -88,8 +76,35 @@
       "compressor_phase": {
         "default": "mdi:information"
       },
+      "compressor_starts": {
+        "default": "mdi:counter"
+      },
+      "ess_state_of_charge": {
+        "default": "mdi:home-battery"
+      },
+      "pcc_energy_consumption": {
+        "default": "mdi:transmission-tower-export"
+      },
+      "pcc_energy_feed_in": {
+        "default": "mdi:transmission-tower-import"
+      },
+      "pcc_transfer_power_exchange": {
+        "default": "mdi:transmission-tower"
+      },
+      "photovoltaic_energy_production_today": {
+        "default": "mdi:solar-power"
+      },
+      "valve_position": {
+        "default": "mdi:pipe-valve"
+      },
       "ventilation_level": {
         "default": "mdi:fan"
+      },
+      "volumetric_flow": {
+        "default": "mdi:gauge"
+      },
+      "zigbee_signal_strength": {
+        "default": "mdi:wifi"
       }
     }
   },

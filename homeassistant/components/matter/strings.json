@@ -1,34 +1,5 @@
 {
   "config": {
-    "flow_title": "{name}",
-    "step": {
-      "manual": {
-        "data": {
-          "url": "[%key:common::config_flow::data::url%]"
-        }
-      },
-      "on_supervisor": {
-        "title": "Select connection method",
-        "description": "Do you want to use the official Matter Server Supervisor add-on?\n\nIf you are already running the Matter Server in another add-on, in a custom container, natively etc., then do not select this option.",
-        "data": {
-          "use_addon": "Use the official Matter Server Supervisor add-on"
-        }
-      },
-      "install_addon": {
-        "title": "The add-on installation has started"
-      },
-      "start_addon": {
-        "title": "Starting add-on."
-      },
-      "hassio_confirm": {
-        "title": "Set up the Matter integration with the Matter Server add-on"
-      }
-    },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_server_version": "The Matter server is not the correct version",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
-    },
     "abort": {
       "addon_get_discovery_info_failed": "Failed to get Matter Server add-on discovery info.",
       "addon_info_failed": "Failed to get Matter Server add-on info.",
@@ -40,42 +11,56 @@
       "not_matter_addon": "Discovered add-on is not the official Matter Server add-on.",
       "reconfiguration_successful": "Successfully reconfigured the Matter integration."
     },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_server_version": "The Matter server is not the correct version",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "flow_title": "{name}",
     "progress": {
       "install_addon": "Please wait while the Matter Server add-on installation finishes. This can take several minutes.",
       "start_addon": "Please wait while the Matter Server add-on starts. This add-on is what powers Matter in Home Assistant. This may take some seconds."
+    },
+    "step": {
+      "hassio_confirm": {
+        "title": "Set up the Matter integration with the Matter Server add-on"
+      },
+      "install_addon": {
+        "title": "The add-on installation has started"
+      },
+      "manual": {
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]"
+        }
+      },
+      "on_supervisor": {
+        "data": {
+          "use_addon": "Use the official Matter Server Supervisor add-on"
+        },
+        "description": "Do you want to use the official Matter Server Supervisor add-on?\n\nIf you are already running the Matter Server in another add-on, in a custom container, natively etc., then do not select this option.",
+        "title": "Select connection method"
+      },
+      "start_addon": {
+        "title": "Starting add-on."
+      }
     }
   },
   "entity": {
     "binary_sensor": {
+      "alarm_door": {
+        "name": "Door alarm"
+      },
       "battery_alert": {
         "name": "Battery alert"
       },
+      "boost_state": {
+        "name": "Boost state"
+      },
+      "dishwasher_alarm_inflow": {
+        "name": "Inflow alarm"
+      },
       "end_of_service": {
         "name": "End of service"
-      },
-      "hardware_fault": {
-        "name": "Hardware fault"
-      },
-      "interconnected_smoke_alarm": {
-        "name": "Interconnected smoke alarm"
-      },
-      "interconnected_co_alarm": {
-        "name": "Interconnected CO alarm"
-      },
-      "test_in_progress": {
-        "name": "Test in progress"
-      },
-      "water_leak": {
-        "name": "Water leak"
-      },
-      "water_freeze": {
-        "name": "Water freeze"
-      },
-      "rain": {
-        "name": "Rain"
-      },
-      "muted": {
-        "name": "Muted"
       },
       "evse_charging_status": {
         "name": "Charging status"
@@ -86,14 +71,23 @@
       "evse_supply_state": {
         "name": "Charger supply state"
       },
-      "boost_state": {
-        "name": "Boost state"
+      "hardware_fault": {
+        "name": "Hardware fault"
       },
-      "dishwasher_alarm_inflow": {
-        "name": "Inflow alarm"
+      "interconnected_co_alarm": {
+        "name": "Interconnected CO alarm"
       },
-      "alarm_door": {
-        "name": "Door alarm"
+      "interconnected_smoke_alarm": {
+        "name": "Interconnected smoke alarm"
+      },
+      "muted": {
+        "name": "Muted"
+      },
+      "rain": {
+        "name": "Rain"
+      },
+      "test_in_progress": {
+        "name": "Test in progress"
       },
       "valve_fault_blocked": {
         "name": "Valve blocked"
@@ -103,26 +97,35 @@
       },
       "valve_fault_leaking": {
         "name": "Valve leaking"
+      },
+      "water_freeze": {
+        "name": "Water freeze"
+      },
+      "water_leak": {
+        "name": "Water leak"
       }
     },
     "button": {
+      "cancel_boost": {
+        "name": "Cancel boost"
+      },
       "pause": {
         "name": "[%key:common::action::pause%]"
       },
+      "reset_filter_condition": {
+        "name": "Reset filter condition"
+      },
       "resume": {
         "name": "Resume"
+      },
+      "self_test_request": {
+        "name": "Self-test"
       },
       "start": {
         "name": "[%key:common::action::start%]"
       },
       "stop": {
         "name": "[%key:common::action::stop%]"
-      },
-      "reset_filter_condition": {
-        "name": "Reset filter condition"
-      },
-      "self_test_request": {
-        "name": "Self-test"
       }
     },
     "climate": {
@@ -141,10 +144,8 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "switch_latched": "Switch latched",
               "initial_press": "Pressed",
               "long_press": "Held down",
-              "short_release": "Released after being pressed",
               "long_release": "Released after being held down",
               "multi_press_1": "Pressed once",
               "multi_press_2": "Pressed twice",
@@ -153,7 +154,9 @@
               "multi_press_5": "Pressed 5 times",
               "multi_press_6": "Pressed 6 times",
               "multi_press_7": "Pressed 7 times",
-              "multi_press_8": "Pressed 8 times"
+              "multi_press_8": "Pressed 8 times",
+              "short_release": "Released after being pressed",
+              "switch_latched": "Switch latched"
             }
           }
         }
@@ -165,59 +168,15 @@
         "state_attributes": {
           "preset_mode": {
             "state": {
+              "auto": "[%key:common::state::auto%]",
+              "high": "[%key:common::state::high%]",
               "low": "[%key:common::state::low%]",
               "medium": "[%key:common::state::medium%]",
-              "high": "[%key:common::state::high%]",
-              "auto": "[%key:common::state::auto%]",
               "natural_wind": "Natural wind",
               "sleep_wind": "Sleep wind"
             }
           }
         }
-      }
-    },
-    "number": {
-      "on_level": {
-        "name": "On level"
-      },
-      "on_transition_time": {
-        "name": "On transition time"
-      },
-      "off_transition_time": {
-        "name": "Off transition time"
-      },
-      "on_off_transition_time": {
-        "name": "On/Off transition time"
-      },
-      "altitude": {
-        "name": "Altitude above sea level"
-      },
-      "cook_time": {
-        "name": "Cooking time"
-      },
-      "pump_setpoint": {
-        "name": "Setpoint"
-      },
-      "temperature_offset": {
-        "name": "Temperature offset"
-      },
-      "temperature_setpoint": {
-        "name": "Temperature setpoint"
-      },
-      "hold_time": {
-        "name": "Hold time"
-      },
-      "auto_relock_timer": {
-        "name": "Autorelock time"
-      },
-      "led_indicator_intensity_off": {
-        "name": "LED off intensity"
-      },
-      "led_indicator_intensity_on": {
-        "name": "LED on intensity"
-      },
-      "valve_configuration_and_control_default_open_duration": {
-        "name": "Default open duration"
       }
     },
     "light": {
@@ -230,53 +189,89 @@
         "name": "[%key:component::lock::title%]"
       }
     },
+    "number": {
+      "altitude": {
+        "name": "Altitude above sea level"
+      },
+      "auto_relock_timer": {
+        "name": "Autorelock time"
+      },
+      "cook_time": {
+        "name": "Cooking time"
+      },
+      "hold_time": {
+        "name": "Hold time"
+      },
+      "led_indicator_intensity_off": {
+        "name": "LED off intensity"
+      },
+      "led_indicator_intensity_on": {
+        "name": "LED on intensity"
+      },
+      "off_transition_time": {
+        "name": "Off transition time"
+      },
+      "on_level": {
+        "name": "On level"
+      },
+      "on_off_transition_time": {
+        "name": "On/Off transition time"
+      },
+      "on_transition_time": {
+        "name": "On transition time"
+      },
+      "pump_setpoint": {
+        "name": "Setpoint"
+      },
+      "temperature_offset": {
+        "name": "Temperature offset"
+      },
+      "temperature_setpoint": {
+        "name": "Temperature setpoint"
+      },
+      "user_code_temporary_disable_time": {
+        "name": "User code temporary disable time"
+      },
+      "valve_configuration_and_control_default_open_duration": {
+        "name": "Default open duration"
+      },
+      "wrong_code_entry_limit": {
+        "name": "Wrong code limit"
+      }
+    },
     "select": {
       "clean_mode": {
         "name": "Clean mode"
       },
-      "mode": {
-        "name": "Mode"
-      },
       "device_energy_management_mode": {
         "name": "Energy management mode"
       },
-      "power_level": {
-        "name": "Power level (W)"
-      },
-      "sensitivity_level": {
-        "name": "Sensitivity",
+      "door_lock_sound_volume": {
+        "name": "Sound volume",
         "state": {
+          "high": "[%key:common::state::high%]",
           "low": "[%key:common::state::low%]",
-          "standard": "Standard",
-          "high": "[%key:common::state::high%]"
+          "medium": "[%key:common::state::medium%]",
+          "silent": "Silent"
         }
-      },
-      "startup_on_off": {
-        "name": "Power-on behavior on startup",
-        "state": {
-          "on": "[%key:common::state::on%]",
-          "off": "[%key:common::state::off%]",
-          "toggle": "[%key:common::action::toggle%]",
-          "previous": "Previous"
-        }
-      },
-      "temperature_level": {
-        "name": "Temperature level"
-      },
-      "temperature_display_mode": {
-        "name": "Temperature display mode"
       },
       "laundry_washer_number_of_rinses": {
         "name": "Number of rinses",
         "state": {
-          "off": "[%key:common::state::off%]",
-          "normal": "[%key:common::state::normal%]",
           "extra": "Extra",
-          "max": "Max"
+          "max": "Max",
+          "normal": "[%key:common::state::normal%]",
+          "off": "[%key:common::state::off%]"
         }
       },
       "laundry_washer_spin_speed": {
         "name": "Spin speed"
+      },
+      "mode": {
+        "name": "Mode"
+      },
+      "power_level": {
+        "name": "Power level (W)"
       },
       "pump_operation_mode": {
         "name": "mode",
@@ -287,87 +282,56 @@
           "normal": "[%key:common::state::normal%]"
         }
       },
+      "sensitivity_level": {
+        "name": "Sensitivity",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "standard": "Standard"
+        }
+      },
+      "startup_on_off": {
+        "name": "Power-on behavior on startup",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]",
+          "previous": "Previous",
+          "toggle": "[%key:common::action::toggle%]"
+        }
+      },
+      "temperature_display_mode": {
+        "name": "Temperature display mode"
+      },
+      "temperature_level": {
+        "name": "Temperature level"
+      },
       "water_heater_mode": {
         "name": "Water heater mode"
-      },
-      "door_lock_sound_volume": {
-        "name": "Sound volume",
-        "state": {
-          "silent": "Silent",
-          "low": "[%key:common::state::low%]",
-          "medium": "[%key:common::state::medium%]",
-          "high": "[%key:common::state::high%]"
-        }
       }
     },
     "sensor": {
       "activated_carbon_filter_condition": {
         "name": "Activated carbon filter condition"
       },
-      "auto_close_time": {
-        "name": "Auto-close time"
-      },
-      "contamination_state": {
-        "name": "Contamination state",
-        "state": {
-          "normal": "[%key:common::state::normal%]",
-          "low": "[%key:common::state::low%]",
-          "warning": "Warning",
-          "critical": "Critical"
-        }
+      "active_current": {
+        "name": "Active current"
       },
       "air_quality": {
         "name": "Air quality",
         "state": {
           "extremely_poor": "Extremely poor",
-          "very_poor": "Very poor",
-          "poor": "Poor",
           "fair": "Fair",
           "good": "Good",
-          "moderate": "Moderate"
+          "moderate": "Moderate",
+          "poor": "Poor",
+          "very_poor": "Very poor"
         }
       },
-      "expiry_date": {
-        "name": "Expiry date"
+      "apparent_current": {
+        "name": "Apparent current"
       },
-      "flow": {
-        "name": "Flow"
-      },
-      "hepa_filter_condition": {
-        "name": "HEPA filter condition"
-      },
-      "operational_state": {
-        "name": "Operational state",
-        "state": {
-          "stopped": "[%key:common::state::stopped%]",
-          "running": "Running",
-          "paused": "[%key:common::state::paused%]",
-          "error": "[%key:common::state::error%]",
-          "seeking_charger": "Seeking charger",
-          "charging": "[%key:common::state::charging%]",
-          "docked": "Docked"
-        }
-      },
-      "estimated_end_time": {
-        "name": "Estimated end time"
-      },
-      "switch_current_position": {
-        "name": "Current switch position"
-      },
-      "estimated_heat_required": {
-        "name": "Required heating energy"
-      },
-      "tank_volume": {
-        "name": "Tank volume"
-      },
-      "tank_percentage": {
-        "name": "Hot water level"
-      },
-      "valve_position": {
-        "name": "Valve position"
-      },
-      "battery_replacement_description": {
-        "name": "Battery type"
+      "auto_close_time": {
+        "name": "Auto-close time"
       },
       "battery_charge_state": {
         "name": "Battery charge state",
@@ -376,6 +340,9 @@
           "full_charge": "Full charge",
           "not_charging": "Not charging"
         }
+      },
+      "battery_replacement_description": {
+        "name": "Battery type"
       },
       "battery_time_remaining": {
         "name": "Time remaining"
@@ -386,107 +353,161 @@
       "battery_voltage": {
         "name": "Battery voltage"
       },
+      "contamination_state": {
+        "name": "Contamination state",
+        "state": {
+          "critical": "Critical",
+          "low": "[%key:common::state::low%]",
+          "normal": "[%key:common::state::normal%]",
+          "warning": "Warning"
+        }
+      },
       "current_phase": {
         "name": "Current phase"
       },
       "energy_exported": {
         "name": "Energy exported"
       },
-      "esa_state": {
-        "name": "Appliance energy state",
-        "state": {
-          "offline": "Offline",
-          "online": "Online",
-          "fault": "[%key:common::state::fault%]",
-          "power_adjust_active": "Power adjust",
-          "paused": "[%key:common::state::paused%]"
-        }
-      },
       "esa_opt_out_state": {
         "name": "Energy optimization opt-out",
         "state": {
-          "no_opt_out": "[%key:common::state::off%]",
-          "local_opt_out": "Local",
           "grid_opt_out": "Grid",
+          "local_opt_out": "Local",
+          "no_opt_out": "[%key:common::state::off%]",
           "opt_out": "Local and grid"
         }
       },
-      "evse_fault_state": {
-        "name": "Fault state",
+      "esa_state": {
+        "name": "Appliance energy state",
         "state": {
-          "no_error": "OK",
-          "meter_failure": "Meter failure",
-          "over_voltage": "Overvoltage",
-          "under_voltage": "Undervoltage",
-          "over_current": "Overcurrent",
-          "contact_wet_failure": "Contact wet failure",
-          "contact_dry_failure": "Contact dry failure",
-          "power_loss": "Power loss",
-          "power_quality": "Power quality",
-          "pilot_short_circuit": "Pilot short circuit",
-          "emergency_stop": "Emergency stop",
-          "ev_disconnected": "EV disconnected",
-          "wrong_power_supply": "Wrong power supply",
-          "live_neutral_swap": "Live/neutral swap",
-          "over_temperature": "Overtemperature",
-          "other": "Other fault"
+          "fault": "[%key:common::state::fault%]",
+          "offline": "Offline",
+          "online": "Online",
+          "paused": "[%key:common::state::paused%]",
+          "power_adjust_active": "Power adjust"
         }
       },
-      "evse_soc": {
-        "name": "State of charge"
+      "estimated_end_time": {
+        "name": "Estimated end time"
       },
-      "nitrogen_dioxide": {
-        "name": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]"
-      },
-      "pump_control_mode": {
-        "name": "Control mode",
-        "state": {
-          "constant_flow": "Constant flow",
-          "constant_pressure": "Constant pressure",
-          "constant_speed": "Constant speed",
-          "constant_temperature": "Constant temp",
-          "proportional_pressure": "Proportional pressure",
-          "automatic": "Automatic"
-        }
-      },
-      "pump_speed": {
-        "name": "Rotation speed"
+      "estimated_heat_required": {
+        "name": "Required heating energy"
       },
       "eve_weather_trend": {
         "name": "Weather trend",
         "state": {
           "cloudy": "Cloudy",
           "rainy": "Rainy",
-          "sunny": "Sunny",
-          "stormy": "Stormy"
+          "stormy": "Stormy",
+          "sunny": "Sunny"
         }
-      },
-      "evse_circuit_capacity": {
-        "name": "Circuit capacity"
       },
       "evse_charge_current": {
         "name": "Charge current"
       },
-      "evse_min_charge_current": {
-        "name": "Min charge current"
+      "evse_circuit_capacity": {
+        "name": "Circuit capacity"
+      },
+      "evse_fault_state": {
+        "name": "Fault state",
+        "state": {
+          "contact_dry_failure": "Contact dry failure",
+          "contact_wet_failure": "Contact wet failure",
+          "emergency_stop": "Emergency stop",
+          "ev_disconnected": "EV disconnected",
+          "live_neutral_swap": "Live/neutral swap",
+          "meter_failure": "Meter failure",
+          "no_error": "OK",
+          "other": "Other fault",
+          "over_current": "Overcurrent",
+          "over_temperature": "Overtemperature",
+          "over_voltage": "Overvoltage",
+          "pilot_short_circuit": "Pilot short circuit",
+          "power_loss": "Power loss",
+          "power_quality": "Power quality",
+          "under_voltage": "Undervoltage",
+          "wrong_power_supply": "Wrong power supply"
+        }
       },
       "evse_max_charge_current": {
         "name": "Max charge current"
       },
+      "evse_min_charge_current": {
+        "name": "Min charge current"
+      },
+      "evse_soc": {
+        "name": "State of charge"
+      },
       "evse_user_max_charge_current": {
         "name": "User max charge current"
       },
-      "window_covering_target_position": {
-        "name": "Target opening position"
+      "expiry_date": {
+        "name": "Expiry date"
       },
-      "active_current": {
-        "name": "Active current"
+      "flow": {
+        "name": "Flow"
       },
-      "apparent_current": {
-        "name": "Apparent current"
+      "hepa_filter_condition": {
+        "name": "HEPA filter condition"
+      },
+      "nitrogen_dioxide": {
+        "name": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]"
+      },
+      "operational_error": {
+        "name": "Operational error",
+        "state": {
+          "brush_jammed": "Brush jammed",
+          "cannot_reach_target_area": "Cannot reach target area",
+          "command_invalid_in_state": "Command invalid in current state",
+          "dirty_water_tank_full": "Dirty water tank full",
+          "dirty_water_tank_missing": "Dirty water tank missing",
+          "dust_bin_full": "Dust bin full",
+          "dust_bin_missing": "Dust bin missing",
+          "failed_to_find_charging_dock": "Failed to find charging dock",
+          "low_battery": "Low battery",
+          "mop_cleaning_pad_missing": "Mop cleaning pad missing",
+          "navigation_sensor_obscured": "Navigation sensor obscured",
+          "no_error": "No error",
+          "stuck": "Stuck",
+          "unable_to_complete_operation": "Unable to complete operation",
+          "unable_to_start_or_resume": "Unable to start or resume",
+          "water_tank_empty": "Water tank empty",
+          "water_tank_lid_open": "Water tank lid open",
+          "water_tank_missing": "Water tank missing",
+          "wheels_jammed": "Wheels jammed"
+        }
+      },
+      "operational_state": {
+        "name": "Operational state",
+        "state": {
+          "charging": "[%key:common::state::charging%]",
+          "docked": "Docked",
+          "error": "[%key:common::state::error%]",
+          "paused": "[%key:common::state::paused%]",
+          "running": "Running",
+          "seeking_charger": "Seeking charger",
+          "stopped": "[%key:common::state::stopped%]"
+        }
       },
       "outdoor_temperature": {
         "name": "Outdoor temperature"
+      },
+      "pi_heating_demand": {
+        "name": "Heating demand"
+      },
+      "pump_control_mode": {
+        "name": "Control mode",
+        "state": {
+          "automatic": "Automatic",
+          "constant_flow": "Constant flow",
+          "constant_pressure": "Constant pressure",
+          "constant_speed": "Constant speed",
+          "constant_temperature": "Constant temp",
+          "proportional_pressure": "Proportional pressure"
+        }
+      },
+      "pump_speed": {
+        "name": "Rotation speed"
       },
       "reactive_current": {
         "name": "Reactive current"
@@ -497,22 +518,43 @@
       "rms_voltage": {
         "name": "Effective voltage"
       },
+      "switch_current_position": {
+        "name": "Current switch position"
+      },
+      "tank_percentage": {
+        "name": "Hot water level"
+      },
+      "tank_volume": {
+        "name": "Tank volume"
+      },
+      "valve_position": {
+        "name": "Valve position"
+      },
       "voltage": {
         "name": "Voltage"
+      },
+      "window_covering_target_position": {
+        "name": "Target opening position"
       }
     },
     "switch": {
-      "switch": {
-        "name": "[%key:component::switch::title%]"
-      },
-      "power": {
-        "name": "Power"
-      },
       "child_lock": {
         "name": "Child lock"
       },
       "evse_charging_switch": {
         "name": "Enable charging"
+      },
+      "power": {
+        "name": "Power"
+      },
+      "privacy_mode_button": {
+        "name": "Privacy mode button"
+      },
+      "speaker_mute": {
+        "name": "Mute"
+      },
+      "switch": {
+        "name": "[%key:component::switch::title%]"
       }
     },
     "vacuum": {
@@ -532,25 +574,43 @@
     }
   },
   "issues": {
-    "server_version_version_too_old": {
-      "description": "The version of the Matter Server you are currently running is too old for this version of Home Assistant. Please update the Matter Server to the latest version to fix this issue.",
-      "title": "Newer version of Matter Server needed"
-    },
     "server_version_version_too_new": {
       "description": "The version of the Matter Server you are currently running is too new for this version of Home Assistant. Please update Home Assistant or downgrade the Matter Server to an older version to fix this issue.",
       "title": "Older version of Matter Server needed"
+    },
+    "server_version_version_too_old": {
+      "description": "The version of the Matter Server you are currently running is too old for this version of Home Assistant. Please update the Matter Server to the latest version to fix this issue.",
+      "title": "Newer version of Matter Server needed"
     }
   },
   "services": {
     "open_commissioning_window": {
-      "name": "Open commissioning window",
       "description": "Allows adding one of your devices to another Matter network by opening the commissioning window for this Matter device for 60 seconds.",
       "fields": {
         "device_id": {
-          "name": "[%key:common::config_flow::data::device%]",
-          "description": "The Matter device to add to the other Matter network."
+          "description": "The Matter device to add to the other Matter network.",
+          "name": "[%key:common::config_flow::data::device%]"
         }
-      }
+      },
+      "name": "Open commissioning window"
+    },
+    "water_heater_boost": {
+      "description": "Enables water heater boost for a specific duration.",
+      "fields": {
+        "duration": {
+          "description": "Boost duration in seconds.",
+          "name": "Duration"
+        },
+        "emergency_boost": {
+          "description": "Whether to enable emergency boost mode.",
+          "name": "Emergency boost"
+        },
+        "temporary_setpoint": {
+          "description": "Temporary setpoint temperature in Celsius during the boost period.",
+          "name": "Temporary setpoint"
+        }
+      },
+      "name": "Boost water heater"
     }
   }
 }

@@ -4,13 +4,41 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     },
     "error": {
+      "column_invalid": "The column `{column}` is not returned by the query",
       "db_url_invalid": "Database URL invalid",
-      "query_invalid": "SQL query invalid",
-      "query_no_read_only": "SQL query must be read-only",
       "multiple_queries": "Multiple SQL queries are not supported",
-      "column_invalid": "The column `{column}` is not returned by the query"
+      "query_invalid": "SQL query invalid",
+      "query_no_read_only": "SQL query must be read-only"
     },
     "step": {
+      "options": {
+        "data": {
+          "column": "Column",
+          "query": "Select query"
+        },
+        "data_description": {
+          "column": "Column for returned query to present as state",
+          "query": "Query to run, needs to start with 'SELECT'"
+        },
+        "sections": {
+          "advanced_options": {
+            "data": {
+              "device_class": "Device class",
+              "state_class": "State class",
+              "unit_of_measurement": "Unit of measurement",
+              "value_template": "Value template"
+            },
+            "data_description": {
+              "device_class": "The type/class of the sensor to set the icon in the frontend",
+              "state_class": "The state class of the sensor",
+              "unit_of_measurement": "The unit of measurement for the sensor (optional)",
+              "value_template": "Template to extract a value from the payload (optional)"
+            },
+            "description": "Provide additional configuration to the sensor",
+            "name": "Advanced options"
+          }
+        }
+      },
       "user": {
         "data": {
           "db_url": "Database URL",
@@ -20,74 +48,67 @@
           "db_url": "Leave empty to use Home Assistant Recorder database",
           "name": "Name that will be used for config entry and also the sensor"
         }
-      },
-      "options": {
-        "data": {
-          "query": "Select query",
-          "column": "Column"
-        },
-        "data_description": {
-          "query": "Query to run, needs to start with 'SELECT'",
-          "column": "Column for returned query to present as state"
-        },
-        "sections": {
-          "advanced_options": {
-            "name": "Advanced options",
-            "description": "Provide additional configuration to the sensor",
-            "data": {
-              "unit_of_measurement": "Unit of measurement",
-              "value_template": "Value template",
-              "device_class": "Device class",
-              "state_class": "State class"
-            },
-            "data_description": {
-              "unit_of_measurement": "The unit of measurement for the sensor (optional)",
-              "value_template": "Template to extract a value from the payload (optional)",
-              "device_class": "The type/class of the sensor to set the icon in the frontend",
-              "state_class": "The state class of the sensor"
-            }
-          }
-        }
       }
     }
   },
+  "exceptions": {
+    "db_connection_failed": {
+      "message": "Failed to connect to the database: {db_url}"
+    },
+    "query_execution_error": {
+      "message": "An error occurred when executing the query: {error}"
+    },
+    "query_not_allowed": {
+      "message": "The provided query is not allowed: {error}"
+    }
+  },
+  "issues": {
+    "entity_id_query_does_full_table_scan": {
+      "description": "The query `{query}` contains the keyword `entity_id` but does not reference the `states_meta` table. This will cause a full table scan and database instability. Please check the documentation and use `states_meta.entity_id` instead.",
+      "title": "SQL query does full table scan"
+    },
+    "platform_yaml_not_supported": {
+      "description": "Platform YAML setup is not supported.\nChange from configuring it in the `sensor:` key to using the `sql:` key directly in configuration.yaml.\nTo see the detailed documentation, select Learn more.",
+      "title": "Platform YAML is not supported in SQL"
+    }
+  },
   "options": {
+    "error": {
+      "column_invalid": "[%key:component::sql::config::error::column_invalid%]",
+      "db_url_invalid": "[%key:component::sql::config::error::db_url_invalid%]",
+      "multiple_queries": "[%key:component::sql::config::error::multiple_queries%]",
+      "query_invalid": "[%key:component::sql::config::error::query_invalid%]",
+      "query_no_read_only": "[%key:component::sql::config::error::query_no_read_only%]"
+    },
     "step": {
       "init": {
         "data": {
-          "query": "[%key:component::sql::config::step::options::data::query%]",
-          "column": "[%key:component::sql::config::step::options::data::column%]"
+          "column": "[%key:component::sql::config::step::options::data::column%]",
+          "query": "[%key:component::sql::config::step::options::data::query%]"
         },
         "data_description": {
-          "query": "[%key:component::sql::config::step::options::data_description::query%]",
-          "column": "[%key:component::sql::config::step::options::data_description::column%]"
+          "column": "[%key:component::sql::config::step::options::data_description::column%]",
+          "query": "[%key:component::sql::config::step::options::data_description::query%]"
         },
         "sections": {
           "advanced_options": {
-            "name": "[%key:component::sql::config::step::options::sections::advanced_options::name%]",
-            "description": "[%key:component::sql::config::step::options::sections::advanced_options::name%]",
             "data": {
-              "unit_of_measurement": "[%key:component::sql::config::step::options::sections::advanced_options::data::unit_of_measurement%]",
-              "value_template": "[%key:component::sql::config::step::options::sections::advanced_options::data::value_template%]",
               "device_class": "[%key:component::sql::config::step::options::sections::advanced_options::data::device_class%]",
-              "state_class": "[%key:component::sql::config::step::options::sections::advanced_options::data::state_class%]"
+              "state_class": "[%key:component::sql::config::step::options::sections::advanced_options::data::state_class%]",
+              "unit_of_measurement": "[%key:component::sql::config::step::options::sections::advanced_options::data::unit_of_measurement%]",
+              "value_template": "[%key:component::sql::config::step::options::sections::advanced_options::data::value_template%]"
             },
             "data_description": {
-              "unit_of_measurement": "[%key:component::sql::config::step::options::sections::advanced_options::data_description::unit_of_measurement%]",
-              "value_template": "[%key:component::sql::config::step::options::sections::advanced_options::data_description::value_template%]",
               "device_class": "[%key:component::sql::config::step::options::sections::advanced_options::data_description::device_class%]",
-              "state_class": "[%key:component::sql::config::step::options::sections::advanced_options::data_description::state_class%]"
-            }
+              "state_class": "[%key:component::sql::config::step::options::sections::advanced_options::data_description::state_class%]",
+              "unit_of_measurement": "[%key:component::sql::config::step::options::sections::advanced_options::data_description::unit_of_measurement%]",
+              "value_template": "[%key:component::sql::config::step::options::sections::advanced_options::data_description::value_template%]"
+            },
+            "description": "[%key:component::sql::config::step::options::sections::advanced_options::name%]",
+            "name": "[%key:component::sql::config::step::options::sections::advanced_options::name%]"
           }
         }
       }
-    },
-    "error": {
-      "db_url_invalid": "[%key:component::sql::config::error::db_url_invalid%]",
-      "query_invalid": "[%key:component::sql::config::error::query_invalid%]",
-      "query_no_read_only": "[%key:component::sql::config::error::query_no_read_only%]",
-      "multiple_queries": "[%key:component::sql::config::error::multiple_queries%]",
-      "column_invalid": "[%key:component::sql::config::error::column_invalid%]"
     }
   },
   "selector": {
@@ -125,9 +146,9 @@
         "ozone": "[%key:component::sensor::entity_component::ozone::name%]",
         "ph": "[%key:component::sensor::entity_component::ph::name%]",
         "pm1": "[%key:component::sensor::entity_component::pm1::name%]",
-        "pm4": "[%key:component::sensor::entity_component::pm4::name%]",
         "pm10": "[%key:component::sensor::entity_component::pm10::name%]",
         "pm25": "[%key:component::sensor::entity_component::pm25::name%]",
+        "pm4": "[%key:component::sensor::entity_component::pm4::name%]",
         "power": "[%key:component::sensor::entity_component::power::name%]",
         "power_factor": "[%key:component::sensor::entity_component::power_factor::name%]",
         "precipitation": "[%key:component::sensor::entity_component::precipitation::name%]",
@@ -162,10 +183,20 @@
       }
     }
   },
-  "issues": {
-    "entity_id_query_does_full_table_scan": {
-      "title": "SQL query does full table scan",
-      "description": "The query `{query}` contains the keyword `entity_id` but does not reference the `states_meta` table. This will cause a full table scan and database instability. Please check the documentation and use `states_meta.entity_id` instead."
+  "services": {
+    "query": {
+      "description": "Executes a SQL query and returns the result.",
+      "fields": {
+        "db_url": {
+          "description": "The URL of the database to connect to. If not provided, the default Home Assistant recorder database will be used.",
+          "name": "Database URL"
+        },
+        "query": {
+          "description": "The SELECT query to execute.",
+          "name": "Query"
+        }
+      },
+      "name": "Query"
     }
   }
 }

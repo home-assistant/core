@@ -1,27 +1,27 @@
 {
   "entity": {
-    "switch": {
-      "smart_mode": {
-        "default": "mdi:refresh-auto"
-      }
-    },
     "number": {
       "intensity": {
         "default": "mdi:sine-wave"
       }
     },
     "sensor": {
+      "activity": {
+        "default": "mdi:baby-face"
+      },
       "amplitude": {
         "default": "mdi:sine-wave"
       },
       "period": {
         "default": "mdi:sine-wave"
       },
-      "activity": {
-        "default": "mdi:baby-face"
-      },
       "swing_count": {
         "default": "mdi:counter"
+      }
+    },
+    "switch": {
+      "smart_mode": {
+        "default": "mdi:refresh-auto"
       }
     }
   }

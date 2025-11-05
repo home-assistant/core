@@ -61,12 +61,12 @@ async def test_immediate_works(hass: HomeAssistant) -> None:
     assert debouncer._job.target == debouncer.function
     assert debouncer._job == before_job
 
-    # Test calling doesn't execute/cooldown if currently executing.
+    # Test calling enabled timer if currently executing.
     await debouncer._execute_lock.acquire()
     await debouncer.async_call()
     assert len(calls) == 2
-    assert debouncer._timer_task is None
-    assert debouncer._execute_at_end_of_timer is False
+    assert debouncer._timer_task is not None
+    assert debouncer._execute_at_end_of_timer is True
     debouncer._execute_lock.release()
     assert debouncer._job.target == debouncer.function
 
@@ -118,13 +118,13 @@ async def test_immediate_works_with_schedule_call(hass: HomeAssistant) -> None:
     assert debouncer._job.target == debouncer.function
     assert debouncer._job == before_job
 
-    # Test calling doesn't execute/cooldown if currently executing.
+    # Test calling enabled timer if currently executing.
     await debouncer._execute_lock.acquire()
     debouncer.async_schedule_call()
     await hass.async_block_till_done()
     assert len(calls) == 2
-    assert debouncer._timer_task is None
-    assert debouncer._execute_at_end_of_timer is False
+    assert debouncer._timer_task is not None
+    assert debouncer._execute_at_end_of_timer is True
     debouncer._execute_lock.release()
     assert debouncer._job.target == debouncer.function
 
@@ -225,12 +225,12 @@ async def test_immediate_works_with_passed_callback_function_raises(
     assert debouncer._job.target == debouncer.function
     assert debouncer._job == before_job
 
-    # Test calling doesn't execute/cooldown if currently executing.
+    # Test calling enabled timer if currently executing.
     await debouncer._execute_lock.acquire()
     await debouncer.async_call()
     assert len(calls) == 2
-    assert debouncer._timer_task is None
-    assert debouncer._execute_at_end_of_timer is False
+    assert debouncer._timer_task is not None
+    assert debouncer._execute_at_end_of_timer is True
     debouncer._execute_lock.release()
     assert debouncer._job.target == debouncer.function
 
@@ -288,12 +288,12 @@ async def test_immediate_works_with_passed_coroutine_raises(
     assert debouncer._job.target == debouncer.function
     assert debouncer._job == before_job
 
-    # Test calling doesn't execute/cooldown if currently executing.
+    # Test calling enabled timer if currently executing.
     await debouncer._execute_lock.acquire()
     await debouncer.async_call()
     assert len(calls) == 2
-    assert debouncer._timer_task is None
-    assert debouncer._execute_at_end_of_timer is False
+    assert debouncer._timer_task is not None
+    assert debouncer._execute_at_end_of_timer is True
     debouncer._execute_lock.release()
     assert debouncer._job.target == debouncer.function
 
@@ -339,12 +339,12 @@ async def test_not_immediate_works(hass: HomeAssistant) -> None:
     # Reset debouncer
     debouncer.async_cancel()
 
-    # Test calling doesn't schedule if currently executing.
+    # Test calling enabled timer if currently executing.
     await debouncer._execute_lock.acquire()
     await debouncer.async_call()
     assert len(calls) == 1
-    assert debouncer._timer_task is None
-    assert debouncer._execute_at_end_of_timer is False
+    assert debouncer._timer_task is not None
+    assert debouncer._execute_at_end_of_timer is True
     debouncer._execute_lock.release()
     assert debouncer._job.target == debouncer.function
 
@@ -393,13 +393,13 @@ async def test_not_immediate_works_schedule_call(hass: HomeAssistant) -> None:
     # Reset debouncer
     debouncer.async_cancel()
 
-    # Test calling doesn't schedule if currently executing.
+    # Test calling enabled timer if currently executing.
     await debouncer._execute_lock.acquire()
     debouncer.async_schedule_call()
     await hass.async_block_till_done()
     assert len(calls) == 1
-    assert debouncer._timer_task is None
-    assert debouncer._execute_at_end_of_timer is False
+    assert debouncer._timer_task is not None
+    assert debouncer._execute_at_end_of_timer is True
     debouncer._execute_lock.release()
     assert debouncer._job.target == debouncer.function
 
@@ -455,13 +455,13 @@ async def test_immediate_works_with_function_swapped(hass: HomeAssistant) -> Non
     assert debouncer._job.target == debouncer.function
     assert debouncer._job != before_job
 
-    # Test calling doesn't execute/cooldown if currently executing.
+    # Test calling enabled timer if currently executing.
     await debouncer._execute_lock.acquire()
     await debouncer.async_call()
     assert len(calls) == 2
     assert calls == [1, 2]
-    assert debouncer._timer_task is None
-    assert debouncer._execute_at_end_of_timer is False
+    assert debouncer._timer_task is not None
+    assert debouncer._execute_at_end_of_timer is True
     debouncer._execute_lock.release()
     assert debouncer._job.target == debouncer.function
 

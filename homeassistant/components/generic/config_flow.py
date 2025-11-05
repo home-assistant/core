@@ -191,7 +191,9 @@ async def async_test_still(
     try:
         async_client = get_async_client(hass, verify_ssl=verify_ssl)
         async with asyncio.timeout(GET_IMAGE_TIMEOUT):
-            response = await async_client.get(url, auth=auth, timeout=GET_IMAGE_TIMEOUT)
+            response = await async_client.get(
+                url, auth=auth, timeout=GET_IMAGE_TIMEOUT, follow_redirects=True
+            )
             response.raise_for_status()
             image = response.content
     except (

@@ -6,15 +6,15 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from functools import partial
-from typing import Any
 
 from xknx import XKNX
 from xknx.core.connection_state import XknxConnectionState, XknxConnectionType
-from xknx.devices import Sensor as XknxSensor
+from xknx.devices import Device as XknxDevice, Sensor as XknxSensor
 
 from homeassistant import config_entries
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
+    RestoreSensor,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -25,6 +25,8 @@ from homeassistant.const import (
     CONF_ENTITY_CATEGORY,
     CONF_NAME,
     CONF_TYPE,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
     EntityCategory,
     Platform,
 )
@@ -136,12 +138,12 @@ def _create_sensor(xknx: XKNX, config: ConfigType) -> XknxSensor:
         name=config[CONF_NAME],
         group_address_state=config[SensorSchema.CONF_STATE_ADDRESS],
         sync_state=config[SensorSchema.CONF_SYNC_STATE],
-        always_callback=config[SensorSchema.CONF_ALWAYS_CALLBACK],
+        always_callback=True,
         value_type=config[CONF_TYPE],
     )
 
 
-class KNXSensor(KnxYamlEntity, SensorEntity):
+class KNXSensor(KnxYamlEntity, RestoreSensor):
     """Representation of a KNX sensor."""
 
     _device: XknxSensor
@@ -159,25 +161,35 @@ class KNXSensor(KnxYamlEntity, SensorEntity):
                 SensorDeviceClass, self._device.ha_device_class()
             )
 
-        self._attr_force_update = self._device.always_callback
+        self._attr_force_update = config[SensorSchema.CONF_ALWAYS_CALLBACK]
         self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
         self._attr_unique_id = str(self._device.sensor_value.group_address_state)
         self._attr_native_unit_of_measurement = self._device.unit_of_measurement()
         self._attr_state_class = config.get(CONF_STATE_CLASS)
+        self._attr_extra_state_attributes = {}
 
-    @property
-    def native_value(self) -> StateType:
-        """Return the state of the sensor."""
-        return self._device.resolve_state()
+    async def async_added_to_hass(self) -> None:
+        """Restore last state."""
+        if (
+            (last_state := await self.async_get_last_state())
+            and last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+            and (
+                (last_sensor_data := await self.async_get_last_sensor_data())
+                is not None
+            )
+        ):
+            self._attr_native_value = last_sensor_data.native_value
+            self._attr_extra_state_attributes.update(last_state.attributes)
+        await super().async_added_to_hass()
 
-    @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return device specific state attributes."""
-        attr: dict[str, Any] = {}
-
-        if self._device.last_telegram is not None:
-            attr[ATTR_SOURCE] = str(self._device.last_telegram.source_address)
-        return attr
+    def after_update_callback(self, device: XknxDevice) -> None:
+        """Call after device was updated."""
+        self._attr_native_value = self._device.resolve_state()
+        if telegram := self._device.last_telegram:
+            self._attr_extra_state_attributes[ATTR_SOURCE] = str(
+                telegram.source_address
+            )
+        super().after_update_callback(device)
 
 
 class KNXSystemSensor(SensorEntity):

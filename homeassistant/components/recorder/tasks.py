@@ -77,6 +77,7 @@ class UpdateStatisticsMetadataTask(RecorderTask):
     on_done: Callable[[], None] | None
     statistic_id: str
     new_statistic_id: str | None | UndefinedType
+    new_unit_class: str | None | UndefinedType
     new_unit_of_measurement: str | None | UndefinedType
 
     def run(self, instance: Recorder) -> None:
@@ -85,6 +86,7 @@ class UpdateStatisticsMetadataTask(RecorderTask):
             instance,
             self.statistic_id,
             self.new_statistic_id,
+            self.new_unit_class,
             self.new_unit_of_measurement,
         )
         if self.on_done:

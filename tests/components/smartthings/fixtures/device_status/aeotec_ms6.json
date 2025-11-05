@@ -1,0 +1,62 @@
+{
+  "components": {
+    "main": {
+      "ultravioletIndex": {
+        "ultravioletIndex": {
+          "value": 0,
+          "timestamp": "2025-09-30T15:13:46.521Z"
+        }
+      },
+      "relativeHumidityMeasurement": {
+        "humidity": {
+          "value": 60.0,
+          "unit": "%",
+          "timestamp": "2025-09-30T15:13:45.441Z"
+        }
+      },
+      "temperatureMeasurement": {
+        "temperatureRange": {
+          "value": null
+        },
+        "temperature": {
+          "value": 22.2,
+          "unit": "C",
+          "timestamp": "2025-09-30T16:13:50.478Z"
+        }
+      },
+      "refresh": {},
+      "motionSensor": {
+        "motion": {
+          "value": "inactive",
+          "timestamp": "2025-09-30T15:33:27.594Z"
+        }
+      },
+      "illuminanceMeasurement": {
+        "illuminance": {
+          "value": 30,
+          "unit": "lux",
+          "timestamp": "2025-09-30T15:13:52.607Z"
+        }
+      },
+      "battery": {
+        "quantity": {
+          "value": null
+        },
+        "battery": {
+          "value": 100,
+          "unit": "%",
+          "timestamp": "2025-09-30T15:13:46.166Z"
+        },
+        "type": {
+          "value": null
+        }
+      },
+      "tamperAlert": {
+        "tamper": {
+          "value": "clear",
+          "timestamp": "2025-09-30T14:06:07.064Z"
+        }
+      }
+    }
+  }
+}

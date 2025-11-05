@@ -306,7 +306,7 @@ def test_find_unserializable_data() -> None:
     assert find_paths_unserializable_data({("A",): 1}) == {"$<key: ('A',)>": ("A",)}
     assert math.isnan(
         find_paths_unserializable_data(
-            float("nan"), dump=partial(json.dumps, allow_nan=False)
+            math.nan, dump=partial(json.dumps, allow_nan=False)
         )["$"]
     )
 

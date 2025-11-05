@@ -7,6 +7,8 @@ from freezegun.api import FrozenDateTimeFactory
 from homeassistant.components.fastdotcom.const import DEFAULT_NAME, DOMAIN
 from homeassistant.core import HomeAssistant
 
+from . import MOCK_DATA
+
 from tests.common import MockConfigEntry
 
 
@@ -22,11 +24,12 @@ async def test_fastdotcom_data_update_coordinator(
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.fastdotcom.coordinator.fast_com", return_value=5.0
+        "homeassistant.components.fastdotcom.coordinator.fast_com",
+        return_value=MOCK_DATA,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.fast_com_download")
     assert state is not None
-    assert state.state == "5.0"
+    assert state.state == "100.0"

@@ -4,10 +4,10 @@
       "heating": {
         "default": "mdi:radiator"
       },
-      "water": {
+      "hot_water": {
         "default": "mdi:faucet"
       },
-      "hot_water": {
+      "water": {
         "default": "mdi:faucet"
       }
     }

@@ -73,7 +73,7 @@ def mock_get_forecast_api_error():
 
 
 @pytest.fixture
-def mock_irm_kmi_api(request: pytest.FixtureRequest) -> Generator[None, MagicMock]:
+def mock_irm_kmi_api(request: pytest.FixtureRequest) -> Generator[MagicMock]:
     """Return a mocked IrmKmi api client."""
     fixture: str = "forecast.json"
 
@@ -111,9 +111,7 @@ def mock_irm_kmi_api_high_low_temp():
 
 
 @pytest.fixture
-def mock_exception_irm_kmi_api(
-    request: pytest.FixtureRequest,
-) -> Generator[None, MagicMock]:
+def mock_exception_irm_kmi_api(request: pytest.FixtureRequest) -> Generator[MagicMock]:
     """Return a mocked IrmKmi api client that will raise an error upon refreshing data."""
     with patch(
         "homeassistant.components.irm_kmi.IrmKmiApiClientHa", autospec=True

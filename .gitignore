@@ -79,7 +79,6 @@ junit.xml
 .project
 .pydevproject
 
-.python-version
 .tool-versions
 
 # emacs auto backups
@@ -112,6 +111,7 @@ virtualization/vagrant/config
 !.vscode/cSpell.json
 !.vscode/extensions.json
 !.vscode/tasks.json
+!.vscode/settings.default.jsonc
 .env
 
 # Windows Explorer
@@ -141,4 +141,5 @@ pytest_buckets.txt
 
 # AI tooling
 .claude/settings.local.json
+.serena/
 

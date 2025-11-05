@@ -441,9 +441,7 @@ class KeyFrameConverter:
 
         # Keep import here so that we can import stream integration
         # without installing reqs
-        from homeassistant.components.camera.img_util import (  # noqa: PLC0415
-            TurboJPEGSingleton,
-        )
+        from homeassistant.components.camera import TurboJPEGSingleton  # noqa: PLC0415
 
         self._packet: Packet | None = None
         self._event: asyncio.Event = asyncio.Event()

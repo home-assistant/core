@@ -44,19 +44,23 @@ PACKAGE_CHECK_VERSION_RANGE = {
     "typing_extensions": "SemVer",
     "urllib3": "SemVer",
     "yarl": "SemVer",
+    "zeroconf": "SemVer",
 }
 PACKAGE_CHECK_PREPARE_UPDATE: dict[str, int] = {
     # In the form dict("dependencyX": n+1)
     # - dependencyX should be the name of the referenced dependency
     # - current major version +1
     # Pandas will only fully support Python 3.14 in v3.
+    # Zeroconf will switch to v1 soon, without any breaking changes.
     "pandas": 3,
+    "zeroconf": 1,
 }
 PACKAGE_CHECK_VERSION_RANGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     # In the form dict("domain": {"package": {"dependency1", "dependency2"}})
     # - domain is the integration domain
     # - package is the package (can be transitive) referencing the dependency
     # - dependencyX should be the name of the referenced dependency
+    "altruist": {"altruistclient": {"zeroconf"}},
     "geocaching": {
         # scipy version closely linked to numpy
         # geocachingapi > reverse_geocode > scipy > numpy
@@ -73,6 +77,9 @@ PACKAGE_CHECK_VERSION_RANGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "stiebel_eltron": {
         # Current has an upper bound on major >=3.10.0,<4.0.0
         "pystiebeleltron": {"pymodbus"}
+    },
+    "xiaomi_miio": {
+        "python-miio": {"zeroconf"},
     },
 }
 
@@ -130,11 +137,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     },
     "emulated_kasa": {"sense-energy": {"async-timeout"}},
     "entur_public_transport": {"enturclient": {"async-timeout"}},
-    "epson": {
-        # https://github.com/pszafer/epson_projector/pull/22
-        # epson-projector > pyserial-asyncio
-        "epson-projector": {"pyserial-asyncio", "async-timeout"}
-    },
     "escea": {"pescea": {"async-timeout"}},
     "evil_genius_labs": {"pyevilgenius": {"async-timeout"}},
     "familyhub": {"python-family-hub-local": {"async-timeout"}},
@@ -167,11 +169,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # https://github.com/Pyhass/Pyhiveapi/pull/88
         # pyhive-integration > unasync > setuptools
         "unasync": {"setuptools"}
-    },
-    "homeassistant_hardware": {
-        # https://github.com/zigpy/zigpy/issues/1604
-        # universal-silabs-flasher > zigpy > pyserial-asyncio
-        "zigpy": {"pyserial-asyncio"},
     },
     "homewizard": {"python-homewizard-energy": {"async-timeout"}},
     "imeon_inverter": {"imeon-inverter-api": {"async-timeout"}},
@@ -222,11 +219,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # pymochad > pbr > setuptools
         "pbr": {"setuptools"}
     },
-    "monoprice": {
-        # https://github.com/etsinko/pymonoprice/issues/9
-        # pymonoprice > pyserial-asyncio
-        "pymonoprice": {"pyserial-asyncio"}
-    },
     "nibe_heatpump": {"nibe": {"async-timeout"}},
     "norway_air": {"pymetno": {"async-timeout"}},
     "opengarage": {"open-garage": {"async-timeout"}},
@@ -245,7 +237,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     },
     "ring": {"ring-doorbell": {"async-timeout"}},
     "rmvtransport": {"pyrmvtransport": {"async-timeout"}},
-    "roborock": {"python-roborock": {"async-timeout"}},
     "samsungtv": {"async-upnp-client": {"async-timeout"}},
     "screenlogic": {"screenlogicpy": {"async-timeout"}},
     "sense": {"sense-energy": {"async-timeout"}},
@@ -271,9 +262,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # https://github.com/waveform80/colorzero/issues/9
         # zha > zigpy-zigate > gpiozero > colorzero > setuptools
         "colorzero": {"setuptools"},
-        # https://github.com/zigpy/zigpy/issues/1604
-        # zha > zigpy > pyserial-asyncio
-        "zigpy": {"pyserial-asyncio"},
     },
 }
 
@@ -321,8 +309,6 @@ FORBIDDEN_PACKAGE_FILES_EXCEPTIONS = {
     "obihai": {"homeassistant": {"pyobihai"}},
     # https://github.com/iamkubi/pydactyl
     "pterodactyl": {"homeassistant": {"py-dactyl"}},
-    # https://github.com/markusressel/raspyrfm-client
-    "raspyrfm": {"homeassistant": {"raspyrfm-client"}},
     # https://github.com/sstallion/sensorpush-api
     "sensorpush_cloud": {
         "homeassistant": {"sensorpush-api"},

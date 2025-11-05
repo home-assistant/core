@@ -41,7 +41,7 @@
 # name: test_entities[light.dimmable_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': 255,
+      'brightness': 100,
       'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
       'friendly_name': 'dimmable light',
       'supported_color_modes': list([

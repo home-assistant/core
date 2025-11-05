@@ -250,7 +250,7 @@
               'friendly_name': 'Test Fan',
               'preset_modes': list([
               ]),
-              'supported_features': 57,
+              'supported_features': 59,
             }),
             'entity_id': 'fan.test_fan',
             'last_changed': str,

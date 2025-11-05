@@ -36,7 +36,9 @@ async def test_setup_and_remove_config_entry(
     input_sensor_entity_id = "sensor.input"
     derivative_entity_id = "sensor.my_derivative"
 
-    hass.states.async_set(input_sensor_entity_id, "10.0", {})
+    hass.states.async_set(
+        input_sensor_entity_id, "10.0", {"unit_of_measurement": "dog"}
+    )
     await hass.async_block_till_done()
 
     # Setup the config entry
@@ -63,7 +65,7 @@ async def test_setup_and_remove_config_entry(
     # Check the platform is setup correctly
     state = hass.states.get(derivative_entity_id)
     assert state.state == "0.0"
-    assert "unit_of_measurement" not in state.attributes
+    assert state.attributes["unit_of_measurement"] == "kdog/min"
     assert state.attributes["source"] == "sensor.input"
 
     hass.states.async_set(input_sensor_entity_id, 10, {"unit_of_measurement": "dog"})

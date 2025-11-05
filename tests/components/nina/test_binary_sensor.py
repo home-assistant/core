@@ -31,21 +31,29 @@ from tests.common import MockConfigEntry
 
 ENTRY_DATA: dict[str, Any] = {
     "slots": 5,
-    "corona_filter": True,
     "regions": {"083350000000": "Aach, Stadt"},
+    "filters": {
+        "headline_filter": ".*corona.*",
+        "area_filter": ".*",
+    },
 }
 
 ENTRY_DATA_NO_CORONA: dict[str, Any] = {
     "slots": 5,
-    "corona_filter": False,
     "regions": {"083350000000": "Aach, Stadt"},
+    "filters": {
+        "headline_filter": "/(?!)/",
+        "area_filter": ".*",
+    },
 }
 
 ENTRY_DATA_NO_AREA: dict[str, Any] = {
     "slots": 5,
-    "corona_filter": False,
-    "area_filter": ".*nagold.*",
     "regions": {"083350000000": "Aach, Stadt"},
+    "filters": {
+        "headline_filter": "/(?!)/",
+        "area_filter": ".*nagold.*",
+    },
 }
 
 
@@ -57,7 +65,7 @@ async def test_sensors(hass: HomeAssistant, entity_registry: er.EntityRegistry) 
         wraps=mocked_request_function,
     ):
         conf_entry: MockConfigEntry = MockConfigEntry(
-            domain=DOMAIN, title="NINA", data=ENTRY_DATA
+            domain=DOMAIN, title="NINA", data=ENTRY_DATA, version=1, minor_version=3
         )
         conf_entry.add_to_hass(hass)
 
@@ -178,7 +186,11 @@ async def test_sensors_without_corona_filter(
         wraps=mocked_request_function,
     ):
         conf_entry: MockConfigEntry = MockConfigEntry(
-            domain=DOMAIN, title="NINA", data=ENTRY_DATA_NO_CORONA
+            domain=DOMAIN,
+            title="NINA",
+            data=ENTRY_DATA_NO_CORONA,
+            version=1,
+            minor_version=3,
         )
         conf_entry.add_to_hass(hass)
 
@@ -311,7 +323,11 @@ async def test_sensors_with_area_filter(
         wraps=mocked_request_function,
     ):
         conf_entry: MockConfigEntry = MockConfigEntry(
-            domain=DOMAIN, title="NINA", data=ENTRY_DATA_NO_AREA
+            domain=DOMAIN,
+            title="NINA",
+            data=ENTRY_DATA_NO_AREA,
+            version=1,
+            minor_version=3,
         )
         conf_entry.add_to_hass(hass)
 

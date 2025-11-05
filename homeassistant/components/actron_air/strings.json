@@ -1,0 +1,29 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "oauth2_error": "Failed to start OAuth2 flow"
+    },
+    "error": {
+      "oauth2_error": "Failed to start OAuth2 flow. Please try again later."
+    },
+    "progress": {
+      "wait_for_authorization": "To authenticate, open the following URL and login at Actron Air:\n{verification_uri}\nIf the code is not automatically copied, paste the following code to authorize the integration:\n\n```{user_code}```\n\n\nThe login attempt will time out after {expires_minutes} minutes."
+    },
+    "step": {
+      "connection_error": {
+        "data": {},
+        "description": "Failed to connect to Actron Air. Please check your internet connection and try again.",
+        "title": "Connection error"
+      },
+      "timeout": {
+        "data": {},
+        "description": "The authorization process timed out. Please try again.",
+        "title": "Authorization timeout"
+      },
+      "user": {
+        "title": "Actron Air OAuth2 Authorization"
+      }
+    }
+  }
+}

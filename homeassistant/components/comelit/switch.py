@@ -13,7 +13,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import ComelitConfigEntry, ComelitSerialBridge
 from .entity import ComelitBridgeBaseEntity
-from .utils import bridge_api_call
+from .utils import DeviceType, bridge_api_call, new_device_listener
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -28,35 +28,20 @@ async def async_setup_entry(
 
     coordinator = cast(ComelitSerialBridge, config_entry.runtime_data)
 
-    entities: list[ComelitSwitchEntity] = []
-    entities.extend(
-        ComelitSwitchEntity(coordinator, device, config_entry.entry_id)
-        for device in coordinator.data[IRRIGATION].values()
-    )
-    entities.extend(
-        ComelitSwitchEntity(coordinator, device, config_entry.entry_id)
-        for device in coordinator.data[OTHER].values()
-    )
-    async_add_entities(entities)
+    def _add_new_entities(new_devices: list[DeviceType], dev_type: str) -> None:
+        """Add entities for new monitors."""
+        entities = [
+            ComelitSwitchEntity(coordinator, device, config_entry.entry_id)
+            for device in coordinator.data[dev_type].values()
+            if device in new_devices
+        ]
+        if entities:
+            async_add_entities(entities)
 
-    known_devices: dict[str, set[int]] = {
-        dev_type: set() for dev_type in (IRRIGATION, OTHER)
-    }
-
-    def _check_device() -> None:
-        for dev_type in (IRRIGATION, OTHER):
-            current_devices = set(coordinator.data[dev_type])
-            new_devices = current_devices - known_devices[dev_type]
-            if new_devices:
-                known_devices[dev_type].update(new_devices)
-                async_add_entities(
-                    ComelitSwitchEntity(coordinator, device, config_entry.entry_id)
-                    for device in coordinator.data[dev_type].values()
-                    if device.index in new_devices
-                )
-
-    _check_device()
-    config_entry.async_on_unload(coordinator.async_add_listener(_check_device))
+    for dev_type in (IRRIGATION, OTHER):
+        config_entry.async_on_unload(
+            new_device_listener(coordinator, _add_new_entities, dev_type)
+        )
 
 
 class ComelitSwitchEntity(ComelitBridgeBaseEntity, SwitchEntity):

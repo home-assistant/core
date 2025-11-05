@@ -171,39 +171,6 @@
       'aliases': set({
       }),
       'area_id': None,
-      'capabilities': None,
-      'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
-      'device_class': None,
-      'device_id': <ANY>,
-      'disabled_by': None,
-      'domain': 'sensor',
-      'entity_category': None,
-      'entity_id': 'sensor.air_purifier_200s_air_quality',
-      'has_entity_name': True,
-      'hidden_by': None,
-      'icon': None,
-      'id': <ANY>,
-      'labels': set({
-      }),
-      'name': None,
-      'options': dict({
-      }),
-      'original_device_class': None,
-      'original_icon': None,
-      'original_name': 'Air quality',
-      'platform': 'vesync',
-      'previous_unique_id': None,
-      'suggested_object_id': None,
-      'supported_features': 0,
-      'translation_key': 'air_quality',
-      'unique_id': 'asd_sdfKIHG7IJHGwJGJ7GJ_ag5h3G55-air-quality',
-      'unit_of_measurement': None,
-    }),
-    EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
-      'area_id': None,
       'capabilities': dict({
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
@@ -236,19 +203,6 @@
       'unit_of_measurement': '%',
     }),
   ])
-# ---
-# name: test_sensor_state[Air Purifier 200s][sensor.air_purifier_200s_air_quality]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Air Purifier 200s Air quality',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.air_purifier_200s_air_quality',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'None',
-  })
 # ---
 # name: test_sensor_state[Air Purifier 200s][sensor.air_purifier_200s_filter_lifetime]
   StateSnapshot({
@@ -793,6 +747,94 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '35',
+  })
+# ---
+# name: test_sensor_state[Humidifier 6000s][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          '6000s',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'LEH-S601S-WUS',
+      'model_id': None,
+      'name': 'Humidifier 6000s',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_sensor_state[Humidifier 6000s][entities]
+  list([
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': dict({
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.humidifier_6000s_humidity',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
+      'original_icon': None,
+      'original_name': 'Humidity',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': None,
+      'unique_id': '6000s-humidity',
+      'unit_of_measurement': '%',
+    }),
+  ])
+# ---
+# name: test_sensor_state[Humidifier 6000s][sensor.humidifier_6000s_humidity]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'humidity',
+      'friendly_name': 'Humidifier 6000s Humidity',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.humidifier_6000s_humidity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '36',
   })
 # ---
 # name: test_sensor_state[Humidifier 600S][devices]
