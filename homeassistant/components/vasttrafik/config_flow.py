@@ -107,7 +107,7 @@ async def search_stations(
 
 async def validate_api_credentials(
     hass: HomeAssistant, data: dict[str, Any]
-) -> dict[str, str] | None:
+) -> dict[str, str]:
     """Validate that the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
@@ -133,7 +133,7 @@ async def validate_api_credentials(
         _LOGGER.exception("Unexpected error validating Västtrafik credentials")
         return {"base": "unknown"}
 
-    return None
+    return {}
 
 
 class VasttrafikConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -155,7 +155,7 @@ class VasttrafikConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step."""
 
-        errors: dict[str, str] | None = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             self._async_abort_entries_match(
                 {CONF_KEY: user_input[CONF_KEY], CONF_SECRET: user_input[CONF_SECRET]}
@@ -173,7 +173,7 @@ class VasttrafikConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle reconfiguration of API credentials."""
         entry = self._get_reconfigure_entry()
 
-        errors: dict[str, str] | None = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             self._async_abort_entries_match(
                 {CONF_KEY: user_input[CONF_KEY], CONF_SECRET: user_input[CONF_SECRET]}
