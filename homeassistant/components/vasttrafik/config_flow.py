@@ -148,7 +148,7 @@ class VasttrafikConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(title="Västtrafik", data=user_input)
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors or {}
+            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
     async def async_step_reconfigure(
@@ -170,7 +170,7 @@ class VasttrafikConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=self.add_suggested_values_to_schema(
                 STEP_USER_DATA_SCHEMA, user_input or entry.data
             ),
-            errors=errors or {},
+            errors=errors,
         )
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
