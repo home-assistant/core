@@ -35,6 +35,7 @@ from .const import (
     CONF_HEADING,
     CONF_KEY,
     CONF_LINES,
+    CONF_SEARCH_QUERY,
     CONF_SECRET,
     CONF_STATION_GID,
     CONF_STATION_NAME,
@@ -262,7 +263,7 @@ class VasttrafikSubentryFlow(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Handle the initial step of adding a departure board."""
         if user_input is not None:
-            search_query = user_input.get("search_query", "").strip()
+            search_query = user_input[CONF_SEARCH_QUERY].strip()
             if not search_query:
                 errors = {"base": "search_required"}
             else:
@@ -283,7 +284,7 @@ class VasttrafikSubentryFlow(ConfigSubentryFlow):
 
         search_schema = vol.Schema(
             {
-                vol.Required("search_query"): TextSelector(
+                vol.Required(CONF_SEARCH_QUERY): TextSelector(
                     TextSelectorConfig(type=TextSelectorType.SEARCH)
                 ),
             }

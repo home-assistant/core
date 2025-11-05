@@ -2,6 +2,8 @@
 
 DOMAIN = "vasttrafik"
 
+CONF_SEARCH_QUERY = "search_query"
+
 # Configuration constants
 CONF_STATION_GID = "station_gid"
 CONF_STATION_NAME = "station_name"
