@@ -31,11 +31,11 @@ from .const import DOMAIN
 if TYPE_CHECKING:
     from . import GoogleSheetsConfigEntry
 
+ADD_DATETIME = "add_datetime"
 DATA = "data"
 DATA_CONFIG_ENTRY = "config_entry"
 ROWS = "rows"
 WORKSHEET = "worksheet"
-ADD_DATETIME = "add_datetime"
 
 SERVICE_APPEND_SHEET = "append_sheet"
 SERVICE_GET_SHEET = "get_sheet"
