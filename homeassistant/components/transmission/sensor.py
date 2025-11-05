@@ -16,13 +16,10 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import STATE_IDLE, UnitOfDataRate
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
-    DOMAIN,
     STATE_ATTR_TORRENT_INFO,
     STATE_DOWNLOADING,
     STATE_SEEDING,
@@ -30,6 +27,7 @@ from .const import (
     SUPPORTED_ORDER_MODES,
 )
 from .coordinator import TransmissionConfigEntry, TransmissionDataUpdateCoordinator
+from .entity import TransmissionEntity
 
 MODES: dict[str, list[str] | None] = {
     "started_torrents": ["downloading"],
@@ -140,30 +138,10 @@ async def async_setup_entry(
     )
 
 
-class TransmissionSensor(
-    CoordinatorEntity[TransmissionDataUpdateCoordinator], SensorEntity
-):
+class TransmissionSensor(TransmissionEntity, SensorEntity):
     """A base class for all Transmission sensors."""
 
     entity_description: TransmissionSensorEntityDescription
-    _attr_has_entity_name = True
-
-    def __init__(
-        self,
-        coordinator: TransmissionDataUpdateCoordinator,
-        entity_description: TransmissionSensorEntityDescription,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator)
-        self.entity_description = entity_description
-        self._attr_unique_id = (
-            f"{coordinator.config_entry.entry_id}-{entity_description.key}"
-        )
-        self._attr_device_info = DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
-            manufacturer="Transmission",
-        )
 
     @property
     def native_value(self) -> StateType:
