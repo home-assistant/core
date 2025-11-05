@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from tuya_device_handlers import TUYA_QUIRKS_REGISTRY
+from tuya_device_handlers.builder import TuyaSelectDefinition
+from tuya_device_handlers.helpers import parse_enum
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
@@ -343,6 +346,16 @@ SELECTS[DeviceCategory.DGHSXJ] = SELECTS[DeviceCategory.SP]
 SELECTS[DeviceCategory.PC] = SELECTS[DeviceCategory.KG]
 
 
+def _create_quirk_description(
+    definition: TuyaSelectDefinition,
+) -> SelectEntityDescription:
+    return SelectEntityDescription(
+        key=DPCode(definition.key),
+        translation_key=definition.translation_key,
+        entity_category=parse_enum(EntityCategory, definition.entity_category),
+    )
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TuyaConfigEntry,
@@ -357,7 +370,15 @@ async def async_setup_entry(
         entities: list[TuyaSelectEntity] = []
         for device_id in device_ids:
             device = manager.device_map[device_id]
-            if descriptions := SELECTS.get(device.category):
+            if quirk := TUYA_QUIRKS_REGISTRY.get_quirk_for_device(device):
+                entities.extend(
+                    TuyaSelectEntity(
+                        device, manager, _create_quirk_description(definition)
+                    )
+                    for definition in quirk.select_definitions
+                    if definition.key in device.status
+                )
+            elif descriptions := SELECTS.get(device.category):
                 entities.extend(
                     TuyaSelectEntity(device, manager, description)
                     for description in descriptions

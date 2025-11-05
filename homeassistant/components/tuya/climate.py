@@ -5,6 +5,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
+from tuya_device_handlers import TUYA_QUIRKS_REGISTRY
+from tuya_device_handlers.builder import (
+    TuyaClimateDefinition,
+    TuyaIntegerConversionFunction,
+)
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.climate import (
@@ -46,6 +51,9 @@ class TuyaClimateEntityDescription(ClimateEntityDescription):
     """Describe an Tuya climate entity."""
 
     switch_only_hvac_mode: HVACMode
+    current_temperature_state_conversion: TuyaIntegerConversionFunction | None = None
+    target_temperature_state_conversion: TuyaIntegerConversionFunction | None = None
+    target_temperature_command_conversion: TuyaIntegerConversionFunction | None = None
 
 
 CLIMATE_DESCRIPTIONS: dict[DeviceCategory, TuyaClimateEntityDescription] = {
@@ -76,6 +84,18 @@ CLIMATE_DESCRIPTIONS: dict[DeviceCategory, TuyaClimateEntityDescription] = {
 }
 
 
+def _create_quirk_description(
+    definition: TuyaClimateDefinition,
+) -> TuyaClimateEntityDescription:
+    return TuyaClimateEntityDescription(
+        key=definition.key,
+        switch_only_hvac_mode=HVACMode(definition.switch_only_hvac_mode),
+        current_temperature_state_conversion=definition.current_temperature_state_conversion,
+        target_temperature_state_conversion=definition.target_temperature_state_conversion,
+        target_temperature_command_conversion=definition.target_temperature_command_conversion,
+    )
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TuyaConfigEntry,
@@ -90,7 +110,17 @@ async def async_setup_entry(
         entities: list[TuyaClimateEntity] = []
         for device_id in device_ids:
             device = manager.device_map[device_id]
-            if device and device.category in CLIMATE_DESCRIPTIONS:
+            if quirk := TUYA_QUIRKS_REGISTRY.get_quirk_for_device(device):
+                entities.extend(
+                    TuyaClimateEntity(
+                        device,
+                        manager,
+                        _create_quirk_description(definition),
+                        hass.config.units.temperature_unit,
+                    )
+                    for definition in quirk.climate_definitions
+                )
+            elif device.category in CLIMATE_DESCRIPTIONS:
                 entities.append(
                     TuyaClimateEntity(
                         device,
@@ -194,8 +224,16 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         # it to define min, max & step temperatures
         if self._set_temperature:
             self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
-            self._attr_max_temp = self._set_temperature.max_scaled
-            self._attr_min_temp = self._set_temperature.min_scaled
+            if convert := self.entity_description.target_temperature_state_conversion:
+                self._attr_max_temp = convert(
+                    self.device, self._set_temperature, self._set_temperature.max
+                )
+                self._attr_min_temp = convert(
+                    self.device, self._set_temperature, self._set_temperature.min
+                )
+            else:
+                self._attr_max_temp = self._set_temperature.max_scaled
+                self._attr_min_temp = self._set_temperature.min_scaled
             self._attr_target_temperature_step = self._set_temperature.step_scaled
 
         # Determine HVAC modes
@@ -347,13 +385,20 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             # guarded by ClimateEntityFeature.TARGET_TEMPERATURE
             assert self._set_temperature is not None
 
+        if convert := self.entity_description.target_temperature_command_conversion:
+            value = convert(
+                self.device, self._set_temperature, kwargs[ATTR_TEMPERATURE]
+            )
+        else:
+            value = round(
+                self._set_temperature.scale_value_back(kwargs[ATTR_TEMPERATURE])
+            )
+
         self._send_command(
             [
                 {
                     "code": self._set_temperature.dpcode,
-                    "value": round(
-                        self._set_temperature.scale_value_back(kwargs[ATTR_TEMPERATURE])
-                    ),
+                    "value": value,
                 }
             ]
         )
@@ -367,6 +412,9 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         temperature = self.device.status.get(self._current_temperature.dpcode)
         if temperature is None:
             return None
+
+        if convert := self.entity_description.current_temperature_state_conversion:
+            return convert(self.device, self._current_temperature, temperature)
 
         if self._current_temperature.scale == 0 and self._current_temperature.step != 1:
             # The current temperature can have a scale of 0 or 1 and is used for
@@ -398,6 +446,9 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         temperature = self.device.status.get(self._set_temperature.dpcode)
         if temperature is None:
             return None
+
+        if convert := self.entity_description.target_temperature_state_conversion:
+            return convert(self.device, self._set_temperature, temperature)
 
         return self._set_temperature.scale_value(temperature)
 

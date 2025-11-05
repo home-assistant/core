@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any, NamedTuple
 
+from tuya_device_handlers.devices import register_tuya_quirks
 from tuya_sharing import (
     CustomerDevice,
     Manager,
@@ -103,6 +104,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> bool
             model_id=device.product_id,
         )
 
+    # Should be loaded from configuration.yaml
+    # but for now, we can use a hardcoded path for testing
+    quirks_path = "/config/tuya_quirks/"
+    await hass.async_add_executor_job(register_tuya_quirks, quirks_path)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     # If the device does not register any entities, the device does not need to subscribe
     # So the subscription is here

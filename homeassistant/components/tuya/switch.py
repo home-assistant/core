@@ -5,6 +5,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from tuya_device_handlers import TUYA_QUIRKS_REGISTRY
+from tuya_device_handlers.builder import TuyaSwitchDefinition
+from tuya_device_handlers.helpers import parse_enum
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.switch import (
@@ -921,6 +924,17 @@ SWITCHES[DeviceCategory.CZ] = SWITCHES[DeviceCategory.PC]
 SWITCHES[DeviceCategory.DGHSXJ] = SWITCHES[DeviceCategory.SP]
 
 
+def _create_quirk_description(
+    definition: TuyaSwitchDefinition,
+) -> SwitchEntityDescription:
+    return SwitchEntityDescription(
+        key=DPCode(definition.key),
+        translation_key=definition.translation_key,
+        device_class=parse_enum(SwitchDeviceClass, definition.device_class),
+        entity_category=parse_enum(EntityCategory, definition.entity_category),
+    )
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TuyaConfigEntry,
@@ -936,7 +950,15 @@ async def async_setup_entry(
         entities: list[TuyaSwitchEntity] = []
         for device_id in device_ids:
             device = manager.device_map[device_id]
-            if descriptions := SWITCHES.get(device.category):
+            if quirk := TUYA_QUIRKS_REGISTRY.get_quirk_for_device(device):
+                entities.extend(
+                    TuyaSwitchEntity(
+                        device, manager, _create_quirk_description(definition)
+                    )
+                    for definition in quirk.switch_definitions
+                    if definition.key in device.status
+                )
+            elif descriptions := SWITCHES.get(device.category):
                 entities.extend(
                     TuyaSwitchEntity(device, manager, description)
                     for description in descriptions

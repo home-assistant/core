@@ -5,6 +5,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
+from tuya_device_handlers import TUYA_QUIRKS_REGISTRY
+from tuya_device_handlers.builder import TuyaCoverDefinition
+from tuya_device_handlers.helpers import parse_enum
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.cover import (
@@ -143,6 +146,19 @@ COVERS: dict[DeviceCategory, tuple[TuyaCoverEntityDescription, ...]] = {
 }
 
 
+def _create_quirk_description(
+    definition: TuyaCoverDefinition,
+) -> TuyaCoverEntityDescription:
+    return TuyaCoverEntityDescription(
+        key=DPCode(definition.key),
+        translation_key=definition.translation_key,
+        current_state=parse_enum(DPCode, definition.current_state_dp_code),
+        current_position=parse_enum(DPCode, definition.current_position_dp_code),
+        set_position=parse_enum(DPCode, definition.set_position_dp_code),
+        device_class=parse_enum(CoverDeviceClass, definition.device_class),
+    )
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TuyaConfigEntry,
@@ -157,7 +173,18 @@ async def async_setup_entry(
         entities: list[TuyaCoverEntity] = []
         for device_id in device_ids:
             device = manager.device_map[device_id]
-            if descriptions := COVERS.get(device.category):
+            if quirk := TUYA_QUIRKS_REGISTRY.get_quirk_for_device(device):
+                entities.extend(
+                    TuyaCoverEntity(
+                        device, manager, _create_quirk_description(definition)
+                    )
+                    for definition in quirk.cover_definitions
+                    if (
+                        definition.key in device.function
+                        or definition.key in device.status_range
+                    )
+                )
+            elif descriptions := COVERS.get(device.category):
                 entities.extend(
                     TuyaCoverEntity(device, manager, description)
                     for description in descriptions

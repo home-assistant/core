@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -352,3 +353,108 @@ async def test_cl_n3xgr5pdmpinictg_state(
     state = hass.states.get(entity_id)
     assert state is not None, f"{entity_id} does not exist"
     assert state.state == expected_state
+
+
+@pytest.mark.parametrize(
+    "mock_device_code",
+    ["cl_lfkr93x0ukp5gaia"],
+)
+@pytest.mark.parametrize(
+    ("tuya_status", "expected_state"),
+    [
+        (
+            {
+                "control": "open",
+                "percent_control": 100,
+                "percent_state": 0,
+                "control_back_mode": "forward",
+                "work_state": "opening",
+                "countdown_left": 0,
+                "time_total": 0,
+                "situation_set": "fully_open",
+                "fault": 0,
+                "border": "down",
+            },
+            "open",
+        ),
+        (
+            {
+                "control": "close",
+                "percent_control": 100,
+                "percent_state": 0,
+                "control_back_mode": "forward",
+                "work_state": "opening",
+                "countdown_left": 0,
+                "time_total": 0,
+                "situation_set": "fully_open",
+                "fault": 0,
+                "border": "down",
+            },
+            "closed",
+        ),
+    ],
+)
+@patch("homeassistant.components.tuya.PLATFORMS", [Platform.COVER])
+async def test_cl_lfkr93x0ukp5gaia_state(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    tuya_status: dict[str, Any],
+    expected_state: str,
+) -> None:
+    """Test cover position for lfkr93x0ukp5gaia device.
+
+    See https://github.com/home-assistant/core/issues/152826
+    percent_control / percent_state / situation_set never change, regardless
+    of open or closed state
+    """
+    entity_id = "cover.projector_screen_curtain"
+    mock_device.status.update(**tuya_status)
+
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    state = hass.states.get(entity_id)
+    assert state is not None, f"{entity_id} does not exist"
+    assert state.state == expected_state
+    assert ATTR_CURRENT_POSITION not in state.attributes
+
+
+@pytest.mark.parametrize(
+    "mock_device_code",
+    ["cl_g1cp07dsqnbdbbki"],
+)
+@pytest.mark.parametrize(
+    ("initial_percent_control", "expected_state", "expected_position"),
+    [
+        (0, "open", 100),
+        (25, "open", 75),
+        (50, "open", 50),
+        (75, "open", 25),
+        (100, "closed", 0),
+    ],
+)
+@patch("homeassistant.components.tuya.PLATFORMS", [Platform.COVER])
+async def test_cl_g1cp07dsqnbdbbki_state(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    initial_percent_control: int,
+    expected_state: str,
+    expected_position: int,
+) -> None:
+    """Test cover position for g1cp07dsqnbdbbki device.
+
+    See https://github.com/home-assistant/core/issues/139966
+    percent_state never changes, regardless of actual position
+    """
+    entity_id = "cover.persiana_do_quarto_curtain"
+    mock_device.status["percent_control"] = initial_percent_control
+
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    state = hass.states.get(entity_id)
+    assert state is not None, f"{entity_id} does not exist"
+    assert state.state == expected_state
+    assert state.attributes[ATTR_CURRENT_POSITION] == expected_position

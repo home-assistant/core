@@ -6,6 +6,9 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
+from tuya_device_handlers import TUYA_QUIRKS_REGISTRY
+from tuya_device_handlers.builder import TuyaSensorDefinition
+from tuya_device_handlers.helpers import parse_enum
 from tuya_sharing import CustomerDevice, Manager
 from tuya_sharing.device import DeviceStatusRange
 
@@ -1635,6 +1638,17 @@ SENSORS[DeviceCategory.DGHSXJ] = SENSORS[DeviceCategory.SP]
 SENSORS[DeviceCategory.PC] = SENSORS[DeviceCategory.KG]
 
 
+def _create_quirk_description(
+    definition: TuyaSensorDefinition,
+) -> TuyaSensorEntityDescription:
+    return TuyaSensorEntityDescription(
+        key=DPCode(definition.key),
+        translation_key=definition.translation_key,
+        device_class=parse_enum(SensorDeviceClass, definition.device_class),
+        entity_category=parse_enum(EntityCategory, definition.entity_category),
+    )
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TuyaConfigEntry,
@@ -1649,7 +1663,15 @@ async def async_setup_entry(
         entities: list[TuyaSensorEntity] = []
         for device_id in device_ids:
             device = manager.device_map[device_id]
-            if descriptions := SENSORS.get(device.category):
+            if quirk := TUYA_QUIRKS_REGISTRY.get_quirk_for_device(device):
+                entities.extend(
+                    TuyaSensorEntity(
+                        device, manager, _create_quirk_description(definition)
+                    )
+                    for definition in quirk.sensor_definitions
+                    if definition.key in device.status
+                )
+            elif descriptions := SENSORS.get(device.category):
                 entities.extend(
                     TuyaSensorEntity(device, manager, description)
                     for description in descriptions
