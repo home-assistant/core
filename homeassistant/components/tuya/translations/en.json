@@ -602,6 +602,9 @@
             "temperature": {
                 "name": "Temperature"
             },
+            "temperature_external": {
+                "name": "Probe temperature"
+            },
             "total_absorption_particles": {
                 "name": "Total absorption of particles"
             },

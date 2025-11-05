@@ -62,6 +62,14 @@
             },
             "time": {
                 "name": "Time"
+            },
+            "total_satellites": {
+                "name": "Total satellites",
+                "unit_of_measurement": "satellites"
+            },
+            "used_satellites": {
+                "name": "Used satellites",
+                "unit_of_measurement": "satellites"
             }
         }
     }

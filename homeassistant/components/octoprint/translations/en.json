@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Device is already configured",
-            "auth_failed": "Failed to retrieve application api key",
+            "auth_failed": "Failed to retrieve API key",
             "cannot_connect": "Failed to connect",
             "reauth_successful": "Re-authentication was successful",
             "unknown": "Unexpected error"
@@ -11,7 +11,7 @@
             "cannot_connect": "Failed to connect",
             "unknown": "Unexpected error"
         },
-        "flow_title": "OctoPrint Printer: {host}",
+        "flow_title": "OctoPrint printer: {host}",
         "progress": {
             "get_api_key": "Open the OctoPrint UI and select **Allow** on the Access Request for **Home Assistant**."
         },
@@ -24,7 +24,7 @@
             "user": {
                 "data": {
                     "host": "Host",
-                    "path": "Application Path",
+                    "path": "Application path",
                     "port": "Port",
                     "ssl": "Uses an SSL certificate",
                     "username": "Username",
@@ -43,7 +43,7 @@
     },
     "services": {
         "printer_connect": {
-            "description": "Instructs the octoprint server to connect to a printer.",
+            "description": "Instructs the OctoPrint server to connect to a printer.",
             "fields": {
                 "baudrate": {
                     "description": "Baud rate.",

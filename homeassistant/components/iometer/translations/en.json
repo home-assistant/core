@@ -1,0 +1,65 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "already_in_progress": "Configuration flow is already in progress"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of the IOmeter device to connect to."
+                },
+                "description": "Setup your IOmeter device for local data"
+            },
+            "zeroconf_confirm": {
+                "description": "Do you want to set up IOmeter on the meter with meter number: {meter_number}?",
+                "title": "Discovered IOmeter"
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "battery_level": {
+                "name": "Battery level"
+            },
+            "core_bridge_rssi": {
+                "name": "Signal strength Core/Bridge"
+            },
+            "meter_number": {
+                "name": "Meter number"
+            },
+            "pin_status": {
+                "name": "PIN status",
+                "state": {
+                    "entered": "Entered",
+                    "missing": "Missing",
+                    "pending": "Pending",
+                    "unknown": "Unknown"
+                }
+            },
+            "power_status": {
+                "name": "Power supply",
+                "state": {
+                    "battery": "Battery",
+                    "wired": "Wired"
+                }
+            },
+            "total_consumption": {
+                "name": "Total consumption"
+            },
+            "total_production": {
+                "name": "Total production"
+            },
+            "wifi_rssi": {
+                "name": "Signal strength Wi-Fi"
+            }
+        }
+    }
+}

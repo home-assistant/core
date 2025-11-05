@@ -73,7 +73,7 @@
     },
     "services": {
         "alarm_arm_away": {
-            "description": "Sets the alarm to: _armed, no one home_.",
+            "description": "Arms the alarm in the away mode.",
             "fields": {
                 "code": {
                     "description": "Code to arm the alarm.",
@@ -93,7 +93,7 @@
             "name": "Arm with custom bypass"
         },
         "alarm_arm_home": {
-            "description": "Sets the alarm to: _armed, but someone is home_.",
+            "description": "Arms the alarm in the home mode.",
             "fields": {
                 "code": {
                     "description": "Code to arm the alarm.",
@@ -103,7 +103,7 @@
             "name": "Arm home"
         },
         "alarm_arm_night": {
-            "description": "Sets the alarm to: _armed for the night_.",
+            "description": "Arms the alarm in the night mode.",
             "fields": {
                 "code": {
                     "description": "Code to arm the alarm.",
@@ -113,7 +113,7 @@
             "name": "Arm night"
         },
         "alarm_arm_vacation": {
-            "description": "Sets the alarm to: _armed for vacation_.",
+            "description": "Arms the alarm in the vacation mode.",
             "fields": {
                 "code": {
                     "description": "Code to arm the alarm.",
@@ -133,7 +133,7 @@
             "name": "Disarm"
         },
         "alarm_trigger": {
-            "description": "Trigger the alarm manually.",
+            "description": "Triggers the alarm manually.",
             "fields": {
                 "code": {
                     "description": "Code to arm the alarm.",

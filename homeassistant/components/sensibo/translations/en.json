@@ -18,7 +18,7 @@
                     "api_key": "API key"
                 },
                 "data_description": {
-                    "api_key": "Follow the [documentation]({url}) to get your api key"
+                    "api_key": "Follow the [documentation]({url}) to get your API key"
                 }
             },
             "reconfigure": {
@@ -26,7 +26,7 @@
                     "api_key": "API key"
                 },
                 "data_description": {
-                    "api_key": "Follow the [documentation]({url}) to get your api key"
+                    "api_key": "Follow the [documentation]({url}) to get your API key"
                 }
             },
             "user": {
@@ -34,7 +34,7 @@
                     "api_key": "API key"
                 },
                 "data_description": {
-                    "api_key": "Follow the [documentation]({url}) to get your api key"
+                    "api_key": "Follow the [documentation]({url}) to get your API key"
                 }
             }
         }
@@ -526,11 +526,11 @@
             "description": "Enables and configures Pure Boost settings.",
             "fields": {
                 "ac_integration": {
-                    "description": "Integrate with Air Conditioner.",
+                    "description": "Integrate with air conditioner.",
                     "name": "AC integration"
                 },
                 "geo_integration": {
-                    "description": "Integrate with Presence.",
+                    "description": "Integrate with presence.",
                     "name": "Geo integration"
                 },
                 "indoor_integration": {
@@ -546,7 +546,7 @@
                     "name": "Sensitivity"
                 }
             },
-            "name": "Enable pure boost"
+            "name": "Enable Pure Boost"
         },
         "enable_timer": {
             "description": "Enables the timer with custom time.",
@@ -562,7 +562,7 @@
             "description": "Sets full state for Sensibo device.",
             "fields": {
                 "fan_mode": {
-                    "description": "set fan mode.",
+                    "description": "Set fan mode.",
                     "name": "Fan mode"
                 },
                 "horizontal_swing_mode": {

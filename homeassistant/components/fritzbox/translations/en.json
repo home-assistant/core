@@ -101,7 +101,7 @@
     },
     "exceptions": {
         "change_hvac_while_active_mode": {
-            "message": "Can't change hvac mode while holiday or summer mode is active on the device."
+            "message": "Can't change HVAC mode while holiday or summer mode is active on the device."
         },
         "change_preset_while_active_mode": {
             "message": "Can't change preset while holiday or summer mode is active on the device."

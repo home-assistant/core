@@ -24,6 +24,7 @@
             },
             "user": {
                 "data": {
+                    "baichuan_port": "Basic service port",
                     "host": "Host",
                     "password": "Password",
                     "port": "Port",
@@ -31,9 +32,10 @@
                     "username": "Username"
                 },
                 "data_description": {
+                    "baichuan_port": "The 'Basic Service Port' to connect to the Reolink device over TCP. Normally '9000' unless manually changed in the Reolink desktop client.",
                     "host": "The hostname or IP address of your Reolink device. For example: '192.168.1.25'.",
                     "password": "Password to login to the Reolink device itself. Not the Reolink cloud account.",
-                    "port": "The port to connect to the Reolink device. For HTTP normally: '80', for HTTPS normally '443'.",
+                    "port": "The HTTP(s) port to connect to the Reolink device API. For HTTP normally: '80', for HTTPS normally '443'.",
                     "use_https": "Use a HTTPS (SSL) connection to the Reolink device.",
                     "username": "Username to login to the Reolink device itself. Not the Reolink cloud account."
                 },
@@ -64,6 +66,27 @@
                     "on": "Detected"
                 }
             },
+            "crossline_dog_cat": {
+                "name": "Crossline {zone_name} animal",
+                "state": {
+                    "off": "Clear",
+                    "on": "Detected"
+                }
+            },
+            "crossline_person": {
+                "name": "Crossline {zone_name} person",
+                "state": {
+                    "off": "Clear",
+                    "on": "Detected"
+                }
+            },
+            "crossline_vehicle": {
+                "name": "Crossline {zone_name} vehicle",
+                "state": {
+                    "off": "Clear",
+                    "on": "Detected"
+                }
+            },
             "cry": {
                 "name": "Baby crying",
                 "state": {
@@ -87,6 +110,55 @@
             },
             "face_lens_1": {
                 "name": "Face lens 1",
+                "state": {
+                    "off": "Clear",
+                    "on": "Detected"
+                }
+            },
+            "forgotten_item": {
+                "name": "Item forgotten {zone_name}",
+                "state": {
+                    "off": "Clear",
+                    "on": "Detected"
+                }
+            },
+            "intrusion_dog_cat": {
+                "name": "Intrusion {zone_name} animal",
+                "state": {
+                    "off": "Clear",
+                    "on": "Detected"
+                }
+            },
+            "intrusion_person": {
+                "name": "Intrusion {zone_name} person",
+                "state": {
+                    "off": "Clear",
+                    "on": "Detected"
+                }
+            },
+            "intrusion_vehicle": {
+                "name": "Intrusion {zone_name} vehicle",
+                "state": {
+                    "off": "Clear",
+                    "on": "Detected"
+                }
+            },
+            "linger_dog_cat": {
+                "name": "Linger {zone_name} animal",
+                "state": {
+                    "off": "Clear",
+                    "on": "Detected"
+                }
+            },
+            "linger_person": {
+                "name": "Linger {zone_name} person",
+                "state": {
+                    "off": "Clear",
+                    "on": "Detected"
+                }
+            },
+            "linger_vehicle": {
+                "name": "Linger {zone_name} vehicle",
                 "state": {
                     "off": "Clear",
                     "on": "Detected"
@@ -174,6 +246,13 @@
                 "state": {
                     "off": "Awake",
                     "on": "Sleeping"
+                }
+            },
+            "taken_item": {
+                "name": "Item taken {zone_name}",
+                "state": {
+                    "off": "Clear",
+                    "on": "Detected"
                 }
             },
             "vehicle": {
@@ -607,6 +686,14 @@
             "cpu_usage": {
                 "name": "CPU usage"
             },
+            "day_night_state": {
+                "name": "Day night state",
+                "state": {
+                    "day": "Color",
+                    "led_day": "Color with floodlight",
+                    "night": "Black & white"
+                }
+            },
             "hdd_storage": {
                 "name": "HDD {hdd_index} storage"
             },
@@ -752,7 +839,7 @@
             "title": "Reolink webhook URL uses HTTPS (SSL)"
         },
         "hub_switch_deprecated": {
-            "description": "The redundant 'Record', 'Email on event', 'FTP upload', 'Push notifications', and 'Buzzer on event' switches on the Reolink Home Hub are depricated since the new firmware no longer supports these. Please use the equally named switches under each of the camera devices connected to the Home Hub instead. To remove this issue, please adjust automations accordingly and disable the switch entities mentioned.",
+            "description": "The redundant 'Record', 'Email on event', 'FTP upload', 'Push notifications', and 'Buzzer on event' switches on the Reolink Home Hub are deprecated since the new firmware no longer supports these. Please use the equally named switches under each of the camera devices connected to the Home Hub instead. To remove this issue, please adjust automations accordingly and disable the switch entities mentioned.",
             "title": "Reolink Home Hub switches deprecated"
         },
         "ssl": {

@@ -13,15 +13,23 @@
         "step": {
             "reauth_confirm": {
                 "data": {
+                    "api_key": "API key",
                     "password": "Password"
+                },
+                "data_description": {
+                    "api_key": "You can generate an API Key in the 'Account Details' section of the Hydrawise app"
                 },
                 "description": "The Hydrawise integration needs to re-authenticate your account",
                 "title": "Authentication expired for {name}"
             },
             "user": {
                 "data": {
+                    "api_key": "API key",
                     "password": "Password",
                     "username": "Username"
+                },
+                "data_description": {
+                    "api_key": "You can generate an API Key in the 'Account Details' section of the Hydrawise app"
                 },
                 "description": "Please provide the username and password for your Hydrawise cloud account:",
                 "title": "Hydrawise Login"

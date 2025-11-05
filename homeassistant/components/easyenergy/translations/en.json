@@ -60,7 +60,7 @@
             "fields": {
                 "config_entry": {
                     "description": "The configuration entry to use for this action.",
-                    "name": "Config Entry"
+                    "name": "Config entry"
                 },
                 "end": {
                     "description": "Specifies the date and time until which to retrieve prices. Defaults to today if omitted.",
@@ -78,15 +78,15 @@
             "fields": {
                 "config_entry": {
                     "description": "The configuration entry to use for this action.",
-                    "name": "Config Entry"
+                    "name": "Config entry"
                 },
                 "end": {
                     "description": "Specifies the date and time until which to retrieve prices. Defaults to today if omitted.",
                     "name": "End"
                 },
                 "incl_vat": {
-                    "description": "Include or exclude VAT in the prices, default is true.",
-                    "name": "VAT Included"
+                    "description": "Whether the prices should include VAT.",
+                    "name": "VAT included"
                 },
                 "start": {
                     "description": "Specifies the date and time from which to retrieve prices. Defaults to today if omitted.",
@@ -100,15 +100,15 @@
             "fields": {
                 "config_entry": {
                     "description": "The configuration entry to use for this action.",
-                    "name": "Config Entry"
+                    "name": "Config entry"
                 },
                 "end": {
                     "description": "Specifies the date and time until which to retrieve prices. Defaults to today if omitted.",
                     "name": "End"
                 },
                 "incl_vat": {
-                    "description": "Include or exclude VAT in the prices, default is true.",
-                    "name": "VAT Included"
+                    "description": "Whether the prices should include VAT.",
+                    "name": "VAT included"
                 },
                 "start": {
                     "description": "Specifies the date and time from which to retrieve prices. Defaults to today if omitted.",

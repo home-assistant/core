@@ -24,10 +24,18 @@
             }
         },
         "outlet": {
-            "name": "Outlet"
+            "name": "Outlet",
+            "state": {
+                "off": "Off",
+                "on": "On"
+            }
         },
         "switch": {
-            "name": "Switch"
+            "name": "Switch",
+            "state": {
+                "off": "Off",
+                "on": "On"
+            }
         }
     },
     "services": {

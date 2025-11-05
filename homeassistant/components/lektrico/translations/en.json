@@ -27,7 +27,7 @@
                 "name": "Relay contacts welded"
             },
             "cp_diode_failure": {
-                "name": "Ev diode short"
+                "name": "EV diode short"
             },
             "critical_temp": {
                 "name": "Overheating"
@@ -45,10 +45,10 @@
                 "name": "Overvoltage"
             },
             "rcd_error": {
-                "name": "Rcd error"
+                "name": "RCD error"
             },
             "state_e_activated": {
-                "name": "Ev error"
+                "name": "EV error"
             },
             "undervoltage": {
                 "name": "Undervoltage"
@@ -67,7 +67,7 @@
                 "name": "Dynamic limit"
             },
             "led_max_brightness": {
-                "name": "Led brightness"
+                "name": "LED brightness"
             }
         },
         "select": {

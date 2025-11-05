@@ -42,6 +42,9 @@
     },
     "entity": {
         "sensor": {
+            "actual_threshold_electricity": {
+                "name": "Actual threshold electricity"
+            },
             "current_average_demand": {
                 "name": "Current average demand"
             },
@@ -58,11 +61,20 @@
                     "normal": "Normal"
                 }
             },
+            "electricity_combined": {
+                "name": "Energy combined"
+            },
             "electricity_delivered_tariff_1": {
                 "name": "Energy production (tarif 1)"
             },
             "electricity_delivered_tariff_2": {
                 "name": "Energy production (tarif 2)"
+            },
+            "electricity_delivered_tariff_3": {
+                "name": "Energy production (tarif 3)"
+            },
+            "electricity_delivered_tariff_4": {
+                "name": "Energy production (tarif 4)"
             },
             "electricity_exported_total": {
                 "name": "Energy production (total)"
@@ -70,11 +82,47 @@
             "electricity_imported_total": {
                 "name": "Energy consumption (total)"
             },
+            "electricity_reactive_exported_total": {
+                "name": "Exported reactive electricity (total)"
+            },
+            "electricity_reactive_imported_total": {
+                "name": "Imported reactive electricity (total)"
+            },
+            "electricity_reactive_total_q1": {
+                "name": "Reactive electricity (Q1)"
+            },
+            "electricity_reactive_total_q2": {
+                "name": "Reactive electricity (Q2)"
+            },
+            "electricity_reactive_total_q3": {
+                "name": "Reactive electricity (Q3)"
+            },
+            "electricity_reactive_total_q4": {
+                "name": "Reactive electricity (Q4)"
+            },
             "electricity_used_tariff_1": {
                 "name": "Energy consumption (tarif 1)"
             },
             "electricity_used_tariff_2": {
                 "name": "Energy consumption (tarif 2)"
+            },
+            "electricity_used_tariff_3": {
+                "name": "Energy consumption (tarif 3)"
+            },
+            "electricity_used_tariff_4": {
+                "name": "Energy consumption (tarif 4)"
+            },
+            "frequency": {
+                "name": "Frequency"
+            },
+            "fuse_threshold_l1": {
+                "name": "Fuse threshold on L1"
+            },
+            "fuse_threshold_l2": {
+                "name": "Fuse threshold on L2"
+            },
+            "fuse_threshold_l3": {
+                "name": "Fuse threshold on L3"
             },
             "gas_meter_reading": {
                 "name": "Gas consumption"
@@ -106,6 +154,18 @@
             "instantaneous_current_l3": {
                 "name": "Current phase L3"
             },
+            "instantaneous_power_factor_l1": {
+                "name": "Instantaneous power factor L1"
+            },
+            "instantaneous_power_factor_l2": {
+                "name": "Instantaneous power factor L2"
+            },
+            "instantaneous_power_factor_l3": {
+                "name": "Instantaneous power factor L3"
+            },
+            "instantaneous_power_factor_total": {
+                "name": "Instantaneous power factor (total)"
+            },
             "instantaneous_voltage_l1": {
                 "name": "Voltage phase L1"
             },
@@ -129,6 +189,9 @@
             },
             "short_power_failure_count": {
                 "name": "Short power failure count"
+            },
+            "text_message": {
+                "name": "Text message"
             },
             "voltage_sag_l1_count": {
                 "name": "Voltage sags phase L1"

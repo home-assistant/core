@@ -6,18 +6,32 @@
         "error": {
             "invalid_dongle_path": "No valid dongle found for this path"
         },
+        "flow_title": "{name}",
         "step": {
             "detect": {
                 "data": {
-                    "path": "USB dongle path"
+                    "device": "USB dongle"
                 },
-                "title": "Select the path to your EnOcean dongle"
+                "data_description": {
+                    "device": "Path to your EnOcean USB dongle."
+                },
+                "description": "Select your EnOcean USB dongle."
             },
             "manual": {
                 "data": {
-                    "path": "USB dongle path"
+                    "device": "USB dongle"
                 },
-                "title": "Enter the path to your EnOcean dongle"
+                "data_description": {
+                    "device": "Path to your EnOcean USB dongle."
+                },
+                "description": "Enter the path to your EnOcean USB dongle."
+            }
+        }
+    },
+    "selector": {
+        "devices": {
+            "options": {
+                "manual": "Custom path"
             }
         }
     }

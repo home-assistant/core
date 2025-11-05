@@ -58,14 +58,14 @@
     },
     "services": {
         "lock_n_go": {
-            "description": "Nuki Lock 'n' Go.",
+            "description": "Unlocks the door, waits a few seconds then re-locks. The wait period can be customized through the app.",
             "fields": {
                 "unlatch": {
-                    "description": "Whether to unlatch the lock.",
+                    "description": "Whether to also unlatch the door when unlocking it.",
                     "name": "Unlatch"
                 }
             },
-            "name": "Lock 'n' go"
+            "name": "Lock 'n' Go"
         },
         "set_continuous_mode": {
             "description": "Enables or disables continuous mode on Nuki Opener.",

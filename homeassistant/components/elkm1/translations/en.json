@@ -64,7 +64,7 @@
             "description": "Arms the ElkM1 in home instant mode.",
             "fields": {
                 "code": {
-                    "description": "An code to arm the alarm control panel.",
+                    "description": "Alarm code to arm the alarm control panel.",
                     "name": "Code"
                 }
             },
@@ -74,7 +74,7 @@
             "description": "Arms the ElkM1 in night instant mode.",
             "fields": {
                 "code": {
-                    "description": "An code to arm the alarm control panel.",
+                    "description": "Alarm code to arm the alarm control panel.",
                     "name": "Code"
                 }
             },
@@ -84,7 +84,7 @@
             "description": "Arms the ElkM1 in vacation mode.",
             "fields": {
                 "code": {
-                    "description": "An code to arm the alarm control panel.",
+                    "description": "Alarm code to arm the alarm control panel.",
                     "name": "Code"
                 }
             },
@@ -94,7 +94,7 @@
             "description": "Bypasses all zones for the area.",
             "fields": {
                 "code": {
-                    "description": "An code to authorize the bypass of the alarm control panel.",
+                    "description": "Alarm code to authorize the bypass of the alarm control panel.",
                     "name": "Code"
                 }
             },
@@ -104,7 +104,7 @@
             "description": "Removes bypass on all zones for the area.",
             "fields": {
                 "code": {
-                    "description": "An code to authorize the bypass clear of the alarm control panel.",
+                    "description": "Alarm code to authorize the bypass clear of the alarm control panel.",
                     "name": "Code"
                 }
             },
@@ -154,7 +154,7 @@
             "description": "Bypasses zone.",
             "fields": {
                 "code": {
-                    "description": "An code to authorize the bypass of the zone.",
+                    "description": "Alarm code to authorize the bypass of the zone.",
                     "name": "Code"
                 }
             },

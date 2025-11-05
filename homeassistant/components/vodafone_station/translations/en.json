@@ -96,6 +96,11 @@
             }
         }
     },
+    "exceptions": {
+        "update_failed": {
+            "message": "Error fetching data: {error}"
+        }
+    },
     "options": {
         "step": {
             "init": {

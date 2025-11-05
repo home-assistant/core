@@ -1,47 +1,400 @@
 {
     "config": {
         "abort": {
-            "invalid_webhook_url": "Home Assistant is not configured correctly to receive updates from SmartThings. The webhook URL is invalid:\n> {webhook_url}\n\nPlease update your configuration per the [instructions]({component_url}), restart Home Assistant, and try again.",
-            "no_available_locations": "There are no available SmartThings Locations to set up in Home Assistant.",
-            "reauth_successful": "Home Assistant has been successfully reauthorized with SmartThings."
+            "already_configured": "Account is already configured",
+            "authorize_url_timeout": "Timeout generating authorize URL.",
+            "cloud_not_enabled": "Please make sure you run Home Assistant with `{default_config}` enabled in your configuration.yaml.",
+            "missing_configuration": "The component is not configured. Please follow the documentation.",
+            "missing_scopes": "Authentication failed. Please make sure you have granted all required permissions.",
+            "no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})",
+            "oauth_error": "Received invalid token data.",
+            "oauth_failed": "Error while obtaining access token.",
+            "oauth_timeout": "Timeout resolving OAuth token.",
+            "oauth_unauthorized": "OAuth authorization error while obtaining access token.",
+            "reauth_account_mismatch": "Authenticated account does not match the account to be reauthenticated. Please log in with the correct account and pick the right location.",
+            "reauth_location_mismatch": "Authenticated location does not match the location to be reauthenticated. Please log in with the correct account and pick the right location.",
+            "reauth_successful": "Re-authentication was successful"
         },
         "error": {
-            "app_setup_error": "Unable to set up the SmartApp. Please try again.",
-            "token_forbidden": "The token does not have the required OAuth scopes.",
-            "token_invalid_format": "The token must be in the UID/GUID format",
-            "token_unauthorized": "The token is invalid or no longer authorized.",
-            "webhook_error": "SmartThings could not validate the webhook URL. Please ensure the webhook URL is reachable from the internet and try again."
+            "already_configured": "Account is already configured"
         },
         "step": {
-            "authorize": {
-                "title": "Authorize Home Assistant"
-            },
-            "pat": {
-                "data": {
-                    "access_token": "Access token"
-                },
-                "description": "Please enter a SmartThings [Personal Access Token]({token_url}) that has been created per the [instructions]({component_url}). This will be used to create the Home Assistant integration within your SmartThings account.\n\n**Please note that all Personal Access Tokens created after 30 December 2024 are only valid for 24 hours, after which the integration will stop working. We are working on a fix.**",
-                "title": "Enter Personal Access Token"
+            "pick_implementation": {
+                "title": "Pick authentication method"
             },
             "reauth_confirm": {
-                "description": "You are about to reauthorize Home Assistant with SmartThings. This will require you to log in and authorize the integration again.",
-                "title": "Reauthorize Home Assistant"
-            },
-            "select_location": {
-                "data": {
-                    "location_id": "Location"
-                },
-                "description": "Please select the SmartThings Location you wish to add to Home Assistant. We will then open a new window and ask you to login and authorize installation of the Home Assistant integration into the selected location.",
-                "title": "Select Location"
-            },
-            "update_confirm": {
-                "description": "You have almost successfully reauthorized Home Assistant with SmartThings. Please press the button down below to finish the process.",
-                "title": "Finish reauthentication"
-            },
-            "user": {
-                "description": "SmartThings will be configured to send push updates to Home Assistant at:\n> {webhook_url}\n\nIf this is not correct, please update your configuration, restart Home Assistant, and try again.",
-                "title": "Confirm Callback URL"
+                "description": "The SmartThings integration needs to re-authenticate your account",
+                "title": "Authentication expired for {name}"
             }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "acceleration": {
+                "name": "Acceleration"
+            },
+            "filter_status": {
+                "name": "Filter status"
+            },
+            "valve": {
+                "name": "Valve"
+            }
+        },
+        "sensor": {
+            "air_conditioner_mode": {
+                "name": "Air conditioner mode"
+            },
+            "air_quality": {
+                "name": "Air quality"
+            },
+            "alarm": {
+                "name": "Alarm",
+                "state": {
+                    "both": "Strobe and siren",
+                    "off": "Off",
+                    "siren": "Siren",
+                    "strobe": "Strobe"
+                }
+            },
+            "audio_volume": {
+                "name": "Volume"
+            },
+            "body_mass_index": {
+                "name": "Body mass index"
+            },
+            "body_weight": {
+                "name": "Body weight"
+            },
+            "carbon_monoxide_detector": {
+                "name": "Carbon monoxide detector",
+                "state": {
+                    "clear": "Clear",
+                    "detected": "Detected",
+                    "tested": "Tested"
+                }
+            },
+            "completion_time": {
+                "name": "Completion time"
+            },
+            "dishwasher_job_state": {
+                "name": "Job state",
+                "state": {
+                    "air_wash": "Air wash",
+                    "cooling": "Cooling",
+                    "drying": "Drying",
+                    "finish": "Finish",
+                    "pre_drain": "Pre-drain",
+                    "pre_wash": "Pre-wash",
+                    "rinse": "Rinse",
+                    "spin": "Spin",
+                    "wash": "Wash",
+                    "wrinkle_prevent": "Wrinkle prevention"
+                }
+            },
+            "dishwasher_machine_state": {
+                "name": "Machine state",
+                "state": {
+                    "pause": "Paused",
+                    "run": "Running",
+                    "stop": "Stopped"
+                }
+            },
+            "dryer_job_state": {
+                "name": "Job state",
+                "state": {
+                    "ai_drying": "AI drying",
+                    "continuous_dehumidifying": "Continuous dehumidifying",
+                    "cooling": "Cooling",
+                    "dehumidifying": "Dehumidifying",
+                    "delay_wash": "Delay wash",
+                    "drying": "Drying",
+                    "finished": "Finished",
+                    "freeze_protection": "Freeze protection",
+                    "internal_care": "Internal care",
+                    "none": "None",
+                    "refreshing": "Refreshing",
+                    "sanitizing": "Sanitizing",
+                    "thawing_frozen_inside": "Thawing frozen inside",
+                    "weight_sensing": "Weight sensing",
+                    "wrinkle_prevent": "Wrinkle prevention"
+                }
+            },
+            "dryer_machine_state": {
+                "name": "Machine state",
+                "state": {
+                    "pause": "Paused",
+                    "run": "Running",
+                    "stop": "Stopped"
+                }
+            },
+            "dryer_mode": {
+                "name": "Dryer mode"
+            },
+            "energy_difference": {
+                "name": "Energy difference"
+            },
+            "energy_saved": {
+                "name": "Energy saved"
+            },
+            "equivalent_carbon_dioxide": {
+                "name": "Equivalent carbon dioxide"
+            },
+            "formaldehyde": {
+                "name": "Formaldehyde"
+            },
+            "gas_meter": {
+                "name": "Gas meter"
+            },
+            "gas_meter_calorific": {
+                "name": "Gas meter calorific"
+            },
+            "gas_meter_time": {
+                "name": "Gas meter time"
+            },
+            "infrared_level": {
+                "name": "Infrared level"
+            },
+            "lighting_mode": {
+                "name": "Activity lighting mode"
+            },
+            "link_quality": {
+                "name": "Link quality"
+            },
+            "media_input_source": {
+                "name": "Media input source",
+                "state": {
+                    "am": "AM",
+                    "analog1": "Analog 1",
+                    "analog2": "Analog 2",
+                    "analog3": "Analog 3",
+                    "aux": "AUX",
+                    "bluetooth": "Bluetooth",
+                    "cd": "CD",
+                    "coaxial": "Coaxial",
+                    "digital": "Digital",
+                    "digitaltv": "Digital TV",
+                    "fm": "FM",
+                    "hdmi": "HDMI",
+                    "hdmi1": "HDMI 1",
+                    "hdmi2": "HDMI 2",
+                    "hdmi3": "HDMI 3",
+                    "hdmi4": "HDMI 4",
+                    "hdmi5": "HDMI 5",
+                    "hdmi6": "HDMI 6",
+                    "melon": "Melon",
+                    "network": "Network",
+                    "optical": "Optical",
+                    "phono": "Phono",
+                    "usb": "USB",
+                    "wifi": "Wi-Fi",
+                    "youtube": "YouTube"
+                }
+            },
+            "media_playback_repeat": {
+                "name": "Media playback repeat"
+            },
+            "media_playback_shuffle": {
+                "name": "Media playback shuffle"
+            },
+            "media_playback_status": {
+                "name": "Media playback status"
+            },
+            "odor_sensor": {
+                "name": "Odor sensor"
+            },
+            "oven_job_state": {
+                "name": "Job state",
+                "state": {
+                    "cleaning": "Cleaning",
+                    "cooking": "Cooking",
+                    "cooling": "Cooling",
+                    "defrosting": "Defrosting",
+                    "draining": "Draining",
+                    "fast_preheat": "Fast preheat",
+                    "finished": "Finished",
+                    "preheat": "Preheat",
+                    "ready": "Ready",
+                    "rinsing": "Rinsing",
+                    "scheduled_end": "Scheduled end",
+                    "scheduled_start": "Scheduled start",
+                    "searing": "Searing",
+                    "sensing": "Sensing",
+                    "stone_heating": "Stone heating",
+                    "time_hold_preheat": "Time hold preheat",
+                    "warming": "Warming"
+                }
+            },
+            "oven_machine_state": {
+                "name": "Machine state",
+                "state": {
+                    "paused": "Paused",
+                    "ready": "Ready",
+                    "running": "Running"
+                }
+            },
+            "oven_mode": {
+                "name": "Oven mode",
+                "state": {
+                    "bake": "Bake",
+                    "bottom_heat": "Bottom heat",
+                    "broil": "Broil",
+                    "convection_bake": "Convection bake",
+                    "convection_broil": "Convection broil",
+                    "convection_roast": "Convection roast",
+                    "conventional": "Conventional",
+                    "defrosting": "Defrosting",
+                    "dehydrate": "Dehydrate",
+                    "descale": "Descale",
+                    "grill": "Grill",
+                    "heating": "Heating",
+                    "microwave": "Microwave",
+                    "microwave_plus_convection": "Microwave plus convection",
+                    "microwave_plus_grill": "Microwave plus grill",
+                    "microwave_plus_hot_blast": "Microwave plus hot blast",
+                    "microwave_plus_hot_blast_2": "Microwave plus hot blast 2",
+                    "others": "Others",
+                    "proof": "Proof",
+                    "rinse": "Rinse",
+                    "slim_middle": "Slim middle",
+                    "slim_strong": "Slim strong",
+                    "slow_cook": "Slow cook",
+                    "steam_bake": "Steam bake",
+                    "steam_bottom_heat_plus_convection": "Steam bottom heat plus convection",
+                    "steam_cook": "Steam cook",
+                    "steam_roast": "Steam roast",
+                    "strong_steam": "Strong steam",
+                    "warming": "Warming"
+                }
+            },
+            "oven_setpoint": {
+                "name": "Set point"
+            },
+            "power_energy": {
+                "name": "Power energy"
+            },
+            "power_source": {
+                "name": "Power source"
+            },
+            "refrigeration_setpoint": {
+                "name": "Set point"
+            },
+            "robot_cleaner_cleaning_mode": {
+                "name": "Cleaning mode",
+                "state": {
+                    "auto": "Auto",
+                    "manual": "Manual",
+                    "map": "Map",
+                    "part": "Partial",
+                    "repeat": "Repeat",
+                    "stop": "Stop"
+                }
+            },
+            "robot_cleaner_movement": {
+                "name": "Movement",
+                "state": {
+                    "after": "After",
+                    "alarm": "Alarm",
+                    "charging": "Charging",
+                    "cleaning": "Cleaning",
+                    "homing": "Homing",
+                    "idle": "Idle",
+                    "off": "Off",
+                    "pause": "Paused",
+                    "point": "Point",
+                    "reserve": "Reserve"
+                }
+            },
+            "robot_cleaner_turbo_mode": {
+                "name": "Turbo mode",
+                "state": {
+                    "extra_silence": "Extra silent",
+                    "off": "Off",
+                    "on": "On",
+                    "silence": "Silent"
+                }
+            },
+            "smoke_detector": {
+                "name": "Smoke detector",
+                "state": {
+                    "clear": "Clear",
+                    "detected": "Detected",
+                    "tested": "Tested"
+                }
+            },
+            "thermostat_cooling_setpoint": {
+                "name": "Cooling set point"
+            },
+            "thermostat_fan_mode": {
+                "name": "Fan mode"
+            },
+            "thermostat_heating_setpoint": {
+                "name": "Heating set point"
+            },
+            "thermostat_mode": {
+                "name": "Mode"
+            },
+            "thermostat_operating_state": {
+                "name": "Operating state"
+            },
+            "thermostat_setpoint": {
+                "name": "Set point"
+            },
+            "tv_channel": {
+                "name": "TV channel"
+            },
+            "tv_channel_name": {
+                "name": "TV channel name"
+            },
+            "uv_index": {
+                "name": "UV index"
+            },
+            "washer_job_state": {
+                "name": "Job state",
+                "state": {
+                    "ai_rinse": "AI rinse",
+                    "ai_spin": "AI spin",
+                    "ai_wash": "AI wash",
+                    "air_wash": "Air wash",
+                    "cooling": "Cooling",
+                    "delay_wash": "Delay wash",
+                    "drying": "Drying",
+                    "finish": "Finish",
+                    "freeze_protection": "Freeze protection",
+                    "none": "None",
+                    "pre_wash": "Pre-wash",
+                    "rinse": "Rinse",
+                    "spin": "Spin",
+                    "wash": "Wash",
+                    "weight_sensing": "Weight sensing",
+                    "wrinkle_prevent": "Wrinkle prevention"
+                }
+            },
+            "washer_machine_state": {
+                "name": "Machine state",
+                "state": {
+                    "pause": "Paused",
+                    "run": "Running",
+                    "stop": "Stopped"
+                }
+            },
+            "washer_mode": {
+                "name": "Washer mode"
+            },
+            "x_coordinate": {
+                "name": "X coordinate"
+            },
+            "y_coordinate": {
+                "name": "Y coordinate"
+            },
+            "z_coordinate": {
+                "name": "Z coordinate"
+            }
+        }
+    },
+    "issues": {
+        "deprecated_binary_valve": {
+            "description": "The valve binary sensor `{entity}` is deprecated and is used in the following automations or scripts:\n{items}\n\nA valve entity with controls is available and should be used going forward; Please use it on the above automations or scripts to fix this issue.",
+            "title": "Deprecated valve binary sensor detected in some automations or scripts"
         }
     }
 }

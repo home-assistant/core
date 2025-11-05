@@ -1,7 +1,7 @@
 {
     "options": {
         "abort": {
-            "not_hassio": "The hardware options can only be configured on HassOS installations.",
+            "not_hassio": "The hardware options can only be configured on Home Assistant OS installations.",
             "read_hw_settings_error": "Failed to read hardware settings",
             "write_hw_settings_error": "Failed to write hardware settings"
         },

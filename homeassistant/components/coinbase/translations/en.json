@@ -6,18 +6,18 @@
         "error": {
             "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication",
-            "invalid_auth_key": "API credentials rejected by Coinbase due to an invalid API Key.",
-            "invalid_auth_secret": "API credentials rejected by Coinbase due to an invalid API Secret.",
+            "invalid_auth_key": "API credentials rejected by Coinbase due to an invalid API key.",
+            "invalid_auth_secret": "API credentials rejected by Coinbase due to an invalid API secret.",
             "unknown": "Unexpected error"
         },
         "step": {
             "user": {
                 "data": {
                     "api_key": "API key",
-                    "api_token": "API Secret"
+                    "api_token": "API secret"
                 },
                 "description": "Please enter the details of your API key as provided by Coinbase.",
-                "title": "Coinbase API Key Details"
+                "title": "Coinbase API key details"
             }
         }
     },
@@ -33,9 +33,9 @@
                     "account_balance_currencies": "Wallet balances to report.",
                     "exchange_base": "Base currency for exchange rate sensors.",
                     "exchange_rate_currencies": "Exchange rates to report.",
-                    "exchnage_rate_precision": "Number of decimal places for exchange rates."
+                    "exchange_rate_precision": "Number of decimal places for exchange rates."
                 },
-                "description": "Adjust Coinbase Options"
+                "description": "Adjust Coinbase options"
             }
         }
     }

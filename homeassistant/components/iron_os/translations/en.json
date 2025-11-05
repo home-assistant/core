@@ -50,6 +50,9 @@
             "display_brightness": {
                 "name": "Display brightness"
             },
+            "hall_effect_sleep_time": {
+                "name": "Hall sensor sleep timeout"
+            },
             "hall_sensitivity": {
                 "name": "Hall effect sensitivity"
             },
@@ -167,6 +170,15 @@
                     "fahrenheit": "Fahrenheit (\u00b0F)"
                 }
             },
+            "tip_type": {
+                "name": "Soldering tip type",
+                "state": {
+                    "auto": "Auto sense",
+                    "pine_short": "Pinecil short tip",
+                    "pts200": "PTS200 short tip",
+                    "ts100_long": "TS100 long/Hakko T12 tip"
+                }
+            },
             "usb_pd_mode": {
                 "name": "Power Delivery 3.1 EPR",
                 "state": {
@@ -198,11 +210,20 @@
                 "name": "Operating mode",
                 "state": {
                     "boost": "Boost",
+                    "cjc_calibration": "CJC calibration",
                     "debug": "Debug",
+                    "hibernating": "Hibernating",
                     "idle": "Idle",
+                    "initialisation_done": "Initialisation done",
                     "settings": "Settings",
                     "sleeping": "Sleeping",
-                    "soldering": "Soldering"
+                    "soldering": "Soldering",
+                    "soldering_profile": "Soldering profile",
+                    "startup_logo": "Booting",
+                    "startup_warnings": "Startup warnings",
+                    "temperature_adjust": "Temperature adjust",
+                    "thermal_runaway": "Thermal runaway",
+                    "usb_pd_debug": "USB PD debug"
                 }
             },
             "power_pwm_level": {

@@ -35,7 +35,7 @@
                     "high_temp": "High temperature",
                     "idle": "Idle",
                     "low_water": "Low water",
-                    "ota": "Ota",
+                    "ota": "OTA update",
                     "provisioning": "Provisioning",
                     "startup": "Startup"
                 }

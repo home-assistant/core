@@ -19,7 +19,7 @@
                     "name": "Media URL"
                 }
             },
-            "name": "Get Media URL"
+            "name": "Get media URL"
         },
         "play_media": {
             "description": "Downloads file from given URL.",
@@ -29,7 +29,7 @@
                     "name": "Media content ID"
                 },
                 "media_content_type": {
-                    "description": "The type of the content to play. Must be one of MUSIC, TVSHOW, VIDEO, EPISODE, CHANNEL or PLAYLIST MUSIC.",
+                    "description": "The type of the content to play.",
                     "name": "Media content type"
                 }
             },

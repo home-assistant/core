@@ -1,27 +1,45 @@
 {
     "config": {
         "abort": {
+            "reauth_successful": "Re-authentication was successful",
             "single_instance_allowed": "Already configured. Only a single configuration possible."
         },
         "error": {
             "invalid_auth": "Invalid authentication"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password",
+                    "username": "Email"
+                },
+                "description": "The VeSync integration needs to re-authenticate your account",
+                "title": "Authentication expired for {name}"
+            },
             "user": {
                 "data": {
                     "password": "Password",
                     "username": "Email"
                 },
-                "title": "Enter Username and Password"
+                "title": "Enter username and password"
             }
         }
     },
     "entity": {
+        "binary_sensor": {
+            "water_lacks": {
+                "name": "Low water"
+            },
+            "water_tank_lifted": {
+                "name": "Water tank lifted"
+            }
+        },
         "fan": {
             "vesync": {
                 "state_attributes": {
                     "preset_mode": {
                         "state": {
+                            "advanced_sleep": "Advanced sleep",
                             "auto": "Auto",
                             "pet": "Pet",
                             "sleep": "Sleep",
@@ -34,6 +52,17 @@
         "number": {
             "mist_level": {
                 "name": "Mist level"
+            }
+        },
+        "select": {
+            "night_light_level": {
+                "name": "Night light level",
+                "state": {
+                    "bright": "Bright",
+                    "dim": "Dim",
+                    "off": "Off",
+                    "on": "On"
+                }
             }
         },
         "sensor": {

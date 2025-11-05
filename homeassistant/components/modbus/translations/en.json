@@ -31,7 +31,7 @@
     },
     "services": {
         "reload": {
-            "description": "Reloads all modbus entities.",
+            "description": "Reloads all Modbus entities.",
             "name": "Reload"
         },
         "restart": {
@@ -55,7 +55,7 @@
             "name": "Stop"
         },
         "write_coil": {
-            "description": "Writes to a modbus coil.",
+            "description": "Writes to a Modbus coil.",
             "fields": {
                 "address": {
                     "description": "Address of the register to write to.",
@@ -66,8 +66,8 @@
                     "name": "Hub"
                 },
                 "slave": {
-                    "description": "Address of the modbus unit/slave.",
-                    "name": "Slave"
+                    "description": "Address of the Modbus unit/server.",
+                    "name": "Server"
                 },
                 "state": {
                     "description": "State to write.",
@@ -77,7 +77,7 @@
             "name": "Write coil"
         },
         "write_register": {
-            "description": "Writes to a modbus holding register.",
+            "description": "Writes to a Modbus holding register.",
             "fields": {
                 "address": {
                     "description": "Address of the holding register to write to.",
@@ -88,8 +88,8 @@
                     "name": "Hub"
                 },
                 "slave": {
-                    "description": "Address of the modbus unit/slave.",
-                    "name": "Slave"
+                    "description": "Address of the Modbus unit/server.",
+                    "name": "Server"
                 },
                 "value": {
                     "description": "Value (single value or array) to write.",

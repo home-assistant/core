@@ -5,7 +5,7 @@
         },
         "error": {
             "cannot_connect": "Failed to connect",
-            "cannot_receive_deviceinfo": "Failed to retreive MAC Address. Make sure the device is turned on"
+            "cannot_receive_deviceinfo": "Failed to retrieve MAC Address. Make sure the device is turned on"
         },
         "step": {
             "user": {

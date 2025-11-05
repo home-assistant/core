@@ -1,6 +1,6 @@
 {
     "common": {
-        "data_description_password": "The Remote Admin Password from the Fully Kiosk Browser app settings.",
+        "data_description_password": "The Remote Admin password from the Fully Kiosk Browser app settings.",
         "data_description_ssl": "Is the Fully Kiosk app configured to require SSL for the connection?",
         "data_description_verify_ssl": "Should SSL certificartes be verified? This should be off for self-signed certificates."
     },
@@ -20,7 +20,7 @@
                     "verify_ssl": "Verify SSL certificate"
                 },
                 "data_description": {
-                    "password": "The Remote Admin Password from the Fully Kiosk Browser app settings.",
+                    "password": "The Remote Admin password from the Fully Kiosk Browser app settings.",
                     "ssl": "Is the Fully Kiosk app configured to require SSL for the connection?",
                     "verify_ssl": "Should SSL certificartes be verified? This should be off for self-signed certificates."
                 },
@@ -35,7 +35,7 @@
                 },
                 "data_description": {
                     "host": "The hostname or IP address of the device running your Fully Kiosk Browser application.",
-                    "password": "The Remote Admin Password from the Fully Kiosk Browser app settings.",
+                    "password": "The Remote Admin password from the Fully Kiosk Browser app settings.",
                     "ssl": "Is the Fully Kiosk app configured to require SSL for the connection?",
                     "verify_ssl": "Should SSL certificartes be verified? This should be off for self-signed certificates."
                 }
@@ -162,7 +162,7 @@
                     "name": "Value"
                 }
             },
-            "name": "Set Configuration"
+            "name": "Set configuration"
         },
         "start_application": {
             "description": "Starts an application on the device running Fully Kiosk Browser.",
@@ -172,7 +172,7 @@
                     "name": "Application"
                 }
             },
-            "name": "Start Application"
+            "name": "Start application"
         }
     }
 }

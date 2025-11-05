@@ -13,13 +13,13 @@
         "error": {
             "bad_birth": "Invalid birth topic",
             "bad_certificate": "The CA certificate is invalid",
-            "bad_client_cert": "Invalid client certificate, ensure a PEM coded file is supplied",
+            "bad_client_cert": "Invalid client certificate, ensure a valid file is supplied",
             "bad_client_cert_key": "Client certificate and private key are not a valid pair",
-            "bad_client_key": "Invalid private key, ensure a PEM coded file is supplied without password",
             "bad_discovery_prefix": "Invalid discovery prefix",
             "bad_will": "Invalid will topic",
             "bad_ws_headers": "Supply valid HTTP headers as a JSON object",
             "cannot_connect": "Failed to connect",
+            "client_key_error": "Invalid private key file or invalid password supplied",
             "invalid_auth": "Invalid authentication",
             "invalid_inclusion": "The client certificate and private key must be configured together"
         },
@@ -32,6 +32,7 @@
                     "client_cert": "Upload client certificate file",
                     "client_id": "Client ID (leave empty to randomly generated one)",
                     "client_key": "Upload private key file",
+                    "client_key_password": "Password",
                     "keepalive": "The time between sending keep alive messages",
                     "password": "Password",
                     "port": "Port",
@@ -51,6 +52,7 @@
                     "client_cert": "The client certificate to authenticate against your MQTT broker.",
                     "client_id": "The unique ID to identify the Home Assistant MQTT API as MQTT client. It is recommended to leave this option blank.",
                     "client_key": "The private key file that belongs to your client certificate.",
+                    "client_key_password": "The password for the private key file (if set).",
                     "keepalive": "A value less than 90 seconds is advised.",
                     "password": "The password to login to your MQTT broker.",
                     "port": "The port your MQTT broker listens to. For example 1883.",
@@ -92,6 +94,127 @@
                 "menu_options": {
                     "addon": "Use the official {addon} add-on.",
                     "broker": "Manually enter the MQTT broker connection details"
+                }
+            }
+        }
+    },
+    "config_subentries": {
+        "device": {
+            "abort": {
+                "reconfigure_successful": "Re-configuration was successful"
+            },
+            "create_entry": {
+                "default": "MQTT device with {platform} entity \"{entity}\" was set up successfully.\n\nNote that you can reconfigure the MQTT device at any time, e.g. to add more entities."
+            },
+            "entry_type": "MQTT Device",
+            "error": {
+                "invalid_input": "Invalid value",
+                "invalid_subscribe_topic": "Invalid subscribe topic",
+                "invalid_template": "Invalid template",
+                "invalid_url": "Invalid URL"
+            },
+            "initiate_flow": {
+                "reconfigure": "Reconfigure MQTT Device",
+                "user": "Add MQTT Device"
+            },
+            "step": {
+                "availability": {
+                    "data": {
+                        "availability_template": "Availability template",
+                        "availability_topic": "Availability topic",
+                        "payload_available": "Payload available",
+                        "payload_not_available": "Payload not available"
+                    },
+                    "data_description": {
+                        "availability_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-templates-with-the-mqtt-integration) to render the availability payload received on the availability topic",
+                        "availability_topic": "Topic to receive the availabillity payload on",
+                        "payload_available": "The payload that indicates the device is available (defaults to 'online')",
+                        "payload_not_available": "The payload that indicates the device is not available (defaults to 'offline')"
+                    },
+                    "description": "The availability feature allows a device to report it's availability.",
+                    "title": "Availability options"
+                },
+                "delete_entity": {
+                    "data": {
+                        "component": "Entity"
+                    },
+                    "data_description": {
+                        "component": "Select the entity you want to delete. Minimal one entity is required."
+                    },
+                    "description": "Delete an entity. The entity will be removed from the device. Removing an entity will break any automations or scripts that depend on it.",
+                    "title": "Delete entity"
+                },
+                "device": {
+                    "data": {
+                        "configuration_url": "Configuration URL",
+                        "hw_version": "Hardware version",
+                        "model": "Model",
+                        "model_id": "Model ID",
+                        "name": "Name",
+                        "sw_version": "Software version"
+                    },
+                    "data_description": {
+                        "configuration_url": "A link to the webpage that can manage the configuration of this device. Can be either a 'http://', 'https://' or an internal 'homeassistant://' URL.",
+                        "hw_version": "The hardware version of the device. E.g. 'v1.0 rev a'.",
+                        "model": "E.g. 'Cleanmaster Pro'.",
+                        "model_id": "E.g. '123NK2PRO'.",
+                        "name": "The name of the manually added MQTT device.",
+                        "sw_version": "The software version of the device. E.g. '2025.1.0'."
+                    },
+                    "description": "Enter the MQTT device details:",
+                    "title": "Configure MQTT device details"
+                },
+                "entity": {
+                    "data": {
+                        "entity_picture": "Entity picture",
+                        "name": "Entity name",
+                        "platform": "Type of entity"
+                    },
+                    "data_description": {
+                        "entity_picture": "An URL to a picture to be assigned.",
+                        "name": "The name of the entity. Leave empty to set it to `None` to [mark it as main feature of the MQTT device](https://www.home-assistant.io/integrations/mqtt/#naming-of-mqtt-entities).",
+                        "platform": "The type of the entity to configure."
+                    },
+                    "description": "Configure the basic {platform_label}entity settings{entity_name_label}",
+                    "title": "Configure MQTT device \"{mqtt_device}\""
+                },
+                "mqtt_platform_config": {
+                    "data": {
+                        "command_template": "Command template",
+                        "command_topic": "Command topic",
+                        "qos": "QoS",
+                        "retain": "Retain"
+                    },
+                    "data_description": {
+                        "command_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to render the payload to be published at the command topic.",
+                        "command_topic": "The publishing topic that will be used to control the {platform} entity.",
+                        "qos": "The QoS value {platform} entity should use.",
+                        "retain": "Select if values published by the {platform} entity should be retained at the MQTT broker."
+                    },
+                    "description": "Please configure MQTT specific details for {platform} entity \"{entity}\":",
+                    "title": "Configure MQTT device \"{mqtt_device}\""
+                },
+                "summary_menu": {
+                    "description": "Entities set up:\n{mqtt_items}\n\nDecide what to do next:",
+                    "menu_options": {
+                        "availability": "Configure availability",
+                        "delete_entity": "Delete an entity",
+                        "device": "Update device properties",
+                        "entity": "Add another entity to \"{mqtt_device}\"",
+                        "save_changes": "Save changes",
+                        "update_entity": "Update entity properties"
+                    },
+                    "title": "Reconfigure \"{mqtt_device}\""
+                },
+                "update_entity": {
+                    "data": {
+                        "component": "Entity"
+                    },
+                    "data_description": {
+                        "component": "Select the entity you want to update."
+                    },
+                    "description": "Select the entity you want to update",
+                    "title": "Select entity"
                 }
             }
         }
@@ -151,30 +274,26 @@
         }
     },
     "issues": {
-        "deprecated_color_handling": {
-            "description": "An MQTT light config (with `json` schema) found in `configuration.yaml` uses deprecated color handling flags.\n\nConfiguration found:\n```yaml\n{config}\n```\nDeprecated flags: **{deprecated_flags}**.\n\nUse the `supported_color_modes` option instead and [reload](/developer-tools/yaml) the manually configured MQTT items or restart Home Assistant to fix this issue.",
-            "title": "Deprecated color handling used for MQTT light"
-        },
-        "deprecated_color_mode_flag": {
-            "description": "An MQTT light config (with `json` schema) found in `configuration.yaml` uses a deprecated `color_mode` flag.\n\nConfiguration found:\n```yaml\n{config}\n```\n\nRemove the option from your config and [reload](/developer-tools/yaml) the manually configured MQTT items or restart Home Assistant to fix this issue.",
-            "title": "Deprecated color_mode option flag used for MQTT light"
-        },
         "invalid_platform_config": {
             "description": "Home Assistant detected an invalid config for a manually configured item.\n\nPlatform domain: **{domain}**\nConfiguration file: **{config_file}**\nNear line: **{line}**\nConfiguration found:\n```yaml\n{config}\n```\nError: **{error}**.\n\nMake sure the configuration is valid and [reload](/developer-tools/yaml) the manually configured MQTT items or restart Home Assistant to fix this issue.",
             "title": "Invalid config found for mqtt {domain} item"
+        },
+        "invalid_unit_of_measurement": {
+            "description": "Manual configured Sensor entity **{entity_id}** has a configured unit of measurement **{uom}** which is not valid with configured device class **{device_class}**. Make sure a valid unit of measurement is configured or remove the device class, and [reload](/developer-tools/yaml) the manually configured MQTT items or restart Home Assistant to fix this issue.",
+            "title": "Sensor with invalid unit of measurement"
         }
     },
     "options": {
         "error": {
             "bad_birth": "Invalid birth topic",
             "bad_certificate": "The CA certificate is invalid",
-            "bad_client_cert": "Invalid client certificate, ensure a PEM coded file is supplied",
+            "bad_client_cert": "Invalid client certificate, ensure a valid file is supplied",
             "bad_client_cert_key": "Client certificate and private key are not a valid pair",
-            "bad_client_key": "Invalid private key, ensure a PEM coded file is supplied without password",
             "bad_discovery_prefix": "Invalid discovery prefix",
             "bad_will": "Invalid will topic",
             "bad_ws_headers": "Supply valid HTTP headers as a JSON object",
             "cannot_connect": "Failed to connect",
+            "client_key_error": "Invalid private key file or invalid password supplied",
             "invalid_inclusion": "The client certificate and private key must be configured together"
         },
         "step": {
@@ -255,6 +374,11 @@
         }
     },
     "selector": {
+        "platform": {
+            "options": {
+                "notify": "Notify"
+            }
+        },
         "set_ca_cert": {
             "options": {
                 "auto": "Auto",
@@ -282,16 +406,12 @@
             "description": "Publishes a message to an MQTT topic.",
             "fields": {
                 "evaluate_payload": {
-                    "description": "When `payload` is a Python bytes literal, evaluate the bytes literal and publish the raw data.",
+                    "description": "If 'Payload' is a Python bytes literal, evaluate the bytes literal and publish the raw data.",
                     "name": "Evaluate payload"
                 },
                 "payload": {
-                    "description": "The payload to publish.",
+                    "description": "The payload to publish. Publishes an empty message if not provided.",
                     "name": "Payload"
-                },
-                "payload_template": {
-                    "description": "Template to render as a payload value. If a payload is provided, the template is ignored.",
-                    "name": "Payload template"
                 },
                 "qos": {
                     "description": "Quality of Service to use. 0: At most once. 1: At least once. 2: Exactly once.",

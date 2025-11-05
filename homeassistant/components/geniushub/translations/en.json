@@ -52,7 +52,7 @@
                     "name": "Entity"
                 },
                 "mode": {
-                    "description": "One of: off, timer or footprint.",
+                    "description": "The zone's operating mode.",
                     "name": "Mode"
                 }
             },

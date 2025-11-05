@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_ics_file": "Invalid .ics file"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "calendar_name": "Calendar name",
+                    "url": "Calendar URL"
+                },
+                "data_description": {
+                    "calendar_name": "The name of the calendar shown in the UI.",
+                    "url": "The URL of the remote calendar."
+                },
+                "description": "Please choose a name for the calendar to be imported"
+            }
+        }
+    },
+    "exceptions": {
+        "unable_to_fetch": {
+            "message": "Unable to fetch calendar data: {err}"
+        },
+        "unable_to_parse": {
+            "message": "Unable to parse calendar data: {err}"
+        }
+    },
+    "title": "Remote Calendar"
+}

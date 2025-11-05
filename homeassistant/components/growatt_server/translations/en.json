@@ -28,13 +28,13 @@
     "entity": {
         "sensor": {
             "inverter_amperage_input_1": {
-                "name": "Input 1 Amperage"
+                "name": "Input 1 amperage"
             },
             "inverter_amperage_input_2": {
-                "name": "Input 2 Amperage"
+                "name": "Input 2 amperage"
             },
             "inverter_amperage_input_3": {
-                "name": "Input 3 Amperage"
+                "name": "Input 3 amperage"
             },
             "inverter_current_reactive_wattage": {
                 "name": "Reactive wattage"
@@ -76,13 +76,13 @@
                 "name": "Input 3 voltage"
             },
             "inverter_wattage_input_1": {
-                "name": "Input 1 Wattage"
+                "name": "Input 1 wattage"
             },
             "inverter_wattage_input_2": {
-                "name": "Input 2 Wattage"
+                "name": "Input 2 wattage"
             },
             "inverter_wattage_input_3": {
-                "name": "Input 3 Wattage"
+                "name": "Input 3 wattage"
             },
             "mix_battery_charge": {
                 "name": "Battery charging"
@@ -172,19 +172,19 @@
                 "name": "System production today (self-consumption + export)"
             },
             "mix_wattage_pv_1": {
-                "name": "PV1 Wattage"
+                "name": "PV1 wattage"
             },
             "mix_wattage_pv_2": {
-                "name": "PV2 Wattage"
+                "name": "PV2 wattage"
             },
             "mix_wattage_pv_all": {
-                "name": "All PV Wattage"
+                "name": "All PV wattage"
             },
             "storage_ac_input_frequency_out": {
                 "name": "AC input frequency"
             },
             "storage_ac_output_frequency": {
-                "name": "Ac output frequency"
+                "name": "AC output frequency"
             },
             "storage_battery_percentage": {
                 "name": "Battery percentage"
@@ -244,7 +244,7 @@
                 "name": "Lifetime load consumption"
             },
             "storage_load_consumption_solar_storage": {
-                "name": "Load consumption (Solar + Storage)"
+                "name": "Load consumption (solar + storage)"
             },
             "storage_load_consumption_today": {
                 "name": "Load consumption today"
@@ -277,7 +277,7 @@
                 "name": "Solar power production (PV2)"
             },
             "storage_storage_production_lifetime": {
-                "name": "Lifetime Storage production"
+                "name": "Lifetime storage production"
             },
             "storage_storage_production_today": {
                 "name": "Storage production today"
@@ -295,16 +295,16 @@
                 "name": "Lifetime total all batteries discharged"
             },
             "tlx_amperage_input_1": {
-                "name": "Input 1 Amperage"
+                "name": "Input 1 amperage"
             },
             "tlx_amperage_input_2": {
-                "name": "Input 2 Amperage"
+                "name": "Input 2 amperage"
             },
             "tlx_amperage_input_3": {
-                "name": "Input 3 Amperage"
+                "name": "Input 3 amperage"
             },
             "tlx_amperage_input_4": {
-                "name": "Input 4 Amperage"
+                "name": "Input 4 amperage"
             },
             "tlx_battery_1_charge_total": {
                 "name": "Lifetime total battery 1 charged"
@@ -337,16 +337,16 @@
                 "name": "Energy today"
             },
             "tlx_energy_today_input_1": {
-                "name": "Energy Today Input 1"
+                "name": "Energy today input 1"
             },
             "tlx_energy_today_input_2": {
-                "name": "Energy Today Input 2"
+                "name": "Energy today input 2"
             },
             "tlx_energy_today_input_3": {
-                "name": "Energy Today Input 3"
+                "name": "Energy today input 3"
             },
             "tlx_energy_today_input_4": {
-                "name": "Energy Today Input 4"
+                "name": "Energy today input 4"
             },
             "tlx_energy_total": {
                 "name": "Lifetime energy output"
@@ -415,22 +415,22 @@
                 "name": "Input 4 voltage"
             },
             "tlx_wattage_input_1": {
-                "name": "Input 1 Wattage"
+                "name": "Input 1 wattage"
             },
             "tlx_wattage_input_2": {
-                "name": "Input 2 Wattage"
+                "name": "Input 2 wattage"
             },
             "tlx_wattage_input_3": {
-                "name": "Input 3 Wattage"
+                "name": "Input 3 wattage"
             },
             "tlx_wattage_input_4": {
-                "name": "Input 4 Wattage"
+                "name": "Input 4 wattage"
             },
             "total_energy_output": {
                 "name": "Lifetime energy output"
             },
             "total_energy_today": {
-                "name": "Energy Today"
+                "name": "Energy today"
             },
             "total_maximum_output": {
                 "name": "Maximum power"
@@ -442,7 +442,7 @@
                 "name": "Money lifetime"
             },
             "total_output_power": {
-                "name": "Output Power"
+                "name": "Output power"
             }
         }
     },

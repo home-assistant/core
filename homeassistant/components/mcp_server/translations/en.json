@@ -9,7 +9,7 @@
                     "llm_hass_api": "Control Home Assistant"
                 },
                 "data_description": {
-                    "llm_hass_api": "The method for controling Home Assistant to expose with the Model Context Protocol."
+                    "llm_hass_api": "The method for controlling Home Assistant to expose with the Model Context Protocol."
                 },
                 "description": "See the [integration documentation]({more_info_url}) for setup instructions."
             }

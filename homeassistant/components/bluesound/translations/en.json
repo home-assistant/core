@@ -3,7 +3,8 @@
         "abort": {
             "already_configured": "Service is already configured",
             "already_in_progress": "Configuration flow is already in progress",
-            "cannot_connect": "Failed to connect"
+            "cannot_connect": "Failed to connect",
+            "no_ipv4_address": "No IPv4 address found."
         },
         "error": {
             "cannot_connect": "Failed to connect"
@@ -27,7 +28,7 @@
     },
     "services": {
         "clear_sleep_timer": {
-            "description": "Clear a Bluesound timer.",
+            "description": "Clears a Bluesound timer.",
             "fields": {
                 "entity_id": {
                     "description": "Name(s) of entities that will have the timer cleared.",
@@ -37,10 +38,10 @@
             "name": "Clear sleep timer"
         },
         "join": {
-            "description": "Group player together.",
+            "description": "Groups players together under a single master speaker.",
             "fields": {
                 "entity_id": {
-                    "description": "Name of entity that will coordinate the grouping. Platform dependent.",
+                    "description": "Name of entity that will group to master speaker. Platform dependent.",
                     "name": "Entity"
                 },
                 "master": {
@@ -51,7 +52,7 @@
             "name": "Join"
         },
         "set_sleep_timer": {
-            "description": "Set a Bluesound timer. It will increase timer in steps: 15, 30, 45, 60, 90, 0.",
+            "description": "Sets a Bluesound timer that will turn off the speaker. It will increase in steps: 15, 30, 45, 60, 90, 0.",
             "fields": {
                 "entity_id": {
                     "description": "Name(s) of entities that will have a timer set.",
@@ -61,10 +62,10 @@
             "name": "Set sleep timer"
         },
         "unjoin": {
-            "description": "Unjoin the player from a group.",
+            "description": "Separates a player from a group.",
             "fields": {
                 "entity_id": {
-                    "description": "Name of entity that will be unjoined from their group. Platform dependent.",
+                    "description": "Name of entity that will be separated from their group. Platform dependent.",
                     "name": "Entity"
                 }
             },

@@ -1,0 +1,40 @@
+{
+    "application_credentials": {
+        "description": "Follow the [instructions]({more_info_url}) to configure the Cloud Console:\n\n1. Go to the [OAuth consent screen]({oauth_consent_url}) and configure\n1. Go to [Credentials]({oauth_creds_url}) and select **Create Credentials**.\n1. From the drop-down list select **OAuth client ID**.\n1. Select **Web application** for the Application Type.\n1. Add `{redirect_url}` under *Authorized redirect URI*."
+    },
+    "config": {
+        "abort": {
+            "access_not_configured": "Unable to access the Google Drive API:\n\n{message}",
+            "already_configured": "Account is already configured",
+            "already_in_progress": "Configuration flow is already in progress",
+            "authorize_url_timeout": "Timeout generating authorize URL.",
+            "create_folder_failure": "Error while creating Google Drive folder:\n\n{message}",
+            "missing_configuration": "The component is not configured. Please follow the documentation.",
+            "missing_credentials": "The integration requires application credentials.",
+            "no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})",
+            "oauth_error": "Received invalid token data.",
+            "oauth_failed": "Error while obtaining access token.",
+            "oauth_timeout": "Timeout resolving OAuth token.",
+            "oauth_unauthorized": "OAuth authorization error while obtaining access token.",
+            "reauth_successful": "Re-authentication was successful",
+            "unknown": "Unexpected error",
+            "user_rejected_authorize": "Account linking rejected: {error}",
+            "wrong_account": "Wrong account: Please authenticate with {email}."
+        },
+        "create_entry": {
+            "default": "Using [{folder_name}]({url}) folder. Feel free to rename it in Google Drive as you wish."
+        },
+        "step": {
+            "auth": {
+                "title": "Link Google Account"
+            },
+            "pick_implementation": {
+                "title": "Pick authentication method"
+            },
+            "reauth_confirm": {
+                "description": "The Google Drive integration needs to re-authenticate your account",
+                "title": "Authentication expired for {name}"
+            }
+        }
+    }
+}

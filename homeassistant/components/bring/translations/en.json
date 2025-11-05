@@ -6,9 +6,11 @@
         "abort": {
             "already_configured": "Service is already configured",
             "reauth_successful": "Re-authentication was successful",
+            "reconfigure_successful": "Re-configuration was successful",
             "unique_id_mismatch": "The login details correspond to a different account. Please re-authenticate to the previously configured account."
         },
         "error": {
+            "already_in_progress": "Configuration flow is already in progress",
             "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication",
             "unknown": "Unexpected error"
@@ -19,18 +21,54 @@
                     "email": "Email",
                     "password": "Password"
                 },
+                "data_description": {
+                    "email": "The email address associated with your Bring! account.",
+                    "password": "The password to login to your Bring! account."
+                },
                 "description": "The Bring! integration needs to re-authenticate your account",
                 "title": "Authentication expired for {name}"
+            },
+            "reconfigure": {
+                "data": {
+                    "email": "Email",
+                    "password": "Password"
+                },
+                "data_description": {
+                    "email": "The email address associated with your Bring! account.",
+                    "password": "The password to login to your Bring! account."
+                },
+                "description": "Update your credentials if you have changed your Bring! account email or password.",
+                "title": "Bring! configuration"
             },
             "user": {
                 "data": {
                     "email": "Email",
                     "password": "Password"
-                }
+                },
+                "data_description": {
+                    "email": "The email address associated with your Bring! account.",
+                    "password": "The password to login to your Bring! account."
+                },
+                "description": "Connect your Bring! account to sync your shopping lists with Home Assistant.\n\nDon't have a Bring! account? Download the app on [Google Play for Android]({google_play}) or the [App Store for iOS]({app_store}) to sign up.",
+                "title": "Bring! Grocery shopping list"
             }
         }
     },
     "entity": {
+        "event": {
+            "activities": {
+                "name": "Activities",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "list_items_added": "Items added",
+                            "list_items_changed": "Items changed",
+                            "list_items_removed": "Items removed"
+                        }
+                    }
+                }
+            }
+        },
         "sensor": {
             "convenient": {
                 "name": "On occasion",

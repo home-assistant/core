@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Device is already configured",
-            "reauth_successful": "Re-authentication was successful"
+            "reauth_successful": "Re-authentication was successful",
+            "reconfigure_successful": "Re-configuration was successful"
         },
         "error": {
             "invalid_auth": "Invalid authentication",
@@ -18,6 +19,16 @@
                 },
                 "description": "Please update your password for {email}",
                 "title": "Authentication expired for {name}"
+            },
+            "reconfigure": {
+                "data": {
+                    "password": "Password"
+                },
+                "data_description": {
+                    "password": "Enter the password for your Ohme account"
+                },
+                "description": "Update your password for {email}",
+                "title": "Reconfigure Ohme Account"
             },
             "user": {
                 "data": {
@@ -39,6 +50,9 @@
             }
         },
         "number": {
+            "preconditioning_duration": {
+                "name": "Preconditioning duration"
+            },
             "target_percentage": {
                 "name": "Target percentage"
             }
@@ -51,16 +65,23 @@
                     "paused": "Paused",
                     "smart_charge": "Smart charge"
                 }
+            },
+            "vehicle": {
+                "name": "Vehicle"
             }
         },
         "sensor": {
             "ct_current": {
                 "name": "CT current"
             },
+            "slot_list": {
+                "name": "Charge slots"
+            },
             "status": {
                 "name": "Status",
                 "state": {
                     "charging": "Charging",
+                    "finished": "Finished charging",
                     "paused": "Paused",
                     "pending_approval": "Pending approval",
                     "plugged_in": "Plugged in",
@@ -74,6 +95,9 @@
         "switch": {
             "lock_buttons": {
                 "name": "Lock buttons"
+            },
+            "price_cap": {
+                "name": "Price cap"
             },
             "require_approval": {
                 "name": "Require approval"
@@ -115,6 +139,20 @@
                 }
             },
             "name": "List charge slots"
+        },
+        "set_price_cap": {
+            "description": "Prevents charging when the electricity price exceeds a defined threshold.",
+            "fields": {
+                "config_entry": {
+                    "description": "The Ohme config entry for which to return charge slots.",
+                    "name": "Ohme account"
+                },
+                "price_cap": {
+                    "description": "Threshold in 1/100ths of your local currency.",
+                    "name": "Price cap"
+                }
+            },
+            "name": "Set price cap"
         }
     }
 }

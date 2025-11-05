@@ -118,11 +118,11 @@
                     "name": "Group"
                 },
                 "mode": {
-                    "description": "Linking mode   controller - IM is controller   responder - IM is responder.",
+                    "description": "Linking mode of the Insteon Modem.",
                     "name": "Mode"
                 }
             },
-            "name": "Add all link"
+            "name": "Add All-Link"
         },
         "add_default_links": {
             "description": "Adds the default links between the device and the Insteon Modem (IM).",
@@ -135,42 +135,42 @@
             "name": "Add default links"
         },
         "delete_all_link": {
-            "description": "Tells the Insteon Modem (IM) to remove an All-Link record from the All-Link Database of the IM and a device. Once the IM is set to delete the link, press the link button on the corresponding device to complete the process.",
+            "description": "Tells the Insteon Modem (IM) to remove an All-Link record from the All-Link database of the IM and a device. Once the IM is set to delete the link, press the link button on the corresponding device to complete the process.",
             "fields": {
                 "group": {
                     "description": "All-Link group number.",
                     "name": "Group"
                 }
             },
-            "name": "Delete all link"
+            "name": "Delete All-Link"
         },
         "load_all_link_database": {
-            "description": "Load the All-Link Database for a device. WARNING - Loading a device All-LInk database is very time consuming and inconsistent. This may take a LONG time and may need to be repeated to obtain all records.",
+            "description": "Loads the All-Link database for a device. WARNING - Loading a device All-Link database is very time consuming and inconsistent. This may take a LONG time and may need to be repeated to obtain all records.",
             "fields": {
                 "entity_id": {
                     "description": "Name of the device to load. Use \"all\" to load the database of all devices.",
                     "name": "Entity"
                 },
                 "reload": {
-                    "description": "Reloads all records. If true the current records are cleared from memory (does not effect the device) and the records are reloaded. If false the existing records are left in place and only missing records are added. Default is false.",
+                    "description": "If enabled, all current records are cleared from memory (does not effect the device) and reloaded. Otherwise the existing records are left in place and only missing records are added.",
                     "name": "Reload"
                 }
             },
-            "name": "Load all link database"
+            "name": "Load All-Link database"
         },
         "print_all_link_database": {
-            "description": "Prints the All-Link Database for a device. Requires that the All-Link Database is loaded into memory.",
+            "description": "Prints the All-Link database for a device. Requires that the All-Link database is loaded into memory.",
             "fields": {
                 "entity_id": {
                     "description": "Name of the device to print.",
                     "name": "Entity"
                 }
             },
-            "name": "Print all link database"
+            "name": "Print All-Link database"
         },
         "print_im_all_link_database": {
-            "description": "Prints the All-Link Database for the INSTEON Modem (IM).",
-            "name": "Print IM all link database"
+            "description": "Prints the All-Link database for the INSTEON Modem (IM).",
+            "name": "Print IM All-Link database"
         },
         "scene_off": {
             "description": "Triggers an INSTEON scene to turn OFF.",

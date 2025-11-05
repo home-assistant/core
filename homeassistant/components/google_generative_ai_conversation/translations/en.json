@@ -21,6 +21,12 @@
             }
         }
     },
+    "issues": {
+        "deprecated_image_filename_parameter": {
+            "description": "The 'image_filename' parameter in Google Generative AI actions is deprecated. Please edit scripts and automations to use 'filenames' instead.",
+            "title": "Deprecated 'image_filename' parameter"
+        }
+    },
     "options": {
         "step": {
             "init": {
@@ -48,8 +54,13 @@
         "generate_content": {
             "description": "Generate content from a prompt consisting of text and optionally images",
             "fields": {
+                "filenames": {
+                    "description": "Attachments to add to the prompt (images, PDFs, etc)",
+                    "example": "/config/www/image.jpg",
+                    "name": "Attachment filenames"
+                },
                 "image_filename": {
-                    "description": "Images",
+                    "description": "Deprecated. Use filenames instead.",
                     "example": "/config/www/image.jpg",
                     "name": "Image filename"
                 },

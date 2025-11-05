@@ -476,7 +476,7 @@
             }
         },
         "switch": {
-            "charge_state_charge_enable_request": {
+            "charge_state_charging_state": {
                 "name": "Charge"
             },
             "climate_state_defrost_mode": {
@@ -527,7 +527,7 @@
             "message": "{name} is not supported."
         },
         "unknown": {
-            "message": "An unknown issue occured changing {name}."
+            "message": "An unknown issue occurred changing {name}."
         }
     }
 }

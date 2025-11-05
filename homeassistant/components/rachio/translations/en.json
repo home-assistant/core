@@ -13,7 +13,7 @@
                 "data": {
                     "api_key": "API key"
                 },
-                "description": "You will need the API Key from https://app.rach.io/. Go to Settings, then select 'GET API KEY'.",
+                "description": "You will need the API key from https://app.rach.io/. Go to Settings, then select 'GET API KEY'.",
                 "title": "Connect to your Rachio device"
             }
         }
@@ -49,7 +49,7 @@
     },
     "services": {
         "pause_watering": {
-            "description": "Pause any currently running zones or schedules.",
+            "description": "Pauses any currently running zones or schedules.",
             "fields": {
                 "devices": {
                     "description": "Name of controllers to pause. Defaults to all controllers on the account if not provided.",
@@ -63,7 +63,7 @@
             "name": "Pause watering"
         },
         "resume_watering": {
-            "description": "Resume any paused zone runs or schedules.",
+            "description": "Resumes any paused zone runs or schedules.",
             "fields": {
                 "devices": {
                     "description": "Name of controllers to resume. Defaults to all controllers on the account if not provided.",
@@ -93,7 +93,7 @@
             "name": "Start multiple zones"
         },
         "start_watering": {
-            "description": "Start a single zone, a schedule or any number of smart hose timers.",
+            "description": "Starts a single zone, a schedule or any number of smart hose timers.",
             "fields": {
                 "duration": {
                     "description": "Number of minutes to run. For sprinkler zones the maximum duration is 3 hours, or 24 hours for smart hose timers. Leave empty for schedules.",
@@ -103,7 +103,7 @@
             "name": "Start watering"
         },
         "stop_watering": {
-            "description": "Stop any currently running zones or schedules.",
+            "description": "Stops any currently running zones or schedules.",
             "fields": {
                 "devices": {
                     "description": "Name of controllers to stop. Defaults to all controllers on the account if not provided.",

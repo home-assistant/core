@@ -42,7 +42,7 @@
             "description": "Sends a TTS message to Snips to listen for a response.",
             "fields": {
                 "can_be_enqueued": {
-                    "description": "If True, session waits for an open session to end, if False session is dropped if one is running.",
+                    "description": "Whether the session should wait for an open session to end. Otherwise it is dropped if another session is already running.",
                     "name": "Can be enqueued"
                 },
                 "custom_data": {

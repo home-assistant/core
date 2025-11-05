@@ -60,7 +60,7 @@
             "status": {
                 "name": "Status",
                 "state": {
-                    "high_charge_period": "High charge period",
+                    "high_tariff_period": "High tariff period",
                     "out_of_activation_period": "Out of activation period",
                     "plugged_charging": "Plugged, charging",
                     "plugged_waiting": "Plugged, waiting",

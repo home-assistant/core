@@ -19,7 +19,7 @@
                     "host": "The hostname or IP address of your madVR Envy device.",
                     "port": "The port your madVR Envy is listening on. In 99% of cases, leave this as the default."
                 },
-                "description": "Your device needs to be on in order to reconfigure the integation.",
+                "description": "Your device needs to be on in order to reconfigure the integration.",
                 "title": "Reconfigure madVR Envy"
             },
             "user": {
@@ -31,7 +31,7 @@
                     "host": "The hostname or IP address of your madVR Envy device.",
                     "port": "The port your madVR Envy is listening on. In 99% of cases, leave this as the default."
                 },
-                "description": "Your device needs to be on in order to add the integation.",
+                "description": "Your device needs to be on in order to add the integration.",
                 "title": "Set up madVR Envy"
             }
         }

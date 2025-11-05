@@ -11,13 +11,13 @@
         "step": {
             "reauth_confirm": {
                 "data": {
-                    "api_token": "Personal api token"
+                    "api_token": "Personal API token"
                 },
                 "description": "Reauthenticate with WeatherFlow"
             },
             "user": {
                 "data": {
-                    "api_token": "Personal api token"
+                    "api_token": "Personal API token"
                 },
                 "description": "Set up a WeatherFlow Forecast Station"
             }

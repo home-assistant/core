@@ -8,7 +8,8 @@
                 "data": {
                     "todo_list_name": "To-do list name"
                 },
-                "description": "Please choose a name for your new To-do list"
+                "description": "Please choose a name for your new To-do list",
+                "submit": "Create"
             }
         }
     },

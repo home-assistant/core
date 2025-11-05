@@ -103,7 +103,7 @@
             "name": "Play sound"
         },
         "update": {
-            "description": "Updates iCloud devices.",
+            "description": "Asks for a state update of all devices linked to an iCloud account.",
             "fields": {
                 "account": {
                     "description": "Your iCloud account username (email) or account name.",

@@ -1,4 +1,196 @@
 {
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured"
+        },
+        "step": {
+            "lowpass": {
+                "data": {
+                    "precision": "Precision",
+                    "time_constant": "Time constant",
+                    "window_size": "Window size"
+                },
+                "data_description": {
+                    "precision": "Defines the number of decimal places of the calculated sensor value.",
+                    "time_constant": "Loosely relates to the amount of time it takes for a state to influence the output.",
+                    "window_size": "Size of the window of previous states."
+                },
+                "description": "Read the documentation for further details on how to configure the filter sensor using these options."
+            },
+            "outlier": {
+                "data": {
+                    "precision": "Precision",
+                    "radius": "Radius",
+                    "window_size": "Window size"
+                },
+                "data_description": {
+                    "precision": "Defines the number of decimal places of the calculated sensor value.",
+                    "radius": "Band radius from median of previous states.",
+                    "window_size": "Size of the window of previous states."
+                },
+                "description": "Read the documentation for further details on how to configure the filter sensor using these options."
+            },
+            "range": {
+                "data": {
+                    "lower_bound": "Lower bound",
+                    "precision": "Precision",
+                    "upper_bound": "Upper bound"
+                },
+                "data_description": {
+                    "lower_bound": "Lower bound for filter range.",
+                    "precision": "Defines the number of decimal places of the calculated sensor value.",
+                    "upper_bound": "Upper bound for filter range."
+                },
+                "description": "Read the documentation for further details on how to configure the filter sensor using these options."
+            },
+            "throttle": {
+                "data": {
+                    "precision": "Precision",
+                    "window_size": "Window size"
+                },
+                "data_description": {
+                    "precision": "Defines the number of decimal places of the calculated sensor value.",
+                    "window_size": "Size of the window of previous states."
+                },
+                "description": "Read the documentation for further details on how to configure the filter sensor using these options."
+            },
+            "time_simple_moving_average": {
+                "data": {
+                    "precision": "Precision",
+                    "type": "Type",
+                    "window_size": "Window size"
+                },
+                "data_description": {
+                    "precision": "Defines the number of decimal places of the calculated sensor value.",
+                    "type": "Defines the type of Simple Moving Average.",
+                    "window_size": "Size of the window of previous states."
+                },
+                "description": "Read the documentation for further details on how to configure the filter sensor using these options."
+            },
+            "time_throttle": {
+                "data": {
+                    "precision": "Precision",
+                    "window_size": "Window size"
+                },
+                "data_description": {
+                    "precision": "Defines the number of decimal places of the calculated sensor value.",
+                    "window_size": "Size of the window of previous states."
+                },
+                "description": "Read the documentation for further details on how to configure the filter sensor using these options."
+            },
+            "user": {
+                "data": {
+                    "entity_id": "Entity",
+                    "filter": "Filter",
+                    "name": "Name"
+                },
+                "data_description": {
+                    "entity_id": "Entity to filter from.",
+                    "filter": "Select filter to configure.",
+                    "name": "Name for the created entity."
+                },
+                "description": "Add a filter sensor. UI configuration is limited to a single filter, use YAML for filter chain."
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "already_configured": "Account is already configured"
+        },
+        "step": {
+            "lowpass": {
+                "data": {
+                    "precision": "Precision",
+                    "time_constant": "Time constant",
+                    "window_size": "Window size"
+                },
+                "data_description": {
+                    "precision": "Defines the number of decimal places of the calculated sensor value.",
+                    "time_constant": "Loosely relates to the amount of time it takes for a state to influence the output.",
+                    "window_size": "Size of the window of previous states."
+                },
+                "description": "Read the documentation for further details on how to configure the filter sensor using these options."
+            },
+            "outlier": {
+                "data": {
+                    "precision": "Precision",
+                    "radius": "Radius",
+                    "window_size": "Window size"
+                },
+                "data_description": {
+                    "precision": "Defines the number of decimal places of the calculated sensor value.",
+                    "radius": "Band radius from median of previous states.",
+                    "window_size": "Size of the window of previous states."
+                },
+                "description": "Read the documentation for further details on how to configure the filter sensor using these options."
+            },
+            "range": {
+                "data": {
+                    "lower_bound": "Lower bound",
+                    "precision": "Precision",
+                    "upper_bound": "Upper bound"
+                },
+                "data_description": {
+                    "lower_bound": "Lower bound for filter range.",
+                    "precision": "Defines the number of decimal places of the calculated sensor value.",
+                    "upper_bound": "Upper bound for filter range."
+                },
+                "description": "Read the documentation for further details on how to configure the filter sensor using these options."
+            },
+            "throttle": {
+                "data": {
+                    "precision": "Precision",
+                    "window_size": "Window size"
+                },
+                "data_description": {
+                    "precision": "Defines the number of decimal places of the calculated sensor value.",
+                    "window_size": "Size of the window of previous states."
+                },
+                "description": "Read the documentation for further details on how to configure the filter sensor using these options."
+            },
+            "time_simple_moving_average": {
+                "data": {
+                    "precision": "Precision",
+                    "type": "Type",
+                    "window_size": "Window size"
+                },
+                "data_description": {
+                    "precision": "Defines the number of decimal places of the calculated sensor value.",
+                    "type": "Defines the type of Simple Moving Average.",
+                    "window_size": "Size of the window of previous states."
+                },
+                "description": "Read the documentation for further details on how to configure the filter sensor using these options."
+            },
+            "time_throttle": {
+                "data": {
+                    "precision": "Precision",
+                    "window_size": "Window size"
+                },
+                "data_description": {
+                    "precision": "Defines the number of decimal places of the calculated sensor value.",
+                    "window_size": "Size of the window of previous states."
+                },
+                "description": "Read the documentation for further details on how to configure the filter sensor using these options."
+            }
+        }
+    },
+    "selector": {
+        "filter": {
+            "options": {
+                "lowpass": "Lowpass",
+                "outlier": "Outlier",
+                "range": "Range",
+                "throttle": "Throttle",
+                "time_simple_moving_average": "Moving Average (Time based)",
+                "time_throttle": "Time throttle"
+            }
+        },
+        "type": {
+            "options": {
+                "last": "Last"
+            }
+        }
+    },
     "services": {
         "reload": {
             "description": "Reloads filters from the YAML-configuration.",

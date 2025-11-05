@@ -7,7 +7,7 @@
         },
         "error": {
             "cannot_connect": "Failed to connect",
-            "invalid_auth": "Invalid authentication",
+            "invalid_auth": "Authentication failed. Your API key is invalid or CSRF protection is turned on, preventing authentication.",
             "invalid_host": "The provided URL is not a valid host."
         },
         "step": {
@@ -107,14 +107,14 @@
     },
     "services": {
         "get_requests": {
-            "description": "Get media requests from Overseerr.",
+            "description": "Retrieves a list of media requests from Overseerr.",
             "fields": {
                 "config_entry_id": {
                     "description": "The Overseerr instance to get requests from.",
                     "name": "Overseerr instance"
                 },
                 "requested_by": {
-                    "description": "Filter the requests by the user id that requested them.",
+                    "description": "Filter the requests by the user ID that requested them.",
                     "name": "Requested by"
                 },
                 "sort_order": {

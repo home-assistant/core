@@ -6,7 +6,7 @@
         "error": {
             "cannot_connect": "Failed to connect",
             "unknown": "Unexpected error",
-            "unsupported_device": "Only the primary powerview hub can be added"
+            "unsupported_device": "Only the primary PowerView Hub can be added"
         },
         "flow_title": "{name} ({host})",
         "step": {
@@ -16,7 +16,7 @@
             },
             "user": {
                 "data": {
-                    "api_version": "Hub Generation",
+                    "api_version": "Hub generation",
                     "host": "IP address"
                 },
                 "data_description": {

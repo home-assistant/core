@@ -184,7 +184,7 @@
                     "name": "Username"
                 },
                 "verify_ssl": {
-                    "description": "Enable or disable SSL certificate verification. Set to false if you're downloading the file from a URL and you don't want to validate the SSL certificate of the server.",
+                    "description": "Enable or disable SSL certificate verification. Disable if you're downloading the file from a URL and you don't want to validate the SSL certificate of the server.",
                     "name": "Verify SSL"
                 }
             },
@@ -254,7 +254,7 @@
                     "name": "Username"
                 },
                 "verify_ssl": {
-                    "description": "Enable or disable SSL certificate verification. Set to false if you're downloading the file from a URL and you don't want to validate the SSL certificate of the server.",
+                    "description": "Enable or disable SSL certificate verification. Disable if you're downloading the file from a URL and you don't want to validate the SSL certificate of the server.",
                     "name": "Verify SSL"
                 }
             },
@@ -424,7 +424,7 @@
                     "name": "Username"
                 },
                 "verify_ssl": {
-                    "description": "Enable or disable SSL certificate verification. Set to false if you're downloading the file from a URL and you don't want to validate the SSL certificate of the server.",
+                    "description": "Enable or disable SSL certificate verification. Disable if you're downloading the file from a URL and you don't want to validate the SSL certificate of the server.",
                     "name": "Verify SSL"
                 }
             },
@@ -434,7 +434,7 @@
             "description": "Sends a poll.",
             "fields": {
                 "allows_multiple_answers": {
-                    "description": "If the poll allows multiple answers, defaults to False.",
+                    "description": "If the poll allows multiple answers.",
                     "name": "Allow multiple answers"
                 },
                 "disable_notification": {
@@ -442,7 +442,7 @@
                     "name": "Disable notification"
                 },
                 "is_anonymous": {
-                    "description": "If the poll needs to be anonymous, defaults to True.",
+                    "description": "If the poll needs to be anonymous. This is the default.",
                     "name": "Is anonymous"
                 },
                 "message_tag": {
@@ -540,7 +540,7 @@
                     "name": "Username"
                 },
                 "verify_ssl": {
-                    "description": "Enable or disable SSL certificate verification. Set to false if you're downloading the file from a URL and you don't want to validate the SSL certificate of the server.",
+                    "description": "Enable or disable SSL certificate verification. Disable if you're downloading the file from a URL and you don't want to validate the SSL certificate of the server.",
                     "name": "Verify SSL"
                 }
             },
@@ -610,7 +610,7 @@
                     "name": "Username"
                 },
                 "verify_ssl": {
-                    "description": "Enable or disable SSL certificate verification. Set to false if you're downloading the file from a URL and you don't want to validate the SSL certificate of the server.",
+                    "description": "Enable or disable SSL certificate verification. Disable if you're downloading the file from a URL and you don't want to validate the SSL certificate of the server.",
                     "name": "Verify SSL"
                 }
             },
@@ -676,7 +676,7 @@
                     "name": "Username"
                 },
                 "verify_ssl": {
-                    "description": "Enable or disable SSL certificate verification. Set to false if you're downloading the file from a URL and you don't want to validate the SSL certificate of the server.",
+                    "description": "Enable or disable SSL certificate verification. Disable if you're downloading the file from a URL and you don't want to validate the SSL certificate of the server.",
                     "name": "Verify SSL"
                 }
             },

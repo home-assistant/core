@@ -60,7 +60,10 @@
             "options": {
                 "album": "Album",
                 "artist": "Artist",
+                "audiobook": "Audiobook",
+                "folder": "Folder",
                 "playlist": "Playlist",
+                "podcast": "Podcast",
                 "radio": "Radio",
                 "track": "Track"
             }
@@ -90,10 +93,10 @@
     },
     "services": {
         "get_library": {
-            "description": "Get items from a Music Assistant library.",
+            "description": "Retrieves items from a Music Assistant library.",
             "fields": {
                 "album_artists_only": {
-                    "description": "Only return Album Artists when listing the Artists library items.",
+                    "description": "Only return album artists when listing the artists library items.",
                     "name": "Enable album artists filter (only for artist library)"
                 },
                 "album_type": {
@@ -122,14 +125,14 @@
                 },
                 "order_by": {
                     "description": "Sort the list by this field.",
-                    "name": "Order By"
+                    "name": "Order by"
                 },
                 "search": {
                     "description": "Optional search string to search through this library.",
                     "name": "Search"
                 }
             },
-            "name": "Get Library items"
+            "name": "Get library items"
         },
         "get_queue": {
             "description": "Retrieves the details of the currently active queue of a Music Assistant player.",

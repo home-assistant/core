@@ -111,7 +111,7 @@
             "name": "Send program command"
         },
         "send_raw_node_command": {
-            "description": "Set the options for the ISY integration: \n \u2022 Node Sensor String: Any device or folder that contains 'Node Sensor String' in the name will be treated as a sensor or binary sensor. \n \u2022 Ignore String: Any device with 'Ignore String' in the name will be ignored. \n \u2022 Variable Sensor String: Any variable that contains 'Variable Sensor String' will be added as a sensor. \n \u2022 Restore Light Brightness: If enabled, the previous brightness will be restored when turning on a light instead of the device's built-in On-Level.",
+            "description": "Sends a \u201craw\u201d (e.g., DON, DOF) ISY REST device command to a node using its Home Assistant entity ID. This is useful for devices that aren\u2019t fully supported in Home Assistant yet, such as controls for many NodeServer nodes.",
             "fields": {
                 "command": {
                     "description": "The ISY REST command to be sent to the device.",

@@ -19,21 +19,21 @@
                     "pin": "PIN code"
                 },
                 "description": "Please enter your MySubaru PIN\nNOTE: All vehicles in account must have the same PIN",
-                "title": "Subaru Starlink Configuration"
+                "title": "Subaru Starlink configuration"
             },
             "two_factor": {
                 "data": {
                     "contact_method": "Please select a contact method:"
                 },
                 "description": "Two factor authentication required",
-                "title": "Subaru Starlink Configuration"
+                "title": "Subaru Starlink configuration"
             },
             "two_factor_validate": {
                 "data": {
                     "validation_code": "Validation code"
                 },
                 "description": "Please enter validation code received",
-                "title": "Subaru Starlink Configuration"
+                "title": "Subaru Starlink configuration"
             },
             "user": {
                 "data": {
@@ -42,7 +42,7 @@
                     "username": "Username"
                 },
                 "description": "Please enter your MySubaru credentials\nNOTE: Initial setup may take up to 30 seconds",
-                "title": "Subaru Starlink Configuration"
+                "title": "Subaru Starlink configuration"
             }
         }
     },
@@ -95,7 +95,7 @@
                     "update_enabled": "Enable vehicle polling"
                 },
                 "description": "When enabled, vehicle polling will send a remote command to your vehicle every 2 hours to obtain new sensor data. Without vehicle polling, new sensor data is only received when the vehicle automatically pushes data (normally after engine shutdown).",
-                "title": "Subaru Starlink Options"
+                "title": "Subaru Starlink options"
             }
         }
     },
@@ -104,7 +104,7 @@
             "description": "Unlocks specific door(s).",
             "fields": {
                 "door": {
-                    "description": "One of the following: 'all', 'driver', 'tailgate'.",
+                    "description": "Which door(s) to open.",
                     "name": "Door"
                 }
             },

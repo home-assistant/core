@@ -4,8 +4,8 @@
             "already_configured": "Account is already configured"
         },
         "error": {
-            "missing_keep_last_sample": "The sensor configuration must provide 'max_age' if 'keep_last_sample' is True",
-            "missing_max_age_or_sampling_size": "The sensor configuration must provide 'max_age' and/or 'sampling_size'"
+            "missing_keep_last_sample": "The sensor configuration must provide 'Max age' if 'Keep last sample' is true",
+            "missing_max_age_or_sampling_size": "The sensor configuration must provide 'Max age' and/or 'Sampling size'"
         },
         "step": {
             "options": {
@@ -17,13 +17,13 @@
                     "sampling_size": "Sampling size"
                 },
                 "data_description": {
-                    "keep_last_sample": "Defines whether the most recent sampled value should be preserved regardless of the 'max age' setting.",
+                    "keep_last_sample": "Defines whether the most recent sampled value should be preserved regardless of the 'Max age' setting.",
                     "max_age": "Maximum age of source sensor measurements stored.",
-                    "percentile": "Only relevant in combination with the 'percentile' characteristic. Must be a value between 1 and 99.",
+                    "percentile": "Only relevant in combination with the 'Percentile' characteristic. Must be a value between 1 and 99.",
                     "precision": "Defines the number of decimal places of the calculated sensor value.",
                     "sampling_size": "Maximum number of source sensor measurements stored."
                 },
-                "description": "Read the documention for further details on how to configure the statistics sensor using these options."
+                "description": "Read the documentation for further details on how to configure the statistics sensor using these options."
             },
             "state_characteristic": {
                 "data": {
@@ -32,7 +32,7 @@
                 "data_description": {
                     "state_characteristic": "The statistic characteristic that should be used as the state of the sensor."
                 },
-                "description": "Read the documention for further details on available options and how to use them."
+                "description": "Read the documentation for further details on available options and how to use them."
             },
             "user": {
                 "data": {
@@ -52,8 +52,8 @@
             "already_configured": "Account is already configured"
         },
         "error": {
-            "missing_keep_last_sample": "The sensor configuration must provide 'max_age' if 'keep_last_sample' is True",
-            "missing_max_age_or_sampling_size": "The sensor configuration must provide 'max_age' and/or 'sampling_size'"
+            "missing_keep_last_sample": "The sensor configuration must provide 'Max age' if 'Keep last sample' is true",
+            "missing_max_age_or_sampling_size": "The sensor configuration must provide 'Max age' and/or 'Sampling size'"
         },
         "step": {
             "init": {
@@ -65,13 +65,13 @@
                     "sampling_size": "Sampling size"
                 },
                 "data_description": {
-                    "keep_last_sample": "Defines whether the most recent sampled value should be preserved regardless of the 'max age' setting.",
+                    "keep_last_sample": "Defines whether the most recent sampled value should be preserved regardless of the 'Max age' setting.",
                     "max_age": "Maximum age of source sensor measurements stored.",
-                    "percentile": "Only relevant in combination with the 'percentile' characteristic. Must be a value between 1 and 99.",
+                    "percentile": "Only relevant in combination with the 'Percentile' characteristic. Must be a value between 1 and 99.",
                     "precision": "Defines the number of decimal places of the calculated sensor value.",
                     "sampling_size": "Maximum number of source sensor measurements stored."
                 },
-                "description": "Read the documention for further details on how to configure the statistics sensor using these options."
+                "description": "Read the documentation for further details on how to configure the statistics sensor using these options."
             }
         }
     },

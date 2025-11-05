@@ -30,7 +30,7 @@
                     "devices": "Devices (Triggers)"
                 },
                 "description": "Programmable switches are created for each selected device. When a device trigger fires, HomeKit can be configured to run an automation or scene.",
-                "title": "Advanced Configuration"
+                "title": "Advanced configuration"
             },
             "cameras": {
                 "data": {
@@ -38,7 +38,7 @@
                     "camera_copy": "Cameras that support native H.264 streams"
                 },
                 "description": "Check all cameras that support native H.264 streams. If the camera does not output a H.264 stream, the system will transcode the video to H.264 for HomeKit. Transcoding requires a performant CPU and is unlikely to work on single board computers.",
-                "title": "Camera Configuration"
+                "title": "Camera configuration"
             },
             "exclude": {
                 "data": {
@@ -57,21 +57,21 @@
             "init": {
                 "data": {
                     "domains": "Domains to include",
-                    "include_exclude_mode": "Inclusion Mode",
-                    "mode": "HomeKit Mode"
+                    "include_exclude_mode": "Inclusion mode",
+                    "mode": "HomeKit mode"
                 },
                 "description": "HomeKit can be configured expose a bridge or a single accessory. In accessory mode, only a single entity can be used. Accessory mode is required for media players with the TV or RECEIVER device class to function properly. Entities in the \u201cDomains to include\u201d will be included to HomeKit. You will be able to select which entities to include or exclude from this list on the next screen.",
                 "title": "Select mode and domains."
             },
             "yaml": {
                 "description": "This entry is controlled via YAML",
-                "title": "Adjust HomeKit Options"
+                "title": "Adjust HomeKit options"
             }
         }
     },
     "services": {
         "reload": {
-            "description": "Reloads homekit and re-process YAML-configuration.",
+            "description": "Reloads HomeKit and re-processes the YAML-configuration.",
             "name": "Reload"
         },
         "reset_accessory": {

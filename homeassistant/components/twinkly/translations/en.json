@@ -20,5 +20,21 @@
                 }
             }
         }
+    },
+    "entity": {
+        "select": {
+            "mode": {
+                "name": "Mode",
+                "state": {
+                    "color": "Color",
+                    "demo": "Demo",
+                    "effect": "Effect",
+                    "movie": "Uploaded effect",
+                    "off": "Off",
+                    "playlist": "Playlist",
+                    "rt": "Real time"
+                }
+            }
+        }
     }
 }

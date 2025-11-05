@@ -15,14 +15,14 @@
             "name": "Refresh system"
         },
         "reset_system": {
-            "description": "Sets the system to Auto mode and reset all the zones to follow their schedules. Not all Evohome systems support this feature (i.e. AutoWithReset mode).",
+            "description": "Sets the system to Auto mode and resets all the zones to follow their schedules. Not all Evohome systems support this feature (i.e. AutoWithReset mode).",
             "name": "Reset system"
         },
         "set_system_mode": {
             "description": "Sets the system mode, either indefinitely, or for a specified period of time, after which it will revert to Auto. Not all systems support all modes.",
             "fields": {
                 "duration": {
-                    "description": "The duration in hours; used only with AutoWithEco (up to 24 hours).",
+                    "description": "The duration in hours; used only with AutoWithEco mode (up to 24 hours).",
                     "name": "Duration"
                 },
                 "mode": {
@@ -30,7 +30,7 @@
                     "name": "Mode"
                 },
                 "period": {
-                    "description": "A period of time in days; used only with Away, DayOff, or Custom. The system will revert to Auto at midnight (up to 99 days, today is day 1).",
+                    "description": "A period of time in days; used only with Away, DayOff, or Custom mode. The system will revert to Auto mode at midnight (up to 99 days, today is day 1).",
                     "name": "Period"
                 }
             },

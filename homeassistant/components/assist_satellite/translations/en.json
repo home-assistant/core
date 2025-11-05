@@ -12,7 +12,7 @@
     },
     "services": {
         "announce": {
-            "description": "Let the satellite announce a message.",
+            "description": "Lets a satellite announce a message.",
             "fields": {
                 "media_id": {
                     "description": "The media ID to announce instead of using text-to-speech.",
@@ -24,6 +24,24 @@
                 }
             },
             "name": "Announce"
+        },
+        "start_conversation": {
+            "description": "Starts a conversation from a satellite.",
+            "fields": {
+                "extra_system_prompt": {
+                    "description": "Provide background information to the AI about the request.",
+                    "name": "Extra system prompt"
+                },
+                "start_media_id": {
+                    "description": "The media ID to start with instead of using text-to-speech.",
+                    "name": "Media ID"
+                },
+                "start_message": {
+                    "description": "The message to start with.",
+                    "name": "Message"
+                }
+            },
+            "name": "Start conversation"
         }
     },
     "title": "Assist satellite"

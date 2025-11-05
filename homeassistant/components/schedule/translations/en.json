@@ -21,6 +21,10 @@
         }
     },
     "services": {
+        "get_schedule": {
+            "description": "Retrieves the configured time ranges of one or multiple schedules.",
+            "name": "Get schedule"
+        },
         "reload": {
             "description": "Reloads schedules from the YAML-configuration.",
             "name": "Reload"

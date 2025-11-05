@@ -74,6 +74,21 @@
             }
         }
     },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "browse_limit": "Browse limit",
+                    "volume_step": "Volume step"
+                },
+                "data_description": {
+                    "browse_limit": "Maximum number of items when browsing or in a playlist.",
+                    "volume_step": "Amount to adjust the volume when turning volume up or down."
+                },
+                "title": "LMS Configuration"
+            }
+        }
+    },
     "services": {
         "call_method": {
             "description": "Calls a custom Squeezebox JSONRPC API.",
