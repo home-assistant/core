@@ -304,19 +304,17 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         Active provisioning flows (do_provision/provision_done) should not be aborted
         as they're waiting for zeroconf handoff.
         """
-        normalized_mac = format_mac(mac)
-
         for flow in self._async_in_progress(include_uninitialized=True):
             if (
                 flow["flow_id"] != self.flow_id
-                and flow["context"].get("unique_id") == normalized_mac
+                and flow["context"].get("unique_id") == mac
                 and flow["context"].get("source") == "bluetooth"
                 and flow.get("step_id") not in BLUETOOTH_FINISHING_STEPS
             ):
                 LOGGER.debug(
                     "Aborting idle BLE flow %s for %s (device discovered via zeroconf)",
                     flow["flow_id"],
-                    normalized_mac,
+                    mac,
                 )
                 self.hass.config_entries.flow.async_abort(flow["flow_id"])
 
