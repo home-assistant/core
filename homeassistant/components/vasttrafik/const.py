@@ -3,13 +3,17 @@
 DOMAIN = "vasttrafik"
 
 # Configuration constants
-CONF_DEPARTURES = "departures"
-CONF_FROM = "from"
+CONF_STATION_GID = "station_gid"
+CONF_STATION_NAME = "station_name"
 CONF_HEADING = "heading"
 CONF_LINES = "lines"
 CONF_TRACKS = "tracks"
 CONF_KEY = "key"
 CONF_SECRET = "secret"
+
+# keys used in legacy YAML based config
+CONF_DEPARTURES = "departures"
+CONF_FROM = "from"
 
 # State attributes
 ATTR_ACCESSIBILITY = "accessibility"

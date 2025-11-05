@@ -38,6 +38,7 @@ from .const import (
     CONF_KEY,
     CONF_LINES,
     CONF_SECRET,
+    CONF_STATION_GID,
     CONF_TRACKS,
     DEFAULT_DELAY,
     DOMAIN,
@@ -113,16 +114,15 @@ async def async_setup_entry(
             async_add_entities(
                 [
                     VasttrafikDepartureSensor(
-                        planner,
-                        subentry.data[CONF_NAME],
-                        subentry.data[CONF_FROM],
-                        subentry.data.get(CONF_HEADING, ""),
-                        subentry.data[CONF_LINES],
-                        subentry.data[CONF_TRACKS],
-                        subentry.data[CONF_DELAY],
-                        entry.entry_id,
-                        subentry.subentry_id,
-                        subentry.subentry_id,
+                        planner=planner,
+                        name=subentry.data[CONF_NAME],
+                        station_gid=subentry.data[CONF_STATION_GID],
+                        heading=subentry.data.get(CONF_HEADING, ""),
+                        lines=subentry.data[CONF_LINES],
+                        tracks=subentry.data[CONF_TRACKS],
+                        delay=subentry.data[CONF_DELAY],
+                        config_entry_id=entry.entry_id,
+                        subentry_id=subentry.subentry_id,
                     )
                 ],
                 update_before_add=True,
@@ -139,30 +139,21 @@ class VasttrafikDepartureSensor(SensorEntity):
 
     def __init__(
         self,
-        planner,
-        name,
-        departure,
-        heading,
-        lines,
-        tracks,
-        delay,
-        config_entry_id,
-        unique_suffix=None,
-        subentry_id=None,
+        planner: vasttrafik.JournyPlanner,
+        name: str,
+        station_gid: str,
+        heading: str,
+        lines: list[str],
+        tracks: list[str],
+        delay: int,
+        config_entry_id: str,
+        subentry_id: str,
     ) -> None:
         """Initialize the sensor."""
         self._planner = planner
-        if name:
-            self._attr_name = name
-        else:
-            self._attr_translation_key = "departures"
-            self._attr_translation_placeholders = {"station": departure}
-        self._departure_name = departure
+        self._attr_name = name
+        self._station_gid = station_gid
         self._heading_name = heading
-        self._departure: dict[str, str] | None = (
-            None  # Will be resolved on first update
-        )
-        self._heading: dict[str, str] | None = None  # Will be resolved on first update
         self._lines = lines if lines else None
         self._tracks = tracks if tracks else None
         self._delay = timedelta(minutes=delay)
@@ -170,51 +161,34 @@ class VasttrafikDepartureSensor(SensorEntity):
         self._state: str | None = None
         self._attributes: dict[str, Any] | None = None
 
-        # Create device info for departure board subentries (similar to Ollama pattern)
-        if subentry_id:
-            # Build descriptive device name with filters (like Ollama shows model)
-            device_name_parts = [f"Departure: {departure}"]
+        # Build descriptive device name with filters (like Ollama shows model)
+        device_name_parts = [f"Departure: {self._attr_name}"]
 
-            # Add destination filter if specified
-            if heading:
-                device_name_parts.append(f"→ {heading}")
+        # Add destination filter if specified
+        if heading:
+            device_name_parts.append(f"→ {heading}")
 
-            # Add line filter if specified
-            if lines:
-                lines_str = ", ".join(str(line) for line in lines)
-                device_name_parts.append(f"Lines: {lines_str}")
+        # Add line filter if specified
+        if lines:
+            lines_str = ", ".join(str(line) for line in lines)
+            device_name_parts.append(f"Lines: {lines_str}")
 
-            # Add track filter if specified
-            if tracks:
-                tracks_str = ", ".join(str(track) for track in tracks)
-                device_name_parts.append(f"Tracks: {tracks_str}")
+        # Add track filter if specified
+        if tracks:
+            tracks_str = ", ".join(str(track) for track in tracks)
+            device_name_parts.append(f"Tracks: {tracks_str}")
 
-            device_name = " • ".join(device_name_parts)
+        device_name = " • ".join(device_name_parts)
 
-            self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, subentry_id)},
-                name=device_name,
-                manufacturer="Västtrafik",
-                model="Departure Board",
-                entry_type=dr.DeviceEntryType.SERVICE,
-            )
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, subentry_id)},
+            name=device_name,
+            manufacturer="Västtrafik",
+            model="Departure Board",
+            entry_type=dr.DeviceEntryType.SERVICE,
+        )
 
-        # Create unique ID
-        if unique_suffix:
-            self._attr_unique_id = f"{config_entry_id}_{unique_suffix}_departures"
-        else:
-            # Fallback for YAML or option-based sensors
-            safe_departure = departure.lower().replace(" ", "_")
-            self._attr_unique_id = f"{config_entry_id}_{safe_departure}_departures"
-
-    def get_station_id(self, location) -> dict[str, str]:
-        """Get the station ID."""
-        if location.isdecimal():
-            station_info = {"station_name": location, "station_id": location}
-        else:
-            station_id = self._planner.location_name(location)[0]["gid"]
-            station_info = {"station_name": location, "station_id": station_id}
-        return station_info
+        self._attr_unique_id = subentry_id
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
@@ -228,24 +202,12 @@ class VasttrafikDepartureSensor(SensorEntity):
 
     async def async_update(self) -> None:
         """Get the departure board."""
-        # Resolve station IDs on first update (deferred from __init__ to avoid blocking calls)
-        if self._departure is None:
-            self._departure = await self.hass.async_add_executor_job(
-                self.get_station_id, self._departure_name
-            )
-        if self._heading_name and self._heading is None:
-            self._heading = await self.hass.async_add_executor_job(
-                self.get_station_id, self._heading_name
-            )
-
-        assert self._departure is not None  # Guaranteed to be set above
-
         try:
             self._departureboard = await self.hass.async_add_executor_job(
                 self._planner.departureboard,
-                self._departure["station_id"],
+                self._station_gid,
                 now() + self._delay,
-                self._heading["station_id"] if self._heading else None,
+                None,
             )
         except vasttrafik.Error:
             _LOGGER.debug("Unable to read departure board")
@@ -254,8 +216,8 @@ class VasttrafikDepartureSensor(SensorEntity):
         if not self._departureboard:
             _LOGGER.debug(
                 "No departures from departure station %s to destination station %s",
-                self._departure["station_name"],
-                self._heading["station_name"] if self._heading else "ANY",
+                self._attr_name,
+                self._heading_name,
             )
             self._state = None
             self._attributes = {}
@@ -265,11 +227,12 @@ class VasttrafikDepartureSensor(SensorEntity):
             total_departures = len(self._departureboard)
 
             _LOGGER.debug(
-                "Processing %d departures for %s (line_filter=%s, track_filter=%s)",
+                "Processing %d departures for %s (line_filter=%s, track_filter=%s, heading_filter=%s)",
                 total_departures,
-                self._departure["station_name"],
+                self._attr_name,
                 self._lines,
                 self._tracks,
+                self._heading_name,
             )
 
             for departure in self._departureboard:
@@ -289,15 +252,22 @@ class VasttrafikDepartureSensor(SensorEntity):
                 # Apply track filter if specified
                 track_matches = not self._tracks or platform in self._tracks
 
+                # Heading name match if specified
+                heading_name_match = (
+                    not self._heading_name
+                    or service_journey.get("direction") == self._heading_name
+                )
+
                 _LOGGER.debug(
-                    "Departure: line=%s, platform=%s, line_matches=%s, track_matches=%s",
+                    "Departure: line=%s, platform=%s, line_matches=%s, track_matches=%s, heading_name_match=%s",
                     line_name,
                     platform,
                     line_matches,
                     track_matches,
+                    heading_name_match,
                 )
 
-                if line_matches and track_matches:
+                if line_matches and track_matches and heading_name_match:
                     # Parse departure time
                     departure_time = None
                     if "estimatedOtherwisePlannedTime" in departure:
@@ -341,9 +311,9 @@ class VasttrafikDepartureSensor(SensorEntity):
             # Set attributes with multiple departures and general info
             self._attributes = {
                 "departures": departures_list,
-                "station": self._departure["station_name"],
-                "destination": self._heading["station_name"]
-                if self._heading
+                "station": self._attr_name,
+                "destination": self._heading_name
+                if self._heading_name
                 else "Any direction",
                 "line_filter": self._lines if self._lines else None,
                 "track_filter": self._tracks if self._tracks else None,

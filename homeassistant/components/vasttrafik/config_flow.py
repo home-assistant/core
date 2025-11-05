@@ -33,6 +33,8 @@ from .const import (
     CONF_KEY,
     CONF_LINES,
     CONF_SECRET,
+    CONF_STATION_GID,
+    CONF_STATION_NAME,
     CONF_TRACKS,
     DEFAULT_DELAY,
     DOMAIN,
@@ -49,7 +51,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 CONFIGURE_DEPARTURE_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_NAME): str,
+        vol.Required(CONF_NAME): str,
         vol.Optional(CONF_HEADING): str,
         vol.Optional(CONF_LINES): TextSelector(TextSelectorConfig(multiple=True)),
         vol.Optional(CONF_TRACKS): TextSelector(TextSelectorConfig(multiple=True)),
@@ -173,6 +175,22 @@ class VasttrafikConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    def get_station_data(
+        self, planner: vasttrafik.JournyPlanner, location: str
+    ) -> StationData:
+        """Get the station ID from either station name or station ID.
+
+        This is used during the import process only.
+        """
+        if location.isdecimal():
+            station_data = StationData(
+                name=location, gid=location
+            )  # no good way to get name from GID
+        else:
+            api_result: StationData = planner.location_name(location)[0]
+            station_data = StationData(name=api_result["name"], gid=api_result["gid"])
+        return station_data
+
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle import from YAML configuration."""
         self._async_abort_entries_match(
@@ -182,22 +200,28 @@ class VasttrafikConfigFlow(ConfigFlow, domain=DOMAIN):
         if errors := await validate_api_credentials(self.hass, import_data):
             return self.async_abort(reason=errors["base"])
 
-        subentries = [
-            ConfigSubentryData(
-                title=departure.get(CONF_NAME, departure[CONF_FROM]),
-                subentry_type="departure_board",
-                data={
-                    CONF_FROM: departure[CONF_FROM],
-                    CONF_NAME: departure.get(CONF_NAME, departure[CONF_FROM]),
-                    CONF_HEADING: departure.get(CONF_HEADING, ""),
-                    CONF_LINES: departure.get(CONF_LINES, []),
-                    CONF_TRACKS: departure.get(CONF_TRACKS, []),
-                    CONF_DELAY: departure.get(CONF_DELAY, DEFAULT_DELAY),
-                },
-                unique_id=None,
+        planner: vasttrafik.JournyPlanner = await self.hass.async_add_executor_job(
+            vasttrafik.JournyPlanner, import_data[CONF_KEY], import_data[CONF_SECRET]
+        )
+
+        subentries = []
+        for departure in import_data.get(CONF_DEPARTURES, []):
+            station_data = self.get_station_data(planner, departure[CONF_FROM])
+            subentries.append(
+                ConfigSubentryData(
+                    title=departure.get(CONF_NAME, station_data["name"]),
+                    subentry_type="departure_board",
+                    data={
+                        CONF_STATION_GID: station_data["gid"],
+                        CONF_NAME: departure.get(CONF_NAME, station_data["name"]),
+                        CONF_HEADING: departure.get(CONF_HEADING),
+                        CONF_LINES: departure.get(CONF_LINES, []),
+                        CONF_TRACKS: departure.get(CONF_TRACKS, []),
+                        CONF_DELAY: departure.get(CONF_DELAY, DEFAULT_DELAY),
+                    },
+                    unique_id=None,
+                )
             )
-            for departure in import_data.get(CONF_DEPARTURES, [])
-        ]
 
         return self.async_create_entry(
             title="Västtrafik",
@@ -298,14 +322,11 @@ class VasttrafikSubentryFlow(ConfigSubentryFlow):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            unique_id = f"departure_{self._selected_station['gid']}"
-
             departure_data = {
-                CONF_FROM: self._selected_station["name"],
-                CONF_NAME: user_input.get(CONF_NAME, unique_id),
-                CONF_HEADING: user_input.get(
-                    CONF_HEADING, ""
-                ),  # Keep for backward compatibility
+                CONF_STATION_GID: self._selected_station["gid"],
+                CONF_STATION_NAME: self._selected_station["name"],
+                CONF_NAME: user_input.get(CONF_NAME),
+                CONF_HEADING: user_input.get(CONF_HEADING, ""),
                 CONF_LINES: user_input.get(CONF_LINES, []),
                 CONF_TRACKS: user_input.get(CONF_TRACKS, []),
                 CONF_DELAY: user_input.get(CONF_DELAY, DEFAULT_DELAY),
@@ -314,12 +335,16 @@ class VasttrafikSubentryFlow(ConfigSubentryFlow):
             return self.async_create_entry(
                 title=f"Departure: {departure_data[CONF_NAME]}",
                 data=departure_data,
-                unique_id=unique_id,
             )
 
         return self.async_show_form(
             step_id="configure",
-            data_schema=CONFIGURE_DEPARTURE_SCHEMA,
+            data_schema=self.add_suggested_values_to_schema(
+                CONFIGURE_DEPARTURE_SCHEMA,
+                {
+                    CONF_NAME: self._selected_station["name"],
+                },
+            ),
             errors=errors,
             description_placeholders={"station_name": self._selected_station["name"]},
         )
@@ -332,7 +357,8 @@ class VasttrafikSubentryFlow(ConfigSubentryFlow):
 
         if user_input is not None:
             new_data = {
-                CONF_FROM: subentry.data[CONF_FROM],  # Keep original station
+                CONF_STATION_GID: subentry.data[CONF_STATION_GID],
+                CONF_STATION_NAME: subentry.data[CONF_STATION_NAME],
                 CONF_NAME: user_input.get(CONF_NAME, subentry.data[CONF_NAME]),
                 CONF_HEADING: user_input.get(CONF_HEADING, ""),
                 CONF_LINES: user_input.get(CONF_LINES, []),
@@ -353,6 +379,6 @@ class VasttrafikSubentryFlow(ConfigSubentryFlow):
                 CONFIGURE_DEPARTURE_SCHEMA, user_input or subentry.data
             ),
             description_placeholders={
-                "station_name": subentry.data.get(CONF_FROM, "Unknown"),
+                "station_name": subentry.data.get(CONF_STATION_NAME, "Unknown"),
             },
         )

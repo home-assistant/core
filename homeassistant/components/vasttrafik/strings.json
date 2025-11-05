@@ -61,7 +61,7 @@
             "delay": "Time offset in minutes",
             "heading": "Direction filter (optional)",
             "lines": "Line numbers (optional)",
-            "name": "Board name (optional)",
+            "name": "Board name",
             "tracks": "Track/Platform filter (optional)"
           },
           "data_description": {
@@ -79,7 +79,7 @@
             "delay": "Time offset in minutes",
             "heading": "Destination filter (optional)",
             "lines": "Line numbers (optional)",
-            "name": "Board name (optional)",
+            "name": "Board name",
             "tracks": "Track/Platform filter (optional)"
           },
           "data_description": {
