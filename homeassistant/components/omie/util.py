@@ -29,6 +29,8 @@ def pick_series_cet(
     series_data = getattr(res.contents, series_name, [])
 
     return {
-        dt.datetime.fromisoformat(dt_str).astimezone(CET): v
-        for dt_str, v in localize_quarter_hourly_data(market_date, series_data).items()
+        dt.datetime.fromisoformat(dt_str).astimezone(CET): series_values
+        for dt_str, series_values in localize_quarter_hourly_data(
+            market_date, series_data
+        ).items()
     }
