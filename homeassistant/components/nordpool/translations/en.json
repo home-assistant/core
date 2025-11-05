@@ -14,7 +14,7 @@
                     "currency": "Currency"
                 },
                 "data_description": {
-                    "areas": "Areas to display prices for according to Nordpool market areas.",
+                    "areas": "Areas to display prices for according to Nord Pool market areas.",
                     "currency": "Select currency to display prices in, EUR is the base currency."
                 }
             },
@@ -24,7 +24,7 @@
                     "currency": "Currency"
                 },
                 "data_description": {
-                    "areas": "Areas to display prices for according to Nordpool market areas.",
+                    "areas": "Areas to display prices for according to Nord Pool market areas.",
                     "currency": "Select currency to display prices in, EUR is the base currency."
                 }
             }
@@ -114,15 +114,15 @@
     },
     "services": {
         "get_prices_for_date": {
-            "description": "Retrieve the prices for a specific date.",
+            "description": "Retrieves the prices for a specific date.",
             "fields": {
                 "areas": {
                     "description": "One or multiple areas to get prices for. If left empty it will use the areas already configured.",
                     "name": "Areas"
                 },
                 "config_entry": {
-                    "description": "Choose the configuration entry.",
-                    "name": "Select Nord Pool configuration entry"
+                    "description": "The Nord Pool configuration entry for this action.",
+                    "name": "Config entry"
                 },
                 "currency": {
                     "description": "Currency to get prices in. If left empty it will use the currency already configured.",

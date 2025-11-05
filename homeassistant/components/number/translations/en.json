@@ -168,6 +168,9 @@
         "weight": {
             "name": "Weight"
         },
+        "wind_direction": {
+            "name": "Wind direction"
+        },
         "wind_speed": {
             "name": "Wind speed"
         }

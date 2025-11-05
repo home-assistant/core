@@ -15,7 +15,7 @@
                 "data": {
                     "house_number": "Your house number",
                     "house_number_suffix": "A suffix for your house number",
-                    "zip_code": "Your zip code"
+                    "zip_code": "Your ZIP code"
                 },
                 "title": "Provide your address details"
             }

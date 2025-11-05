@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "no_devices_found": "No devices found on the network",
+            "not_ipv4_address": "No IPv4 address in SSDP discovery information",
             "not_sonos_device": "Discovered device is not a Sonos device",
             "single_instance_allowed": "Already configured. Only a single configuration possible."
         },
@@ -111,7 +112,7 @@
             "name": "Get queue"
         },
         "play_queue": {
-            "description": "Start playing the queue from the first item.",
+            "description": "Starts playing the queue from the first item.",
             "fields": {
                 "queue_position": {
                     "description": "Position of the song in the queue to start playing from.",
@@ -131,14 +132,14 @@
             "name": "Remove from queue"
         },
         "restore": {
-            "description": "Restores a snapshot of the media player.",
+            "description": "Restores a snapshot of a media player.",
             "fields": {
                 "entity_id": {
                     "description": "Name of entity that will be restored.",
                     "name": "Entity"
                 },
                 "with_group": {
-                    "description": "True or False. Also restore the group layout.",
+                    "description": "Whether the group layout and the state of other speakers in the group should also be restored.",
                     "name": "With group"
                 }
             },
@@ -155,14 +156,14 @@
             "name": "Set timer"
         },
         "snapshot": {
-            "description": "Takes a snapshot of the media player.",
+            "description": "Takes a snapshot of a media player.",
             "fields": {
                 "entity_id": {
                     "description": "Name of entity that will be snapshot.",
                     "name": "Entity"
                 },
                 "with_group": {
-                    "description": "True or False. Also snapshot the group layout.",
+                    "description": "Whether the snapshot should include the group layout and the state of other speakers in the group.",
                     "name": "With group"
                 }
             },
@@ -172,23 +173,23 @@
             "description": "Updates an alarm with new time and volume settings.",
             "fields": {
                 "alarm_id": {
-                    "description": "ID for the alarm to be updated.",
+                    "description": "The ID of the alarm to be updated.",
                     "name": "Alarm ID"
                 },
                 "enabled": {
-                    "description": "Enable or disable the alarm.",
+                    "description": "Whether or not to enable the alarm.",
                     "name": "Alarm enabled"
                 },
                 "include_linked_zones": {
-                    "description": "Enable or disable including grouped rooms.",
+                    "description": "Whether the alarm also plays on grouped players.",
                     "name": "Include linked zones"
                 },
                 "time": {
-                    "description": "Set time for the alarm.",
+                    "description": "The time for the alarm.",
                     "name": "Time"
                 },
                 "volume": {
-                    "description": "Set alarm volume level.",
+                    "description": "The alarm volume level.",
                     "name": "Volume"
                 }
             },

@@ -27,12 +27,12 @@
             "user": {
                 "data": {
                     "authentication": "Authentication",
-                    "framerate": "Frame Rate (Hz)",
-                    "limit_refetch_to_url_change": "Limit refetch to url change",
+                    "framerate": "Frame rate (Hz)",
+                    "limit_refetch_to_url_change": "Limit refetch to URL change",
                     "password": "Password",
                     "rtsp_transport": "RTSP transport protocol",
-                    "still_image_url": "Still Image URL (e.g. http://...)",
-                    "stream_source": "Stream Source URL (e.g. rtsp://...)",
+                    "still_image_url": "Still image URL (e.g. http://...)",
+                    "stream_source": "Stream source URL (e.g. rtsp://...)",
                     "username": "Username",
                     "verify_ssl": "Verify SSL certificate"
                 },
@@ -71,12 +71,12 @@
             "init": {
                 "data": {
                     "authentication": "Authentication",
-                    "framerate": "Frame Rate (Hz)",
-                    "limit_refetch_to_url_change": "Limit refetch to url change",
+                    "framerate": "Frame rate (Hz)",
+                    "limit_refetch_to_url_change": "Limit refetch to URL change",
                     "password": "Password",
                     "rtsp_transport": "RTSP transport protocol",
-                    "still_image_url": "Still Image URL (e.g. http://...)",
-                    "stream_source": "Stream Source URL (e.g. rtsp://...)",
+                    "still_image_url": "Still image URL (e.g. http://...)",
+                    "stream_source": "Stream source URL (e.g. rtsp://...)",
                     "use_wallclock_as_timestamps": "Use wallclock as timestamps",
                     "username": "Username",
                     "verify_ssl": "Verify SSL certificate"

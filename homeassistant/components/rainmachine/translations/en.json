@@ -10,7 +10,7 @@
         "step": {
             "user": {
                 "data": {
-                    "ip_address": "Hostname or IP Address",
+                    "ip_address": "Hostname or IP address",
                     "password": "Password",
                     "port": "Port"
                 },
@@ -110,7 +110,7 @@
             "name": "Pause all watering"
         },
         "push_flow_meter_data": {
-            "description": "Push flow meter data to the RainMachine device.",
+            "description": "Sends flow meter data from Home Assistant to the RainMachine device.",
             "fields": {
                 "device_id": {
                     "description": "The controller to send flow meter data to.",
@@ -128,7 +128,7 @@
             "name": "Push flow meter data"
         },
         "push_weather_data": {
-            "description": "Push weather data from Home Assistant to the RainMachine device.\nLocal Weather Push service should be enabled from Settings > Weather > Developer tab for RainMachine to consider the values being sent. Units must be sent in metric; no conversions are performed by the integraion.\nSee details of RainMachine API Here: https://rainmachine.docs.apiary.io/#reference/weather-services/parserdata/post.",
+            "description": "Sends weather data from Home Assistant to the RainMachine device.\nLocal Weather Push service should be enabled from Settings > Weather > Developer tab for RainMachine to consider the values being sent. Units must be sent in metric; no conversions are performed by the integraion.\nSee details of RainMachine API here: https://rainmachine.docs.apiary.io/#reference/weather-services/parserdata/post.",
             "fields": {
                 "condition": {
                     "description": "Current weather condition code (WNUM).",
@@ -183,7 +183,7 @@
                     "name": "Temperature"
                 },
                 "timestamp": {
-                    "description": "UNIX Timestamp for the weather data. If omitted, the RainMachine device's local time at the time of the call is used.",
+                    "description": "UNIX timestamp for the weather data. If omitted, the RainMachine device's local time at the time of the call is used.",
                     "name": "Timestamp"
                 },
                 "wind": {
@@ -240,7 +240,7 @@
             "name": "Stop zone"
         },
         "unpause_watering": {
-            "description": "Unpauses all paused watering activities.",
+            "description": "Resumes all paused watering activities.",
             "fields": {
                 "device_id": {
                     "description": "The controller whose watering activities should be unpaused.",
@@ -250,7 +250,7 @@
             "name": "Unpause all watering"
         },
         "unrestrict_watering": {
-            "description": "Unrestrict all watering activities.",
+            "description": "Removes all watering restrictions.",
             "fields": {
                 "device_id": {
                     "description": "The controller whose watering activities should be unrestricted.",

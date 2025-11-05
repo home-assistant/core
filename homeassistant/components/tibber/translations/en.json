@@ -112,7 +112,7 @@
     },
     "services": {
         "get_prices": {
-            "description": "Get hourly energy prices from Tibber",
+            "description": "Fetches hourly energy prices including price level.",
             "fields": {
                 "end": {
                     "description": "Specifies the date and time until which to retrieve prices. Defaults to the last hour of today if omitted.",

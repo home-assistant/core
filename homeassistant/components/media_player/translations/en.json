@@ -180,6 +180,20 @@
         }
     },
     "services": {
+        "browse_media": {
+            "description": "Browses the available media.",
+            "fields": {
+                "media_content_id": {
+                    "description": "The ID of the content to browse. Integration dependent.",
+                    "name": "Content ID"
+                },
+                "media_content_type": {
+                    "description": "The type of the content to browse, such as image, music, tv show, video, episode, channel, or playlist.",
+                    "name": "Content type"
+                }
+            },
+            "name": "Browse media"
+        },
         "clear_playlist": {
             "description": "Removes all items from the playlist.",
             "name": "Clear playlist"
@@ -244,21 +258,21 @@
                     "name": "Content ID"
                 },
                 "media_content_type": {
-                    "description": "The type of the content to play. Such as image, music, tv show, video, episode, channel, or playlist.",
+                    "description": "The type of the content to play, such as image, music, tv show, video, episode, channel, or playlist.",
                     "name": "Content type"
                 }
             },
             "name": "Play media"
         },
         "repeat_set": {
-            "description": "Playback mode that plays the media in a loop.",
+            "description": "Sets the repeat mode.",
             "fields": {
                 "repeat": {
-                    "description": "Repeat mode to set.",
+                    "description": "Whether the media (one or all) should be played in a loop or not.",
                     "name": "Repeat mode"
                 }
             },
-            "name": "Repeat"
+            "name": "Set repeat"
         },
         "select_sound_mode": {
             "description": "Selects a specific sound mode.",
@@ -281,14 +295,14 @@
             "name": "Select source"
         },
         "shuffle_set": {
-            "description": "Playback mode that selects the media in randomized order.",
+            "description": "Enables or disables the shuffle mode.",
             "fields": {
                 "shuffle": {
-                    "description": "Whether or not shuffle mode is enabled.",
-                    "name": "Shuffle"
+                    "description": "Whether the media should be played in randomized order or not.",
+                    "name": "Shuffle mode"
                 }
             },
-            "name": "Shuffle"
+            "name": "Set shuffle"
         },
         "toggle": {
             "description": "Toggles a media player on/off.",

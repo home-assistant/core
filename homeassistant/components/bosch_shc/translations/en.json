@@ -8,7 +8,7 @@
             "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication",
             "pairing_failed": "Pairing failed; please check the Bosch Smart Home Controller is in pairing mode (LED flashing) as well as your password is correct.",
-            "session_error": "Session error: API return Non-OK result.",
+            "session_error": "Session error: API returned Non-OK result.",
             "unknown": "Unexpected error"
         },
         "flow_title": "Bosch SHC: {name}",
@@ -28,7 +28,7 @@
                 "data": {
                     "host": "Host"
                 },
-                "description": "The bosch_shc integration needs to re-authenticate your account",
+                "description": "The Bosch SHC integration needs to re-authenticate your account",
                 "title": "Authentication expired for {name}"
             },
             "user": {

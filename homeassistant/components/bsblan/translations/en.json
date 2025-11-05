@@ -37,7 +37,7 @@
     },
     "exceptions": {
         "set_data_error": {
-            "message": "An error occurred while sending the data to the BSBLAN device"
+            "message": "An error occurred while sending the data to the BSB-Lan device"
         },
         "set_operation_mode_error": {
             "message": "An error occurred while setting the operation mode"

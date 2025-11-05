@@ -30,7 +30,7 @@
             "name": "Last"
         },
         "select_next": {
-            "description": "Select the next option.",
+            "description": "Selects the next option.",
             "fields": {
                 "cycle": {
                     "description": "If the option should cycle from the last to the first option on the list.",
@@ -53,7 +53,7 @@
             "description": "Selects the previous option.",
             "fields": {
                 "cycle": {
-                    "description": "If the option should cycle from the last to the first option on the list.",
+                    "description": "If the option should cycle from the first to the last option on the list.",
                     "name": "Cycle"
                 }
             },

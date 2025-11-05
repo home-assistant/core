@@ -9,6 +9,31 @@
             }
         }
     },
+    "config_subentries": {
+        "entity": {
+            "entry_type": "Sensor",
+            "initiate_flow": {
+                "reconfigure": "Reconfigure sensor",
+                "user": "Add sensor"
+            },
+            "step": {
+                "add_sensor": {
+                    "data": {
+                        "name": "Name",
+                        "state": "Initial state"
+                    },
+                    "description": "Configure the new sensor"
+                },
+                "reconfigure_sensor": {
+                    "data": {
+                        "name": "Initial state",
+                        "state": "Initial state"
+                    },
+                    "description": "Reconfigure the sensor"
+                }
+            }
+        }
+    },
     "device": {
         "n_ch_power_strip": {
             "name": "Power strip with {number_of_sockets} sockets"

@@ -283,7 +283,7 @@
     },
     "services": {
         "toggle": {
-            "description": "Toggles one or more lights, from on to off, or, off to on, based on their current state.",
+            "description": "Toggles one or more lights, from on to off, or off to on, based on their current state.",
             "fields": {
                 "brightness": {
                     "description": "Number indicating brightness, where 0 turns the light off, 1 is the minimum brightness, and 255 is the maximum brightness.",
@@ -354,7 +354,7 @@
             }
         },
         "turn_off": {
-            "description": "Turn off one or more lights.",
+            "description": "Turns off one or more lights.",
             "fields": {
                 "flash": {
                     "description": "Tell light to flash, can be either value short or long.",
@@ -373,7 +373,7 @@
             }
         },
         "turn_on": {
-            "description": "Turn on one or more lights and adjust properties of the light, even when they are turned on already.",
+            "description": "Turns on one or more lights and adjusts their properties, even when they are turned on already.",
             "fields": {
                 "brightness": {
                     "description": "Number indicating brightness, where 0 turns the light off, 1 is the minimum brightness, and 255 is the maximum brightness.",

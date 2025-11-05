@@ -62,13 +62,13 @@
                 "name": "Disks used space"
             },
             "load_15m": {
-                "name": "Load (15m)"
+                "name": "Load (15 min)"
             },
             "load_1m": {
-                "name": "Load (1m)"
+                "name": "Load (1 min)"
             },
             "load_5m": {
-                "name": "Load (5m)"
+                "name": "Load (5 min)"
             },
             "mem_free": {
                 "name": "Memory free"

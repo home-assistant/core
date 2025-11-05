@@ -16,34 +16,38 @@
                     "password": "Password",
                     "username": "Username"
                 },
+                "data_description": {
+                    "password": "The password associated with the pyLoad account.",
+                    "username": "The username used to access the pyLoad instance."
+                },
                 "title": "Authentication expired for {name}"
             },
             "reconfigure": {
                 "data": {
-                    "host": "Host",
                     "password": "Password",
-                    "port": "Port",
-                    "ssl": "Uses an SSL certificate",
+                    "url": "URL",
                     "username": "Username",
                     "verify_ssl": "Verify SSL certificate"
                 },
                 "data_description": {
-                    "host": "The hostname or IP address of the device running your pyLoad instance.",
-                    "port": "pyLoad uses port 8000 by default."
+                    "password": "The password associated with the pyLoad account.",
+                    "url": "Specify the full URL of your pyLoad web interface, including the protocol (HTTP or HTTPS), hostname or IP address, port (pyLoad uses 8000 by default), and any path prefix if applicable.\nExample: `https://example.com:8000/path`",
+                    "username": "The username used to access the pyLoad instance.",
+                    "verify_ssl": "If checked, the SSL certificate will be validated to ensure a secure connection."
                 }
             },
             "user": {
                 "data": {
-                    "host": "Host",
                     "password": "Password",
-                    "port": "Port",
-                    "ssl": "Uses an SSL certificate",
+                    "url": "URL",
                     "username": "Username",
                     "verify_ssl": "Verify SSL certificate"
                 },
                 "data_description": {
-                    "host": "The hostname or IP address of the device running your pyLoad instance.",
-                    "port": "pyLoad uses port 8000 by default."
+                    "password": "The password associated with the pyLoad account.",
+                    "url": "Specify the full URL of your pyLoad web interface, including the protocol (HTTP or HTTPS), hostname or IP address, port (pyLoad uses 8000 by default), and any path prefix if applicable.\nExample: `https://example.com:8000/path`",
+                    "username": "The username used to access the pyLoad instance.",
+                    "verify_ssl": "If checked, the SSL certificate will be validated to ensure a secure connection."
                 }
             }
         }
@@ -100,10 +104,10 @@
             "message": "Authentication failed for {username}, verify your login credentials"
         },
         "setup_parse_exception": {
-            "message": "Unable to parse data from pyLoad API, try again later"
+            "message": "Unable to parse data from pyLoad API"
         },
         "setup_request_exception": {
-            "message": "Unable to connect and retrieve data from pyLoad API, try again later"
+            "message": "Unable to connect and retrieve data from pyLoad API"
         }
     }
 }

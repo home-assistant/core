@@ -16,7 +16,7 @@
                     "name": "Message"
                 },
                 "name": {
-                    "description": "Custom name for an entity, can be referenced using an `entity_id`.",
+                    "description": "Custom name for an entity, can be referenced using the 'Entity ID' field.",
                     "name": "Name"
                 }
             },

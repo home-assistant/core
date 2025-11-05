@@ -34,10 +34,12 @@
         },
         "sensor": {
             "movies": {
-                "name": "Movies"
+                "name": "Movies",
+                "unit_of_measurement": "movies"
             },
             "queue": {
-                "name": "Queue"
+                "name": "Queue",
+                "unit_of_measurement": "movies"
             },
             "start_time": {
                 "name": "Start time"

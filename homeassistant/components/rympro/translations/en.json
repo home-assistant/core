@@ -20,6 +20,12 @@
     },
     "entity": {
         "sensor": {
+            "daily_consumption": {
+                "name": "Daily consumption"
+            },
+            "monthly_consumption": {
+                "name": "Monthly consumption"
+            },
             "monthly_forecast": {
                 "name": "Monthly forecast"
             },

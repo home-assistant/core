@@ -170,13 +170,48 @@
             }
         }
     },
+    "issues": {
+        "missing_backup_setup": {
+            "fix_flow": {
+                "abort": {
+                    "ignored": "The backup location has not been configured.\nYou can still set it up later via the integration options.",
+                    "no_shares": "There are no shared folders available for the user.\nPlease check the documentation."
+                },
+                "step": {
+                    "confirm": {
+                        "data": {
+                            "backup_path": "Path",
+                            "backup_share": "Shared folder"
+                        },
+                        "data_description": {
+                            "backup_path": "Define the path on the selected shared folder (will automatically be created, if not exist).",
+                            "backup_share": "Select the shared folder, where the automatic Home-Assistant backup should be stored."
+                        },
+                        "title": "Synology DSM: Backup location"
+                    },
+                    "init": {
+                        "description": "The backup location for {title} is not configured. Do you want to set it up now? Details can be found in the integration documentation under [Backup Location]({docs_url})",
+                        "menu_options": {
+                            "confirm": "Set up the backup location now",
+                            "ignore": "Don't set it up now"
+                        }
+                    }
+                }
+            },
+            "title": "Backup location not configured for {title}"
+        }
+    },
     "options": {
         "step": {
             "init": {
                 "data": {
-                    "scan_interval": "Minutes between scans",
-                    "snap_profile_type": "Quality level of camera snapshots (0:high 1:medium 2:low)",
-                    "timeout": "Timeout (seconds)"
+                    "backup_path": "Path",
+                    "backup_share": "Shared folder",
+                    "snap_profile_type": "Quality level of camera snapshots (0:high 1:medium 2:low)"
+                },
+                "data_description": {
+                    "backup_path": "Define the path on the selected shared folder (will automatically be created, if not exist).",
+                    "backup_share": "Select the shared folder, where the automatic Home-Assistant backup should be stored."
                 }
             }
         }

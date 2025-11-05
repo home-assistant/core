@@ -9,7 +9,7 @@
                     "api_key": "API key"
                 },
                 "data_description": {
-                    "api_key": "Your Elevenlabs API key."
+                    "api_key": "Your ElevenLabs API key."
                 }
             }
         }

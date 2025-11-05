@@ -33,7 +33,7 @@
             "description": "Sends a notification message to selected targets.",
             "fields": {
                 "data": {
-                    "description": "Some integrations provide extended functionality. For information on how to use _data_, refer to the integration documentation.",
+                    "description": "Some integrations provide extended functionality via this field. For more information, refer to the integration documentation.",
                     "name": "Data"
                 },
                 "message": {
@@ -55,7 +55,7 @@
             "description": "Sends a notification that is visible in the notifications panel.",
             "fields": {
                 "data": {
-                    "description": "Some integrations provide extended functionality. For information on how to use _data_, refer to the integration documentation..",
+                    "description": "Some integrations provide extended functionality via this field. For more information, refer to the integration documentation.",
                     "name": "Data"
                 },
                 "message": {

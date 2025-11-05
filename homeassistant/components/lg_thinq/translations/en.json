@@ -58,6 +58,12 @@
             },
             "signal_level": {
                 "name": "Chime sound"
+            },
+            "water_heater_operation_mode": {
+                "name": "Power",
+                "state": {
+                    "off": "Standby"
+                }
             }
         },
         "climate": {
@@ -168,9 +174,9 @@
                             "error_during_washing": "An error has occurred in the washing machine",
                             "error_has_occurred": "An error has occurred",
                             "frozen_is_complete": "Ice plus is done",
-                            "homeguard_is_stopped": "Home guard has stopped",
+                            "homeguard_is_stopped": "Home Guard has stopped",
                             "lack_of_water": "There is no water in the water tank",
-                            "motion_is_detected": "Photograph is sent as movement is detected during home guard",
+                            "motion_is_detected": "Photograph is sent as movement is detected during Home Guard",
                             "need_to_check_location": "Location check is required",
                             "pollution_is_high": "Air status is rapidly becoming bad",
                             "preheating_is_complete": "Preheating is done",
@@ -208,10 +214,10 @@
                 "name": "{location} schedule turn-on"
             },
             "relative_hour_to_start_wm": {
-                "name": "Delay starts in"
+                "name": "Delayed start"
             },
             "relative_hour_to_start_wm_for_location": {
-                "name": "{location} delay starts in"
+                "name": "{location} delayed start"
             },
             "relative_hour_to_stop": {
                 "name": "Schedule turn-off"
@@ -220,10 +226,10 @@
                 "name": "{location} schedule turn-off"
             },
             "relative_hour_to_stop_wm": {
-                "name": "Delay ends in"
+                "name": "Delayed end"
             },
             "relative_hour_to_stop_wm_for_location": {
-                "name": "{location} delay ends in"
+                "name": "{location} delayed end"
             },
             "sleep_timer_relative_hour_to_stop": {
                 "name": "Sleep timer"
@@ -344,6 +350,7 @@
                 "state": {
                     "cancel": "Cancel",
                     "power_off": "Power off",
+                    "power_on": "Power on",
                     "preheating": "Preheating",
                     "start": "Start",
                     "stop": "Stop",
@@ -355,6 +362,7 @@
                 "state": {
                     "cancel": "Cancel",
                     "power_off": "Power off",
+                    "power_on": "Power on",
                     "preheating": "Preheating",
                     "start": "Start",
                     "stop": "Stop",
@@ -532,9 +540,9 @@
                     "lock": "Control lock",
                     "macrosector": "Remote is in use",
                     "melting": "Wort dissolving",
-                    "monitoring_detecting": "HomeGuard is active",
+                    "monitoring_detecting": "Home Guard is active",
                     "monitoring_moving": "Going to the starting point",
-                    "monitoring_positioning": "Setting homeguard start point",
+                    "monitoring_positioning": "Setting Home Guard start point",
                     "night_dry": "Night dry",
                     "oven_setting": "Cooktop connected",
                     "pause": "Paused",
@@ -619,9 +627,9 @@
                     "lock": "Control lock",
                     "macrosector": "Remote is in use",
                     "melting": "Wort dissolving",
-                    "monitoring_detecting": "HomeGuard is active",
+                    "monitoring_detecting": "Home Guard is active",
                     "monitoring_moving": "Going to the starting point",
-                    "monitoring_positioning": "Setting homeguard start point",
+                    "monitoring_positioning": "Setting Home Guard start point",
                     "night_dry": "Night dry",
                     "oven_setting": "Cooktop connected",
                     "pause": "Paused",
@@ -664,6 +672,12 @@
             },
             "current_temperature": {
                 "name": "Current temperature"
+            },
+            "cycle_count": {
+                "name": "Cycles"
+            },
+            "cycle_count_for_location": {
+                "name": "{location} cycles"
             },
             "day_target_temperature": {
                 "name": "Day growth temperature"
@@ -793,10 +807,10 @@
                 "name": "{location} schedule turn-on"
             },
             "relative_to_start_wm": {
-                "name": "Delay starts in"
+                "name": "Delayed start"
             },
             "relative_to_start_wm_for_location": {
-                "name": "{location} delay starts in"
+                "name": "{location} delayed start"
             },
             "relative_to_stop": {
                 "name": "Schedule turn-off"
@@ -805,10 +819,10 @@
                 "name": "{location} schedule turn-off"
             },
             "relative_to_stop_wm": {
-                "name": "Delay ends in"
+                "name": "Delayed end"
             },
             "relative_to_stop_wm_for_location": {
-                "name": "{location} delay ends in"
+                "name": "{location} delayed end"
             },
             "remain": {
                 "name": "Remaining time"
@@ -825,6 +839,15 @@
                     "rinselevel_3": "3",
                     "rinselevel_4": "4"
                 }
+            },
+            "room_air_current_temperature": {
+                "name": "Indoor temperature"
+            },
+            "room_in_water_current_temperature": {
+                "name": "Inlet temperature"
+            },
+            "room_out_water_current_temperature": {
+                "name": "Outlet temperature"
             },
             "running": {
                 "name": "Running time"
@@ -957,11 +980,17 @@
             "auto_mode": {
                 "name": "Auto mode"
             },
+            "display_light": {
+                "name": "Lighting"
+            },
+            "express_fridge": {
+                "name": "Express cool"
+            },
             "express_mode": {
-                "name": "Ice plus"
+                "name": "Express mode"
             },
             "hot_water_mode": {
-                "name": "Hot water"
+                "name": "Heating water"
             },
             "humidity_warm_mode": {
                 "name": "Warm mist"

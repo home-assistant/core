@@ -30,7 +30,7 @@
             },
             "zeroconf_confirm": {
                 "description": "Confirm the configuration of the {model}-{serial_number} @ {host}.",
-                "title": "Setup Bang & Olufsen device"
+                "title": "Set up Bang & Olufsen device"
             }
         }
     },
@@ -180,7 +180,7 @@
     },
     "exceptions": {
         "invalid_grouping_entity": {
-            "message": "Entity with id: {entity_id} can't be added to the Beolink session. Is the entity a Bang & Olufsen media_player?"
+            "message": "Entity with ID {entity_id} can't be added to the Beolink session. Is the entity a Bang & Olufsen media_player?"
         },
         "invalid_media_type": {
             "message": "{invalid_media_type} is an invalid type. Valid values are: {valid_media_types}."
@@ -216,11 +216,11 @@
     },
     "services": {
         "beolink_allstandby": {
-            "description": "Set all Connected Beolink devices to standby.",
+            "description": "Sets all connected Beolink devices to standby.",
             "name": "Beolink all standby"
         },
         "beolink_expand": {
-            "description": "Expand current Beolink experience.",
+            "description": "Adds devices to the current Beolink experience.",
             "fields": {
                 "all_discovered": {
                     "description": "Expand Beolink experience to all discovered devices.",
@@ -240,7 +240,7 @@
             }
         },
         "beolink_join": {
-            "description": "Join a Beolink experience.",
+            "description": "Joins a Beolink experience.",
             "fields": {
                 "beolink_jid": {
                     "description": "Manually specify Beolink JID to join.",
@@ -260,11 +260,11 @@
             }
         },
         "beolink_leave": {
-            "description": "Leave a Beolink experience.",
+            "description": "Leaves a Beolink experience.",
             "name": "Beolink leave"
         },
         "beolink_unexpand": {
-            "description": "Unexpand from current Beolink experience.",
+            "description": "Removes devices from the current Beolink experience.",
             "fields": {
                 "beolink_jids": {
                     "description": "Specify which Beolink JIDs will leave from current Beolink experience.",

@@ -4,7 +4,8 @@
             "already_configured": "Device is already configured",
             "device_not_supported": "This device is not supported",
             "invalid_discovery_parameters": "Invalid discovery parameters",
-            "reauth_successful": "Enabling API was successful",
+            "reauth_enable_api_successful": "Enabling API was successful",
+            "reauth_successful": "Authorization successful",
             "reconfigure_successful": "Re-configuration was successful",
             "unknown_error": "Unexpected error",
             "unsupported_api_version": "Detected unsupported API version",
@@ -12,14 +13,23 @@
         },
         "error": {
             "api_not_enabled": "The local API is disabled. Go to the HomeWizard Energy app and enable the API in the device settings.",
+            "authorization_failed": "Failed to authorize, make sure to press the button of the device within 30 seconds",
             "network_error": "Device unreachable, make sure that you have entered the correct IP address and that the device is available in your network"
         },
         "step": {
+            "authorize": {
+                "description": "Press the button on the HomeWizard Energy device, then select the button below.",
+                "title": "Authorize"
+            },
             "discovery_confirm": {
                 "description": "Do you want to set up {product_type} ({serial}) at {ip_address}?",
                 "title": "Confirm"
             },
-            "reauth_confirm": {
+            "reauth_confirm_update_token": {
+                "description": "Press the button on the HomeWizard Energy device, then select the button below.",
+                "title": "Re-authenticate"
+            },
+            "reauth_enable_api": {
                 "description": "The local API is disabled. Go to the HomeWizard Energy app and enable the API in the device settings."
             },
             "reconfigure": {
@@ -80,6 +90,9 @@
             "any_power_fail_count": {
                 "name": "Power failures detected"
             },
+            "cycles": {
+                "name": "Battery cycles"
+            },
             "dsmr_version": {
                 "name": "DSMR version"
             },
@@ -91,6 +104,9 @@
             },
             "monthly_power_peak_w": {
                 "name": "Peak demand current month"
+            },
+            "state_of_charge_pct": {
+                "name": "State of charge"
             },
             "total_energy_export_kwh": {
                 "name": "Energy export"
@@ -110,11 +126,17 @@
             "unique_meter_id": {
                 "name": "Smart meter identifier"
             },
+            "uptime": {
+                "name": "Uptime"
+            },
             "voltage_sag_phase_count": {
                 "name": "Voltage sags detected phase {phase}"
             },
             "voltage_swell_phase_count": {
                 "name": "Voltage swells detected phase {phase}"
+            },
+            "wifi_rssi": {
+                "name": "Wi-Fi RSSI"
             },
             "wifi_ssid": {
                 "name": "Wi-Fi SSID"
@@ -138,6 +160,26 @@
         },
         "communication_error": {
             "message": "An error occurred while communicating with HomeWizard device"
+        }
+    },
+    "issues": {
+        "migrate_to_v2_api": {
+            "fix_flow": {
+                "error": {
+                    "authorization_failed": "Failed to authorize, make sure to press the button of the device within 30 seconds"
+                },
+                "step": {
+                    "authorize": {
+                        "description": "Press the button on the HomeWizard Energy device, then select the button below.",
+                        "title": "Authorize"
+                    },
+                    "confirm": {
+                        "description": "Your {title} now supports a more secure and feature-rich communication method. To take advantage of this, you need to reconfigure the integration.\n\nSelect **Submit** to start the reconfiguration.",
+                        "title": "Update authentication method"
+                    }
+                }
+            },
+            "title": "Update authentication method"
         }
     }
 }

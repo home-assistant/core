@@ -18,6 +18,7 @@
                     "name": "Name (optional, used as name prefix for all devices)",
                     "pin": "PIN code"
                 },
+                "description": "If you are about to register a **Homematic IP HCU1**, please press the button on top of the device before you continue.\n\nThe registration process must be completed within 5 minutes.",
                 "title": "Pick Homematic IP access point"
             },
             "link": {

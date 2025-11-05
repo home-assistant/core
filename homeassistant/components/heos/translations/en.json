@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_in_progress": "Configuration flow is already in progress",
+            "cannot_connect": "Failed to connect",
             "reauth_successful": "Re-authentication was successful",
             "reconfigure_successful": "Re-configuration was successful",
             "single_instance_allowed": "Already configured. Only a single configuration possible."
@@ -14,6 +15,10 @@
             "username_missing": "Username is missing"
         },
         "step": {
+            "confirm_discovery": {
+                "description": "Do you want to add your HEOS devices to Home Assistant?",
+                "title": "Discovered HEOS System"
+            },
             "reauth_confirm": {
                 "data": {
                     "password": "Password",
@@ -31,7 +36,7 @@
                     "host": "Host"
                 },
                 "data_description": {
-                    "host": "Host name or IP address of a HEOS-capable product (preferrably one connected via wire to the network)."
+                    "host": "Host name or IP address of a HEOS-capable product (preferably one connected via wire to the network)."
                 },
                 "description": "Change the host name or IP address of the HEOS-capable product used to access your HEOS System.",
                 "title": "Reconfigure HEOS"
@@ -41,7 +46,7 @@
                     "host": "Host"
                 },
                 "data_description": {
-                    "host": "Host name or IP address of a HEOS-capable product (preferrably one connected via wire to the network)."
+                    "host": "Host name or IP address of a HEOS-capable product (preferably one connected via wire to the network)."
                 },
                 "description": "Please enter the host name or IP address of a HEOS-capable product to access your HEOS System.",
                 "title": "Connect to HEOS"
@@ -55,14 +60,35 @@
         "entity_not_found": {
             "message": "Entity {entity_id} was not found"
         },
+        "entity_not_grouped": {
+            "message": "Entity {entity_id} is not joined to a group"
+        },
         "integration_not_loaded": {
             "message": "The HEOS integration is not loaded"
         },
         "not_heos_media_player": {
             "message": "Entity {entity_id} is not a HEOS media player entity"
         },
+        "sign_in_auth_error": {
+            "message": "Failed to sign in: Invalid username and/or password"
+        },
+        "sign_in_error": {
+            "message": "Unable to sign in: {error}"
+        },
+        "sign_out_error": {
+            "message": "Unable to sign out: {error}"
+        },
+        "unable_to_connect": {
+            "message": "Unable to connect to {host}"
+        },
+        "unable_to_get_players": {
+            "message": "Unexpected error retrieving players"
+        },
         "unknown_source": {
             "message": "Unknown source: {source}"
+        },
+        "unsupported_media_content_id": {
+            "message": "Unsupported media_content_id: {media_content_id}"
         }
     },
     "issues": {
@@ -94,6 +120,24 @@
         }
     },
     "services": {
+        "group_volume_down": {
+            "description": "Turns down the group volume.",
+            "name": "Turn down group volume"
+        },
+        "group_volume_set": {
+            "description": "Sets the group's volume while preserving member volume ratios.",
+            "fields": {
+                "volume_level": {
+                    "description": "The volume. 0 is inaudible, 1 is the maximum volume.",
+                    "name": "Level"
+                }
+            },
+            "name": "Set group volume"
+        },
+        "group_volume_up": {
+            "description": "Turns up the group volume.",
+            "name": "Turn up group volume"
+        },
         "sign_in": {
             "description": "Signs in to a HEOS account.",
             "fields": {

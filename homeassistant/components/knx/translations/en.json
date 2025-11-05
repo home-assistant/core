@@ -387,7 +387,7 @@
                     "name": "Group address"
                 },
                 "remove": {
-                    "description": "If `True` the group address(es) will be removed.",
+                    "description": "Whether the group address(es) will be removed.",
                     "name": "Remove event registration"
                 },
                 "type": {
@@ -417,7 +417,7 @@
                     "name": "Entity"
                 },
                 "remove": {
-                    "description": "If `True` the exposure will be removed. Only `address` is required for removal.",
+                    "description": "Whether the exposure should be removed. Only the 'Address' field is required for removal.",
                     "name": "Remove exposure"
                 },
                 "type": {
@@ -453,7 +453,7 @@
                     "name": "Payload"
                 },
                 "response": {
-                    "description": "If set to `True`, the telegram will be sent as a `GroupValueResponse` instead of a `GroupValueWrite`.",
+                    "description": "Whether the telegram should be sent as a `GroupValueResponse` instead of a `GroupValueWrite`.",
                     "name": "Send as Response"
                 },
                 "type": {

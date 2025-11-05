@@ -114,6 +114,9 @@
             "overheated": {
                 "name": "Overheated"
             },
+            "overloaded": {
+                "name": "Overloaded"
+            },
             "temperature_warning": {
                 "name": "Temperature warning"
             },
@@ -126,11 +129,29 @@
             }
         },
         "button": {
+            "charging_contacts_reset": {
+                "name": "Reset charging contacts consumable"
+            },
+            "filter_reset": {
+                "name": "Reset filter consumable"
+            },
+            "main_brush_reset": {
+                "name": "Reset main brush consumable"
+            },
+            "pair": {
+                "name": "Pair new device"
+            },
             "pan_left": {
                 "name": "Pan left"
             },
             "pan_right": {
                 "name": "Pan right"
+            },
+            "sensor_reset": {
+                "name": "Reset sensor consumable"
+            },
+            "side_brush_reset": {
+                "name": "Reset side brush consumable"
             },
             "stop_alarm": {
                 "name": "Stop alarm"
@@ -143,6 +164,9 @@
             },
             "tilt_up": {
                 "name": "Tilt up"
+            },
+            "unpair": {
+                "name": "Unpair device"
             }
         },
         "camera": {
@@ -154,8 +178,14 @@
             "auto_off_minutes": {
                 "name": "Turn off in"
             },
+            "clean_count": {
+                "name": "Clean count"
+            },
             "pan_step": {
                 "name": "Pan degrees"
+            },
+            "power_protection_threshold": {
+                "name": "Power protection"
             },
             "smooth_transition_off": {
                 "name": "Smooth off"
@@ -188,6 +218,21 @@
             "auto_off_at": {
                 "name": "Auto off at"
             },
+            "charging_contacts_remaining": {
+                "name": "Charging contacts remaining"
+            },
+            "charging_contacts_used": {
+                "name": "Charging contacts used"
+            },
+            "clean_area": {
+                "name": "Cleaning area"
+            },
+            "clean_progress": {
+                "name": "Cleaning progress"
+            },
+            "clean_time": {
+                "name": "Cleaning time"
+            },
             "consumption_this_month": {
                 "name": "This month's consumption"
             },
@@ -203,17 +248,76 @@
             "device_time": {
                 "name": "Device time"
             },
+            "filter_remaining": {
+                "name": "Filter remaining"
+            },
+            "filter_used": {
+                "name": "Filter used"
+            },
+            "last_clean_area": {
+                "name": "Last cleaned area"
+            },
+            "last_clean_time": {
+                "name": "Last cleaned time"
+            },
+            "last_clean_timestamp": {
+                "name": "Last clean start"
+            },
+            "main_brush_remaining": {
+                "name": "Main brush remaining"
+            },
+            "main_brush_used": {
+                "name": "Main brush used"
+            },
             "on_since": {
                 "name": "On since"
             },
             "report_interval": {
                 "name": "Report interval"
             },
+            "sensor_remaining": {
+                "name": "Sensor remaining"
+            },
+            "sensor_used": {
+                "name": "Sensor used"
+            },
+            "side_brush_remaining": {
+                "name": "Side brush remaining"
+            },
+            "side_brush_used": {
+                "name": "Side brush used"
+            },
             "signal_level": {
                 "name": "Signal level"
             },
             "ssid": {
                 "name": "SSID"
+            },
+            "total_clean_area": {
+                "name": "Total cleaning area"
+            },
+            "total_clean_count": {
+                "name": "Total cleaning count"
+            },
+            "total_clean_time": {
+                "name": "Total cleaning time"
+            },
+            "vacuum_error": {
+                "name": "Error",
+                "state": {
+                    "batterylow": "Low on battery",
+                    "dustbinremoved": "Missing dust bin",
+                    "lidarblocked": "Lidar blocked",
+                    "mainbrushstuck": "Main brush stuck",
+                    "ok": "No error",
+                    "sidebrushstuck": "Side brush stuck",
+                    "trapped": "Unable to move",
+                    "trappedcliff": "Unable to move (cliff sensor)",
+                    "unabletofinddock": "Unable to find dock",
+                    "unabletomove": "Unable to move",
+                    "unknowninternal": "Unknown error, report to upstream",
+                    "wheelblocked": "Wheel blocked"
+                }
             },
             "water_alert_timestamp": {
                 "name": "Last water leak alert"
@@ -228,6 +332,9 @@
             },
             "baby_cry_detection": {
                 "name": "Baby cry detection"
+            },
+            "carpet_boost": {
+                "name": "Carpet boost"
             },
             "child_lock": {
                 "name": "Child lock"
@@ -253,6 +360,21 @@
             "tamper_detection": {
                 "name": "Tamper detection"
             }
+        },
+        "vacuum": {
+            "vacuum": {
+                "state_attributes": {
+                    "fan_speed": {
+                        "state": {
+                            "max": "Max",
+                            "quiet": "Quiet",
+                            "standard": "Standard",
+                            "turbo": "Turbo",
+                            "ultra": "Ultra"
+                        }
+                    }
+                }
+            }
         }
     },
     "exceptions": {
@@ -264,6 +386,9 @@
         },
         "device_timeout": {
             "message": "Timeout communicating with the device {func}: {exc}"
+        },
+        "invalid_alarm_duration": {
+            "message": "Invalid duration {duration} available: 1-{duration_max}s"
         },
         "set_custom_effect": {
             "message": "Error trying to set custom effect {effect}: {exc}"

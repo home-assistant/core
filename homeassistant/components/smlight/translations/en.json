@@ -38,7 +38,7 @@
                 "data_description": {
                     "host": "The hostname or IP address of the SMLIGHT SLZB-06x device"
                 },
-                "description": "Set up SMLIGHT Zigbee Integration"
+                "description": "Set up SMLIGHT Zigbee integration"
             }
         }
     },
@@ -62,7 +62,7 @@
                 "name": "Core restart"
             },
             "reconnect_zigbee_router": {
-                "name": "Reconnect zigbee router"
+                "name": "Reconnect Zigbee router"
             },
             "zigbee_flash_mode": {
                 "name": "Zigbee flash mode"

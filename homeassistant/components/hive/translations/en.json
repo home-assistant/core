@@ -9,7 +9,7 @@
             "invalid_code": "Failed to sign into Hive. Your two-factor authentication code was incorrect.",
             "invalid_password": "Failed to sign into Hive. Incorrect password, please try again.",
             "invalid_username": "Failed to sign into Hive. Your email address is not recognised.",
-            "no_internet_available": "An internet connection is required to connect to Hive.",
+            "no_internet_available": "An Internet connection is required to connect to Hive.",
             "unknown": "Unexpected error"
         },
         "step": {
@@ -17,15 +17,15 @@
                 "data": {
                     "2fa": "Two-factor code"
                 },
-                "description": "Enter your Hive authentication code. \n \n Please enter code 0000 to request another code.",
-                "title": "Hive Two-factor Authentication."
+                "description": "Enter your Hive authentication code.\n\nPlease enter code 0000 to request another code.",
+                "title": "Hive two-factor authentication"
             },
             "configuration": {
                 "data": {
-                    "device_name": "Device Name"
+                    "device_name": "Device name"
                 },
-                "description": "Enter your Hive configuration",
-                "title": "Hive Configuration."
+                "description": "Enter your Hive configuration.",
+                "title": "Hive configuration"
             },
             "reauth": {
                 "data": {
@@ -33,16 +33,16 @@
                     "username": "Username"
                 },
                 "description": "Re-enter your Hive login information.",
-                "title": "Hive Login"
+                "title": "Hive login"
             },
             "user": {
                 "data": {
                     "password": "Password",
-                    "scan_interval": "Scan Interval (seconds)",
+                    "scan_interval": "Scan interval (seconds)",
                     "username": "Username"
                 },
                 "description": "Enter your Hive login information.",
-                "title": "Hive Login"
+                "title": "Hive login"
             }
         }
     },

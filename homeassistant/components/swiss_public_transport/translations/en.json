@@ -7,7 +7,7 @@
             "unknown": "An unknown error was raised by python-opendata-transport"
         },
         "error": {
-            "bad_config": "Request failed due to bad config: Check at [stationboard]({stationboard_url}) if your station names are valid",
+            "bad_config": "Request failed due to bad config: Check the stationboard linked above if your station names are valid",
             "cannot_connect": "Cannot connect to server",
             "too_many_via_stations": "Too many via stations, only up to 5 via stations are allowed per connection.",
             "unknown": "An unknown error was raised by python-opendata-transport"
@@ -48,7 +48,7 @@
                     "to": "The station where the connection ends",
                     "via": "List of up to 5 stations the route must go through"
                 },
-                "description": "Provide start and end station for your connection,\nand optionally up to 5 via stations.\n\nCheck the [stationboard]({stationboard_url}) for valid stations.",
+                "description": "Provide start and end station for your connection, and optionally up to 5 via stations.\n\nCheck the [stationboard]({stationboard_url}) for valid stations.",
                 "title": "Swiss Public Transport"
             }
         }
@@ -67,9 +67,6 @@
             "departure2": {
                 "name": "Departure +2"
             },
-            "duration": {
-                "name": "Duration"
-            },
             "line": {
                 "name": "Line"
             },
@@ -78,6 +75,9 @@
             },
             "transfers": {
                 "name": "Transfers"
+            },
+            "trip_duration": {
+                "name": "Trip duration"
             }
         }
     },
@@ -115,18 +115,18 @@
     },
     "services": {
         "fetch_connections": {
-            "description": "Fetch a list of connections from the swiss public transport.",
+            "description": "Fetches a list of connections from Swiss public transport.",
             "fields": {
                 "config_entry_id": {
                     "description": "Swiss public transport instance to fetch connections for.",
                     "name": "Instance"
                 },
                 "limit": {
-                    "description": "Number of connections to fetch from [1-15]",
+                    "description": "Number of connections to fetch.",
                     "name": "Limit"
                 }
             },
-            "name": "Fetch Connections"
+            "name": "Fetch connections"
         }
     }
 }

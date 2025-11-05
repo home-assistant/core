@@ -1,10 +1,14 @@
 {
+    "common": {
+        "account_locked_error": "The account is locked. Please follow the instructions in the manufacturer's app to unlock it"
+    },
     "config": {
         "abort": {
             "already_configured": "Account is already configured",
             "reauth_successful": "Re-authentication was successful"
         },
         "error": {
+            "account_locked": "The account is locked. Please follow the instructions in the manufacturer's app to unlock it",
             "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication",
             "no_appliances": "No supported appliances found",
@@ -84,6 +88,11 @@
                     "unknown": "Unknown"
                 }
             }
+        }
+    },
+    "exceptions": {
+        "account_locked": {
+            "message": "The account is locked. Please follow the instructions in the manufacturer's app to unlock it"
         }
     }
 }

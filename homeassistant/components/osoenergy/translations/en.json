@@ -213,7 +213,7 @@
             "description": "Turns off heating for one hour or until min temperature is reached",
             "fields": {
                 "until_temp_limit": {
-                    "description": "Choose if heating should be off until min temperature (True) is reached or for one hour (False)",
+                    "description": "Whether heating should be off until the minimum temperature is reached instead of for one hour.",
                     "name": "Until temperature limit"
                 }
             },
@@ -223,7 +223,7 @@
             "description": "Turns on heating for one hour or until max temperature is reached",
             "fields": {
                 "until_temp_limit": {
-                    "description": "Choose if heating should be on until max temperature (True) is reached or for one hour (False)",
+                    "description": "Whether heating should be on until the maximum temperature is reached instead of for one hour.",
                     "name": "Until temperature limit"
                 }
             },

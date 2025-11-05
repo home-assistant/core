@@ -1,0 +1,104 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "data_description": {
+                    "password": "Your Snoo password",
+                    "username": "Your Snoo username or email"
+                }
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "left_clip": {
+                "name": "Left safety clip"
+            },
+            "right_clip": {
+                "name": "Right safety clip"
+            }
+        },
+        "event": {
+            "event": {
+                "name": "Snoo event",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "activity": "Activity press",
+                            "command": "Command sent",
+                            "cry": "Cry",
+                            "long_activity_press": "Long activity press",
+                            "power": "Power button pressed",
+                            "safety_clip": "Safety clip changed",
+                            "status_requested": "Status requested",
+                            "sticky_white_noise_updated": "Sleepytime sounds updated",
+                            "timer": "Timer"
+                        }
+                    }
+                }
+            }
+        },
+        "select": {
+            "intensity": {
+                "name": "Intensity",
+                "state": {
+                    "baseline": "Baseline",
+                    "level1": "Level 1",
+                    "level2": "Level 2",
+                    "level3": "Level 3",
+                    "level4": "Level 4",
+                    "stop": "Stopped"
+                }
+            }
+        },
+        "sensor": {
+            "state": {
+                "name": "State",
+                "state": {
+                    "baseline": "Baseline",
+                    "level1": "Level 1",
+                    "level2": "Level 2",
+                    "level3": "Level 3",
+                    "level4": "Level 4",
+                    "pretimeout": "Pre-timeout",
+                    "stop": "Stopped",
+                    "timeout": "Timeout"
+                }
+            },
+            "time_left": {
+                "name": "Time left"
+            }
+        },
+        "switch": {
+            "hold": {
+                "name": "Level lock"
+            },
+            "sticky_white_noise": {
+                "name": "Sleepytime sounds"
+            }
+        }
+    },
+    "exceptions": {
+        "select_failed": {
+            "message": "Error while updating {name} to {option}"
+        },
+        "switch_off_failed": {
+            "message": "Turning {name} off failed"
+        },
+        "switch_on_failed": {
+            "message": "Turning {name} on failed"
+        }
+    }
+}

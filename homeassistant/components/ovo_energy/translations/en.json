@@ -21,12 +21,12 @@
             },
             "user": {
                 "data": {
-                    "account": "OVO account id (only add if you have multiple accounts)",
+                    "account": "OVO account ID (only add if you have multiple accounts)",
                     "password": "Password",
                     "username": "Username"
                 },
                 "description": "Set up an OVO Energy instance to access your energy usage.",
-                "title": "Add OVO Energy Account"
+                "title": "Add OVO Energy account"
             }
         }
     },

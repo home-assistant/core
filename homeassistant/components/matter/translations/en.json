@@ -180,6 +180,21 @@
             "clean_mode": {
                 "name": "Clean mode"
             },
+            "device_energy_management_mode": {
+                "name": "Energy management mode"
+            },
+            "laundry_washer_number_of_rinses": {
+                "name": "Number of rinses",
+                "state": {
+                    "extra": "Extra",
+                    "max": "Max",
+                    "normal": "Normal",
+                    "off": "Off"
+                }
+            },
+            "laundry_washer_spin_speed": {
+                "name": "Spin speed"
+            },
             "mode": {
                 "name": "Mode"
             },
@@ -234,6 +249,9 @@
                     "warning": "Warning"
                 }
             },
+            "current_phase": {
+                "name": "Current phase"
+            },
             "expiry_date": {
                 "name": "Expiry date"
             },
@@ -246,9 +264,12 @@
             "operational_state": {
                 "name": "Operational state",
                 "state": {
+                    "charging": "Charging",
+                    "docked": "Docked",
                     "error": "Error",
                     "paused": "Paused",
                     "running": "Running",
+                    "seeking_charger": "Seeking charger",
                     "stopped": "Stopped"
                 }
             },

@@ -18,8 +18,8 @@
                 "data": {
                     "api_key": "API key"
                 },
-                "description": "Please enter a new api key for PI-Hole at {host}/{location}",
-                "title": "Reauthenticate PI-Hole"
+                "description": "Please enter a new API key for Pi-hole at {host}/{location}",
+                "title": "Reauthenticate Pi-hole"
             },
             "user": {
                 "data": {

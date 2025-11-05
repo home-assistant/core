@@ -90,8 +90,7 @@
                             "heavy": "Heavy",
                             "mild": "Mild",
                             "none": "None",
-                            "test": "Test",
-                            "unknown": "Unknown"
+                            "test": "Test"
                         }
                     }
                 }
@@ -120,15 +119,50 @@
             }
         },
         "sensor": {
+            "gas_detected": {
+                "state": {
+                    "heavy": "Heavy",
+                    "mild": "Mild",
+                    "none": "None",
+                    "test": "Test"
+                },
+                "state_attributes": {
+                    "options": {
+                        "state": {
+                            "heavy": "Heavy",
+                            "mild": "Mild",
+                            "none": "None",
+                            "test": "Test"
+                        }
+                    }
+                }
+            },
             "operation": {
                 "state": {
                     "fault": "Fault",
                     "normal": "Normal",
-                    "unknown": "Unknown",
                     "warmup": "Warm-up"
                 },
                 "state_attributes": {
                     "self_test": {
+                        "state": {
+                            "completed": "Completed",
+                            "not_completed": "Not completed",
+                            "pending": "Pending",
+                            "running": "Running"
+                        }
+                    }
+                }
+            },
+            "self_test": {
+                "state": {
+                    "completed": "Completed",
+                    "not_completed": "Not completed",
+                    "pending": "Pending",
+                    "running": "Running"
+                },
+                "state_attributes": {
+                    "options": {
                         "state": {
                             "completed": "Completed",
                             "not_completed": "Not completed",
@@ -145,8 +179,7 @@
                     "closing": "Closing",
                     "failure": "Failure",
                     "opened": "Opened",
-                    "opening": "Opening",
-                    "unknown": "Unknown"
+                    "opening": "Opening"
                 }
             }
         }

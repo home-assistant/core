@@ -1,0 +1,72 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured",
+            "reauth_successful": "Re-authentication was successful",
+            "reconfigure_successful": "Re-configuration was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "storage_account_key": "Storage account key"
+                },
+                "data_description": {
+                    "storage_account_key": "Storage account access key used for authorization"
+                },
+                "description": "Provide a new storage account key.",
+                "title": "Reauthenticate Azure storage account"
+            },
+            "reconfigure": {
+                "data": {
+                    "container_name": "Container name",
+                    "storage_account_key": "Storage account key"
+                },
+                "data_description": {
+                    "container_name": "Name of the storage container to be used (will be created if it does not exist)",
+                    "storage_account_key": "Storage account access key used for authorization"
+                },
+                "description": "Change the settings of the Azure storage integration.",
+                "title": "Reconfigure Azure storage account"
+            },
+            "user": {
+                "data": {
+                    "account_name": "Account name",
+                    "container_name": "Container name",
+                    "storage_account_key": "Storage account key"
+                },
+                "data_description": {
+                    "account_name": "Name of the storage account",
+                    "container_name": "Name of the storage container to be used (will be created if it does not exist)",
+                    "storage_account_key": "Storage account access key used for authorization"
+                },
+                "description": "Set up an Azure (Blob) storage account to be used for backups.",
+                "title": "Add Azure storage account"
+            }
+        }
+    },
+    "exceptions": {
+        "account_not_found": {
+            "message": "Storage account {account_name} not found"
+        },
+        "cannot_connect": {
+            "message": "Can not connect to storage account {account_name}"
+        },
+        "container_not_found": {
+            "message": "Storage container {container_name} not found"
+        },
+        "invalid_auth": {
+            "message": "Authentication failed for storage account {account_name}"
+        }
+    },
+    "issues": {
+        "container_not_found": {
+            "description": "The storage container {container_name} has not been found in the storage account. Please re-create it manually, then fix this issue.",
+            "title": "Storage container not found"
+        }
+    }
+}

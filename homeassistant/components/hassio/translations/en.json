@@ -170,7 +170,7 @@
             "title": "Unsupported system - CGroup version"
         },
         "unsupported_connectivity_check": {
-            "description": "System is unsupported because Home Assistant cannot determine when an internet connection is available. Use the link to learn more and how to fix this.",
+            "description": "System is unsupported because Home Assistant cannot determine when an Internet connection is available. Use the link to learn more and how to fix this.",
             "title": "Unsupported system - Connectivity check disabled"
         },
         "unsupported_content_trust": {
@@ -234,7 +234,7 @@
             "title": "Unsupported system - Systemd issues"
         },
         "unsupported_systemd_journal": {
-            "description": "System is unsupported because Systemd Journal and/or the gateway service is missing, inactive or misconfigured . Use the link to learn more and how to fix this.",
+            "description": "System is unsupported because Systemd Journal and/or the gateway service is missing, inactive or misconfigured. Use the link to learn more and how to fix this.",
             "title": "Unsupported system - Systemd Journal issues"
         },
         "unsupported_systemd_resolved": {
@@ -309,7 +309,7 @@
                     "name": "Compressed"
                 },
                 "homeassistant_exclude_database": {
-                    "description": "Exclude the Home Assistant database file from backup",
+                    "description": "Exclude the Home Assistant database file from the backup.",
                     "name": "Home Assistant exclude database"
                 },
                 "location": {
@@ -347,7 +347,7 @@
                     "name": "Home Assistant settings"
                 },
                 "homeassistant_exclude_database": {
-                    "description": "Exclude the Home Assistant database file from backup",
+                    "description": "Exclude the Home Assistant database file from the backup.",
                     "name": "Home Assistant exclude database"
                 },
                 "location": {

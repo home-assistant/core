@@ -53,11 +53,11 @@
     },
     "services": {
         "get_energy_prices": {
-            "description": "Request energy prices from EnergyZero.",
+            "description": "Requests energy prices from EnergyZero.",
             "fields": {
                 "config_entry": {
                     "description": "The config entry to use for this action.",
-                    "name": "Config Entry"
+                    "name": "Config entry"
                 },
                 "end": {
                     "description": "Specifies the date and time until which to retrieve prices. Defaults to today if omitted.",
@@ -75,11 +75,11 @@
             "name": "Get energy prices"
         },
         "get_gas_prices": {
-            "description": "Request gas prices from EnergyZero.",
+            "description": "Requests gas prices from EnergyZero.",
             "fields": {
                 "config_entry": {
                     "description": "The config entry to use for this action.",
-                    "name": "Config Entry"
+                    "name": "Config entry"
                 },
                 "end": {
                     "description": "Specifies the date and time until which to retrieve prices. Defaults to today if omitted.",

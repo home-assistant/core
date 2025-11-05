@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "invalid_auth": "Invalid authentication",
+            "missing_capabilities": "The MCP server does not support a required capability (Tools)"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_url": "Must be a valid MCP server URL e.g. https://example.com/sse",
+            "timeout_connect": "Timeout establishing connection",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "url": "URL"
+                },
+                "data_description": {
+                    "url": "The remote MCP server URL for the SSE endpoint, for example http://example/sse"
+                }
+            }
+        }
+    }
+}

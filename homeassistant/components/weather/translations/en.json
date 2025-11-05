@@ -82,12 +82,12 @@
             "fix_flow": {
                 "step": {
                     "confirm": {
-                        "description": "Use `weather.get_forecasts` instead which supports multiple entities.\n\nPlease replace this service and adjust your automations and scripts and select **Submit** to close this issue.",
-                        "title": "Detected use of deprecated service weather.get_forecast"
+                        "description": "Use `weather.get_forecasts` instead which supports multiple entities.\n\nPlease replace this action and adjust your automations and scripts and select **Submit** to close this issue.",
+                        "title": "Detected use of deprecated action weather.get_forecast"
                     }
                 }
             },
-            "title": "Detected use of deprecated service weather.get_forecast"
+            "title": "Detected use of deprecated action weather.get_forecast"
         }
     },
     "selector": {
@@ -101,20 +101,20 @@
     },
     "services": {
         "get_forecast": {
-            "description": "Get weather forecast.",
+            "description": "Retrieves the forecast from a selected weather service.",
             "fields": {
                 "type": {
-                    "description": "Forecast type: daily, hourly or twice daily.",
+                    "description": "The scope of the weather forecast.",
                     "name": "Forecast type"
                 }
             },
             "name": "Get forecast"
         },
         "get_forecasts": {
-            "description": "Get weather forecasts.",
+            "description": "Retrieves the forecast from selected weather services.",
             "fields": {
                 "type": {
-                    "description": "Forecast type: daily, hourly or twice daily.",
+                    "description": "The scope of the weather forecast.",
                     "name": "Forecast type"
                 }
             },

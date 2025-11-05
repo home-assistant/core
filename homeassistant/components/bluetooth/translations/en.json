@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Service is already configured",
-            "no_adapters": "No unconfigured Bluetooth adapters found. There are {ignored_adapters} ignored adapters."
+            "no_adapters": "No unconfigured Bluetooth adapters found."
         },
         "flow_title": "{name} {manufacturer} {model}",
         "step": {
@@ -28,6 +28,7 @@
     },
     "options": {
         "abort": {
+            "local_adapters_no_passive_support": "Local Bluetooth adapters that do not support passive scanning cannot be configured.",
             "remote_adapters_not_supported": "Bluetooth configuration for remote adapters is not supported."
         },
         "step": {

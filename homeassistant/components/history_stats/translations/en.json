@@ -18,7 +18,7 @@
                     "end": "When to stop the measure (timestamp or datetime). Can be a template",
                     "start": "When to start the measure (timestamp or datetime). Can be a template."
                 },
-                "description": "Read the documention for further details on how to configure the history stats sensor using these options."
+                "description": "Read the documentation for further details on how to configure the history stats sensor using these options."
             },
             "user": {
                 "data": {
@@ -56,7 +56,7 @@
                     "end": "When to stop the measure (timestamp or datetime). Can be a template",
                     "start": "When to start the measure (timestamp or datetime). Can be a template."
                 },
-                "description": "Read the documention for further details on how to configure the history stats sensor using these options."
+                "description": "Read the documentation for further details on how to configure the history stats sensor using these options."
             }
         }
     },

@@ -50,6 +50,10 @@
             "calibrate_stop": "Stop runtime calibration",
             "load_off": "Turn off the load immediately",
             "load_on": "Turn on the load immediately",
+            "outlet_1_load_off": "Power outlet 1 off",
+            "outlet_1_load_on": "Power outlet 1 on",
+            "outlet_2_load_off": "Power outlet 2 off",
+            "outlet_2_load_on": "Power outlet 2 on",
             "reset_input_minmax": "Reset minimum and maximum input voltage status",
             "reset_watchdog": "Reset watchdog timer (forced reboot of load)",
             "shutdown_reboot": "Shut down the load briefly while rebooting the UPS",
@@ -73,8 +77,14 @@
             "ambient_humidity": {
                 "name": "Ambient humidity"
             },
+            "ambient_humidity_status": {
+                "name": "Ambient humidity status"
+            },
             "ambient_temperature": {
                 "name": "Ambient temperature"
+            },
+            "ambient_temperature_status": {
+                "name": "Ambient temperature status"
             },
             "battery_alarm_threshold": {
                 "name": "Battery alarm threshold"
@@ -187,6 +197,9 @@
             "input_current": {
                 "name": "Input current"
             },
+            "input_current_status": {
+                "name": "Input current status"
+            },
             "input_frequency": {
                 "name": "Input frequency"
             },
@@ -232,8 +245,14 @@
             "input_l3_realpower": {
                 "name": "Input L3 real power"
             },
+            "input_load": {
+                "name": "Input load"
+            },
             "input_phases": {
                 "name": "Input phases"
+            },
+            "input_power": {
+                "name": "Input power"
             },
             "input_realpower": {
                 "name": "Input real power"
@@ -255,6 +274,12 @@
             },
             "input_voltage_nominal": {
                 "name": "Nominal input voltage"
+            },
+            "input_voltage_status": {
+                "name": "Input voltage status"
+            },
+            "outlet_voltage": {
+                "name": "Outlet voltage"
             },
             "output_current": {
                 "name": "Output current"

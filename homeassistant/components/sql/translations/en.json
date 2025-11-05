@@ -7,7 +7,7 @@
             "column_invalid": "The column `{column}` is not returned by the query",
             "db_url_invalid": "Database URL invalid",
             "multiple_queries": "Multiple SQL queries are not supported",
-            "query_invalid": "SQL Query invalid",
+            "query_invalid": "SQL query invalid",
             "query_no_read_only": "SQL query must be read-only"
         },
         "step": {
@@ -15,22 +15,22 @@
                 "data": {
                     "column": "Column",
                     "db_url": "Database URL",
-                    "device_class": "Device Class",
+                    "device_class": "Device class",
                     "name": "Name",
-                    "query": "Select Query",
-                    "state_class": "State Class",
-                    "unit_of_measurement": "Unit of Measure",
-                    "value_template": "Value Template"
+                    "query": "Select query",
+                    "state_class": "State class",
+                    "unit_of_measurement": "Unit of measurement",
+                    "value_template": "Value template"
                 },
                 "data_description": {
                     "column": "Column for returned query to present as state",
-                    "db_url": "Database URL, leave empty to use HA recorder database",
+                    "db_url": "Leave empty to use Home Assistant Recorder database",
                     "device_class": "The type/class of the sensor to set the icon in the frontend",
-                    "name": "Name that will be used for Config Entry and also the Sensor",
+                    "name": "Name that will be used for config entry and also the sensor",
                     "query": "Query to run, needs to start with 'SELECT'",
-                    "state_class": "The state_class of the sensor",
-                    "unit_of_measurement": "Unit of Measure (optional)",
-                    "value_template": "Value Template (optional)"
+                    "state_class": "The state class of the sensor",
+                    "unit_of_measurement": "The unit of measurement for the sensor (optional)",
+                    "value_template": "Template to extract a value from the payload (optional)"
                 }
             }
         }
@@ -46,7 +46,7 @@
             "column_invalid": "The column `{column}` is not returned by the query",
             "db_url_invalid": "Database URL invalid",
             "multiple_queries": "Multiple SQL queries are not supported",
-            "query_invalid": "SQL Query invalid",
+            "query_invalid": "SQL query invalid",
             "query_no_read_only": "SQL query must be read-only"
         },
         "step": {
@@ -54,22 +54,22 @@
                 "data": {
                     "column": "Column",
                     "db_url": "Database URL",
-                    "device_class": "Device Class",
+                    "device_class": "Device class",
                     "name": "Name",
-                    "query": "Select Query",
-                    "state_class": "State Class",
-                    "unit_of_measurement": "Unit of Measure",
-                    "value_template": "Value Template"
+                    "query": "Select query",
+                    "state_class": "State class",
+                    "unit_of_measurement": "Unit of measurement",
+                    "value_template": "Value template"
                 },
                 "data_description": {
                     "column": "Column for returned query to present as state",
-                    "db_url": "Database URL, leave empty to use HA recorder database",
+                    "db_url": "Leave empty to use Home Assistant Recorder database",
                     "device_class": "The type/class of the sensor to set the icon in the frontend",
-                    "name": "Name that will be used for Config Entry and also the Sensor",
+                    "name": "Name that will be used for config entry and also the sensor",
                     "query": "Query to run, needs to start with 'SELECT'",
-                    "state_class": "The state_class of the sensor",
-                    "unit_of_measurement": "Unit of Measure (optional)",
-                    "value_template": "Value Template (optional)"
+                    "state_class": "The state class of the sensor",
+                    "unit_of_measurement": "The unit of measurement for the sensor (optional)",
+                    "value_template": "Template to extract a value from the payload (optional)"
                 }
             }
         }

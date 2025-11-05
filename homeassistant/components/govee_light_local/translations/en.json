@@ -9,5 +9,29 @@
                 "description": "Do you want to start setup?"
             }
         }
+    },
+    "entity": {
+        "light": {
+            "govee_light": {
+                "state_attributes": {
+                    "effect": {
+                        "state": {
+                            "breathe": "Breathe",
+                            "candlelight": "Candlelight",
+                            "crossing": "Crossing",
+                            "dating": "Dating",
+                            "energetic": "Energetic",
+                            "movie": "Movie",
+                            "none": "None",
+                            "romantic": "Romantic",
+                            "snowflake": "Snowflake",
+                            "sunrise": "Sunrise",
+                            "sunset": "Sunset",
+                            "twinkle": "Twinkle"
+                        }
+                    }
+                }
+            }
+        }
     }
 }

@@ -61,6 +61,9 @@
             "frost_protection": {
                 "name": "Frost protection"
             },
+            "one_time_charge": {
+                "name": "One-time charge"
+            },
             "solar_pump": {
                 "name": "Solar pump"
             }
@@ -81,10 +84,12 @@
                 "state_attributes": {
                     "preset_mode": {
                         "state": {
-                            "permanent": "permanent",
-                            "sensor_driven": "sensor",
-                            "sensor_override": "schedule with sensor-override",
-                            "ventilation": "schedule"
+                            "permanent": "Permanent",
+                            "sensor_driven": "Sensor-driven",
+                            "sensor_override": "Schedule with sensor-override",
+                            "standard": "Minimal",
+                            "standby": "Standby",
+                            "ventilation": "Schedule"
                         }
                     }
                 }
@@ -144,8 +149,20 @@
             "boiler_temperature": {
                 "name": "Boiler temperature"
             },
+            "buffer_bottom_temperature": {
+                "name": "Buffer bottom temperature"
+            },
             "buffer_main_temperature": {
                 "name": "Buffer main temperature"
+            },
+            "buffer_mid_bottom_temperature": {
+                "name": "Buffer mid bottom temperature"
+            },
+            "buffer_mid_top_temperature": {
+                "name": "Buffer mid top temperature"
+            },
+            "buffer_middle_temperature": {
+                "name": "Buffer middle temperature"
             },
             "buffer_top_temperature": {
                 "name": "Buffer top temperature"
@@ -254,6 +271,9 @@
                     "standby": "Standby"
                 }
             },
+            "fuel_need": {
+                "name": "Fuel need"
+            },
             "gas_consumption_fuelcell_this_month": {
                 "name": "Fuel cell gas consumption this month"
             },
@@ -354,25 +374,25 @@
                 "name": "Power exchange with grid"
             },
             "photovoltaic_energy_production_this_month": {
-                "name": "Solar energy production this month"
+                "name": "PV energy production this month"
             },
             "photovoltaic_energy_production_this_week": {
-                "name": "Solar energy production this week"
+                "name": "PV energy production this week"
             },
             "photovoltaic_energy_production_this_year": {
-                "name": "Solar energy production this year"
+                "name": "PV energy production this year"
             },
             "photovoltaic_energy_production_today": {
-                "name": "Solar energy production today"
+                "name": "PV energy production today"
             },
             "photovoltaic_energy_production_total": {
-                "name": "Solar energy production total"
+                "name": "PV energy production total"
             },
             "photovoltaic_power_production_current": {
-                "name": "Solar power"
+                "name": "PV power"
             },
             "photovoltaic_status": {
-                "name": "Solar state",
+                "name": "PV state",
                 "state": {
                     "production": "Producing",
                     "ready": "Standby"
@@ -435,6 +455,15 @@
             "solar_storage_temperature": {
                 "name": "Solar storage temperature"
             },
+            "spf_dhw": {
+                "name": "Seasonal performance factor - domestic hot water"
+            },
+            "spf_heating": {
+                "name": "Seasonal performance factor - heating"
+            },
+            "spf_total": {
+                "name": "Seasonal performance factor"
+            },
             "supply_pressure": {
                 "name": "Supply pressure"
             },
@@ -485,10 +514,10 @@
     },
     "services": {
         "set_vicare_mode": {
-            "description": "Set a ViCare mode.",
+            "description": "Sets the mode of the climate device as defined by Viessmann.",
             "fields": {
                 "vicare_mode": {
-                    "description": "ViCare mode.",
+                    "description": "For supported values, see the `vicare_modes` attribute of the climate entity.",
                     "name": "ViCare mode"
                 }
             },
