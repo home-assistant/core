@@ -798,6 +798,16 @@ def mock_provisioning_timeout() -> Generator[None]:
         yield
 
 
+@pytest.fixture(autouse=True)
+def mock_zeroconf_async_get_instance() -> Generator[AsyncMock]:
+    """Patch zeroconf async_get_async_instance for tests."""
+    with patch(
+        "homeassistant.components.shelly.config_flow.zeroconf.async_get_async_instance"
+    ) as mock_aiozc:
+        mock_aiozc.return_value = AsyncMock()
+        yield mock_aiozc
+
+
 @pytest.fixture
 def mock_wifi_scan() -> Generator[AsyncMock]:
     """Mock async_scan_wifi_networks."""
