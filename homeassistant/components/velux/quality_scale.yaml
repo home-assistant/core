@@ -21,7 +21,7 @@ rules:
   entity-unique-id: done
   has-entity-name:
     status: todo
-    comment: light name still needs to be fixed, all else ok
+    comment: light name needs to be fixed, see https://github.com/home-assistant/core/pull/155850
   runtime-data:
     status: done
     comment: addressed in https://github.com/home-assistant/core/pull/155207
