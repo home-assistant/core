@@ -94,18 +94,18 @@ class RedgtechDataUpdateCoordinator(DataUpdateCoordinator[list[RedgtechDevice]])
         devices: list[RedgtechDevice] = []
 
         for item in data["boards"]:
-            display_categories = item["displayCategories"]
+            display_categories = [cat.lower() for cat in item["displayCategories"]]
 
-            for category in display_categories:
-                device_type = category.lower()
+            if "switch" not in display_categories:
+                continue
 
-                device = RedgtechDevice(
-                    unique_id=item["endpointId"],
-                    name=item["friendlyName"],
-                    state=item["value"],
-                    type=device_type,
-                )
-                _LOGGER.debug("Processing device: %s", device)
-                devices.append(device)
+            device = RedgtechDevice(
+                unique_id=item["endpointId"],
+                name=item["friendlyName"],
+                state=item["value"],
+                type="switch",
+            )
+            _LOGGER.debug("Processing device: %s", device)
+            devices.append(device)
 
         return devices
