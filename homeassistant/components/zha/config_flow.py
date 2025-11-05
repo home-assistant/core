@@ -39,7 +39,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import AbortFlow, progress_step
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.selector import FileSelector, FileSelectorConfig
@@ -190,7 +190,8 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
 
         self._hass = None  # type: ignore[assignment]
         self._radio_mgr = ZhaRadioManager()
-        self._restore_backup_task: asyncio.Task[None] | None = None
+        self._restore_backup_task: asyncio.Task[None] | None = None        self._reset_old_radio_task: asyncio.Task[ConfigFlowResult] | None = None
+        self._form_network_task: asyncio.Task[None] | None = None
         self._extra_network_config: dict[str, Any] = {}
 
     @property
@@ -464,12 +465,8 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         self._radio_mgr.chosen_backup = self._radio_mgr.backups[0]
         return await self.async_step_maybe_reset_old_radio()
 
-    @progress_step()
-    async def async_step_maybe_reset_old_radio(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Erase the old radio's network settings before migration."""
-
+    async def _async_reset_old_radio(self) -> ConfigFlowResult:
+        """Do the work of resetting the old radio."""
         # Like in the options flow, pull the correct settings from the config entry
         config_entries = self.hass.config_entries.async_entries(
             DOMAIN, include_ignore=False
@@ -499,6 +496,30 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
                 return await self.async_step_plug_in_old_radio()
 
         return await self.async_step_restore_backup()
+
+    async def async_step_maybe_reset_old_radio(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Erase the old radio's network settings before migration."""
+        if self._reset_old_radio_task is None:
+            self._reset_old_radio_task = self.hass.async_create_task(
+                self._async_reset_old_radio(),
+                "Reset old radio",
+            )
+
+        if not self._reset_old_radio_task.done():
+            return self.async_show_progress(
+                step_id="maybe_reset_old_radio",
+                progress_action="maybe_reset_old_radio",
+                progress_task=self._reset_old_radio_task,
+            )
+
+        try:
+            result = await self._reset_old_radio_task
+        finally:
+            self._reset_old_radio_task = None
+
+        return result
 
     async def async_step_plug_in_old_radio(
         self, user_input: dict[str, Any] | None = None
@@ -618,16 +639,37 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         # This step exists only for translations, it does nothing new
         return await self.async_step_form_new_network(user_input)
 
-    @progress_step()
+    async def _async_form_new_network(self) -> None:
+        """Do the work of forming a new network."""
+        await self._radio_mgr.async_form_network()
+        # Load the newly formed network settings to get the network info
+        await self._radio_mgr.async_load_network_settings()
+
     async def async_step_form_new_network(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Form a brand-new network."""
-        await self._radio_mgr.async_form_network(config=self._extra_network_config)
+        if self._form_network_task is None:
+            self._form_network_task = self.hass.async_create_task(
+                self._async_form_new_network(
+                    config=self._extra_network_config
+                ),
+                "Form new network",
+            )
 
-        # Load the newly formed network settings to get the network info
-        await self._radio_mgr.async_load_network_settings()
-        return await self._async_create_radio_entry()
+        if not self._form_network_task.done():
+            return self.async_show_progress(
+                step_id="form_new_network",
+                progress_action="form_new_network",
+                progress_task=self._form_network_task,
+            )
+
+        try:
+            await self._form_network_task
+        finally:
+            self._form_network_task = None
+
+        return self.async_show_progress_done(next_step_id="create_entry")
 
     def _parse_uploaded_backup(
         self, uploaded_file_id: str
