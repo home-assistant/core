@@ -48,7 +48,6 @@
         "api_error": "API error occurred. Please try again or check your credentials.",
         "no_stations_found": "No stations found matching your search",
         "search_required": "Please enter a search query",
-        "search_too_short": "Search query must be at least 2 characters",
         "station_required": "Please select a station"
       },
       "initiate_flow": {

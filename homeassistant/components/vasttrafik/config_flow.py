@@ -258,8 +258,6 @@ class VasttrafikSubentryFlow(ConfigSubentryFlow):
             search_query = user_input.get("search_query", "").strip()
             if not search_query:
                 errors = {"base": "search_required"}
-            elif len(search_query) < 2:
-                errors = {"base": "search_too_short"}
             else:
                 parent_entry = self._get_entry()
 
