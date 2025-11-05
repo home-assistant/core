@@ -1,19 +1,28 @@
 """Template entity base class."""
 
 from abc import abstractmethod
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
+from enum import StrEnum
 import logging
 from typing import Any
 
-from homeassistant.const import CONF_DEVICE_ID, CONF_OPTIMISTIC, CONF_STATE
+import voluptuous as vol
+
+from homeassistant.const import (
+    CONF_DEVICE_ID,
+    CONF_OPTIMISTIC,
+    CONF_STATE,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import Context, HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.script import Script, _VarsType
 from homeassistant.helpers.template import Template, TemplateStateFromEntityId
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_DEFAULT_ENTITY_ID
+from .const import CONF_DEFAULT_ENTITY_ID, RESULT_OFF, RESULT_ON
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,6 +44,7 @@ class AbstractTemplateEntity(Entity):
 
         self.hass = hass
         self._action_scripts: dict[str, Script] = {}
+        self._result_handler = TemplateResultHandler(self)
 
         if self._optimistic_entity:
             optimistic = config.get(CONF_OPTIMISTIC)
@@ -106,3 +116,301 @@ class AbstractTemplateEntity(Entity):
             },
             context=context,
         )
+
+
+def log_result_error(
+    entity: AbstractTemplateEntity,
+    attribute: str,
+    value: Any,
+    expected: tuple[str, ...] | str,
+) -> None:
+    """Log a template result error."""
+
+    # in some cases, like `preview` entities, the entity_id does not exist.
+    if entity.entity_id is None:
+        message = f"Received invalid {attribute}: {value} for entity {entity.name}, %s"
+    else:
+        message = (
+            f"Received invalid {entity.entity_id.split('.')[0]} {attribute}"
+            f": {value} for entity {entity.entity_id}, %s"
+        )
+
+    _LOGGER.error(
+        message,
+        expected if isinstance(expected, str) else "expected: " + ", ".join(expected),
+    )
+
+
+def _check_result_for_none(result: Any, none_on_unknown_unavailable: bool) -> bool:
+    """Checks the result for none, unknown, unavailable."""
+    if result is None:
+        return True
+
+    if none_on_unknown_unavailable and isinstance(result, str):
+        return result.lower() in (STATE_UNAVAILABLE, STATE_UNKNOWN)
+
+    return False
+
+
+class TemplateResultHandler:
+    """Class for converting template results."""
+
+    def __init__(self, entity: AbstractTemplateEntity) -> None:
+        """Initialize the converter."""
+        self._entity = entity
+
+    def as_enum[T: StrEnum](
+        self,
+        attribute: str,
+        state_enum: type[T],
+        none_on_unknown_unavailable: bool = False,
+    ) -> Callable[[Any], T | None]:
+        """Converts the template result to an StrEnum.
+
+        All strings will attempt to convert to the StrEnum
+        Anything that cannot convert will result in None.
+        """
+
+        def convert(result: Any) -> T | None:
+            if _check_result_for_none(result, none_on_unknown_unavailable):
+                return None
+
+            if isinstance(result, str):
+                value = result.lower().strip()
+                try:
+                    return state_enum(value)
+                except ValueError:
+                    pass
+
+            log_result_error(
+                self._entity,
+                attribute,
+                result,
+                tuple(s.value for s in state_enum),
+            )
+            return None
+
+        return convert
+
+    def as_enum_with_on_off[T: StrEnum](
+        self,
+        attribute: str,
+        state_enum: type[T],
+        on_state: T,
+        off_state: T,
+        none_on_unknown_unavailable: bool = False,
+    ) -> Callable[[Any], T | None]:
+        """Converts the template result to an StrEnum.
+
+        Boolean results will be converted to `on_state` and `off_state`
+        All strings will attempt to convert to the StrEnum
+        Anything that cannot convert will result in None.
+        """
+
+        def convert(result: Any) -> T | None:
+            if _check_result_for_none(result, none_on_unknown_unavailable):
+                return None
+
+            if isinstance(result, bool):
+                return on_state if result else off_state
+
+            if isinstance(result, str):
+                value = result.lower().strip()
+                try:
+                    return state_enum(value)
+                except ValueError:
+                    try:
+                        return on_state if cv.boolean(value) else off_state
+                    except vol.Invalid:
+                        pass
+
+            log_result_error(
+                self._entity,
+                attribute,
+                result,
+                RESULT_ON + RESULT_OFF + tuple(s.value for s in state_enum),
+            )
+            return None
+
+        return convert
+
+    def as_boolean(
+        self,
+        attribute: str,
+        as_true: tuple[str, ...] | None = None,
+        as_false: tuple[str, ...] | None = None,
+        none_on_unknown_unavailable: bool = False,
+    ) -> Callable[[Any], bool | None]:
+        """Convert the result to a boolean.
+
+        True/not 0/'1'/'true'/'yes'/'on'/'enable' are considered truthy
+        False/0/'0'/'false'/'no'/'off'/'disable' are considered falsy
+        Additional values provided by as_true are considered truthy
+        Additional values provided by as_false are considered truthy
+        All other values are None
+        """
+
+        def convert(result: Any) -> bool | None:
+            if _check_result_for_none(result, none_on_unknown_unavailable):
+                return None
+
+            if isinstance(result, bool):
+                return result
+
+            if isinstance(result, str) and (as_true or as_false):
+                value = result.lower().strip()
+                if as_true and value in as_true:
+                    return True
+                if as_false and value in as_false:
+                    return False
+
+            try:
+                return cv.boolean(result)
+            except vol.Invalid:
+                log_result_error(
+                    self._entity,
+                    attribute,
+                    result,
+                    RESULT_ON + RESULT_OFF,
+                )
+                return None
+
+        return convert
+
+    def as_number(
+        self,
+        attribute: str,
+        number_type: type[float] | type[int] = float,
+        none_on_unknown_unavailable: bool = False,
+    ) -> Callable[[Any], float | int | None]:
+        """Convert the result to a number (float or int).
+
+        Any value is converted to a float or in
+        All other values are None
+        """
+
+        def convert(result: Any) -> float | int | None:
+            if _check_result_for_none(result, none_on_unknown_unavailable):
+                return None
+
+            try:
+                if number_type is int:
+                    return vol.Coerce(int)(result)
+                return vol.Coerce(float)(result)
+            except vol.Invalid:
+                log_result_error(self._entity, attribute, result, "expected a number")
+                return None
+
+        return convert
+
+    def as_number_in_range(
+        self,
+        attribute: str,
+        minimum: float = 0.0,
+        maximum: float = 100.0,
+        range_type: type[float] | type[int] = float,
+        none_on_unknown_unavailable: bool = False,
+    ) -> Callable[[Any], float | int | None]:
+        """Convert the result to a number (float or int).
+
+        Any value in the range is converted to a float or int
+        All other values are None
+        """
+        message = f"expected a value between {minimum:0.1f} and {maximum:0.1f}"
+
+        def convert(result: Any) -> float | int | None:
+            if _check_result_for_none(result, none_on_unknown_unavailable):
+                return None
+
+            try:
+                if range_type is int:
+                    value = vol.Coerce(int)(result)
+                else:
+                    value = vol.Coerce(float)(result)
+            except vol.Invalid:
+                log_result_error(self._entity, attribute, result, message)
+                return None
+
+            if minimum <= value <= maximum:
+                return value
+
+            log_result_error(self._entity, attribute, result, message)
+            return None
+
+        return convert
+
+    def as_list_of_strings(
+        self,
+        attribute: str,
+        none_on_empty: bool = False,
+        none_on_unknown_unavailable: bool = False,
+    ) -> Callable[[Any], list[str] | None]:
+        """Convert the result to a list of strings.
+
+        This ensures the result is a list of strings.
+        All other values that are not lists will result in None.
+
+        none_on_empty will cause the converter to return None when the list is empty.
+        """
+
+        def convert(result: Any) -> list[str] | None:
+            if _check_result_for_none(result, none_on_unknown_unavailable):
+                return None
+
+            if not isinstance(result, list):
+                log_result_error(
+                    self._entity,
+                    attribute,
+                    result,
+                    "expected a list of strings",
+                )
+                return None
+
+            if none_on_empty and len(result) == 0:
+                return None
+
+            # Ensure the result are strings.
+            return [str(v) for v in result]
+
+        return convert
+
+    def as_item_in_list[T](
+        self,
+        attribute: str,
+        items: list[Any] | None,
+        items_attribute: str | None = None,
+        none_on_unknown_unavailable: bool = False,
+    ) -> Callable[[Any], Any | None]:
+        """Convert the result to an item inside a list.
+
+        Returns the result if the result is inside the list.
+        All results that are not inside the list will return None.
+        """
+
+        def convert(result: Any) -> Any | None:
+            if _check_result_for_none(result, none_on_unknown_unavailable):
+                return None
+
+            if items is None or (len(items) == 0):
+                if items_attribute:
+                    log_result_error(
+                        self._entity,
+                        attribute,
+                        result,
+                        f"{items_attribute} is empty",
+                    )
+
+                return None
+
+            if result not in items:
+                log_result_error(
+                    self._entity,
+                    attribute,
+                    result,
+                    tuple(str(v) for v in items),
+                )
+                return None
+
+            return result
+
+        return convert

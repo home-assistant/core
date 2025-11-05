@@ -28,9 +28,6 @@ from homeassistant.const import (
     CONF_STATE,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
-    STATE_ON,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
@@ -276,90 +273,42 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
         return self._direction
 
     def _handle_state(self, result) -> None:
-        if isinstance(result, bool):
-            self._state = result
+        # Does not support unknown, defaults to off when the result is None
+        if result is None:
+            self._state = False
             return
 
-        if isinstance(result, str):
-            self._state = result.lower() in ("true", STATE_ON)
-            return
-
-        self._state = False
+        self._state = self._result_handler.as_boolean(CONF_STATE)(result) or False
 
     @callback
     def _update_percentage(self, percentage):
-        # Validate percentage
-        try:
-            percentage = int(float(percentage))
-        except (ValueError, TypeError):
-            _LOGGER.error(
-                "Received invalid percentage: %s for entity %s",
-                percentage,
-                self.entity_id,
+        # Update the percentage, All None cases should be 0.
+        self._percentage = (
+            self._result_handler.as_number_in_range(CONF_PERCENTAGE, range_type=int)(
+                percentage
             )
-            self._percentage = 0
-            return
-
-        if 0 <= percentage <= 100:
-            self._percentage = percentage
-        else:
-            _LOGGER.error(
-                "Received invalid percentage: %s for entity %s",
-                percentage,
-                self.entity_id,
-            )
-            self._percentage = 0
+            or 0
+        )
 
     @callback
     def _update_preset_mode(self, preset_mode):
         # Validate preset mode
-        preset_mode = str(preset_mode)
-
-        if self.preset_modes and preset_mode in self.preset_modes:
-            self._preset_mode = preset_mode
-        elif preset_mode in (STATE_UNAVAILABLE, STATE_UNKNOWN):
-            self._preset_mode = None
-        else:
-            _LOGGER.error(
-                "Received invalid preset_mode: %s for entity %s. Expected: %s",
-                preset_mode,
-                self.entity_id,
-                self.preset_mode,
-            )
-            self._preset_mode = None
+        self._preset_mode = self._result_handler.as_item_in_list(
+            CONF_PRESET_MODE, self.preset_modes, none_on_unknown_unavailable=True
+        )(str(preset_mode))
 
     @callback
     def _update_oscillating(self, oscillating):
-        # Validate osc
-        if oscillating == "True" or oscillating is True:
-            self._oscillating = True
-        elif oscillating == "False" or oscillating is False:
-            self._oscillating = False
-        elif oscillating in (STATE_UNAVAILABLE, STATE_UNKNOWN):
-            self._oscillating = None
-        else:
-            _LOGGER.error(
-                "Received invalid oscillating: %s for entity %s. Expected: True/False",
-                oscillating,
-                self.entity_id,
-            )
-            self._oscillating = None
+        self._oscillating = self._result_handler.as_boolean(
+            CONF_OSCILLATING, none_on_unknown_unavailable=True
+        )(oscillating)
 
     @callback
     def _update_direction(self, direction):
         # Validate direction
-        if direction in _VALID_DIRECTIONS:
-            self._direction = direction
-        elif direction in (STATE_UNAVAILABLE, STATE_UNKNOWN):
-            self._direction = None
-        else:
-            _LOGGER.error(
-                "Received invalid direction: %s for entity %s. Expected: %s",
-                direction,
-                self.entity_id,
-                ", ".join(_VALID_DIRECTIONS),
-            )
-            self._direction = None
+        self._direction = self._result_handler.as_item_in_list(
+            CONF_DIRECTION, _VALID_DIRECTIONS, none_on_unknown_unavailable=True
+        )(direction)
 
     async def async_turn_on(
         self,

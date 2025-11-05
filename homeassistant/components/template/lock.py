@@ -207,43 +207,21 @@ class AbstractTemplateLock(AbstractTemplateEntity, LockEntity):
         return self._code_format
 
     def _handle_state(self, result: Any) -> None:
-        if isinstance(result, bool):
-            self._state = LockState.LOCKED if result else LockState.UNLOCKED
-            return
-
-        if isinstance(result, str):
-            if result.lower() in (
-                "true",
-                "on",
-                "locked",
-            ):
-                self._state = LockState.LOCKED
-            elif result.lower() in (
-                "false",
-                "off",
-                "unlocked",
-            ):
-                self._state = LockState.UNLOCKED
-            else:
-                try:
-                    self._state = LockState(result.lower())
-                except ValueError:
-                    self._state = None
-            return
-
-        self._state = None
+        self._state = self._result_handler.as_enum_with_on_off(
+            CONF_STATE, LockState, LockState.LOCKED, LockState.UNLOCKED
+        )(result)
 
     @callback
-    def _update_code_format(self, render: str | TemplateError | None):
+    def _update_code_format(self, result: Any):
         """Update code format from the template."""
-        if isinstance(render, TemplateError):
+        if isinstance(result, TemplateError):
             self._code_format = None
-            self._code_format_template_error = render
-        elif render in (None, "None", ""):
+            self._code_format_template_error = result
+        elif result in (None, "None", ""):
             self._code_format = None
             self._code_format_template_error = None
         else:
-            self._code_format = render
+            self._code_format = result
             self._code_format_template_error = None
 
     async def async_lock(self, **kwargs: Any) -> None:

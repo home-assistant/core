@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Generator, Sequence
-import logging
 from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
@@ -17,6 +16,7 @@ from homeassistant.components.cover import (
     PLATFORM_SCHEMA as COVER_PLATFORM_SCHEMA,
     CoverEntity,
     CoverEntityFeature,
+    CoverState,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -54,23 +54,6 @@ from .schemas import (
 )
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
-
-_LOGGER = logging.getLogger(__name__)
-
-OPEN_STATE = "open"
-OPENING_STATE = "opening"
-CLOSED_STATE = "closed"
-CLOSING_STATE = "closing"
-
-_VALID_STATES = [
-    OPEN_STATE,
-    OPENING_STATE,
-    CLOSED_STATE,
-    CLOSING_STATE,
-    "true",
-    "false",
-    "none",
-]
 
 CONF_POSITION = "position"
 CONF_POSITION_TEMPLATE = "position_template"
@@ -291,74 +274,27 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity):
         """
         return self._tilt_value
 
-    @callback
-    def _update_position(self, result):
-        if result is None:
-            self._position = None
-            return
-
-        try:
-            state = float(result)
-        except ValueError as err:
-            _LOGGER.error(err)
-            self._position = None
-            return
-
-        if state < 0 or state > 100:
-            self._position = None
-            _LOGGER.error(
-                "Cover position value must be between 0 and 100. Value was: %.2f",
-                state,
-            )
-        else:
-            self._position = state
-
-    @callback
-    def _update_tilt(self, result):
-        if result is None:
-            self._tilt_value = None
-            return
-
-        try:
-            state = float(result)
-        except ValueError as err:
-            _LOGGER.error(err)
-            self._tilt_value = None
-            return
-
-        if state < 0 or state > 100:
-            self._tilt_value = None
-            _LOGGER.error(
-                "Tilt value must be between 0 and 100. Value was: %.2f",
-                state,
-            )
-        else:
-            self._tilt_value = state
-
     def _update_opening_and_closing(self, result: Any) -> None:
-        state = str(result).lower()
-
-        if state in _VALID_STATES:
+        if (
+            state := self._result_handler.as_enum_with_on_off(
+                CONF_STATE, CoverState, CoverState.OPEN, CoverState.CLOSED
+            )(result)
+        ) is not None:
             if not self._position_template:
-                if state in ("true", OPEN_STATE):
+                if state is CoverState.OPEN:
                     self._position = 100
                 else:
                     self._position = 0
 
-            self._is_opening = state == OPENING_STATE
-            self._is_closing = state == CLOSING_STATE
-        else:
-            _LOGGER.error(
-                "Received invalid cover is_on state: %s for entity %s. Expected: %s",
-                state,
-                self.entity_id,
-                ", ".join(_VALID_STATES),
-            )
-            if not self._position_template:
-                self._position = None
+            self._is_opening = state == CoverState.OPENING
+            self._is_closing = state == CoverState.CLOSING
+            return
 
-            self._is_opening = False
-            self._is_closing = False
+        if not self._position_template:
+            self._position = None
+
+        self._is_opening = False
+        self._is_closing = False
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Move the cover up."""
@@ -473,16 +409,16 @@ class StateCoverEntity(TemplateEntity, AbstractTemplateCover):
             self.add_template_attribute(
                 "_position",
                 self._position_template,
+                self._result_handler.as_number_in_range(CONF_POSITION),
                 None,
-                self._update_position,
                 none_on_template_error=True,
             )
         if self._tilt_template:
             self.add_template_attribute(
                 "_tilt_value",
                 self._tilt_template,
+                self._result_handler.as_number_in_range(CONF_TILT),
                 None,
-                self._update_tilt,
                 none_on_template_error=True,
             )
         super()._async_setup_templates()
@@ -536,13 +472,23 @@ class TriggerCoverEntity(TriggerEntity, AbstractTemplateCover):
             return
 
         write_ha_state = False
-        for key, updater in (
-            (CONF_STATE, self._update_opening_and_closing),
-            (CONF_POSITION, self._update_position),
-            (CONF_TILT, self._update_tilt),
+        if (rendered := self._rendered.get(CONF_STATE)) is not None:
+            self._update_opening_and_closing(rendered)
+            write_ha_state = True
+        for key, attr, updater in (
+            (
+                CONF_POSITION,
+                "_position",
+                self._result_handler.as_number_in_range(CONF_POSITION),
+            ),
+            (
+                CONF_TILT,
+                "_tilt_value",
+                self._result_handler.as_number_in_range(CONF_TILT),
+            ),
         ):
             if (rendered := self._rendered.get(key)) is not None:
-                updater(rendered)
+                setattr(self, attr, updater(rendered))
                 write_ha_state = True
 
         if not self._attr_assumed_state:

@@ -469,7 +469,7 @@ async def test_state_template(hass: HomeAssistant) -> None:
         ("{{ True }}", STATE_ON),
         ("{{ False }}", STATE_OFF),
         ("{{ x - 1 }}", STATE_UNAVAILABLE),
-        ("{{ 7.45 }}", STATE_OFF),
+        ("{{ 7.45 }}", STATE_ON),
     ],
 )
 @pytest.mark.parametrize(

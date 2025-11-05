@@ -172,28 +172,28 @@ class StateNumberEntity(TemplateEntity, AbstractTemplateNumber):
             self.add_template_attribute(
                 "_attr_native_value",
                 self._template,
-                vol.Coerce(float),
+                validator=self._result_handler.as_number(CONF_STATE),
                 none_on_template_error=True,
             )
         if self._step_template is not None:
             self.add_template_attribute(
                 "_attr_native_step",
                 self._step_template,
-                vol.Coerce(float),
+                validator=self._result_handler.as_number(CONF_STEP),
                 none_on_template_error=True,
             )
         if self._min_template is not None:
             self.add_template_attribute(
                 "_attr_native_min_value",
                 self._min_template,
-                validator=vol.Coerce(float),
+                validator=self._result_handler.as_number(CONF_MIN),
                 none_on_template_error=True,
             )
         if self._max_template is not None:
             self.add_template_attribute(
                 "_attr_native_max_value",
                 self._max_template,
-                validator=vol.Coerce(float),
+                validator=self._result_handler.as_number(CONF_MAX),
                 none_on_template_error=True,
             )
         super()._async_setup_templates()
@@ -247,7 +247,7 @@ class TriggerNumberEntity(TriggerEntity, AbstractTemplateNumber):
             (CONF_MAX, "_attr_native_max_value"),
         ):
             if (rendered := self._rendered.get(key)) is not None:
-                setattr(self, attr, vol.Any(vol.Coerce(float), None)(rendered))
+                setattr(self, attr, self._result_handler.as_number(key)(rendered))
                 write_ha_state = True
 
         if len(self._rendered) > 0:

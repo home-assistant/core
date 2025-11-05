@@ -76,14 +76,6 @@ CONF_FAN_SPEED_TEMPLATE = "fan_speed_template"
 DEFAULT_NAME = "Template Vacuum"
 
 ENTITY_ID_FORMAT = VACUUM_DOMAIN + ".{}"
-_VALID_STATES = [
-    VacuumActivity.CLEANING,
-    VacuumActivity.DOCKED,
-    VacuumActivity.PAUSED,
-    VacuumActivity.IDLE,
-    VacuumActivity.RETURNING,
-    VacuumActivity.ERROR,
-]
 
 LEGACY_FIELDS = {
     CONF_BATTERY_LEVEL_TEMPLATE: CONF_BATTERY_LEVEL,
@@ -258,21 +250,6 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity):
             if (action_config := config.get(action_id)) is not None:
                 yield (action_id, action_config, supported_feature)
 
-    def _handle_state(self, result: Any) -> None:
-        # Validate state
-        if result in _VALID_STATES:
-            self._attr_activity = result
-        elif result == STATE_UNKNOWN:
-            self._attr_activity = None
-        else:
-            _LOGGER.error(
-                "Received invalid vacuum state: %s for entity %s. Expected: %s",
-                result,
-                self.entity_id,
-                ", ".join(_VALID_STATES),
-            )
-            self._attr_activity = None
-
     async def async_start(self) -> None:
         """Start or resume the cleaning task."""
         if self._attr_assumed_state:
@@ -434,7 +411,6 @@ class TemplateStateVacuumEntity(TemplateEntity, AbstractTemplateVacuum):
 
     @callback
     def _update_state(self, result):
-        super()._update_state(result)
         if isinstance(result, TemplateError):
             # This is legacy behavior
             self._attr_activity = None
@@ -442,7 +418,9 @@ class TemplateStateVacuumEntity(TemplateEntity, AbstractTemplateVacuum):
                 self._attr_available = True
             return
 
-        self._handle_state(result)
+        self._attr_activity = self._result_handler.as_enum(
+            CONF_STATE, VacuumActivity, none_on_unknown_unavailable=True
+        )(result)
 
 
 class TriggerVacuumEntity(TriggerEntity, AbstractTemplateVacuum):
@@ -493,8 +471,11 @@ class TriggerVacuumEntity(TriggerEntity, AbstractTemplateVacuum):
             return
 
         write_ha_state = False
+        if (rendered := self._rendered.get(CONF_STATE)) is not None:
+            self._attr_activity = self._result_handler.as_enum(
+                CONF_STATE, VacuumActivity
+            )(rendered)
         for key, updater in (
-            (CONF_STATE, self._handle_state),
             (CONF_FAN_SPEED, self._update_fan_speed),
             (CONF_BATTERY_LEVEL, self._update_battery_level),
         ):

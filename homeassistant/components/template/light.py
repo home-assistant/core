@@ -38,8 +38,6 @@ from homeassistant.const import (
     CONF_STATE,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
-    STATE_OFF,
-    STATE_ON,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
@@ -69,7 +67,6 @@ from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
 
 _LOGGER = logging.getLogger(__name__)
-_VALID_STATES = [STATE_ON, STATE_OFF, "true", "false"]
 
 # Legacy
 CONF_COLOR_ACTION = "set_color"
@@ -612,68 +609,23 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
     @callback
     def _update_brightness(self, brightness):
         """Update the brightness from the template."""
-        try:
-            if brightness in (None, "None", ""):
-                self._brightness = None
-                return
-            if 0 <= int(brightness) <= 255:
-                self._brightness = int(brightness)
-            else:
-                _LOGGER.error(
-                    "Received invalid brightness : %s for entity %s. Expected: 0-255",
-                    brightness,
-                    self.entity_id,
-                )
-                self._brightness = None
-        except ValueError:
-            _LOGGER.exception(
-                "Template must supply an integer brightness from 0-255, or 'None'"
-            )
-            self._brightness = None
+        self._brightness = self._result_handler.as_number_in_range(
+            CONF_LEVEL, maximum=255.0, range_type=int
+        )(brightness)
 
     @callback
     def _update_effect_list(self, effect_list):
         """Update the effect list from the template."""
-        if effect_list in (None, "None", ""):
-            self._effect_list = None
-            return
-
-        if not isinstance(effect_list, list):
-            _LOGGER.error(
-                (
-                    "Received invalid effect list: %s for entity %s. Expected list of"
-                    " strings"
-                ),
-                effect_list,
-                self.entity_id,
-            )
-            self._effect_list = None
-            return
-
-        if len(effect_list) == 0:
-            self._effect_list = None
-            return
-
-        self._effect_list = effect_list
+        self._effect_list = self._result_handler.as_list_of_strings(
+            CONF_EFFECT_LIST, none_on_empty=True
+        )(effect_list)
 
     @callback
     def _update_effect(self, effect):
         """Update the effect from the template."""
-        if effect in (None, "None", ""):
-            self._effect = None
-            return
-
-        if effect not in self._effect_list:
-            _LOGGER.error(
-                "Received invalid effect: %s for entity %s. Expected one of: %s",
-                effect,
-                self.entity_id,
-                self._effect_list,
-            )
-            self._effect = None
-            return
-
-        self._effect = effect
+        self._effect = self._result_handler.as_item_in_list(
+            CONF_EFFECT, self._effect_list, items_attribute=CONF_EFFECT_LIST
+        )(str(effect))
 
     @callback
     def _update_temperature(self, render):
@@ -1076,22 +1028,7 @@ class StateLightEntity(TemplateEntity, AbstractTemplateLight):
                 self._attr_available = True
             return
 
-        if isinstance(result, bool):
-            self._state = result
-            return
-
-        state = str(result).lower()
-        if state in _VALID_STATES:
-            self._state = state in ("true", STATE_ON)
-            return
-
-        _LOGGER.error(
-            "Received invalid light is_on state: %s for entity %s. Expected: %s",
-            state,
-            self.entity_id,
-            ", ".join(_VALID_STATES),
-        )
-        self._state = None
+        self._state = self._result_handler.as_boolean(CONF_STATE)(result)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""

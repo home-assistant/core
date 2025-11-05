@@ -27,8 +27,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import config_validation as cv, template
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -200,23 +199,6 @@ class StateSwitchEntity(TemplateEntity, AbstractTemplateSwitch):
         if (off_action := config.get(CONF_TURN_OFF)) is not None:
             self.add_script(CONF_TURN_OFF, off_action, name, DOMAIN)
 
-    @callback
-    def _update_state(self, result):
-        super()._update_state(result)
-        if isinstance(result, TemplateError):
-            self._attr_is_on = None
-            return
-
-        if isinstance(result, bool):
-            self._attr_is_on = result
-            return
-
-        if isinstance(result, str):
-            self._attr_is_on = result.lower() in ("true", STATE_ON)
-            return
-
-        self._attr_is_on = False
-
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         if self._template is None:
@@ -231,7 +213,10 @@ class StateSwitchEntity(TemplateEntity, AbstractTemplateSwitch):
         """Set up templates."""
         if self._template is not None:
             self.add_template_attribute(
-                "_attr_is_on", self._template, None, self._update_state
+                "_attr_is_on",
+                self._template,
+                validator=self._result_handler.as_boolean(CONF_STATE),
+                none_on_template_error=True,
             )
 
         super()._async_setup_templates()
@@ -286,7 +271,7 @@ class TriggerSwitchEntity(TriggerEntity, AbstractTemplateSwitch):
 
         write_ha_state = False
         if (state := self._rendered.get(CONF_STATE)) is not None:
-            self._attr_is_on = template.result_as_boolean(state)
+            self._attr_is_on = self._result_handler.as_boolean(CONF_STATE)(state)
             write_ha_state = True
 
         elif len(self._rendered) > 0:
