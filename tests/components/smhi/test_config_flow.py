@@ -23,6 +23,7 @@ pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 async def test_form(
     hass: HomeAssistant,
     mock_client: MagicMock,
+    mock_fire_client: MagicMock,
 ) -> None:
     """Test we get the form and create an entry."""
 
@@ -87,6 +88,7 @@ async def test_form(
 async def test_form_invalid_coordinates(
     hass: HomeAssistant,
     mock_client: MagicMock,
+    mock_fire_client: MagicMock,
 ) -> None:
     """Test we handle invalid coordinates."""
     result = await hass.config_entries.flow.async_init(
@@ -133,6 +135,7 @@ async def test_form_invalid_coordinates(
 async def test_form_unique_id_exist(
     hass: HomeAssistant,
     mock_client: MagicMock,
+    mock_fire_client: MagicMock,
 ) -> None:
     """Test we handle unique id already exist."""
     entry = MockConfigEntry(
@@ -168,6 +171,7 @@ async def test_form_unique_id_exist(
 async def test_reconfigure_flow(
     hass: HomeAssistant,
     mock_client: MagicMock,
+    mock_fire_client: MagicMock,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
