@@ -1,5 +1,6 @@
 """Constants for the Saunum Leil Sauna Control Unit integration."""
 
+from datetime import timedelta
 from typing import Final
 
 from homeassistant.const import Platform
@@ -11,4 +12,4 @@ PLATFORMS: list[Platform] = [
     Platform.CLIMATE,
 ]
 
-DEFAULT_SCAN_INTERVAL: Final = 5
+DEFAULT_SCAN_INTERVAL: Final = timedelta(seconds=5)

@@ -2,145 +2,97 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock
-
 from pysaunum import SaunumConnectionError, SaunumException
 import pytest
 
-from homeassistant import config_entries
 from homeassistant.components.saunum.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
-TEST_USER_INPUT = {CONF_HOST: "192.168.1.100", CONF_PORT: 502}
+TEST_USER_INPUT = {CONF_HOST: "192.168.1.100"}
 
 
 @pytest.mark.usefixtures("mock_saunum_client")
 async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert not result["errors"]
-
-
-@pytest.mark.usefixtures("mock_saunum_client")
-async def test_form_success(hass: HomeAssistant) -> None:
-    """Test successful form submission."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    assert not result["errors"]
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         TEST_USER_INPUT,
     )
-    await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Saunum Leil Sauna"
-    assert result2["data"] == TEST_USER_INPUT
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Saunum Leil Sauna"
+    assert result["data"] == TEST_USER_INPUT
 
 
-async def test_form_connection_error(hass: HomeAssistant, mock_saunum_client) -> None:
-    """Test connection error handling."""
-    mock_saunum_client.connect = AsyncMock(
-        side_effect=SaunumConnectionError("Connection failed")
-    )
+@pytest.mark.parametrize(
+    ("side_effect", "error_base"),
+    [
+        (SaunumConnectionError("Connection failed"), "cannot_connect"),
+        (SaunumException("Read error"), "cannot_connect"),
+        (Exception("Unexpected error"), "unknown"),
+    ],
+)
+async def test_form_errors(
+    hass: HomeAssistant,
+    mock_saunum_client,
+    side_effect: Exception,
+    error_base: str,
+) -> None:
+    """Test error handling and recovery."""
+    mock_saunum_client.connect.side_effect = side_effect
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         TEST_USER_INPUT,
     )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error_base}
 
+    # Test recovery - clear the error and try again
+    mock_saunum_client.connect.side_effect = None
 
-async def test_form_saunum_error(hass: HomeAssistant, mock_saunum_client) -> None:
-    """Test Saunum communication error handling."""
-    mock_saunum_client.async_get_data = AsyncMock(
-        side_effect=SaunumException("Read error")
-    )
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         TEST_USER_INPUT,
     )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
-
-
-async def test_form_saunum_exception(hass: HomeAssistant, mock_saunum_client) -> None:
-    """Test SaunumException handling."""
-    mock_saunum_client.connect = AsyncMock(
-        side_effect=SaunumException("Connection error")
-    )
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        TEST_USER_INPUT,
-    )
-
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
-
-
-async def test_form_exception(hass: HomeAssistant, mock_saunum_client) -> None:
-    """Test exception handling."""
-    mock_saunum_client.connect = AsyncMock(side_effect=Exception("Connection failed"))
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        TEST_USER_INPUT,
-    )
-
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "unknown"}
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Saunum Leil Sauna"
+    assert result["data"] == TEST_USER_INPUT
 
 
 @pytest.mark.usefixtures("mock_saunum_client")
-async def test_form_duplicate(hass: HomeAssistant) -> None:
+async def test_form_duplicate(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test duplicate entry handling."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=TEST_USER_INPUT,
-        # Config flow sets unique_id as "{host}:{port}" so mirror that here
-        unique_id="192.168.1.100:502",
-    )
-    entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         TEST_USER_INPUT,
     )
 
-    assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "already_configured"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"

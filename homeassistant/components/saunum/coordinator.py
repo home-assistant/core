@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING
 
@@ -35,7 +34,7 @@ class LeilSaunaCoordinator(DataUpdateCoordinator[SaunumData]):
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
+            update_interval=DEFAULT_SCAN_INTERVAL,
             config_entry=config_entry,
         )
         self.client = client
@@ -45,4 +44,4 @@ class LeilSaunaCoordinator(DataUpdateCoordinator[SaunumData]):
         try:
             return await self.client.async_get_data()
         except SaunumException as err:
-            raise UpdateFailed(f"communication error: {err}") from err
+            raise UpdateFailed(f"Communication error: {err}") from err

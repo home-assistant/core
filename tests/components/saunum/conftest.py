@@ -7,7 +7,7 @@ from pysaunum import SaunumData
 import pytest
 
 from homeassistant.components.saunum.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PORT, Platform
+from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -15,15 +15,12 @@ from tests.common import MockConfigEntry
 
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
-    """Return a mock config entry."""
+    """Return the default mocked config entry."""
     return MockConfigEntry(
+        entry_id="01K98T2T85R5GN0ZHYV25VFMMA",
         title="Saunum Leil Sauna",
         domain=DOMAIN,
-        data={
-            CONF_HOST: "192.168.1.100",
-            CONF_PORT: 502,
-        },
-        unique_id="192.168.1.100:502",
+        data={CONF_HOST: "192.168.1.100"},
     )
 
 
@@ -32,12 +29,11 @@ def mock_saunum_client() -> Generator[MagicMock]:
     """Return a mocked Saunum client for config flow and integration tests."""
     with (
         patch(
-            "homeassistant.components.saunum.config_flow.SaunumClient"
+            "homeassistant.components.saunum.config_flow.SaunumClient", autospec=True
         ) as mock_client_class,
-        patch("homeassistant.components.saunum.SaunumClient") as mock_client_class2,
+        patch("homeassistant.components.saunum.SaunumClient", new=mock_client_class),
     ):
-        mock_client = MagicMock()
-        mock_client.connect = AsyncMock()
+        mock_client = mock_client_class.return_value
         mock_client.close = MagicMock()
         mock_client.is_connected = True
 
@@ -69,32 +65,8 @@ def mock_saunum_client() -> Generator[MagicMock]:
 
         # Make both patches return the same mock
         mock_client_class.return_value = mock_client
-        mock_client_class2.return_value = mock_client
 
         yield mock_client
-
-
-# Backward compatibility aliases
-@pytest.fixture
-def mock_modbus_client(mock_saunum_client) -> MagicMock:
-    """Alias for mock_saunum_client for backward compatibility."""
-    return mock_saunum_client
-
-
-@pytest.fixture
-def mock_modbus_coordinator(mock_saunum_client) -> MagicMock:
-    """Alias for mock_saunum_client for backward compatibility."""
-    return mock_saunum_client
-
-
-@pytest.fixture
-def mock_setup_platforms():
-    """Mock async_forward_entry_setups."""
-    with patch(
-        "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups"
-    ) as mock_setup:
-        mock_setup.return_value = True
-        yield mock_setup
 
 
 @pytest.fixture

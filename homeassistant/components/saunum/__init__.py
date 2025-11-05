@@ -7,7 +7,7 @@ import logging
 from pysaunum import SaunumClient, SaunumConnectionError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
@@ -22,15 +22,14 @@ type LeilSaunaConfigEntry = ConfigEntry[LeilSaunaCoordinator]
 async def async_setup_entry(hass: HomeAssistant, entry: LeilSaunaConfigEntry) -> bool:
     """Set up Saunum Leil Sauna from a config entry."""
     host = entry.data[CONF_HOST]
-    port = entry.data[CONF_PORT]
 
-    client = SaunumClient(host=host, port=port)
+    client = SaunumClient(host=host)
 
     # Test connection
     try:
         await client.connect()
     except SaunumConnectionError as exc:
-        raise ConfigEntryNotReady(f"Error connecting to {host}:{port}: {exc}") from exc
+        raise ConfigEntryNotReady(f"Error connecting to {host}: {exc}") from exc
 
     coordinator = LeilSaunaCoordinator(hass, client, entry)
     await coordinator.async_config_entry_first_refresh()

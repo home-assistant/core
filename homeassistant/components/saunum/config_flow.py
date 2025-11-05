@@ -5,11 +5,11 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from pysaunum import DEFAULT_PORT, SaunumClient, SaunumException
+from pysaunum import SaunumClient, SaunumException
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 
@@ -20,7 +20,6 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
     }
 )
 
@@ -33,9 +32,8 @@ async def validate_input(
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
     host = data[CONF_HOST]
-    port = data[CONF_PORT]
 
-    client = SaunumClient(host=host, port=port)
+    client = SaunumClient(host=host)
 
     try:
         await client.connect()
@@ -58,6 +56,9 @@ class LeilSaunaConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            # Check for duplicate configuration
+            self._async_abort_entries_match(user_input)
+
             try:
                 await validate_input(self.hass, user_input, self)
             except SaunumException:
@@ -66,11 +67,6 @@ class LeilSaunaConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                # Check for duplicate configuration
-                self._async_abort_entries_match(
-                    {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
-                )
-
                 return self.async_create_entry(
                     title="Saunum Leil Sauna",
                     data=user_input,

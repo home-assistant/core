@@ -17,7 +17,7 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import LeilSaunaConfigEntry, LeilSaunaCoordinator
+from . import LeilSaunaConfigEntry
 from .entity import LeilSaunaEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,10 +45,6 @@ class LeilSaunaClimate(LeilSaunaEntity, ClimateEntity):
     _attr_min_temp = MIN_TEMPERATURE
     _attr_max_temp = MAX_TEMPERATURE
 
-    def __init__(self, coordinator: LeilSaunaCoordinator) -> None:
-        """Initialize the climate entity."""
-        super().__init__(coordinator)
-
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature in Celsius."""
@@ -68,8 +64,7 @@ class LeilSaunaClimate(LeilSaunaEntity, ClimateEntity):
     @property
     def hvac_action(self) -> HVACAction | None:
         """Return current HVAC action."""
-        session_active = self.coordinator.data.session_active
-        if not session_active:
+        if not self.coordinator.data.session_active:
             return HVACAction.OFF
 
         heater_elements_active = self.coordinator.data.heater_elements_active
@@ -83,13 +78,12 @@ class LeilSaunaClimate(LeilSaunaEntity, ClimateEntity):
         """Set new HVAC mode."""
         if hvac_mode == HVACMode.HEAT:
             await self.coordinator.client.async_start_session()
-        elif hvac_mode == HVACMode.OFF:
+        else:
             await self.coordinator.client.async_stop_session()
         await self.coordinator.async_request_refresh()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        # Home Assistant handles conversion from user's preferred unit
         await self.coordinator.client.async_set_target_temperature(
             int(kwargs[ATTR_TEMPERATURE])
         )
