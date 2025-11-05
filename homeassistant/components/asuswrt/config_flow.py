@@ -175,12 +175,12 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     async def _async_check_connection(
-        self, user_input: dict[str, Any]
+        self, user_input: dict[str, str | int]
     ) -> tuple[str, str | None]:
         """Attempt to connect the AsusWrt router."""
 
         api: AsusWrtBridge
-        host: str = user_input[CONF_HOST]
+        host = user_input[CONF_HOST]
         protocol = user_input[CONF_PROTOCOL]
         error: str | None = None
 
