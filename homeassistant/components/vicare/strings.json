@@ -529,6 +529,15 @@
       "ventilation_quickmode_boost": {
         "name": "Ventilation boost mode"
       },
+      "ventilation_quickmode_comfort": {
+        "name": "Ventilation comfort mode"
+      },
+      "ventilation_quickmode_eco": {
+        "name": "Ventilation eco mode"
+      },
+      "ventilation_quickmode_holiday": {
+        "name": "Ventilation holiday mode"
+      },
       "ventilation_quickmode_silent": {
         "name": "Ventilation silent mode"
       }

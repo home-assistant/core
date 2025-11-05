@@ -53,6 +53,27 @@ VENTILATION_SWITCH_DESCRIPTIONS: tuple[ViCareSwitchEntityDescription, ...] = (
         enabler=lambda api: api.activateVentilationQuickmode("silent"),
         disabler=lambda api: api.deactivateVentilationQuickmode("silent"),
     ),
+    ViCareSwitchEntityDescription(
+        key="ventilation_quickmode_comfort",
+        translation_key="ventilation_quickmode_comfort",
+        value_getter=lambda api: api.getVentilationQuickmode("comfort"),
+        enabler=lambda api: api.activateVentilationQuickmode("comfort"),
+        disabler=lambda api: api.deactivateVentilationQuickmode("comfort"),
+    ),
+    ViCareSwitchEntityDescription(
+        key="ventilation_quickmode_eco",
+        translation_key="ventilation_quickmode_eco",
+        value_getter=lambda api: api.getVentilationQuickmode("eco"),
+        enabler=lambda api: api.activateVentilationQuickmode("eco"),
+        disabler=lambda api: api.deactivateVentilationQuickmode("eco"),
+    ),
+    ViCareSwitchEntityDescription(
+        key="ventilation_quickmode_holiday",
+        translation_key="ventilation_quickmode_holiday",
+        value_getter=lambda api: api.getVentilationQuickmode("holiday"),
+        enabler=lambda api: api.activateVentilationQuickmode("holiday"),
+        disabler=lambda api: api.deactivateVentilationQuickmode("holiday"),
+    ),
 )
 
 
