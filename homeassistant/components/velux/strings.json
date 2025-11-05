@@ -18,6 +18,10 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your KLF200 gateway.",
+          "password": "The password for your KLF200 gateway."
         }
       }
     }
