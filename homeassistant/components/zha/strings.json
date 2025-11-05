@@ -16,6 +16,11 @@
       "invalid_backup_json": "Invalid backup JSON"
     },
     "flow_title": "{name}",
+    "progress": {
+      "form_new_network": "Forming a new Zigbee network.\n\nWe scan for a clear network channel as part of this process, this can take a minute.",
+      "maybe_reset_old_radio": "Resetting old adapter.\n\nYour old adapter has been backed up and is being factory reset.",
+      "restore_backup": "Restoring network settings to new adapter.\n\nThis will take a minute."
+    },
     "step": {
       "choose_automatic_backup": {
         "data": {
@@ -76,8 +81,15 @@
       "confirm": {
         "description": "Do you want to set up {name}?"
       },
-      "confirm_hardware": {
-        "description": "Do you want to set up {name}?"
+      "confirm_ezsp_ieee_overwrite": {
+        "data": {
+          "overwrite_coordinator_ieee": "Permanently replace the adapter IEEE address"
+        },
+        "description": "Your backup has a different IEEE address than your adapter. For your network to function properly, the IEEE address of your adapter should also be changed.\n\nThis is a permanent operation.",
+        "title": "Overwrite adapter IEEE address"
+      },
+      "form_new_network": {
+        "title": "Forming new network"
       },
       "manual_pick_radio_type": {
         "data": {
@@ -100,15 +112,7 @@
         "description": "ZHA was not able to automatically detect serial port settings for your adapter. This usually is an issue with the firmware or permissions.\n\nIf you are using firmware with nonstandard settings, enter the serial port settings",
         "title": "Serial port settings"
       },
-      "maybe_confirm_ezsp_restore": {
-        "data": {
-          "overwrite_coordinator_ieee": "Permanently replace the adapter IEEE address"
-        },
-        "description": "Your backup has a different IEEE address than your adapter. For your network to function properly, the IEEE address of your adapter should also be changed.\n\nThis is a permanent operation.",
-        "title": "Overwrite adapter IEEE address"
-      },
       "maybe_reset_old_radio": {
-        "description": "A backup was created earlier and your old adapter is being reset as part of the migration.",
         "title": "Resetting old adapter"
       },
       "plug_in_new_radio": {
@@ -126,6 +130,9 @@
           "skip_reset_old_radio": "Skip reset"
         },
         "title": "Old adapter not found"
+      },
+      "restore_backup": {
+        "title": "Restoring network to new adapter"
       },
       "upload_manual_backup": {
         "data": {
@@ -1885,6 +1892,11 @@
       "invalid_backup_json": "[%key:component::zha::config::error::invalid_backup_json%]"
     },
     "flow_title": "[%key:component::zha::config::flow_title%]",
+    "progress": {
+      "form_new_network": "[%key:component::zha::config::progress::form_new_network%]",
+      "maybe_reset_old_radio": "[%key:component::zha::config::progress::maybe_reset_old_radio%]",
+      "restore_backup": "[%key:component::zha::config::progress::restore_backup%]"
+    },
     "step": {
       "choose_automatic_backup": {
         "data": {
@@ -1930,6 +1942,16 @@
         "description": "[%key:component::zha::config::step::choose_serial_port::description%]",
         "title": "[%key:component::zha::config::step::choose_serial_port::title%]"
       },
+      "confirm_ezsp_ieee_overwrite": {
+        "data": {
+          "overwrite_coordinator_ieee": "[%key:component::zha::config::step::confirm_ezsp_ieee_overwrite::data::overwrite_coordinator_ieee%]"
+        },
+        "description": "[%key:component::zha::config::step::confirm_ezsp_ieee_overwrite::description%]",
+        "title": "[%key:component::zha::config::step::confirm_ezsp_ieee_overwrite::title%]"
+      },
+      "form_new_network": {
+        "title": "[%key:component::zha::config::step::form_new_network::title%]"
+      },
       "init": {
         "description": "A backup will be performed and ZHA will be stopped. Do you wish to continue?",
         "title": "Reconfigure ZHA"
@@ -1954,12 +1976,8 @@
         "description": "[%key:component::zha::config::step::manual_port_config::description%]",
         "title": "[%key:component::zha::config::step::manual_port_config::title%]"
       },
-      "maybe_confirm_ezsp_restore": {
-        "data": {
-          "overwrite_coordinator_ieee": "[%key:component::zha::config::step::maybe_confirm_ezsp_restore::data::overwrite_coordinator_ieee%]"
-        },
-        "description": "[%key:component::zha::config::step::maybe_confirm_ezsp_restore::description%]",
-        "title": "[%key:component::zha::config::step::maybe_confirm_ezsp_restore::title%]"
+      "maybe_reset_old_radio": {
+        "title": "[%key:component::zha::config::step::maybe_reset_old_radio::title%]"
       },
       "plug_in_new_radio": {
         "description": "[%key:component::zha::config::step::plug_in_new_radio::description%]",
@@ -1988,6 +2006,9 @@
           "intent_reconfigure": "Re-configure the current adapter"
         },
         "title": "Migrate or re-configure"
+      },
+      "restore_backup": {
+        "title": "[%key:component::zha::config::step::restore_backup::title%]"
       },
       "upload_manual_backup": {
         "data": {
