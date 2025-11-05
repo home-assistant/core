@@ -137,6 +137,7 @@ def test_secrets() -> None:
         "server_port": 8123,
         "ssl_profile": "modern",
         "use_x_frame_options": True,
+        "server_host": ["0.0.0.0", "::"],
     }
     assert res["secret_cache"] == {
         get_test_config_dir("secrets.yaml"): {"http_pw": "http://google.com"}
