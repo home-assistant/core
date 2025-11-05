@@ -84,7 +84,7 @@ class AirthingsBLEDataUpdateCoordinator(DataUpdateCoordinator[AirthingsDevice]):
             )
             self.update_interval = timedelta(
                 seconds=DEVICE_SPECIFIC_SCAN_INTERVAL.get(
-                    data.model, DEFAULT_SCAN_INTERVAL
+                    data.model.value, DEFAULT_SCAN_INTERVAL
                 )
             )
 

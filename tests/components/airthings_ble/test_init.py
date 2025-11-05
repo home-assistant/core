@@ -6,8 +6,8 @@ import pytest
 
 from homeassistant.components.airthings_ble.const import (
     DEFAULT_SCAN_INTERVAL,
+    DEVICE_SPECIFIC_SCAN_INTERVAL,
     DOMAIN,
-    RADON_SCAN_INTERVAL,
 )
 from homeassistant.core import HomeAssistant
 
@@ -110,7 +110,11 @@ async def test_scan_interval_corentium_home_2(
 
     # Coordinator should have radon scan interval
     coordinator = entry.runtime_data
-    assert coordinator.update_interval == timedelta(seconds=RADON_SCAN_INTERVAL)
+    assert coordinator.update_interval == timedelta(
+        seconds=DEVICE_SPECIFIC_SCAN_INTERVAL.get(
+            CORENTIUM_HOME_2_DEVICE_INFO.model.value, DEFAULT_SCAN_INTERVAL
+        )
+    )
 
 
 @pytest.mark.parametrize(

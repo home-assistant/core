@@ -8,8 +8,8 @@ import pytest
 
 from homeassistant.components.airthings_ble.const import (
     DEFAULT_SCAN_INTERVAL,
+    DEVICE_SPECIFIC_SCAN_INTERVAL,
     DOMAIN,
-    RADON_SCAN_INTERVAL,
 )
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -279,7 +279,7 @@ async def test_translation_keys(
     assert state.attributes.get("friendly_name") == expected_name
 
 
-async def test_scan_interval_migration_radon_device(
+async def test_scan_interval_migration_corentium_home_2(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
 ) -> None:
@@ -306,7 +306,11 @@ async def test_scan_interval_migration_radon_device(
 
         # Coordinator should have been configured with radon scan interval
         coordinator = entry.runtime_data
-        assert coordinator.update_interval == timedelta(seconds=RADON_SCAN_INTERVAL)
+        assert coordinator.update_interval == timedelta(
+            seconds=DEVICE_SPECIFIC_SCAN_INTERVAL.get(
+                CORENTIUM_HOME_2_DEVICE_INFO.model.value
+            )
+        )
 
         # Should have 2 calls: 1 for migration + 1 for initial refresh
         assert mock_update.call_count == 2
@@ -318,7 +322,9 @@ async def test_scan_interval_migration_radon_device(
         assert mock_update.call_count == 2
 
         # Fast forward to radon interval (1800s) - should trigger update
-        freezer.tick(RADON_SCAN_INTERVAL)
+        freezer.tick(
+            DEVICE_SPECIFIC_SCAN_INTERVAL.get(CORENTIUM_HOME_2_DEVICE_INFO.model.value)
+        )
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
         assert mock_update.call_count == 3
