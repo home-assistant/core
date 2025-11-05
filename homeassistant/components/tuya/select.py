@@ -377,6 +377,8 @@ async def async_setup_entry(
 class TuyaSelectEntity(TuyaEntity, SelectEntity):
     """Tuya Select Entity."""
 
+    _enum_type: EnumTypeData | None = None
+
     def __init__(
         self,
         device: CustomerDevice,
@@ -388,21 +390,22 @@ class TuyaSelectEntity(TuyaEntity, SelectEntity):
         self.entity_description = description
         self._attr_unique_id = f"{super().unique_id}{description.key}"
 
+        self._attr_options = []
         if enum_type := find_dpcode(
             self.device, description.key, dptype=DPType.ENUM, prefer_function=True
         ):
             self._attr_options = enum_type.range
-            self._data_parser = enum_type
-        else:
-            # Should not happen - but fallback to empty options
-            self._attr_options = []
-            self._data_parser = EnumTypeData(dpcode=description.key, range=[])
+            self._enum_type = enum_type
 
     @property
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
-        return self._data_parser.read_device_value(self.device)
+        if self._enum_type is None:
+            return None
+        return self._enum_type.read_device_value(self.device)
 
     def select_option(self, option: str) -> None:
         """Change the selected option."""
-        self._send_command([{"code": self._data_parser.dpcode, "value": option}])
+        if self._enum_type is None:
+            return
+        self._send_command([{"code": self._enum_type.dpcode, "value": option}])
