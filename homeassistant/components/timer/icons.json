@@ -1,22 +1,22 @@
 {
   "services": {
-    "start": {
-      "service": "mdi:play"
-    },
-    "pause": {
-      "service": "mdi:pause"
-    },
     "cancel": {
       "service": "mdi:cancel"
-    },
-    "finish": {
-      "service": "mdi:check"
     },
     "change": {
       "service": "mdi:pencil"
     },
+    "finish": {
+      "service": "mdi:check"
+    },
+    "pause": {
+      "service": "mdi:pause"
+    },
     "reload": {
       "service": "mdi:reload"
+    },
+    "start": {
+      "service": "mdi:play"
     }
   }
 }
