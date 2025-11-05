@@ -76,37 +76,33 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
 
         suggested_addresses: list[str] = self._get_local_addresses()
 
+        schema_entries: dict[vol.Marker, Any] = {}
+
         if len(suggested_addresses) > 0:
-            return self.async_show_form(
-                step_id="user",
-                data_schema=vol.Schema(
-                    {
-                        vol.Required(
-                            CONF_ADDRESS,
-                            default=user_input.get(CONF_ADDRESS, DEFAULT_ADDRESS),
-                        ): selector(
-                            {
-                                "select": {
-                                    "options": suggested_addresses,
-                                    "custom_value": True,
-                                }
-                            }
-                        ),
+            schema_entries[
+                vol.Required(
+                    CONF_ADDRESS,
+                    default=user_input.get(CONF_ADDRESS, DEFAULT_ADDRESS),
+                )
+            ] = selector(
+                {
+                    "select": {
+                        "options": suggested_addresses,
+                        "custom_value": True,
                     }
-                ),
-                errors=errors,
+                }
             )
+        else:
+            schema_entries[
+                vol.Required(
+                    CONF_ADDRESS,
+                    default=user_input.get(CONF_ADDRESS, DEFAULT_ADDRESS),
+                )
+            ] = vol.All(str, vol.Lower)
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_ADDRESS,
-                        default=user_input.get(CONF_ADDRESS, DEFAULT_ADDRESS),
-                    ): str,
-                }
-            ),
+            data_schema=vol.Schema(schema_entries),
             errors=errors,
         )
 
