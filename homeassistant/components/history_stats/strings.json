@@ -40,22 +40,14 @@
       },
       "user": {
         "data": {
-          "duration": "Duration",
-          "end": "End",
           "entity_id": "Entity",
-          "min_state_duration": "Minimum State Duration",
           "name": "[%key:common::config_flow::data::name%]",
-          "start": "Start",
           "state": "State",
           "type": "Type"
         },
         "data_description": {
-          "duration": "Duration of the measure.",
-          "end": "When to stop the measure (timestamp or datetime). Can be a template.",
           "entity_id": "Entity to get statistics from.",
-          "min_state_duration": "The minimum state duration to account for the stats. Default is 0 seconds.",
           "name": "Name for the created entity.",
-          "start": "When to start the measure (timestamp or datetime). Can be a template.",
           "state": "The states you want to track from the entity.",
           "type": "The type of sensor, one of 'time', 'ratio' or 'count'"
         },
