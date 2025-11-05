@@ -12,6 +12,9 @@
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
         },
+        "data_description": {
+          "password": "The password for your KLF200 gateway."
+        },
         "description": "Please enter the password for {name} ({host})"
       },
       "user": {
