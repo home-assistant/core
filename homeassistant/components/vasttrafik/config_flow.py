@@ -79,9 +79,12 @@ async def search_stations(
 
     planner = config_entry.runtime_data
     try:
-        results: list[StationData] = await hass.async_add_executor_job(
+        api_result: list[dict[str, str]] = await hass.async_add_executor_job(
             planner.location_name, query
         )
+        results = [
+            StationData(gid=result["gid"], name=result["name"]) for result in api_result
+        ]
     except vasttrafik.Error as err:
         _LOGGER.error("Västtrafik API error in search_stations: %s", err)
         return [], "api_error"
@@ -190,7 +193,7 @@ class VasttrafikConfigFlow(ConfigFlow, domain=DOMAIN):
                 name=location, gid=location
             )  # no good way to get name from GID
         else:
-            api_result: StationData = planner.location_name(location)[0]
+            api_result: dict[str, str] = planner.location_name(location)[0]
             station_data = StationData(name=api_result["name"], gid=api_result["gid"])
         return station_data
 
