@@ -1,15 +1,25 @@
-"""Test the ThermoPro config flow."""
+"""Test the ThermoPro integration."""
+
+import logging
+from unittest.mock import patch
+
+import pytest
 
 from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.components.thermopro.const import DOMAIN
-from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT
+from homeassistant.const import (
+    ATTR_FRIENDLY_NAME,
+    ATTR_UNIT_OF_MEASUREMENT,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry, mock_restore_cache
+from tests.components.bluetooth import inject_bluetooth_service_info
 
 from . import TP357_SERVICE_INFO, TP962R_SERVICE_INFO, TP962R_SERVICE_INFO_2
 
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import inject_bluetooth_service_info
-
+LOGGER_NAME = "homeassistant.components.thermopro"
 
 async def test_sensors_tp962r(hass: HomeAssistant) -> None:
     """Test setting up creates the sensors."""
@@ -125,3 +135,67 @@ async def test_sensors(hass: HomeAssistant) -> None:
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+
+@pytest.mark.parametrize("enable_custom_integrations", [True])
+async def test_restart_while_device_absent_starts_unavailable_without_transition_log(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """On HA restart while the device is away, restored entities should start unavailable, without a spurious 'no longer being provided' log."""
+
+    caplog.set_level(logging.DEBUG, logger=LOGGER_NAME)
+
+    # 1) Prepare a config entry for a TP357 device
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="4125DDBA-2774-4851-9889-6AADDD4CAC3D",
+        title="TP357 (2142)",
+        data={},
+    )
+    entry.add_to_hass(hass)
+
+    # 2) Simulate that the entities existed before restart and were available
+    #    (so they get restored on setup).
+    # Entity ids match the ones your existing tests assert on.
+    mock_restore_cache(
+        hass,
+        [
+            # Pretend these sensors were last seen with valid values (and available)
+            ("sensor.tp357_2142_temperature", "24.1"),
+            ("sensor.tp357_2142_battery", "100"),
+            # Add more restored entities if your platform creates them
+        ],
+    )
+
+    # 3) During "restart", the device is currently away: force address_present=False
+    with patch(
+        "homeassistant.components.bluetooth.async_address_present",
+        return_value=False,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    # 4) Restored entities should exist immediately and start as UNAVAILABLE
+    temp_ent_id = "sensor.tp357_2142_temperature"
+    batt_ent_id = "sensor.tp357_2142_battery"
+
+    temp_state = hass.states.get(temp_ent_id)
+    batt_state = hass.states.get(batt_ent_id)
+
+    assert temp_state is not None
+    assert batt_state is not None
+    assert temp_state.state == STATE_UNAVAILABLE
+    assert batt_state.state == STATE_UNAVAILABLE
+
+    # 5) No spurious "no longer being provided" transition on startup
+    #    Adjust the substring if your integration logs a different message.
+    assert not any("no longer being provided" in r.message for r in caplog.records)
+
+    # 6) Now the device appears: a single availability transition to available should occur
+    caplog.clear()
+    inject_bluetooth_service_info(hass, TP357_SERVICE_INFO)
+    await hass.async_block_till_done()
+
+    temp_state = hass.states.get(temp_ent_id)
+    batt_state = hass.states.get(batt_ent_id)
+    assert temp_state.state != STATE_UNAVAILABLE
+    assert batt_state.state != STATE_UNAVAILABLE
