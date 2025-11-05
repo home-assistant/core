@@ -39,13 +39,15 @@ from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
-    CONF_CURTAIN_SLOW_MODE,
+    CONF_CURTAIN_SPEED,
     CONF_ENCRYPTION_KEY,
     CONF_KEY_ID,
     CONF_LOCK_NIGHTLATCH,
     CONF_RETRY_COUNT,
     CONNECTABLE_SUPPORTED_MODEL_TYPES,
-    DEFAULT_CURTAIN_SLOW_MODE,
+    CURTAIN_SPEED_MAX,
+    CURTAIN_SPEED_MIN,
+    DEFAULT_CURTAIN_SPEED,
     DEFAULT_LOCK_NIGHTLATCH,
     DEFAULT_RETRY_COUNT,
     DOMAIN,
@@ -79,6 +81,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Switchbot."""
 
     VERSION = 1
+    MINOR_VERSION = 3
 
     @staticmethod
     @callback
@@ -475,11 +478,14 @@ class SwitchbotOptionsFlowHandler(OptionsFlow):
             options.update(
                 {
                     vol.Optional(
-                        CONF_CURTAIN_SLOW_MODE,
+                        CONF_CURTAIN_SPEED,
                         default=self.config_entry.options.get(
-                            CONF_CURTAIN_SLOW_MODE, DEFAULT_CURTAIN_SLOW_MODE
+                            CONF_CURTAIN_SPEED, DEFAULT_CURTAIN_SPEED
                         ),
-                    ): bool
+                    ): vol.All(
+                        vol.Coerce(int),
+                        vol.Range(min=CURTAIN_SPEED_MIN, max=CURTAIN_SPEED_MAX),
+                    )
                 }
             )
 

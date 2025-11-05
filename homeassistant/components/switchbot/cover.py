@@ -20,12 +20,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import (
-    CONF_CURTAIN_SLOW_MODE,
-    CURTAIN_SPEED_FAST,
-    CURTAIN_SPEED_SLOW,
-    DEFAULT_CURTAIN_SLOW_MODE,
-)
+from .const import CONF_CURTAIN_SPEED, DEFAULT_CURTAIN_SPEED
 from .coordinator import SwitchbotConfigEntry, SwitchbotDataUpdateCoordinator
 from .entity import SwitchbotEntity, exception_handler
 
@@ -71,10 +66,10 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         self._attr_is_closed = None
 
     @callback
-    def _use_slow_mode(self) -> bool:
-        """Return if the curtain should operate in slow mode."""
+    def _get_curtain_speed(self) -> int:
+        """Return the configured curtain speed."""
         return self.coordinator.config_entry.options.get(
-            CONF_CURTAIN_SLOW_MODE, DEFAULT_CURTAIN_SLOW_MODE
+            CONF_CURTAIN_SPEED, DEFAULT_CURTAIN_SPEED
         )
 
     async def async_added_to_hass(self) -> None:
@@ -96,7 +91,7 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         """Open the curtain."""
 
         _LOGGER.debug("Switchbot to open curtain %s", self._address)
-        speed = CURTAIN_SPEED_SLOW if self._use_slow_mode() else CURTAIN_SPEED_FAST
+        speed = self._get_curtain_speed()
         self._last_run_success = bool(await self._device.open(speed))
         self._attr_is_opening = self._device.is_opening()
         self._attr_is_closing = self._device.is_closing()
@@ -107,7 +102,7 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         """Close the curtain."""
 
         _LOGGER.debug("Switchbot to close the curtain %s", self._address)
-        speed = CURTAIN_SPEED_SLOW if self._use_slow_mode() else CURTAIN_SPEED_FAST
+        speed = self._get_curtain_speed()
         self._last_run_success = bool(await self._device.close(speed))
         self._attr_is_opening = self._device.is_opening()
         self._attr_is_closing = self._device.is_closing()
