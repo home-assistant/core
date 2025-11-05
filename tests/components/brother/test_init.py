@@ -111,4 +111,4 @@ async def test_serial_mismatch(
 
     await init_integration(hass, mock_config_entry)
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
