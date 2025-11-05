@@ -216,16 +216,6 @@ class VasttrafikConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         if errors := await validate_api_credentials(self.hass, import_data):
-            issue_key = f"deprecated_yaml_import_issue_{errors['base']}"
-            ir.async_create_issue(
-                self.hass,
-                DOMAIN,
-                issue_key,
-                is_fixable=False,
-                issue_domain=DOMAIN,
-                severity=ir.IssueSeverity.ERROR,
-                translation_key=issue_key,
-            )
             return self.async_abort(reason=errors["base"])
 
         try:
@@ -235,15 +225,6 @@ class VasttrafikConfigFlow(ConfigFlow, domain=DOMAIN):
                 import_data[CONF_SECRET],
             )
         except Exception:  # noqa: BLE001
-            ir.async_create_issue(
-                self.hass,
-                DOMAIN,
-                "deprecated_yaml_import_issue_unknown",
-                is_fixable=False,
-                issue_domain=DOMAIN,
-                severity=ir.IssueSeverity.ERROR,
-                translation_key="deprecated_yaml_import_issue_unknown",
-            )
             return self.async_abort(reason="unknown")
 
         subentries = []
