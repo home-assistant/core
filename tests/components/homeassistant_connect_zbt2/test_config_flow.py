@@ -61,7 +61,7 @@ def setup_entry_fixture() -> Generator[AsyncMock]:
 async def test_config_flow_zigbee(
     hass: HomeAssistant,
     country: str,
-    expected_tx_power: str,
+    expected_tx_power: int,
 ) -> None:
     """Test Zigbee config flow for Connect ZBT-2."""
     hass.config.country = country
