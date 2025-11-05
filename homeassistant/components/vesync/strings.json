@@ -54,7 +54,6 @@
         "state_attributes": {
           "mode": {
             "state": {
-              "autopro": "Auto Pro",
               "humidity": "Humidity"
             }
           }
@@ -104,6 +103,9 @@
       }
     },
     "switch": {
+      "child_lock": {
+        "name": "Child lock"
+      },
       "display": {
         "name": "Display"
       }
