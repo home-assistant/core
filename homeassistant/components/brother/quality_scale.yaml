@@ -51,9 +51,7 @@ rules:
   docs-known-limitations: done
   docs-supported-devices: done
   docs-supported-functions: done
-  docs-troubleshooting:
-    status: exempt
-    comment: No known issues that could be resolved by the user.
+  docs-troubleshooting: done
   docs-use-cases: done
   dynamic-devices:
     status: exempt
