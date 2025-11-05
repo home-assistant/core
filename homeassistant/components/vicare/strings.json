@@ -83,6 +83,9 @@
     "button": {
       "activate_onetimecharge": {
         "name": "Activate one-time charge"
+      },
+      "deactivate_onetimecharge": {
+        "name": "Deactivate one-time charge"
       }
     },
     "climate": {
