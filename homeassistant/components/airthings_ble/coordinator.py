@@ -5,11 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from airthings_ble import (
-    AirthingsBluetoothDeviceData,
-    AirthingsDevice,
-    AirthingsDeviceType,
-)
+from airthings_ble import AirthingsBluetoothDeviceData, AirthingsDevice
 from bleak.backends.device import BLEDevice
 from bleak_retry_connector import close_stale_connections_by_address
 
@@ -20,7 +16,12 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from .const import DEFAULT_SCAN_INTERVAL, DEVICE_MODEL, DOMAIN, RADON_SCAN_INTERVAL
+from .const import (
+    DEFAULT_SCAN_INTERVAL,
+    DEVICE_MODEL,
+    DEVICE_SPECIFIC_SCAN_INTERVAL,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,10 +41,9 @@ class AirthingsBLEDataUpdateCoordinator(DataUpdateCoordinator[AirthingsDevice]):
         )
 
         device_model = entry.data.get(DEVICE_MODEL)
-        if device_model == AirthingsDeviceType.CORENTIUM_HOME_2.value:
-            interval = RADON_SCAN_INTERVAL
-        else:
-            interval = DEFAULT_SCAN_INTERVAL
+        interval = DEVICE_SPECIFIC_SCAN_INTERVAL.get(
+            device_model, DEFAULT_SCAN_INTERVAL
+        )
 
         super().__init__(
             hass,
@@ -82,8 +82,11 @@ class AirthingsBLEDataUpdateCoordinator(DataUpdateCoordinator[AirthingsDevice]):
                 self.config_entry,
                 data={**self.config_entry.data, DEVICE_MODEL: data.model.value},
             )
-            if data.model == AirthingsDeviceType.CORENTIUM_HOME_2:
-                self.update_interval = timedelta(seconds=RADON_SCAN_INTERVAL)
+            self.update_interval = timedelta(
+                seconds=DEVICE_SPECIFIC_SCAN_INTERVAL.get(
+                    data.model, DEFAULT_SCAN_INTERVAL
+                )
+            )
 
     async def _async_update_data(self) -> AirthingsDevice:
         """Get data from Airthings BLE."""

@@ -23,7 +23,7 @@ from homeassistant.components.bluetooth import (
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS
 
-from .const import DOMAIN, MFCT_ID
+from .const import DEVICE_MODEL, DOMAIN, MFCT_ID
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -140,7 +140,7 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
 
             return self.async_create_entry(
                 title=self.context["title_placeholders"]["name"],
-                data={"device_model": self._discovered_device.device.model.value},
+                data={DEVICE_MODEL: self._discovered_device.device.model.value},
             )
 
         self._set_confirm_only()
@@ -170,7 +170,7 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
 
             return self.async_create_entry(
                 title=discovery.name,
-                data={"device_model": discovery.device.model.value},
+                data={DEVICE_MODEL: discovery.device.model.value},
             )
 
         current_addresses = self._async_current_ids(include_ignore=False)
