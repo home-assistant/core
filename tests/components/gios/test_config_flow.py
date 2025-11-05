@@ -58,6 +58,12 @@ async def test_invalid_sensor_data(hass: HomeAssistant, mock_gios: MagicMock) ->
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {CONF_STATION_ID: "invalid_sensors_data"}
+    mock_gios.create.return_value.async_update.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=CONFIG
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Test Name 1"
 
 
 async def test_cannot_connect(hass: HomeAssistant, mock_gios: MagicMock) -> None:
@@ -74,6 +80,13 @@ async def test_cannot_connect(hass: HomeAssistant, mock_gios: MagicMock) -> None
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_gios.create.return_value.async_update.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=CONFIG
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Test Name 1"
 
 
 async def test_create_entry(hass: HomeAssistant) -> None:

@@ -9,6 +9,8 @@ from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
+from . import setup_integration
+
 from tests.common import MockConfigEntry
 
 
@@ -70,6 +72,24 @@ async def test_migrate_device_and_config_entry(
         config_entry_id=mock_config_entry.entry_id, identifiers={(DOMAIN, "123")}
     )
     assert device_entry.id == migrated_device_entry.id
+
+
+async def test_migrate_unique_id_to_str(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    mock_gios: MagicMock,
+) -> None:
+    """Test device_info identifiers and config entry migration."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        unique_id=int(mock_config_entry.unique_id),  # type: ignore[misc]
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.unique_id == "123"
 
 
 async def test_remove_air_quality_entities(
