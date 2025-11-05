@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, TypedDict
 
 import vasttrafik
 import voluptuous as vol
@@ -58,9 +58,16 @@ CONFIGURE_DEPARTURE_SCHEMA = vol.Schema(
 )
 
 
+class StationData(TypedDict):
+    """Station data from the Västtrafik API."""
+
+    gid: str
+    name: str
+
+
 async def search_stations(
     hass: HomeAssistant, config_entry: ConfigEntry, query: str
-) -> tuple[list[SelectOptionDict], str | None]:
+) -> tuple[list[StationData], str | None]:
     """Search for stations using the Västtrafik API.
 
     Returns (stations_list, error_code).
@@ -70,7 +77,9 @@ async def search_stations(
 
     planner = config_entry.runtime_data
     try:
-        results = await hass.async_add_executor_job(planner.location_name, query)
+        results: list[StationData] = await hass.async_add_executor_job(
+            planner.location_name, query
+        )
     except vasttrafik.Error as err:
         _LOGGER.error("Västtrafik API error in search_stations: %s", err)
         return [], "api_error"
@@ -78,15 +87,8 @@ async def search_stations(
         _LOGGER.exception("Unexpected error in search_stations")
         return [], "api_error"
 
-    stations: list[SelectOptionDict] = []
-    for result in results:
-        name = result.get("name", "")
-        gid = result.get("gid", "")
-        if name and gid:
-            stations.append({"value": name, "label": f"{name} ({gid})"})
-
-    if stations:
-        return stations, None
+    if results:
+        return results, None
     return [], "no_stations_found"
 
 
@@ -215,8 +217,8 @@ class VasttrafikSubentryFlow(ConfigSubentryFlow):
     def __init__(self) -> None:
         """Initialize the subentry flow."""
         super().__init__()
-        self._search_results: list[SelectOptionDict] = []
-        self._selected_station: str = ""
+        self._search_results: list[StationData] = []
+        self._selected_station: StationData | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -263,13 +265,20 @@ class VasttrafikSubentryFlow(ConfigSubentryFlow):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            self._selected_station = user_input["station"]
+            self._selected_station = [
+                v for v in self._search_results if v["gid"] == user_input["station"]
+            ][0]
             return await self.async_step_configure()
+
+        selector_options = [
+            SelectOptionDict(value=v["gid"], label=v["name"])
+            for v in self._search_results
+        ]
 
         station_schema = vol.Schema(
             {
                 vol.Required("station"): SelectSelector(
-                    SelectSelectorConfig(options=self._search_results)
+                    SelectSelectorConfig(options=selector_options)
                 ),
             }
         )
@@ -284,15 +293,16 @@ class VasttrafikSubentryFlow(ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Configure the departure sensor details."""
+        assert self._selected_station is not None
+
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            station_name = self._selected_station
-            unique_id = f"departure_{station_name.lower().replace(' ', '_')}"
+            unique_id = f"departure_{self._selected_station['gid']}"
 
             departure_data = {
-                CONF_FROM: station_name,
-                CONF_NAME: user_input.get(CONF_NAME, station_name),
+                CONF_FROM: self._selected_station["name"],
+                CONF_NAME: user_input.get(CONF_NAME, unique_id),
                 CONF_HEADING: user_input.get(
                     CONF_HEADING, ""
                 ),  # Keep for backward compatibility
@@ -311,9 +321,7 @@ class VasttrafikSubentryFlow(ConfigSubentryFlow):
             step_id="configure",
             data_schema=CONFIGURE_DEPARTURE_SCHEMA,
             errors=errors,
-            description_placeholders={
-                "station_name": self._selected_station,
-            },
+            description_placeholders={"station_name": self._selected_station["name"]},
         )
 
     async def async_step_reconfigure(
