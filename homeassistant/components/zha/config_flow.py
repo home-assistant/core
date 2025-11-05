@@ -191,7 +191,7 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         self._hass = None  # type: ignore[assignment]
         self._radio_mgr = ZhaRadioManager()
         self._restore_backup_task: asyncio.Task[None] | None = None
-        self._reset_old_radio_task: asyncio.Task[ConfigFlowResult] | None = None
+        self._reset_old_radio_task: asyncio.Task[None] | None = None
         self._form_network_task: asyncio.Task[None] | None = None
         self._extra_network_config: dict[str, Any] = {}
 
@@ -477,45 +477,43 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         self._radio_mgr.chosen_backup = self._radio_mgr.backups[0]
         return await self.async_step_maybe_reset_old_radio()
 
-    async def _async_reset_old_radio(self) -> ConfigFlowResult:
+    async def _async_reset_old_radio(self, config_entry: ConfigEntry) -> None:
         """Do the work of resetting the old radio."""
-        # Like in the options flow, pull the correct settings from the config entry
-        config_entries = self.hass.config_entries.async_entries(
-            DOMAIN, include_ignore=False
-        )
 
-        if config_entries:
-            assert len(config_entries) == 1
-            config_entry = config_entries[0]
+        # Unload ZHA before connecting to the old adapter
+        with suppress(OperationNotAllowed):
+            await self.hass.config_entries.async_unload(config_entry.entry_id)
 
-            # Unload ZHA before connecting to the old adapter
-            with suppress(OperationNotAllowed):
-                await self.hass.config_entries.async_unload(config_entry.entry_id)
+        # Create a radio manager to connect to the old stick to reset it
+        temp_radio_mgr = ZhaRadioManager()
+        temp_radio_mgr.hass = self.hass
+        temp_radio_mgr.device_path = config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
+        temp_radio_mgr.device_settings = config_entry.data[CONF_DEVICE]
+        temp_radio_mgr.radio_type = RadioType[config_entry.data[CONF_RADIO_TYPE]]
 
-            # Create a radio manager to connect to the old stick to reset it
-            temp_radio_mgr = ZhaRadioManager()
-            temp_radio_mgr.hass = self.hass
-            temp_radio_mgr.device_path = config_entry.data[CONF_DEVICE][
-                CONF_DEVICE_PATH
-            ]
-            temp_radio_mgr.device_settings = config_entry.data[CONF_DEVICE]
-            temp_radio_mgr.radio_type = RadioType[config_entry.data[CONF_RADIO_TYPE]]
-
-            try:
-                await temp_radio_mgr.async_reset_adapter()
-            except HomeAssistantError:
-                # Old adapter not found or cannot connect, show prompt to plug back in
-                return await self.async_step_plug_in_old_radio()
-
-        return await self.async_step_restore_backup()
+        await temp_radio_mgr.async_reset_adapter()
 
     async def async_step_maybe_reset_old_radio(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Erase the old radio's network settings before migration."""
+
+        # Like in the options flow, pull the correct settings from the config entry
+        config_entries = self.hass.config_entries.async_entries(
+            DOMAIN, include_ignore=False
+        )
+
+        if not config_entries:
+            return await self.async_step_restore_backup()
+
         if self._reset_old_radio_task is None:
+            # This will only ever be called during migration, so there must be an
+            # existing config entry
+            assert len(config_entries) == 1
+            config_entry = config_entries[0]
+
             self._reset_old_radio_task = self.hass.async_create_task(
-                self._async_reset_old_radio(),
+                self._async_reset_old_radio(config_entry),
                 "Reset old radio",
             )
 
@@ -527,11 +525,14 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
             )
 
         try:
-            result = await self._reset_old_radio_task
+            await self._reset_old_radio_task
+        except HomeAssistantError:
+            # Old adapter not found or cannot connect, show prompt to plug back in
+            return self.async_show_progress_done(next_step_id="plug_in_old_radio")
         finally:
             self._reset_old_radio_task = None
 
-        return result
+        return self.async_show_progress_done(next_step_id="restore_backup")
 
     async def async_step_plug_in_old_radio(
         self, user_input: dict[str, Any] | None = None
