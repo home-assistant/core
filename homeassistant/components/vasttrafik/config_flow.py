@@ -115,11 +115,11 @@ async def validate_api_credentials(
 
     Returns errors if any
     """
-    planner = await hass.async_add_executor_job(
-        vasttrafik.JournyPlanner, data[CONF_KEY], data[CONF_SECRET]
-    )
 
     try:
+        planner = await hass.async_add_executor_job(
+            vasttrafik.JournyPlanner, data[CONF_KEY], data[CONF_SECRET]
+        )
         await hass.async_add_executor_job(planner.location_name, "Centralstationen")
     except vasttrafik.Error as err:
         _LOGGER.error("Failed to validate Västtrafik credentials: %s", err)
@@ -228,9 +228,23 @@ class VasttrafikConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             return self.async_abort(reason=errors["base"])
 
-        planner: vasttrafik.JournyPlanner = await self.hass.async_add_executor_job(
-            vasttrafik.JournyPlanner, import_data[CONF_KEY], import_data[CONF_SECRET]
-        )
+        try:
+            planner: vasttrafik.JournyPlanner = await self.hass.async_add_executor_job(
+                vasttrafik.JournyPlanner,
+                import_data[CONF_KEY],
+                import_data[CONF_SECRET],
+            )
+        except Exception:  # noqa: BLE001
+            ir.async_create_issue(
+                self.hass,
+                DOMAIN,
+                "deprecated_yaml_import_issue_unknown",
+                is_fixable=False,
+                issue_domain=DOMAIN,
+                severity=ir.IssueSeverity.ERROR,
+                translation_key="deprecated_yaml_import_issue_unknown",
+            )
+            return self.async_abort(reason="unknown")
 
         subentries = []
         for departure in import_data.get(CONF_DEPARTURES, []):
@@ -249,7 +263,7 @@ class VasttrafikConfigFlow(ConfigFlow, domain=DOMAIN):
                     translation_key="deprecated_yaml_import_issue_station_not_found",
                     translation_placeholders={"station": departure[CONF_FROM]},
                 )
-                return self.async_abort(reason="station_not_found")
+                continue
 
             subentries.append(
                 ConfigSubentryData(
