@@ -88,6 +88,9 @@
         "description": "Your backup has a different IEEE address than your adapter. For your network to function properly, the IEEE address of your adapter should also be changed.\n\nThis is a permanent operation.",
         "title": "Overwrite adapter IEEE address"
       },
+      "form_new_network": {
+        "title": "Forming new network"
+      },
       "manual_pick_radio_type": {
         "data": {
           "radio_type": "Adapter type"
@@ -1945,6 +1948,9 @@
         },
         "description": "[%key:component::zha::config::step::confirm_ezsp_ieee_overwrite::description%]",
         "title": "[%key:component::zha::config::step::confirm_ezsp_ieee_overwrite::title%]"
+      },
+      "form_new_network": {
+        "title": "[%key:component::zha::config::step::form_new_network::title%]"
       },
       "init": {
         "description": "A backup will be performed and ZHA will be stopped. Do you wish to continue?",
