@@ -116,14 +116,12 @@ class SatelIntegraBinarySensor(BinarySensorEntity):
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         if self._react_to_signal == SIGNAL_OUTPUTS_UPDATED:
-            if self._device_number in self._satel.violated_outputs:
-                self._state = 1
-            else:
-                self._state = 0
-        elif self._device_number in self._satel.violated_zones:
-            self._state = 1
+            self._state = (
+                1 if self._device_number in self._satel.violated_outputs else 0
+            )
         else:
-            self._state = 0
+            self._state = 1 if self._device_number in self._satel.violated_zones else 0
+
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass, self._react_to_signal, self._devices_updated
@@ -136,7 +134,7 @@ class SatelIntegraBinarySensor(BinarySensorEntity):
         return self._state == 1
 
     @callback
-    def _devices_updated(self, zones):
+    def _devices_updated(self, zones: list[int]):
         """Update the zone's state, if needed."""
         if self._device_number in zones and self._state != zones[self._device_number]:
             self._state = zones[self._device_number]
