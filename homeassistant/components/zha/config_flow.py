@@ -190,7 +190,8 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
 
         self._hass = None  # type: ignore[assignment]
         self._radio_mgr = ZhaRadioManager()
-        self._restore_backup_task: asyncio.Task[None] | None = None        self._reset_old_radio_task: asyncio.Task[ConfigFlowResult] | None = None
+        self._restore_backup_task: asyncio.Task[None] | None = None
+        self._reset_old_radio_task: asyncio.Task[ConfigFlowResult] | None = None
         self._form_network_task: asyncio.Task[None] | None = None
         self._extra_network_config: dict[str, Any] = {}
 
@@ -652,7 +653,7 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
 
     async def _async_form_new_network(self) -> None:
         """Do the work of forming a new network."""
-        await self._radio_mgr.async_form_network()
+        await self._radio_mgr.async_form_network(config=self._extra_network_config)
         # Load the newly formed network settings to get the network info
         await self._radio_mgr.async_load_network_settings()
 
@@ -662,9 +663,7 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         """Form a brand-new network."""
         if self._form_network_task is None:
             self._form_network_task = self.hass.async_create_task(
-                self._async_form_new_network(
-                    config=self._extra_network_config
-                ),
+                self._async_form_new_network(),
                 "Form new network",
             )
 
