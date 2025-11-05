@@ -397,7 +397,7 @@ class TFAmeSensorEntity(CoordinatorEntity, SensorEntity):
                 return ICON_MAPPING["rssi"]["good"]
             return ICON_MAPPING["rssi"]["strong"]
 
-        # Battery: 0 = low battery, 1 = good battery
+        # Battery: 1 = low battery, 0 = good battery
         if measurement_type == "lowbatt":
             return (
                 ICON_MAPPING["lowbatt"]["low"]

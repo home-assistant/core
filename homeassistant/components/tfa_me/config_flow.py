@@ -155,7 +155,6 @@ class OptionsFlowHandler(OptionsFlow):
                     self.config_entry,
                     options={**self.config_entry.options, "action_rain": True},
                 )
-                # await coordinator.async_refresh()
                 # Update all entities on dashboard
                 cordy: TFAmeDataCoordinator = coordinator
                 for entity in cordy.sensor_entity_list:
