@@ -194,6 +194,10 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         self._form_network_task: asyncio.Task[None] | None = None
         self._extra_network_config: dict[str, Any] = {}
 
+        # Progress flow steps cannot abort so we need to store the abort reason and then
+        # re-raise it in a dedicated step
+        self._progress_error: AbortFlow | None = None
+
     @property
     def hass(self) -> HomeAssistant:
         """Return hass."""
@@ -224,6 +228,13 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
     @abstractmethod
     async def _async_create_radio_entry(self) -> ConfigFlowResult:
         """Create a config entry with the current flow state."""
+
+    async def async_step_progress_failed(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Abort when progress step failed."""
+        assert self._progress_error is not None
+        raise self._progress_error
 
     async def async_step_choose_serial_port(
         self, user_input: dict[str, Any] | None = None
@@ -777,10 +788,11 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
             # User unplugged the new adapter, allow retry
             return self.async_show_progress_done(next_step_id="pre_plug_in_new_radio")
         except CannotWriteNetworkSettings as exc:
-            return self.async_abort(
+            self._progress_error = AbortFlow(
                 reason="cannot_restore_backup",
                 description_placeholders={"error": str(exc)},
             )
+            return self.async_show_progress_done(next_step_id="progress_failed")
         finally:
             self._restore_backup_task = None
 
