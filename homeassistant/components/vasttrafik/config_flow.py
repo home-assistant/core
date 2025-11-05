@@ -215,7 +215,6 @@ class VasttrafikConfigFlow(ConfigFlow, domain=DOMAIN):
             {CONF_KEY: import_data[CONF_KEY], CONF_SECRET: import_data[CONF_SECRET]}
         )
 
-        # Validate API credentials
         if errors := await validate_api_credentials(self.hass, import_data):
             issue_key = f"deprecated_yaml_import_issue_{errors['base']}"
             ir.async_create_issue(
@@ -239,7 +238,7 @@ class VasttrafikConfigFlow(ConfigFlow, domain=DOMAIN):
                 station_data = await self.hass.async_add_executor_job(
                     self.get_station_data, planner, departure[CONF_FROM]
                 )
-            except (vasttrafik.Error, IndexError, KeyError):
+            except Exception:  # noqa: BLE001
                 ir.async_create_issue(
                     self.hass,
                     DOMAIN,
@@ -248,20 +247,9 @@ class VasttrafikConfigFlow(ConfigFlow, domain=DOMAIN):
                     issue_domain=DOMAIN,
                     severity=ir.IssueSeverity.ERROR,
                     translation_key="deprecated_yaml_import_issue_station_not_found",
+                    translation_placeholders={"station": departure[CONF_FROM]},
                 )
                 return self.async_abort(reason="station_not_found")
-            except Exception:
-                _LOGGER.exception("Unexpected error during YAML import station lookup")
-                ir.async_create_issue(
-                    self.hass,
-                    DOMAIN,
-                    "deprecated_yaml_import_issue_unknown",
-                    is_fixable=False,
-                    issue_domain=DOMAIN,
-                    severity=ir.IssueSeverity.ERROR,
-                    translation_key="deprecated_yaml_import_issue_unknown",
-                )
-                return self.async_abort(reason="unknown")
 
             subentries.append(
                 ConfigSubentryData(

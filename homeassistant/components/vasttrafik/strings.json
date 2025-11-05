@@ -135,7 +135,7 @@
       "title": "Västtrafik YAML configuration deprecated"
     },
     "deprecated_yaml_import_issue_station_not_found": {
-      "description": "Configuring Västtrafik using YAML sensor platform is deprecated.\n\nWhile importing your configuration, one or more stations could not be found. Please check your station names in the YAML configuration, or remove the existing YAML configuration and set the integration up via the UI.",
+      "description": "Configuring Västtrafik using YAML sensor platform is deprecated.\n\nWhile importing your configuration, there was a problem importing the depature board for station {station}. Please check the name in the YAML configuration, or remove the existing YAML configuration and set the integration up via the UI.",
       "title": "[%key:component::vasttrafik::issues::deprecated_yaml_import_issue_invalid_auth::title%]"
     },
     "deprecated_yaml_import_issue_unknown": {
