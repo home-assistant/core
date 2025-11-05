@@ -1889,6 +1889,11 @@
       "invalid_backup_json": "[%key:component::zha::config::error::invalid_backup_json%]"
     },
     "flow_title": "[%key:component::zha::config::flow_title%]",
+    "progress": {
+      "form_new_network": "[%key:component::zha::config::progress::form_new_network%]",
+      "maybe_reset_old_radio": "[%key:component::zha::config::progress::maybe_reset_old_radio%]",
+      "restore_backup": "[%key:component::zha::config::progress::restore_backup%]"
+    },
     "step": {
       "choose_automatic_backup": {
         "data": {
