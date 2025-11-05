@@ -76,5 +76,5 @@ rules:
   async-dependency: done
   inject-websession:
     status: exempt
-    comment: The integration does not connect via HTTP.
+    comment: The integration does not connect via HTTP instead it uses a shared SNMP engine.
   strict-typing: done
