@@ -1865,9 +1865,9 @@ async def test_zeroconf_rejects_ipv6(hass: HomeAssistant) -> None:
     assert result["reason"] == "ipv6_not_supported"
 
 
+@pytest.mark.usefixtures("mock_rpc_device", "mock_zeroconf")
 async def test_zeroconf_wrong_device_name(
     hass: HomeAssistant,
-    mock_rpc_device: Mock,
     mock_setup_entry: AsyncMock,
     mock_setup: AsyncMock,
 ) -> None:
@@ -1915,10 +1915,9 @@ async def test_zeroconf_wrong_device_name(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.usefixtures("mock_zeroconf")
+@pytest.mark.usefixtures("mock_rpc_device", "mock_zeroconf")
 async def test_bluetooth_discovery(
     hass: HomeAssistant,
-    mock_rpc_device: Mock,
     mock_setup_entry: AsyncMock,
     mock_setup: AsyncMock,
 ) -> None:
@@ -2065,10 +2064,9 @@ async def test_bluetooth_discovery_no_ble_device(
     assert result["reason"] == "cannot_connect"
 
 
-@pytest.mark.usefixtures("mock_zeroconf")
+@pytest.mark.usefixtures("mock_rpc_device", "mock_zeroconf")
 async def test_bluetooth_wifi_scan_success(
     hass: HomeAssistant,
-    mock_rpc_device: Mock,
     mock_setup_entry: AsyncMock,
     mock_setup: AsyncMock,
 ) -> None:
@@ -2145,10 +2143,9 @@ async def test_bluetooth_wifi_scan_success(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.usefixtures("mock_zeroconf")
+@pytest.mark.usefixtures("mock_rpc_device", "mock_zeroconf")
 async def test_bluetooth_wifi_scan_failure(
     hass: HomeAssistant,
-    mock_rpc_device: Mock,
     mock_setup_entry: AsyncMock,
     mock_setup: AsyncMock,
 ) -> None:
@@ -2262,10 +2259,9 @@ async def test_bluetooth_wifi_scan_ble_not_permitted(
     assert result["reason"] == "ble_not_permitted"
 
 
-@pytest.mark.usefixtures("mock_zeroconf")
+@pytest.mark.usefixtures("mock_rpc_device", "mock_zeroconf")
 async def test_bluetooth_wifi_credentials_and_provision_success(
     hass: HomeAssistant,
-    mock_rpc_device: Mock,
     mock_setup_entry: AsyncMock,
     mock_setup: AsyncMock,
 ) -> None:
@@ -2344,10 +2340,9 @@ async def test_bluetooth_wifi_credentials_and_provision_success(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.usefixtures("mock_zeroconf")
+@pytest.mark.usefixtures("mock_rpc_device", "mock_zeroconf")
 async def test_bluetooth_wifi_provision_failure(
     hass: HomeAssistant,
-    mock_rpc_device: Mock,
     mock_setup_entry: AsyncMock,
     mock_setup: AsyncMock,
 ) -> None:
@@ -2819,3 +2814,155 @@ async def test_bluetooth_provision_firmware_not_fully_provisioned(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "firmware_not_fully_provisioned"
+
+
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_bluetooth_provision_with_zeroconf_discovery_fast_path(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_setup: AsyncMock,
+) -> None:
+    """Test zeroconf discovery arrives during WiFi provisioning (fast path - line 551)."""
+    # Inject BLE device
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        data=BLE_DISCOVERY_INFO,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+    )
+
+    # Confirm and scan
+    with patch(
+        "homeassistant.components.shelly.config_flow.async_scan_wifi_networks",
+        return_value=[{"ssid": "MyNetwork", "rssi": -50, "auth": 2}],
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    # Select network
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_SSID: "MyNetwork"},
+    )
+
+    # Patch async_provision_wifi to trigger zeroconf discovery
+    async def mock_provision_wifi(*args, **kwargs):
+        """Mock provision that triggers zeroconf discovery."""
+        # Trigger zeroconf discovery for the device
+        await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data=ZeroconfServiceInfo(
+                ip_address=ip_address("1.1.1.1"),
+                ip_addresses=[ip_address("1.1.1.1")],
+                hostname="shelly2pm-c049ef8873e8.local.",
+                name="shelly2pm-c049ef8873e8",
+                port=80,
+                properties={"gen": "2"},
+                type="_http._tcp.local.",
+            ),
+            context={"source": config_entries.SOURCE_ZEROCONF},
+        )
+        # Ensure the zeroconf discovery completes before returning
+        await hass.async_block_till_done()
+
+    with (
+        patch(
+            "homeassistant.components.shelly.config_flow.PROVISIONING_TIMEOUT",
+            10,
+        ),
+        patch(
+            "homeassistant.components.shelly.config_flow.async_provision_wifi",
+            side_effect=mock_provision_wifi,
+        ),
+        patch(
+            "homeassistant.components.shelly.config_flow.async_lookup_device_by_name",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.shelly.config_flow.get_info",
+            return_value=MOCK_DEVICE_INFO,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_PASSWORD: "my_password"},
+        )
+
+        # Provisioning shows progress
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        await hass.async_block_till_done()
+
+        # Complete provisioning with zeroconf discovery received (fast path)
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "C049EF8873E8"
+    assert result["title"] == "Test name"
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_bluetooth_provision_timeout_active_lookup_fails(
+    hass: HomeAssistant,
+) -> None:
+    """Test WiFi provisioning times out and active lookup fails (lines 545-547)."""
+    # Inject BLE device
+    inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        data=BLE_DISCOVERY_INFO,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+    )
+
+    # Confirm and scan
+    with patch(
+        "homeassistant.components.shelly.config_flow.async_scan_wifi_networks",
+        return_value=[{"ssid": "MyNetwork", "rssi": -50, "auth": 2}],
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    # Select network
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_SSID: "MyNetwork"},
+    )
+
+    # Provision WiFi but no zeroconf discovery arrives, and active lookup fails
+    with (
+        patch(
+            "homeassistant.components.shelly.config_flow.PROVISIONING_TIMEOUT",
+            0.01,  # Short timeout to trigger timeout path
+        ),
+        patch("homeassistant.components.shelly.config_flow.async_provision_wifi"),
+        patch(
+            "homeassistant.components.shelly.config_flow.async_lookup_device_by_name",
+            return_value=None,  # Active lookup fails
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_PASSWORD: "my_password"},
+        )
+
+        # Provisioning shows progress
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        await hass.async_block_till_done()
+
+        # Timeout occurs, active lookup fails, provision unsuccessful
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    # Should show provision_failed form
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "provision_failed"
+
+    # User aborts after failure
+    with patch(
+        "homeassistant.components.shelly.config_flow.async_scan_wifi_networks",
+        side_effect=RuntimeError("BLE device unavailable"),
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unknown"
