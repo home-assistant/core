@@ -660,6 +660,11 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "local_name": "Ruuvi *",
     },
     {
+        "connectable": True,
+        "domain": "ryse",
+        "manufacturer_id": 1033,
+    },
+    {
         "connectable": False,
         "domain": "sensirion_ble",
         "manufacturer_id": 1749,
