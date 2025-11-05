@@ -8,8 +8,7 @@ import logging
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import format_mac
-
-from .const import PROVISIONING_FUTURES
+from homeassistant.util.hass_dict import HassKey
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,6 +20,11 @@ class ProvisioningState:
     event: asyncio.Event = field(default_factory=asyncio.Event)
     host: str | None = None
     port: int | None = None
+
+
+PROVISIONING_FUTURES: HassKey[dict[str, ProvisioningState]] = HassKey(
+    "shelly_provisioning_futures"
+)
 
 
 @callback

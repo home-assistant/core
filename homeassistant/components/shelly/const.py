@@ -5,7 +5,7 @@ from __future__ import annotations
 from enum import StrEnum
 from logging import Logger, getLogger
 import re
-from typing import TYPE_CHECKING, Final, TypedDict
+from typing import Final, TypedDict
 
 from aioshelly.const import (
     MODEL_BULB,
@@ -31,19 +31,12 @@ from aioshelly.const import (
 
 from homeassistant.components.number import NumberMode
 from homeassistant.const import UnitOfVolumeFlowRate
-from homeassistant.util.hass_dict import HassKey
-
-if TYPE_CHECKING:
-    from .ble_provisioning import ProvisioningState
 
 DOMAIN: Final = "shelly"
 
 LOGGER: Logger = getLogger(__package__)
 
 # BLE provisioning
-PROVISIONING_FUTURES: HassKey[dict[str, ProvisioningState]] = HassKey(
-    "shelly_provisioning_futures"
-)
 PROVISIONING_TIMEOUT: Final = 35  # 35 seconds to wait for device to connect to WiFi
 CONF_SSID: Final = "ssid"
 
