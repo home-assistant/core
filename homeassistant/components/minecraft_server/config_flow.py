@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS, CONF_TYPE
+from homeassistant.helpers.selector import selector
 
 from .api import MinecraftServer, MinecraftServerAddressError, MinecraftServerType
 from .const import DOMAIN
@@ -73,6 +74,34 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             user_input = {}
 
+        suggested_addresses = [
+            "localhost:4090",
+            "123.456.78.90:25565",
+            "play.example.com:19132",
+            "minecraft.example.com:25565",
+        ]
+
+        if len(suggested_addresses) > 0:
+            return self.async_show_form(
+                step_id="user",
+                data_schema=vol.Schema(
+                    {
+                        vol.Required(
+                            CONF_ADDRESS,
+                            default=user_input.get(CONF_ADDRESS, DEFAULT_ADDRESS),
+                        ): selector(
+                            {
+                                "select": {
+                                    "options": suggested_addresses,
+                                    "custom_value": True,
+                                }
+                            }
+                        ),
+                    }
+                ),
+                errors=errors,
+            )
+
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
@@ -80,7 +109,7 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(
                         CONF_ADDRESS,
                         default=user_input.get(CONF_ADDRESS, DEFAULT_ADDRESS),
-                    ): vol.All(str, vol.Lower),
+                    ): str,
                 }
             ),
             errors=errors,
