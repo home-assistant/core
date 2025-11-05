@@ -175,6 +175,9 @@ class VasttrafikConfigFlow(ConfigFlow, domain=DOMAIN):
 
         errors: dict[str, str] | None = {}
         if user_input is not None:
+            self._async_abort_entries_match(
+                {CONF_KEY: user_input[CONF_KEY], CONF_SECRET: user_input[CONF_SECRET]}
+            )
             if not (errors := await validate_api_credentials(self.hass, user_input)):
                 return self.async_update_and_abort(
                     entry,
