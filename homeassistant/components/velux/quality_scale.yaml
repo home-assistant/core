@@ -8,7 +8,7 @@ rules:
   common-modules: done
   config-flow-test-coverage: done
   config-flow:
-    status: done
+    status: todo
     comment: remaining missing descriptions addressed in https://github.com/home-assistant/core/pull/155832
   dependency-transparency: done
   docs-actions: done
