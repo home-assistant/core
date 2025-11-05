@@ -48,7 +48,6 @@ class OMIECoordinator(DataUpdateCoordinator[Mapping[dt.date, OMIEResults[SpotDat
 
         data = {cet_today: spot_data} if spot_data else {}
         self._set_update_interval()
-        _LOGGER.debug("Received data: %s", data)
         return data
 
     def _set_update_interval(self) -> None:
@@ -63,7 +62,10 @@ class OMIECoordinator(DataUpdateCoordinator[Mapping[dt.date, OMIEResults[SpotDat
         _LOGGER.debug("Next refresh at %s", refresh_at.astimezone())
 
     async def __spot_price(self, date: dt.date) -> OMIEResults[SpotData] | None:
-        _LOGGER.debug("Fetching OMIE data for %s", date)
+        _LOGGER.debug("Fetching OMIE spot data for %s", date)
         spot_data = await pyomie.spot_price(self._client_session, date)
-        _LOGGER.debug("pyomie.spot_price returned: %s", spot_data)
+        _LOGGER.debug(
+            "Returned OMIE spot data: %s",
+            spot_data.contents.header if spot_data else spot_data,
+        )
         return spot_data
