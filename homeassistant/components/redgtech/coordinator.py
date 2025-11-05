@@ -95,15 +95,17 @@ class RedgtechDataUpdateCoordinator(DataUpdateCoordinator[list[RedgtechDevice]])
 
         for item in data["boards"]:
             display_categories = item["displayCategories"]
-            device_type = display_categories[0].lower()
 
-            device = RedgtechDevice(
-                unique_id=item["endpointId"],
-                name=item["friendlyName"],
-                state=item["value"],
-                type=device_type,
-            )
-            _LOGGER.debug("Processing device: %s", device)
-            devices.append(device)
+            for category in display_categories:
+                device_type = category.lower()
+
+                device = RedgtechDevice(
+                    unique_id=item["endpointId"],
+                    name=item["friendlyName"],
+                    state=item["value"],
+                    type=device_type,
+                )
+                _LOGGER.debug("Processing device: %s", device)
+                devices.append(device)
 
         return devices
