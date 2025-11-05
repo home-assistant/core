@@ -146,6 +146,7 @@ async def test_config_flow_zigbee(
             "flow_control": "hardware",
         },
         "radio_type": fw_type.value,
+        "tx_power": 8,
     }
 
 
@@ -382,6 +383,7 @@ async def test_options_flow(
             "flow_control": "hardware",
         },
         "radio_type": "ezsp",
+        "tx_power": 8,
     }
 
 
