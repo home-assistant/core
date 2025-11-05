@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import AsyncIterator, Mapping
 from contextlib import asynccontextmanager
-from typing import Any, Final
+from typing import TYPE_CHECKING, Any, Final
 
 from aioshelly.ble.manufacturer_data import has_rpc_over_ble
 from aioshelly.ble.provisioning import async_provision_wifi, async_scan_wifi_networks
@@ -413,7 +413,8 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self.async_step_wifi_credentials()
 
         # Scan for WiFi networks via BLE
-        assert self.ble_device is not None
+        if TYPE_CHECKING:
+            assert self.ble_device is not None
         try:
             self.wifi_networks = await async_scan_wifi_networks(self.ble_device)
         except (DeviceConnectionError, RpcCallError) as err:
@@ -497,7 +498,8 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         Returns the flow result to be stored in self._provision_result, or None if failed.
         """
         # Provision WiFi via BLE
-        assert self.ble_device is not None
+        if TYPE_CHECKING:
+            assert self.ble_device is not None
         try:
             await async_provision_wifi(self.ble_device, self.selected_ssid, password)
         except (DeviceConnectionError, RpcCallError) as err:
@@ -552,8 +554,9 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         # Device discovered via zeroconf - get device info and set up directly
-        assert state.host is not None
-        assert state.port is not None
+        if TYPE_CHECKING:
+            assert state.host is not None
+            assert state.port is not None
         self.host = state.host
         self.port = state.port
 
@@ -594,10 +597,12 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _do_provision(self, password: str) -> None:
         """Provision WiFi credentials to device via BLE."""
-        assert self.ble_device is not None
+        if TYPE_CHECKING:
+            assert self.ble_device is not None
 
         mac = self.unique_id
-        assert mac is not None
+        if TYPE_CHECKING:
+            assert mac is not None
 
         async with self._async_provision_context(mac) as state:
             self._provision_result = (
@@ -611,7 +616,8 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Execute WiFi provisioning via BLE."""
         if not self._provision_task:
-            assert user_input is not None
+            if TYPE_CHECKING:
+                assert user_input is not None
             password = user_input["password"]
             self._provision_task = self.hass.async_create_task(
                 self._do_provision(password), eager_start=False
