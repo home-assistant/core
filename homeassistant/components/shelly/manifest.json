@@ -1,6 +1,11 @@
 {
   "domain": "shelly",
   "name": "Shelly",
+  "bluetooth": [
+    {
+      "local_name": "Shelly*"
+    }
+  ],
   "codeowners": ["@bieniu", "@thecode", "@chemelli74", "@bdraco"],
   "config_flow": true,
   "dependencies": ["bluetooth", "http", "network"],
