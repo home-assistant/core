@@ -14,7 +14,7 @@ from typing import Any
 import voluptuous as vol
 from zha.application.const import RadioType
 import zigpy.backups
-from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
+from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH, CONF_NWK_TX_POWER
 from zigpy.exceptions import CannotWriteNetworkSettings, DestructiveWriteNetworkSettings
 
 from homeassistant.components import onboarding, usb
@@ -191,6 +191,7 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         self._hass = None  # type: ignore[assignment]
         self._radio_mgr = ZhaRadioManager()
         self._restore_backup_task: asyncio.Task[None] | None = None
+        self._extra_network_config: dict[str, Any] = {}
 
     @property
     def hass(self) -> HomeAssistant:
@@ -622,7 +623,8 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Form a brand-new network."""
-        await self._radio_mgr.async_form_network()
+        await self._radio_mgr.async_form_network(config=self._extra_network_config)
+
         # Load the newly formed network settings to get the network info
         await self._radio_mgr.async_load_network_settings()
         return await self._async_create_radio_entry()
@@ -1006,6 +1008,9 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
         device_settings = discovery_data["port"]
         device_path = device_settings[CONF_DEVICE_PATH]
         self._flow_strategy = discovery_data.get("flow_strategy")
+
+        if "tx_power" in discovery_data:
+            self._extra_network_config[CONF_NWK_TX_POWER] = discovery_data["tx_power"]
 
         await self._set_unique_id_and_update_ignored_flow(
             unique_id=f"{name}_{radio_type.name}_{device_path}",

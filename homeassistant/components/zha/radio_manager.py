@@ -78,6 +78,7 @@ HARDWARE_DISCOVERY_SCHEMA = vol.Schema(
         vol.Required("port"): DEVICE_SCHEMA,
         vol.Required("radio_type"): str,
         vol.Optional("flow_strategy"): vol.All(str, vol.Coerce(ZigbeeFlowStrategy)),
+        vol.Optional("tx_power"): vol.All(vol.Coerce(int), vol.Range(min=0, max=10)),
     }
 )
 
@@ -322,7 +323,7 @@ class ZhaRadioManager:
 
         return backup
 
-    async def async_form_network(self) -> None:
+    async def async_form_network(self, config: dict[str, Any] | None) -> None:
         """Form a brand-new network."""
 
         # When forming a new network, we delete the ZHA database to prevent old devices
@@ -331,7 +332,7 @@ class ZhaRadioManager:
             await self.hass.async_add_executor_job(os.remove, self.zigpy_database_path)
 
         async with self.create_zigpy_app() as app:
-            await app.form_network()
+            await app.form_network(config=config)
 
     async def async_reset_adapter(self) -> None:
         """Reset the current adapter."""
