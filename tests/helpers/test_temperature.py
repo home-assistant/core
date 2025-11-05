@@ -23,7 +23,7 @@ def test_temperature_not_a_number(hass: HomeAssistant) -> None:
     """Test that temperature is a number."""
     temp = "Temperature"
     with pytest.raises(Exception) as exception:
-        display_temp(hass, temp, UnitOfTemperature.CELSIUS, PRECISION_HALVES)
+        display_temp(hass, temp, UnitOfTemperature.CELSIUS, PRECISION_HALVES)  # type: ignore[arg-type]
 
     assert f"Temperature is not a number: {temp}" in str(exception.value)
 
@@ -47,7 +47,7 @@ def test_temperature_interval_not_a_number(hass: HomeAssistant) -> None:
     """Test that temperature is a number."""
     temp = "Temperature"
     with pytest.raises(TypeError) as exception:
-        display_temp_interval(hass, temp, UnitOfTemperature.CELSIUS, PRECISION_HALVES)
+        display_temp_interval(hass, temp, UnitOfTemperature.CELSIUS, PRECISION_HALVES)  # type: ignore[arg-type]
 
     assert f"Temperature interval is not a number: {temp}" in str(exception.value)
 
