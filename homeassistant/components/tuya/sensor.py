@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from typing import Any
 
 from tuya_sharing import CustomerDevice, Manager
-from tuya_sharing.device import DeviceStatusRange
 
 from homeassistant.components.sensor import (
     DEVICE_CLASS_UNITS as SENSOR_DEVICE_CLASS_UNITS,
@@ -40,7 +39,6 @@ from .const import (
     DeviceCategory,
     DPCode,
     DPType,
-    UnitOfMeasurement,
 )
 from .entity import TuyaEntity
 from .models import ComplexValue, ElectricityValue, EnumTypeData, IntegerTypeData
@@ -1670,10 +1668,8 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
 
     entity_description: TuyaSensorEntityDescription
 
-    _status_range: DeviceStatusRange | None = None
     _type: DPType | None = None
     _type_data: IntegerTypeData | EnumTypeData | None = None
-    _uom: UnitOfMeasurement | None = None
 
     def __init__(
         self,
