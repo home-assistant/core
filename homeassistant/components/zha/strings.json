@@ -1970,6 +1970,9 @@
         "description": "[%key:component::zha::config::step::manual_port_config::description%]",
         "title": "[%key:component::zha::config::step::manual_port_config::title%]"
       },
+      "maybe_reset_old_radio": {
+        "title": "[%key:component::zha::config::step::maybe_reset_old_radio::title%]"
+      },
       "plug_in_new_radio": {
         "description": "[%key:component::zha::config::step::plug_in_new_radio::description%]",
         "title": "[%key:component::zha::config::step::plug_in_new_radio::title%]"
@@ -1997,6 +2000,9 @@
           "intent_reconfigure": "Re-configure the current adapter"
         },
         "title": "Migrate or re-configure"
+      },
+      "restore_backup": {
+        "title": "[%key:component::zha::config::step::restore_backup::title%]"
       },
       "upload_manual_backup": {
         "data": {
