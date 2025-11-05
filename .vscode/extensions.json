@@ -1,9 +1,0 @@
-{
-  "recommendations": [
-    "ms-python.python",
-    "ms-python.vscode-pylance",
-    "esbenp.prettier-vscode",
-    "redhat.vscode-yaml",
-    "eamodio.gitlens"
-  ]
-}
