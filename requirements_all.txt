@@ -79,7 +79,7 @@ PyQRCode==1.2.1
 # homeassistant.components.rmvtransport
 PyRMVtransport==0.3.3
 
-# homeassistant.components.sunricher_dali_center
+# homeassistant.components.sunricher_dali
 PySrDaliGateway==0.13.1
 
 # homeassistant.components.switchbot
