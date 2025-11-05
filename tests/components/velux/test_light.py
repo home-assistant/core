@@ -26,7 +26,7 @@ async def test_light_setup(
 
     test_entity_id = f"light.{mock_light.name.lower().replace(' ', '_')}"
 
-    # check for entity existence and its name is equal to node name (light is "main feature")
+    # Check that the entity exists and its name matches the node name (the light is the main feature).
     state = hass.states.get(test_entity_id)
     assert state is not None
     assert state.attributes.get("friendly_name") == mock_light.name

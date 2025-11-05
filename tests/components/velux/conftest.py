@@ -91,7 +91,7 @@ def mock_light() -> AsyncMock:
 
 
 @pytest.fixture
-def mock_pyvlx(mock_window, mock_light: MagicMock) -> Generator[MagicMock]:
+def mock_pyvlx(mock_window: MagicMock, mock_light: MagicMock) -> Generator[MagicMock]:
     """Create the library mock and patch PyVLX."""
     pyvlx = MagicMock()
     pyvlx.nodes = [mock_window, mock_light]
