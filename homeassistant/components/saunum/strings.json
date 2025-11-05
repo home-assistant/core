@@ -10,13 +10,12 @@
     "step": {
       "user": {
         "data": {
-          "host": "[%key:common::config_flow::data::host%]"
+          "host": "[%key:common::config_flow::data::ip%]"
         },
         "data_description": {
-          "host": "Find IP address from Leil touch panel -> Settings -> Modbus Settings"
+          "host": "IP address of your Saunum Leil sauna control unit"
         },
-        "description": "Enter the connection details for your Saunum Leil sauna control unit",
-        "title": "Connect to Saunum Leil Sauna Control Unit"
+        "description": "To find the IP address, navigate to Settings → Modbus Settings on your Leil touch panel"
       }
     }
   }

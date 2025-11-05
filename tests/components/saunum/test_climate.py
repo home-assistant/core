@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, patch
+from dataclasses import replace
+from unittest.mock import AsyncMock
 
-from pysaunum import SaunumData
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -12,25 +12,17 @@ from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
-    ATTR_MAX_TEMP,
-    ATTR_MIN_TEMP,
     DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_TEMPERATURE,
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
-
-
-@pytest.fixture
-def platforms() -> list[Platform]:
-    """Fixture to specify platforms to test."""
-    return [Platform.CLIMATE]
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
@@ -42,38 +34,6 @@ async def test_entities(
 ) -> None:
     """Test all entities."""
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
-
-
-@pytest.mark.usefixtures("init_integration")
-async def test_climate_hvac_mode_off(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test climate HVAC mode when session is off."""
-    entity_id = "climate.saunum_leil"
-    state = hass.states.get(entity_id)
-    assert state is not None
-
-    # Mock data has session_active = False
-    assert state.state == HVACMode.OFF
-    assert state.attributes.get(ATTR_HVAC_ACTION) == HVACAction.OFF
-
-
-@pytest.mark.usefixtures("init_integration")
-async def test_climate_temperatures_celsius(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test climate temperatures in Celsius."""
-    entity_id = "climate.saunum_leil"
-    state = hass.states.get(entity_id)
-    assert state is not None
-
-    # Check temperatures from mock data
-    assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == 75
-    assert state.attributes.get(ATTR_TEMPERATURE) == 80
-    assert state.attributes.get(ATTR_MIN_TEMP) == 40
-    assert state.attributes.get(ATTR_MAX_TEMP) == 100
 
 
 @pytest.mark.parametrize(
@@ -136,33 +96,16 @@ async def test_climate_hvac_actions(
     expected_hvac_action: HVACAction,
 ) -> None:
     """Test climate HVAC actions when session is active."""
-    mock_saunum_client.async_get_data = AsyncMock(
-        return_value=SaunumData(
-            session_active=True,
-            sauna_type=0,
-            sauna_duration=60,
-            fan_duration=10,
-            target_temperature=80,
-            fan_speed=2,
-            light_on=False,
-            current_temperature=75.0,
-            on_time=1234,
-            heater_elements_active=heater_elements_active,
-            door_open=False,
-            alarm_door_open=False,
-            alarm_door_sensor=False,
-            alarm_thermal_cutoff=False,
-            alarm_internal_temp=False,
-            alarm_temp_sensor_short=False,
-            alarm_temp_sensor_open=False,
-        )
+    # Get the existing mock data and modify only what we need
+    mock_saunum_client.async_get_data.return_value.session_active = True
+    mock_saunum_client.async_get_data.return_value.heater_elements_active = (
+        heater_elements_active
     )
 
     mock_config_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.saunum.PLATFORMS", [Platform.CLIMATE]):
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     entity_id = "climate.saunum_leil"
     state = hass.states.get(entity_id)
@@ -194,33 +137,20 @@ async def test_climate_temperature_edge_cases(
     expected_target: int,
 ) -> None:
     """Test climate with edge case temperature values."""
+    # Get the existing mock data and modify only what we need
+    base_data = mock_saunum_client.async_get_data.return_value
     mock_saunum_client.async_get_data = AsyncMock(
-        return_value=SaunumData(
-            session_active=False,
-            sauna_type=0,
-            sauna_duration=60,
-            fan_duration=10,
-            target_temperature=target_temperature,
-            fan_speed=2,
-            light_on=False,
+        return_value=replace(
+            base_data,
             current_temperature=current_temperature,
-            on_time=1234,
-            heater_elements_active=0,
-            door_open=False,
-            alarm_door_open=False,
-            alarm_door_sensor=False,
-            alarm_thermal_cutoff=False,
-            alarm_internal_temp=False,
-            alarm_temp_sensor_short=False,
-            alarm_temp_sensor_open=False,
+            target_temperature=target_temperature,
         )
     )
 
     mock_config_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.saunum.PLATFORMS", [Platform.CLIMATE]):
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     entity_id = "climate.saunum_leil"
     state = hass.states.get(entity_id)

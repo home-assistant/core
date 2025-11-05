@@ -17,8 +17,8 @@ TEST_USER_INPUT = {CONF_HOST: "192.168.1.100"}
 
 
 @pytest.mark.usefixtures("mock_saunum_client")
-async def test_form(hass: HomeAssistant) -> None:
-    """Test we get the form."""
+async def test_full_flow(hass: HomeAssistant) -> None:
+    """Test full flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )

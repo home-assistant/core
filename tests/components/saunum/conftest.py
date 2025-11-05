@@ -1,13 +1,13 @@
 """Configuration for Saunum Leil integration tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 from pysaunum import SaunumData
 import pytest
 
 from homeassistant.components.saunum.const import DOMAIN
-from homeassistant.const import CONF_HOST, Platform
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -34,7 +34,6 @@ def mock_saunum_client() -> Generator[MagicMock]:
         patch("homeassistant.components.saunum.SaunumClient", new=mock_client_class),
     ):
         mock_client = mock_client_class.return_value
-        mock_client.close = MagicMock()
         mock_client.is_connected = True
 
         # Create mock data for async_get_data
@@ -58,13 +57,7 @@ def mock_saunum_client() -> Generator[MagicMock]:
             alarm_temp_sensor_open=False,
         )
 
-        mock_client.async_get_data = AsyncMock(return_value=mock_data)
-        mock_client.async_start_session = AsyncMock()
-        mock_client.async_stop_session = AsyncMock()
-        mock_client.async_set_target_temperature = AsyncMock()
-
-        # Make both patches return the same mock
-        mock_client_class.return_value = mock_client
+        mock_client.async_get_data.return_value = mock_data
 
         yield mock_client
 
@@ -74,13 +67,11 @@ async def init_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_saunum_client: MagicMock,
-    platforms: list[Platform],
 ) -> MockConfigEntry:
     """Set up the integration for testing."""
     mock_config_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.saunum.PLATFORMS", platforms):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     return mock_config_entry
