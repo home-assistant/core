@@ -711,7 +711,8 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
             self._restore_backup_task = self.hass.async_create_task(
                 self._radio_mgr.restore_backup(
                     overwrite_ieee=self._overwrite_ieee_during_restore
-                )
+                ),
+                "Restore backup",
             )
 
         if not self._restore_backup_task.done():
