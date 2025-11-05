@@ -612,10 +612,12 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
     async def async_step_do_provision(
-        self, user_input: dict[str, Any]
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Execute WiFi provisioning via BLE."""
         if not self._provision_task:
+            if TYPE_CHECKING:
+                assert user_input is not None
             password = user_input["password"]
             self._provision_task = self.hass.async_create_task(
                 self._do_provision(password), eager_start=False
