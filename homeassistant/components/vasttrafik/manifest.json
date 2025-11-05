@@ -8,6 +8,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["vasttrafik"],
   "quality_scale": "legacy",
-  "requirements": ["vtjp==0.2.1"],
-  "single_config_entry": true
+  "requirements": ["vtjp==0.2.1"]
 }

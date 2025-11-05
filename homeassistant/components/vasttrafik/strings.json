@@ -1,8 +1,8 @@
 {
   "config": {
     "abort": {
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
-      "single_instance_allowed": "Only one Västtrafik integration is allowed"
+      "already_configured": "You already have a Västtrafik integration configured with this API key",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "cannot_connect": "Failed to connect to Västtrafik API",
