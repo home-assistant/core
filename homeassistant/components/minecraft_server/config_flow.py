@@ -74,12 +74,7 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             user_input = {}
 
-        suggested_addresses = [
-            "localhost:4090",
-            "123.456.78.90:25565",
-            "play.example.com:19132",
-            "minecraft.example.com:25565",
-        ]
+        suggested_addresses: list[str] = self._get_local_addresses()
 
         if len(suggested_addresses) > 0:
             return self.async_show_form(
@@ -114,3 +109,13 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
+
+    def _get_local_addresses(self) -> list[str]:
+        """Get a list of suggested minecraft server addresses for the user."""
+        # template values for now
+        return [
+            "localhost:4090",
+            "123.456.78.90:25565",
+            "play.example.com:19132",
+            "minecraft.example.com:25565",
+        ]
