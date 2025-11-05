@@ -77,6 +77,41 @@ async def test_bluetooth_discovery_no_BLEDevice(hass: HomeAssistant) -> None:
     assert result["reason"] == "cannot_connect"
 
 
+async def test_bluetooth_discovery_device_becomes_none(hass: HomeAssistant) -> None:
+    """Test discovery via bluetooth but device becomes None during confirmation."""
+    with (
+        patch_async_ble_device_from_address(WAVE_SERVICE_INFO),
+        patch_airthings_ble(
+            AirthingsDevice(
+                manufacturer="Airthings AS",
+                model=AirthingsDeviceType.WAVE_PLUS,
+                name="Airthings Wave Plus",
+                identifier="123456",
+            )
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_BLUETOOTH},
+            data=WAVE_SERVICE_INFO,
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "bluetooth_confirm"
+
+    # Simulate device becoming None before confirmation
+    flow = hass.config_entries.flow._progress[result["flow_id"]]
+    flow._discovered_device = None
+
+    with patch_async_setup_entry():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={"not": "empty"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_devices_found"
+
+
 @pytest.mark.parametrize(
     ("exc", "reason"),
     [

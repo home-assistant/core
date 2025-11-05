@@ -129,14 +129,11 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm discovery."""
         if user_input is not None:
-            if (
-                self._discovered_device is not None
-                and self._discovered_device.device.firmware.need_firmware_upgrade
-            ):
-                return self.async_abort(reason="firmware_upgrade_required")
-
             if self._discovered_device is None:
                 return self.async_abort(reason="no_devices_found")
+
+            if self._discovered_device.device.firmware.need_firmware_upgrade:
+                return self.async_abort(reason="firmware_upgrade_required")
 
             return self.async_create_entry(
                 title=self.context["title_placeholders"]["name"],
