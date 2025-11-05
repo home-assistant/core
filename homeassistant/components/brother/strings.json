@@ -207,6 +207,9 @@
     "cannot_connect": {
       "message": "An error occurred while connecting to the {device} printer: {error}"
     },
+    "serial_mismatch": {
+      "message": "The serial number for {device} doesn't match the one in the configuration. It's possible that the two Brother printers have swapped IP addresses. Restore the previous IP address configuration or reconfigure the devices with Home Assistant."
+    },
     "update_error": {
       "message": "An error occurred while retrieving data from the {device} printer: {error}"
     }
