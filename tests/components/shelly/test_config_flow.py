@@ -1,5 +1,6 @@
 """Test the Shelly config flow."""
 
+from collections.abc import Generator
 from dataclasses import replace
 from datetime import timedelta
 from ipaddress import ip_address
@@ -177,6 +178,43 @@ MOCK_DEVICE_INFO = {
     "auth": False,
     "gen": 2,
 }
+
+
+@pytest.fixture(autouse=True)
+def mock_provisioning_timeout() -> Generator[None]:
+    """Patch provisioning timeout to 0 for tests."""
+    with patch("homeassistant.components.shelly.config_flow.PROVISIONING_TIMEOUT", 0):
+        yield
+
+
+@pytest.fixture(autouse=True)
+def mock_zeroconf_async_get_instance() -> Generator[AsyncMock]:
+    """Patch zeroconf async_get_async_instance for tests."""
+    with patch(
+        "homeassistant.components.shelly.config_flow.zeroconf.async_get_async_instance"
+    ) as mock_aiozc:
+        mock_aiozc.return_value = AsyncMock()
+        yield mock_aiozc
+
+
+@pytest.fixture
+def mock_wifi_scan() -> Generator[AsyncMock]:
+    """Mock async_scan_wifi_networks."""
+    with patch(
+        "homeassistant.components.shelly.config_flow.async_scan_wifi_networks",
+        new=AsyncMock(return_value=[{"ssid": "TestNetwork", "rssi": -50, "auth": 2}]),
+    ) as mock_scan:
+        yield mock_scan
+
+
+@pytest.fixture
+def mock_wifi_provision() -> Generator[AsyncMock]:
+    """Mock async_provision_wifi."""
+    with patch(
+        "homeassistant.components.shelly.config_flow.async_provision_wifi",
+        new=AsyncMock(),
+    ) as mock_provision:
+        yield mock_provision
 
 
 @pytest.mark.parametrize(
