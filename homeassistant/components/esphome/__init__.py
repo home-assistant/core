@@ -75,10 +75,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> bool:
     """Unload an esphome config entry."""
-    entry_data = await cleanup_instance(entry)
-    return await hass.config_entries.async_unload_platforms(
-        entry, entry_data.loaded_platforms
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        entry, entry.runtime_data.loaded_platforms
     )
+    if unload_ok:
+        await cleanup_instance(entry)
+    return unload_ok
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> None:
