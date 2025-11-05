@@ -1175,7 +1175,7 @@ lektricowifi==0.1
 letpot==0.6.3
 
 # homeassistant.components.foscam
-libpyfoscamcgi==0.0.8
+libpyfoscamcgi==0.0.9
 
 # homeassistant.components.libre_hardware_monitor
 librehardwaremonitor-api==1.5.0
