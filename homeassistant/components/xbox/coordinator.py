@@ -4,24 +4,27 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import timedelta
+from http import HTTPStatus
 import logging
 
 from httpx import HTTPStatusError, RequestError, TimeoutException
-from xbox.webapi.api.client import XboxLiveClient
-from xbox.webapi.api.provider.catalog.const import SYSTEM_PFN_ID_MAP
-from xbox.webapi.api.provider.catalog.models import AlternateIdType, Product
-from xbox.webapi.api.provider.people.models import Person
-from xbox.webapi.api.provider.smartglass.models import (
+from pythonxbox.api.client import XboxLiveClient
+from pythonxbox.api.provider.catalog.const import SYSTEM_PFN_ID_MAP
+from pythonxbox.api.provider.catalog.models import AlternateIdType, Product
+from pythonxbox.api.provider.people.models import Person
+from pythonxbox.api.provider.smartglass.models import (
     SmartglassConsoleList,
     SmartglassConsoleStatus,
 )
-from xbox.webapi.common.signed_session import SignedSession
+from pythonxbox.api.provider.titlehub.models import Title
+from pythonxbox.common.signed_session import SignedSession
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow, device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util.ssl import get_default_context
 
 from . import api
 from .const import DOMAIN
@@ -45,6 +48,7 @@ class XboxData:
 
     consoles: dict[str, ConsoleData] = field(default_factory=dict)
     presence: dict[str, Person] = field(default_factory=dict)
+    title_info: dict[str, Title] = field(default_factory=dict)
 
 
 class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
@@ -87,7 +91,7 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
         session = config_entry_oauth2_flow.OAuth2Session(
             self.hass, self.config_entry, implementation
         )
-        signed_session = await self.hass.async_add_executor_job(SignedSession)
+        signed_session = SignedSession(ssl_context=get_default_context())
         auth = api.AsyncConfigEntryAuth(signed_session, session)
         self.client = XboxLiveClient(auth)
 
@@ -180,7 +184,7 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
 
         # Update user presence
         try:
-            batch = await self.client.people.get_friends_own_batch([self.client.xuid])
+            batch = await self.client.people.get_friends_by_xuid(self.client.xuid)
             friends = await self.client.people.get_friends_own()
         except TimeoutException as e:
             raise UpdateFailed(
@@ -195,9 +199,50 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
             ) from e
         else:
             presence_data = {self.client.xuid: batch.people[0]}
+            configured_xuids = self.configured_as_entry()
             presence_data.update(
-                {friend.xuid: friend for friend in friends.people if friend.is_favorite}
+                {
+                    friend.xuid: friend
+                    for friend in friends.people
+                    if friend.is_favorite and friend.xuid not in configured_xuids
+                }
             )
+
+        # retrieve title details
+        title_data: dict[str, Title] = {}
+        for person in presence_data.values():
+            if presence_detail := next(
+                (
+                    d
+                    for d in person.presence_details or []
+                    if d.state == "Active" and d.title_id and d.is_game and d.is_primary
+                ),
+                None,
+            ):
+                try:
+                    title = await self.client.titlehub.get_title_info(
+                        presence_detail.title_id
+                    )
+                except TimeoutException as e:
+                    raise UpdateFailed(
+                        translation_domain=DOMAIN,
+                        translation_key="timeout_exception",
+                    ) from e
+                except HTTPStatusError as e:
+                    _LOGGER.debug("Xbox exception:", exc_info=True)
+                    if e.response.status_code == HTTPStatus.NOT_FOUND:
+                        continue
+                    raise UpdateFailed(
+                        translation_domain=DOMAIN,
+                        translation_key="request_exception",
+                    ) from e
+                except RequestError as e:
+                    _LOGGER.debug("Xbox exception:", exc_info=True)
+                    raise UpdateFailed(
+                        translation_domain=DOMAIN,
+                        translation_key="request_exception",
+                    ) from e
+                title_data[person.xuid] = title.titles[0]
 
         if (
             self.current_friends - (new_friends := set(presence_data))
@@ -206,15 +251,17 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
             self.remove_stale_devices(new_friends)
         self.current_friends = new_friends
 
-        return XboxData(new_console_data, presence_data)
+        return XboxData(new_console_data, presence_data, title_data)
 
     def remove_stale_devices(self, xuids: set[str]) -> None:
         """Remove stale devices from registry."""
 
         device_reg = dr.async_get(self.hass)
-        identifiers = {(DOMAIN, xuid) for xuid in xuids} | {
-            (DOMAIN, console.id) for console in self.consoles.result
-        }
+        identifiers = (
+            {(DOMAIN, xuid) for xuid in xuids}
+            | {(DOMAIN, console.id) for console in self.consoles.result}
+            | self.configured_as_entry()
+        )
 
         for device in dr.async_entries_for_config_entry(
             device_reg, self.config_entry.entry_id
@@ -224,3 +271,12 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
                 device_reg.async_update_device(
                     device.id, remove_config_entry_id=self.config_entry.entry_id
                 )
+
+    def configured_as_entry(self) -> set[str]:
+        """Get xuids of configured entries."""
+
+        return {
+            entry.unique_id
+            for entry in self.hass.config_entries.async_entries(DOMAIN)
+            if entry.unique_id is not None
+        }

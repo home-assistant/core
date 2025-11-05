@@ -55,12 +55,18 @@ SENSOR_TYPE_MANDATORY_ARG = 4
 
 SIGNAL_SYSTEMMONITOR_UPDATE = "systemmonitor_update"
 
-SENSORS_NO_ARG = ("load_", "memory_", "processor_use", "swap_", "last_boot")
+SENSORS_NO_ARG = (
+    "last_boot",
+    "load_",
+    "memory_",
+    "processor_use",
+    "swap_",
+)
 SENSORS_WITH_ARG = {
     "disk_": "disk_arguments",
     "ipv": "network_arguments",
-    **dict.fromkeys(NET_IO_TYPES, "network_arguments"),
     "process_num_fds": "processes",
+    **dict.fromkeys(NET_IO_TYPES, "network_arguments"),
 }
 
 
@@ -152,11 +158,13 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         native_unit_of_measurement=UnitOfInformation.GIBIBYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda entity: round(
-            entity.coordinator.data.disk_usage[entity.argument].free / 1024**3, 1
-        )
-        if entity.argument in entity.coordinator.data.disk_usage
-        else None,
+        value_fn=(
+            lambda entity: round(
+                entity.coordinator.data.disk_usage[entity.argument].free / 1024**3, 1
+            )
+            if entity.argument in entity.coordinator.data.disk_usage
+            else None
+        ),
         none_is_unavailable=True,
         add_to_update=lambda entity: ("disks", entity.argument),
     ),
@@ -167,11 +175,13 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         native_unit_of_measurement=UnitOfInformation.GIBIBYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda entity: round(
-            entity.coordinator.data.disk_usage[entity.argument].used / 1024**3, 1
-        )
-        if entity.argument in entity.coordinator.data.disk_usage
-        else None,
+        value_fn=(
+            lambda entity: round(
+                entity.coordinator.data.disk_usage[entity.argument].used / 1024**3, 1
+            )
+            if entity.argument in entity.coordinator.data.disk_usage
+            else None
+        ),
         none_is_unavailable=True,
         add_to_update=lambda entity: ("disks", entity.argument),
     ),
@@ -181,11 +191,11 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         placeholder="mount_point",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda entity: entity.coordinator.data.disk_usage[
-            entity.argument
-        ].percent
-        if entity.argument in entity.coordinator.data.disk_usage
-        else None,
+        value_fn=(
+            lambda entity: entity.coordinator.data.disk_usage[entity.argument].percent
+            if entity.argument in entity.coordinator.data.disk_usage
+            else None
+        ),
         none_is_unavailable=True,
         add_to_update=lambda entity: ("disks", entity.argument),
     ),
@@ -212,14 +222,6 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         value_fn=lambda entity: entity.coordinator.data.boot_time,
         add_to_update=lambda entity: ("boot", ""),
     ),
-    "load_15m": SysMonitorSensorEntityDescription(
-        key="load_15m",
-        translation_key="load_15m",
-        icon=get_cpu_icon(),
-        state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda entity: round(entity.coordinator.data.load[2], 2),
-        add_to_update=lambda entity: ("load", ""),
-    ),
     "load_1m": SysMonitorSensorEntityDescription(
         key="load_1m",
         translation_key="load_1m",
@@ -234,6 +236,14 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         icon=get_cpu_icon(),
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda entity: round(entity.coordinator.data.load[1], 2),
+        add_to_update=lambda entity: ("load", ""),
+    ),
+    "load_15m": SysMonitorSensorEntityDescription(
+        key="load_15m",
+        translation_key="load_15m",
+        icon=get_cpu_icon(),
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda entity: round(entity.coordinator.data.load[2], 2),
         add_to_update=lambda entity: ("load", ""),
     ),
     "memory_free": SysMonitorSensorEntityDescription(
@@ -253,13 +263,15 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         native_unit_of_measurement=UnitOfInformation.MEBIBYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda entity: round(
-            (
-                entity.coordinator.data.memory.total
-                - entity.coordinator.data.memory.available
+        value_fn=(
+            lambda entity: round(
+                (
+                    entity.coordinator.data.memory.total
+                    - entity.coordinator.data.memory.available
+                )
+                / 1024**2,
+                1,
             )
-            / 1024**2,
-            1,
         ),
         add_to_update=lambda entity: ("memory", ""),
     ),
@@ -311,27 +323,15 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         value_fn=get_packets,
         add_to_update=lambda entity: ("io_counters", ""),
     ),
-    "throughput_network_in": SysMonitorSensorEntityDescription(
-        key="throughput_network_in",
-        translation_key="throughput_network_in",
-        placeholder="interface",
-        native_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
-        device_class=SensorDeviceClass.DATA_RATE,
+    "process_num_fds": SysMonitorSensorEntityDescription(
+        key="process_num_fds",
+        translation_key="process_num_fds",
+        placeholder="process",
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
         mandatory_arg=True,
-        value_fn=get_throughput,
-        add_to_update=lambda entity: ("io_counters", ""),
-    ),
-    "throughput_network_out": SysMonitorSensorEntityDescription(
-        key="throughput_network_out",
-        translation_key="throughput_network_out",
-        placeholder="interface",
-        native_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
-        device_class=SensorDeviceClass.DATA_RATE,
-        state_class=SensorStateClass.MEASUREMENT,
-        mandatory_arg=True,
-        value_fn=get_throughput,
-        add_to_update=lambda entity: ("io_counters", ""),
+        value_fn=get_process_num_fds,
+        add_to_update=lambda entity: ("processes", ""),
     ),
     "processor_use": SysMonitorSensorEntityDescription(
         key="processor_use",
@@ -339,10 +339,12 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         native_unit_of_measurement=PERCENTAGE,
         icon=get_cpu_icon(),
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda entity: (
-            round(entity.coordinator.data.cpu_percent)
-            if entity.coordinator.data.cpu_percent
-            else None
+        value_fn=(
+            lambda entity: (
+                round(entity.coordinator.data.cpu_percent)
+                if entity.coordinator.data.cpu_percent
+                else None
+            )
         ),
         add_to_update=lambda entity: ("cpu_percent", ""),
     ),
@@ -352,8 +354,8 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda entity: read_cpu_temperature(
-            entity.coordinator.data.temperatures
+        value_fn=(
+            lambda entity: read_cpu_temperature(entity.coordinator.data.temperatures)
         ),
         none_is_unavailable=True,
         add_to_update=lambda entity: ("temperatures", ""),
@@ -384,15 +386,27 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         value_fn=lambda entity: entity.coordinator.data.swap.percent,
         add_to_update=lambda entity: ("swap", ""),
     ),
-    "process_num_fds": SysMonitorSensorEntityDescription(
-        key="process_num_fds",
-        translation_key="process_num_fds",
-        placeholder="process",
+    "throughput_network_in": SysMonitorSensorEntityDescription(
+        key="throughput_network_in",
+        translation_key="throughput_network_in",
+        placeholder="interface",
+        native_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
         state_class=SensorStateClass.MEASUREMENT,
-        entity_registry_enabled_default=False,
         mandatory_arg=True,
-        value_fn=get_process_num_fds,
-        add_to_update=lambda entity: ("processes", ""),
+        value_fn=get_throughput,
+        add_to_update=lambda entity: ("io_counters", ""),
+    ),
+    "throughput_network_out": SysMonitorSensorEntityDescription(
+        key="throughput_network_out",
+        translation_key="throughput_network_out",
+        placeholder="interface",
+        native_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
+        mandatory_arg=True,
+        value_fn=get_throughput,
+        add_to_update=lambda entity: ("io_counters", ""),
     ),
 }
 
@@ -409,14 +423,17 @@ def check_legacy_resource(resource: str, resources: set[str]) -> bool:
 
 
 IO_COUNTER = {
-    "network_out": 0,
     "network_in": 1,
-    "packets_out": 2,
+    "network_out": 0,
     "packets_in": 3,
-    "throughput_network_out": 0,
+    "packets_out": 2,
     "throughput_network_in": 1,
+    "throughput_network_out": 0,
 }
-IF_ADDRS_FAMILY = {"ipv4_address": socket.AF_INET, "ipv6_address": socket.AF_INET6}
+IF_ADDRS_FAMILY = {
+    "ipv4_address": socket.AF_INET,
+    "ipv6_address": socket.AF_INET6,
+}
 
 
 async def async_setup_entry(
