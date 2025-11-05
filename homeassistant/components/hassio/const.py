@@ -90,6 +90,7 @@ DATA_SUPERVISOR_INFO = "hassio_supervisor_info"
 DATA_SUPERVISOR_STATS = "hassio_supervisor_stats"
 DATA_ADDONS_INFO = "hassio_addons_info"
 DATA_ADDONS_STATS = "hassio_addons_stats"
+DATA_MOUNTS_INFO = "hassio_mounts_info"
 HASSIO_UPDATE_INTERVAL = timedelta(minutes=5)
 
 ATTR_AUTO_UPDATE = "auto_update"
@@ -110,6 +111,7 @@ DATA_KEY_SUPERVISOR = "supervisor"
 DATA_KEY_CORE = "core"
 DATA_KEY_HOST = "host"
 DATA_KEY_SUPERVISOR_ISSUES = "supervisor_issues"
+DATA_KEY_MOUNTS = "mounts"
 
 PLACEHOLDER_KEY_ADDON = "addon"
 PLACEHOLDER_KEY_ADDON_INFO = "addon_info"
@@ -174,3 +176,4 @@ class SupervisorEntityModel(StrEnum):
     CORE = "Home Assistant Core"
     SUPERVISOR = "Home Assistant Supervisor"
     HOST = "Home Assistant Host"
+    MOUNT = "Home Assistant Mount"

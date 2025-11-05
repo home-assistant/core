@@ -46,8 +46,8 @@
       "relocate": {
         "name": "Relocate"
       },
-      "reset_lifespan_base_station_filter": {
-        "name": "Reset station filter lifespan"
+      "reset_lifespan_air_freshener": {
+        "name": "Reset air freshener lifespan"
       },
       "reset_lifespan_blade": {
         "name": "Reset blade lifespan"
@@ -55,8 +55,14 @@
       "reset_lifespan_brush": {
         "name": "Reset main brush lifespan"
       },
+      "reset_lifespan_dust_bag": {
+        "name": "Reset dust bag lifespan"
+      },
       "reset_lifespan_filter": {
         "name": "Reset filter lifespan"
+      },
+      "reset_lifespan_hand_filter": {
+        "name": "Reset hand filter lifespan"
       },
       "reset_lifespan_lens_brush": {
         "name": "Reset lens brush lifespan"
@@ -67,8 +73,14 @@
       "reset_lifespan_side_brush": {
         "name": "Reset side brush lifespan"
       },
+      "reset_lifespan_station_filter": {
+        "name": "Reset station filter lifespan"
+      },
       "reset_lifespan_unit_care": {
         "name": "Reset unit care lifespan"
+      },
+      "reset_lifespan_uv_sanitizer": {
+        "name": "Reset UV sanitizer lifespan"
       },
       "station_action_clean_base": {
         "name": "Clean base"
@@ -117,6 +129,16 @@
       "active_map": {
         "name": "Active map"
       },
+      "auto_empty": {
+        "name": "Auto-empty frequency",
+        "state": {
+          "auto": "Auto",
+          "min_10": "10 minutes",
+          "min_15": "15 minutes",
+          "min_25": "25 minutes",
+          "smart": "Smart"
+        }
+      },
       "water_amount": {
         "name": "[%key:component::ecovacs::entity::number::water_amount::name%]",
         "state": {
@@ -145,8 +167,8 @@
           }
         }
       },
-      "lifespan_base_station_filter": {
-        "name": "Station filter lifespan"
+      "lifespan_air_freshener": {
+        "name": "Air freshener lifespan"
       },
       "lifespan_blade": {
         "name": "Blade lifespan"
@@ -154,8 +176,14 @@
       "lifespan_brush": {
         "name": "Main brush lifespan"
       },
+      "lifespan_dust_bag": {
+        "name": "Dust bag lifespan"
+      },
       "lifespan_filter": {
         "name": "Filter lifespan"
+      },
+      "lifespan_hand_filter": {
+        "name": "Hand filter lifespan"
       },
       "lifespan_lens_brush": {
         "name": "Lens brush lifespan"
@@ -171,6 +199,9 @@
       },
       "lifespan_unit_care": {
         "name": "Unit care lifespan"
+      },
+      "lifespan_uv_sanitizer": {
+        "name": "UV sanitizer lifespan"
       },
       "network_ip": {
         "name": "IP address"
@@ -209,6 +240,9 @@
     "switch": {
       "advanced_mode": {
         "name": "Advanced mode"
+      },
+      "border_spin": {
+        "name": "Border spin"
       },
       "border_switch": {
         "name": "Border switch"
