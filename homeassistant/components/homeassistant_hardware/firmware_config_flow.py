@@ -246,7 +246,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
                 _LOGGER.debug("Skipping firmware upgrade due to index download failure")
                 return
 
-            raise AbortFlow(reason="firmware_download_failed") from err
+            raise AbortFlow(reason="fw_download_failed") from err
 
         if not firmware_install_required:
             assert self._probed_firmware_info is not None
@@ -275,7 +275,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
                 return
 
             # Otherwise, fail
-            raise AbortFlow(reason="firmware_download_failed") from err
+            raise AbortFlow(reason="fw_download_failed") from err
 
         self._probed_firmware_info = await async_flash_silabs_firmware(
             hass=self.hass,
@@ -318,7 +318,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
 
         await otbr_manager.async_start_addon_waiting()
 
-    async def async_step_firmware_download_failed(
+    async def async_step_fw_download_failed(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Abort when firmware download failed."""
