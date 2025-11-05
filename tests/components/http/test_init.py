@@ -7,7 +7,7 @@ from http import HTTPStatus
 from ipaddress import ip_network
 import logging
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import ANY, Mock, patch
 
 import pytest
 
@@ -667,3 +667,61 @@ async def test_ssl_issue_urls_configured(
         "http",
         "ssl_configured_without_configured_urls",
     ) not in issue_registry.issues
+
+
+@pytest.mark.parametrize(
+    (
+        "hassio",
+        "http_config",
+        "expected_serverhost",
+        "expected_issues",
+    ),
+    [
+        (False, {}, ["0.0.0.0", "::"], set()),
+        (False, {"server_host": "0.0.0.0"}, ["0.0.0.0"], set()),
+        (True, {}, ["0.0.0.0", "::"], set()),
+        (
+            True,
+            {"server_host": "0.0.0.0"},
+            [
+                "0.0.0.0",
+            ],
+            {("http", "server_host_may_break_hassio")},
+        ),
+    ],
+)
+async def test_server_host(
+    hass: HomeAssistant,
+    hassio: bool,
+    issue_registry: ir.IssueRegistry,
+    http_config: dict,
+    expected_serverhost: list,
+    expected_issues: set[tuple[str, str]],
+) -> None:
+    """Test server_host behavior."""
+    mock_server = Mock()
+    with (
+        patch("homeassistant.components.http.is_hassio", return_value=hassio),
+        patch(
+            "asyncio.BaseEventLoop.create_server", return_value=mock_server
+        ) as mock_create_server,
+    ):
+        assert await async_setup_component(
+            hass,
+            "http",
+            {"http": http_config},
+        )
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    mock_create_server.assert_called_once_with(
+        ANY,
+        expected_serverhost,
+        8123,
+        ssl=None,
+        backlog=128,
+        reuse_address=None,
+        reuse_port=None,
+    )
+
+    assert set(issue_registry.issues) == expected_issues
