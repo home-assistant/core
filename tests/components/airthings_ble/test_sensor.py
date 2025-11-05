@@ -8,6 +8,7 @@ import pytest
 
 from homeassistant.components.airthings_ble.const import (
     DEFAULT_SCAN_INTERVAL,
+    DEVICE_MODEL,
     DEVICE_SPECIFIC_SCAN_INTERVAL,
     DOMAIN,
 )
@@ -301,8 +302,8 @@ async def test_scan_interval_migration_corentium_home_2(
         await hass.async_block_till_done()
 
         # Migration should have added device_model to entry data
-        assert "device_model" in entry.data
-        assert entry.data["device_model"] == CORENTIUM_HOME_2_DEVICE_INFO.model.value
+        assert DEVICE_MODEL in entry.data
+        assert entry.data[DEVICE_MODEL] == CORENTIUM_HOME_2_DEVICE_INFO.model.value
 
         # Coordinator should have been configured with radon scan interval
         coordinator = entry.runtime_data
@@ -361,8 +362,8 @@ async def test_default_scan_interval_migration(
         await hass.async_block_till_done()
 
         # Migration should have added device_model to entry data
-        assert "device_model" in entry.data
-        assert entry.data["device_model"] == device_info.model.value
+        assert DEVICE_MODEL in entry.data
+        assert entry.data[DEVICE_MODEL] == device_info.model.value
 
         # Coordinator should have been configured with default scan interval
         coordinator = entry.runtime_data
