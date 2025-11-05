@@ -30,44 +30,44 @@ _LOGGER = logging.getLogger(__name__)
 class SensorData:
     """Sensor data."""
 
-    disk_usage: dict[str, sdiskusage]
-    swap: sswap
-    memory: VirtualMemory
-    io_counters: dict[str, snetio]
     addresses: dict[str, list[snicaddr]]
-    load: tuple[float, float, float]
-    cpu_percent: float | None
     boot_time: datetime
-    processes: list[Process]
-    temperatures: dict[str, list[shwtemp]]
+    cpu_percent: float | None
+    disk_usage: dict[str, sdiskusage]
+    io_counters: dict[str, snetio]
+    load: tuple[float, float, float]
+    memory: VirtualMemory
     process_fds: dict[str, int]
+    processes: list[Process]
+    swap: sswap
+    temperatures: dict[str, list[shwtemp]]
 
     def as_dict(self) -> dict[str, Any]:
         """Return as dict."""
+        addresses = None
+        if self.addresses:
+            addresses = {k: str(v) for k, v in self.addresses.items()}
         disk_usage = None
         if self.disk_usage:
             disk_usage = {k: str(v) for k, v in self.disk_usage.items()}
         io_counters = None
         if self.io_counters:
             io_counters = {k: str(v) for k, v in self.io_counters.items()}
-        addresses = None
-        if self.addresses:
-            addresses = {k: str(v) for k, v in self.addresses.items()}
         temperatures = None
         if self.temperatures:
             temperatures = {k: str(v) for k, v in self.temperatures.items()}
         return {
-            "disk_usage": disk_usage,
-            "swap": str(self.swap),
-            "memory": str(self.memory),
-            "io_counters": io_counters,
             "addresses": addresses,
-            "load": str(self.load),
-            "cpu_percent": str(self.cpu_percent),
             "boot_time": str(self.boot_time),
-            "processes": str(self.processes),
-            "temperatures": temperatures,
+            "cpu_percent": str(self.cpu_percent),
+            "disk_usage": disk_usage,
+            "io_counters": io_counters,
+            "load": str(self.load),
+            "memory": str(self.memory),
             "process_fds": self.process_fds,
+            "processes": str(self.processes),
+            "swap": str(self.swap),
+            "temperatures": temperatures,
         }
 
 
@@ -124,14 +124,14 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
             _disk_defaults[("disks", argument)] = set()
         return {
             **_disk_defaults,
-            ("swap", ""): set(),
-            ("memory", ""): set(),
-            ("io_counters", ""): set(),
             ("addresses", ""): set(),
-            ("load", ""): set(),
-            ("cpu_percent", ""): set(),
             ("boot", ""): set(),
+            ("cpu_percent", ""): set(),
+            ("io_counters", ""): set(),
+            ("load", ""): set(),
+            ("memory", ""): set(),
             ("processes", ""): set(),
+            ("swap", ""): set(),
             ("temperatures", ""): set(),
         }
 
@@ -153,17 +153,17 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
 
         self._initial_update = False
         return SensorData(
-            disk_usage=_data["disks"],
-            swap=_data["swap"],
-            memory=_data["memory"],
-            io_counters=_data["io_counters"],
             addresses=_data["addresses"],
-            load=load,
-            cpu_percent=cpu_percent,
             boot_time=_data["boot_time"],
-            processes=_data["processes"],
-            temperatures=_data["temperatures"],
+            cpu_percent=cpu_percent,
+            disk_usage=_data["disks"],
+            io_counters=_data["io_counters"],
+            load=load,
+            memory=_data["memory"],
             process_fds=_data["process_fds"],
+            processes=_data["processes"],
+            swap=_data["swap"],
+            temperatures=_data["temperatures"],
         )
 
     def update_data(self) -> dict[str, Any]:
@@ -256,13 +256,13 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
                 _LOGGER.debug("OS does not provide temperature sensors")
 
         return {
-            "disks": disks,
-            "swap": swap,
-            "memory": memory,
-            "io_counters": io_counters,
             "addresses": addresses,
             "boot_time": self.boot_time,
-            "processes": selected_processes,
-            "temperatures": temps,
+            "disks": disks,
+            "io_counters": io_counters,
+            "memory": memory,
             "process_fds": process_fds,
+            "processes": selected_processes,
+            "swap": swap,
+            "temperatures": temps,
         }
