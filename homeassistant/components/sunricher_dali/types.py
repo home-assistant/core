@@ -1,4 +1,4 @@
-"""Type definitions for the DALI Center integration."""
+"""Type definitions for the Sunricher DALI integration."""
 
 from dataclasses import dataclass
 
@@ -9,7 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 
 @dataclass
 class DaliCenterData:
-    """Runtime data for the DALI Center integration."""
+    """Runtime data for the Sunricher DALI integration."""
 
     gateway: DaliGateway
     devices: list[Device]

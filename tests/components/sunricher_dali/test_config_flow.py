@@ -1,13 +1,10 @@
-"""Test the DALI Center config flow."""
+"""Test the Sunricher DALI config flow."""
 
 from unittest.mock import AsyncMock, MagicMock
 
 from PySrDaliGateway.exceptions import DaliGatewayError
 
-from homeassistant.components.sunricher_dali_center.const import (
-    CONF_SERIAL_NUMBER,
-    DOMAIN,
-)
+from homeassistant.components.sunricher_dali.const import CONF_SERIAL_NUMBER, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_HOST,
