@@ -1158,7 +1158,7 @@ async def test_bad_code_attempt_event_fired(hass: HomeAssistant) -> None:
 
     mock_user_id = "test_user_id_123"
     test_context = Context(user_id=mock_user_id)
-    
+
     events = []
 
     @callback
