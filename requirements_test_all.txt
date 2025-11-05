@@ -1456,7 +1456,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.8.2
+plugwise==1.8.3
 
 # homeassistant.components.poolsense
 poolsense==0.0.8
@@ -2094,7 +2094,7 @@ python-overseerr==0.7.1
 python-picnic-api2==1.3.1
 
 # homeassistant.components.pooldose
-python-pooldose==0.7.0
+python-pooldose==0.7.8
 
 # homeassistant.components.rabbitair
 python-rabbitair==0.0.8

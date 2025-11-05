@@ -314,6 +314,9 @@
     "invalid_xml_data": {
       "message": "[%key:component::plugwise::config::error::response_error%]"
     },
+    "set_schedule_first": {
+      "message": "Failed setting HVACMode, set a schedule first."
+    },
     "unsupported_firmware": {
       "message": "[%key:component::plugwise::config::error::unsupported%]"
     }
