@@ -2,7 +2,11 @@
   "config": {
     "abort": {
       "already_configured": "You already have a Västtrafik integration configured with this API key",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "cannot_connect": "[%key:component::vasttrafik::config::error::cannot_connect%]",
+      "invalid_auth": "[%key:component::vasttrafik::config::error::invalid_auth%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "station_not_found": "One or more stations could not be found",
+      "unknown": "[%key:component::vasttrafik::config::error::unknown%]"
     },
     "error": {
       "cannot_connect": "Failed to connect to Västtrafik API",
@@ -130,9 +134,17 @@
       "description": "Configuring Västtrafik using YAML sensor platform is deprecated.\n\nWhile importing your configuration, invalid API credentials were found. Please update your YAML configuration with valid credentials, or remove the existing YAML configuration and set the integration up via the UI.",
       "title": "Västtrafik YAML configuration deprecated"
     },
+    "deprecated_yaml_import_issue_station_not_found": {
+      "description": "Configuring Västtrafik using YAML sensor platform is deprecated.\n\nWhile importing your configuration, one or more stations could not be found. Please check your station names in the YAML configuration, or remove the existing YAML configuration and set the integration up via the UI.",
+      "title": "[%key:component::vasttrafik::issues::deprecated_yaml_import_issue_invalid_auth::title%]"
+    },
     "deprecated_yaml_import_issue_unknown": {
       "description": "Configuring Västtrafik using YAML sensor platform is deprecated.\n\nWhile importing your configuration, an unknown error occurred. Please restart Home Assistant to try again, or remove the existing YAML configuration and set the integration up via the UI.",
       "title": "[%key:component::vasttrafik::issues::deprecated_yaml_import_issue_invalid_auth::title%]"
+    },
+    "deprecated_yaml_import_success": {
+      "description": "Configuring Västtrafik using YAML sensor platform is deprecated.\n\nYour YAML configuration has been successfully imported into the UI. You can now safely remove the `vasttrafik` sensor configuration from your `configuration.yaml` file and restart Home Assistant.",
+      "title": "Västtrafik YAML configuration successfully imported"
     }
   },
   "options": {
