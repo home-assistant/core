@@ -2129,3 +2129,10 @@ def _dhcp_service_info_init(self: DhcpServiceInfo, *args: Any, **kwargs: Any) ->
 
 
 DhcpServiceInfo.__init__ = _dhcp_service_info_init
+
+
+@pytest.fixture(autouse=True)
+def disable_http_server_log() -> Generator[None]:
+    """Disable HTTP server log during tests."""
+    with patch("homeassistant.components.http.start_http_server_and_save_config"):
+        yield
