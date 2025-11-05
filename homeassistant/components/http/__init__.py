@@ -214,7 +214,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             hass,
             DOMAIN,
             "server_host_may_break_hassio",
-            breaks_in_ha_version="2026.5.0",
             is_fixable=False,
             severity=ir.IssueSeverity.ERROR,
             translation_key=issue_id,
