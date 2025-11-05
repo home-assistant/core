@@ -49,6 +49,17 @@
         }
       }
     },
+    "humidifier": {
+      "vesync": {
+        "state_attributes": {
+          "mode": {
+            "state": {
+              "humidity": "Humidity"
+            }
+          }
+        }
+      }
+    },
     "number": {
       "mist_level": {
         "name": "Mist level"
@@ -95,6 +106,9 @@
       }
     },
     "switch": {
+      "child_lock": {
+        "name": "Child lock"
+      },
       "display": {
         "name": "Display"
       }
