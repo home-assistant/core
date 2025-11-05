@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass, field
 import logging
-from typing import cast
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import format_mac
@@ -33,9 +32,7 @@ def async_get_provisioning_registry(
     This is a helper function for internal use.
     It ensures the registry exists without requiring async_setup to run first.
     """
-    return cast(
-        dict[str, ProvisioningState], hass.data.setdefault(PROVISIONING_FUTURES, {})
-    )
+    return hass.data.setdefault(PROVISIONING_FUTURES, {})
 
 
 @callback
