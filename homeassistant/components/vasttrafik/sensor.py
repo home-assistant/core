@@ -198,9 +198,6 @@ class VasttrafikDepartureSensor(SensorEntity):
                 model="Departure Board",
                 entry_type=dr.DeviceEntryType.SERVICE,
             )
-        else:
-            # No device info for YAML/option-based sensors - entities appear directly under the service
-            self._attr_device_info = None
 
         # Create unique ID
         if unique_suffix:
