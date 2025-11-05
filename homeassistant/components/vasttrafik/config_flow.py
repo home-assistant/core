@@ -19,11 +19,14 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_DELAY, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.selector import (
+    NumberSelector,
+    NumberSelectorConfig,
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
     TextSelector,
     TextSelectorConfig,
+    TextSelectorType,
 )
 
 from .const import (
@@ -44,18 +47,22 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_KEY): str,
-        vol.Required(CONF_SECRET): str,
+        vol.Required(CONF_KEY): TextSelector(),
+        vol.Required(CONF_SECRET): TextSelector(
+            TextSelectorConfig(type=TextSelectorType.PASSWORD)
+        ),
     }
 )
 
 CONFIGURE_DEPARTURE_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_NAME): str,
-        vol.Optional(CONF_HEADING): str,
+        vol.Required(CONF_NAME): TextSelector(),
+        vol.Optional(CONF_HEADING): TextSelector(),
         vol.Optional(CONF_LINES): TextSelector(TextSelectorConfig(multiple=True)),
         vol.Optional(CONF_TRACKS): TextSelector(TextSelectorConfig(multiple=True)),
-        vol.Optional(CONF_DELAY, default=DEFAULT_DELAY): vol.Coerce(int),
+        vol.Optional(CONF_DELAY, default=DEFAULT_DELAY): NumberSelector(
+            NumberSelectorConfig(unit_of_measurement="min")
+        ),
     }
 )
 
@@ -276,7 +283,9 @@ class VasttrafikSubentryFlow(ConfigSubentryFlow):
 
         search_schema = vol.Schema(
             {
-                vol.Required("search_query"): vol.All(str, vol.Length(min=2)),
+                vol.Required("search_query"): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.SEARCH)
+                ),
             }
         )
 
