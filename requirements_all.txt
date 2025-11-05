@@ -389,7 +389,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==13.15.0
+aioshelly==13.16.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -1181,10 +1181,10 @@ hole==0.9.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.83
+holidays==0.84
 
 # homeassistant.components.frontend
-home-assistant-frontend==20251103.0
+home-assistant-frontend==20251105.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.10.28
@@ -1353,7 +1353,7 @@ lektricowifi==0.1
 letpot==0.6.3
 
 # homeassistant.components.foscam
-libpyfoscamcgi==0.0.8
+libpyfoscamcgi==0.0.9
 
 # homeassistant.components.vivotek
 libpyvivotek==0.6.1
@@ -1719,7 +1719,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.8.2
+plugwise==1.8.3
 
 # homeassistant.components.serial_pm
 pmsensor==0.4
@@ -2146,7 +2146,7 @@ pylibrespot-java==0.1.1
 pylitejet==0.6.3
 
 # homeassistant.components.litterrobot
-pylitterbot==2024.2.7
+pylitterbot==2025.0.0
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.25.0
@@ -2525,7 +2525,7 @@ python-overseerr==0.7.1
 python-picnic-api2==1.3.1
 
 # homeassistant.components.pooldose
-python-pooldose==0.7.0
+python-pooldose==0.7.8
 
 # homeassistant.components.rabbitair
 python-rabbitair==0.0.8
