@@ -110,24 +110,23 @@ async def async_setup_entry(
     planner = entry.runtime_data
 
     for subentry in entry.subentries.values():
-        if subentry.subentry_type == "departure_board":
-            async_add_entities(
-                [
-                    VasttrafikDepartureSensor(
-                        planner=planner,
-                        name=subentry.data[CONF_NAME],
-                        station_gid=subentry.data[CONF_STATION_GID],
-                        heading=subentry.data.get(CONF_HEADING, ""),
-                        lines=subentry.data[CONF_LINES],
-                        tracks=subentry.data[CONF_TRACKS],
-                        delay=subentry.data[CONF_DELAY],
-                        config_entry_id=entry.entry_id,
-                        subentry_id=subentry.subentry_id,
-                    )
-                ],
-                update_before_add=True,
-                config_subentry_id=subentry.subentry_id,
-            )
+        async_add_entities(
+            [
+                VasttrafikDepartureSensor(
+                    planner=planner,
+                    name=subentry.data[CONF_NAME],
+                    station_gid=subentry.data[CONF_STATION_GID],
+                    heading=subentry.data.get(CONF_HEADING, ""),
+                    lines=subentry.data[CONF_LINES],
+                    tracks=subentry.data[CONF_TRACKS],
+                    delay=subentry.data[CONF_DELAY],
+                    config_entry_id=entry.entry_id,
+                    subentry_id=subentry.subentry_id,
+                )
+            ],
+            update_before_add=True,
+            config_subentry_id=subentry.subentry_id,
+        )
 
 
 class VasttrafikDepartureSensor(SensorEntity):
