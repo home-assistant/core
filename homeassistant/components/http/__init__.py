@@ -108,7 +108,7 @@ _DEFAULT_BIND = ["0.0.0.0", "::"] if _HAS_IPV6 else ["0.0.0.0"]
 
 HTTP_SCHEMA: Final = vol.All(
     cv.deprecated(CONF_BASE_URL),
-    cv.deprecated(CONF_SERVER_HOST),  # Deprecated in HA Core 2025.11
+    cv.deprecated(CONF_SERVER_HOST),  # Deprecated in HA Core 2025.12
     vol.Schema(
         {
             vol.Optional(CONF_SERVER_HOST): vol.All(
