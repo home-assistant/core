@@ -1,37 +1,37 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+      "cloud_not_enabled": "Please make sure you run Home Assistant with `{default_config}` enabled in your configuration.yaml.",
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "missing_scopes": "Authentication failed. Please make sure you have granted all required permissions.",
+      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "reauth_account_mismatch": "Authenticated account does not match the account to be reauthenticated. Please log in with the correct account and pick the right location.",
+      "reauth_location_mismatch": "Authenticated location does not match the location to be reauthenticated. Please log in with the correct account and pick the right location.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
     "step": {
       "pick_implementation": {
-        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]",
         "data": {
           "implementation": "[%key:common::config_flow::data::implementation%]"
         },
         "data_description": {
           "implementation": "[%key:common::config_flow::description::implementation%]"
-        }
+        },
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
       },
       "reauth_confirm": {
-        "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "The SmartThings integration needs to re-authenticate your account"
+        "description": "The SmartThings integration needs to re-authenticate your account",
+        "title": "[%key:common::config_flow::title::reauth%]"
       }
-    },
-    "error": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
-    },
-    "abort": {
-      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
-      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
-      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
-      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
-      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
-      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reauth_account_mismatch": "Authenticated account does not match the account to be reauthenticated. Please log in with the correct account and pick the right location.",
-      "reauth_location_mismatch": "Authenticated location does not match the location to be reauthenticated. Please log in with the correct account and pick the right location.",
-      "missing_scopes": "Authentication failed. Please make sure you have granted all required permissions.",
-      "cloud_not_enabled": "Please make sure you run Home Assistant with `{default_config}` enabled in your configuration.yaml."
     }
   },
   "entity": {
@@ -39,14 +39,20 @@
       "acceleration": {
         "name": "Acceleration"
       },
+      "child_lock": {
+        "name": "Child lock"
+      },
+      "cool_select_plus_door": {
+        "name": "CoolSelect+ door"
+      },
+      "cooler_door": {
+        "name": "Fridge door"
+      },
       "door": {
         "name": "[%key:component::binary_sensor::entity_component::door::name%]"
       },
       "dryer_wrinkle_prevent_active": {
         "name": "Wrinkle prevent active"
-      },
-      "keep_fresh_mode_active": {
-        "name": "Keep fresh mode active"
       },
       "filter_status": {
         "name": "Filter status"
@@ -54,17 +60,11 @@
       "freezer_door": {
         "name": "Freezer door"
       },
-      "cooler_door": {
-        "name": "Fridge door"
-      },
-      "cool_select_plus_door": {
-        "name": "CoolSelect+ door"
+      "keep_fresh_mode_active": {
+        "name": "Keep fresh mode active"
       },
       "remote_control": {
         "name": "Remote control"
-      },
-      "child_lock": {
-        "name": "Child lock"
       },
       "valve": {
         "name": "Valve"
@@ -81,20 +81,20 @@
     "climate": {
       "air_conditioner": {
         "state_attributes": {
-          "preset_mode": {
-            "state": {
-              "wind_free": "WindFree",
-              "wind_free_sleep": "WindFree sleep",
-              "quiet": "Quiet",
-              "long_wind": "Long wind",
-              "smart": "Smart",
-              "motion_direct": "Motion direct",
-              "motion_indirect": "Motion indirect"
-            }
-          },
           "fan_mode": {
             "state": {
               "turbo": "Turbo"
+            }
+          },
+          "preset_mode": {
+            "state": {
+              "long_wind": "Long wind",
+              "motion_direct": "Motion direct",
+              "motion_indirect": "Motion indirect",
+              "quiet": "Quiet",
+              "smart": "Smart saver",
+              "wind_free": "WindFree",
+              "wind_free_sleep": "WindFree sleep"
             }
           }
         }
@@ -103,14 +103,7 @@
     "event": {
       "button": {
         "state": {
-          "pushed": "Pushed",
-          "held": "Held",
           "double": "Double",
-          "pushed_2x": "Pushed 2x",
-          "pushed_3x": "Pushed 3x",
-          "pushed_4x": "Pushed 4x",
-          "pushed_5x": "Pushed 5x",
-          "pushed_6x": "Pushed 6x",
           "down": "Down",
           "down_2x": "Down 2x",
           "down_3x": "Down 3x",
@@ -118,89 +111,100 @@
           "down_5x": "Down 5x",
           "down_6x": "Down 6x",
           "down_hold": "Down hold",
+          "held": "Held",
+          "pushed": "Pushed",
+          "pushed_2x": "Pushed 2x",
+          "pushed_3x": "Pushed 3x",
+          "pushed_4x": "Pushed 4x",
+          "pushed_5x": "Pushed 5x",
+          "pushed_6x": "Pushed 6x",
+          "swipe_down": "Swipe down",
+          "swipe_left": "Swipe left",
+          "swipe_right": "Swipe right",
+          "swipe_up": "Swipe up",
           "up": "Up",
           "up_2x": "Up 2x",
           "up_3x": "Up 3x",
           "up_4x": "Up 4x",
           "up_5x": "Up 5x",
           "up_6x": "Up 6x",
-          "up_hold": "Up hold",
-          "swipe_up": "Swipe up",
-          "swipe_down": "Swipe down",
-          "swipe_left": "Swipe left",
-          "swipe_right": "Swipe right"
+          "up_hold": "Up hold"
         }
       }
     },
     "number": {
-      "washer_rinse_cycles": {
-        "name": "Rinse cycles",
-        "unit_of_measurement": "cycles"
-      },
-      "hood_fan_speed": {
-        "name": "Fan speed"
-      },
-      "freezer_temperature": {
-        "name": "Freezer temperature"
+      "cool_select_plus_temperature": {
+        "name": "CoolSelect+ temperature"
       },
       "cooler_temperature": {
         "name": "Fridge temperature"
       },
-      "cool_select_plus_temperature": {
-        "name": "CoolSelect+ temperature"
+      "freezer_temperature": {
+        "name": "Freezer temperature"
+      },
+      "hood_fan_speed": {
+        "name": "Fan speed"
+      },
+      "washer_rinse_cycles": {
+        "name": "Rinse cycles",
+        "unit_of_measurement": "cycles"
       }
     },
     "select": {
-      "operating_state": {
-        "state": {
-          "run": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::state::run%]",
-          "pause": "[%key:common::state::paused%]",
-          "stop": "[%key:common::state::stopped%]"
-        }
-      },
-      "lamp": {
-        "name": "Lamp",
-        "state": {
-          "off": "[%key:common::state::off%]",
-          "on": "[%key:common::state::on%]",
-          "low": "[%key:common::state::low%]",
-          "mid": "Mid",
-          "high": "[%key:common::state::high%]",
-          "extra_high": "Extra high"
-        }
-      },
       "detergent_amount": {
         "name": "Detergent dispense amount",
         "state": {
-          "none": "[%key:common::state::off%]",
-          "less": "Less",
-          "standard": "Standard",
+          "custom": "Custom",
           "extra": "Extra",
-          "custom": "Custom"
+          "less": "Less",
+          "none": "[%key:common::state::off%]",
+          "standard": "Standard"
         }
       },
       "flexible_detergent_amount": {
         "name": "Flexible compartment dispense amount",
         "state": {
-          "none": "[%key:common::state::off%]",
-          "less": "[%key:component::smartthings::entity::select::detergent_amount::state::less%]",
-          "standard": "[%key:component::smartthings::entity::select::detergent_amount::state::standard%]",
+          "custom": "[%key:component::smartthings::entity::select::detergent_amount::state::custom%]",
           "extra": "[%key:component::smartthings::entity::select::detergent_amount::state::extra%]",
-          "custom": "[%key:component::smartthings::entity::select::detergent_amount::state::custom%]"
+          "less": "[%key:component::smartthings::entity::select::detergent_amount::state::less%]",
+          "none": "[%key:common::state::off%]",
+          "standard": "[%key:component::smartthings::entity::select::detergent_amount::state::standard%]"
+        }
+      },
+      "lamp": {
+        "name": "Lamp",
+        "state": {
+          "extra_high": "Extra high",
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "mid": "Mid",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      },
+      "operating_state": {
+        "state": {
+          "pause": "[%key:common::state::paused%]",
+          "run": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::state::run%]",
+          "stop": "[%key:common::state::stopped%]"
+        }
+      },
+      "soil_level": {
+        "name": "Soil level",
+        "state": {
+          "down": "Down",
+          "extra_heavy": "Extra heavy",
+          "extra_light": "Extra light",
+          "heavy": "Heavy",
+          "light": "Light",
+          "none": "None",
+          "normal": "[%key:common::state::normal%]",
+          "up": "Up"
         }
       },
       "spin_level": {
         "name": "Spin level",
         "state": {
-          "none": "None",
-          "rinse_hold": "Rinse hold",
-          "no_spin": "No spin",
-          "low": "[%key:common::state::low%]",
-          "extra_low": "Extra low",
-          "delicate": "Delicate",
-          "medium": "[%key:common::state::medium%]",
-          "high": "[%key:common::state::high%]",
-          "extra_high": "Extra high",
           "200": "200",
           "400": "400",
           "600": "600",
@@ -208,27 +212,20 @@
           "1000": "1000",
           "1200": "1200",
           "1400": "1400",
-          "1600": "1600"
-        }
-      },
-      "soil_level": {
-        "name": "Soil level",
-        "state": {
+          "1600": "1600",
+          "delicate": "Delicate",
+          "extra_high": "Extra high",
+          "extra_low": "Extra low",
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "no_spin": "No spin",
           "none": "None",
-          "heavy": "Heavy",
-          "normal": "[%key:common::state::normal%]",
-          "light": "Light",
-          "extra_light": "Extra light",
-          "extra_heavy": "Extra heavy",
-          "up": "Up",
-          "down": "Down"
+          "rinse_hold": "Rinse hold"
         }
       }
     },
     "sensor": {
-      "lighting_mode": {
-        "name": "Activity lighting mode"
-      },
       "air_conditioner_mode": {
         "name": "Air conditioner mode"
       },
@@ -239,9 +236,9 @@
         "name": "Alarm",
         "state": {
           "both": "Strobe and siren",
-          "strobe": "Strobe",
+          "off": "[%key:common::state::off%]",
           "siren": "Siren",
-          "off": "[%key:common::state::off%]"
+          "strobe": "Strobe"
         }
       },
       "audio_volume": {
@@ -253,49 +250,31 @@
       "body_weight": {
         "name": "Body weight"
       },
+      "brightness_intensity": {
+        "name": "Brightness intensity"
+      },
       "carbon_monoxide_detector": {
         "name": "Carbon monoxide detector",
         "state": {
-          "detected": "Detected",
           "clear": "Clear",
+          "detected": "Detected",
           "tested": "Tested"
         }
+      },
+      "completion_time": {
+        "name": "Completion time"
       },
       "cooktop_operating_state": {
         "name": "Operating state",
         "state": {
-          "ready": "[%key:component::smartthings::entity::sensor::oven_machine_state::state::ready%]",
-          "run": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::state::run%]",
+          "finished": "[%key:component::smartthings::entity::sensor::oven_job_state::state::finished%]",
           "paused": "[%key:common::state::paused%]",
-          "finished": "[%key:component::smartthings::entity::sensor::oven_job_state::state::finished%]"
+          "ready": "[%key:component::smartthings::entity::sensor::oven_machine_state::state::ready%]",
+          "run": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::state::run%]"
         }
       },
       "cooler_temperature": {
         "name": "Fridge temperature"
-      },
-      "manual_level": {
-        "name": "Burner {burner_id} level"
-      },
-      "heating_mode": {
-        "name": "Burner {burner_id} heating mode",
-        "state": {
-          "off": "[%key:common::state::off%]",
-          "manual": "[%key:common::state::manual%]",
-          "boost": "Boost",
-          "keep_warm": "Keep warm",
-          "quick_preheat": "Quick preheat",
-          "defrost": "Defrost",
-          "melt": "Melt",
-          "simmer": "Simmer"
-        }
-      },
-      "dishwasher_machine_state": {
-        "name": "Machine state",
-        "state": {
-          "pause": "[%key:common::state::paused%]",
-          "run": "Running",
-          "stop": "[%key:common::state::stopped%]"
-        }
       },
       "dishwasher_job_state": {
         "name": "Job state",
@@ -312,8 +291,13 @@
           "wrinkle_prevent": "Wrinkle prevention"
         }
       },
-      "completion_time": {
-        "name": "Completion time"
+      "dishwasher_machine_state": {
+        "name": "Machine state",
+        "state": {
+          "pause": "[%key:common::state::paused%]",
+          "run": "Running",
+          "stop": "[%key:common::state::stopped%]"
+        }
       },
       "diverter_valve_position": {
         "name": "Valve position",
@@ -322,8 +306,25 @@
           "tank": "Tank"
         }
       },
-      "dryer_mode": {
-        "name": "Dryer mode"
+      "dryer_job_state": {
+        "name": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::name%]",
+        "state": {
+          "ai_drying": "AI drying",
+          "continuous_dehumidifying": "Continuous dehumidifying",
+          "cooling": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::cooling%]",
+          "dehumidifying": "Dehumidifying",
+          "delay_wash": "[%key:component::smartthings::entity::sensor::washer_job_state::state::delay_wash%]",
+          "drying": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::drying%]",
+          "finished": "[%key:component::smartthings::entity::sensor::oven_job_state::state::finished%]",
+          "freeze_protection": "Freeze protection",
+          "internal_care": "Internal care",
+          "none": "[%key:component::smartthings::entity::sensor::washer_job_state::state::none%]",
+          "refreshing": "Refreshing",
+          "sanitizing": "Sanitizing",
+          "thawing_frozen_inside": "Thawing frozen inside",
+          "weight_sensing": "[%key:component::smartthings::entity::sensor::washer_job_state::state::weight_sensing%]",
+          "wrinkle_prevent": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::wrinkle_prevent%]"
+        }
       },
       "dryer_machine_state": {
         "name": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::name%]",
@@ -333,34 +334,23 @@
           "stop": "[%key:common::state::stopped%]"
         }
       },
-      "dryer_job_state": {
-        "name": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::name%]",
-        "state": {
-          "cooling": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::cooling%]",
-          "delay_wash": "[%key:component::smartthings::entity::sensor::washer_job_state::state::delay_wash%]",
-          "drying": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::drying%]",
-          "finished": "[%key:component::smartthings::entity::sensor::oven_job_state::state::finished%]",
-          "none": "[%key:component::smartthings::entity::sensor::washer_job_state::state::none%]",
-          "refreshing": "Refreshing",
-          "weight_sensing": "[%key:component::smartthings::entity::sensor::washer_job_state::state::weight_sensing%]",
-          "wrinkle_prevent": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::wrinkle_prevent%]",
-          "dehumidifying": "Dehumidifying",
-          "ai_drying": "AI drying",
-          "sanitizing": "Sanitizing",
-          "internal_care": "Internal care",
-          "freeze_protection": "Freeze protection",
-          "continuous_dehumidifying": "Continuous dehumidifying",
-          "thawing_frozen_inside": "Thawing frozen inside"
-        }
+      "dryer_mode": {
+        "name": "Dryer mode"
+      },
+      "energy_difference": {
+        "name": "Energy difference"
+      },
+      "energy_saved": {
+        "name": "Energy saved"
       },
       "equivalent_carbon_dioxide": {
         "name": "Equivalent carbon dioxide"
       },
-      "freezer_temperature": {
-        "name": "Freezer temperature"
-      },
       "formaldehyde": {
         "name": "Formaldehyde"
+      },
+      "freezer_temperature": {
+        "name": "Freezer temperature"
       },
       "gas_meter": {
         "name": "Gas meter"
@@ -371,15 +361,45 @@
       "gas_meter_time": {
         "name": "Gas meter time"
       },
+      "heating_mode": {
+        "name": "Burner {burner_id} heating mode",
+        "state": {
+          "boost": "Boost",
+          "defrost": "Defrost",
+          "keep_warm": "Keep warm",
+          "manual": "[%key:common::state::manual%]",
+          "melt": "Melt",
+          "off": "[%key:common::state::off%]",
+          "quick_preheat": "Quick preheat",
+          "simmer": "Simmer"
+        }
+      },
       "infrared_level": {
         "name": "Infrared level"
+      },
+      "lighting_mode": {
+        "name": "Activity lighting mode"
+      },
+      "link_quality": {
+        "name": "Link quality"
+      },
+      "manual_level": {
+        "name": "Burner {burner_id} level"
       },
       "media_input_source": {
         "name": "Media input source",
         "state": {
           "am": "AM",
-          "fm": "FM",
+          "analog1": "Analog 1",
+          "analog2": "Analog 2",
+          "analog3": "Analog 3",
+          "aux": "AUX",
+          "bluetooth": "Bluetooth",
           "cd": "CD",
+          "coaxial": "Coaxial",
+          "digital": "Digital",
+          "digitaltv": "Digital TV",
+          "fm": "FM",
           "hdmi": "HDMI",
           "hdmi1": "HDMI 1",
           "hdmi2": "HDMI 2",
@@ -387,21 +407,13 @@
           "hdmi4": "HDMI 4",
           "hdmi5": "HDMI 5",
           "hdmi6": "HDMI 6",
-          "digitaltv": "Digital TV",
-          "usb": "USB",
-          "youtube": "YouTube",
-          "aux": "AUX",
-          "bluetooth": "Bluetooth",
-          "digital": "Digital",
           "melon": "Melon",
-          "wifi": "Wi-Fi",
           "network": "Network",
           "optical": "Optical",
-          "coaxial": "Coaxial",
-          "analog1": "Analog 1",
-          "analog2": "Analog 2",
-          "analog3": "Analog 3",
-          "phono": "Phono"
+          "phono": "Phono",
+          "usb": "USB",
+          "wifi": "Wi-Fi",
+          "youtube": "YouTube"
         }
       },
       "media_playback_repeat": {
@@ -416,81 +428,75 @@
       "odor_sensor": {
         "name": "Odor sensor"
       },
-      "oven_mode": {
-        "name": "Oven mode",
-        "state": {
-          "heating": "Heating",
-          "grill": "Grill",
-          "warming": "Warming",
-          "defrosting": "Defrosting",
-          "conventional": "Conventional",
-          "bake": "Bake",
-          "bottom_heat": "Bottom heat",
-          "convection_bake": "Convection bake",
-          "convection_roast": "Convection roast",
-          "broil": "Broil",
-          "convection_broil": "Convection broil",
-          "steam_cook": "Steam cook",
-          "steam_bake": "Steam bake",
-          "steam_roast": "Steam roast",
-          "steam_bottom_heat_plus_convection": "Steam bottom heat plus convection",
-          "microwave": "Microwave",
-          "microwave_plus_grill": "Microwave plus grill",
-          "microwave_plus_convection": "Microwave plus convection",
-          "microwave_plus_hot_blast": "Microwave plus hot blast",
-          "microwave_plus_hot_blast_2": "Microwave plus hot blast 2",
-          "slim_middle": "Slim middle",
-          "slim_strong": "Slim strong",
-          "slow_cook": "Slow cook",
-          "proof": "Proof",
-          "dehydrate": "Dehydrate",
-          "others": "Others",
-          "strong_steam": "Strong steam",
-          "descale": "Descale",
-          "rinse": "Rinse"
-        }
-      },
-      "oven_machine_state": {
-        "name": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::name%]",
-        "state": {
-          "ready": "Ready",
-          "running": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::state::run%]",
-          "paused": "[%key:common::state::paused%]"
-        }
-      },
       "oven_job_state": {
         "name": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::name%]",
         "state": {
           "cleaning": "Cleaning",
           "cooking": "Cooking",
           "cooling": "Cooling",
+          "defrosting": "Defrosting",
           "draining": "Draining",
+          "fast_preheat": "Fast preheat",
+          "finished": "Finished",
           "preheat": "Preheat",
           "ready": "Ready",
           "rinsing": "Rinsing",
-          "finished": "Finished",
-          "scheduled_start": "Scheduled start",
-          "warming": "Warming",
-          "defrosting": "Defrosting",
-          "sensing": "Sensing",
-          "searing": "Searing",
-          "fast_preheat": "Fast preheat",
           "scheduled_end": "Scheduled end",
+          "scheduled_start": "Scheduled start",
+          "searing": "Searing",
+          "sensing": "Sensing",
           "stone_heating": "Stone heating",
-          "time_hold_preheat": "Time hold preheat"
+          "time_hold_preheat": "Time hold preheat",
+          "warming": "Warming"
+        }
+      },
+      "oven_machine_state": {
+        "name": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::name%]",
+        "state": {
+          "paused": "[%key:common::state::paused%]",
+          "ready": "Ready",
+          "running": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::state::run%]"
+        }
+      },
+      "oven_mode": {
+        "name": "Oven mode",
+        "state": {
+          "bake": "Bake",
+          "bottom_heat": "Bottom heat",
+          "broil": "Broil",
+          "convection_bake": "Convection bake",
+          "convection_broil": "Convection broil",
+          "convection_roast": "Convection roast",
+          "conventional": "Conventional",
+          "defrosting": "Defrosting",
+          "dehydrate": "Dehydrate",
+          "descale": "Descale",
+          "grill": "Grill",
+          "heating": "Heating",
+          "microwave": "Microwave",
+          "microwave_plus_convection": "Microwave plus convection",
+          "microwave_plus_grill": "Microwave plus grill",
+          "microwave_plus_hot_blast": "Microwave plus hot blast",
+          "microwave_plus_hot_blast_2": "Microwave plus hot blast 2",
+          "others": "Others",
+          "proof": "Proof",
+          "rinse": "Rinse",
+          "slim_middle": "Slim middle",
+          "slim_strong": "Slim strong",
+          "slow_cook": "Slow cook",
+          "steam_bake": "Steam bake",
+          "steam_bottom_heat_plus_convection": "Steam bottom heat plus convection",
+          "steam_cook": "Steam cook",
+          "steam_roast": "Steam roast",
+          "strong_steam": "Strong steam",
+          "warming": "Warming"
         }
       },
       "oven_setpoint": {
         "name": "Setpoint"
       },
-      "energy_difference": {
-        "name": "Energy difference"
-      },
       "power_energy": {
         "name": "Power energy"
-      },
-      "energy_saved": {
-        "name": "Energy saved"
       },
       "power_source": {
         "name": "Power source"
@@ -498,52 +504,46 @@
       "refrigeration_setpoint": {
         "name": "[%key:component::smartthings::entity::sensor::oven_setpoint::name%]"
       },
-      "brightness_intensity": {
-        "name": "Brightness intensity"
-      },
       "robot_cleaner_cleaning_mode": {
         "name": "Cleaning mode",
         "state": {
-          "stop": "[%key:common::action::stop%]",
           "auto": "[%key:common::state::auto%]",
           "manual": "[%key:common::state::manual%]",
+          "map": "Map",
           "part": "Partial",
           "repeat": "Repeat",
-          "map": "Map"
+          "stop": "[%key:common::action::stop%]"
         }
       },
       "robot_cleaner_movement": {
         "name": "Movement",
         "state": {
+          "after": "After",
+          "alarm": "Alarm",
+          "charging": "[%key:common::state::charging%]",
+          "cleaning": "Cleaning",
           "homing": "Homing",
           "idle": "[%key:common::state::idle%]",
-          "charging": "[%key:common::state::charging%]",
-          "alarm": "Alarm",
           "off": "[%key:common::state::off%]",
-          "reserve": "Reserve",
+          "pause": "[%key:common::state::paused%]",
           "point": "Point",
-          "after": "After",
-          "cleaning": "Cleaning",
-          "pause": "[%key:common::state::paused%]"
+          "reserve": "Reserve"
         }
       },
       "robot_cleaner_turbo_mode": {
         "name": "Turbo mode",
         "state": {
-          "on": "[%key:common::state::on%]",
+          "extra_silence": "Extra silent",
           "off": "[%key:common::state::off%]",
-          "silence": "Silent",
-          "extra_silence": "Extra silent"
+          "on": "[%key:common::state::on%]",
+          "silence": "Silent"
         }
-      },
-      "link_quality": {
-        "name": "Link quality"
       },
       "smoke_detector": {
         "name": "Smoke detector",
         "state": {
-          "detected": "[%key:component::smartthings::entity::sensor::carbon_monoxide_detector::state::detected%]",
           "clear": "[%key:component::smartthings::entity::sensor::carbon_monoxide_detector::state::clear%]",
+          "detected": "[%key:component::smartthings::entity::sensor::carbon_monoxide_detector::state::detected%]",
           "tested": "[%key:component::smartthings::entity::sensor::carbon_monoxide_detector::state::tested%]"
         }
       },
@@ -565,15 +565,6 @@
       "thermostat_setpoint": {
         "name": "[%key:component::smartthings::entity::sensor::oven_setpoint::name%]"
       },
-      "x_coordinate": {
-        "name": "X coordinate"
-      },
-      "y_coordinate": {
-        "name": "Y coordinate"
-      },
-      "z_coordinate": {
-        "name": "Z coordinate"
-      },
       "tv_channel": {
         "name": "TV channel"
       },
@@ -583,8 +574,26 @@
       "uv_index": {
         "name": "UV index"
       },
-      "washer_mode": {
-        "name": "Washer mode"
+      "washer_job_state": {
+        "name": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::name%]",
+        "state": {
+          "ai_rinse": "AI rinse",
+          "ai_spin": "AI spin",
+          "ai_wash": "AI wash",
+          "air_wash": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::air_wash%]",
+          "cooling": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::cooling%]",
+          "delay_wash": "Delay wash",
+          "drying": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::drying%]",
+          "finish": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::finish%]",
+          "freeze_protection": "Freeze protection",
+          "none": "None",
+          "pre_wash": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::pre_wash%]",
+          "rinse": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::rinse%]",
+          "spin": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::spin%]",
+          "wash": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::wash%]",
+          "weight_sensing": "Weight sensing",
+          "wrinkle_prevent": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::wrinkle_prevent%]"
+        }
       },
       "washer_machine_state": {
         "name": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::name%]",
@@ -594,43 +603,34 @@
           "stop": "[%key:common::state::stopped%]"
         }
       },
-      "washer_job_state": {
-        "name": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::name%]",
-        "state": {
-          "air_wash": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::air_wash%]",
-          "ai_rinse": "AI rinse",
-          "ai_spin": "AI spin",
-          "ai_wash": "AI wash",
-          "cooling": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::cooling%]",
-          "delay_wash": "Delay wash",
-          "drying": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::drying%]",
-          "finish": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::finish%]",
-          "none": "None",
-          "pre_wash": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::pre_wash%]",
-          "rinse": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::rinse%]",
-          "spin": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::spin%]",
-          "wash": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::wash%]",
-          "weight_sensing": "Weight sensing",
-          "wrinkle_prevent": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::wrinkle_prevent%]",
-          "freeze_protection": "Freeze protection"
-        }
+      "washer_mode": {
+        "name": "Washer mode"
       },
       "water_consumption": {
         "name": "Water consumption"
       },
       "water_filter_usage": {
         "name": "Water filter usage"
+      },
+      "x_coordinate": {
+        "name": "X coordinate"
+      },
+      "y_coordinate": {
+        "name": "Y coordinate"
+      },
+      "z_coordinate": {
+        "name": "Z coordinate"
       }
     },
     "switch": {
+      "auto_cycle_link": {
+        "name": "Auto Cycle Link"
+      },
       "bubble_soak": {
         "name": "Bubble Soak"
       },
       "display_lighting": {
         "name": "Display lighting"
-      },
-      "wrinkle_prevent": {
-        "name": "Wrinkle prevent"
       },
       "ice_maker": {
         "name": "Cubed ice"
@@ -638,8 +638,8 @@
       "ice_maker_2": {
         "name": "Ice Bites"
       },
-      "sabbath_mode": {
-        "name": "Sabbath mode"
+      "keep_fresh_mode": {
+        "name": "Keep fresh mode"
       },
       "power_cool": {
         "name": "Power cool"
@@ -647,73 +647,73 @@
       "power_freeze": {
         "name": "Power freeze"
       },
-      "auto_cycle_link": {
-        "name": "Auto Cycle Link"
+      "sabbath_mode": {
+        "name": "Sabbath mode"
       },
       "sanitize": {
         "name": "Sanitize"
       },
-      "keep_fresh_mode": {
-        "name": "Keep fresh mode"
+      "wrinkle_prevent": {
+        "name": "Wrinkle prevent"
       }
     }
   },
   "issues": {
-    "deprecated_binary_valve": {
-      "title": "Valve binary sensor deprecated",
-      "description": "The valve binary sensor {entity_name} (`{entity_id}`) is deprecated and will be removed in the future. A valve entity with controls is available and should be used going forward. Please update your dashboards, templates accordingly and disable the entity to fix this issue."
-    },
-    "deprecated_binary_valve_scripts": {
-      "title": "[%key:component::smartthings::issues::deprecated_binary_valve::title%]",
-      "description": "The valve binary sensor {entity_name} (`{entity_id}`) is deprecated and will be removed in the future. The entity is used in the following automations or scripts:\n{items}\n\nA valve entity with controls is available and should be used going forward. Please use the new valve entity in the above automations or scripts and disable the entity to fix this issue."
-    },
     "deprecated_binary_fridge_door": {
-      "title": "Refrigerator door binary sensor deprecated",
-      "description": "The refrigerator door binary sensor {entity_name} (`{entity_id}`) is deprecated and will be removed in the future. Separate entities for cooler and freezer door are available and should be used going forward. Please update your dashboards, templates accordingly and disable the entity to fix this issue."
+      "description": "The refrigerator door binary sensor {entity_name} (`{entity_id}`) is deprecated and will be removed in the future. Separate entities for cooler and freezer door are available and should be used going forward. Please update your dashboards, templates accordingly and disable the entity to fix this issue.",
+      "title": "Refrigerator door binary sensor deprecated"
     },
     "deprecated_binary_fridge_door_scripts": {
-      "title": "[%key:component::smartthings::issues::deprecated_binary_fridge_door::title%]",
-      "description": "The refrigerator door binary sensor {entity_name} (`{entity_id}`) is deprecated and will be removed in the future. The entity is used in the following automations or scripts:\n{items}\n\nSeparate entities for cooler and freezer door are available and should be used going forward. Please use them in the above automations or scripts and disable the entity to fix this issue."
+      "description": "The refrigerator door binary sensor {entity_name} (`{entity_id}`) is deprecated and will be removed in the future. The entity is used in the following automations or scripts:\n{items}\n\nSeparate entities for cooler and freezer door are available and should be used going forward. Please use them in the above automations or scripts and disable the entity to fix this issue.",
+      "title": "[%key:component::smartthings::issues::deprecated_binary_fridge_door::title%]"
     },
-    "deprecated_switch_appliance": {
-      "title": "Appliance switch deprecated",
-      "description": "The switch `{entity_id}` is deprecated because the actions did not work, so it has been replaced with a binary sensor instead.\n\nPlease update your dashboards, templates accordingly and disable the entity to fix this issue."
+    "deprecated_binary_valve": {
+      "description": "The valve binary sensor {entity_name} (`{entity_id}`) is deprecated and will be removed in the future. A valve entity with controls is available and should be used going forward. Please update your dashboards, templates accordingly and disable the entity to fix this issue.",
+      "title": "Valve binary sensor deprecated"
     },
-    "deprecated_switch_appliance_scripts": {
-      "title": "[%key:component::smartthings::issues::deprecated_switch_appliance::title%]",
-      "description": "The switch `{entity_id}` is deprecated because the actions did not work, so it has been replaced with a binary sensor instead.\n\nThe switch was used in the following automations or scripts:\n{items}\n\nPlease use the new binary sensor in the above automations or scripts and disable the switch to fix this issue."
-    },
-    "deprecated_switch_media_player": {
-      "title": "[%key:component::smartthings::issues::deprecated_switch_appliance::title%]",
-      "description": "The switch `{entity_id}` is deprecated and a media player entity has been added to replace it.\n\nPlease update your dashboards and templates accordingly and disable the switch to fix this issue."
-    },
-    "deprecated_switch_media_player_scripts": {
-      "title": "[%key:component::smartthings::issues::deprecated_switch_appliance::title%]",
-      "description": "The switch `{entity_id}` is deprecated and a media player entity has been added to replace it.\n\nThe switch was used in the following automations or scripts:\n{items}\n\nPlease use the new media player entity in the above automations or scripts and disable the switch to fix this issue."
-    },
-    "deprecated_switch_dhw": {
-      "title": "Heat pump switch deprecated",
-      "description": "The switch `{entity_id}` is deprecated and a water heater entity has been added to replace it.\n\nPlease update your dashboards and templates accordingly and disable the switch to fix this issue."
-    },
-    "deprecated_switch_dhw_scripts": {
-      "title": "[%key:component::smartthings::issues::deprecated_switch_dhw::title%]",
-      "description": "The switch `{entity_id}` is deprecated and a water heater entity has been added to replace it.\n\nThe switch was used in the following automations or scripts:\n{items}\n\nPlease use the new water heater entity in the above automations or scripts and disable the switch to fix this issue."
-    },
-    "deprecated_media_player": {
-      "title": "Media player sensors deprecated",
-      "description": "The sensor {entity_name} (`{entity_id}`) is deprecated because it has been replaced with a media player entity.\n\nPlease update your dashboards and templates to use the new media player entity and disable the sensor to fix this issue."
-    },
-    "deprecated_media_player_scripts": {
-      "title": "Deprecated sensor detected in some automations or scripts",
-      "description": "The sensor {entity_name} (`{entity_id}`) is deprecated because it has been replaced with a media player entity.\n\nThe sensor was used in the following automations or scripts:\n{items}\n\nPlease update the above automations or scripts to use the new media player entity and disable the sensor to fix this issue."
+    "deprecated_binary_valve_scripts": {
+      "description": "The valve binary sensor {entity_name} (`{entity_id}`) is deprecated and will be removed in the future. The entity is used in the following automations or scripts:\n{items}\n\nA valve entity with controls is available and should be used going forward. Please use the new valve entity in the above automations or scripts and disable the entity to fix this issue.",
+      "title": "[%key:component::smartthings::issues::deprecated_binary_valve::title%]"
     },
     "deprecated_dhw": {
-      "title": "Water heater sensors deprecated",
-      "description": "The sensor {entity_name} (`{entity_id}`) is deprecated because it has been replaced with a water heater entity.\n\nPlease update your dashboards and templates to use the new water heater entity and disable the sensor to fix this issue."
+      "description": "The sensor {entity_name} (`{entity_id}`) is deprecated because it has been replaced with a water heater entity.\n\nPlease update your dashboards and templates to use the new water heater entity and disable the sensor to fix this issue.",
+      "title": "Water heater sensors deprecated"
     },
     "deprecated_dhw_scripts": {
-      "title": "[%key:component::smartthings::issues::deprecated_dhw::title%]",
-      "description": "The sensor {entity_name} (`{entity_id}`) is deprecated because it has been replaced with a water heater entity.\n\nThe sensor was used in the following automations or scripts:\n{items}\n\nPlease update the above automations or scripts to use the new water heater entity and disable the sensor to fix this issue."
+      "description": "The sensor {entity_name} (`{entity_id}`) is deprecated because it has been replaced with a water heater entity.\n\nThe sensor was used in the following automations or scripts:\n{items}\n\nPlease update the above automations or scripts to use the new water heater entity and disable the sensor to fix this issue.",
+      "title": "[%key:component::smartthings::issues::deprecated_dhw::title%]"
+    },
+    "deprecated_media_player": {
+      "description": "The sensor {entity_name} (`{entity_id}`) is deprecated because it has been replaced with a media player entity.\n\nPlease update your dashboards and templates to use the new media player entity and disable the sensor to fix this issue.",
+      "title": "Media player sensors deprecated"
+    },
+    "deprecated_media_player_scripts": {
+      "description": "The sensor {entity_name} (`{entity_id}`) is deprecated because it has been replaced with a media player entity.\n\nThe sensor was used in the following automations or scripts:\n{items}\n\nPlease update the above automations or scripts to use the new media player entity and disable the sensor to fix this issue.",
+      "title": "Deprecated sensor detected in some automations or scripts"
+    },
+    "deprecated_switch_appliance": {
+      "description": "The switch `{entity_id}` is deprecated because the actions did not work, so it has been replaced with a binary sensor instead.\n\nPlease update your dashboards, templates accordingly and disable the entity to fix this issue.",
+      "title": "Appliance switch deprecated"
+    },
+    "deprecated_switch_appliance_scripts": {
+      "description": "The switch `{entity_id}` is deprecated because the actions did not work, so it has been replaced with a binary sensor instead.\n\nThe switch was used in the following automations or scripts:\n{items}\n\nPlease use the new binary sensor in the above automations or scripts and disable the switch to fix this issue.",
+      "title": "[%key:component::smartthings::issues::deprecated_switch_appliance::title%]"
+    },
+    "deprecated_switch_dhw": {
+      "description": "The switch `{entity_id}` is deprecated and a water heater entity has been added to replace it.\n\nPlease update your dashboards and templates accordingly and disable the switch to fix this issue.",
+      "title": "Heat pump switch deprecated"
+    },
+    "deprecated_switch_dhw_scripts": {
+      "description": "The switch `{entity_id}` is deprecated and a water heater entity has been added to replace it.\n\nThe switch was used in the following automations or scripts:\n{items}\n\nPlease use the new water heater entity in the above automations or scripts and disable the switch to fix this issue.",
+      "title": "[%key:component::smartthings::issues::deprecated_switch_dhw::title%]"
+    },
+    "deprecated_switch_media_player": {
+      "description": "The switch `{entity_id}` is deprecated and a media player entity has been added to replace it.\n\nPlease update your dashboards and templates accordingly and disable the switch to fix this issue.",
+      "title": "[%key:component::smartthings::issues::deprecated_switch_appliance::title%]"
+    },
+    "deprecated_switch_media_player_scripts": {
+      "description": "The switch `{entity_id}` is deprecated and a media player entity has been added to replace it.\n\nThe switch was used in the following automations or scripts:\n{items}\n\nPlease use the new media player entity in the above automations or scripts and disable the switch to fix this issue.",
+      "title": "[%key:component::smartthings::issues::deprecated_switch_appliance::title%]"
     }
   }
 }

@@ -1,57 +1,31 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "title": "Enter username and password",
-        "data": {
-          "username": "[%key:common::config_flow::data::email%]",
-          "password": "[%key:common::config_flow::data::password%]"
-        }
-      },
-      "reauth_confirm": {
-        "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "The VeSync integration needs to re-authenticate your account",
-        "data": {
-          "username": "[%key:common::config_flow::data::email%]",
-          "password": "[%key:common::config_flow::data::password%]"
-        }
-      }
+    "abort": {
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     },
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
-    "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::email%]"
+        },
+        "description": "The VeSync integration needs to re-authenticate your account",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "user": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::email%]"
+        },
+        "title": "Enter username and password"
+      }
     }
   },
   "entity": {
-    "sensor": {
-      "filter_life": {
-        "name": "Filter lifetime"
-      },
-      "air_quality": {
-        "name": "Air quality"
-      },
-      "current_power": {
-        "name": "Current power"
-      },
-      "energy_today": {
-        "name": "Energy use today"
-      },
-      "energy_week": {
-        "name": "Energy use weekly"
-      },
-      "energy_month": {
-        "name": "Energy use monthly"
-      },
-      "energy_year": {
-        "name": "Energy use yearly"
-      },
-      "current_voltage": {
-        "name": "Current voltage"
-      }
-    },
     "binary_sensor": {
       "water_lacks": {
         "name": "Low water"
@@ -60,14 +34,35 @@
         "name": "Water tank lifted"
       }
     },
+    "fan": {
+      "vesync": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "advanced_sleep": "Advanced sleep",
+              "auto": "[%key:common::state::auto%]",
+              "pet": "Pet",
+              "sleep": "Sleep",
+              "turbo": "Turbo"
+            }
+          }
+        }
+      }
+    },
+    "humidifier": {
+      "vesync": {
+        "state_attributes": {
+          "mode": {
+            "state": {
+              "humidity": "Humidity"
+            }
+          }
+        }
+      }
+    },
     "number": {
       "mist_level": {
         "name": "Mist level"
-      }
-    },
-    "switch": {
-      "display": {
-        "name": "Display"
       }
     },
     "select": {
@@ -81,26 +76,42 @@
         }
       }
     },
-    "fan": {
-      "vesync": {
-        "state_attributes": {
-          "preset_mode": {
-            "state": {
-              "auto": "[%key:common::state::auto%]",
-              "sleep": "Sleep",
-              "advanced_sleep": "Advanced sleep",
-              "pet": "Pet",
-              "turbo": "Turbo"
-            }
-          }
-        }
+    "sensor": {
+      "air_quality": {
+        "name": "Air quality"
+      },
+      "current_power": {
+        "name": "Current power"
+      },
+      "current_voltage": {
+        "name": "Current voltage"
+      },
+      "energy_month": {
+        "name": "Energy use monthly"
+      },
+      "energy_today": {
+        "name": "Energy use today"
+      },
+      "energy_week": {
+        "name": "Energy use weekly"
+      },
+      "energy_year": {
+        "name": "Energy use yearly"
+      },
+      "filter_life": {
+        "name": "Filter lifetime"
+      }
+    },
+    "switch": {
+      "display": {
+        "name": "Display"
       }
     }
   },
   "services": {
     "update_devices": {
-      "name": "Update devices",
-      "description": "Adds new VeSync devices to Home Assistant."
+      "description": "Adds new VeSync devices to Home Assistant.",
+      "name": "Update devices"
     }
   }
 }

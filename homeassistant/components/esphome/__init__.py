@@ -17,7 +17,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.issue_registry import async_delete_issue
 from homeassistant.helpers.typing import ConfigType
 
-from . import dashboard, ffmpeg_proxy
+from . import assist_satellite, dashboard, ffmpeg_proxy
 from .const import CONF_BLUETOOTH_MAC_ADDRESS, CONF_NOISE_PSK, DOMAIN
 from .domain_data import DomainData
 from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
@@ -31,6 +31,7 @@ CLIENT_INFO = f"Home Assistant {ha_version}"
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the esphome component."""
     ffmpeg_proxy.async_setup(hass)
+    await assist_satellite.async_setup(hass)
     await dashboard.async_setup(hass)
     return True
 
@@ -74,10 +75,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> bool:
     """Unload an esphome config entry."""
-    entry_data = await cleanup_instance(entry)
-    return await hass.config_entries.async_unload_platforms(
-        entry, entry_data.loaded_platforms
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        entry, entry.runtime_data.loaded_platforms
     )
+    if unload_ok:
+        await cleanup_instance(entry)
+    return unload_ok
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> None:

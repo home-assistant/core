@@ -39,7 +39,9 @@ from homeassistant.components.media_player import (
     async_process_play_media_url,
 )
 from homeassistant.components.plex import PLEX_URI_SCHEME
-from homeassistant.components.plex.services import process_plex_payload
+from homeassistant.components.plex.services import (  # pylint: disable=hass-component-root-import
+    process_plex_payload,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -610,7 +612,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
     def _play_media_queue(
         self, soco: SoCo, item: MusicServiceItem, enqueue: MediaPlayerEnqueue
-    ):
+    ) -> None:
         """Manage adding, replacing, playing items onto the sonos queue."""
         _LOGGER.debug(
             "_play_media_queue item_id [%s] title [%s] enqueue [%s]",
@@ -639,7 +641,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         media_type: MediaType | str,
         media_id: str,
         enqueue: MediaPlayerEnqueue,
-    ):
+    ) -> None:
         """Play a directory from a music library share."""
         item = media_browser.get_media(self.media.library, media_id, media_type)
         if not item:
@@ -660,6 +662,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         enqueue: MediaPlayerEnqueue,
         title: str,
     ) -> None:
+        """Play a sharelink."""
         share_link = self.coordinator.share_link
         kwargs = {}
         if title:
