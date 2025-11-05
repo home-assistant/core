@@ -6,7 +6,9 @@ import base64
 from dataclasses import dataclass
 import json
 import struct
-from typing import Literal, Self, overload
+from typing import Any, Literal, Self, overload
+
+from tuya_sharing import CustomerDevice
 
 from tuya_sharing import CustomerDevice
 
@@ -86,6 +88,21 @@ def find_dpcode(
     return None
 
 
+@dataclass(kw_only=True)
+class DeviceDataParser:
+    """Device Data Parser."""
+
+    dpcode: str
+
+    def _read_device_value_raw(self, device: CustomerDevice) -> Any | None:
+        """Read the device value for the dpcode."""
+        return device.status.get(self.dpcode)
+
+    def read_device_value(self, device: CustomerDevice) -> Any | None:
+        """Read the device value for the dpcode."""
+        raise NotImplementedError
+
+
 @dataclass
 class IntegerTypeData:
     """Integer Type Data."""
@@ -159,18 +176,23 @@ class IntegerTypeData:
 
 
 @dataclass
-class EnumTypeData:
+class EnumTypeData(DeviceDataParser):
     """Enum Type Data."""
 
-    dpcode: DPCode
     range: list[str]
+
+    def read_device_value(self, device: CustomerDevice) -> str | None:
+        """Read the device value for the dpcode."""
+        if (raw_value := self._read_device_value_raw(device)) in self.range:
+            return raw_value
+        return None
 
     @classmethod
     def from_json(cls, dpcode: DPCode, data: str) -> EnumTypeData | None:
         """Load JSON string and return a EnumTypeData object."""
         if not (parsed := json.loads(data)):
             return None
-        return cls(dpcode, **parsed)
+        return cls(dpcode=dpcode, **parsed)
 
 
 class ComplexValue:

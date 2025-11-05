@@ -13,7 +13,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, DPType
 from .entity import TuyaEntity
-from .models import find_dpcode
+from .models import EnumTypeData, find_dpcode
 
 # All descriptions can be found here. Mostly the Enum data types in the
 # default instructions set of each category end up being a select.
@@ -388,29 +388,21 @@ class TuyaSelectEntity(TuyaEntity, SelectEntity):
         self.entity_description = description
         self._attr_unique_id = f"{super().unique_id}{description.key}"
 
-        self._attr_options: list[str] = []
         if enum_type := find_dpcode(
             self.device, description.key, dptype=DPType.ENUM, prefer_function=True
         ):
             self._attr_options = enum_type.range
+            self._data_parser = enum_type
+        else:
+            # Should not happen - but fallback to empty options
+            self._attr_options = []
+            self._data_parser = EnumTypeData(dpcode=description.key, range=[])
 
     @property
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
-        # Raw value
-        value = self.device.status.get(self.entity_description.key)
-        if value is None or value not in self._attr_options:
-            return None
-
-        return value
+        return self._data_parser.read_device_value(self.device)
 
     def select_option(self, option: str) -> None:
         """Change the selected option."""
-        self._send_command(
-            [
-                {
-                    "code": self.entity_description.key,
-                    "value": option,
-                }
-            ]
-        )
+        self._send_command([{"code": self._data_parser.dpcode, "value": option}])
