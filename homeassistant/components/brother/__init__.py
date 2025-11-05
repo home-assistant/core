@@ -50,6 +50,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: BrotherConfigEntry) -> b
     coordinator = BrotherDataUpdateCoordinator(hass, entry, brother)
     await coordinator.async_config_entry_first_refresh()
 
+    if brother.serial.lower() != entry.unique_id:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="serial_mismatch",
+            translation_placeholders={
+                "device": entry.title,
+            },
+        )
+
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
