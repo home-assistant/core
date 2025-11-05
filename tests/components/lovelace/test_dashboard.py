@@ -509,6 +509,7 @@ async def test_storage_dashboards(
     assert not response["success"]
     assert response["error"]["code"] == "home_assistant_error"
     assert response["error"]["translation_key"] == "url_already_exists"
+    assert response["error"]["translation_placeholders"]["url"] == "created-url-path"
 
     # Delete dashboards
     await client.send_json(
