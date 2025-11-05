@@ -74,5 +74,7 @@ rules:
 
   # Platinum
   async-dependency: done
-  inject-websession: done
+  inject-websession:
+    status: exempt
+    comment: The integration does not connect via HTTP.
   strict-typing: done
