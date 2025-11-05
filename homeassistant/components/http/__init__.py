@@ -209,14 +209,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         conf = cast(ConfData, HTTP_SCHEMA({}))
 
     if CONF_SERVER_HOST in conf and is_hassio(hass):
-        issue_id = "server_host_may_break_hassio"
         ir.async_create_issue(
             hass,
             DOMAIN,
             "server_host_may_break_hassio",
             is_fixable=False,
             severity=ir.IssueSeverity.ERROR,
-            translation_key=issue_id,
+            translation_key="server_host_may_break_hassio",
         )
 
     server_host = conf.get(CONF_SERVER_HOST, _DEFAULT_BIND)
