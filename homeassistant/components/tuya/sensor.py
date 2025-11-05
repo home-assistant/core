@@ -1689,20 +1689,23 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             self._type = DPType.INTEGER
             if description.native_unit_of_measurement is None:
                 self._attr_native_unit_of_measurement = int_type.unit
-        elif enum_type := self.find_dpcode(
-            description.key, dptype=DPType.ENUM, prefer_function=True
-        ):
+        elif enum_type := self.find_dpcode(description.key, dptype=DPType.ENUM):
             self._type_data = enum_type
             self._type = DPType.ENUM
         else:
             self._type = get_dptype(self.device, DPCode(description.key))
+
+        self._validate_device_class_unit()
+
+    def _validate_device_class_unit(self) -> None:
+        """Validate device class unit compatibility."""
 
         # Logic to ensure the set device class and API received Unit Of Measurement
         # match Home Assistants requirements.
         if (
             self.device_class is not None
             and not self.device_class.startswith(DOMAIN)
-            and description.native_unit_of_measurement is None
+            and self.entity_description.native_unit_of_measurement is None
             # we do not need to check mappings if the API UOM is allowed
             and self.native_unit_of_measurement
             not in SENSOR_DEVICE_CLASS_UNITS[self.device_class]
