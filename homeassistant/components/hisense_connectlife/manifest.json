@@ -11,7 +11,7 @@
     "iot_class": "cloud_polling",
     "issue_tracker": "https://github.com/Connectlife-LLC/HomeAssistantPluginIntegration/issues",
     "requirements": [
-        "connectlife-cloud>=0.3.0"
+        "connectlife-cloud>=0.3.1"
     ],
     "ssdp": [],
     "zeroconf": []

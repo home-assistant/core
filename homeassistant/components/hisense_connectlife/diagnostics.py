@@ -34,7 +34,7 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     _LOGGER.debug("Getting diagnostics for config entry: %s", config_entry.entry_id)
 
-    coordinator = hass.data[DOMAIN].get(config_entry.entry_id)
+    coordinator = config_entry.runtime_data
     if not coordinator:
         return {"error": "Coordinator not found"}
 
@@ -113,7 +113,7 @@ async def async_get_device_diagnostics(
     """Return diagnostics for a specific device."""
     _LOGGER.debug("Getting diagnostics for device: %s", device_id)
 
-    coordinator = hass.data[DOMAIN].get(config_entry.entry_id)
+    coordinator = config_entry.runtime_data
     if not coordinator:
         return {"error": "Coordinator not found"}
 

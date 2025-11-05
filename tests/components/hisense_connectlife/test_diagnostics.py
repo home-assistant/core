@@ -14,7 +14,7 @@ from homeassistant.components.hisense_connectlife.diagnostics import (
 @pytest.mark.asyncio
 async def test_get_config_entry_diagnostics_no_coordinator(mock_hass, mock_config_entry):
     """Test diagnostics when coordinator is not found."""
-    mock_hass.data = {}
+    mock_config_entry.runtime_data = None
     
     result = await async_get_config_entry_diagnostics(mock_hass, mock_config_entry)
     
@@ -24,7 +24,7 @@ async def test_get_config_entry_diagnostics_no_coordinator(mock_hass, mock_confi
 @pytest.mark.asyncio
 async def test_get_config_entry_diagnostics_with_coordinator(mock_hass, mock_config_entry, mock_coordinator, mock_device_info):
     """Test diagnostics with coordinator."""
-    mock_hass.data = {mock_config_entry.domain: {mock_config_entry.entry_id: mock_coordinator}}
+    mock_config_entry.runtime_data = mock_coordinator
     mock_coordinator._devices = {"test_device_1": mock_device_info}
     mock_coordinator.api_client = MagicMock()
     mock_coordinator.api_client.parsers = {"test_device_1": MagicMock()}
@@ -47,7 +47,7 @@ async def test_get_config_entry_diagnostics_with_coordinator(mock_hass, mock_con
 @pytest.mark.asyncio
 async def test_get_device_diagnostics_no_coordinator(mock_hass, mock_config_entry):
     """Test device diagnostics when coordinator is not found."""
-    mock_hass.data = {}
+    mock_config_entry.runtime_data = None
     
     result = await async_get_device_diagnostics(mock_hass, mock_config_entry, "test_device_1")
     
@@ -57,7 +57,7 @@ async def test_get_device_diagnostics_no_coordinator(mock_hass, mock_config_entr
 @pytest.mark.asyncio
 async def test_get_device_diagnostics_device_not_found(mock_hass, mock_config_entry, mock_coordinator):
     """Test device diagnostics when device is not found."""
-    mock_hass.data = {mock_config_entry.domain: {mock_config_entry.entry_id: mock_coordinator}}
+    mock_config_entry.runtime_data = mock_coordinator
     mock_coordinator.get_device.return_value = None
     
     result = await async_get_device_diagnostics(mock_hass, mock_config_entry, "test_device_1")
@@ -68,7 +68,7 @@ async def test_get_device_diagnostics_device_not_found(mock_hass, mock_config_en
 @pytest.mark.asyncio
 async def test_get_device_diagnostics_success(mock_hass, mock_config_entry, mock_coordinator, mock_device_info):
     """Test successful device diagnostics."""
-    mock_hass.data = {mock_config_entry.domain: {mock_config_entry.entry_id: mock_coordinator}}
+    mock_config_entry.runtime_data = mock_coordinator
     mock_coordinator.get_device.return_value = mock_device_info
     mock_coordinator.api_client = MagicMock()
     mock_coordinator.api_client.parsers = {"test_device_1": MagicMock()}

@@ -120,7 +120,7 @@ async def test_options_flow_refresh_devices(mock_config_entry, mock_hass, mock_c
 
     flow = HisenseOptionsFlowHandler(mock_config_entry)
     flow.hass = mock_hass
-    flow.hass.data[DOMAIN] = {mock_config_entry.entry_id: mock_coordinator}
+    mock_config_entry.runtime_data = mock_coordinator
 
     result = await flow.async_step_init({"refresh_devices": True})
 
@@ -135,7 +135,7 @@ async def test_options_flow_refresh_token(mock_config_entry, mock_hass, mock_coo
 
     flow = HisenseOptionsFlowHandler(mock_config_entry)
     flow.hass = mock_hass
-    flow.hass.data[DOMAIN] = {mock_config_entry.entry_id: mock_coordinator}
+    mock_config_entry.runtime_data = mock_coordinator
 
     result = await flow.async_step_init({"refresh_token": True})
 
@@ -212,7 +212,7 @@ async def test_options_flow_no_coordinator(mock_config_entry, mock_hass):
 
     flow = HisenseOptionsFlowHandler(mock_config_entry)
     flow.hass = mock_hass
-    flow.hass.data[DOMAIN] = {}
+    mock_config_entry.runtime_data = None
 
     result = await flow.async_step_init({"refresh_devices": True})
 
@@ -227,7 +227,7 @@ async def test_options_flow_both_actions(mock_config_entry, mock_hass, mock_coor
 
     flow = HisenseOptionsFlowHandler(mock_config_entry)
     flow.hass = mock_hass
-    flow.hass.data[DOMAIN] = {mock_config_entry.entry_id: mock_coordinator}
+    mock_config_entry.runtime_data = mock_coordinator
 
     result = await flow.async_step_init({
         "refresh_devices": True,
@@ -246,7 +246,7 @@ async def test_options_flow_no_actions(mock_config_entry, mock_hass, mock_coordi
 
     flow = HisenseOptionsFlowHandler(mock_config_entry)
     flow.hass = mock_hass
-    flow.hass.data[DOMAIN] = {mock_config_entry.entry_id: mock_coordinator}
+    mock_config_entry.runtime_data = mock_coordinator
 
     result = await flow.async_step_init({
         "refresh_devices": False,

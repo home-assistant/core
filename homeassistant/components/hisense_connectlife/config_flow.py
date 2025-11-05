@@ -31,7 +31,7 @@ class HisenseOptionsFlowHandler(OptionsFlow):
         description_placeholders = {"message": ""}  # Initialize with empty message
 
         if user_input is not None:
-            coordinator = self.hass.data[DOMAIN][self.config_entry.entry_id]
+            coordinator = self.config_entry.runtime_data
 
             if user_input.get("refresh_devices", False):
                 try:

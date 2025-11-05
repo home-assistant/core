@@ -9,7 +9,6 @@ from connectlife_cloud import (
     ConnectLifeCloudClient,
     DeviceInfo,
     DeviceParserFactory,
-    TranslationManager,
 )
 from connectlife_cloud.devices.base import BaseDeviceParser, DeviceAttribute
 from homeassistant.core import HomeAssistant
@@ -45,22 +44,6 @@ class HisenseApiClient:
         self._devices: dict[str, DeviceInfo] = {}
         self._status_callbacks: dict[str, Callable[[dict[str, Any]], None]] = {}
         self._websocket: HisenseWebSocket | None = None
-
-        # Load translations for Home Assistant
-        self._load_translations()
-
-    def _load_translations(self) -> None:
-        """Load translations into Home Assistant data."""
-        self.hass.data[f"{DOMAIN}.translations"] = {}
-        
-        for lang in TranslationManager.SUPPORTED_LANGUAGES:
-            try:
-                self.hass.data[f"{DOMAIN}.translations"][lang] = (
-                    TranslationManager.get_all_translations(lang)
-                )
-                _LOGGER.debug("Loaded translations for %s", lang)
-            except Exception as e:
-                _LOGGER.error("Failed to load translations for %s: %s", lang, e)
 
     @property
     async def async_get_devices(self) -> dict[str, DeviceInfo]:
@@ -288,20 +271,6 @@ class HisenseApiClient:
         """
         return self.client.get_parser(device_id)
 
-    def get_translation(
-        self, key: str, language: str = "en", default: str | None = None
-    ) -> str:
-        """Get translation for a key.
-        
-        Args:
-            key: Translation key
-            language: Language code
-            default: Default value if translation not found
-            
-        Returns:
-            Translated string
-        """
-        return TranslationManager.get_translation(key, language, default)
 
     @property
     def parsers(self) -> dict[str, BaseDeviceParser]:

@@ -31,7 +31,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Hisense AC Plugin component."""
     _LOGGER.debug("Setting up Hisense AC Plugin")
 
-    hass.data.setdefault(DOMAIN, {})
 
     implementation = HisenseOAuth2Implementation(
         hass,
@@ -86,8 +85,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("Failed to setup coordinator")
         return False
 
-    # Store coordinator in hass.data
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    # Store coordinator in entry.runtime_data
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -96,8 +95,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        coordinator = hass.data[DOMAIN][entry.entry_id]
+        coordinator = entry.runtime_data
         await coordinator.api_client.oauth_session.close()
-        hass.data[DOMAIN].pop(entry.entry_id)
+        entry.runtime_data = None
 
     return unload_ok

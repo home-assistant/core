@@ -1,7 +1,7 @@
 """Test the Hisense ConnectLife integration initialization."""
 
 import pytest
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -30,14 +30,10 @@ async def test_async_unload_entry(hass: HomeAssistant, mock_config_entry: Config
     """Test async_unload_entry."""
     from homeassistant.components.hisense_connectlife import async_unload_entry
     
-    # Mock coordinator in hass.data
+    # Mock coordinator in entry.runtime_data
     mock_coordinator = AsyncMock()
     mock_coordinator.api_client.oauth_session.close = AsyncMock()
-    hass.data = {
-        "hisense_connectlife": {
-            mock_config_entry.entry_id: mock_coordinator
-        }
-    }
+    mock_config_entry.runtime_data = mock_coordinator
     
     with patch("homeassistant.config_entries.async_unload_platforms", return_value=True) as mock_unload:
         result = await async_unload_entry(hass, mock_config_entry)
@@ -45,6 +41,7 @@ async def test_async_unload_entry(hass: HomeAssistant, mock_config_entry: Config
         assert result is True
         mock_unload.assert_called_once()
         mock_coordinator.api_client.oauth_session.close.assert_called_once()
+        assert mock_config_entry.runtime_data is None
 
 
 @pytest.mark.asyncio
@@ -53,14 +50,13 @@ async def test_async_setup(hass: HomeAssistant):
     from homeassistant.components.hisense_connectlife import async_setup
     
     with patch("homeassistant.components.hisense_connectlife.HisenseOAuth2Implementation") as mock_impl, \
-         patch("homeassistant.components.hisense_connectlife.HisenseApplicationCredentials") as mock_app_creds, \
          patch("homeassistant.components.hisense_connectlife.OAuth2FlowHandler.async_register_implementation") as mock_register:
         
-        mock_app_creds_instance = AsyncMock()
-        mock_app_creds.return_value = mock_app_creds_instance
+        mock_impl_instance = MagicMock()
+        mock_impl.return_value = mock_impl_instance
         
         result = await async_setup(hass, {})
         
         assert result is True
+        mock_impl.assert_called_once_with(hass)
         mock_register.assert_called_once()
-        mock_app_creds_instance.async_get_auth_implementation.assert_called_once()

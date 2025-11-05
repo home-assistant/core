@@ -44,21 +44,14 @@ from .coordinator import HisenseACPluginDataUpdateCoordinator
 from .api import HisenseApiClient
 from .models import DeviceInfo as HisenseDeviceInfo
 from connectlife_cloud.devices import get_device_parser
+from connectlife_cloud.mode_converter import (
+    find_device_value_for_ha_fan_mode,
+    find_device_value_for_ha_mode,
+    get_ha_fan_mode_string,
+    get_ha_mode_string,
+)
 
 _LOGGER = logging.getLogger(__name__)
-
-# Standard mappings for Home Assistant HVAC modes
-HA_MODE_TO_STR = {
-    HVACMode.AUTO: "auto",
-    HVACMode.COOL: "cool",
-    HVACMode.HEAT: "heat",
-    HVACMode.DRY: "dry",
-    HVACMode.FAN_ONLY: "fan_only",
-    HVACMode.OFF: "off",
-}
-
-# Reverse mapping
-STR_TO_HA_MODE = {v: k for k, v in HA_MODE_TO_STR.items()}
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -66,7 +59,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Hisense AC climate platform."""
-    coordinator: HisenseACPluginDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator: HisenseACPluginDataUpdateCoordinator = config_entry.runtime_data
 
     try:
         # Trigger initial data update
@@ -173,16 +166,9 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
         else:
             self._parser = None
 
-        # Default modes if parser not available
+        # Only OFF mode if parser not available (don't assume device supports all modes)
         if not hasattr(self, '_attr_hvac_modes'):
-            self._attr_hvac_modes = [
-                HVACMode.OFF,
-                HVACMode.AUTO,
-                HVACMode.COOL,
-                HVACMode.HEAT,
-                HVACMode.DRY,
-                HVACMode.FAN_ONLY,
-            ]
+            self._attr_hvac_modes = [HVACMode.OFF]
 
         # Get target_temp attribute
         target_temp_attr = self._parser.attributes.get(StatusKey.TARGET_TEMP) if self._parser else None
@@ -243,32 +229,34 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
 
         # Always include OFF mode
         modes = [HVACMode.OFF]
-        available_modes = []
         has_heat = '1'
-        if self.static_data :
+        if self.static_data:
             has_heat = self.static_data.get("Mode_settings")
+        
         # Get work mode attribute from parser
         work_mode_attr = self._parser.attributes.get(StatusKey.MODE)
         if work_mode_attr and work_mode_attr.value_map:
+            # Use library function to convert mode strings
+            available_ha_modes = set()
             for key, value in work_mode_attr.value_map.items():
-                # Map Chinese descriptions to HA modes
-                if "制冷" in value or "cool" in value.lower():
-                    available_modes.append(HVACMode.COOL)
-                elif "制热" in value or "heat" in value.lower():
-                    if has_heat == '1':
-                        available_modes.append(HVACMode.HEAT)
-                elif "除湿" in value or "dry" in value.lower():
-                    available_modes.append(HVACMode.DRY)
-                elif "送风" in value or "fan" in value.lower():
-                    available_modes.append(HVACMode.FAN_ONLY)
-                elif "自动" in value or "auto" in value.lower():
-                    available_modes.append(HVACMode.AUTO)
+                ha_mode_str = get_ha_mode_string(work_mode_attr.value_map, key)
+                if ha_mode_str:
+                    try:
+                        ha_mode = HVACMode(ha_mode_str)
+                        # Special handling for heat mode - check static data
+                        if ha_mode == HVACMode.HEAT and has_heat != '1':
+                            continue
+                        available_ha_modes.add(ha_mode)
+                    except ValueError:
+                        # Invalid mode string, skip
+                        continue
 
-        # Add modes in user-specified order (skip unsupported modes)
-        desired_order = [HVACMode.COOL, HVACMode.HEAT, HVACMode.DRY, HVACMode.FAN_ONLY, HVACMode.AUTO]
-        for mode in desired_order:
-            if mode in available_modes:
-                modes.append(mode)
+            # Add modes in preferred order
+            desired_order = [HVACMode.COOL, HVACMode.HEAT, HVACMode.DRY, HVACMode.FAN_ONLY, HVACMode.AUTO]
+            for mode in desired_order:
+                if mode in available_ha_modes:
+                    modes.append(mode)
+        
         self._attr_hvac_modes = modes
 
     def _setup_fan_modes(self):
@@ -281,24 +269,28 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
         fan_modes = []
         fan_speed_attr = self._parser.attributes.get(StatusKey.FAN_SPEED)
         if fan_speed_attr and fan_speed_attr.value_map:
+            # Use library function to convert fan mode strings
             for key, value in fan_speed_attr.value_map.items():
-                # Map Chinese descriptions to standard fan modes
-                if "自动" == value or "auto" == value.lower():
-                    fan_modes.append(FAN_AUTO)
-                    self.hasAuto = True
-                elif "超低" == value or "ultra low" == value.lower():
-                    fan_modes.append(SFAN_ULTRA_LOW)
-                elif "低" == value or "low" == value.lower():
-                    fan_modes.append(FAN_LOW)
-                elif "中" == value or "medium" == value.lower() or "med" == value.lower():
-                    fan_modes.append(FAN_MEDIUM)
-                elif "高" == value or "high" == value.lower():
-                    fan_modes.append(FAN_HIGH)
-                elif "超高" == value or "ultra high" == value.lower():
-                    fan_modes.append(SFAN_ULTRA_HIGH)
-                else:
-                    # Use the Chinese description as the mode name
-                    fan_modes.append(value)
+                ha_fan_mode_str = get_ha_fan_mode_string(fan_speed_attr.value_map, key)
+                if ha_fan_mode_str:
+                    # Map HA fan mode strings to const values
+                    if ha_fan_mode_str == "auto":
+                        fan_modes.append(FAN_AUTO)
+                        self.hasAuto = True
+                    elif ha_fan_mode_str == "ultra_low":
+                        fan_modes.append(SFAN_ULTRA_LOW)
+                    elif ha_fan_mode_str == "low":
+                        fan_modes.append(FAN_LOW)
+                    elif ha_fan_mode_str == "medium":
+                        fan_modes.append(FAN_MEDIUM)
+                    elif ha_fan_mode_str == "high":
+                        fan_modes.append(FAN_HIGH)
+                    elif ha_fan_mode_str == "ultra_high":
+                        fan_modes.append(SFAN_ULTRA_HIGH)
+                    elif ha_fan_mode_str == "medium_low":
+                        fan_modes.append(SFAN_ULTRA_LOW)
+                    elif ha_fan_mode_str == "medium_high":
+                        fan_modes.append(SFAN_ULTRA_HIGH)
 
         if fan_modes:
             # Filter modes based on position6_damper_control
@@ -390,30 +382,27 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
 
         mode = self._device.get_status_value(StatusKey.MODE)
         if not mode:
-            return HVACMode.AUTO  # Default to AUTO if mode is not set
+            return HVACMode.OFF  # Default to OFF if mode is not set
+        
         _LOGGER.debug("Current device %s mode %s", self._current_feature_code, mode)
+        
         # Try to map the mode using the device parser
         if hasattr(self, '_parser') and self._parser:
             work_mode_attr = self._parser.attributes.get(StatusKey.MODE)
-            if work_mode_attr and work_mode_attr.value_map and mode in work_mode_attr.value_map:
-                mode_desc = work_mode_attr.value_map[mode]
-                _LOGGER.debug("Mode %s maps to description: %s", mode, mode_desc)
-
-                # Map to HA modes based on description
-                if "自动" in mode_desc or "auto" in mode_desc.lower():
-                    return HVACMode.AUTO
-                elif "制冷" in mode_desc or "cool" in mode_desc.lower():
-                    return HVACMode.COOL
-                elif "制热" in mode_desc or "heat" in mode_desc.lower():
-                    return HVACMode.HEAT
-                elif "除湿" in mode_desc or "dry" in mode_desc.lower():
-                    return HVACMode.DRY
-                elif "送风" in mode_desc or "fan" in mode_desc.lower():
-                    return HVACMode.FAN_ONLY
-
-        # Fallback to standard mapping
-        ha_mode = STR_TO_HA_MODE.get(mode)
-        return HVACMode(ha_mode) if ha_mode else HVACMode.AUTO
+            if work_mode_attr and work_mode_attr.value_map:
+                ha_mode_str = get_ha_mode_string(work_mode_attr.value_map, mode)
+                if ha_mode_str:
+                    try:
+                        return HVACMode(ha_mode_str)
+                    except ValueError:
+                        _LOGGER.warning("Invalid mode string: %s", ha_mode_str)
+        
+        # Fallback: try direct conversion if mode is already a valid HA mode string
+        try:
+            return HVACMode(mode)
+        except ValueError:
+            _LOGGER.warning("Could not convert mode %s to HVACMode, defaulting to OFF", mode)
+            return HVACMode.OFF
 
     @property
     def fan_mode(self) -> str | None:
@@ -430,26 +419,26 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
         # Try to map using device parser
         if hasattr(self, '_parser') and self._parser:
             fan_attr = self._parser.attributes.get(StatusKey.FAN_SPEED)
-            if fan_attr and fan_attr.value_map and fan_mode in fan_attr.value_map:
-                fan_desc = fan_attr.value_map[fan_mode]
-                _LOGGER.debug("Fan mode %s maps to fan: %s", fan_mode, fan_desc)
-
-                # Map to standard fan modes based on description
-                if "自动" == fan_desc or "auto" == fan_desc.lower():
-                    return FAN_AUTO
-                elif "超低" == fan_desc or "ultra low" == fan_desc.lower():
-                    return SFAN_ULTRA_LOW
-                elif "低" == fan_desc or "low" == fan_desc.lower():
-                    return FAN_LOW
-                elif "中" == fan_desc or "medium" == fan_desc.lower() or "med" == fan_desc.lower():
-                    return FAN_MEDIUM
-                elif "高" == fan_desc or "high" == fan_desc.lower():
-                    return FAN_HIGH
-                elif "超高" == fan_desc or "ultra high" == fan_desc.lower():
-                    return SFAN_ULTRA_HIGH
-                else:
-                    # Use the Chinese description as the mode name
-                    return fan_desc
+            if fan_attr and fan_attr.value_map:
+                ha_fan_mode_str = get_ha_fan_mode_string(fan_attr.value_map, fan_mode)
+                if ha_fan_mode_str:
+                    # Map HA fan mode strings to const values
+                    if ha_fan_mode_str == "auto":
+                        return FAN_AUTO
+                    elif ha_fan_mode_str == "ultra_low":
+                        return SFAN_ULTRA_LOW
+                    elif ha_fan_mode_str == "low":
+                        return FAN_LOW
+                    elif ha_fan_mode_str == "medium":
+                        return FAN_MEDIUM
+                    elif ha_fan_mode_str == "high":
+                        return FAN_HIGH
+                    elif ha_fan_mode_str == "ultra_high":
+                        return SFAN_ULTRA_HIGH
+                    elif ha_fan_mode_str == "medium_low":
+                        return SFAN_ULTRA_LOW
+                    elif ha_fan_mode_str == "medium_high":
+                        return SFAN_ULTRA_HIGH
 
         # Fallback to the raw value
         return fan_mode
@@ -565,32 +554,16 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
             # Find the Hisense mode value for this HA mode
             hisense_mode = None
 
-            # Try to map using device parser
+            # Convert HVACMode enum to string (e.g., HVACMode.COOL -> "cool")
+            mode_str = str(hvac_mode).lower().replace("hvacmode.", "")
+
+            # Try to map using device parser with library function
             if hasattr(self, '_parser') and self._parser:
                 work_mode_attr = self._parser.attributes.get(StatusKey.MODE)
                 if work_mode_attr and work_mode_attr.value_map:
-                    for key, value in work_mode_attr.value_map.items():
-                        if hvac_mode == HVACMode.COOL and ("制冷" in value or "cool" in value.lower()):
-                            hisense_mode = key
-                            break
-                        elif hvac_mode == HVACMode.HEAT and ("制热" in value or "heat" in value.lower()):
-                            hisense_mode = key
-                            break
-                        elif hvac_mode == HVACMode.DRY and ("除湿" in value or "dry" in value.lower()):
-                            hisense_mode = key
-                            break
-                        elif hvac_mode == HVACMode.FAN_ONLY and ("送风" in value or "fan" in value.lower()):
-                            hisense_mode = key
-                            break
-                        elif hvac_mode == HVACMode.AUTO and ("自动" in value or "auto" in value.lower()):
-                            hisense_mode = key
-                            break
-
-            # Fallback to standard mapping
-            if not hisense_mode:
-                mode_str = HA_MODE_TO_STR.get(hvac_mode)
-                if mode_str:
-                    hisense_mode = mode_str
+                    hisense_mode = find_device_value_for_ha_mode(
+                        work_mode_attr.value_map, mode_str
+                    )
             if hvac_mode != HVACMode.OFF:
                 power = self._device.get_status_value(StatusKey.POWER)
                 if power == "0":
@@ -614,6 +587,7 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
             _LOGGER.error("Failed to set hvac mode: %s", err)
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
+        """Set new target fan mode."""
         # Update cache and timestamp
         self._cached_fan_mode = fan_mode
         self._cached_hvac_mode = self.hvac_mode
@@ -621,38 +595,29 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
         self._cached_target_temp = self.target_temperature
         self._last_command_time = time.time()
         self.async_write_ha_state()
-        """Set new target fan mode."""
+        
         try:
-            # Find the Hisense fan mode value for this HA fan mode
-            hisense_fan_mode = None
+            # Map HA fan mode constant to standard string
+            fan_mode_map = {
+                FAN_AUTO: "auto",
+                FAN_LOW: "low",
+                FAN_MEDIUM: "medium",
+                FAN_HIGH: "high",
+                FAN_ULTRA_LOW: "ultra_low",
+                SFAN_ULTRA_LOW: "ultra_low",
+                FAN_ULTRA_HIGH: "ultra_high",
+                SFAN_ULTRA_HIGH: "ultra_high",
+            }
+            ha_fan_mode_str = fan_mode_map.get(fan_mode, fan_mode.lower().replace("_", ""))
 
-            # Try to map using device parser
+            # Find the Hisense fan mode value using library function
+            hisense_fan_mode = None
             if hasattr(self, '_parser') and self._parser:
                 fan_attr = self._parser.attributes.get(StatusKey.FAN_SPEED)
                 if fan_attr and fan_attr.value_map:
-                    for key, value in fan_attr.value_map.items():
-                        if fan_mode == FAN_AUTO and ("自动" in value or "auto" in value.lower()):
-                            hisense_fan_mode = key
-                            break
-                        elif fan_mode == FAN_LOW and ("低" in value or "low" in value.lower()):
-                            hisense_fan_mode = key
-                            break
-                        elif fan_mode == FAN_MEDIUM and ("中" in value or "medium" in value.lower() or "med" in value.lower()):
-                            hisense_fan_mode = key
-                            break
-                        elif fan_mode == FAN_HIGH and ("高" in value or "high" in value.lower()):
-                            hisense_fan_mode = key
-                            break
-                        elif fan_mode == FAN_ULTRA_LOW and ("超低" in value or "ultra low" in value.lower()):
-                            hisense_fan_mode = key
-                            break
-                        elif fan_mode == FAN_ULTRA_HIGH and ("超高" in value or "ultra high" in value.lower()):
-                            hisense_fan_mode = key
-                            break
-                        elif fan_mode == value:
-                            # Direct match with the description
-                            hisense_fan_mode = key
-                            break
+                    hisense_fan_mode = find_device_value_for_ha_fan_mode(
+                        fan_attr.value_map, ha_fan_mode_str
+                    )
 
             # Fallback to the fan mode as is
             if not hisense_fan_mode:
@@ -740,7 +705,7 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
         if not device:
             _LOGGER.warning("Device %s not found during sensor update", self._device_id)
             return
-        """仅在超时后处理协调器更新"""
+        # Only handle coordinator update after timeout
         if time.time() - self._last_command_time >= self.wait_time:
             super()._handle_coordinator_update()
 
