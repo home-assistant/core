@@ -115,6 +115,18 @@
         "name": "Stop program"
       }
     },
+    "fan": {
+      "air_conditioner": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "heating_ventilation_air_conditioning_air_conditioner_enum_type_fan_speed_mode_automatic": "[%key:common::state::auto%]",
+              "heating_ventilation_air_conditioning_air_conditioner_enum_type_fan_speed_mode_manual": "[%key:common::state::manual%]"
+            }
+          }
+        }
+      }
+    },
     "light": {
       "ambient_light": {
         "name": "Ambient light"
