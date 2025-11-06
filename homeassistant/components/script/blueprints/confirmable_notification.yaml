@@ -25,6 +25,12 @@ blueprint:
       description: "The message body"
       selector:
         text:
+    tag:
+      name: "Tag"
+      description: "An optional tag property for the notification"
+      default: []
+      selector:
+        text:
     confirm_text:
       name: "Confirmation Text"
       description: "Text to show on the confirmation button"
@@ -64,6 +70,7 @@ sequence:
     title: !input title
     message: !input message
     data:
+      tag: !input tag
       actions:
         - action: "{{ action_confirm }}"
           title: !input confirm_text
