@@ -1065,7 +1065,7 @@ def progress_step[
 
             # Task is done or this is a subsequent call
             try:
-                progress_task_result = await progress_task
+                progress_step_data["next_step_result"] = await progress_task
             except AbortFlow as err:
                 progress_step_data["abort_reason"] = err.reason
                 progress_step_data["abort_description_placeholders"] = (
@@ -1077,13 +1077,6 @@ def progress_step[
             finally:
                 # Clean up task reference
                 progress_step_data["tasks"].pop(step_id, None)
-
-            # If the result type is FlowResultType.SHOW_PROGRESS_DONE
-            # an earlier show progress step has already been run and stored its result.
-            # In this case we should not overwrite the result,
-            # but just use the stored one.
-            if progress_task_result["type"] != FlowResultType.SHOW_PROGRESS_DONE:
-                progress_step_data["next_step_result"] = progress_task_result
 
             return self.async_show_progress_done(
                 next_step_id="_progress_step_progress_done"

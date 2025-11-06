@@ -1068,40 +1068,6 @@ async def test_progress_step(
             lambda received_event, init_task_event, next_task_event: None,
             lambda received_event, init_task_event, next_task_event: None,
         ),
-        (  # first step shows progress and second step task is already done
-            None,
-            None,
-            data_entry_flow.FlowResultType.SHOW_PROGRESS,
-            data_entry_flow.FlowResultType.CREATE_ENTRY,
-            data_entry_flow.FlowResultType.CREATE_ENTRY,
-            1,
-            1,
-            lambda manager, result: manager.async_configure(result["flow_id"]),
-            lambda manager, result: AsyncMock(return_value=result)(),
-            lambda received_event,
-            init_task_event,
-            next_task_event: next_task_event.set(),
-            lambda received_event, init_task_event, next_task_event: None,
-        ),
-        (  # both step tasks are already done and flow completes immediately
-            None,
-            None,
-            data_entry_flow.FlowResultType.SHOW_PROGRESS_DONE,
-            data_entry_flow.FlowResultType.CREATE_ENTRY,
-            data_entry_flow.FlowResultType.CREATE_ENTRY,
-            0,
-            0,
-            lambda manager, result: manager.async_configure(result["flow_id"]),
-            lambda manager, result: AsyncMock(return_value=result)(),
-            lambda received_event,
-            init_task_event,
-            next_task_event: received_event.set()
-            or init_task_event.set()
-            or next_task_event.set(),
-            lambda received_event,
-            init_task_event,
-            next_task_event: received_event.set(),
-        ),
         (  # first step task is already done, second step shows progress and completes
             None,
             None,
@@ -1219,49 +1185,6 @@ async def test_chaining_progress_steps(
     # Continue the flow if needed.
     result = await manager_call_after_next(manager, result)
     assert result["type"] == flow_result_after_next
-
-
-async def test_progress_step_done_abort(
-    hass: HomeAssistant,
-    manager: MockFlowManager,
-) -> None:
-    """Test progress_step decorator without done result set."""
-    manager.hass = hass
-    events = []
-
-    @callback
-    def capture_events(event: Event) -> None:
-        events.append(event)
-
-    @manager.mock_reg_handler("test")
-    class TestFlow(data_entry_flow.FlowHandler):
-        VERSION = 5
-
-        @data_entry_flow.progress_step()
-        async def async_step_init(self, user_input=None):
-            # async_show_progress_done
-            return data_entry_flow.FlowResult(
-                flow_id=self.flow_id,
-                handler=self.handler,
-                type=data_entry_flow.FlowResultType.SHOW_PROGRESS_DONE,
-            )
-
-    hass.bus.async_listen(
-        data_entry_flow.EVENT_DATA_ENTRY_FLOW_PROGRESSED,
-        capture_events,
-    )
-
-    result = await manager.async_init("test")
-    assert result["type"] == data_entry_flow.FlowResultType.SHOW_PROGRESS_DONE
-    assert len(manager.async_progress()) == 1
-    assert len(manager.async_progress_by_handler("test")) == 1
-
-    result = await manager.async_configure(result["flow_id"])
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
-    assert result["reason"] == ""
-    assert len(manager.async_progress()) == 0
-    assert len(manager.async_progress_by_handler("test")) == 0
-    assert not events
 
 
 async def test_progress_step_result_reset(
