@@ -169,6 +169,9 @@ async def init_integration(
     platforms: Platform | list[Platform],
 ) -> AsyncGenerator[MockConfigEntry]:
     """Set up the Ecovacs integration for testing."""
+    # Workaround for https://github.com/home-assistant/core/issues/155417
+    caplog.clear()
+
     if not isinstance(platforms, list):
         platforms = [platforms]
 
