@@ -47,6 +47,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "generic": {
+        "name": "Generic"
+      }
+    },
     "event": {
       "button": {
         "state_attributes": {
