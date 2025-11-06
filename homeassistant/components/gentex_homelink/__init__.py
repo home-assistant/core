@@ -4,18 +4,15 @@ from __future__ import annotations
 
 from homelink.mqtt_provider import MQTTProvider
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 
 from . import oauth2
 from .const import DOMAIN
-from .coordinator import HomeLinkCoordinator, HomeLinkData
+from .coordinator import HomeLinkConfigEntry, HomeLinkCoordinator, HomeLinkData
 
 PLATFORMS: list[Platform] = [Platform.EVENT]
-
-type HomeLinkConfigEntry = ConfigEntry[HomeLinkData]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: HomeLinkConfigEntry) -> bool:

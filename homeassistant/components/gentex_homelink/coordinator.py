@@ -21,6 +21,8 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
+type HomeLinkConfigEntry = ConfigEntry[HomeLinkData]
+
 
 @dataclass
 class HomeLinkData:
@@ -52,7 +54,7 @@ class HomeLinkCoordinator(BaseDataUpdateCoordinatorProtocol):
         self,
         hass: HomeAssistant,
         provider: MQTTProvider,
-        config_entry: ConfigEntry[HomeLinkData],
+        config_entry: HomeLinkConfigEntry,
     ) -> None:
         """Initialize my coordinator."""
         self.hass = hass
