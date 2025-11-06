@@ -53,33 +53,31 @@ def find_dpcode(
     elif not isinstance(dpcodes, tuple):
         dpcodes = (dpcodes,)
 
-    order = ["status_range", "function"]
-    if prefer_function:
-        order = ["function", "status_range"]
+    lookup_tuple = (
+        (device.function, device.status_range)
+        if prefer_function
+        else (device.status_range, device.function)
+    )
 
     for dpcode in dpcodes:
-        for key in order:
-            if dpcode not in getattr(device, key):
-                continue
-            if (
-                dptype == DPType.ENUM
-                and getattr(device, key)[dpcode].type == DPType.ENUM
+        for device_specs in lookup_tuple:
+            if not (
+                (current_definition := device_specs.get(dpcode))
+                and current_definition.type == dptype
             ):
+                continue
+            if dptype is DPType.ENUM:
                 if not (
                     enum_type := EnumTypeData.from_json(
-                        dpcode, getattr(device, key)[dpcode].values
+                        dpcode, current_definition.values
                     )
                 ):
                     continue
                 return enum_type
-
-            if (
-                dptype == DPType.INTEGER
-                and getattr(device, key)[dpcode].type == DPType.INTEGER
-            ):
+            if dptype is DPType.INTEGER:
                 if not (
                     integer_type := IntegerTypeData.from_json(
-                        dpcode, getattr(device, key)[dpcode].values
+                        dpcode, current_definition.values
                     )
                 ):
                     continue
