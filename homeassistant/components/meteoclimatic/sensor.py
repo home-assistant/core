@@ -109,7 +109,13 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.PRECIPITATION,
     ),
 )
-
+    SensorEntityDescription(
+        key="rain_intensity",
+        name="Daily Intensity Precipitation",
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+        device_class=SensorDeviceClass.INTENSITY_PRECIPITATION,
+    ),
+)
 
 async def async_setup_entry(
     hass: HomeAssistant,
