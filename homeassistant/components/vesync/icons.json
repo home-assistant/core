@@ -1,5 +1,10 @@
 {
   "entity": {
+    "binary_sensor": {
+      "drying_mode_state": {
+        "default": "mdi:heat-wave"
+      }
+    },
     "fan": {
       "vesync": {
         "state_attributes": {

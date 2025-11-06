@@ -27,6 +27,9 @@
   },
   "entity": {
     "binary_sensor": {
+      "drying_mode_state": {
+        "name": "Drying"
+      },
       "water_lacks": {
         "name": "Low water"
       },
