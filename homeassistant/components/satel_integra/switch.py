@@ -72,10 +72,11 @@ class SatelIntegraSwitch(SwitchEntity):
         """Initialize the switch."""
         self._device_number = device_number
         self._attr_unique_id = f"{config_entry_id}_switch_{device_number}"
-        self._name = device_name
         self._state = False
         self._code = code
         self._satel = controller
+
+        self._attr_name = device_name
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -86,7 +87,7 @@ class SatelIntegraSwitch(SwitchEntity):
     @callback
     def _devices_updated(self, outputs: dict[int, int]) -> None:
         """Update switch state, if needed."""
-        _LOGGER.debug("Update switch name: %s zones: %s", self._name, outputs)
+        _LOGGER.debug("Update switch name: %s zones: %s", self._attr_name, outputs)
         if self._device_number in outputs:
             new_state = self._read_state()
             _LOGGER.debug("New state: %s", new_state)
@@ -96,14 +97,14 @@ class SatelIntegraSwitch(SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        _LOGGER.debug("Switch: %s status: %s, turning on", self._name, self._state)
+        _LOGGER.debug("Switch: %s status: %s, turning on", self._attr_name, self._state)
         await self._satel.set_output(self._code, self._device_number, True)
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         _LOGGER.debug(
-            "Switch name: %s status: %s, turning off", self._name, self._state
+            "Switch name: %s status: %s, turning off", self._attr_name, self._state
         )
         await self._satel.set_output(self._code, self._device_number, False)
         self.async_write_ha_state()
@@ -117,8 +118,3 @@ class SatelIntegraSwitch(SwitchEntity):
     def _read_state(self) -> bool:
         """Read state of the device."""
         return self._device_number in self._satel.violated_outputs
-
-    @property
-    def name(self):
-        """Return the name of the switch."""
-        return self._name
