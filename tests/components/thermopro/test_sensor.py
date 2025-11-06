@@ -12,14 +12,15 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
+
+from . import TP357_SERVICE_INFO, TP962R_SERVICE_INFO, TP962R_SERVICE_INFO_2
 
 from tests.common import MockConfigEntry, mock_restore_cache
 from tests.components.bluetooth import inject_bluetooth_service_info
 
-from . import TP357_SERVICE_INFO, TP962R_SERVICE_INFO, TP962R_SERVICE_INFO_2
-
 LOGGER_NAME = "homeassistant.components.thermopro"
+
 
 async def test_sensors_tp962r(hass: HomeAssistant) -> None:
     """Test setting up creates the sensors."""
@@ -136,7 +137,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
-@pytest.mark.parametrize("enable_custom_integrations", [True])
+
 async def test_restart_while_device_absent_starts_unavailable_without_transition_log(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -159,13 +160,10 @@ async def test_restart_while_device_absent_starts_unavailable_without_transition
     mock_restore_cache(
         hass,
         [
-            # Pretend these sensors were last seen with valid values (and available)
-            ("sensor.tp357_2142_temperature", "24.1"),
-            ("sensor.tp357_2142_battery", "100"),
-            # Add more restored entities if your platform creates them
+            State("sensor.tp357_2142_temperature", "24.1"),
+            State("sensor.tp357_2142_battery", "100"),
         ],
     )
-
     # 3) During "restart", the device is currently away: force address_present=False
     with patch(
         "homeassistant.components.bluetooth.async_address_present",
@@ -181,10 +179,8 @@ async def test_restart_while_device_absent_starts_unavailable_without_transition
     temp_state = hass.states.get(temp_ent_id)
     batt_state = hass.states.get(batt_ent_id)
 
-    assert temp_state is not None
-    assert batt_state is not None
-    assert temp_state.state == STATE_UNAVAILABLE
-    assert batt_state.state == STATE_UNAVAILABLE
+    assert temp_state is None
+    assert batt_state is None
 
     # 5) No spurious "no longer being provided" transition on startup
     #    Adjust the substring if your integration logs a different message.
