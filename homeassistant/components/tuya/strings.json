@@ -642,6 +642,7 @@
           "level": "Level",
           "sleep": "Sleep",
           "standby": "[%key:common::state::standby%]",
+          "standly": "[%key:common::state::standby%]",
           "uv": "UV"
         }
       },

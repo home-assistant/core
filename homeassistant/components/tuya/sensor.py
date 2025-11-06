@@ -770,17 +770,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="excretion_times_day",
         ),
         TuyaSensorEntityDescription(
-            key=DPCode.STATUS,
-            translation_key="cat_litter_box_status",
-            options=[
-                "clean",
-                "clock",
-                "empty",
-                "level",
-                "sleep",
-                "standly",
-                "uv",
-            ],  # Typo in the Tuya API
+            key=DPCode.STATUS, translation_key="cat_litter_box_status"
         ),
     ),
     DeviceCategory.MZJ: (
