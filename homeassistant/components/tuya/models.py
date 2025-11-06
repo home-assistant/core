@@ -74,7 +74,7 @@ def find_dpcode(
                 ):
                     continue
                 return enum_type
-            if dptype == DPType.INTEGER:
+            if dptype is DPType.INTEGER:
                 if not (
                     integer_type := IntegerTypeData.from_json(
                         dpcode, current_definition.values
