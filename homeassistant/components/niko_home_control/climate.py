@@ -11,7 +11,7 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import UnitOfTemperature, ATTR_TEMPERATURE
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -77,9 +77,7 @@ class NikoHomeControlClimate(NikoHomeControlEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
-        await self._action.set_mode(
-            NIKO_HOME_CONTROL_THERMOSTAT_MODES_MAP[hvac_mode]
-        )
+        await self._action.set_mode(NIKO_HOME_CONTROL_THERMOSTAT_MODES_MAP[hvac_mode])
 
     async def async_turn_off(self) -> None:
         """Turn thermostat off."""
