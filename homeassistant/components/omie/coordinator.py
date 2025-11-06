@@ -52,7 +52,7 @@ class OMIECoordinator(DataUpdateCoordinator[Mapping[dt.date, OMIEResults[SpotDat
 
     def _set_update_interval(self) -> None:
         """Schedules the next refresh at the start of the next quarter-hour."""
-        now = dt.datetime.now()
+        now = util.dt.now()
         now_quarter_minute = now.minute // 15 * 15
         refresh_at = now.replace(
             minute=now_quarter_minute, second=0, microsecond=0
