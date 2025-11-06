@@ -77,7 +77,7 @@ class SatelIntegraSwitch(SwitchEntity):
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
-        self._state = self._read_state()
+        self._state = self._device_number in self._satel.violated_outputs
 
         self.async_on_remove(
             async_dispatcher_connect(
@@ -89,7 +89,7 @@ class SatelIntegraSwitch(SwitchEntity):
     def _devices_updated(self, outputs: dict[int, int]) -> None:
         """Update switch state, if needed."""
         if self._device_number in outputs:
-            new_state = self._read_state()
+            new_state = outputs[self._device_number] == 1
             if new_state != self._state:
                 self._state = new_state
                 self.async_write_ha_state()
@@ -110,7 +110,3 @@ class SatelIntegraSwitch(SwitchEntity):
     def is_on(self) -> bool | None:
         """Return true if device is on."""
         return self._state
-
-    def _read_state(self) -> bool:
-        """Read state of the device."""
-        return self._device_number in self._satel.violated_outputs
