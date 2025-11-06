@@ -149,6 +149,7 @@ class EnergyPreferences(TypedDict):
 
     energy_sources: list[SourceType]
     device_consumption: list[DeviceConsumption]
+    device_consumption_water: list[DeviceConsumption]
 
 
 class EnergyPreferencesUpdate(EnergyPreferences, total=False):
@@ -314,7 +315,16 @@ class EnergyManager:
 
     async def async_initialize(self) -> None:
         """Initialize the energy integration."""
-        self.data = await self._store.async_load()
+        data = await self._store.async_load()
+
+        # Migrate old data to include new fields
+        if data is not None:
+            # Cast to dict to allow checking for and adding missing keys
+            data_dict: dict = data  # type: ignore[assignment]
+            if "device_consumption_water" not in data_dict:
+                data_dict["device_consumption_water"] = []
+
+        self.data = data
 
     @staticmethod
     def default_preferences() -> EnergyPreferences:
@@ -322,6 +332,7 @@ class EnergyManager:
         return {
             "energy_sources": [],
             "device_consumption": [],
+            "device_consumption_water": [],
         }
 
     async def async_update(self, update: EnergyPreferencesUpdate) -> None:
@@ -334,6 +345,7 @@ class EnergyManager:
         for key in (
             "energy_sources",
             "device_consumption",
+            "device_consumption_water",
         ):
             if key in update:
                 data[key] = update[key]
