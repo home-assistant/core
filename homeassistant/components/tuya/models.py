@@ -175,7 +175,7 @@ class IntegerTypeData:
         )
 
 
-@dataclass
+@dataclass(kw_only=True)
 class EnumTypeData(DeviceDataParser):
     """Enum Type Data."""
 
