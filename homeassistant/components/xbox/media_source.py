@@ -363,7 +363,7 @@ class XboxSource(MediaSource):
                 domain=DOMAIN,
                 identifier=f"{identifier}/{media_type}",
                 media_class=MediaClass.DIRECTORY,
-                media_content_type=MediaClass.GAME,
+                media_content_type=MediaClass.DIRECTORY,
                 title=MAP_TITLE[media_type],
                 can_play=False,
                 can_expand=True,
