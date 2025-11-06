@@ -581,6 +581,9 @@
           "level_6": "Level 6"
         }
       },
+      "alarm_message": {
+        "name": "Alarm message"
+      },
       "battery": {
         "name": "[%key:component::sensor::entity_component::battery::name%]"
       },
@@ -622,6 +625,9 @@
       },
       "dew_point_temperature": {
         "name": "Dew point"
+      },
+      "doorbell_picture": {
+        "name": "Doorbell picture"
       },
       "duster_cloth_life": {
         "name": "Duster cloth lifetime"
@@ -877,12 +883,6 @@
       },
       "wind_direction": {
         "name": "[%key:component::sensor::entity_component::wind_direction::name%]"
-      },
-      "alarm_message": {
-        "name": "Alarm message"
-      },
-      "doorbell_picture": {
-        "name": "Doorbell picture"
       }
     },
     "switch": {

@@ -47,7 +47,7 @@ async def test_alarm_message_event(
     """Test alarm message event entity triggers correctly."""
     entity_id = "event.intercom_alarm_message"
     dp_code = "alarm_message"
-    
+
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
     # Verify entity was created

@@ -32,6 +32,7 @@ class TuyaEventEntityDescription(EventEntityDescription):
     event_type_conversion: Callable[[Any], str] | None = None
     event_attributes_conversion: Callable[[Any], dict[str, Any]] | None = None
 
+
 # All descriptions can be found here. Mostly the Enum data types in the
 # default status set of each category (that don't have a set instruction)
 # end up being events.
@@ -42,14 +43,18 @@ EVENTS: dict[DeviceCategory, tuple[TuyaEventEntityDescription, ...]] = {
             device_class=EventDeviceClass.DOORBELL,
             translation_key="alarm_message",
             event_type_conversion=lambda value: DPCode.ALARM_MESSAGE,
-            event_attributes_conversion=lambda value: {"message": b64decode(value).decode("utf-8")},
+            event_attributes_conversion=lambda value: {
+                "message": b64decode(value).decode("utf-8")
+            },
         ),
         TuyaEventEntityDescription(
             key=DPCode.DOORBELL_PIC,
             device_class=EventDeviceClass.DOORBELL,
             translation_key="doorbell_picture",
             event_type_conversion=lambda value: DPCode.DOORBELL_PIC,
-            event_attributes_conversion=lambda value: {"picture": b64decode(value).decode("utf-8")},
+            event_attributes_conversion=lambda value: {
+                "picture": b64decode(value).decode("utf-8")
+            },
         ),
     ),
     DeviceCategory.WXKG: (
@@ -107,7 +112,7 @@ EVENTS: dict[DeviceCategory, tuple[TuyaEventEntityDescription, ...]] = {
             translation_key="numbered_button",
             translation_placeholders={"button_number": "9"},
         ),
-    )
+    ),
 }
 
 
@@ -180,7 +185,9 @@ class TuyaEventEntity(TuyaEntity, EventEntity):
             if self.entity_description.event_type_conversion:
                 event_type = self.entity_description.event_type_conversion(value)
             if self.entity_description.event_attributes_conversion:
-                event_attributes = self.entity_description.event_attributes_conversion(value)
+                event_attributes = self.entity_description.event_attributes_conversion(
+                    value
+                )
 
         self._trigger_event(event_type, event_attributes)
         self.async_write_ha_state()
