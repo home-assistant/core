@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from satel_integra.satel_integra import AsyncSatel
@@ -19,8 +18,6 @@ from .const import (
     SUBENTRY_TYPE_SWITCHABLE_OUTPUT,
     SatelConfigEntry,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -91,26 +88,20 @@ class SatelIntegraSwitch(SwitchEntity):
     @callback
     def _devices_updated(self, outputs: dict[int, int]) -> None:
         """Update switch state, if needed."""
-        _LOGGER.debug("Update switch name: %s zones: %s", self._attr_name, outputs)
         if self._device_number in outputs:
             new_state = self._read_state()
-            _LOGGER.debug("New state: %s", new_state)
             if new_state != self._state:
                 self._state = new_state
                 self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        _LOGGER.debug("Switch: %s status: %s, turning on", self._attr_name, self._state)
         await self._satel.set_output(self._code, self._device_number, True)
         self._state = True
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        _LOGGER.debug(
-            "Switch name: %s status: %s, turning off", self._attr_name, self._state
-        )
         await self._satel.set_output(self._code, self._device_number, False)
         self._state = False
         self.async_write_ha_state()
