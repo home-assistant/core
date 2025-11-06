@@ -126,7 +126,7 @@ class NintendoParentalControlsDeviceSensorEntity(NintendoDevice, SensorEntity):
 
 
 class NintendoParentalControlsPlayerSensorEntity(NintendoDevice, SensorEntity):
-    """Represent a single sensor."""
+    """Represent a single player sensor."""
 
     entity_description: NintendoParentalControlsPlayerSensorEntityDescription
 
