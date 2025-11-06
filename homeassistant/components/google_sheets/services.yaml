@@ -9,7 +9,7 @@ append_sheet:
       example: "Sheet1"
       selector:
         text:
-    add_datetime:
+    add_created_column:
       required: false
       default: true
       selector:

@@ -17,8 +17,11 @@ from homeassistant.components.application_credentials import (
 )
 from homeassistant.components.google_sheets.const import DOMAIN
 from homeassistant.components.google_sheets.services import (
+    ADD_CREATED_COLUMN,
+    DATA,
     DATA_CONFIG_ENTRY,
     ROWS,
+    SERVICE_APPEND_SHEET,
     SERVICE_GET_SHEET,
     WORKSHEET,
 )
@@ -209,11 +212,12 @@ async def test_append_sheet(
     with patch("homeassistant.components.google_sheets.services.Client") as mock_client:
         await hass.services.async_call(
             DOMAIN,
-            "append_sheet",
+            SERVICE_APPEND_SHEET,
             {
-                "config_entry": config_entry.entry_id,
-                "worksheet": "Sheet1",
-                "data": {"foo": "bar"},
+                DATA_CONFIG_ENTRY: config_entry.entry_id,
+                WORKSHEET: "Sheet1",
+                ADD_CREATED_COLUMN: True,
+                DATA: {"foo": "bar"},
             },
             blocking=True,
         )

@@ -31,7 +31,7 @@ from .const import DOMAIN
 if TYPE_CHECKING:
     from . import GoogleSheetsConfigEntry
 
-ADD_DATETIME = "add_datetime"
+ADD_CREATED_COLUMN = "add_created_column"
 DATA = "data"
 DATA_CONFIG_ENTRY = "config_entry"
 ROWS = "rows"
@@ -44,7 +44,7 @@ SHEET_SERVICE_SCHEMA = vol.All(
     {
         vol.Required(DATA_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
         vol.Optional(WORKSHEET): cv.string,
-        vol.Optional(ADD_DATETIME, default=True): cv.boolean,
+        vol.Optional(ADD_CREATED_COLUMN, default=True): cv.boolean,
         vol.Required(DATA): vol.Any(cv.ensure_list, [dict]),
     },
 )
@@ -71,11 +71,11 @@ def _append_to_sheet(call: ServiceCall, entry: GoogleSheetsConfigEntry) -> None:
 
     worksheet = sheet.worksheet(call.data.get(WORKSHEET, sheet.sheet1.title))
     columns: list[str] = next(iter(worksheet.get_values("A1:ZZ1")), [])
-    add_timestamp = call.data[ADD_DATETIME]
+    add_created_column = call.data[ADD_CREATED_COLUMN]
     now = str(datetime.now())
     rows = []
     for d in call.data[DATA]:
-        row_data = ({"created": now} | d) if add_timestamp else d
+        row_data = ({"created": now} | d) if add_created_column else d
         row = [row_data.get(column, "") for column in columns]
         for key, value in row_data.items():
             if key not in columns:
