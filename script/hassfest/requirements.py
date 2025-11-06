@@ -94,6 +94,8 @@ FORBIDDEN_PACKAGES = {
     "async-timeout": "be replaced by asyncio.timeout (Python 3.11+)",
     # Only needed for tests
     "codecov": "not be a runtime dependency",
+    # Only needed for docs
+    "mkdocs": "not be a runtime dependency",
     # Does blocking I/O and should be replaced by pyserial-asyncio-fast
     # See https://github.com/home-assistant/core/pull/116635
     "pyserial-asyncio": "be replaced by pyserial-asyncio-fast",
@@ -101,6 +103,8 @@ FORBIDDEN_PACKAGES = {
     "pytest": "not be a runtime dependency",
     # Only needed for build
     "setuptools": "not be a runtime dependency",
+    # Only needed for docs
+    "sphinx": "not be a runtime dependency",
     # Only needed for build
     "wheel": "not be a runtime dependency",
 }
@@ -170,11 +174,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # pyhive-integration > unasync > setuptools
         "unasync": {"setuptools"}
     },
-    "homeassistant_hardware": {
-        # https://github.com/zigpy/zigpy/issues/1604
-        # universal-silabs-flasher > zigpy > pyserial-asyncio
-        "zigpy": {"pyserial-asyncio"},
-    },
     "homewizard": {"python-homewizard-energy": {"async-timeout"}},
     "imeon_inverter": {"imeon-inverter-api": {"async-timeout"}},
     "influxdb": {
@@ -242,7 +241,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     },
     "ring": {"ring-doorbell": {"async-timeout"}},
     "rmvtransport": {"pyrmvtransport": {"async-timeout"}},
-    "roborock": {"python-roborock": {"async-timeout"}},
     "samsungtv": {"async-upnp-client": {"async-timeout"}},
     "screenlogic": {"screenlogicpy": {"async-timeout"}},
     "sense": {"sense-energy": {"async-timeout"}},
@@ -268,9 +266,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # https://github.com/waveform80/colorzero/issues/9
         # zha > zigpy-zigate > gpiozero > colorzero > setuptools
         "colorzero": {"setuptools"},
-        # https://github.com/zigpy/zigpy/issues/1604
-        # zha > zigpy > pyserial-asyncio
-        "zigpy": {"pyserial-asyncio"},
     },
 }
 
