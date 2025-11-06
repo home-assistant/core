@@ -89,8 +89,10 @@ class NikoHomeControlClimate(NikoHomeControlEntity, ClimateEntity):
         """Update the state of the entity."""
         if self._action.state == NikoHomeControlThermostatModes.OFF:
             self._attr_hvac_mode = HVACMode.OFF
+            self._attr_preset_mode = None
         elif self._action.state == NikoHomeControlThermostatModes.COOL:
             self._attr_hvac_mode = HVACMode.COOL
+            self._attr_preset_mode = None
         else:
             self._attr_hvac_mode = HVACMode.AUTO
             self._attr_preset_mode = THERMOSTAT_MODES[self._action.state]
