@@ -143,6 +143,40 @@ def find_dpcode(
 
 
 @dataclass
+class DPCodeReader:
+    """Base DPCode reader.
+
+    Used to read raw values from a device for a specific DPCode.
+
+    `read_device_value` can be overridden to implement custom parsing logic.
+    """
+
+    dpcode: str
+
+    def _read_device_value_raw(self, device: CustomerDevice) -> Any | None:
+        """Read the device value for the dpcode."""
+        return device.status.get(self.dpcode)
+
+    def read_device_value(self, device: CustomerDevice) -> Any | None:
+        """Read the device value for the dpcode."""
+        return self._read_device_value_raw(device)
+
+
+@dataclass
+class BooleanDPCodeReader(DPCodeReader):
+    """Simple parser for boolean values.
+
+    Supports True/False only.
+    """
+
+    def read_device_value(self, device: CustomerDevice) -> bool | None:
+        """Read the device value for the dpcode."""
+        if (raw_value := self._read_device_value_raw(device)) in (True, False):
+            return raw_value
+        return None
+
+
+@dataclass
 class IntegerTypeData:
     """Integer Type Data."""
 
