@@ -30,7 +30,7 @@ async def hass_lisbon(hass: HomeAssistant):
 
 @pytest.fixture
 async def hass_madrid(hass: HomeAssistant):
-    """Home Assistant configured for Lisbon timezone."""
+    """Home Assistant configured for Madrid timezone."""
     await hass.config.async_set_time_zone("Europe/Madrid")
     return hass
 
