@@ -80,18 +80,18 @@ class HomematicipGenericEntity(Entity):
     def __init__(
         self,
         hap: HomematicipHAP,
-        device: Group | Device,
-        post: str | None = None,
-        channel: int | None = None,
-        is_multi_channel: bool | None = False,
-        channel_real_index: int | None = None,
+        device,
+        post=None,
+        channel=None,
+        is_multi_channel=False,
+        channel_real_index=None,
     ) -> None:
         """Initialize the generic entity."""
         self._hap = hap
         self._home: AsyncHome = hap.home
-        self._device: Group | Device = device
-        self._post: str | None = post
-        self._channel: int | None = channel
+        self._device = device
+        self._post = post
+        self._channel = channel
 
         # channel_real_index represents the actual index of the devices channel.
         # Accessing a functionalChannel by the channel parameter or array index is unreliable,
