@@ -119,7 +119,7 @@ async def test_paired_depaired_devices_flow(
     for entity_entry in entity_entries:
         assert not entity_registry.async_get(entity_entry.entity_id)
 
-    # Now that all everything related to the device is removed, pair it again
+    # Now that everything related to the device is removed, pair it again
     await client.add_events(
         [
             EventMessage(
@@ -496,7 +496,7 @@ async def test_preset_modes_programs_mapping_and_functionality(
     program_keys: list[ProgramKey],
     expected_preset_modes: list[str],
 ) -> None:
-    """Test the HVAC modes to programs mapping."""
+    """Test the preset modes to programs mapping and functionality."""
     client.get_all_programs.side_effect = None
     client.get_all_programs.return_value = ArrayOfPrograms(
         [
@@ -820,7 +820,7 @@ async def test_preset_mode_feature_not_supported_on_missing_active_clean(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     program_keys: list[ProgramKey],
 ) -> None:
-    """Test that the preset modes are supported if active clean program is missing."""
+    """Test that the preset modes are not supported if active clean program is missing."""
     client.get_all_programs.side_effect = None
     client.get_all_programs.return_value = ArrayOfPrograms(
         [
