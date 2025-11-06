@@ -90,7 +90,7 @@ def find_dpcode(
 
 @dataclass(kw_only=True)
 class DeviceDataParser:
-    """Device Data Parser."""
+    """Base class for reading and converting DPCode data from Tuya devices."""
 
     dpcode: str
 
@@ -182,7 +182,10 @@ class EnumTypeData(DeviceDataParser):
     range: list[str]
 
     def read_device_value(self, device: CustomerDevice) -> str | None:
-        """Read the device value for the dpcode."""
+        """Read the device value for the dpcode.
+
+        Values outside of the defined range will return None.
+        """
         if (raw_value := self._read_device_value_raw(device)) in self.range:
             return raw_value
         return None
