@@ -1,7 +1,6 @@
 """Support for media browsing."""
 
 import asyncio
-import contextlib
 import logging
 
 from homeassistant.components import media_source
@@ -221,15 +220,14 @@ async def library_payload(hass):
     for child in library_info.children:
         child.thumbnail = "https://brands.home-assistant.io/_/kodi/logo.png"
 
-    with contextlib.suppress(media_source.BrowseError):
-        item = await media_source.async_browse_media(
-            hass, None, content_filter=media_source_content_filter
-        )
-        # If domain is None, it's overview of available sources
-        if item.domain is None:
-            library_info.children.extend(item.children)
-        else:
-            library_info.children.append(item)
+    item = await media_source.async_browse_media(
+        hass, None, content_filter=media_source_content_filter
+    )
+    # If domain is None, it's overview of available sources
+    if item.domain is None:
+        library_info.children.extend(item.children)
+    else:
+        library_info.children.append(item)
 
     return library_info
 
