@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Mapping
 from functools import partial
-import logging
 from typing import Any
 
 from devolo_home_control_api.exceptions.gateway import GatewayOfflineError
@@ -101,10 +100,6 @@ def configure_mydevolo(conf: Mapping[str, Any]) -> Mydevolo:
     mydevolo = Mydevolo()
     mydevolo.user = conf[CONF_USERNAME]
     mydevolo.password = conf[CONF_PASSWORD]
-
-    # With gateways being accessible locally only, there is not need to warn here.
-    logging.getLogger("Mydevolo").setLevel(logging.ERROR)
-
     return mydevolo
 
 
