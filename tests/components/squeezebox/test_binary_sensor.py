@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.squeezebox.const import PLAYER_UPDATE_INTERVAL
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
@@ -64,6 +65,32 @@ async def mock_player(
     return (await lms.async_get_players())[0]
 
 
+async def test_player_alarm_sensors_device_class(
+    hass: HomeAssistant,
+    mock_player: MagicMock,
+) -> None:
+    """Test player alarm binary sensors have correct device class."""
+
+    # Test alarm upcoming sensor device class
+    upcoming_state = hass.states.get("binary_sensor.none_alarm_upcoming")
+    assert upcoming_state is not None
+    assert upcoming_state.attributes.get("device_class") is None
+
+    # Test alarm active sensor device class
+    active_state = hass.states.get("binary_sensor.none_alarm_active")
+    assert active_state is not None
+    assert (
+        active_state.attributes.get("device_class") == BinarySensorDeviceClass.RUNNING
+    )
+
+    # Test alarm snooze sensor device class
+    snooze_state = hass.states.get("binary_sensor.none_alarm_snoozed")
+    assert snooze_state is not None
+    assert (
+        snooze_state.attributes.get("device_class") == BinarySensorDeviceClass.RUNNING
+    )
+
+
 async def test_player_alarm_sensors_state(
     hass: HomeAssistant,
     mock_player: MagicMock,
@@ -103,7 +130,3 @@ async def test_player_alarm_sensors_state(
     active_state = hass.states.get("binary_sensor.none_alarm_active")
     assert active_state is not None
     assert active_state.state == STATE_ON
-
-    snooze_state = hass.states.get("binary_sensor.none_alarm_snoozed")
-    assert snooze_state is not None
-    assert snooze_state.state == STATE_ON
