@@ -360,9 +360,14 @@ async def async_setup_entry(
             device = manager.device_map[device_id]
             if descriptions := SELECTS.get(device.category):
                 entities.extend(
-                    TuyaSelectEntity(device, manager, description)
+                    TuyaSelectEntity(device, manager, description, enum_type)
                     for description in descriptions
                     if description.key in device.status
+                    and (
+                        enum_type := find_dpcode(
+                            description.key, dptype=DPType.ENUM, prefer_function=True
+                        )
+                    )
                 )
 
         async_add_entities(entities)
@@ -384,28 +389,20 @@ class TuyaSelectEntity(TuyaEntity, SelectEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: SelectEntityDescription,
+        data_parser: EnumTypeData,
     ) -> None:
         """Init Tuya sensor."""
         super().__init__(device, device_manager)
         self.entity_description = description
         self._attr_unique_id = f"{super().unique_id}{description.key}"
-
-        self._attr_options = []
-        if enum_type := find_dpcode(
-            self.device, description.key, dptype=DPType.ENUM, prefer_function=True
-        ):
-            self._attr_options = enum_type.range
-            self._enum_type = enum_type
+        self._data_parser = data_parser
+        self._attr_options = data_parser.range
 
     @property
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
-        if self._enum_type is None:
-            return None
-        return self._enum_type.read_device_value(self.device)
+        return self._data_parser.read_device_value(self.device)
 
     def select_option(self, option: str) -> None:
         """Change the selected option."""
-        if self._enum_type is None:
-            return
-        self._send_command([{"code": self._enum_type.dpcode, "value": option}])
+        self._send_command([{"code": self._data_parser.dpcode, "value": option}])
