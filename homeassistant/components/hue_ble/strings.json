@@ -9,6 +9,7 @@
       "invalid_auth": "Invalid authentication. Ensure the light is [made discoverable to voice assistants]({url_pairing_mode}).",
       "no_scanners": "No Bluetooth scanners are available to search for the light.",
       "not_found": "The light was not found.",
+      "not_supported": "The light is not a supported model.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {

@@ -15,7 +15,6 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import color as color_util
@@ -36,6 +35,21 @@ async def async_setup_entry(
 
     light = config_entry.runtime_data
     async_add_entities([HueBLELight(light)])
+
+
+def get_avaliable_color_modes(api: HueBleLight) -> set[ColorMode]:
+    """Return a set of available color modes."""
+    color_modes = set()
+    if api.supports_colour_xy:
+        color_modes.add(ColorMode.XY)
+    if api.supports_colour_temp:
+        color_modes.add(ColorMode.COLOR_TEMP)
+    if api.supports_brightness and len(color_modes) == 0:
+        color_modes.add(ColorMode.BRIGHTNESS)
+    if api.supports_on_off and len(color_modes) == 0:
+        color_modes.add(ColorMode.ONOFF)
+
+    return color_modes
 
 
 class HueBLELight(LightEntity):
@@ -66,17 +80,7 @@ class HueBLELight(LightEntity):
             model_id=light.model,
             sw_version=light.firmware,
         )
-        self._attr_supported_color_modes: set[ColorMode] = set()
-        if light.supports_colour_xy:
-            self._attr_supported_color_modes.add(ColorMode.XY)
-        if light.supports_colour_temp:
-            self._attr_supported_color_modes.add(ColorMode.COLOR_TEMP)
-        if light.supports_brightness and len(self._attr_supported_color_modes) == 0:
-            self._attr_supported_color_modes.add(ColorMode.BRIGHTNESS)
-        if light.supports_on_off and len(self._attr_supported_color_modes) == 0:
-            self._attr_supported_color_modes.add(ColorMode.ONOFF)
-        if len(self._attr_supported_color_modes) == 0:
-            raise HomeAssistantError("Light does not support any known color modes")
+        self._attr_supported_color_modes = get_avaliable_color_modes(self._api)
         self._update_updatable_attributes()
 
     async def async_added_to_hass(self) -> None:

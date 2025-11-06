@@ -20,6 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN, URL_PAIRING_MODE
+from .light import get_avaliable_color_modes
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,6 +52,9 @@ async def validate_input(hass: HomeAssistant, address: str) -> Error | None:
 
         if not light.connected:
             return Error.CANNOT_CONNECT
+
+        if len(get_avaliable_color_modes(light)) == 0:
+            return Error.NOT_SUPPORTED
 
         _, errors = await light.poll_state()
         if len(errors) != 0:
@@ -139,6 +143,9 @@ class Error(Enum):
 
     NOT_FOUND = "not_found"
     """Error to indicate the light could not be found."""
+
+    NOT_SUPPORTED = "not_supported"
+    """Error to indicate that the light is not a supported model."""
 
     UNKNOWN = "unknown"
     """Error to indicate that the issue is unknown."""
