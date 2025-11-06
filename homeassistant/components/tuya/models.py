@@ -146,9 +146,9 @@ def find_dpcode(
 class DPCodeReader:
     """Base DPCode reader.
 
-    Used to read raw values from a device for a specific DPCode.
+    Used to read and convert raw values from a device for a specific DPCode.
 
-    `read_device_value` can be overridden to implement custom parsing logic.
+    `read_device_value` must be overridden to implement custom parsing logic.
     """
 
     dpcode: str
@@ -159,7 +159,7 @@ class DPCodeReader:
 
     def read_device_value(self, device: CustomerDevice) -> Any | None:
         """Read the device value for the dpcode."""
-        return self._read_device_value_raw(device)
+        raise NotImplementedError("read_device_value must be implemented")
 
 
 @dataclass
