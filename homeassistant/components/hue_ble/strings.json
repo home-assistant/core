@@ -1,9 +1,8 @@
 {
   "config": {
-    "step": {
-      "confirm": {
-        "description": "Do you want to set up {name} ({mac})?. Make sure the light is [made discoverable to voice assistants]({url_pairing_mode})."
-      }
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "not_implemented": "This integration can only be setup via discovery."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -12,9 +11,10 @@
       "not_found": "The light was not found.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "not_implemented": "This integration can only be setup via discovery."
+    "step": {
+      "confirm": {
+        "description": "Do you want to set up {name} ({mac})?. Make sure the light is [made discoverable to voice assistants]({url_pairing_mode})."
+      }
     }
   }
 }
