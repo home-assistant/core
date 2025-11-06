@@ -26,6 +26,15 @@ from tests.common import async_call_logger_set_level, async_fire_time_changed
 from tests.typing import ClientSessionGenerator
 
 
+@pytest.fixture(autouse=True)
+def disable_http_server() -> None:
+    """Override the global disable_http_server fixture with an empty fixture.
+
+    This allows the HTTP server to start in tests that need it.
+    """
+    return
+
+
 def _setup_broken_ssl_pem_files(tmp_path: Path) -> tuple[Path, Path]:
     test_dir = tmp_path / "test_broken_ssl"
     test_dir.mkdir()
