@@ -628,3 +628,41 @@
     'title': 'Xbox / GSR Ae / Blue Dragon / Screenshots',
   })
 # ---
+# name: test_browse_media_accounts
+  dict({
+    'can_expand': True,
+    'can_play': False,
+    'can_search': False,
+    'children': list([
+      dict({
+        'can_expand': True,
+        'can_play': False,
+        'can_search': False,
+        'children_media_class': None,
+        'media_class': <MediaClass.DIRECTORY: 'directory'>,
+        'media_content_id': 'media-source://xbox/271958441785640',
+        'media_content_type': <MediaClass.DIRECTORY: 'directory'>,
+        'thumbnail': 'https://images-eds-ssl.xboxlive.com/image?url=wHwbXKif8cus8csoZ03RW_ES.ojiJijNBGRVUbTnZKsoCCCkjlsEJrrMqDkYqs3M0aLOK2kxE9mbLm9M2.R0stAQYoDsGCDJxqDzG9WF3oa4rOCjEK7DbZXdBmBWnMrfErA3M_Q4y_mUTEQLqSAEeYFGlGeCXYsccnQMvEecxRg-&format=png',
+        'title': 'GSR Ae',
+      }),
+      dict({
+        'can_expand': True,
+        'can_play': False,
+        'can_search': False,
+        'children_media_class': None,
+        'media_class': <MediaClass.DIRECTORY: 'directory'>,
+        'media_content_id': 'media-source://xbox/277923030577271',
+        'media_content_type': <MediaClass.DIRECTORY: 'directory'>,
+        'thumbnail': 'https://images-eds-ssl.xboxlive.com/image?url=z951ykn43p4FqWbbFvR2Ec.8vbDhj8G2Xe7JngaTToBrrCmIEEXHC9UNrdJ6P7KIwuPiuIs6TLDV4WsQAGzSwgbaLlf_CiIdb0jJCiBao9CB40sjycuA5l0Jf.hfuP8l&format=png',
+        'title': 'Iqnavs',
+      }),
+    ]),
+    'children_media_class': <MediaClass.DIRECTORY: 'directory'>,
+    'media_class': <MediaClass.DIRECTORY: 'directory'>,
+    'media_content_id': 'media-source://xbox',
+    'media_content_type': <MediaClass.IMAGE: 'image'>,
+    'not_shown': 0,
+    'thumbnail': None,
+    'title': 'Xbox Game Media',
+  })
+# ---
