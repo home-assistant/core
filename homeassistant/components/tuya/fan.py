@@ -238,7 +238,7 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
         """Return the current direction of the fan."""
         if (
             self._direction is None
-            or (value := self._direction.read_device_value(self.device)) is None
+            or (value := self.device.status.get(self._direction.dpcode)) is None
         ):
             return None
 
@@ -273,7 +273,9 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
             return int(self._speed.remap_value_to(value, 1, 100))
 
         if self._speeds is not None:
-            if (value := self._speeds.read_device_value(self.device)) is None:
+            if (
+                value := self.device.status.get(self._speeds.dpcode)
+            ) is None or value not in self._speeds.range:
                 return None
             return ordered_list_item_to_percentage(self._speeds.range, value)
 

@@ -121,9 +121,7 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
     @property
     def fan_speed(self) -> str | None:
         """Return the fan speed of the vacuum cleaner."""
-        if not self._fan_speed:
-            return None
-        return self._fan_speed.read_device_value(self.device)
+        return self.device.status.get(DPCode.SUCTION)
 
     @property
     def activity(self) -> VacuumActivity | None:
@@ -161,9 +159,7 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
 
     def set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
-        if not self._fan_speed:
-            return
-        self._send_command([{"code": self._fan_speed.dpcode, "value": fan_speed}])
+        self._send_command([{"code": DPCode.SUCTION, "value": fan_speed}])
 
     def send_command(
         self,

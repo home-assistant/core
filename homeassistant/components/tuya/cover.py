@@ -265,7 +265,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         # Having motor_reverse_mode == "back" cancels the inversion
         return not (
             self._motor_reverse_mode_enum
-            and self._motor_reverse_mode_enum.read_device_value(self.device) == "back"
+            and self.device.status.get(self._motor_reverse_mode_enum.dpcode) == "back"
         )
 
     @property

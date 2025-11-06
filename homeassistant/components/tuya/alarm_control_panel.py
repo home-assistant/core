@@ -150,7 +150,7 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
         # The 'mode' doesn't change, and stays as 'arm' or 'home'.
         if (
             self._master_state is not None
-            and self._master_state.read_device_value(self.device) == State.ALARM
+            and self.device.status.get(self._master_state.dpcode) == State.ALARM
         ):
             # Only report as triggered if NOT a battery warning
             if (
@@ -168,7 +168,7 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
         if (
             self._master_state is not None
             and self._alarm_msg_dpcode is not None
-            and self._master_state.read_device_value(self.device) == State.ALARM
+            and self.device.status.get(self._master_state.dpcode) == State.ALARM
             and (encoded_msg := self.device.status.get(self._alarm_msg_dpcode))
         ):
             return b64decode(encoded_msg).decode("utf-16be")
