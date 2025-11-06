@@ -1,4 +1,13 @@
 # serializer version: 1
+# name: test_binary_sensor[System Monitor Charging - attributes]
+  ReadOnlyDict({
+    'device_class': 'battery_charging',
+    'friendly_name': 'System Monitor Charging',
+  })
+# ---
+# name: test_binary_sensor[System Monitor Charging - state]
+  'off'
+# ---
 # name: test_binary_sensor[System Monitor Process pip - attributes]
   ReadOnlyDict({
     'device_class': 'running',

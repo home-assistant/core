@@ -1,4 +1,25 @@
 # serializer version: 1
+# name: test_sensor[System Monitor Battery - attributes]
+  ReadOnlyDict({
+    'device_class': 'battery',
+    'friendly_name': 'System Monitor Battery',
+    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor[System Monitor Battery - state]
+  '93'
+# ---
+# name: test_sensor[System Monitor Battery empty - attributes]
+  ReadOnlyDict({
+    'device_class': 'timestamp',
+    'friendly_name': 'System Monitor Battery empty',
+    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+  })
+# ---
+# name: test_sensor[System Monitor Battery empty - state]
+  '2024-02-24T19:37:00+00:00'
+# ---
 # name: test_sensor[System Monitor Disk free / - attributes]
   ReadOnlyDict({
     'device_class': 'data_size',
@@ -371,4 +392,24 @@
 # ---
 # name: test_sensor[System Monitor Swap use - state]
   '60.0'
+# ---
+# name: test_sensor[System Monitor another-fan fan speed - attributes]
+  ReadOnlyDict({
+    'friendly_name': 'System Monitor another-fan fan speed',
+    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    'unit_of_measurement': 'rpm',
+  })
+# ---
+# name: test_sensor[System Monitor another-fan fan speed - state]
+  '1300'
+# ---
+# name: test_sensor[System Monitor cpu-fan fan speed - attributes]
+  ReadOnlyDict({
+    'friendly_name': 'System Monitor cpu-fan fan speed',
+    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    'unit_of_measurement': 'rpm',
+  })
+# ---
+# name: test_sensor[System Monitor cpu-fan fan speed - state]
+  '1200'
 # ---

@@ -9,7 +9,7 @@ import os
 from typing import TYPE_CHECKING, Any, NamedTuple
 
 from psutil import Process
-from psutil._common import sdiskusage, shwtemp, snetio, snicaddr, sswap
+from psutil._common import sbattery, sdiskusage, shwtemp, snetio, snicaddr, sswap
 import psutil_home_assistant as ha_psutil
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -22,6 +22,7 @@ from .const import CONF_PROCESS, PROCESS_ERRORS
 
 if TYPE_CHECKING:
     from . import SystemMonitorConfigEntry
+from .util import read_fan_speed
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,9 +32,11 @@ class SensorData:
     """Sensor data."""
 
     addresses: dict[str, list[snicaddr]]
+    battery: sbattery | None
     boot_time: datetime
     cpu_percent: float | None
     disk_usage: dict[str, sdiskusage]
+    fan_speed: dict[str, int]
     io_counters: dict[str, snetio]
     load: tuple[float, float, float]
     memory: VirtualMemory
@@ -50,17 +53,23 @@ class SensorData:
         disk_usage = None
         if self.disk_usage:
             disk_usage = {k: str(v) for k, v in self.disk_usage.items()}
+        fan_speed = None
+        if self.fan_speed:
+            fan_speed = {k: str(v) for k, v in self.fan_speed.items()}
         io_counters = None
         if self.io_counters:
             io_counters = {k: str(v) for k, v in self.io_counters.items()}
         temperatures = None
         if self.temperatures:
             temperatures = {k: str(v) for k, v in self.temperatures.items()}
+
         return {
             "addresses": addresses,
+            "battery": str(self.battery),
             "boot_time": str(self.boot_time),
             "cpu_percent": str(self.cpu_percent),
             "disk_usage": disk_usage,
+            "fan_speed": fan_speed,
             "io_counters": io_counters,
             "load": str(self.load),
             "memory": str(self.memory),
@@ -125,8 +134,10 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
         return {
             **_disk_defaults,
             ("addresses", ""): set(),
+            ("battery", ""): set(),
             ("boot", ""): set(),
             ("cpu_percent", ""): set(),
+            ("fan_speed", ""): set(),
             ("io_counters", ""): set(),
             ("load", ""): set(),
             ("memory", ""): set(),
@@ -154,9 +165,11 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
         self._initial_update = False
         return SensorData(
             addresses=_data["addresses"],
+            battery=_data["battery"],
             boot_time=_data["boot_time"],
             cpu_percent=cpu_percent,
             disk_usage=_data["disks"],
+            fan_speed=_data["fan_speed"],
             io_counters=_data["io_counters"],
             load=load,
             memory=_data["memory"],
@@ -255,10 +268,29 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
             except AttributeError:
                 _LOGGER.debug("OS does not provide temperature sensors")
 
+        fan_speed: dict[str, int] = {}
+        if self.update_subscribers[("fan_speed", "")] or self._initial_update:
+            try:
+                fan_sensors = self._psutil.sensors_fans()
+                fan_speed = read_fan_speed(fan_sensors)
+                _LOGGER.debug("fan_speed: %s", fan_speed)
+            except AttributeError:
+                _LOGGER.debug("OS does not provide fan sensors")
+
+        battery: sbattery | None = None
+        if self.update_subscribers[("battery", "")] or self._initial_update:
+            try:
+                battery = self._psutil.sensors_battery()
+                _LOGGER.debug("battery: %s", battery)
+            except AttributeError:
+                _LOGGER.debug("OS does not provide battery sensors")
+
         return {
             "addresses": addresses,
+            "battery": battery,
             "boot_time": self.boot_time,
             "disks": disks,
+            "fan_speed": fan_speed,
             "io_counters": io_counters,
             "memory": memory,
             "process_fds": process_fds,

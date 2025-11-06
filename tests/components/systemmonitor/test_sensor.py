@@ -23,6 +23,7 @@ from .conftest import MockProcess
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
+@pytest.mark.freeze_time("2024-02-24 15:00:00", tz_offset=0)
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor(
     hass: HomeAssistant,
@@ -543,7 +544,7 @@ async def test_remove_obsolete_entities(
                 mock_added_config_entry.entry_id
             )
         )
-        == 39
+        == 44
     )
 
     entity_registry.async_update_entity(
@@ -584,7 +585,7 @@ async def test_remove_obsolete_entities(
                 mock_added_config_entry.entry_id
             )
         )
-        == 40
+        == 45
     )
 
     assert (
