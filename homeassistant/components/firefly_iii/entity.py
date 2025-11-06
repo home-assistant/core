@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from pyfirefly.models import Account, Category
+from pyfirefly.models import Account, Budget, Category
 from yarl import URL
 
 from homeassistant.const import CONF_URL
@@ -82,4 +82,30 @@ class FireflyCategoryBaseEntity(FireflyBaseEntity):
         )
         self._attr_unique_id = (
             f"{coordinator.config_entry.unique_id}_category_{category.id}_{key}"
+        )
+
+
+class FireflyBudgetBaseEntity(FireflyBaseEntity):
+    """Base class for Firefly III budget entity."""
+
+    def __init__(
+        self,
+        coordinator: FireflyDataUpdateCoordinator,
+        budget: Budget,
+        key: str,
+    ) -> None:
+        """Initialize a Firefly budget entity."""
+        super().__init__(coordinator)
+        self._budget = budget
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            manufacturer=MANUFACTURER,
+            name=budget.attributes.name,
+            configuration_url=f"{URL(coordinator.config_entry.data[CONF_URL])}/budgets/show/{budget.id}",
+            identifiers={
+                (DOMAIN, f"{coordinator.config_entry.entry_id}_budget_{budget.id}")
+            },
+        )
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.unique_id}_budget_{budget.id}_{key}"
         )

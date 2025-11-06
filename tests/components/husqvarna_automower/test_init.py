@@ -35,7 +35,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 ADDITIONAL_NUMBER_ENTITIES = 1
 ADDITIONAL_SENSOR_ENTITIES = 2
 ADDITIONAL_SWITCH_ENTITIES = 1
-NUMBER_OF_ENTITIES_MOWER_2 = 11
+NUMBER_OF_ENTITIES_MOWER_2 = 12
 
 
 async def test_load_unload_entry(

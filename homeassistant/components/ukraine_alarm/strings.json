@@ -1,19 +1,19 @@
 {
   "config": {
     "abort": {
-      "max_regions": "Max 5 regions can be configured",
       "already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
-      "rate_limit": "Too much requests",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]",
-      "timeout": "[%key:common::config_flow::error::timeout_connect%]"
+      "max_regions": "Max 5 regions can be configured",
+      "rate_limit": "Too much requests",
+      "timeout": "[%key:common::config_flow::error::timeout_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
-      "user": {
+      "community": {
         "data": {
-          "region": "Region"
+          "region": "[%key:component::ukraine_alarm::config::step::user::data::region%]"
         },
-        "description": "Choose state to monitor"
+        "description": "If you want to monitor not only state and district, choose its specific community"
       },
       "district": {
         "data": {
@@ -21,24 +21,18 @@
         },
         "description": "If you want to monitor not only state, choose its specific district"
       },
-      "community": {
+      "user": {
         "data": {
-          "region": "[%key:component::ukraine_alarm::config::step::user::data::region%]"
+          "region": "Region"
         },
-        "description": "If you want to monitor not only state and district, choose its specific community"
+        "description": "Choose state to monitor"
       }
     }
   },
   "entity": {
     "binary_sensor": {
-      "unknown": {
-        "name": "Unknown"
-      },
       "air": {
         "name": "Air"
-      },
-      "urban_fights": {
-        "name": "Urban fights"
       },
       "artillery": {
         "name": "Artillery"
@@ -48,6 +42,12 @@
       },
       "nuclear": {
         "name": "Nuclear"
+      },
+      "unknown": {
+        "name": "Unknown"
+      },
+      "urban_fights": {
+        "name": "Urban fights"
       }
     }
   }

@@ -36,6 +36,10 @@ DOMAIN: Final = "shelly"
 
 LOGGER: Logger = getLogger(__package__)
 
+# BLE provisioning
+PROVISIONING_TIMEOUT: Final = 35  # 35 seconds to wait for device to connect to WiFi
+CONF_SSID: Final = "ssid"
+
 CONF_COAP_PORT: Final = "coap_port"
 FIRMWARE_PATTERN: Final = re.compile(r"^(\d{8})")
 

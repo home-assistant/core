@@ -1,4 +1,35 @@
 # serializer version: 1
+# name: test_device_registry[18yvbamhgkjc]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        '18yvbamhgkjc',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Interruptor Zigbee',
+    'model_id': 'hmabvy81',
+    'name': 'Interruptor',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[1nw1rysgyj8th1l5qbnxw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -2748,7 +2779,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart Switch (unsupported)',
+    'model': 'Smart Switch',
     'model_id': 'uenof8jd',
     'name': 'Smart Switch',
     'name_by_user': None,
@@ -4487,6 +4518,37 @@
     'model': 'Smart Smoke Alarm',
     'model_id': 'gf9dejhmzffgdyfj',
     'name': ' Smoke detector upstairs ',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_registry[jgsopsvzh2ec3itjzc]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'jgsopsvzh2ec3itjzc',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Osprey Smart Plug',
+    'model_id': 'jti3ce2hzvsposgj',
+    'name': 'Dehumidifier ',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
@@ -7215,6 +7277,37 @@
     'model': 'Smart Socket',
     'model_id': 'wifvoilfrqeo6hvu',
     'name': 'Licht drucker',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_registry[vADxMzNytofrgbm4zc]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'vADxMzNytofrgbm4zc',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Smart Plug',
+    'model_id': '4mbgrfotyNzMxDAv',
+    'name': 'Air Purifier ',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,

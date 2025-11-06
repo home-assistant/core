@@ -162,6 +162,7 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
         self._entry = entry
         self._client = entry.runtime_data
         self._attr_assumed_state = True
+        self._unavailable_logged = False
         self._device_name = entry.title
         self._attr_unique_id = entry.unique_id
         self._sources = entry.options.get(CONF_SOURCES)
@@ -348,19 +349,31 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
             ):
                 self._source_list["Live TV"] = app
 
+    def _set_availability(self, available: bool) -> None:
+        """Set availability and log changes only once."""
+        self._attr_available = available
+        if not available and not self._unavailable_logged:
+            _LOGGER.info("LG webOS TV entity %s is unavailable", self.entity_id)
+            self._unavailable_logged = True
+        elif available and self._unavailable_logged:
+            _LOGGER.info("LG webOS TV entity %s is back online", self.entity_id)
+            self._unavailable_logged = False
+
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     async def async_update(self) -> None:
         """Connect."""
         if self._client.is_connected():
             return
 
-        with suppress(*WEBOSTV_EXCEPTIONS):
-            try:
-                await self._client.connect()
-            except WebOsTvPairError:
-                self._entry.async_start_reauth(self.hass)
-            else:
-                update_client_key(self.hass, self._entry)
+        try:
+            await self._client.connect()
+        except WEBOSTV_EXCEPTIONS:
+            self._set_availability(bool(self._turn_on))
+        except WebOsTvPairError:
+            self._entry.async_start_reauth(self.hass)
+        else:
+            self._set_availability(True)
+            update_client_key(self.hass, self._entry)
 
     @property
     def supported_features(self) -> MediaPlayerEntityFeature:

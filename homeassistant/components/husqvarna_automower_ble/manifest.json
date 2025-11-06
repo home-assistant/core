@@ -3,8 +3,8 @@
   "name": "Husqvarna Automower BLE",
   "bluetooth": [
     {
-      "service_uuid": "98bd0001-0b0e-421a-84e5-ddbf75dc6de4",
-      "connectable": true
+      "connectable": true,
+      "service_uuid": "98bd0001-0b0e-421a-84e5-ddbf75dc6de4"
     }
   ],
   "codeowners": ["@alistair23"],

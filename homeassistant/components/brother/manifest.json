@@ -11,8 +11,8 @@
   "requirements": ["brother==5.1.1"],
   "zeroconf": [
     {
-      "type": "_printer._tcp.local.",
-      "name": "brother*"
+      "name": "brother*",
+      "type": "_printer._tcp.local."
     }
   ]
 }

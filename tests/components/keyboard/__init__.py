@@ -1,1 +1,0 @@
-"""Keyboard tests."""

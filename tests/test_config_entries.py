@@ -8887,7 +8887,7 @@ async def test_state_cache_is_cleared_on_entry_disable(hass: HomeAssistant) -> N
     "source",
     [config_entries.SOURCE_REAUTH, config_entries.SOURCE_RECONFIGURE],
 )
-async def test_create_entry_reauth_reconfigure(
+async def test_create_entry_reauth_reconfigure_fails(
     hass: HomeAssistant,
     source: str,
     original_unique_id: str | None,
@@ -8937,25 +8937,9 @@ async def test_create_entry_reauth_reconfigure(
 
     with (
         mock_config_flow("test", TestFlow),
-        patch.object(frame, "_REPORTED_INTEGRATIONS", set()),
+        pytest.raises(HomeAssistantError),
     ):
-        result = await getattr(entry, f"start_{source}_flow")(hass)
-        await hass.async_block_till_done()
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-
-    entries = hass.config_entries.async_entries("test")
-    assert len(entries) == count
-    if count == 1:
-        # Show that the previous entry got binned and recreated
-        assert entries[0].entry_id != entry.entry_id
-
-    assert (
-        f"Detected that integration 'test' creates a new entry in a '{source}' flow, "
-        "when it is expected to update an existing entry and abort. This will stop "
-        "working in Home Assistant 2025.11, please create a bug report at "
-        "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue+"
-        "label%3A%22integration%3A+test%22"
-    ) in caplog.text
+        await getattr(entry, f"start_{source}_flow")(hass)
 
 
 async def test_async_update_entry_unique_id_collision(

@@ -281,7 +281,7 @@
     'state': 'on',
   })
 # ---
-# name: test_lights[inovelli_vtm30][light.white_series_onoff_switch_rgb_indicator-entry]
+# name: test_lights[inovelli_vtm30][light.white_series_onoff_switch_light_rgb_indicator-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -304,7 +304,7 @@
     'disabled_by': None,
     'domain': 'light',
     'entity_category': None,
-    'entity_id': 'light.white_series_onoff_switch_rgb_indicator',
+    'entity_id': 'light.white_series_onoff_switch_light_rgb_indicator',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -316,7 +316,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'RGB Indicator',
+    'original_name': 'Light (RGB Indicator)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -326,14 +326,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_lights[inovelli_vtm30][light.white_series_onoff_switch_rgb_indicator-state]
+# name: test_lights[inovelli_vtm30][light.white_series_onoff_switch_light_rgb_indicator-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'brightness': None,
       'color_mode': None,
       'color_temp': None,
       'color_temp_kelvin': None,
-      'friendly_name': 'White Series OnOff Switch RGB Indicator',
+      'friendly_name': 'White Series OnOff Switch Light (RGB Indicator)',
       'hs_color': None,
       'max_color_temp_kelvin': 1000000,
       'max_mireds': 66666,
@@ -349,7 +349,7 @@
       'xy_color': None,
     }),
     'context': <ANY>,
-    'entity_id': 'light.white_series_onoff_switch_rgb_indicator',
+    'entity_id': 'light.white_series_onoff_switch_light_rgb_indicator',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

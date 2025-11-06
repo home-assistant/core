@@ -1,38 +1,37 @@
 {
-  "title": "Media player",
   "device_automation": {
     "condition_type": {
       "is_buffering": "{entity_name} is buffering",
-      "is_on": "[%key:common::device_automation::condition_type::is_on%]",
-      "is_off": "[%key:common::device_automation::condition_type::is_off%]",
       "is_idle": "{entity_name} is idle",
+      "is_off": "[%key:common::device_automation::condition_type::is_off%]",
+      "is_on": "[%key:common::device_automation::condition_type::is_on%]",
       "is_paused": "{entity_name} is paused",
       "is_playing": "{entity_name} is playing"
     },
+    "extra_fields": {
+      "for": "[%key:common::device_automation::extra_fields::for%]"
+    },
     "trigger_type": {
       "buffering": "{entity_name} starts buffering",
-      "turned_on": "[%key:common::device_automation::trigger_type::turned_on%]",
-      "turned_off": "[%key:common::device_automation::trigger_type::turned_off%]",
+      "changed_states": "[%key:common::device_automation::trigger_type::changed_states%]",
       "idle": "{entity_name} becomes idle",
       "paused": "{entity_name} is paused",
       "playing": "{entity_name} starts playing",
-      "changed_states": "[%key:common::device_automation::trigger_type::changed_states%]"
-    },
-    "extra_fields": {
-      "for": "[%key:common::device_automation::extra_fields::for%]"
+      "turned_off": "[%key:common::device_automation::trigger_type::turned_off%]",
+      "turned_on": "[%key:common::device_automation::trigger_type::turned_on%]"
     }
   },
   "entity_component": {
     "_": {
       "name": "[%key:component::media_player::title%]",
       "state": {
+        "buffering": "Buffering",
+        "idle": "[%key:common::state::idle%]",
         "off": "[%key:common::state::off%]",
         "on": "[%key:common::state::on%]",
-        "playing": "Playing",
         "paused": "[%key:common::state::paused%]",
-        "idle": "[%key:common::state::idle%]",
-        "standby": "[%key:common::state::standby%]",
-        "buffering": "Buffering"
+        "playing": "Playing",
+        "standby": "[%key:common::state::standby%]"
       },
       "state_attributes": {
         "app_id": {
@@ -50,8 +49,8 @@
         "is_volume_muted": {
           "name": "Muted",
           "state": {
-            "true": "[%key:common::state::yes%]",
-            "false": "[%key:common::state::no%]"
+            "false": "[%key:common::state::no%]",
+            "true": "[%key:common::state::yes%]"
           }
         },
         "media_album_artist": {
@@ -109,17 +108,17 @@
         "media_position_updated_at": {
           "name": "Position updated"
         },
-        "media_title": {
-          "name": "Title"
-        },
-        "media_track": {
-          "name": "Track"
-        },
         "media_season": {
           "name": "Season"
         },
         "media_series_title": {
           "name": "Series"
+        },
+        "media_title": {
+          "name": "Title"
+        },
+        "media_track": {
+          "name": "Track"
         },
         "repeat": {
           "name": "Repeat",
@@ -132,15 +131,9 @@
         "shuffle": {
           "name": "Shuffle",
           "state": {
-            "true": "[%key:common::state::on%]",
-            "false": "[%key:common::state::off%]"
+            "false": "[%key:common::state::off%]",
+            "true": "[%key:common::state::on%]"
           }
-        },
-        "source": {
-          "name": "Source"
-        },
-        "source_list": {
-          "name": "Available sources"
         },
         "sound_mode": {
           "name": "Sound mode"
@@ -148,224 +141,231 @@
         "sound_mode_list": {
           "name": "Available sound modes"
         },
+        "source": {
+          "name": "Source"
+        },
+        "source_list": {
+          "name": "Available sources"
+        },
         "volume_level": {
           "name": "Volume"
         }
       }
     },
-    "tv": {
-      "name": "TV"
+    "receiver": {
+      "name": "Receiver"
     },
     "speaker": {
       "name": "Speaker"
     },
-    "receiver": {
-      "name": "Receiver"
-    }
-  },
-  "services": {
-    "turn_on": {
-      "name": "[%key:common::action::turn_on%]",
-      "description": "Turns on the power of the media player."
-    },
-    "turn_off": {
-      "name": "[%key:common::action::turn_off%]",
-      "description": "Turns off the power of the media player."
-    },
-    "toggle": {
-      "name": "[%key:common::action::toggle%]",
-      "description": "Toggles a media player on/off."
-    },
-    "volume_up": {
-      "name": "Turn up volume",
-      "description": "Turns up the volume."
-    },
-    "volume_down": {
-      "name": "Turn down volume",
-      "description": "Turns down the volume."
-    },
-    "volume_mute": {
-      "name": "Mute/unmute volume",
-      "description": "Mutes or unmutes the media player.",
-      "fields": {
-        "is_volume_muted": {
-          "name": "Muted",
-          "description": "Defines whether or not it is muted."
-        }
-      }
-    },
-    "volume_set": {
-      "name": "Set volume",
-      "description": "Sets the volume level.",
-      "fields": {
-        "volume_level": {
-          "name": "Level",
-          "description": "The volume. 0 is inaudible, 1 is the maximum volume."
-        }
-      }
-    },
-    "media_play_pause": {
-      "name": "Play/Pause",
-      "description": "Toggles play/pause."
-    },
-    "media_play": {
-      "name": "Play",
-      "description": "Starts playing."
-    },
-    "media_pause": {
-      "name": "[%key:common::action::pause%]",
-      "description": "Pauses."
-    },
-    "media_stop": {
-      "name": "[%key:common::action::stop%]",
-      "description": "Stops playing."
-    },
-    "media_next_track": {
-      "name": "Next",
-      "description": "Selects the next track."
-    },
-    "media_previous_track": {
-      "name": "Previous",
-      "description": "Selects the previous track."
-    },
-    "media_seek": {
-      "name": "Seek",
-      "description": "Allows you to go to a different part of the media that is currently playing.",
-      "fields": {
-        "seek_position": {
-          "name": "Position",
-          "description": "Target position in the currently playing media. The format is platform dependent."
-        }
-      }
-    },
-    "play_media": {
-      "name": "Play media",
-      "description": "Starts playing specified media.",
-      "fields": {
-        "media": {
-          "name": "Media",
-          "description": "The media selected to play."
-        },
-        "enqueue": {
-          "name": "Enqueue",
-          "description": "If the content should be played now or be added to the queue."
-        },
-        "announce": {
-          "name": "Announce",
-          "description": "If the media should be played as an announcement."
-        }
-      }
-    },
-    "browse_media": {
-      "name": "Browse media",
-      "description": "Browses the available media.",
-      "fields": {
-        "media_content_id": {
-          "name": "Content ID",
-          "description": "The ID of the content to browse. Integration dependent."
-        },
-        "media_content_type": {
-          "name": "Content type",
-          "description": "The type of the content to browse, such as image, music, TV show, video, episode, channel, or playlist."
-        }
-      }
-    },
-    "search_media": {
-      "name": "Search media",
-      "description": "Searches the available media.",
-      "fields": {
-        "media_content_id": {
-          "name": "[%key:component::media_player::services::browse_media::fields::media_content_id::name%]",
-          "description": "[%key:component::media_player::services::browse_media::fields::media_content_id::description%]"
-        },
-        "media_content_type": {
-          "name": "[%key:component::media_player::services::browse_media::fields::media_content_type::name%]",
-          "description": "[%key:component::media_player::services::browse_media::fields::media_content_type::description%]"
-        },
-        "search_query": {
-          "name": "Search query",
-          "description": "The term to search for."
-        },
-        "media_filter_classes": {
-          "name": "Media class filter",
-          "description": "List of media classes to filter the search results by."
-        }
-      }
-    },
-    "select_source": {
-      "name": "Select source",
-      "description": "Sends the media player the command to change input source.",
-      "fields": {
-        "source": {
-          "name": "Source",
-          "description": "Name of the source to switch to. Platform dependent."
-        }
-      }
-    },
-    "select_sound_mode": {
-      "name": "Select sound mode",
-      "description": "Selects a specific sound mode.",
-      "fields": {
-        "sound_mode": {
-          "name": "Sound mode",
-          "description": "Name of the sound mode to switch to."
-        }
-      }
-    },
-    "clear_playlist": {
-      "name": "Clear playlist",
-      "description": "Removes all items from the playlist."
-    },
-    "shuffle_set": {
-      "name": "Set shuffle",
-      "description": "Enables or disables the shuffle mode.",
-      "fields": {
-        "shuffle": {
-          "name": "Shuffle mode",
-          "description": "Whether the media should be played in randomized order or not."
-        }
-      }
-    },
-    "repeat_set": {
-      "name": "Set repeat",
-      "description": "Sets the repeat mode.",
-      "fields": {
-        "repeat": {
-          "name": "Repeat mode",
-          "description": "Whether the media (one or all) should be played in a loop or not."
-        }
-      }
-    },
-    "join": {
-      "name": "Join",
-      "description": "Groups media players together for synchronous playback. Only works on supported multiroom audio systems.",
-      "fields": {
-        "group_members": {
-          "name": "Group members",
-          "description": "The players which will be synced with the playback specified in 'Targets'."
-        }
-      }
-    },
-    "unjoin": {
-      "name": "Unjoin",
-      "description": "Removes the player from a group. Only works on platforms which support player groups."
+    "tv": {
+      "name": "TV"
     }
   },
   "selector": {
     "enqueue": {
       "options": {
-        "play": "Play",
-        "next": "Play next",
         "add": "Add to queue",
+        "next": "Play next",
+        "play": "Play",
         "replace": "Play now and clear queue"
       }
     },
     "repeat": {
       "options": {
-        "off": "[%key:common::state::off%]",
         "all": "Repeat all",
+        "off": "[%key:common::state::off%]",
         "one": "Repeat one"
       }
     }
-  }
+  },
+  "services": {
+    "browse_media": {
+      "description": "Browses the available media.",
+      "fields": {
+        "media_content_id": {
+          "description": "The ID of the content to browse. Integration dependent.",
+          "name": "Content ID"
+        },
+        "media_content_type": {
+          "description": "The type of the content to browse, such as image, music, TV show, video, episode, channel, or playlist.",
+          "name": "Content type"
+        }
+      },
+      "name": "Browse media"
+    },
+    "clear_playlist": {
+      "description": "Removes all items from the playlist.",
+      "name": "Clear playlist"
+    },
+    "join": {
+      "description": "Groups media players together for synchronous playback. Only works on supported multiroom audio systems.",
+      "fields": {
+        "group_members": {
+          "description": "The players which will be synced with the playback specified in 'Targets'.",
+          "name": "Group members"
+        }
+      },
+      "name": "Join"
+    },
+    "media_next_track": {
+      "description": "Selects the next track.",
+      "name": "Next"
+    },
+    "media_pause": {
+      "description": "Pauses.",
+      "name": "[%key:common::action::pause%]"
+    },
+    "media_play": {
+      "description": "Starts playing.",
+      "name": "Play"
+    },
+    "media_play_pause": {
+      "description": "Toggles play/pause.",
+      "name": "Play/Pause"
+    },
+    "media_previous_track": {
+      "description": "Selects the previous track.",
+      "name": "Previous"
+    },
+    "media_seek": {
+      "description": "Allows you to go to a different part of the media that is currently playing.",
+      "fields": {
+        "seek_position": {
+          "description": "Target position in the currently playing media. The format is platform dependent.",
+          "name": "Position"
+        }
+      },
+      "name": "Seek"
+    },
+    "media_stop": {
+      "description": "Stops playing.",
+      "name": "[%key:common::action::stop%]"
+    },
+    "play_media": {
+      "description": "Starts playing specified media.",
+      "fields": {
+        "announce": {
+          "description": "If the media should be played as an announcement.",
+          "name": "Announce"
+        },
+        "enqueue": {
+          "description": "If the content should be played now or be added to the queue.",
+          "name": "Enqueue"
+        },
+        "media": {
+          "description": "The media selected to play.",
+          "name": "Media"
+        }
+      },
+      "name": "Play media"
+    },
+    "repeat_set": {
+      "description": "Sets the repeat mode.",
+      "fields": {
+        "repeat": {
+          "description": "Whether the media (one or all) should be played in a loop or not.",
+          "name": "Repeat mode"
+        }
+      },
+      "name": "Set repeat"
+    },
+    "search_media": {
+      "description": "Searches the available media.",
+      "fields": {
+        "media_content_id": {
+          "description": "[%key:component::media_player::services::browse_media::fields::media_content_id::description%]",
+          "name": "[%key:component::media_player::services::browse_media::fields::media_content_id::name%]"
+        },
+        "media_content_type": {
+          "description": "[%key:component::media_player::services::browse_media::fields::media_content_type::description%]",
+          "name": "[%key:component::media_player::services::browse_media::fields::media_content_type::name%]"
+        },
+        "media_filter_classes": {
+          "description": "List of media classes to filter the search results by.",
+          "name": "Media class filter"
+        },
+        "search_query": {
+          "description": "The term to search for.",
+          "name": "Search query"
+        }
+      },
+      "name": "Search media"
+    },
+    "select_sound_mode": {
+      "description": "Selects a specific sound mode.",
+      "fields": {
+        "sound_mode": {
+          "description": "Name of the sound mode to switch to.",
+          "name": "Sound mode"
+        }
+      },
+      "name": "Select sound mode"
+    },
+    "select_source": {
+      "description": "Sends the media player the command to change input source.",
+      "fields": {
+        "source": {
+          "description": "Name of the source to switch to. Platform dependent.",
+          "name": "Source"
+        }
+      },
+      "name": "Select source"
+    },
+    "shuffle_set": {
+      "description": "Enables or disables the shuffle mode.",
+      "fields": {
+        "shuffle": {
+          "description": "Whether the media should be played in randomized order or not.",
+          "name": "Shuffle mode"
+        }
+      },
+      "name": "Set shuffle"
+    },
+    "toggle": {
+      "description": "Toggles a media player on/off.",
+      "name": "[%key:common::action::toggle%]"
+    },
+    "turn_off": {
+      "description": "Turns off the power of the media player.",
+      "name": "[%key:common::action::turn_off%]"
+    },
+    "turn_on": {
+      "description": "Turns on the power of the media player.",
+      "name": "[%key:common::action::turn_on%]"
+    },
+    "unjoin": {
+      "description": "Removes the player from a group. Only works on platforms which support player groups.",
+      "name": "Unjoin"
+    },
+    "volume_down": {
+      "description": "Turns down the volume.",
+      "name": "Turn down volume"
+    },
+    "volume_mute": {
+      "description": "Mutes or unmutes the media player.",
+      "fields": {
+        "is_volume_muted": {
+          "description": "Defines whether or not it is muted.",
+          "name": "Muted"
+        }
+      },
+      "name": "Mute/unmute volume"
+    },
+    "volume_set": {
+      "description": "Sets the volume level.",
+      "fields": {
+        "volume_level": {
+          "description": "The volume. 0 is inaudible, 1 is the maximum volume.",
+          "name": "Level"
+        }
+      },
+      "name": "Set volume"
+    },
+    "volume_up": {
+      "description": "Turns up the volume.",
+      "name": "Turn up volume"
+    }
+  },
+  "title": "Media player"
 }

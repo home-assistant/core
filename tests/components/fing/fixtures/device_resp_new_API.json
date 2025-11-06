@@ -1,0 +1,35 @@
+{
+  "networkId": "TEST",
+  "devices": [
+    {
+      "mac": "00:00:00:00:00:01",
+      "ip": ["192.168.50.1"],
+      "state": "UP",
+      "name": "FreeBSD router",
+      "type": "FIREWALL",
+      "make": "OPNsense",
+      "first_seen": "2024-08-26T13:28:57.927Z"
+    },
+    {
+      "mac": "00:00:00:00:00:02",
+      "ip": ["192.168.50.2"],
+      "state": "UP",
+      "name": "Samsung The Frame 55",
+      "type": "TELEVISION",
+      "make": "Samsung",
+      "model": "The Frame 55",
+      "first_seen": "2024-08-26T14:03:31.497Z",
+      "last_changed": "2024-08-26T14:52:08.559Z"
+    },
+    {
+      "mac": "00:00:00:00:00:03",
+      "ip": ["192.168.50.3"],
+      "state": "UP",
+      "name": "PC_HOME",
+      "type": "COMPUTER",
+      "make": "Dell",
+      "first_seen": "2024-08-26T13:28:57.927Z",
+      "last_changed": "2024-09-02T11:15:15.456Z"
+    }
+  ]
+}

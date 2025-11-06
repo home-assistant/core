@@ -56,6 +56,63 @@
     'state': 'Map 2',
   })
 # ---
+# name: test_selects[n0vyif-entity_ids2][select.x8_pro_omni_auto_empty_frequency:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'auto',
+        'smart',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.x8_pro_omni_auto_empty_frequency',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Auto-empty frequency',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'auto_empty',
+    'unique_id': 'E1234567890000000009_auto_empty',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[n0vyif-entity_ids2][select.x8_pro_omni_auto_empty_frequency:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'X8 PRO OMNI Auto-empty frequency',
+      'options': list([
+        'auto',
+        'smart',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.x8_pro_omni_auto_empty_frequency',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'auto',
+  })
+# ---
 # name: test_selects[n0vyif-entity_ids2][select.x8_pro_omni_work_mode:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -172,6 +229,63 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Map 2',
+  })
+# ---
+# name: test_selects[qhe2o2-entity_ids1][select.dusty_auto_empty_frequency:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'auto',
+        'smart',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.dusty_auto_empty_frequency',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Auto-empty frequency',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'auto_empty',
+    'unique_id': '8516fbb1-17f1-4194-0000001_auto_empty',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[qhe2o2-entity_ids1][select.dusty_auto_empty_frequency:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Dusty Auto-empty frequency',
+      'options': list([
+        'auto',
+        'smart',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.dusty_auto_empty_frequency',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'auto',
   })
 # ---
 # name: test_selects[qhe2o2-entity_ids1][select.dusty_water_flow_level:entity-registry]

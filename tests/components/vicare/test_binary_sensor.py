@@ -45,6 +45,8 @@ async def test_all_entities(
         Fixture({"type:boiler"}, "vicare/Vitodens300W.json"),
         Fixture({"type:radiator"}, "vicare/ZigbeeTRV.json"),
         Fixture({"type:repeater"}, "vicare/ZigbeeRepeater.json"),
+        Fixture({"type:fhtMain"}, "vicare/FHTMain.json"),
+        Fixture({"type:fhtChannel"}, "vicare/FHTChannel.json"),
     ]
     with (
         patch(f"{MODULE}.login", return_value=MockPyViCare(fixtures)),

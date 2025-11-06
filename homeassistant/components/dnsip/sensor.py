@@ -122,10 +122,12 @@ class WanIpSensor(SensorEntity):
         try:
             async with asyncio.timeout(10):
                 response = await self.resolver.query(self.hostname, self.querytype)
-        except TimeoutError:
+        except TimeoutError as err:
+            _LOGGER.debug("Timeout while resolving host: %s", err)
             await self.resolver.close()
         except DNSError as err:
             _LOGGER.warning("Exception while resolving host: %s", err)
+            await self.resolver.close()
 
         if response:
             sorted_ips = sort_ips(

@@ -30,6 +30,7 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfFrequency,
     UnitOfPower,
+    UnitOfPrecipitationDepth,
     UnitOfPressure,
     UnitOfTemperature,
     UnitOfTime,
@@ -552,6 +553,14 @@ RPC_SENSORS: Final = {
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    "power_rgbcct": RpcSensorDescription(
+        key="rgbcct",
+        sub_key="apower",
+        name="Power",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
     "a_act_power": RpcSensorDescription(
         key="em",
         sub_key="a_act_power",
@@ -1013,6 +1022,17 @@ RPC_SENSORS: Final = {
     ),
     "energy_rgbw": RpcSensorDescription(
         key="rgbw",
+        sub_key="aenergy",
+        name="Energy",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        value=lambda status, _: status["total"],
+        suggested_display_precision=2,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    "energy_rgbcct": RpcSensorDescription(
+        key="rgbcct",
         sub_key="aenergy",
         name="Energy",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
@@ -1490,6 +1510,27 @@ RPC_SENSORS: Final = {
         translation_key="illuminance_level",
         device_class=SensorDeviceClass.ENUM,
         options=["dark", "twilight", "bright"],
+    ),
+    "number_average_temperature": RpcSensorDescription(
+        key="number",
+        sub_key="value",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=1,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        role="average_temperature",
+        removal_condition=lambda config, _s, _k: not config.get("service:0", {}).get(
+            "weather_api", False
+        ),
+    ),
+    "number_last_precipitation": RpcSensorDescription(
+        key="number",
+        sub_key="value",
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+        device_class=SensorDeviceClass.PRECIPITATION,
+        role="last_precipitation",
+        removal_condition=lambda config, _s, _k: not config.get("service:0", {}).get(
+            "weather_api", False
+        ),
     ),
     "number_current_humidity": RpcSensorDescription(
         key="number",

@@ -229,7 +229,7 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the local authentication step via config flow."""
         errors = {}
         description_placeholders = {
-            "somfy-developer-mode-docs": "https://github.com/Somfy-Developer/Somfy-TaHoma-Developer-Mode#getting-started"
+            "somfy_developer_mode_docs": "https://github.com/Somfy-Developer/Somfy-TaHoma-Developer-Mode#getting-started"
         }
 
         if user_input:

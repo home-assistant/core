@@ -768,7 +768,16 @@ class DefaultAgent(ConversationEntity):
         if lang_intents.fuzzy_matcher is None:
             return None
 
-        fuzzy_result = lang_intents.fuzzy_matcher.match(user_input.text)
+        context_area: str | None = None
+        satellite_area, _ = self._get_satellite_area_and_device(
+            user_input.satellite_id, user_input.device_id
+        )
+        if satellite_area:
+            context_area = satellite_area.name
+
+        fuzzy_result = lang_intents.fuzzy_matcher.match(
+            user_input.text, context_area=context_area
+        )
         if fuzzy_result is None:
             return None
 
@@ -1240,12 +1249,15 @@ class DefaultAgent(ConversationEntity):
             intent_slot_list_names=self._fuzzy_config.slot_list_names,
             slot_combinations={
                 intent_name: {
-                    combo_key: [
-                        SlotCombinationInfo(
-                            name_domains=(set(name_domains) if name_domains else None)
-                        )
-                    ]
-                    for combo_key, name_domains in intent_combos.items()
+                    combo_key: SlotCombinationInfo(
+                        context_area=combo_info.context_area,
+                        name_domains=(
+                            set(combo_info.name_domains)
+                            if combo_info.name_domains
+                            else None
+                        ),
+                    )
+                    for combo_key, combo_info in intent_combos.items()
                 }
                 for intent_name, intent_combos in self._fuzzy_config.slot_combinations.items()
             },

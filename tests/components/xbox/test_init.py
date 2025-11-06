@@ -72,7 +72,7 @@ async def test_config_implementation_not_available(
     [
         ("smartglass", "get_console_status"),
         ("catalog", "get_product_from_alternate_id"),
-        ("people", "get_friends_own_batch"),
+        ("people", "get_friends_by_xuid"),
         ("people", "get_friends_own"),
     ],
 )

@@ -10,7 +10,7 @@ from unittest.mock import Mock, PropertyMock, patch
 
 import pytest
 from roborock import RoborockCategory, RoomMapping
-from roborock.code_mappings import DyadError, RoborockDyadStateCode, ZeoError, ZeoState
+from roborock.data import DyadError, RoborockDyadStateCode, ZeoError, ZeoState
 from roborock.roborock_message import RoborockDyadDataProtocol, RoborockZeoProtocol
 from roborock.version_a01_apis import RoborockMqttClientA01
 

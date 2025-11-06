@@ -3815,9 +3815,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 try_connection,
                 new_entry_data,
             ):
-                return self.async_update_reload_and_abort(
-                    reauth_entry, data=new_entry_data
-                )
+                return self.async_update_and_abort(reauth_entry, data=new_entry_data)
 
             errors["base"] = "invalid_auth"
 
@@ -3863,7 +3861,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
             if can_connect:
                 if is_reconfigure:
-                    return self.async_update_reload_and_abort(
+                    return self.async_update_and_abort(
                         reconfigure_entry,
                         data=validated_user_input,
                     )

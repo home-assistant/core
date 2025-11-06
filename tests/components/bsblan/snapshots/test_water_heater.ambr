@@ -6,7 +6,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_temp': 65.0,
-      'min_temp': 40.0,
+      'min_temp': 35.0,
       'operation_list': list([
         'eco',
         'off',
@@ -48,7 +48,7 @@
       'current_temperature': 48.5,
       'friendly_name': 'BSB-LAN',
       'max_temp': 65.0,
-      'min_temp': 40.0,
+      'min_temp': 35.0,
       'operation_list': list([
         'eco',
         'off',

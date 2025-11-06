@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from typing import Any
 
 from tuya_sharing import CustomerDevice, Manager
-from tuya_sharing.device import DeviceStatusRange
 
 from homeassistant.components.sensor import (
     DEVICE_CLASS_UNITS as SENSOR_DEVICE_CLASS_UNITS,
@@ -40,7 +39,6 @@ from .const import (
     DeviceCategory,
     DPCode,
     DPType,
-    UnitOfMeasurement,
 )
 from .entity import TuyaEntity
 from .models import ComplexValue, ElectricityValue, EnumTypeData, IntegerTypeData
@@ -759,6 +757,15 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="cat_weight",
             device_class=SensorDeviceClass.WEIGHT,
             state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.EXCRETION_TIME_DAY,
+            translation_key="excretion_time_day",
+            device_class=SensorDeviceClass.DURATION,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.EXCRETION_TIMES_DAY,
+            translation_key="excretion_times_day",
         ),
     ),
     DeviceCategory.MZJ: (
@@ -1661,10 +1668,8 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
 
     entity_description: TuyaSensorEntityDescription
 
-    _status_range: DeviceStatusRange | None = None
     _type: DPType | None = None
     _type_data: IntegerTypeData | EnumTypeData | None = None
-    _uom: UnitOfMeasurement | None = None
 
     def __init__(
         self,
@@ -1692,12 +1697,17 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
         else:
             self._type = get_dptype(self.device, DPCode(description.key))
 
+        self._validate_device_class_unit()
+
+    def _validate_device_class_unit(self) -> None:
+        """Validate device class unit compatibility."""
+
         # Logic to ensure the set device class and API received Unit Of Measurement
         # match Home Assistants requirements.
         if (
             self.device_class is not None
             and not self.device_class.startswith(DOMAIN)
-            and description.native_unit_of_measurement is None
+            and self.entity_description.native_unit_of_measurement is None
             # we do not need to check mappings if the API UOM is allowed
             and self.native_unit_of_measurement
             not in SENSOR_DEVICE_CLASS_UNITS[self.device_class]

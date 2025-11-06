@@ -1,33 +1,146 @@
 {
   "config": {
+    "abort": {
+      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    },
+    "create_entry": {
+      "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    },
     "step": {
       "pick_implementation": {
-        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]",
         "data": {
           "implementation": "[%key:common::config_flow::data::implementation%]"
         },
         "data_description": {
           "implementation": "[%key:common::config_flow::description::implementation%]"
-        }
+        },
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
       },
       "reauth_confirm": {
-        "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "The Netatmo integration needs to re-authenticate your account"
+        "description": "The Netatmo integration needs to re-authenticate your account",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      }
+    }
+  },
+  "device_automation": {
+    "trigger_subtype": {
+      "away": "[%key:common::state::not_home%]",
+      "hg": "Frost guard",
+      "schedule": "Schedule"
+    },
+    "trigger_type": {
+      "alarm_started": "{entity_name} detected an alarm",
+      "animal": "{entity_name} detected an animal",
+      "cancel_set_point": "{entity_name} has resumed its schedule",
+      "human": "{entity_name} detected a human",
+      "movement": "{entity_name} detected movement",
+      "outdoor": "{entity_name} detected an outdoor event",
+      "person": "{entity_name} detected a person",
+      "person_away": "{entity_name} detected a person has left",
+      "set_point": "Target temperature {entity_name} set manually",
+      "therm_mode": "{entity_name} switched to \"{subtype}\"",
+      "turned_off": "[%key:common::device_automation::trigger_type::turned_off%]",
+      "turned_on": "[%key:common::device_automation::trigger_type::turned_on%]",
+      "vehicle": "{entity_name} detected a vehicle"
+    }
+  },
+  "entity": {
+    "button": {
+      "preferred_position": {
+        "name": "Preferred position"
       }
     },
-    "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
-      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
-      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
-      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
-      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
-      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
-      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]"
+    "climate": {
+      "thermostat": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "frost_guard": "Frost guard",
+              "manual": "[%key:common::state::manual%]",
+              "schedule": "Schedule"
+            }
+          }
+        }
+      }
     },
-    "create_entry": {
-      "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    "sensor": {
+      "gust_angle": {
+        "name": "Gust angle"
+      },
+      "gust_direction": {
+        "name": "Gust direction",
+        "state": {
+          "e": "[%key:component::netatmo::entity::sensor::wind_direction::state::e%]",
+          "n": "[%key:component::netatmo::entity::sensor::wind_direction::state::n%]",
+          "ne": "[%key:component::netatmo::entity::sensor::wind_direction::state::ne%]",
+          "nw": "[%key:component::netatmo::entity::sensor::wind_direction::state::nw%]",
+          "s": "[%key:component::netatmo::entity::sensor::wind_direction::state::s%]",
+          "se": "[%key:component::netatmo::entity::sensor::wind_direction::state::se%]",
+          "sw": "[%key:component::netatmo::entity::sensor::wind_direction::state::sw%]",
+          "w": "[%key:component::netatmo::entity::sensor::wind_direction::state::w%]"
+        }
+      },
+      "gust_strength": {
+        "name": "Gust strength"
+      },
+      "health_idx": {
+        "name": "Health index",
+        "state": {
+          "fair": "Fair",
+          "fine": "Fine",
+          "healthy": "Healthy",
+          "poor": "Poor",
+          "unhealthy": "Unhealthy"
+        }
+      },
+      "noise": {
+        "name": "Noise"
+      },
+      "pressure_trend": {
+        "name": "Pressure trend"
+      },
+      "reachable": {
+        "name": "Reachability"
+      },
+      "rf_strength": {
+        "name": "RF strength"
+      },
+      "sum_rain_1": {
+        "name": "Precipitation last hour"
+      },
+      "sum_rain_24": {
+        "name": "Precipitation today"
+      },
+      "temp_trend": {
+        "name": "Temperature trend"
+      },
+      "wifi_strength": {
+        "name": "Wi-Fi strength"
+      },
+      "wind_angle": {
+        "name": "Wind angle"
+      },
+      "wind_direction": {
+        "name": "Wind direction",
+        "state": {
+          "e": "East",
+          "n": "North",
+          "ne": "Northeast",
+          "nw": "Northwest",
+          "s": "South",
+          "se": "Southeast",
+          "sw": "Southwest",
+          "w": "West"
+        }
+      }
     }
   },
   "options": {
@@ -36,8 +149,8 @@
         "data": {
           "area_name": "Name of the area",
           "lat_ne": "Northeast corner latitude",
-          "lon_ne": "Northeast corner longitude",
           "lat_sw": "Southwest corner latitude",
+          "lon_ne": "Northeast corner longitude",
           "lon_sw": "Southwest corner longitude",
           "mode": "Calculation",
           "show_on_map": "Show on map"
@@ -55,213 +168,100 @@
       }
     }
   },
-  "device_automation": {
-    "trigger_subtype": {
-      "away": "[%key:common::state::not_home%]",
-      "schedule": "Schedule",
-      "hg": "Frost guard"
-    },
-    "trigger_type": {
-      "turned_off": "[%key:common::device_automation::trigger_type::turned_off%]",
-      "turned_on": "[%key:common::device_automation::trigger_type::turned_on%]",
-      "human": "{entity_name} detected a human",
-      "movement": "{entity_name} detected movement",
-      "person": "{entity_name} detected a person",
-      "person_away": "{entity_name} detected a person has left",
-      "animal": "{entity_name} detected an animal",
-      "outdoor": "{entity_name} detected an outdoor event",
-      "vehicle": "{entity_name} detected a vehicle",
-      "alarm_started": "{entity_name} detected an alarm",
-      "set_point": "Target temperature {entity_name} set manually",
-      "cancel_set_point": "{entity_name} has resumed its schedule",
-      "therm_mode": "{entity_name} switched to \"{subtype}\""
-    }
-  },
   "services": {
+    "clear_temperature_setting": {
+      "description": "Clears any temperature setting for a Netatmo climate device reverting it to the current preset or schedule.",
+      "name": "Clear temperature setting"
+    },
+    "register_webhook": {
+      "description": "Registers the webhook to the Netatmo backend.",
+      "name": "Register webhook"
+    },
     "set_camera_light": {
-      "name": "Set camera light mode",
       "description": "Sets the light mode for a Netatmo Outdoor camera light.",
       "fields": {
         "camera_light_mode": {
-          "name": "Camera light mode",
-          "description": "Outdoor camera light mode."
+          "description": "Outdoor camera light mode.",
+          "name": "Camera light mode"
         }
-      }
-    },
-    "set_schedule": {
-      "name": "Set heating schedule",
-      "description": "Sets the heating schedule for Netatmo climate device. The schedule name must match a schedule configured at Netatmo.",
-      "fields": {
-        "schedule_name": {
-          "name": "[%key:component::netatmo::device_automation::trigger_subtype::schedule%]",
-          "description": "Schedule name."
-        }
-      }
-    },
-    "set_persons_home": {
-      "name": "Set persons at home",
-      "description": "Sets a list of persons as at home. Person's name must match a name known by the Netatmo Indoor (Welcome) Camera.",
-      "fields": {
-        "persons": {
-          "name": "Persons",
-          "description": "List of names."
-        }
-      }
+      },
+      "name": "Set camera light mode"
     },
     "set_person_away": {
-      "name": "Set person away",
       "description": "Sets a person as away. If no person is set the home will be marked as empty. Person's name must match a name known by the Netatmo Indoor (Welcome) Camera.",
       "fields": {
         "person": {
-          "name": "Person",
-          "description": "Person's name."
+          "description": "Person's name.",
+          "name": "Person"
         }
-      }
+      },
+      "name": "Set person away"
     },
-    "register_webhook": {
-      "name": "Register webhook",
-      "description": "Registers the webhook to the Netatmo backend."
-    },
-    "unregister_webhook": {
-      "name": "Unregister webhook",
-      "description": "Unregisters the webhook from the Netatmo backend."
+    "set_persons_home": {
+      "description": "Sets a list of persons as at home. Person's name must match a name known by the Netatmo Indoor (Welcome) Camera.",
+      "fields": {
+        "persons": {
+          "description": "List of names.",
+          "name": "Persons"
+        }
+      },
+      "name": "Set persons at home"
     },
     "set_preset_mode_with_end_datetime": {
-      "name": "Set preset mode with end date & time",
       "description": "Sets the preset mode for a Netatmo climate device. The preset mode must match a preset mode configured at Netatmo.",
       "fields": {
-        "preset_mode": {
-          "name": "Preset mode",
-          "description": "Climate preset mode such as Schedule, Away or Frost Guard."
-        },
         "end_datetime": {
-          "name": "End date & time",
-          "description": "Date & time the preset will be active until."
+          "description": "Date & time the preset will be active until.",
+          "name": "End date & time"
+        },
+        "preset_mode": {
+          "description": "Climate preset mode such as Schedule, Away or Frost Guard.",
+          "name": "Preset mode"
         }
-      }
+      },
+      "name": "Set preset mode with end date & time"
+    },
+    "set_schedule": {
+      "description": "Sets the heating schedule for Netatmo climate device. The schedule name must match a schedule configured at Netatmo.",
+      "fields": {
+        "schedule_name": {
+          "description": "Schedule name.",
+          "name": "[%key:component::netatmo::device_automation::trigger_subtype::schedule%]"
+        }
+      },
+      "name": "Set heating schedule"
     },
     "set_temperature_with_end_datetime": {
-      "name": "Set temperature with end date & time",
       "description": "Sets the target temperature for a Netatmo climate device with an end date & time.",
       "fields": {
-        "target_temperature": {
-          "name": "Target temperature",
-          "description": "The target temperature for the device."
-        },
         "end_datetime": {
-          "name": "[%key:component::netatmo::services::set_preset_mode_with_end_datetime::fields::end_datetime::name%]",
-          "description": "Date & time the target temperature will be active until."
+          "description": "Date & time the target temperature will be active until.",
+          "name": "[%key:component::netatmo::services::set_preset_mode_with_end_datetime::fields::end_datetime::name%]"
+        },
+        "target_temperature": {
+          "description": "The target temperature for the device.",
+          "name": "Target temperature"
         }
-      }
+      },
+      "name": "Set temperature with end date & time"
     },
     "set_temperature_with_time_period": {
-      "name": "Set temperature with time period",
       "description": "Sets the target temperature for a Netatmo climate device with time period.",
       "fields": {
         "target_temperature": {
-          "name": "[%key:component::netatmo::services::set_temperature_with_end_datetime::fields::target_temperature::name%]",
-          "description": "[%key:component::netatmo::services::set_temperature_with_end_datetime::fields::target_temperature::description%]"
+          "description": "[%key:component::netatmo::services::set_temperature_with_end_datetime::fields::target_temperature::description%]",
+          "name": "[%key:component::netatmo::services::set_temperature_with_end_datetime::fields::target_temperature::name%]"
         },
         "time_period": {
-          "name": "Time period",
-          "description": "The time period which the temperature setting will be active for."
+          "description": "The time period which the temperature setting will be active for.",
+          "name": "Time period"
         }
-      }
+      },
+      "name": "Set temperature with time period"
     },
-    "clear_temperature_setting": {
-      "name": "Clear temperature setting",
-      "description": "Clears any temperature setting for a Netatmo climate device reverting it to the current preset or schedule."
-    }
-  },
-  "entity": {
-    "climate": {
-      "thermostat": {
-        "state_attributes": {
-          "preset_mode": {
-            "state": {
-              "frost_guard": "Frost guard",
-              "schedule": "Schedule",
-              "manual": "[%key:common::state::manual%]"
-            }
-          }
-        }
-      }
-    },
-    "button": {
-      "preferred_position": {
-        "name": "Preferred position"
-      }
-    },
-    "sensor": {
-      "temp_trend": {
-        "name": "Temperature trend"
-      },
-      "pressure_trend": {
-        "name": "Pressure trend"
-      },
-      "noise": {
-        "name": "Noise"
-      },
-      "sum_rain_1": {
-        "name": "Precipitation last hour"
-      },
-      "sum_rain_24": {
-        "name": "Precipitation today"
-      },
-      "wind_direction": {
-        "name": "Wind direction",
-        "state": {
-          "n": "North",
-          "ne": "Northeast",
-          "e": "East",
-          "se": "Southeast",
-          "s": "South",
-          "sw": "Southwest",
-          "w": "West",
-          "nw": "Northwest"
-        }
-      },
-      "wind_angle": {
-        "name": "Wind angle"
-      },
-      "gust_direction": {
-        "name": "Gust direction",
-        "state": {
-          "n": "[%key:component::netatmo::entity::sensor::wind_direction::state::n%]",
-          "ne": "[%key:component::netatmo::entity::sensor::wind_direction::state::ne%]",
-          "e": "[%key:component::netatmo::entity::sensor::wind_direction::state::e%]",
-          "se": "[%key:component::netatmo::entity::sensor::wind_direction::state::se%]",
-          "s": "[%key:component::netatmo::entity::sensor::wind_direction::state::s%]",
-          "sw": "[%key:component::netatmo::entity::sensor::wind_direction::state::sw%]",
-          "w": "[%key:component::netatmo::entity::sensor::wind_direction::state::w%]",
-          "nw": "[%key:component::netatmo::entity::sensor::wind_direction::state::nw%]"
-        }
-      },
-      "gust_angle": {
-        "name": "Gust angle"
-      },
-      "gust_strength": {
-        "name": "Gust strength"
-      },
-      "reachable": {
-        "name": "Reachability"
-      },
-      "rf_strength": {
-        "name": "RF strength"
-      },
-      "wifi_strength": {
-        "name": "Wi-Fi strength"
-      },
-      "health_idx": {
-        "name": "Health index",
-        "state": {
-          "healthy": "Healthy",
-          "fine": "Fine",
-          "fair": "Fair",
-          "poor": "Poor",
-          "unhealthy": "Unhealthy"
-        }
-      }
+    "unregister_webhook": {
+      "description": "Unregisters the webhook from the Netatmo backend.",
+      "name": "Unregister webhook"
     }
   }
 }

@@ -58,6 +58,181 @@
     'state': '30 mm',
   })
 # ---
+# name: test_selects[aqara_motion_p2][select.aqara_motion_and_light_sensor_p2_sensitivity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'low',
+        'standard',
+        'high',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.aqara_motion_and_light_sensor_p2_sensitivity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sensitivity',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sensitivity_level',
+    'unique_id': '00000000000004D2-0000000000000053-MatterNodeDevice-1-AqaraOccupancySensorBooleanStateConfigurationCurrentSensitivityLevel-128-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[aqara_motion_p2][select.aqara_motion_and_light_sensor_p2_sensitivity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Aqara Motion and Light Sensor P2 Sensitivity',
+      'options': list([
+        'low',
+        'standard',
+        'high',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.aqara_motion_and_light_sensor_p2_sensitivity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'standard',
+  })
+# ---
+# name: test_selects[aqara_presence_fp300][select.presence_multi_sensor_fp300_1_sensitivity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'low',
+        'standard',
+        'high',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.presence_multi_sensor_fp300_1_sensitivity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sensitivity',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sensitivity_level',
+    'unique_id': '00000000000004D2-00000000000000CD-MatterNodeDevice-1-AqaraOccupancySensorBooleanStateConfigurationCurrentSensitivityLevel-128-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[aqara_presence_fp300][select.presence_multi_sensor_fp300_1_sensitivity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Presence Multi-Sensor FP300 1 Sensitivity',
+      'options': list([
+        'low',
+        'standard',
+        'high',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.presence_multi_sensor_fp300_1_sensitivity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'low',
+  })
+# ---
+# name: test_selects[aqara_thermostat_w500][select.floor_heating_thermostat_temperature_display_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Celsius',
+        'Fahrenheit',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.floor_heating_thermostat_temperature_display_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Temperature display mode',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_display_mode',
+    'unique_id': '00000000000004D2-0000000000000064-MatterNodeDevice-1-TrvTemperatureDisplayMode-516-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[aqara_thermostat_w500][select.floor_heating_thermostat_temperature_display_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Floor Heating Thermostat Temperature display mode',
+      'options': list([
+        'Celsius',
+        'Fahrenheit',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.floor_heating_thermostat_temperature_display_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Celsius',
+  })
+# ---
 # name: test_selects[color_temperature_light][select.mock_color_temperature_light_lighting-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -682,17 +857,16 @@
     'state': 'silent',
   })
 # ---
-# name: test_selects[eve_energy_20ecn4101][select.eve_energy_20ecn4101_power_on_behavior_on_startup_1-entry]
+# name: test_selects[ecovacs_deebot][select.ecodeebot_clean_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'on',
-        'off',
-        'toggle',
-        'previous',
+        'Vacuum & Mop',
+        'Vacuum-Only',
+        'Mop after Vacuum',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -701,8 +875,8 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'select',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.eve_energy_20ecn4101_power_on_behavior_on_startup_1',
+    'entity_category': None,
+    'entity_id': 'select.ecodeebot_clean_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -714,36 +888,35 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Power-on behavior on startup (1)',
+    'original_name': 'Clean mode',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'startup_on_off',
-    'unique_id': '00000000000004D2-00000000000000C7-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'translation_key': 'clean_mode',
+    'unique_id': '00000000000004D2-000000000000002F-MatterNodeDevice-1-MatterRvcCleanMode-85-1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[eve_energy_20ecn4101][select.eve_energy_20ecn4101_power_on_behavior_on_startup_1-state]
+# name: test_selects[ecovacs_deebot][select.ecodeebot_clean_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Eve Energy 20ECN4101 Power-on behavior on startup (1)',
+      'friendly_name': 'ecodeebot Clean mode',
       'options': list([
-        'on',
-        'off',
-        'toggle',
-        'previous',
+        'Vacuum & Mop',
+        'Vacuum-Only',
+        'Mop after Vacuum',
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.eve_energy_20ecn4101_power_on_behavior_on_startup_1',
+    'entity_id': 'select.ecodeebot_clean_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'previous',
+    'state': 'Vacuum & Mop',
   })
 # ---
-# name: test_selects[eve_energy_20ecn4101][select.eve_energy_20ecn4101_power_on_behavior_on_startup_2-entry]
+# name: test_selects[eve_energy_20ecn4101][select.eve_energy_20ecn4101_power_on_behavior_on_startup_bottom-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -763,7 +936,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.eve_energy_20ecn4101_power_on_behavior_on_startup_2',
+    'entity_id': 'select.eve_energy_20ecn4101_power_on_behavior_on_startup_bottom',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -775,7 +948,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Power-on behavior on startup (2)',
+    'original_name': 'Power-on behavior on startup (bottom)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -785,10 +958,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[eve_energy_20ecn4101][select.eve_energy_20ecn4101_power_on_behavior_on_startup_2-state]
+# name: test_selects[eve_energy_20ecn4101][select.eve_energy_20ecn4101_power_on_behavior_on_startup_bottom-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Eve Energy 20ECN4101 Power-on behavior on startup (2)',
+      'friendly_name': 'Eve Energy 20ECN4101 Power-on behavior on startup (bottom)',
       'options': list([
         'on',
         'off',
@@ -797,7 +970,68 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.eve_energy_20ecn4101_power_on_behavior_on_startup_2',
+    'entity_id': 'select.eve_energy_20ecn4101_power_on_behavior_on_startup_bottom',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'previous',
+  })
+# ---
+# name: test_selects[eve_energy_20ecn4101][select.eve_energy_20ecn4101_power_on_behavior_on_startup_top-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.eve_energy_20ecn4101_power_on_behavior_on_startup_top',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior on startup (top)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-00000000000000C7-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[eve_energy_20ecn4101][select.eve_energy_20ecn4101_power_on_behavior_on_startup_top-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Eve Energy 20ECN4101 Power-on behavior on startup (top)',
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.eve_energy_20ecn4101_power_on_behavior_on_startup_top',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1101,6 +1335,65 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'previous',
+  })
+# ---
+# name: test_selects[heiman_motion_sensor_m1][select.smart_motion_sensor_sensitivity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'low',
+        'standard',
+        'high',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.smart_motion_sensor_sensitivity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sensitivity',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sensitivity_level',
+    'unique_id': '00000000000004D2-0000000000000058-MatterNodeDevice-1-HeimanOccupancySensorBooleanStateConfigurationCurrentSensitivityLevel-128-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[heiman_motion_sensor_m1][select.smart_motion_sensor_sensitivity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Smart motion sensor Sensitivity',
+      'options': list([
+        'low',
+        'standard',
+        'high',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.smart_motion_sensor_sensitivity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'high',
   })
 # ---
 # name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_button_press_delay-entry]
@@ -1421,67 +1714,6 @@
     'state': 'Solid',
   })
 # ---
-# name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_load_control-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'on',
-        'off',
-        'toggle',
-        'previous',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'select',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.white_series_onoff_switch_load_control',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Load Control',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'startup_on_off',
-    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_load_control-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'White Series OnOff Switch Load Control',
-      'options': list([
-        'on',
-        'off',
-        'toggle',
-        'previous',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'select.white_series_onoff_switch_load_control',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'previous',
-  })
-# ---
 # name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_local_protection-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1596,7 +1828,7 @@
     'state': 'Local Timer Disable',
   })
 # ---
-# name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_rgb_indicator-entry]
+# name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_power_on_behavior_on_startup_load_control-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1616,7 +1848,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.white_series_onoff_switch_rgb_indicator',
+    'entity_id': 'select.white_series_onoff_switch_power_on_behavior_on_startup_load_control',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1628,7 +1860,68 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'RGB Indicator',
+    'original_name': 'Power-on behavior on startup (Load Control)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_power_on_behavior_on_startup_load_control-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'White Series OnOff Switch Power-on behavior on startup (Load Control)',
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.white_series_onoff_switch_power_on_behavior_on_startup_load_control',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'previous',
+  })
+# ---
+# name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_power_on_behavior_on_startup_rgb_indicator-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.white_series_onoff_switch_power_on_behavior_on_startup_rgb_indicator',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior on startup (RGB Indicator)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1638,10 +1931,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_rgb_indicator-state]
+# name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_power_on_behavior_on_startup_rgb_indicator-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'White Series OnOff Switch RGB Indicator',
+      'friendly_name': 'White Series OnOff Switch Power-on behavior on startup (RGB Indicator)',
       'options': list([
         'on',
         'off',
@@ -1650,7 +1943,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.white_series_onoff_switch_rgb_indicator',
+    'entity_id': 'select.white_series_onoff_switch_power_on_behavior_on_startup_rgb_indicator',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

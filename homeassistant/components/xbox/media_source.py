@@ -6,11 +6,11 @@ from contextlib import suppress
 from dataclasses import dataclass
 
 from pydantic import ValidationError
-from xbox.webapi.api.client import XboxLiveClient
-from xbox.webapi.api.provider.catalog.models import FieldsTemplate, Image
-from xbox.webapi.api.provider.gameclips.models import GameclipsResponse
-from xbox.webapi.api.provider.screenshots.models import ScreenshotResponse
-from xbox.webapi.api.provider.smartglass.models import InstalledPackage
+from pythonxbox.api.client import XboxLiveClient
+from pythonxbox.api.provider.catalog.models import FieldsTemplate, Image
+from pythonxbox.api.provider.gameclips.models import GameclipsResponse
+from pythonxbox.api.provider.screenshots.models import ScreenshotResponse
+from pythonxbox.api.provider.smartglass.models import InstalledPackage
 
 from homeassistant.components.media_player import MediaClass
 from homeassistant.components.media_source import (
@@ -149,9 +149,9 @@ class XboxSource(MediaSource):
                 items = [
                     XboxMediaItem(
                         item.user_caption
-                        or dt_util.as_local(
-                            dt_util.parse_datetime(item.date_recorded)
-                        ).strftime("%b. %d, %Y %I:%M %p"),
+                        or dt_util.as_local(item.date_recorded).strftime(
+                            "%b. %d, %Y %I:%M %p"
+                        ),
                         item.thumbnails[0].uri,
                         item.game_clip_uris[0].uri,
                         MediaClass.VIDEO,
@@ -201,7 +201,7 @@ class XboxSource(MediaSource):
 def _build_game_item(item: InstalledPackage, images: dict[str, list[Image]]):
     """Build individual game."""
     thumbnail = ""
-    image = _find_media_image(images.get(item.one_store_product_id, []))
+    image = _find_media_image(images.get(item.one_store_product_id, []))  # type: ignore[arg-type]
     if image is not None:
         thumbnail = image.uri
         if thumbnail[0] == "/":
