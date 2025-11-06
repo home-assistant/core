@@ -943,13 +943,19 @@ class MieleConsumptionSensor(MieleRestorableSensor):
         """Update the last value of the sensor."""
         current_value = self.entity_description.value_fn(self.device)
         current_status = StateStatus(self.device.state_status)
+        # Guard for corrupt restored value
+        restored_value = (
+            self._attr_native_value
+            if isinstance(self._attr_native_value, (int, float))
+            else 0
+        )
         last_value = (
-            float(cast(str, self._attr_native_value))
+            float(cast(str, restored_value))
             if self._attr_native_value is not None
             else 0
         )
 
-        # force unknown when appliance is not able to report consumption
+        # Force unknown when appliance is not able to report consumption
         if current_status in (
             StateStatus.ON,
             StateStatus.OFF,
