@@ -5,13 +5,13 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from xbox.webapi.api.provider.catalog.models import CatalogResponse
-from xbox.webapi.api.provider.people.models import PeopleResponse
-from xbox.webapi.api.provider.smartglass.models import (
+from pythonxbox.api.provider.catalog.models import CatalogResponse
+from pythonxbox.api.provider.people.models import PeopleResponse
+from pythonxbox.api.provider.smartglass.models import (
     SmartglassConsoleList,
     SmartglassConsoleStatus,
 )
-from xbox.webapi.api.provider.titlehub.models import TitleHubResponse
+from pythonxbox.api.provider.titlehub.models import TitleHubResponse
 
 from homeassistant.components.application_credentials import (
     ClientCredential,
@@ -67,6 +67,7 @@ def mock_config_entry() -> MockConfigEntry:
                 "user_id": "AAAAAAAAAAAAAAAAAAAAA",
             },
         },
+        unique_id="271958441785640",
     )
 
 
@@ -130,7 +131,7 @@ def mock_xbox_live_client(signed_session) -> Generator[AsyncMock]:
         )
 
         client.people = AsyncMock()
-        client.people.get_friends_own_batch.return_value = PeopleResponse(
+        client.people.get_friends_by_xuid.return_value = PeopleResponse(
             **load_json_object_fixture("people_batch.json", DOMAIN)
         )
         client.people.get_friends_own.return_value = PeopleResponse(

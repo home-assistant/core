@@ -12,7 +12,6 @@ from pyportainer.exceptions import (
     PortainerConnectionError,
     PortainerTimeoutError,
 )
-from pyportainer.models.docker import DockerContainer
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -26,7 +25,11 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import PortainerConfigEntry
 from .const import DOMAIN
-from .coordinator import PortainerCoordinator, PortainerCoordinatorData
+from .coordinator import (
+    PortainerContainerData,
+    PortainerCoordinator,
+    PortainerCoordinatorData,
+)
 from .entity import PortainerContainerEntity
 
 
@@ -64,7 +67,7 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
 
     def _async_add_new_containers(
-        containers: list[tuple[PortainerCoordinatorData, DockerContainer]],
+        containers: list[tuple[PortainerCoordinatorData, PortainerContainerData]],
     ) -> None:
         """Add new container button sensors."""
         async_add_entities(
@@ -97,7 +100,7 @@ class PortainerButton(PortainerContainerEntity, ButtonEntity):
         self,
         coordinator: PortainerCoordinator,
         entity_description: PortainerButtonDescription,
-        device_info: DockerContainer,
+        device_info: PortainerContainerData,
         via_device: PortainerCoordinatorData,
     ) -> None:
         """Initialize the Portainer button entity."""
