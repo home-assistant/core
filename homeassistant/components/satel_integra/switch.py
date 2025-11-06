@@ -80,8 +80,10 @@ class SatelIntegraSwitch(SwitchEntity):
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
-        async_dispatcher_connect(
-            self.hass, SIGNAL_OUTPUTS_UPDATED, self._devices_updated
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_OUTPUTS_UPDATED, self._devices_updated
+            )
         )
 
     @callback
