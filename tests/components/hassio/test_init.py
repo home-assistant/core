@@ -3,11 +3,19 @@
 from datetime import timedelta
 import logging
 import os
+from pathlib import PurePath
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import AddonsStats
+from aiohasupervisor.models.mounts import (
+    CIFSMountResponse,
+    MountsInfo,
+    MountState,
+    MountType,
+    MountUsage,
+)
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from voluptuous import Invalid
@@ -487,6 +495,7 @@ async def test_service_register(hass: HomeAssistant) -> None:
     assert hass.services.has_service("hassio", "backup_partial")
     assert hass.services.has_service("hassio", "restore_full")
     assert hass.services.has_service("hassio", "restore_partial")
+    assert hass.services.has_service("hassio", "mount_reload")
 
 
 @pytest.mark.freeze_time("2021-11-13 11:48:00")
@@ -1458,3 +1467,40 @@ async def test_deprecated_installation_issue_supported_board(
         await hass.async_block_till_done()
 
     assert len(issue_registry.issues) == 0
+
+
+async def test_mount_reload_action(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test reload_mount service call."""
+    supervisor_client.mounts.info = AsyncMock(
+        return_value=MountsInfo(
+            default_backup_mount=None,
+            mounts=[
+                CIFSMountResponse(
+                    share="files",
+                    server="1.2.3.4",
+                    name="NAS",
+                    type=MountType.CIFS,
+                    usage=MountUsage.SHARE,
+                    read_only=False,
+                    state=MountState.ACTIVE,
+                    user_path=PurePath("/share/nas"),
+                )
+            ],
+        )
+    )
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, "mount_NAS")})
+    assert device is not None
+
+    await hass.services.async_call("hassio", "mount_reload", {"device_id": device.id})
+    supervisor_client.mounts.reload_mount.assert_awaited_once_with("NAS")

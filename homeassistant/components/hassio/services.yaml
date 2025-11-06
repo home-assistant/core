@@ -121,3 +121,13 @@ restore_partial:
       example: "password"
       selector:
         text:
+
+mount_reload:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          filter:
+            integration: hassio
+            model: Home Assistant Mount
