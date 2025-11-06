@@ -28,21 +28,29 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_GAMECLIPS = "gameclips"
 ATTR_SCREENSHOTS = "screenshots"
 ATTR_GAME_MEDIA = "game_media"
+ATTR_COMMUNITY_GAMECLIPS = "community_gameclips"
+ATTR_COMMUNITY_SCREENSHOTS = "community_screenshots"
 
 MAP_TITLE = {
     ATTR_GAMECLIPS: "Gameclips",
     ATTR_SCREENSHOTS: "Screenshots",
     ATTR_GAME_MEDIA: "Game media",
+    ATTR_COMMUNITY_GAMECLIPS: "Community gameclips",
+    ATTR_COMMUNITY_SCREENSHOTS: "Community screenshots",
 }
 
 MIME_TYPE_MAP = {
     ATTR_GAMECLIPS: "video/mp4",
+    ATTR_COMMUNITY_GAMECLIPS: "video/mp4",
     ATTR_SCREENSHOTS: "image/png",
+    ATTR_COMMUNITY_SCREENSHOTS: "image/png",
 }
 
 MEDIA_CLASS_MAP = {
     ATTR_GAMECLIPS: MediaClass.VIDEO,
+    ATTR_COMMUNITY_GAMECLIPS: MediaClass.VIDEO,
     ATTR_SCREENSHOTS: MediaClass.IMAGE,
+    ATTR_COMMUNITY_SCREENSHOTS: MediaClass.IMAGE,
     ATTR_GAME_MEDIA: MediaClass.IMAGE,
 }
 
@@ -106,13 +114,20 @@ class XboxSource(MediaSource):
 
         client = entry.runtime_data.client
 
-        if identifier.media_type == ATTR_GAMECLIPS:
+        if identifier.media_type in (ATTR_GAMECLIPS, ATTR_COMMUNITY_GAMECLIPS):
             try:
-                gameclips = (
-                    await client.gameclips.get_recent_clips_by_xuid(
-                        identifier.xuid, identifier.title_id, max_items=999
+                if identifier.media_type == ATTR_GAMECLIPS:
+                    gameclips_response = (
+                        await client.gameclips.get_recent_clips_by_xuid(
+                            identifier.xuid, identifier.title_id, max_items=999
+                        )
                     )
-                ).game_clips
+                else:
+                    gameclips_response = (
+                        await client.gameclips.get_recent_community_clips_by_title_id(
+                            identifier.title_id
+                        )
+                    )
             except TimeoutException as e:
                 raise Unresolvable(
                     translation_domain=DOMAIN,
@@ -124,7 +139,7 @@ class XboxSource(MediaSource):
                     translation_domain=DOMAIN,
                     translation_key="request_exception",
                 ) from e
-
+            gameclips = gameclips_response.game_clips
             try:
                 clip = next(
                     g for g in gameclips if g.game_clip_id == identifier.media_id
@@ -136,13 +151,18 @@ class XboxSource(MediaSource):
                 ) from e
             return PlayMedia(clip.game_clip_uris[0].uri, MIME_TYPE_MAP[ATTR_GAMECLIPS])
 
-        if identifier.media_type == ATTR_SCREENSHOTS:
+        if identifier.media_type in (ATTR_SCREENSHOTS, ATTR_COMMUNITY_SCREENSHOTS):
             try:
-                screenshots = (
-                    await client.screenshots.get_recent_screenshots_by_xuid(
-                        identifier.xuid, identifier.title_id, max_items=999
+                if identifier.media_type == ATTR_SCREENSHOTS:
+                    screenshot_response = (
+                        await client.screenshots.get_recent_screenshots_by_xuid(
+                            identifier.xuid, identifier.title_id, max_items=999
+                        )
                     )
-                ).screenshots
+                else:
+                    screenshot_response = await client.screenshots.get_recent_community_screenshots_by_title_id(
+                        identifier.title_id
+                    )
             except TimeoutException as e:
                 raise Unresolvable(
                     translation_domain=DOMAIN,
@@ -154,7 +174,7 @@ class XboxSource(MediaSource):
                     translation_domain=DOMAIN,
                     translation_key="request_exception",
                 ) from e
-
+            screenshots = screenshot_response.screenshots
             try:
                 img = next(
                     s for s in screenshots if s.screenshot_id == identifier.media_id
@@ -165,7 +185,7 @@ class XboxSource(MediaSource):
                     translation_key="media_not_found",
                 ) from e
             return PlayMedia(
-                img.screenshot_uris[0].uri, MIME_TYPE_MAP[ATTR_SCREENSHOTS]
+                img.screenshot_uris[0].uri, MIME_TYPE_MAP[identifier.media_type]
             )
         if identifier.media_type == ATTR_GAME_MEDIA:
             try:
@@ -369,7 +389,13 @@ class XboxSource(MediaSource):
                 can_expand=True,
                 children_media_class=MEDIA_CLASS_MAP[media_type],
             )
-            for media_type in (ATTR_GAMECLIPS, ATTR_SCREENSHOTS, ATTR_GAME_MEDIA)
+            for media_type in (
+                ATTR_GAMECLIPS,
+                ATTR_SCREENSHOTS,
+                ATTR_COMMUNITY_GAMECLIPS,
+                ATTR_COMMUNITY_SCREENSHOTS,
+                ATTR_GAME_MEDIA,
+            )
         ]
 
     async def _build_game_media(
@@ -401,7 +427,9 @@ class XboxSource(MediaSource):
             can_expand=True,
             children=[
                 *await self._build_media_items_gameclips(entry, identifier)
+                + await self._build_media_items_community_gameclips(entry, identifier)
                 + await self._build_media_items_screenshots(entry, identifier)
+                + await self._build_media_items_community_screenshots(entry, identifier)
                 + self._build_media_items_promotional(identifier, game)
             ],
             children_media_class=MEDIA_CLASS_MAP[identifier.media_type],
@@ -451,6 +479,50 @@ class XboxSource(MediaSource):
             for gameclip in gameclips
         ]
 
+    async def _build_media_items_community_gameclips(
+        self, entry: XboxConfigEntry, identifier: XboxMediaSourceIdentifier
+    ) -> list[BrowseMediaSource]:
+        """List media items."""
+        client = entry.runtime_data.client
+
+        if identifier.media_type != ATTR_COMMUNITY_GAMECLIPS:
+            return []
+        try:
+            gameclips = (
+                await client.gameclips.get_recent_community_clips_by_title_id(
+                    identifier.title_id
+                )
+            ).game_clips
+        except TimeoutException as e:
+            raise BrowseError(
+                translation_domain=DOMAIN,
+                translation_key="timeout_exception",
+            ) from e
+        except (RequestError, HTTPStatusError) as e:
+            _LOGGER.debug("Xbox exception:", exc_info=True)
+            raise BrowseError(
+                translation_domain=DOMAIN,
+                translation_key="request_exception",
+            ) from e
+
+        return [
+            BrowseMediaSource(
+                domain=DOMAIN,
+                identifier=f"{identifier}/{gameclip.game_clip_id}",
+                media_class=MediaClass.VIDEO,
+                media_content_type=MediaClass.VIDEO,
+                title=(
+                    f"{gameclip.user_caption}"
+                    f"{' | ' if gameclip.user_caption else ''}"
+                    f"{dt_util.get_age(gameclip.date_recorded)}"
+                ),
+                can_play=True,
+                can_expand=False,
+                thumbnail=gameclip.thumbnails[0].uri,
+            )
+            for gameclip in gameclips
+        ]
+
     async def _build_media_items_screenshots(
         self, entry: XboxConfigEntry, identifier: XboxMediaSourceIdentifier
     ) -> list[BrowseMediaSource]:
@@ -463,6 +535,50 @@ class XboxSource(MediaSource):
             screenshots = (
                 await client.screenshots.get_recent_screenshots_by_xuid(
                     identifier.xuid, identifier.title_id, max_items=999
+                )
+            ).screenshots
+        except TimeoutException as e:
+            raise BrowseError(
+                translation_domain=DOMAIN,
+                translation_key="timeout_exception",
+            ) from e
+        except (RequestError, HTTPStatusError) as e:
+            _LOGGER.debug("Xbox exception:", exc_info=True)
+            raise BrowseError(
+                translation_domain=DOMAIN,
+                translation_key="request_exception",
+            ) from e
+
+        return [
+            BrowseMediaSource(
+                domain=DOMAIN,
+                identifier=f"{identifier}/{screenshot.screenshot_id}",
+                media_class=MediaClass.VIDEO,
+                media_content_type=MediaClass.VIDEO,
+                title=(
+                    f"{screenshot.user_caption}"
+                    f"{' | ' if screenshot.user_caption else ''}"
+                    f"{dt_util.get_age(screenshot.date_taken)} | {screenshot.resolution_height}p"
+                ),
+                can_play=True,
+                can_expand=False,
+                thumbnail=screenshot.thumbnails[0].uri,
+            )
+            for screenshot in screenshots
+        ]
+
+    async def _build_media_items_community_screenshots(
+        self, entry: XboxConfigEntry, identifier: XboxMediaSourceIdentifier
+    ) -> list[BrowseMediaSource]:
+        """List media items."""
+        client = entry.runtime_data.client
+
+        if identifier.media_type != ATTR_COMMUNITY_SCREENSHOTS:
+            return []
+        try:
+            screenshots = (
+                await client.screenshots.get_recent_community_screenshots_by_title_id(
+                    identifier.title_id
                 )
             ).screenshots
         except TimeoutException as e:
