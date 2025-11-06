@@ -1,0 +1,44 @@
+"""Anglian Water entity."""
+
+from __future__ import annotations
+
+import logging
+
+from pyanglianwater import SmartMeter
+
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from .const import DOMAIN
+from .coordinator import AnglianWaterUpdateCoordinator
+
+_LOGGER = logging.getLogger(__name__)
+
+class AnglianWaterEntity(CoordinatorEntity[AnglianWaterUpdateCoordinator]):
+    """Defines a Anglian Water entity."""
+
+    def __init__(
+        self,
+        coordinator: AnglianWaterUpdateCoordinator,
+        smart_meter: SmartMeter,
+    ) -> None:
+        """Initialize Anglian Water entity."""
+        super().__init__(coordinator)
+        self.smart_meter = smart_meter
+        self._attr_unique_id = smart_meter.serial_number
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, smart_meter.serial_number)},
+            name="Smart Water Meter",
+            manufacturer="Anglian Water",
+            serial_number=smart_meter.serial_number,
+        )
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is loaded."""
+        await super().async_added_to_hass()
+        self.coordinator.api.register_callback(self.async_write_ha_state)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """When will be removed from HASS."""
+        self.coordinator.api.updated_data_callbacks.pop(self.async_write_ha_state, None)
+        await super().async_will_remove_from_hass()
