@@ -1049,10 +1049,10 @@ class MieleAbsoluteTimeSensor(MieleRestorableSensor):
                 < self._previous_value + timedelta(seconds=90)
             )
         ) or current_status == StateStatus.PROGRAM_ENDED:
-            pass
+            return
 
         # force unknown when appliance is not working (some devices are keeping last value until a new cycle starts)
-        elif current_status in (StateStatus.OFF, StateStatus.ON, StateStatus.IDLE):
+        if current_status in (StateStatus.OFF, StateStatus.ON, StateStatus.IDLE):
             self._attr_native_value = None
 
         # otherwise, cache value and return it
