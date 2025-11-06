@@ -25,7 +25,6 @@ from .const import (
     COFFEE_TEMPERATURE_OPTIONS,
     DOMAIN,
     DRYING_TARGET_OPTIONS,
-    FAN_SPEED_MODE_OPTIONS,
     FLOW_RATE_OPTIONS,
     HOT_WATER_TEMPERATURE_OPTIONS,
     INTENSIVE_LEVEL_OPTIONS,
@@ -308,16 +307,6 @@ PROGRAM_SELECT_OPTION_ENTITY_DESCRIPTIONS = (
         values_translation_key={
             value: translation_key
             for translation_key, value in VARIO_PERFECT_OPTIONS.items()
-        },
-    ),
-    HomeConnectSelectEntityDescription(
-        key=OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_MODE,
-        translation_key="fan_speed_mode",
-        options=list(FAN_SPEED_MODE_OPTIONS),
-        translation_key_values=FAN_SPEED_MODE_OPTIONS,
-        values_translation_key={
-            value: translation_key
-            for translation_key, value in FAN_SPEED_MODE_OPTIONS.items()
         },
     ),
 )

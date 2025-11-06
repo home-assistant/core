@@ -118,13 +118,6 @@ NUMBER_OPTIONS = (
         translation_key="setpoint_temperature",
         device_class=NumberDeviceClass.TEMPERATURE,
     ),
-    NumberEntityDescription(
-        key=OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_PERCENTAGE,
-        translation_key="fan_speed_percentage",
-        native_unit_of_measurement=PERCENTAGE,
-        native_min_value=1,
-        native_max_value=100,
-    ),
 )
 
 
