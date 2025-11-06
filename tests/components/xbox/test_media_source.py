@@ -3,6 +3,7 @@
 import httpx
 import pytest
 from pythonxbox.api.provider.people.models import PeopleResponse
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import BrowseError
 from homeassistant.components.media_source import (
@@ -21,10 +22,11 @@ from tests.typing import MagicMock
 
 
 @pytest.mark.usefixtures("xbox_live_client")
-@pytest.mark.freeze_time("2017-11-10T17:12:27")
+@pytest.mark.freeze_time("2025-11-06T17:12:27")
 async def test_browse_media(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test browsing media."""
 
@@ -36,81 +38,53 @@ async def test_browse_media(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}")
+    assert (
+        await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}")
+    ).as_dict() == snapshot(name="games_view")
 
-    assert browse.domain == DOMAIN
-    assert browse.identifier == "271958441785640"
-    assert browse.title == "Xbox / GSR Ae"
-    assert browse.children
-    assert [(child.identifier, child.title) for child in browse.children] == [
-        ("271958441785640/1297287135", "Blue Dragon"),
-        ("271958441785640/1560034050", "Assassin's Creed® Syndicate"),
-    ]
+    assert (
+        await async_browse_media(
+            hass, f"{URI_SCHEME}{DOMAIN}/271958441785640/1297287135"
+        )
+    ).as_dict() == snapshot(name="category_view")
 
-    browse = await async_browse_media(
-        hass, f"{URI_SCHEME}{DOMAIN}/271958441785640/1297287135"
-    )
+    assert (
+        await async_browse_media(
+            hass, f"{URI_SCHEME}{DOMAIN}/271958441785640/1297287135/gameclips"
+        )
+    ).as_dict() == snapshot(name="gameclips_view")
 
-    assert browse.identifier == "271958441785640/1297287135"
-    assert browse.title == "Xbox / GSR Ae / Blue Dragon"
-    assert browse.children
-    assert [(child.identifier, child.title) for child in browse.children] == [
-        ("271958441785640/1297287135/gameclips", "Gameclips"),
-        ("271958441785640/1297287135/screenshots", "Screenshots"),
-        ("271958441785640/1297287135/game_media", "Game media"),
-    ]
+    assert (
+        await async_browse_media(
+            hass, f"{URI_SCHEME}{DOMAIN}/271958441785640/1297287135/screenshots"
+        )
+    ).as_dict() == snapshot(name="screenshots_view")
 
-    browse = await async_browse_media(
-        hass, f"{URI_SCHEME}{DOMAIN}/271958441785640/1297287135/gameclips"
-    )
+    assert (
+        await async_browse_media(
+            hass, f"{URI_SCHEME}{DOMAIN}/271958441785640/1297287135/game_media"
+        )
+    ).as_dict() == snapshot(name="game_media_view")
 
-    assert browse.identifier == "271958441785640/1297287135/gameclips"
-    assert browse.title == "Xbox / GSR Ae / Blue Dragon / Gameclips"
-    assert browse.children
+    assert (
+        await async_browse_media(
+            hass, f"{URI_SCHEME}{DOMAIN}/271958441785640/1297287135/community_gameclips"
+        )
+    ).as_dict() == snapshot(name="community_gameclips_view")
 
-    assert [(child.identifier, child.title) for child in browse.children] == [
-        (
-            "271958441785640/1297287135/gameclips/44b7e94d-b3e9-4b97-be73-417be9091e93",
-            "11 hours",
-        ),
-        (
-            "271958441785640/1297287135/gameclips/f87cc6ac-c291-4998-9124-d8b36c059b6a",
-            "1 year",
-        ),
-    ]
-
-    browse = await async_browse_media(
-        hass, f"{URI_SCHEME}{DOMAIN}/271958441785640/1297287135/screenshots"
-    )
-
-    assert browse.identifier == "271958441785640/1297287135/screenshots"
-    assert browse.title == "Xbox / GSR Ae / Blue Dragon / Screenshots"
-    assert browse.children
-
-    assert [(child.identifier, child.title) for child in browse.children] == [
-        (
-            "271958441785640/1297287135/screenshots/41593644-be22-43d6-b224-c7bebe14076e",
-            "2 years | 1080p",
-        ),
-    ]
-
-    browse = await async_browse_media(
-        hass, f"{URI_SCHEME}{DOMAIN}/271958441785640/1297287135/game_media"
-    )
-
-    assert browse.identifier == "271958441785640/1297287135/game_media"
-    assert browse.title == "Xbox / GSR Ae / Blue Dragon / Game media"
-    assert browse.children
-    assert len(browse.children) == 24
-
-    assert browse.children[0].identifier == "271958441785640/1297287135/game_media/0"
-    assert browse.children[0].title == "Screenshot"
+    assert (
+        await async_browse_media(
+            hass,
+            f"{URI_SCHEME}{DOMAIN}/271958441785640/1297287135/community_screenshots",
+        )
+    ).as_dict() == snapshot(name="community_screenshots_view")
 
 
 async def test_browse_media_accounts(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     xbox_live_client: AsyncMock,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test browsing media we get account view if more than 1 account is configured."""
 
@@ -153,16 +127,18 @@ async def test_browse_media_accounts(
 
     assert len(hass.config_entries.async_loaded_entries(DOMAIN)) == 2
 
-    browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}")
+    assert (
+        await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}")
+    ).as_dict() == snapshot
 
-    assert browse.domain == DOMAIN
-    assert browse.identifier is None
-    assert browse.title == "Xbox Game Media"
-    assert browse.children
-    assert [(child.identifier, child.title) for child in browse.children] == [
-        ("271958441785640", "GSR Ae"),
-        ("277923030577271", "Iqnavs"),
-    ]
+    # assert browse.domain == DOMAIN
+    # assert browse.identifier is None
+    # assert browse.title == "Xbox Game Media"
+    # assert browse.children
+    # assert [(child.identifier, child.title) for child in browse.children] == [
+    #     ("271958441785640", "GSR Ae"),
+    #     ("277923030577271", "Iqnavs"),
+    # ]
 
 
 @pytest.mark.parametrize(

@@ -134,10 +134,24 @@ def mock_xbox_live_client() -> Generator[AsyncMock]:
         client.gameclips.get_recent_clips_by_xuid.return_value = GameclipsResponse(
             **load_json_object_fixture("gameclips_recent_xuid.json", DOMAIN)
         )
+        client.gameclips.get_recent_community_clips_by_title_id.return_value = (
+            GameclipsResponse(
+                **load_json_object_fixture(
+                    "gameclips_community_recent_xuid.json", DOMAIN
+                )
+            )
+        )
         client.screenshots = AsyncMock()
         client.screenshots.get_recent_screenshots_by_xuid.return_value = (
             ScreenshotResponse(
                 **load_json_object_fixture("screenshots_recent_xuid.json", DOMAIN)
+            )
+        )
+        client.screenshots.get_recent_community_screenshots_by_title_id.return_value = (
+            ScreenshotResponse(
+                **load_json_object_fixture(
+                    "screenshots_community_recent_xuid.json", DOMAIN
+                )
             )
         )
 
