@@ -66,15 +66,21 @@ def find_dpcode(
                 and current_definition.type == dptype
             ):
                 continue
-            if dptype == DPType.ENUM and (
-                enum_type := EnumTypeData.from_json(dpcode, current_definition.values)
-            ):
+            if dptype is DPType.ENUM:
+                if not (
+                    enum_type := EnumTypeData.from_json(
+                        dpcode, current_definition.values
+                    )
+                ):
+                    continue
                 return enum_type
-            if dptype == DPType.INTEGER and (
-                integer_type := IntegerTypeData.from_json(
-                    dpcode, current_definition.values
-                )
-            ):
+            if dptype == DPType.INTEGER:
+                if not (
+                    integer_type := IntegerTypeData.from_json(
+                        dpcode, current_definition.values
+                    )
+                ):
+                    continue
                 return integer_type
 
     return None
