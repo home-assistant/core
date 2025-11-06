@@ -19,7 +19,7 @@ import voluptuous as vol
 from homeassistant.components.recorder import SupportedDialect, get_instance
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.exceptions import TemplateError
+from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.template import Template
 
@@ -51,7 +51,7 @@ def validate_sql_select(value: Template) -> Template:
     try:
         assert value.hass
         check_and_render_sql_query(value.hass, value)
-    except ValueError as err:
+    except (TemplateError, InvalidSqlQuery) as err:
         raise vol.Invalid(str(err)) from err
     return value
 
@@ -250,23 +250,42 @@ def check_and_render_sql_query(hass: HomeAssistant, query: Template | str) -> st
     if isinstance(query, str):
         query = query.strip()
         if not query:
-            raise ValueError("Query cannot be empty")
+            raise EmptyQueryError("Query cannot be empty")
         query = Template(query, hass=hass)
 
-    try:
-        query.ensure_valid()
-        rendered_query: str = query.async_render()
-    except TemplateError as err:
-        raise ValueError("Invalid template") from err
+    # Raises TemplateError if template is invalid
+    query.ensure_valid()
+    rendered_query: str = query.async_render()
+
     if len(rendered_queries := sqlparse.parse(rendered_query.lstrip().lstrip(";"))) > 1:
-        raise ValueError("Multiple SQL statements are not allowed")
+        raise MultipleQueryError("Multiple SQL statements are not allowed")
     if (
         len(rendered_queries) == 0
         or (query_type := rendered_queries[0].get_type()) == "UNKNOWN"
     ):
-        raise ValueError("SQL query is empty or unknown type")
+        raise UnknownQueryTypeError("SQL query is empty or unknown type")
     if query_type != "SELECT":
         _LOGGER.debug("The SQL query %s is of type %s", rendered_query, query_type)
-        raise ValueError("SQL query must be of type SELECT")
+        raise NotSelectQueryError("SQL query must be of type SELECT")
 
     return str(rendered_queries[0])
+
+
+class InvalidSqlQuery(HomeAssistantError):
+    """SQL query is invalid error."""
+
+
+class EmptyQueryError(InvalidSqlQuery):
+    """SQL query is empty error."""
+
+
+class MultipleQueryError(InvalidSqlQuery):
+    """SQL query is multiple error."""
+
+
+class UnknownQueryTypeError(InvalidSqlQuery):
+    """SQL query is of unknown type error."""
+
+
+class NotSelectQueryError(InvalidSqlQuery):
+    """SQL query is not a SELECT statement error."""

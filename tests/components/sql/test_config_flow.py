@@ -280,7 +280,7 @@ async def test_flow_fails_invalid_query(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {
-        CONF_QUERY: "query_invalid",
+        CONF_QUERY: "query_no_read_only",
     }
 
     result = await hass.config_entries.flow.async_configure(
@@ -290,7 +290,7 @@ async def test_flow_fails_invalid_query(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {
-        CONF_QUERY: "query_invalid",
+        CONF_QUERY: "query_no_read_only",
     }
 
     result = await hass.config_entries.flow.async_configure(
@@ -572,7 +572,7 @@ async def test_options_flow_fails_invalid_query(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {
-        CONF_QUERY: "query_invalid",
+        CONF_QUERY: "query_no_read_only",
     }
 
     result = await hass.config_entries.options.async_configure(
@@ -582,7 +582,7 @@ async def test_options_flow_fails_invalid_query(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {
-        CONF_QUERY: "query_invalid",
+        CONF_QUERY: "query_no_read_only",
     }
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],

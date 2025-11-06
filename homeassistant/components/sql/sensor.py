@@ -40,6 +40,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_ADVANCED_OPTIONS, CONF_COLUMN_NAME, CONF_QUERY, DOMAIN
 from .util import (
+    InvalidSqlQuery,
     async_create_sessionmaker,
     check_and_render_sql_query,
     convert_value,
@@ -268,7 +269,7 @@ class SQLSensor(ManualTriggerSensorEntity):
             rendered_query = check_and_render_sql_query(self.hass, self._query)
             _lambda_stmt = generate_lambda_stmt(rendered_query)
             result: Result = sess.execute(_lambda_stmt)
-        except ValueError as err:
+        except (TemplateError, InvalidSqlQuery) as err:
             _LOGGER.error(
                 "Error rendering query %s: %s",
                 redact_credentials(self._query.template),

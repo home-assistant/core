@@ -9,7 +9,6 @@ import sqlalchemy
 from sqlalchemy.engine import Engine, Result
 from sqlalchemy.exc import MultipleResultsFound, NoSuchColumnError, SQLAlchemyError
 from sqlalchemy.orm import Session, scoped_session, sessionmaker
-from sqlparse.exceptions import SQLParseError
 import voluptuous as vol
 
 from homeassistant.components.recorder import CONF_DB_URL, get_instance
@@ -32,10 +31,19 @@ from homeassistant.const import (
 )
 from homeassistant.core import async_get_hass, callback
 from homeassistant.data_entry_flow import section
+from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import selector
 
 from .const import CONF_ADVANCED_OPTIONS, CONF_COLUMN_NAME, CONF_QUERY, DOMAIN
-from .util import check_and_render_sql_query, resolve_db_url
+from .util import (
+    EmptyQueryError,
+    InvalidSqlQuery,
+    MultipleQueryError,
+    NotSelectQueryError,
+    UnknownQueryTypeError,
+    check_and_render_sql_query,
+    resolve_db_url,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -89,16 +97,8 @@ def validate_sql_select(value: str) -> str:
     hass = async_get_hass()
     try:
         return check_and_render_sql_query(hass, value)
-    except ValueError as err:
-        err_text = err.args[0]
-        _LOGGER.debug("Invalid query '%s' results in '%s'", value, err_text)
-        if err_text == "Multiple SQL statements are not allowed":
-            raise MultipleResultsFound from err
-        if err_text in (
-            "SQL query must be of type SELECT",
-            "SQL query must start with SELECT",
-        ):
-            raise SQLParseError from err
+    except (TemplateError, InvalidSqlQuery) as err:
+        _LOGGER.debug("Invalid query '%s' results in '%s'", value, err.args[0])
         raise
 
 
@@ -141,7 +141,7 @@ def validate_query(db_url: str, query: str, column: str) -> bool:
         if sess:
             sess.close()
             engine.dispose()
-        raise ValueError(error) from error
+        raise InvalidSqlQuery from error
 
     for res in result.mappings():
         if column not in res:
@@ -227,13 +227,13 @@ class SQLConfigFlow(ConfigFlow, domain=DOMAIN):
             except NoSuchColumnError:
                 errors["column"] = "column_invalid"
                 description_placeholders = {"column": column}
-            except MultipleResultsFound:
+            except (MultipleResultsFound, MultipleQueryError):
                 errors["query"] = "multiple_queries"
             except SQLAlchemyError:
                 errors["db_url"] = "db_url_invalid"
-            except SQLParseError:
+            except (NotSelectQueryError, UnknownQueryTypeError):
                 errors["query"] = "query_no_read_only"
-            except ValueError as err:
+            except (TemplateError, EmptyQueryError, InvalidSqlQuery) as err:
                 _LOGGER.debug("Invalid query: %s", err)
                 errors["query"] = "query_invalid"
 
@@ -285,13 +285,13 @@ class SQLOptionsFlowHandler(OptionsFlowWithReload):
             except NoSuchColumnError:
                 errors["column"] = "column_invalid"
                 description_placeholders = {"column": column}
-            except MultipleResultsFound:
+            except (MultipleResultsFound, MultipleQueryError):
                 errors["query"] = "multiple_queries"
             except SQLAlchemyError:
                 errors["db_url"] = "db_url_invalid"
-            except SQLParseError:
+            except (NotSelectQueryError, UnknownQueryTypeError):
                 errors["query"] = "query_no_read_only"
-            except ValueError as err:
+            except (TemplateError, EmptyQueryError, InvalidSqlQuery) as err:
                 _LOGGER.debug("Invalid query: %s", err)
                 errors["query"] = "query_invalid"
             else:

@@ -196,8 +196,10 @@ async def test_broken_template_query_2(
     state = hass.states.get("sensor.count_tables")
     assert state.state == "0.005"
     assert (
-        "Error rendering query SELECT {{ states.sensor.input1.state"
-        " | int / 1000}} as value LIMIT 1;: Invalid template" in caplog.text
+        "Error rendering query SELECT {{ states.sensor.input1.state | int / 1000}} as value"
+        " LIMIT 1;: ValueError: Template error: int got invalid input 'on' when rendering"
+        " template 'SELECT {{ states.sensor.input1.state | int / 1000}} as value LIMIT 1;'"
+        " but no default was specified" in caplog.text
     )
 
 
