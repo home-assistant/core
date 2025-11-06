@@ -6,7 +6,7 @@ from dataclasses import replace
 
 from aioesphomeapi import EntityInfo, SelectInfo, SelectState
 
-from homeassistant.components.assist_pipeline.select import (
+from homeassistant.components.assist_pipeline import (
     AssistPipelineSelect,
     VadSensitivitySelect,
 )
@@ -194,6 +194,21 @@ class EsphomeAssistSatelliteWakeWordSelect(
         self._attr_options = [NO_WAKE_WORD, *sorted(self._wake_words)]
 
         option = self._attr_current_option
+
+        if (
+            (self._wake_word_index == 0)
+            and (len(config.active_wake_words) == 1)
+            and (option in (None, NO_WAKE_WORD))
+        ):
+            option = next(
+                (
+                    wake_word
+                    for wake_word, wake_word_id in self._wake_words.items()
+                    if wake_word_id == config.active_wake_words[0]
+                ),
+                None,
+            )
+
         if (
             (option is None)
             or ((wake_word_id := self._wake_words.get(option)) is None)

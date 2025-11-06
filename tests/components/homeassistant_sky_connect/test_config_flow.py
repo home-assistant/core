@@ -1,6 +1,7 @@
 """Test the Home Assistant SkyConnect config flow."""
 
-from unittest.mock import Mock, patch
+from collections.abc import Generator
+from unittest.mock import AsyncMock, Mock, call, patch
 
 import pytest
 
@@ -8,6 +9,9 @@ from homeassistant.components.hassio import AddonInfo, AddonState
 from homeassistant.components.homeassistant_hardware.firmware_config_flow import (
     STEP_PICK_FIRMWARE_THREAD,
     STEP_PICK_FIRMWARE_ZIGBEE,
+)
+from homeassistant.components.homeassistant_hardware.helpers import (
+    async_notify_firmware_info,
 )
 from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon import (
     CONF_DISABLE_MULTI_PAN,
@@ -19,14 +23,36 @@ from homeassistant.components.homeassistant_hardware.util import (
     FirmwareInfo,
 )
 from homeassistant.components.homeassistant_sky_connect.const import DOMAIN
+from homeassistant.components.usb import USBDevice
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
+from homeassistant.setup import async_setup_component
 
 from .common import USB_DATA_SKY, USB_DATA_ZBT1
 
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture(name="supervisor")
+def mock_supervisor_fixture() -> Generator[None]:
+    """Mock Supervisor."""
+    with patch(
+        "homeassistant.components.homeassistant_hardware.firmware_config_flow.is_hassio",
+        return_value=True,
+    ):
+        yield
+
+
+@pytest.fixture(name="setup_entry", autouse=True)
+def setup_entry_fixture() -> Generator[AsyncMock]:
+    """Mock entry setup."""
+    with patch(
+        "homeassistant.components.homeassistant_sky_connect.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        yield mock_setup_entry
 
 
 @pytest.mark.parametrize(
@@ -70,30 +96,20 @@ async def test_config_flow_zigbee(
         step_id: str,
         next_step_id: str,
     ) -> ConfigFlowResult:
-        if next_step_id == "start_otbr_addon":
-            next_step_id = "pre_confirm_otbr"
-
-        return await getattr(self, f"async_step_{next_step_id}")(user_input={})
+        self._probed_firmware_info = FirmwareInfo(
+            device=usb_data.device,
+            firmware_type=expected_installed_firmware_type,
+            firmware_version=fw_version,
+            owners=[],
+            source="probe",
+        )
+        return await getattr(self, f"async_step_{next_step_id}")()
 
     with (
-        patch(
-            "homeassistant.components.homeassistant_hardware.firmware_config_flow.BaseFirmwareConfigFlow._ensure_thread_addon_setup",
-            return_value=None,
-        ),
         patch(
             "homeassistant.components.homeassistant_hardware.firmware_config_flow.BaseFirmwareConfigFlow._install_firmware_step",
             autospec=True,
             side_effect=mock_install_firmware_step,
-        ),
-        patch(
-            "homeassistant.components.homeassistant_hardware.firmware_config_flow.probe_silabs_firmware_info",
-            return_value=FirmwareInfo(
-                device=usb_data.device,
-                firmware_type=fw_type,
-                firmware_version=fw_version,
-                owners=[],
-                source="probe",
-            ),
         ),
     ):
         pick_result = await hass.config_entries.flow.async_configure(
@@ -133,6 +149,7 @@ async def test_config_flow_zigbee(
     assert zha_flow["step_id"] == "confirm"
 
 
+@pytest.mark.usefixtures("addon_installed", "supervisor")
 @pytest.mark.parametrize(
     ("usb_data", "model"),
     [
@@ -150,6 +167,7 @@ async def test_config_flow_thread(
     usb_data: UsbServiceInfo,
     model: str,
     hass: HomeAssistant,
+    start_addon: AsyncMock,
 ) -> None:
     """Test the config flow for SkyConnect with Thread."""
     fw_type = ApplicationType.SPINEL
@@ -174,44 +192,39 @@ async def test_config_flow_thread(
         step_id: str,
         next_step_id: str,
     ) -> ConfigFlowResult:
-        if next_step_id == "start_otbr_addon":
-            next_step_id = "pre_confirm_otbr"
-
-        return await getattr(self, f"async_step_{next_step_id}")(user_input={})
+        self._probed_firmware_info = FirmwareInfo(
+            device=usb_data.device,
+            firmware_type=expected_installed_firmware_type,
+            firmware_version=fw_version,
+            owners=[],
+            source="probe",
+        )
+        return await getattr(self, f"async_step_{next_step_id}")()
 
     with (
-        patch(
-            "homeassistant.components.homeassistant_hardware.firmware_config_flow.BaseFirmwareConfigFlow._ensure_thread_addon_setup",
-            return_value=None,
-        ),
         patch(
             "homeassistant.components.homeassistant_hardware.firmware_config_flow.BaseFirmwareConfigFlow._install_firmware_step",
             autospec=True,
             side_effect=mock_install_firmware_step,
         ),
-        patch(
-            "homeassistant.components.homeassistant_hardware.firmware_config_flow.probe_silabs_firmware_info",
-            return_value=FirmwareInfo(
-                device=usb_data.device,
-                firmware_type=fw_type,
-                firmware_version=fw_version,
-                owners=[],
-                source="probe",
-            ),
-        ),
     ):
-        confirm_result = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={"next_step_id": STEP_PICK_FIRMWARE_THREAD},
         )
 
-        assert confirm_result["type"] is FlowResultType.FORM
-        assert confirm_result["step_id"] == ("confirm_otbr")
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        assert result["step_id"] == "start_otbr_addon"
+
+        # Make sure the flow continues when the progress task is done.
+        await hass.async_block_till_done()
 
         create_result = await hass.config_entries.flow.async_configure(
-            confirm_result["flow_id"], user_input={}
+            result["flow_id"]
         )
 
+    assert start_addon.call_count == 1
+    assert start_addon.call_args == call("core_openthread_border_router")
     assert create_result["type"] is FlowResultType.CREATE_ENTRY
     config_entry = create_result["result"]
     assert config_entry.data == {
@@ -279,10 +292,14 @@ async def test_options_flow(
         step_id: str,
         next_step_id: str,
     ) -> ConfigFlowResult:
-        if next_step_id == "start_otbr_addon":
-            next_step_id = "pre_confirm_otbr"
-
-        return await getattr(self, f"async_step_{next_step_id}")(user_input={})
+        self._probed_firmware_info = FirmwareInfo(
+            device=usb_data.device,
+            firmware_type=expected_installed_firmware_type,
+            firmware_version="7.4.4.0 build 0",
+            owners=[],
+            source="probe",
+        )
+        return await getattr(self, f"async_step_{next_step_id}")()
 
     with (
         patch(
@@ -290,23 +307,9 @@ async def test_options_flow(
             return_value=[],
         ),
         patch(
-            "homeassistant.components.homeassistant_hardware.firmware_config_flow.BaseFirmwareOptionsFlow._ensure_thread_addon_setup",
-            return_value=None,
-        ),
-        patch(
             "homeassistant.components.homeassistant_hardware.firmware_config_flow.BaseFirmwareOptionsFlow._install_firmware_step",
             autospec=True,
             side_effect=mock_install_firmware_step,
-        ),
-        patch(
-            "homeassistant.components.homeassistant_hardware.firmware_config_flow.probe_silabs_firmware_info",
-            return_value=FirmwareInfo(
-                device=usb_data.device,
-                firmware_type=ApplicationType.EZSP,
-                firmware_version="7.4.4.0 build 0",
-                owners=[],
-                source="probe",
-            ),
         ),
     ):
         pick_result = await hass.config_entries.options.async_configure(
@@ -428,3 +431,187 @@ async def test_options_flow_multipan_uninstall(
 
     # We've reverted the firmware back to Zigbee
     assert config_entry.data["firmware"] == "ezsp"
+
+
+@pytest.mark.parametrize(
+    ("usb_data", "model"),
+    [
+        (USB_DATA_SKY, "Home Assistant SkyConnect"),
+        (USB_DATA_ZBT1, "Home Assistant Connect ZBT-1"),
+    ],
+)
+async def test_firmware_callback_auto_creates_entry(
+    usb_data: UsbServiceInfo,
+    model: str,
+    hass: HomeAssistant,
+) -> None:
+    """Test that firmware notification triggers import flow that auto-creates config entry."""
+    await async_setup_component(hass, "homeassistant_hardware", {})
+    await async_setup_component(hass, "usb", {})
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "usb"}, data=usb_data
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "pick_firmware"
+
+    usb_device = USBDevice(
+        device=usb_data.device,
+        vid=usb_data.vid,
+        pid=usb_data.pid,
+        serial_number=usb_data.serial_number,
+        manufacturer=usb_data.manufacturer,
+        description=usb_data.description,
+    )
+
+    with patch(
+        "homeassistant.components.homeassistant_hardware.helpers.usb_device_from_path",
+        return_value=usb_device,
+    ):
+        await async_notify_firmware_info(
+            hass,
+            "zha",
+            FirmwareInfo(
+                device=usb_data.device,
+                firmware_type=ApplicationType.EZSP,
+                firmware_version="7.4.4.0",
+                owners=[],
+                source="zha",
+            ),
+        )
+
+        await hass.async_block_till_done()
+
+    # The config entry was auto-created
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].data == {
+        "device": usb_data.device,
+        "firmware": ApplicationType.EZSP.value,
+        "firmware_version": "7.4.4.0",
+        "vid": usb_data.vid,
+        "pid": usb_data.pid,
+        "serial_number": usb_data.serial_number,
+        "manufacturer": usb_data.manufacturer,
+        "description": usb_data.description,
+        "product": usb_data.description,
+    }
+
+    # The discovery flow is gone
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+
+
+@pytest.mark.parametrize(
+    ("usb_data", "model"),
+    [
+        (USB_DATA_SKY, "Home Assistant SkyConnect"),
+        (USB_DATA_ZBT1, "Home Assistant Connect ZBT-1"),
+    ],
+)
+async def test_duplicate_usb_discovery_aborts_early(
+    usb_data: UsbServiceInfo, model: str, hass: HomeAssistant
+) -> None:
+    """Test USB discovery aborts early when unique_id exists before serial path resolution."""
+    # Create existing config entry
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "firmware": "ezsp",
+            "device": "/dev/oldpath",
+            "manufacturer": usb_data.manufacturer,
+            "pid": usb_data.pid,
+            "description": usb_data.description,
+            "product": usb_data.description,
+            "serial_number": usb_data.serial_number,
+            "vid": usb_data.vid,
+        },
+        unique_id=(
+            f"{usb_data.vid}:{usb_data.pid}_"
+            f"{usb_data.serial_number}_"
+            f"{usb_data.manufacturer}_"
+            f"{usb_data.description}"
+        ),
+    )
+    config_entry.add_to_hass(hass)
+
+    # Try to discover the same device with a different path
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "usb"}, data=usb_data
+    )
+
+    # Should abort before get_serial_by_id is called
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.parametrize(
+    ("usb_data", "model"),
+    [
+        (USB_DATA_SKY, "Home Assistant SkyConnect"),
+        (USB_DATA_ZBT1, "Home Assistant Connect ZBT-1"),
+    ],
+)
+async def test_firmware_callback_updates_existing_entry(
+    usb_data: UsbServiceInfo, model: str, hass: HomeAssistant
+) -> None:
+    """Test that firmware notification updates existing config entry device path."""
+    await async_setup_component(hass, "homeassistant_hardware", {})
+    await async_setup_component(hass, "usb", {})
+
+    # Create existing config entry with old device path
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "firmware": ApplicationType.EZSP.value,
+            "firmware_version": "7.4.4.0",
+            "device": "/dev/oldpath",
+            "vid": usb_data.vid,
+            "pid": usb_data.pid,
+            "serial_number": usb_data.serial_number,
+            "manufacturer": usb_data.manufacturer,
+            "description": usb_data.description,
+            "product": usb_data.description,
+        },
+        unique_id=(
+            f"{usb_data.vid}:{usb_data.pid}_"
+            f"{usb_data.serial_number}_"
+            f"{usb_data.manufacturer}_"
+            f"{usb_data.description}"
+        ),
+    )
+    config_entry.add_to_hass(hass)
+
+    usb_device = USBDevice(
+        device=usb_data.device,
+        vid=usb_data.vid,
+        pid=usb_data.pid,
+        serial_number=usb_data.serial_number,
+        manufacturer=usb_data.manufacturer,
+        description=usb_data.description,
+    )
+
+    with patch(
+        "homeassistant.components.homeassistant_hardware.helpers.usb_device_from_path",
+        return_value=usb_device,
+    ):
+        await async_notify_firmware_info(
+            hass,
+            "zha",
+            FirmwareInfo(
+                device=usb_data.device,
+                firmware_type=ApplicationType.EZSP,
+                firmware_version="7.4.4.0",
+                owners=[],
+                source="zha",
+            ),
+        )
+
+        await hass.async_block_till_done()
+
+    # The config entry device path should be updated
+    assert config_entry.data["device"] == usb_data.device
+
+    # No new config entry was created
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
