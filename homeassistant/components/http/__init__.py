@@ -38,6 +38,7 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, issue_registry as ir, storage
+from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.http import (
     KEY_ALLOW_CONFIGURED_CORS,
     KEY_AUTHENTICATED,  # noqa: F401
@@ -109,7 +110,7 @@ HTTP_SCHEMA: Final = vol.All(
     cv.deprecated(CONF_BASE_URL),
     vol.Schema(
         {
-            vol.Optional(CONF_SERVER_HOST, default=_DEFAULT_BIND): vol.All(
+            vol.Optional(CONF_SERVER_HOST): vol.All(
                 cv.ensure_list, vol.Length(min=1), [cv.string]
             ),
             vol.Optional(CONF_SERVER_PORT, default=SERVER_PORT): cv.port,
@@ -207,7 +208,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if conf is None:
         conf = cast(ConfData, HTTP_SCHEMA({}))
 
-    server_host = conf[CONF_SERVER_HOST]
+    if CONF_SERVER_HOST in conf and is_hassio(hass):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "server_host_may_break_hassio",
+            is_fixable=False,
+            severity=ir.IssueSeverity.ERROR,
+            translation_key="server_host_may_break_hassio",
+        )
+
+    server_host = conf.get(CONF_SERVER_HOST, _DEFAULT_BIND)
     server_port = conf[CONF_SERVER_PORT]
     ssl_certificate = conf.get(CONF_SSL_CERTIFICATE)
     ssl_peer_certificate = conf.get(CONF_SSL_PEER_CERTIFICATE)

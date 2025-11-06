@@ -29,6 +29,7 @@ from homeassistant.helpers.issue_registry import (
 from .const import (
     ATTR_DATA,
     ATTR_HEALTHY,
+    ATTR_STARTUP,
     ATTR_SUPPORTED,
     ATTR_UNHEALTHY_REASONS,
     ATTR_UNSUPPORTED_REASONS,
@@ -43,7 +44,6 @@ from .const import (
     EVENT_SUPPORTED_CHANGED,
     EXTRA_PLACEHOLDERS,
     ISSUE_KEY_ADDON_BOOT_FAIL,
-    ISSUE_KEY_ADDON_DEPRECATED,
     ISSUE_KEY_ADDON_DETACHED_ADDON_MISSING,
     ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED,
     ISSUE_KEY_ADDON_PWNED,
@@ -54,6 +54,7 @@ from .const import (
     PLACEHOLDER_KEY_FREE_SPACE,
     PLACEHOLDER_KEY_REFERENCE,
     REQUEST_REFRESH_DELAY,
+    STARTUP_COMPLETE,
     UPDATE_KEY_SUPERVISOR,
 )
 from .coordinator import get_addons_info, get_host_info
@@ -85,7 +86,6 @@ ISSUE_KEYS_FOR_REPAIRS = {
     "issue_system_disk_lifetime",
     ISSUE_KEY_SYSTEM_FREE_SPACE,
     ISSUE_KEY_ADDON_PWNED,
-    ISSUE_KEY_ADDON_DEPRECATED,
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -383,6 +383,7 @@ class SupervisorIssues:
         if (
             event[ATTR_WS_EVENT] == EVENT_SUPERVISOR_UPDATE
             and event.get(ATTR_UPDATE_KEY) == UPDATE_KEY_SUPERVISOR
+            and event.get(ATTR_DATA, {}).get(ATTR_STARTUP) == STARTUP_COMPLETE
         ):
             self._hass.async_create_task(self._update())
 

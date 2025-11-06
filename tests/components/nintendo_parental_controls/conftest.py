@@ -32,11 +32,15 @@ def mock_nintendo_device() -> Device:
     mock = AsyncMock(spec=Device)
     mock.device_id = "testdevid"
     mock.name = "Home Assistant Test"
-    mock.extra = {"firmwareVersion": {"displayedVersion": "99.99.99"}}
+    mock.extra = {
+        "firmwareVersion": {"displayedVersion": "99.99.99"},
+        "serialNumber": "SN12345678",
+    }
     mock.limit_time = 120
     mock.today_playing_time = 110
     mock.today_time_remaining = 10
     mock.bedtime_alarm = time(hour=19)
+    mock.add_extra_time.return_value = None
     mock.set_bedtime_alarm.return_value = None
     mock.update_max_daily_playtime.return_value = None
     mock.forced_termination_mode = True
@@ -73,6 +77,20 @@ def mock_nintendo_authenticator() -> Generator[MagicMock]:
         type(mock_auth).complete_login = mock_auth.complete_login
         mock_auth_class.generate_login.return_value = mock_auth
         yield mock_auth
+
+
+@pytest.fixture
+def mock_nintendo_api() -> Generator[AsyncMock]:
+    """Mock Nintendo API."""
+    with patch(
+        "homeassistant.components.nintendo_parental_controls.config_flow.Api",
+        autospec=True,
+    ) as mock_api_class:
+        mock_api_instance = MagicMock()
+        # patch async_get_account_devices as an AsyncMock
+        mock_api_instance.async_get_account_devices = AsyncMock()
+        mock_api_class.return_value = mock_api_instance
+        yield mock_api_instance
 
 
 @pytest.fixture
