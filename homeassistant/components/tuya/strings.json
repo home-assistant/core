@@ -634,7 +634,7 @@
         "name": "[%key:component::sensor::entity_component::carbon_monoxide::name%]"
       },
       "cat_litter_box_status": {
-        "name": "[]%key:component::tuya::entity::sensor::status::name%]",
+        "name": "[%key:component::tuya::entity::sensor::status::name%]",
         "state": {
           "clean": "Clean",
           "clock": "Clock",
