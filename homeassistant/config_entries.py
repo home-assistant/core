@@ -1418,10 +1418,8 @@ class ConfigEntriesFlowManager(
             SOURCE_REAUTH,
             SOURCE_RECONFIGURE,
         } and "entry_id" not in context:
-            # Deprecated in 2024.12, should fail in 2025.12
-            report_usage(
-                f"initialises a {source} flow without a link to the config entry",
-                breaks_in_ha_version="2025.12",
+            raise HomeAssistantError(
+                f"Initialises a {source} flow without a link to the config entry"
             )
 
         flow_id = ulid_util.ulid_now()
