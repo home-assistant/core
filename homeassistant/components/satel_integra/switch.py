@@ -103,6 +103,7 @@ class SatelIntegraSwitch(SwitchEntity):
         """Turn the device on."""
         _LOGGER.debug("Switch: %s status: %s, turning on", self._attr_name, self._state)
         await self._satel.set_output(self._code, self._device_number, True)
+        self._state = True
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -111,12 +112,12 @@ class SatelIntegraSwitch(SwitchEntity):
             "Switch name: %s status: %s, turning off", self._attr_name, self._state
         )
         await self._satel.set_output(self._code, self._device_number, False)
+        self._state = False
         self.async_write_ha_state()
 
     @property
     def is_on(self) -> bool | None:
         """Return true if device is on."""
-        self._state = self._read_state()
         return self._state
 
     def _read_state(self) -> bool:
