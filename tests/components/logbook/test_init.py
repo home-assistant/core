@@ -60,14 +60,9 @@ EMPTY_CONFIG = logbook.CONFIG_SCHEMA({logbook.DOMAIN: {}})
 
 
 @pytest.fixture
-async def hass_(
-    recorder_mock: Recorder,
-    hass: HomeAssistant,
-    socket_enabled: None,  # Needed because logbook depends on the HTTP integration
-) -> HomeAssistant:
+async def hass_(recorder_mock: Recorder, hass: HomeAssistant) -> HomeAssistant:
     """Set up things to be run when tests are started."""
     assert await async_setup_component(hass, logbook.DOMAIN, EMPTY_CONFIG)
-    await hass.async_block_till_done()
     return hass
 
 
@@ -130,10 +125,7 @@ async def test_service_call_create_logbook_entry(hass_: HomeAssistant) -> None:
     assert last_call.data.get(logbook.ATTR_DOMAIN) == "logbook"
 
 
-@pytest.mark.usefixtures(
-    "recorder_mock",
-    "socket_enabled",  # Needed because logbook depends on the HTTP integration
-)
+@pytest.mark.usefixtures("recorder_mock")
 async def test_service_call_create_logbook_entry_invalid_entity_id(
     hass: HomeAssistant,
 ) -> None:
@@ -2974,10 +2966,7 @@ async def test_get_events_with_context_state(
     assert "context_event_type" not in results[3]
 
 
-@pytest.mark.usefixtures(
-    "recorder_mock",
-    "socket_enabled",  # Needed because logbook depends on the HTTP integration
-)
+@pytest.mark.usefixtures("recorder_mock")
 async def test_logbook_with_empty_config(hass: HomeAssistant) -> None:
     """Test we handle a empty configuration."""
     assert await async_setup_component(
@@ -2991,10 +2980,7 @@ async def test_logbook_with_empty_config(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
 
-@pytest.mark.usefixtures(
-    "recorder_mock",
-    "socket_enabled",  # Needed because logbook depends on the HTTP integration
-)
+@pytest.mark.usefixtures("recorder_mock")
 async def test_logbook_with_non_iterable_entity_filter(hass: HomeAssistant) -> None:
     """Test we handle a non-iterable entity filter."""
     assert await async_setup_component(
