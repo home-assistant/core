@@ -184,56 +184,18 @@ class AlertEntity(Entity):
 
         for target in self._notifiers:
             try:
-                # Determine if this is an entity ID or a legacy service name
-                # Entity IDs typically have underscores and are longer (e.g., home_assistant_alerts_fons_64366733)
-                # Legacy service names are shorter (e.g., telegram, mobile_app)
-                # Check if target looks like an entity ID (contains multiple underscores or starts with home_assistant)
-                is_entity_id = (
-                    ("_" in target and target.count("_") >= 2)
-                    or target.startswith("home_assistant")
-                    or target.startswith("notify.")
+                # Check if this target is a notify entity (exists in states)
+                # This definitively determines if the target is an entity ID vs a legacy service name
+                entity_id = (
+                    target if target.startswith("notify.") else f"notify.{target}"
+                )
+                entity_state = self.hass.states.get(entity_id)
+                has_send_message = self.hass.services.has_service(
+                    DOMAIN_NOTIFY, "send_message"
                 )
 
-                if is_entity_id:
+                if entity_state is not None and has_send_message:
                     # Use the new notify.send_message service with entity ID
-                    # Ensure entity_id has the notify. prefix
-                    entity_id = (
-                        target if target.startswith("notify.") else f"notify.{target}"
-                    )
-                    import asyncio
-
-                    # Check if entity exists
-                    entity_state = self.hass.states.get(entity_id)
-                    has_send_message = self.hass.services.has_service(
-                        DOMAIN_NOTIFY, "send_message"
-                    )
-
-                    # Wait up to 5 seconds for entity to exist
-                    max_wait = 5
-                    wait_interval = 0.5
-                    waited = 0
-                    while entity_state is None and waited < max_wait:
-                        await asyncio.sleep(wait_interval)
-                        waited += wait_interval
-                        entity_state = self.hass.states.get(entity_id)
-                        has_send_message = self.hass.services.has_service(
-                            DOMAIN_NOTIFY, "send_message"
-                        )
-
-                    if entity_state is None:
-                        LOGGER.warning(
-                            "Alert: Entity %s does not exist after waiting, skipping notification",
-                            entity_id,
-                        )
-                        continue
-
-                    if not has_send_message:
-                        LOGGER.warning(
-                            "Alert: Service notify.send_message not available, skipping notification"
-                        )
-                        continue
-
-                    # The service name is "send_message", not "notify.send_message"
                     # Entity services need the entity_id in the service data
                     await self.hass.services.async_call(
                         DOMAIN_NOTIFY,
@@ -243,6 +205,8 @@ class AlertEntity(Entity):
                     )
                 else:
                     # Legacy service call for backward compatibility
+                    # If entity doesn't exist or send_message service is not available,
+                    # fall back to legacy service name format
                     await self.hass.services.async_call(
                         DOMAIN_NOTIFY, target, msg_payload, context=self._context
                     )
