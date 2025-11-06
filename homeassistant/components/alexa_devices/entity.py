@@ -1,7 +1,7 @@
 """Defines a base Alexa Devices entity."""
 
-from aioamazondevices.api import AmazonDevice
-from aioamazondevices.const import SPEAKER_GROUP_MODEL
+from aioamazondevices.const.devices import SPEAKER_GROUP_MODEL
+from aioamazondevices.structures import AmazonDevice
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription

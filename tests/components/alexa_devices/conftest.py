@@ -4,7 +4,7 @@ from collections.abc import Generator
 from copy import deepcopy
 from unittest.mock import AsyncMock, patch
 
-from aioamazondevices.const import DEVICE_TYPE_TO_MODEL
+from aioamazondevices.const.devices import DEVICE_TYPE_TO_MODEL
 import pytest
 
 from homeassistant.components.alexa_devices.const import (
