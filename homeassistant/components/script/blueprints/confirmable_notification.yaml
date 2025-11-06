@@ -28,7 +28,7 @@ blueprint:
     tag:
       name: "Tag"
       description: "An optional tag property for the notification"
-      default: []
+      default: ""
       selector:
         text:
     confirm_text:
