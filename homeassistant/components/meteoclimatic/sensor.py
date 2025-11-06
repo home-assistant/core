@@ -112,7 +112,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="rain_intensity",
         name="Daily Intensity Precipitation",
-        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS_PER_HOUR,
         device_class=SensorDeviceClass.INTENSITY_PRECIPITATION,
     ),
 )
