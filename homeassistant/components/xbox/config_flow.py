@@ -38,10 +38,6 @@ class OAuth2FlowHandler(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow start."""
-
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         return await super().async_step_user(user_input)
 
     async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
@@ -57,4 +53,5 @@ class OAuth2FlowHandler(
             me = await client.people.get_friends_by_xuid(client.xuid)
 
         await self.async_set_unique_id(client.xuid)
+        self._abort_if_unique_id_configured()
         return self.async_create_entry(title=me.people[0].gamertag, data=data)
