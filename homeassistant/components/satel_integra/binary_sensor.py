@@ -106,7 +106,7 @@ class SatelIntegraBinarySensor(BinarySensorEntity):
         """Initialize the binary_sensor."""
         self._device_number = device_number
         self._attr_unique_id = f"{config_entry_id}_{sensor_type}_{device_number}"
-        self._state = 0
+        self._state: int = 0
         self._react_to_signal = react_to_signal
         self._satel = controller
 
@@ -134,7 +134,7 @@ class SatelIntegraBinarySensor(BinarySensorEntity):
         return self._state == 1
 
     @callback
-    def _devices_updated(self, zones: list[int]):
+    def _devices_updated(self, zones: dict[int, int]):
         """Update the zone's state, if needed."""
         if self._device_number in zones and self._state != zones[self._device_number]:
             self._state = zones[self._device_number]
