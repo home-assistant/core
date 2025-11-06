@@ -4678,7 +4678,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Electricity consumed off peak cumulative',
+    'original_name': 'Electricity consumed off-peak cumulative',
     'platform': 'plugwise',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -4692,7 +4692,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'P1 Electricity consumed off peak cumulative',
+      'friendly_name': 'P1 Electricity consumed off-peak cumulative',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
@@ -4734,7 +4734,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Electricity consumed off peak interval',
+    'original_name': 'Electricity consumed off-peak interval',
     'platform': 'plugwise',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -4748,7 +4748,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'P1 Electricity consumed off peak interval',
+      'friendly_name': 'P1 Electricity consumed off-peak interval',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
@@ -4790,7 +4790,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Electricity consumed off peak point',
+    'original_name': 'Electricity consumed off-peak point',
     'platform': 'plugwise',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -4804,7 +4804,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'P1 Electricity consumed off peak point',
+      'friendly_name': 'P1 Electricity consumed off-peak point',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
@@ -5126,7 +5126,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Electricity produced off peak cumulative',
+    'original_name': 'Electricity produced off-peak cumulative',
     'platform': 'plugwise',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -5140,7 +5140,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'P1 Electricity produced off peak cumulative',
+      'friendly_name': 'P1 Electricity produced off-peak cumulative',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
@@ -5182,7 +5182,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Electricity produced off peak interval',
+    'original_name': 'Electricity produced off-peak interval',
     'platform': 'plugwise',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -5196,7 +5196,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'P1 Electricity produced off peak interval',
+      'friendly_name': 'P1 Electricity produced off-peak interval',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
@@ -5238,7 +5238,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Electricity produced off peak point',
+    'original_name': 'Electricity produced off-peak point',
     'platform': 'plugwise',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -5252,7 +5252,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'P1 Electricity produced off peak point',
+      'friendly_name': 'P1 Electricity produced off-peak point',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
@@ -6459,7 +6459,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Electricity consumed off peak cumulative',
+    'original_name': 'Electricity consumed off-peak cumulative',
     'platform': 'plugwise',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -6473,7 +6473,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'P1 Electricity consumed off peak cumulative',
+      'friendly_name': 'P1 Electricity consumed off-peak cumulative',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
@@ -6515,7 +6515,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Electricity consumed off peak interval',
+    'original_name': 'Electricity consumed off-peak interval',
     'platform': 'plugwise',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -6529,7 +6529,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'P1 Electricity consumed off peak interval',
+      'friendly_name': 'P1 Electricity consumed off-peak interval',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
@@ -6571,7 +6571,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Electricity consumed off peak point',
+    'original_name': 'Electricity consumed off-peak point',
     'platform': 'plugwise',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -6585,7 +6585,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'P1 Electricity consumed off peak point',
+      'friendly_name': 'P1 Electricity consumed off-peak point',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
@@ -7131,7 +7131,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Electricity produced off peak cumulative',
+    'original_name': 'Electricity produced off-peak cumulative',
     'platform': 'plugwise',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -7145,7 +7145,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'P1 Electricity produced off peak cumulative',
+      'friendly_name': 'P1 Electricity produced off-peak cumulative',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
@@ -7187,7 +7187,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Electricity produced off peak interval',
+    'original_name': 'Electricity produced off-peak interval',
     'platform': 'plugwise',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -7201,7 +7201,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'P1 Electricity produced off peak interval',
+      'friendly_name': 'P1 Electricity produced off-peak interval',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
@@ -7243,7 +7243,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Electricity produced off peak point',
+    'original_name': 'Electricity produced off-peak point',
     'platform': 'plugwise',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -7257,7 +7257,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'P1 Electricity produced off peak point',
+      'friendly_name': 'P1 Electricity produced off-peak point',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
@@ -7855,7 +7855,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Electricity consumed off peak cumulative',
+    'original_name': 'Electricity consumed off-peak cumulative',
     'platform': 'plugwise',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -7869,7 +7869,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'P1 Electricity consumed off peak cumulative',
+      'friendly_name': 'P1 Electricity consumed off-peak cumulative',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
@@ -7911,7 +7911,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Electricity consumed off peak interval',
+    'original_name': 'Electricity consumed off-peak interval',
     'platform': 'plugwise',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -7925,7 +7925,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'P1 Electricity consumed off peak interval',
+      'friendly_name': 'P1 Electricity consumed off-peak interval',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
@@ -7967,7 +7967,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Electricity consumed off peak point',
+    'original_name': 'Electricity consumed off-peak point',
     'platform': 'plugwise',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -7981,7 +7981,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'P1 Electricity consumed off peak point',
+      'friendly_name': 'P1 Electricity consumed off-peak point',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
@@ -8303,7 +8303,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Electricity produced off peak cumulative',
+    'original_name': 'Electricity produced off-peak cumulative',
     'platform': 'plugwise',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -8317,7 +8317,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'P1 Electricity produced off peak cumulative',
+      'friendly_name': 'P1 Electricity produced off-peak cumulative',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
@@ -8359,7 +8359,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Electricity produced off peak interval',
+    'original_name': 'Electricity produced off-peak interval',
     'platform': 'plugwise',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -8373,7 +8373,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'P1 Electricity produced off peak interval',
+      'friendly_name': 'P1 Electricity produced off-peak interval',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
@@ -8415,7 +8415,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Electricity produced off peak point',
+    'original_name': 'Electricity produced off-peak point',
     'platform': 'plugwise',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -8429,7 +8429,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'P1 Electricity produced off peak point',
+      'friendly_name': 'P1 Electricity produced off-peak point',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
