@@ -39,6 +39,8 @@ from .const import (
     NABU_CASA_FIRMWARE_RELEASES_URL,
     PID,
     PRODUCT,
+    RADIO_TX_POWER_DBM_BY_COUNTRY,
+    RADIO_TX_POWER_DBM_DEFAULT,
     SERIAL_NUMBER,
     VID,
 )
@@ -75,6 +77,7 @@ class ZBT2FirmwareMixin(ConfigEntryBaseFlow, FirmwareInstallFlowProtocol):
 
     context: ConfigFlowContext
     BOOTLOADER_RESET_METHODS = [ResetTarget.RTS_DTR]
+    ZIGBEE_BAUDRATE = 460800
 
     async def async_step_install_zigbee_firmware(
         self, user_input: dict[str, Any] | None = None
@@ -102,6 +105,21 @@ class ZBT2FirmwareMixin(ConfigEntryBaseFlow, FirmwareInstallFlowProtocol):
             next_step_id="finish_thread_installation",
         )
 
+    def _extra_zha_hardware_options(self) -> dict[str, Any]:
+        """Return extra ZHA hardware options."""
+        country = self.hass.config.country
+
+        if country is None:
+            tx_power = RADIO_TX_POWER_DBM_DEFAULT
+        else:
+            tx_power = RADIO_TX_POWER_DBM_BY_COUNTRY.get(
+                country, RADIO_TX_POWER_DBM_DEFAULT
+            )
+
+        return {
+            "tx_power": tx_power,
+        }
+
 
 class HomeAssistantConnectZBT2ConfigFlow(
     ZBT2FirmwareMixin,
@@ -112,7 +130,6 @@ class HomeAssistantConnectZBT2ConfigFlow(
 
     VERSION = 1
     MINOR_VERSION = 1
-    ZIGBEE_BAUDRATE = 460800
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the config flow."""

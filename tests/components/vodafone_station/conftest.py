@@ -2,7 +2,7 @@
 
 from datetime import UTC, datetime
 
-from aiovodafone.api import VodafoneStationCommonApi, VodafoneStationDevice
+from aiovodafone.api import VodafoneStationDevice
 import pytest
 from yarl import URL
 
@@ -49,16 +49,19 @@ def mock_vodafone_station_router() -> Generator[AsyncMock]:
     """Mock a Vodafone Station router."""
     with (
         patch(
-            "homeassistant.components.vodafone_station.coordinator.init_api_class",
+            "homeassistant.components.vodafone_station.coordinator.init_device_class",
             autospec=True,
         ) as mock_router,
         patch(
-            "homeassistant.components.vodafone_station.config_flow.init_api_class",
+            "homeassistant.components.vodafone_station.config_flow.init_device_class",
             new=mock_router,
         ),
-        patch.object(
-            VodafoneStationCommonApi,
-            "get_device_type",
+        patch(
+            "homeassistant.components.vodafone_station.config_flow.get_device_type",
+            new=AsyncMock(return_value=(TEST_TYPE, URL(TEST_URL))),
+        ),
+        patch(
+            "homeassistant.components.vodafone_station.get_device_type",
             new=AsyncMock(return_value=(TEST_TYPE, URL(TEST_URL))),
         ),
     ):
