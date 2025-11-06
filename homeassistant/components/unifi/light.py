@@ -35,6 +35,27 @@ if TYPE_CHECKING:
     from .hub import UnifiHub
 
 
+def convert_brightness_to_unifi(ha_brightness: int) -> int:
+    """Convert Home Assistant brightness (0-255) to UniFi brightness (0-100)."""
+    return int((ha_brightness / 255) * 100)
+
+
+def convert_brightness_to_ha(
+    unifi_brightness: int | str | None,
+) -> int | None:
+    """Convert UniFi brightness (0-100) to Home Assistant brightness (0-255)."""
+    if unifi_brightness is None:
+        return None
+    return int((int(unifi_brightness) / 100) * 255)
+
+
+def get_device_brightness_or_default(device: Device) -> int:
+    """Get device's current LED brightness. Defaults to 100 (full brightness) if not set."""
+    if device.led_override_color_brightness is None:
+        return 100
+    return int(device.led_override_color_brightness)
+
+
 @callback
 def async_device_led_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Check if device supports LED control."""
@@ -56,17 +77,19 @@ async def async_device_led_control_fn(
 
     status = "on" if turn_on else "off"
 
-    brightness = (
-        int((kwargs[ATTR_BRIGHTNESS] / 255) * 100)
-        if ATTR_BRIGHTNESS in kwargs
-        else device.led_override_color_brightness
-    )
+    # Use provided brightness or fall back to device's current brightness
+    if ATTR_BRIGHTNESS in kwargs:
+        brightness = convert_brightness_to_unifi(kwargs[ATTR_BRIGHTNESS])
+    else:
+        brightness = get_device_brightness_or_default(device)
 
-    color = (
-        f"#{kwargs[ATTR_RGB_COLOR][0]:02x}{kwargs[ATTR_RGB_COLOR][1]:02x}{kwargs[ATTR_RGB_COLOR][2]:02x}"
-        if ATTR_RGB_COLOR in kwargs
-        else device.led_override_color
-    )
+    # Use provided RGB color or fall back to device's current color
+    color: str | None
+    if ATTR_RGB_COLOR in kwargs:
+        rgb = kwargs[ATTR_RGB_COLOR]
+        color = f"#{rgb[0]:02x}{rgb[1]:02x}{rgb[2]:02x}"
+    else:
+        color = device.led_override_color
 
     await hub.api.request(
         DeviceSetLedStatus.create(
@@ -154,12 +177,11 @@ class UnifiLightEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
         device = cast(Device, device_obj)
 
         self._attr_is_on = description.is_on_fn(self.hub, device_obj)
-
-        brightness = device.led_override_color_brightness
-        self._attr_brightness = (
-            int((int(brightness) / 100) * 255) if brightness is not None else None
+        self._attr_brightness = convert_brightness_to_ha(
+            device.led_override_color_brightness
         )
 
+        # Parse hex color from device and convert to RGB tuple
         hex_color = (
             device.led_override_color.lstrip("#")
             if self._attr_is_on and device.led_override_color
