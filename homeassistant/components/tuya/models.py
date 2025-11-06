@@ -11,7 +11,7 @@ from typing import Literal, Self, overload
 from tuya_sharing import CustomerDevice
 
 from .const import DPCode, DPType
-from .util import parse_dptype, remap_value
+from .util import remap_value
 
 
 @overload
@@ -63,7 +63,7 @@ def find_dpcode(
         for device_specs in lookup_tuple:
             if not (
                 (current_definition := device_specs.get(dpcode))
-                and parse_dptype(current_definition.type) is dptype
+                and current_definition.type == dptype
             ):
                 continue
             if dptype == DPType.ENUM and (
@@ -71,9 +71,11 @@ def find_dpcode(
             ):
                 return enum_type
             if dptype == DPType.INTEGER and (
-                int_type := IntegerTypeData.from_json(dpcode, current_definition.values)
+                integer_type := IntegerTypeData.from_json(
+                    dpcode, current_definition.values
+                )
             ):
-                return int_type
+                return integer_type
 
     return None
 
