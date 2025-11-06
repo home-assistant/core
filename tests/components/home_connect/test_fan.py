@@ -113,7 +113,7 @@ async def test_paired_depaired_devices_flow(
     for entity_entry in entity_entries:
         assert not entity_registry.async_get(entity_entry.entity_id)
 
-    # Now that all everything related to the device is removed, pair it again
+    # Now that everything related to the device is removed, pair it again
     await client.add_events(
         [
             EventMessage(
@@ -130,7 +130,7 @@ async def test_paired_depaired_devices_flow(
         assert entity_registry.async_get(entity_entry.entity_id)
 
 
-@pytest.mark.parametrize(("appliance"), ["AirConditioner"], indirect=True)
+@pytest.mark.parametrize("appliance", ["AirConditioner"], indirect=True)
 async def test_connected_devices(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -140,7 +140,7 @@ async def test_connected_devices(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
 ) -> None:
-    """Test that devices reconnected.
+    """Test that devices reconnect.
 
     Specifically those devices whose settings, status, etc. could
     not be obtained while disconnected and once connected, the entities are added.

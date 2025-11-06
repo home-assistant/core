@@ -168,7 +168,7 @@ async def async_setup_entry(
     entry: HomeConnectConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Home Connect select entities."""
+    """Set up the Home Connect fan entities."""
     known_entity_unique_ids: dict[str, str] = {}
     changed_options_listener_remove_callbacks: dict[str, list[Callable[[], None]]] = (
         defaultdict(list)
@@ -251,7 +251,7 @@ class HomeConnectAirConditioningFanEntity(HomeConnectEntity, FanEntity):
         )
 
     def update_native_value(self) -> None:
-        """Set the  HVAC Mode and preset mode values."""
+        """Set the HVAC Mode and preset mode values."""
         option_value = None
         option_key = OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_PERCENTAGE
         if event := self.appliance.events.get(EventKey(option_key)):
