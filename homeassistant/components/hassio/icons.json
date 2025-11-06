@@ -34,6 +34,9 @@
     "host_shutdown": {
       "service": "mdi:power"
     },
+    "mount_reload": {
+      "service": "mdi:reload"
+    },
     "restore_full": {
       "service": "mdi:backup-restore"
     },
