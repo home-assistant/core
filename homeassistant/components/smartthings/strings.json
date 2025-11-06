@@ -626,9 +626,6 @@
       "auto_cycle_link": {
         "name": "Auto Cycle Link"
       },
-      "beep": {
-        "name": "Sound effect"
-      },
       "bubble_soak": {
         "name": "Bubble Soak"
       },
@@ -655,6 +652,9 @@
       },
       "sanitize": {
         "name": "Sanitize"
+      },
+      "sound_effect": {
+        "name": "Sound effect"
       },
       "wrinkle_prevent": {
         "name": "Wrinkle prevent"

@@ -128,13 +128,6 @@
           "on": "mdi:link"
         }
       },
-      "beep": {
-        "default": "mdi:volume-high",
-        "state": {
-          "off": "mdi:volume-off",
-          "on": "mdi:volume-high"
-        }
-      },
       "bubble_soak": {
         "default": "mdi:water-off",
         "state": {
@@ -162,6 +155,13 @@
       },
       "sanitize": {
         "default": "mdi:lotion"
+      },
+      "sound_effect": {
+        "default": "mdi:volume-high",
+        "state": {
+          "off": "mdi:volume-off",
+          "on": "mdi:volume-high"
+        }
       },
       "wrinkle_prevent": {
         "default": "mdi:tumble-dryer",
