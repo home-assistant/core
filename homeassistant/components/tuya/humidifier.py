@@ -24,7 +24,7 @@ from .models import IntegerTypeData
 from .util import ActionDPCodeNotFoundError, get_dpcode
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class TuyaHumidifierEntityDescription(HumidifierEntityDescription):
     """Describe an Tuya (de)humidifier entity."""
 

@@ -984,7 +984,7 @@ class DPCode(StrEnum):
     WORK_STATE_E = "work_state_e"
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class UnitOfMeasurement:
     """Describes a unit of measurement."""
 

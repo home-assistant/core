@@ -64,7 +64,7 @@ _WIND_DIRECTIONS = {
 }
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class TuyaSensorEntityDescription(SensorEntityDescription):
     """Describes Tuya sensor entity."""
 

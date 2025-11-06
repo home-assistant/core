@@ -12,7 +12,7 @@ from .const import DPCode
 from .util import remap_value
 
 
-@dataclass
+@dataclass(kw_only=True)
 class IntegerTypeData:
     """Integer Type Data."""
 
@@ -74,7 +74,7 @@ class IntegerTypeData:
             return None
 
         return cls(
-            dpcode,
+            dpcode=dpcode,
             min=int(parsed["min"]),
             max=int(parsed["max"]),
             scale=float(parsed["scale"]),
@@ -84,7 +84,7 @@ class IntegerTypeData:
         )
 
 
-@dataclass
+@dataclass(kw_only=True)
 class EnumTypeData:
     """Enum Type Data."""
 
@@ -96,7 +96,10 @@ class EnumTypeData:
         """Load JSON string and return a EnumTypeData object."""
         if not (parsed := json.loads(data)):
             return None
-        return cls(dpcode, **parsed)
+        return cls(
+            dpcode=dpcode,
+            range=parsed["range"],
+        )
 
 
 class ComplexValue:
@@ -113,7 +116,7 @@ class ComplexValue:
         raise NotImplementedError("from_raw is not implemented for this type")
 
 
-@dataclass
+@dataclass(kw_only=True)
 class ElectricityValue(ComplexValue):
     """Electricity complex value."""
 

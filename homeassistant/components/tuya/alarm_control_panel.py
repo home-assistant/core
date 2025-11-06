@@ -25,7 +25,7 @@ from .models import EnumTypeData
 from .util import get_dpcode
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class TuyaAlarmControlPanelEntityDescription(AlarmControlPanelEntityDescription):
     """Describe a Tuya Alarm Control Panel entity."""
 

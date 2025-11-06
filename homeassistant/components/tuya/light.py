@@ -32,7 +32,7 @@ from .models import IntegerTypeData
 from .util import get_dpcode, get_dptype, remap_value
 
 
-@dataclass
+@dataclass(kw_only=True)
 class ColorTypeData:
     """Color Type Data."""
 
@@ -42,22 +42,34 @@ class ColorTypeData:
 
 
 DEFAULT_COLOR_TYPE_DATA = ColorTypeData(
-    h_type=IntegerTypeData(DPCode.COLOUR_DATA_HSV, min=1, scale=0, max=360, step=1),
-    s_type=IntegerTypeData(DPCode.COLOUR_DATA_HSV, min=1, scale=0, max=255, step=1),
-    v_type=IntegerTypeData(DPCode.COLOUR_DATA_HSV, min=1, scale=0, max=255, step=1),
+    h_type=IntegerTypeData(
+        dpcode=DPCode.COLOUR_DATA_HSV, min=1, scale=0, max=360, step=1
+    ),
+    s_type=IntegerTypeData(
+        dpcode=DPCode.COLOUR_DATA_HSV, min=1, scale=0, max=255, step=1
+    ),
+    v_type=IntegerTypeData(
+        dpcode=DPCode.COLOUR_DATA_HSV, min=1, scale=0, max=255, step=1
+    ),
 )
 
 DEFAULT_COLOR_TYPE_DATA_V2 = ColorTypeData(
-    h_type=IntegerTypeData(DPCode.COLOUR_DATA_HSV, min=1, scale=0, max=360, step=1),
-    s_type=IntegerTypeData(DPCode.COLOUR_DATA_HSV, min=1, scale=0, max=1000, step=1),
-    v_type=IntegerTypeData(DPCode.COLOUR_DATA_HSV, min=1, scale=0, max=1000, step=1),
+    h_type=IntegerTypeData(
+        dpcode=DPCode.COLOUR_DATA_HSV, min=1, scale=0, max=360, step=1
+    ),
+    s_type=IntegerTypeData(
+        dpcode=DPCode.COLOUR_DATA_HSV, min=1, scale=0, max=1000, step=1
+    ),
+    v_type=IntegerTypeData(
+        dpcode=DPCode.COLOUR_DATA_HSV, min=1, scale=0, max=1000, step=1
+    ),
 )
 
 MAX_MIREDS = 500  # 2000 K
 MIN_MIREDS = 153  # 6500 K
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class TuyaLightEntityDescription(LightEntityDescription):
     """Describe an Tuya light entity."""
 
@@ -381,7 +393,7 @@ LIGHTS[DeviceCategory.DGHSXJ] = LIGHTS[DeviceCategory.SP]
 LIGHTS[DeviceCategory.TDQ] = LIGHTS[DeviceCategory.TGQ]
 
 
-@dataclass
+@dataclass(kw_only=True)
 class ColorData:
     """Color Data."""
 
@@ -491,9 +503,9 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
             # Fetch color data type information
             if function_data := json.loads(values):
                 self._color_data_type = ColorTypeData(
-                    h_type=IntegerTypeData(dpcode, **function_data["h"]),
-                    s_type=IntegerTypeData(dpcode, **function_data["s"]),
-                    v_type=IntegerTypeData(dpcode, **function_data["v"]),
+                    h_type=IntegerTypeData(dpcode=dpcode, **function_data["h"]),
+                    s_type=IntegerTypeData(dpcode=dpcode, **function_data["s"]),
+                    v_type=IntegerTypeData(dpcode=dpcode, **function_data["v"]),
                 )
             else:
                 # If no type is found, use a default one

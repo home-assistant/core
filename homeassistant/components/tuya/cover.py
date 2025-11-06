@@ -26,7 +26,7 @@ from .models import EnumTypeData, IntegerTypeData
 from .util import get_dpcode
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class TuyaCoverEntityDescription(CoverEntityDescription):
     """Describe an Tuya cover entity."""
 

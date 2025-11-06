@@ -22,7 +22,7 @@ from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, DPType
 from .entity import TuyaEntity
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class TuyaBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes a Tuya binary sensor."""
 
