@@ -13,7 +13,7 @@ from homeassistant.components.calendar import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_CALENDAR_EVENTS, DEFAULT_CALENDAR_EVENTS
+from .const import CONF_CALENDAR_EVENTS, DEFAULT_CALENDAR_EVENTS, CalendarEventType
 from .entity import JewishCalendarConfigEntry, JewishCalendarEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -105,7 +105,7 @@ class JewishCalendar(JewishCalendarEntity, CalendarEntity):
         self, event_type: str, target_date: date, info: HDateInfo, zmanim: Zmanim
     ) -> list[CalendarEvent] | CalendarEvent | None:
         """Create a calendar event for the specified type."""
-        if event_type == "date":
+        if event_type == CalendarEventType.DATE:
             return CalendarEvent(
                 start=target_date,
                 end=target_date,
@@ -113,7 +113,7 @@ class JewishCalendar(JewishCalendarEntity, CalendarEntity):
                 description=f"Hebrew date: {info.hdate}",
             )
 
-        if event_type == "holiday" and info.holidays:
+        if event_type == CalendarEventType.HOLIDAY and info.holidays:
             return [
                 CalendarEvent(
                     start=target_date,
@@ -126,7 +126,7 @@ class JewishCalendar(JewishCalendarEntity, CalendarEntity):
                 for holiday in info.holidays
             ]
 
-        if event_type == "weekly_portion" and info.parasha:
+        if event_type == CalendarEventType.WEEKLY_PORTION and info.parasha:
             return CalendarEvent(
                 start=target_date,
                 end=target_date,
@@ -134,7 +134,7 @@ class JewishCalendar(JewishCalendarEntity, CalendarEntity):
                 description=f"Parshat Hashavua: {info.parasha}",
             )
 
-        if event_type == "omer_count" and info.omer.total_days > 0:
+        if event_type == CalendarEventType.OMER_COUNT and info.omer.total_days > 0:
             return CalendarEvent(
                 start=target_date,
                 end=target_date,
@@ -142,7 +142,7 @@ class JewishCalendar(JewishCalendarEntity, CalendarEntity):
                 description=f"Sefirat HaOmer: {info.omer.count_str()}",
             )
 
-        if event_type == "daf_yomi" and info.daf_yomi:
+        if event_type == CalendarEventType.DAF_YOMI and info.daf_yomi:
             return CalendarEvent(
                 start=target_date,
                 end=target_date,
@@ -150,7 +150,7 @@ class JewishCalendar(JewishCalendarEntity, CalendarEntity):
                 description=f"Daf Yomi: {info.daf_yomi}",
             )
 
-        if event_type == "candle_lighting" and zmanim.candle_lighting:
+        if event_type == CalendarEventType.CANDLE_LIGHTING and zmanim.candle_lighting:
             return CalendarEvent(
                 start=zmanim.candle_lighting.astimezone(UTC),
                 end=zmanim.candle_lighting.astimezone(UTC),
@@ -158,7 +158,7 @@ class JewishCalendar(JewishCalendarEntity, CalendarEntity):
                 description=f"Candle lighting time: {zmanim.candle_lighting.strftime('%H:%M')}",
             )
 
-        if event_type == "havdalah" and zmanim.havdalah:
+        if event_type == CalendarEventType.HAVDALAH and zmanim.havdalah:
             return CalendarEvent(
                 start=zmanim.havdalah.astimezone(UTC),
                 end=zmanim.havdalah.astimezone(UTC),
@@ -170,5 +170,5 @@ class JewishCalendar(JewishCalendarEntity, CalendarEntity):
 
     def _update_times(self, zmanim: Zmanim) -> list[datetime | None]:
         """Return a list of times to update the calendar."""
-        # Update at midnight to refresh daily events
+        # Calendar entities do not require periodic updates besides the retrieval of events.
         return [None]

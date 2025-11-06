@@ -1,5 +1,7 @@
 """Jewish Calendar constants."""
 
+from enum import StrEnum, auto
+
 DOMAIN = "jewish_calendar"
 
 ATTR_AFTER_SUNSET = "after_sunset"
@@ -17,15 +19,26 @@ DEFAULT_CANDLE_LIGHT = 18
 DEFAULT_DIASPORA = False
 DEFAULT_HAVDALAH_OFFSET_MINUTES = 0
 DEFAULT_LANGUAGE = "en"
+
+
+class CalendarEventType(StrEnum):
+    """Calendar event types."""
+
+    DATE = auto()
+    HOLIDAY = auto()
+    WEEKLY_PORTION = auto()
+    OMER_COUNT = auto()
+    DAF_YOMI = auto()
+    CANDLE_LIGHTING = auto()
+    HAVDALAH = auto()
+
+
 DEFAULT_CALENDAR_EVENTS = [
-    "date",
-    "holiday",
-    "weekly_portion",
-    "omer_count",
-    "daf_yomi",
+    CalendarEventType.DATE,
+    CalendarEventType.HOLIDAY,
+    CalendarEventType.WEEKLY_PORTION,
+    CalendarEventType.OMER_COUNT,
+    CalendarEventType.DAF_YOMI,
 ]
 
 SERVICE_COUNT_OMER = "count_omer"
-
-# Available calendar event types
-CALENDAR_EVENT_TYPES = [*DEFAULT_CALENDAR_EVENTS, "candle_lighting", "havdalah"]
