@@ -148,10 +148,11 @@ class HueBLELight(LightEntity):
     def color_mode(self) -> ColorMode:
         """Color mode of the light."""
 
-        if self._api.supports_colour_xy:
-            if self._api.supports_colour_temp and self._api.colour_temp_mode:
-                return ColorMode.COLOR_TEMP
+        if self._api.supports_colour_xy and not self._api.colour_temp_mode:
             return ColorMode.XY
+
+        if self._api.colour_temp_mode:
+            return ColorMode.COLOR_TEMP
 
         if self._api.supports_brightness:
             return ColorMode.BRIGHTNESS
