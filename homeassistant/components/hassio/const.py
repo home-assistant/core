@@ -129,6 +129,8 @@ ISSUE_KEY_ADDON_PWNED = "issue_addon_pwned"
 ISSUE_KEY_SYSTEM_FREE_SPACE = "issue_system_free_space"
 ISSUE_KEY_ADDON_DEPRECATED = "issue_addon_deprecated_addon"
 
+ISSUE_MOUNT_MOUNT_FAILED = "issue_mount_mount_failed"
+
 CORE_CONTAINER = "homeassistant"
 SUPERVISOR_CONTAINER = "hassio_supervisor"
 
