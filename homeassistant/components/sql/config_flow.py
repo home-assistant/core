@@ -41,13 +41,14 @@ from homeassistant.helpers.template import Template
 from homeassistant.helpers.trigger_template_entity import ValueTemplate
 
 from .const import CONF_ADVANCED_OPTIONS, CONF_COLUMN_NAME, CONF_QUERY, DOMAIN
-from .sensor import TRIGGER_ENTITY_OPTIONS, SQLSensor, get_db_connection
+from .sensor import TRIGGER_ENTITY_OPTIONS, SQLSensor
 from .util import (
     EmptyQueryError,
     InvalidSqlQuery,
     MultipleQueryError,
     NotSelectQueryError,
     UnknownQueryTypeError,
+    async_create_sessionmaker,
     check_and_render_sql_query,
     resolve_db_url,
 )
@@ -373,7 +374,7 @@ async def ws_start_preview(
         config_entry = hass.config_entries.async_get_entry(flow_status["handler"])
         if not config_entry:
             raise HomeAssistantError("Config entry not found")
-        name = config_entry.options[CONF_NAME]
+        name = config_entry.title
 
     @callback
     def async_preview_updated(state: str, attributes: Mapping[str, Any]) -> None:
@@ -386,15 +387,13 @@ async def ws_start_preview(
 
     db_url = resolve_db_url(hass, msg["user_input"].get(CONF_DB_URL))
 
-    if (
-        db_connection := await get_db_connection(
-            hass,
-            db_url,
-        )
-    ) is None:
-        return  # Missing test
-    sessmaker = db_connection[0]
-    use_database_executor = db_connection[1]
+    (
+        sessmaker,
+        _,
+        use_database_executor,
+    ) = await async_create_sessionmaker(hass, db_url)
+    if sessmaker is None:
+        return
 
     name_template = Template(name, hass)
     trigger_entity_config = {CONF_NAME: name_template}
@@ -418,7 +417,7 @@ async def ws_start_preview(
     preview_entity = SQLSensor(
         trigger_entity_config=trigger_entity_config,
         sessmaker=sessmaker,
-        query=query_str,
+        query=ValueTemplate(query_str, hass),
         column=column_name,
         value_template=value_template,
         yaml=False,

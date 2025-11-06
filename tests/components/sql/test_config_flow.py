@@ -54,6 +54,7 @@ from . import (
     ENTRY_CONFIG_WITH_BROKEN_QUERY_TEMPLATE_OPT,
     ENTRY_CONFIG_WITH_QUERY_TEMPLATE,
     ENTRY_CONFIG_WITH_VALUE_TEMPLATE,
+    init_integration,
 )
 
 from tests.common import MockConfigEntry
@@ -1021,7 +1022,6 @@ async def test_config_flow_preview_no_database(
     # assert msg["event"] == snapshot
     # assert len(hass.states.async_all()) == 0
     await hass.async_block_till_done(wait_background_tasks=True)
-    assert False
 
 
 async def test_options_flow_preview(
@@ -1034,22 +1034,7 @@ async def test_options_flow_preview(
     client = await hass_ws_client(hass)
 
     # Setup the config entry
-    config_entry = MockConfigEntry(
-        data={},
-        domain=DOMAIN,
-        options={
-            CONF_NAME: "Get Value",
-            CONF_QUERY: "SELECT 5 as value",
-            CONF_COLUMN_NAME: "value",
-            CONF_UNIT_OF_MEASUREMENT: "MiB",
-            CONF_DEVICE_CLASS: SensorDeviceClass.DATA_SIZE,
-            CONF_STATE_CLASS: SensorStateClass.TOTAL,
-        },
-        title="Get Value",
-    )
-    config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+    config_entry = await init_integration(hass)
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] == FlowResultType.FORM

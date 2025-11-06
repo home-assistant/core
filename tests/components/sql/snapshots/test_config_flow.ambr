@@ -70,7 +70,7 @@
   dict({
     'attributes': dict({
       'device_class': 'data_size',
-      'friendly_name': 'Get Value',
+      'friendly_name': 'Select value SQL query',
       'state_class': 'total',
       'unit_of_measurement': 'MiB',
       'value': 6,
