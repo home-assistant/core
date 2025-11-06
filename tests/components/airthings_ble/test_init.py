@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.airthings_ble.const import (
@@ -22,7 +23,7 @@ from . import (
     patch_async_ble_device_from_address,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.bluetooth import inject_bluetooth_service_info
 
 
@@ -89,7 +90,7 @@ async def test_no_migration_when_device_model_exists(
 
 
 async def test_scan_interval_corentium_home_2(
-    hass: HomeAssistant,
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test that coordinator uses radon scan interval for Corentium Home 2."""
     entry = MockConfigEntry(
@@ -103,14 +104,20 @@ async def test_scan_interval_corentium_home_2(
 
     with (
         patch_async_ble_device_from_address(WAVE_SERVICE_INFO.device),
-        patch_airthings_ble(CORENTIUM_HOME_2_DEVICE_INFO),
+        patch_airthings_ble(CORENTIUM_HOME_2_DEVICE_INFO) as test,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    # Coordinator should have radon scan interval
-    coordinator = entry.runtime_data
-    assert coordinator.update_interval == timedelta(seconds=RADON_SCAN_INTERVAL)
+        freezer.tick(RADON_SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        assert test.assert_called()
+
+        # Coordinator should have radon scan interval
+        coordinator = entry.runtime_data
+        assert coordinator.update_interval == timedelta(seconds=RADON_SCAN_INTERVAL)
 
 
 @pytest.mark.parametrize(
