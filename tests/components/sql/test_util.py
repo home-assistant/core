@@ -13,6 +13,7 @@ from homeassistant.components.sql.util import (
     validate_sql_select,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.template import Template
 
 
 async def test_resolve_db_url_when_none_configured(
@@ -39,27 +40,27 @@ async def test_resolve_db_url_when_configured(hass: HomeAssistant) -> None:
     [
         (
             "DROP TABLE *",
-            "Only SELECT queries allowed",
+            "SQL query must be of type SELECT",
         ),
         (
             "SELECT5 as value",
-            "Invalid SQL query",
+            "SQL query is empty or unknown type",
         ),
         (
             ";;",
-            "Invalid SQL query",
+            "SQL query is empty or unknown type",
         ),
         (
             "UPDATE states SET state = 999999 WHERE state_id = 11125",
-            "Only SELECT queries allowed",
+            "SQL query must be of type SELECT",
         ),
         (
             "WITH test AS (SELECT state FROM states) UPDATE states SET states.state = test.state;",
-            "Only SELECT queries allowed",
+            "SQL query must be of type SELECT",
         ),
         (
             "SELECT 5 as value; UPDATE states SET state = 10;",
-            "Multiple SQL queries are not supported",
+            "Multiple SQL statements are not allowed",
         ),
     ],
 )
@@ -70,7 +71,7 @@ async def test_invalid_sql_queries(
 ) -> None:
     """Test that various invalid or disallowed SQL queries raise the correct exception."""
     with pytest.raises(vol.Invalid, match=expected_error_message):
-        validate_sql_select(sql_query)
+        validate_sql_select(Template(sql_query, hass))
 
 
 @pytest.mark.parametrize(

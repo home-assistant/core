@@ -153,7 +153,7 @@ async def test_query_service_invalid_query_not_select(
     await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
-    with pytest.raises(vol.Invalid, match="Only SELECT queries allowed"):
+    with pytest.raises(vol.Invalid, match="SQL query must be of type SELECT"):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_QUERY,
@@ -171,7 +171,7 @@ async def test_query_service_sqlalchemy_error(
     await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
-    with pytest.raises(MultipleInvalid, match="Invalid SQL query"):
+    with pytest.raises(MultipleInvalid, match="SQL query is empty or unknown type"):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_QUERY,
