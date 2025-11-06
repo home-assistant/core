@@ -216,6 +216,6 @@ class PooldoseSensor(PooldoseEntity, SensorEntity):
             self.entity_description.key == "flow_rate"
             and (data := self.get_data()) is not None
         ):
-            return data["unit"]  # m3/ h or L/s
+            return data["unit"]  # m3/h or L/s
 
         return super().native_unit_of_measurement
