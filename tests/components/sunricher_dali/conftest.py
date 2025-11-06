@@ -1,4 +1,4 @@
-"""Common fixtures for the Dali Center tests."""
+"""Common fixtures for the Sunricher DALI tests."""
 
 from collections.abc import Callable, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -6,10 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from PySrDaliGateway import CallbackEventType
 import pytest
 
-from homeassistant.components.sunricher_dali_center.const import (
-    CONF_SERIAL_NUMBER,
-    DOMAIN,
-)
+from homeassistant.components.sunricher_dali.const import CONF_SERIAL_NUMBER, DOMAIN
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -121,7 +118,7 @@ def mock_devices() -> list[MagicMock]:
 def mock_discovery(mock_gateway: MagicMock) -> Generator[MagicMock]:
     """Mock DaliGatewayDiscovery."""
     with patch(
-        "homeassistant.components.sunricher_dali_center.config_flow.DaliGatewayDiscovery"
+        "homeassistant.components.sunricher_dali.config_flow.DaliGatewayDiscovery"
     ) as mock_discovery_class:
         mock_discovery = mock_discovery_class.return_value
         mock_discovery.discover_gateways = AsyncMock(return_value=[mock_gateway])
@@ -133,10 +130,10 @@ def mock_gateway(mock_devices: list[MagicMock]) -> Generator[MagicMock]:
     """Return a mocked DaliGateway."""
     with (
         patch(
-            "homeassistant.components.sunricher_dali_center.DaliGateway", autospec=True
+            "homeassistant.components.sunricher_dali.DaliGateway", autospec=True
         ) as mock_gateway_class,
         patch(
-            "homeassistant.components.sunricher_dali_center.config_flow.DaliGateway",
+            "homeassistant.components.sunricher_dali.config_flow.DaliGateway",
             new=mock_gateway_class,
         ),
     ):
@@ -157,7 +154,7 @@ def mock_gateway(mock_devices: list[MagicMock]) -> Generator[MagicMock]:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.sunricher_dali_center.async_setup_entry",
+        "homeassistant.components.sunricher_dali.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         yield mock_setup_entry
