@@ -1,7 +1,7 @@
 """Config flow for RYSE BLE integration."""
 
 import logging
-from typing import Any, cast
+from typing import Any
 
 from ryseble.bluetoothctl import filter_ryse_devices_pairing, pair_with_ble_device
 import voluptuous as vol
@@ -19,6 +19,11 @@ class RyseBLEDeviceConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle config flow for RYSE BLE Device."""
 
     VERSION = 1
+
+    def __init__(self) -> None:
+        """Initialize flow attributes."""
+        self.device_options: dict[str, str] = {}
+        self.selected_device: dict[str, str] | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -58,16 +63,14 @@ class RyseBLEDeviceConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data_schema=vol.Schema({}),
             )
 
-        context = cast(dict[str, Any], self.context)
-        context["device_options"] = device_options
+        self.device_options = device_options
         return await self.async_step_select_device()
 
     async def async_step_select_device(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Let user select one of the discovered pairing devices."""
-        context = cast(dict[str, Any], self.context)
-        device_options = context.get("device_options", {})
+        device_options = getattr(self, "device_options", {})
 
         if user_input is None:
             return self.async_show_form(
@@ -86,15 +89,19 @@ class RyseBLEDeviceConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         _LOGGER.info("User selected device %s (%s)", name, address)
-        context["selected_device"] = {"name": name, "address": address}
+
+        # Store selected device as instance variable
+        self.selected_device = {"name": name, "address": address}
         return await self.async_step_pair()
 
     async def async_step_pair(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Perform BLE pairing."""
-        context = cast(dict[str, Any], self.context)
-        device = context["selected_device"]
+        device = getattr(self, "selected_device", None)
+        if not device:
+            return self.async_abort(reason="device_not_selected")
+
         name = device["name"]
         address = device["address"]
 

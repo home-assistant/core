@@ -2742,7 +2742,7 @@ ruuvitag-ble==0.3.0
 rxv==0.7.0
 
 # homeassistant.components.ryse
-ryseble==1.7.0
+ryseble==1.7.1
 
 # homeassistant.components.samsungtv
 samsungctl[websocket]==0.7.1
