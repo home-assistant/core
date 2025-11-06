@@ -16,6 +16,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, DPType
 from .entity import TuyaEntity
+from .models import find_dpcode
 
 # All descriptions can be found here. Mostly the Enum data types in the
 # default status set of each category (that don't have a set instruction)
@@ -125,7 +126,7 @@ class TuyaEventEntity(TuyaEntity, EventEntity):
         self.entity_description = description
         self._attr_unique_id = f"{super().unique_id}{description.key}"
 
-        if dpcode := self.find_dpcode(description.key, dptype=DPType.ENUM):
+        if dpcode := find_dpcode(self.device, description.key, dptype=DPType.ENUM):
             self._attr_event_types: list[str] = dpcode.range
 
     async def _handle_state_update(

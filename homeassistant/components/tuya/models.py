@@ -6,10 +6,86 @@ import base64
 from dataclasses import dataclass
 import json
 import struct
-from typing import Self
+from typing import Literal, Self, overload
 
-from .const import DPCode
+from tuya_sharing import CustomerDevice
+
+from .const import DPCode, DPType
 from .util import remap_value
+
+
+@overload
+def find_dpcode(
+    device: CustomerDevice,
+    dpcodes: str | DPCode | tuple[DPCode, ...] | None,
+    *,
+    prefer_function: bool = False,
+    dptype: Literal[DPType.ENUM],
+) -> EnumTypeData | None: ...
+
+
+@overload
+def find_dpcode(
+    device: CustomerDevice,
+    dpcodes: str | DPCode | tuple[DPCode, ...] | None,
+    *,
+    prefer_function: bool = False,
+    dptype: Literal[DPType.INTEGER],
+) -> IntegerTypeData | None: ...
+
+
+def find_dpcode(
+    device: CustomerDevice,
+    dpcodes: str | DPCode | tuple[DPCode, ...] | None,
+    *,
+    prefer_function: bool = False,
+    dptype: DPType,
+) -> EnumTypeData | IntegerTypeData | None:
+    """Find type information for a matching DP code available for this device."""
+    if dptype not in (DPType.ENUM, DPType.INTEGER):
+        raise NotImplementedError("Only ENUM and INTEGER types are supported")
+
+    if dpcodes is None:
+        return None
+
+    if isinstance(dpcodes, str):
+        dpcodes = (DPCode(dpcodes),)
+    elif not isinstance(dpcodes, tuple):
+        dpcodes = (dpcodes,)
+
+    order = ["status_range", "function"]
+    if prefer_function:
+        order = ["function", "status_range"]
+
+    for dpcode in dpcodes:
+        for key in order:
+            if dpcode not in getattr(device, key):
+                continue
+            if (
+                dptype == DPType.ENUM
+                and getattr(device, key)[dpcode].type == DPType.ENUM
+            ):
+                if not (
+                    enum_type := EnumTypeData.from_json(
+                        dpcode, getattr(device, key)[dpcode].values
+                    )
+                ):
+                    continue
+                return enum_type
+
+            if (
+                dptype == DPType.INTEGER
+                and getattr(device, key)[dpcode].type == DPType.INTEGER
+            ):
+                if not (
+                    integer_type := IntegerTypeData.from_json(
+                        dpcode, getattr(device, key)[dpcode].values
+                    )
+                ):
+                    continue
+                return integer_type
+
+    return None
 
 
 @dataclass

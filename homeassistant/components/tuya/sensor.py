@@ -41,7 +41,13 @@ from .const import (
     DPType,
 )
 from .entity import TuyaEntity
-from .models import ComplexValue, ElectricityValue, EnumTypeData, IntegerTypeData
+from .models import (
+    ComplexValue,
+    ElectricityValue,
+    EnumTypeData,
+    IntegerTypeData,
+    find_dpcode,
+)
 from .util import get_dptype
 
 _WIND_DIRECTIONS = {
@@ -1684,13 +1690,13 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             f"{super().unique_id}{description.key}{description.subkey or ''}"
         )
 
-        if int_type := self.find_dpcode(description.key, dptype=DPType.INTEGER):
+        if int_type := find_dpcode(self.device, description.key, dptype=DPType.INTEGER):
             self._type_data = int_type
             self._type = DPType.INTEGER
             if description.native_unit_of_measurement is None:
                 self._attr_native_unit_of_measurement = int_type.unit
-        elif enum_type := self.find_dpcode(
-            description.key, dptype=DPType.ENUM, prefer_function=True
+        elif enum_type := find_dpcode(
+            self.device, description.key, dptype=DPType.ENUM, prefer_function=True
         ):
             self._type_data = enum_type
             self._type = DPType.ENUM
