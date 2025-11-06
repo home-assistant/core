@@ -185,7 +185,7 @@ class Data:
 
     def hash_password(self, password: str, for_storage: bool = False) -> bytes:
         """Encode a password."""
-        hashed: bytes = bcrypt.hashpw(password.encode(), bcrypt.gensalt(rounds=12))
+        hashed: bytes = bcrypt.hashpw(password[:72].encode(), bcrypt.gensalt(rounds=12))
 
         if for_storage:
             hashed = base64.b64encode(hashed)
