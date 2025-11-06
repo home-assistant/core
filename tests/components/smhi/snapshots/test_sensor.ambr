@@ -26,7 +26,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Build Up Index',
+    'original_name': 'Build up index',
     'platform': 'smhi',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -40,7 +40,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Swedish weather institute (SMHI)',
-      'friendly_name': 'Test Build Up Index',
+      'friendly_name': 'Test Build up index',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -78,7 +78,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Drought Code',
+    'original_name': 'Drought code',
     'platform': 'smhi',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -92,7 +92,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Swedish weather institute (SMHI)',
-      'friendly_name': 'Test Drought Code',
+      'friendly_name': 'Test Drought code',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -130,7 +130,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Duff Moisture Code',
+    'original_name': 'Duff moisture code',
     'platform': 'smhi',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -144,7 +144,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Swedish weather institute (SMHI)',
-      'friendly_name': 'Test Duff Moisture Code',
+      'friendly_name': 'Test Duff moisture code',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -182,7 +182,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Fine Fuel Moisture Code',
+    'original_name': 'Fine fuel moisture code',
     'platform': 'smhi',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -196,7 +196,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Swedish weather institute (SMHI)',
-      'friendly_name': 'Test Fine Fuel Moisture Code',
+      'friendly_name': 'Test Fine fuel moisture code',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -234,7 +234,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Fire Weather Index',
+    'original_name': 'Fire weather index',
     'platform': 'smhi',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -248,7 +248,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Swedish weather institute (SMHI)',
-      'friendly_name': 'Test Fire Weather Index',
+      'friendly_name': 'Test Fire weather index',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -410,7 +410,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': 'FWI-index',
+    'original_name': 'FWI index',
     'platform': 'smhi',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -425,7 +425,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Swedish weather institute (SMHI)',
       'device_class': 'enum',
-      'friendly_name': 'Test FWI-index',
+      'friendly_name': 'Test FWI index',
       'options': list([
         'very_low',
         'low',
@@ -587,7 +587,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Initial Spread Index',
+    'original_name': 'Initial spread index',
     'platform': 'smhi',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -601,7 +601,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Swedish weather institute (SMHI)',
-      'friendly_name': 'Test Initial Spread Index',
+      'friendly_name': 'Test Initial spread index',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
