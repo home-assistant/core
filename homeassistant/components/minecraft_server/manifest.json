@@ -7,5 +7,9 @@
   "iot_class": "local_polling",
   "loggers": ["dnspython", "mcstatus"],
   "quality_scale": "silver",
-  "requirements": ["mcstatus==12.0.1"]
+  "requirements": [
+    "mcstatus==12.0.1",
+    "netifaces2==0.0.22",
+    "python-nmap==0.7.1"
+  ]
 }

@@ -1288,6 +1288,9 @@ ndms2-client==0.1.2
 # homeassistant.components.ness_alarm
 nessclient==1.2.0
 
+# homeassistant.components.minecraft_server
+netifaces2==0.0.22
+
 # homeassistant.components.nmap_tracker
 netmap==0.7.0.2
 
@@ -2053,6 +2056,9 @@ python-mpd2==3.1.1
 
 # homeassistant.components.mystrom
 python-mystrom==2.5.0
+
+# homeassistant.components.minecraft_server
+python-nmap==0.7.1
 
 # homeassistant.components.open_router
 python-open-router==0.3.1
