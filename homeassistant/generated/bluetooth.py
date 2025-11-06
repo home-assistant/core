@@ -708,6 +708,10 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "service_uuid": "ef090000-11d6-42ba-93b8-9dd7ec090aa9",
     },
     {
+        "domain": "shelly",
+        "local_name": "Shelly*",
+    },
+    {
         "domain": "snooz",
         "local_name": "Snooz*",
     },
