@@ -126,7 +126,7 @@ class IcloudAccount:
 
         try:
             # Gets device owners infos
-            user_info = self.api.devices.user_info
+            user_info = self.api.devices._user_info
         except (
             PyiCloudServiceNotActivatedException,
             PyiCloudNoDevicesException,
