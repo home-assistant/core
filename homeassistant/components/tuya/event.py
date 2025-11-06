@@ -163,8 +163,8 @@ class TuyaEventEntity(TuyaEntity, EventEntity):
 
         if dpcode := find_dpcode(self.device, description.key, dptype=DPType.ENUM):
             self._attr_event_types: list[str] = dpcode.range
-        elif dpcode := get_dpcode(device, description.key):
-            self._attr_event_types: list[str] = [dpcode]
+        elif dpcode2 := get_dpcode(device, description.key):
+            self._attr_event_types = [dpcode2]
 
     async def _handle_state_update(
         self,
