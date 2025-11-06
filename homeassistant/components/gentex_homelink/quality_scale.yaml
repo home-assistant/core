@@ -61,11 +61,11 @@ rules:
     comment: Entities are not noisy and are expected to be enabled by default
   entity-translations:
     status: exempt
-    comment: Entity properties are user controlled, so can't be translated
+    comment: Entity properties are user-defined, and therefore cannot be translated
   exception-translations: todo
   icon-translations:
     status: exempt
-    comment: Entities don't use icons
+    comment: Entities in this integration do not use icons, and therefore do not require translation
   reconfiguration-flow: todo
   repair-issues: todo
   stale-devices: done
