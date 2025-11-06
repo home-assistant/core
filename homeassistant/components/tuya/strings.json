@@ -877,6 +877,12 @@
       },
       "wind_direction": {
         "name": "[%key:component::sensor::entity_component::wind_direction::name%]"
+      },
+      "alarm_message": {
+        "name": "Alarm message"
+      },
+      "doorbell_picture": {
+        "name": "Doorbell picture"
       }
     },
     "switch": {

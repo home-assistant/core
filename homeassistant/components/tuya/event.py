@@ -2,6 +2,11 @@
 
 from __future__ import annotations
 
+from base64 import b64decode
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import Any
+
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.event import (
@@ -17,61 +22,86 @@ from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, DPType
 from .entity import TuyaEntity
 from .models import find_dpcode
+from .util import get_dpcode
+
+
+@dataclass(frozen=True)
+class TuyaEventEntityDescription(EventEntityDescription):
+    """Describes Tuya event entity."""
+
+    event_type_conversion: Callable[[Any], str] | None = None
+    event_attributes_conversion: Callable[[Any], dict[str, Any]] | None = None
 
 # All descriptions can be found here. Mostly the Enum data types in the
 # default status set of each category (that don't have a set instruction)
 # end up being events.
-EVENTS: dict[DeviceCategory, tuple[EventEntityDescription, ...]] = {
+EVENTS: dict[DeviceCategory, tuple[TuyaEventEntityDescription, ...]] = {
+    DeviceCategory.SP: (
+        TuyaEventEntityDescription(
+            key=DPCode.ALARM_MESSAGE,
+            device_class=EventDeviceClass.DOORBELL,
+            translation_key="alarm_message",
+            event_type_conversion=lambda value: DPCode.ALARM_MESSAGE,
+            event_attributes_conversion=lambda value: {"message": b64decode(value).decode("utf-8")},
+        ),
+        TuyaEventEntityDescription(
+            key=DPCode.DOORBELL_PIC,
+            device_class=EventDeviceClass.DOORBELL,
+            translation_key="doorbell_picture",
+            event_type_conversion=lambda value: DPCode.DOORBELL_PIC,
+            event_attributes_conversion=lambda value: {"picture": b64decode(value).decode("utf-8")},
+        ),
+    ),
     DeviceCategory.WXKG: (
-        EventEntityDescription(
+        TuyaEventEntityDescription(
             key=DPCode.SWITCH_MODE1,
             device_class=EventDeviceClass.BUTTON,
             translation_key="numbered_button",
             translation_placeholders={"button_number": "1"},
         ),
-        EventEntityDescription(
+        TuyaEventEntityDescription(
             key=DPCode.SWITCH_MODE2,
             device_class=EventDeviceClass.BUTTON,
             translation_key="numbered_button",
             translation_placeholders={"button_number": "2"},
         ),
-        EventEntityDescription(
+        TuyaEventEntityDescription(
             key=DPCode.SWITCH_MODE3,
             device_class=EventDeviceClass.BUTTON,
             translation_key="numbered_button",
             translation_placeholders={"button_number": "3"},
         ),
-        EventEntityDescription(
+        TuyaEventEntityDescription(
             key=DPCode.SWITCH_MODE4,
             device_class=EventDeviceClass.BUTTON,
             translation_key="numbered_button",
             translation_placeholders={"button_number": "4"},
         ),
-        EventEntityDescription(
+        TuyaEventEntityDescription(
             key=DPCode.SWITCH_MODE5,
             device_class=EventDeviceClass.BUTTON,
             translation_key="numbered_button",
             translation_placeholders={"button_number": "5"},
         ),
-        EventEntityDescription(
+        TuyaEventEntityDescription(
             key=DPCode.SWITCH_MODE6,
             device_class=EventDeviceClass.BUTTON,
             translation_key="numbered_button",
             translation_placeholders={"button_number": "6"},
         ),
-        EventEntityDescription(
+        TuyaEventEntityDescription(
             key=DPCode.SWITCH_MODE7,
             device_class=EventDeviceClass.BUTTON,
             translation_key="numbered_button",
             translation_placeholders={"button_number": "7"},
         ),
-        EventEntityDescription(
+        TuyaEventEntityDescription(
             key=DPCode.SWITCH_MODE8,
             device_class=EventDeviceClass.BUTTON,
             translation_key="numbered_button",
             translation_placeholders={"button_number": "8"},
         ),
-        EventEntityDescription(
+        TuyaEventEntityDescription(
             key=DPCode.SWITCH_MODE9,
             device_class=EventDeviceClass.BUTTON,
             translation_key="numbered_button",
@@ -113,13 +143,13 @@ async def async_setup_entry(
 class TuyaEventEntity(TuyaEntity, EventEntity):
     """Tuya Event Entity."""
 
-    entity_description: EventEntityDescription
+    entity_description: TuyaEventEntityDescription
 
     def __init__(
         self,
         device: CustomerDevice,
         device_manager: Manager,
-        description: EventEntityDescription,
+        description: TuyaEventEntityDescription,
     ) -> None:
         """Init Tuya event entity."""
         super().__init__(device, device_manager)
@@ -128,6 +158,8 @@ class TuyaEventEntity(TuyaEntity, EventEntity):
 
         if dpcode := find_dpcode(self.device, description.key, dptype=DPType.ENUM):
             self._attr_event_types: list[str] = dpcode.range
+        elif dpcode := get_dpcode(device, description.key):
+            self._attr_event_types: list[str] = [dpcode]
 
     async def _handle_state_update(
         self,
@@ -141,5 +173,14 @@ class TuyaEventEntity(TuyaEntity, EventEntity):
             return
 
         value = self.device.status.get(self.entity_description.key)
-        self._trigger_event(value)
+        event_type = value
+        event_attributes = {}
+
+        if value:
+            if self.entity_description.event_type_conversion:
+                event_type = self.entity_description.event_type_conversion(value)
+            if self.entity_description.event_attributes_conversion:
+                event_attributes = self.entity_description.event_attributes_conversion(value)
+
+        self._trigger_event(event_type, event_attributes)
         self.async_write_ha_state()
