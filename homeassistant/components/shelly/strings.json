@@ -2,13 +2,20 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_on_wifi": "Device is already connected to WiFi and was discovered via the network.",
       "another_device": "Re-configuration was unsuccessful, the IP address/hostname of another Shelly device was used.",
+      "ble_not_permitted": "Device is bound to a Shelly cloud account and cannot be provisioned via Bluetooth. Please use the Shelly app to provision WiFi credentials, then add the device when it appears on your network.",
+      "cannot_connect": "Failed to connect to the device. Ensure the device is powered on and within range.",
       "firmware_not_fully_provisioned": "Device not fully provisioned. Please contact Shelly support",
+      "invalid_discovery_info": "Invalid Bluetooth discovery information.",
       "ipv6_not_supported": "IPv6 is not supported.",
       "mac_address_mismatch": "[%key:component::shelly::config::error::mac_address_mismatch%]",
+      "no_wifi_networks": "No WiFi networks found during scan.",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reauth_unsuccessful": "Re-authentication was unsuccessful, please remove the integration and set it up again.",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "wifi_provisioned": "WiFi credentials for {ssid} have been provisioned to {name}. The device is connecting to WiFi and will complete setup automatically."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -19,7 +26,13 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "flow_title": "{name}",
+    "progress": {
+      "provisioning": "Provisioning WiFi credentials and waiting for device to connect"
+    },
     "step": {
+      "bluetooth_confirm": {
+        "description": "The Shelly device {name} has been discovered via Bluetooth but is not connected to WiFi.\n\nDo you want to provision WiFi credentials to this device?"
+      },
       "confirm_discovery": {
         "description": "Do you want to set up the {model} at {host}?\n\nBattery-powered devices that are password-protected must be woken up before continuing with setting up.\nBattery-powered devices that are not password-protected will be added when the device wakes up, you can now manually wake the device up using a button on it or wait for the next data update from the device."
       },
@@ -32,6 +45,9 @@
           "password": "Password for the device's web panel.",
           "username": "Username for the device's web panel."
         }
+      },
+      "provision_failed": {
+        "description": "The device did not connect to {ssid}. This may be due to an incorrect password or the network being out of range. Would you like to try again?"
       },
       "reauth_confirm": {
         "data": {
@@ -64,6 +80,27 @@
           "port": "The TCP port of the Shelly device to connect to (Gen2+)."
         },
         "description": "Before setup, battery-powered devices must be woken up, you can now wake the device up using a button on it."
+      },
+      "wifi_credentials": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "Password for the WiFi network."
+        },
+        "description": "Enter the password for {ssid}."
+      },
+      "wifi_scan": {
+        "data": {
+          "ssid": "WiFi network"
+        },
+        "data_description": {
+          "ssid": "Select a WiFi network from the list or enter a custom SSID for hidden networks."
+        },
+        "description": "Select a WiFi network from the list or enter a custom SSID for hidden networks."
+      },
+      "wifi_scan_failed": {
+        "description": "Failed to scan for WiFi networks via Bluetooth. The device may be out of range or Bluetooth connection failed. Would you like to try again?"
       }
     }
   },

@@ -1,11 +1,11 @@
 {
   "entity": {
     "binary_sensor": {
-      "state": {
-        "name": "Running"
-      },
       "mount": {
         "name": "Connected"
+      },
+      "state": {
+        "name": "Running"
       }
     },
     "sensor": {
