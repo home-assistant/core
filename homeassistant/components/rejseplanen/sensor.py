@@ -20,6 +20,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -316,8 +317,28 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Rejseplanen sensors."""
     coordinator = config_entry.runtime_data
-    entities = []
+    entities: list[SensorEntity] = []
     device_registry = dr.async_get(hass)
+
+    # Add service-level diagnostic sensors (associated with main service device)
+    entities.extend(
+        [
+            RejseplanenDiagnosticSensor(
+                coordinator=coordinator,
+                config_entry=config_entry,
+                key="last_update_time",
+                name="Last update time",
+                device_class=SensorDeviceClass.TIMESTAMP,
+            ),
+            RejseplanenDiagnosticSensor(
+                coordinator=coordinator,
+                config_entry=config_entry,
+                key="update_interval",
+                name="Update interval",
+                native_unit_of_measurement="s",
+            ),
+        ]
+    )
 
     # Process all subentries (stop configurations)
     for subentry_id, subentry in config_entry.subentries.items():
@@ -510,3 +531,45 @@ class RejseplanenTransportSensor(RejseplanenEntity, SensorEntity):
             direction_filter=self._direction if self._direction else None,
             departure_type_filter=self._departure_type_bitflag,
         )
+
+
+class RejseplanenDiagnosticSensor(SensorEntity):
+    """Diagnostic sensor for Rejseplanen coordinator-level information."""
+
+    _attr_has_entity_name = True
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_entity_registry_enabled_default = False
+
+    def __init__(
+        self,
+        coordinator: RejseplanenDataUpdateCoordinator,
+        config_entry: RejseplanenConfigEntry,
+        key: str,
+        name: str,
+        device_class: SensorDeviceClass | None = None,
+        native_unit_of_measurement: str | None = None,
+    ) -> None:
+        """Initialize the diagnostic sensor."""
+        self.coordinator = coordinator
+        self._key = key
+        self._attr_name = name
+        self._attr_device_class = device_class
+        self._attr_native_unit_of_measurement = native_unit_of_measurement
+        self._attr_unique_id = f"{config_entry.entry_id}_{key}"
+
+        # Associate with the main service device
+        self._attr_device_info = dr.DeviceInfo(
+            identifiers={(DOMAIN, config_entry.entry_id)},
+        )
+
+    @property
+    def native_value(self) -> StateType | datetime:
+        """Return the state of the sensor."""
+        diagnostics = self.coordinator.diagnostics_attributes
+
+        if self._key == "last_update_time":
+            return diagnostics.get("last_update_time")
+        if self._key == "update_interval":
+            return diagnostics.get("update_interval")
+
+        return None

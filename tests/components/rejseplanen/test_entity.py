@@ -4,8 +4,10 @@ import contextlib
 from unittest.mock import MagicMock, patch
 
 from py_rejseplan.dataclasses.departure import DepartureType
+import pytest
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from tests.common import MockConfigEntry
@@ -110,3 +112,79 @@ async def test_coordinator_stop_management(
     coordinator.remove_stop_id(123456)
     assert 123456 not in coordinator._stop_ids
     assert 789012 in coordinator._stop_ids
+
+
+async def test_entity_availability_logging(
+    hass: HomeAssistant,
+    setup_integration_with_stop: tuple[MockConfigEntry, MockConfigEntry],
+    mock_departure_data: list[MagicMock],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test entity logs availability changes (Silver requirement)."""
+    main_entry, _ = setup_integration_with_stop
+    coordinator = main_entry.runtime_data
+
+    await hass.async_block_till_done()
+
+    # Find the entity that was created
+    entity_registry = er.async_get(hass)
+    entities = er.async_entries_for_config_entry(entity_registry, main_entry.entry_id)
+
+    # Filter for sensor entities (not diagnostic)
+    sensor_entities = [
+        e
+        for e in entities
+        if not e.entity_id.endswith("_time") and not e.entity_id.endswith("_interval")
+    ]
+    assert len(sensor_entities) > 0
+
+    # Get one of the sensor entities
+    sensor_entity_id = sensor_entities[0].entity_id
+
+    # Verify entity is initially available
+    state = hass.states.get(sensor_entity_id)
+    assert state is not None
+    assert state.state != "unavailable"
+
+    # Clear any existing logs
+    caplog.clear()
+
+    # Make coordinator unavailable by setting last_update_success to False
+    # This will make the entity's available property return False
+    with (
+        patch.object(coordinator, "last_update_success", False),
+        patch.object(coordinator, "data", {}),  # Empty data to avoid filtering errors
+    ):
+        # Trigger state update
+        coordinator.async_update_listeners()
+        await hass.async_block_till_done()
+
+        # Check that unavailability is logged
+        assert any(
+            "became unavailable" in record.message
+            for record in caplog.records
+            if record.levelname == "INFO"
+        ), (
+            f"Expected unavailability log, got: {[r.message for r in caplog.records if r.levelname == 'INFO']}"
+        )
+
+    # Clear the log
+    caplog.clear()
+
+    # Make coordinator available again
+    with (
+        patch.object(coordinator, "last_update_success", True),
+        patch.object(coordinator, "data", {}),  # Empty data to avoid filtering errors
+    ):
+        # Trigger state update
+        coordinator.async_update_listeners()
+        await hass.async_block_till_done()
+
+        # Check that availability is logged
+        assert any(
+            "is back online" in record.message
+            for record in caplog.records
+            if record.levelname == "INFO"
+        ), (
+            f"Expected back online log, got: {[r.message for r in caplog.records if r.levelname == 'INFO']}"
+        )

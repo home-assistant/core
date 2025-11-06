@@ -90,19 +90,9 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard]):
         return (
             self.last_update_success_time is not None
             and self.update_interval is not None
-            and self.last_update_success_time > (dt_util.now() - self.update_interval)
+            and self.last_update_success_time
+            > (dt_util.now() - 3 * self.update_interval)
         )
-
-    def due_in_minutes(self, timestamp) -> int:
-        """Get the time in minutes from a timestamp.
-
-        The timestamp should be in the format day.month.year hour:minute
-        """
-        diff = datetime.strptime(
-            timestamp, "%Y-%m-%d %H:%M:%S"
-        ) - dt_util.now().replace(tzinfo=None)
-
-        return int(diff.total_seconds() // 60)
 
     def add_stop_id(self, stop_id: int):
         """Add a stop ID to the coordinator."""

@@ -7,7 +7,11 @@ import logging
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    issue_registry as ir,
+)
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.typing import ConfigType
 
@@ -21,6 +25,9 @@ _LOGGER = logging.getLogger(__name__)
 logging.getLogger("py_rejseplan").setLevel(logging.WARNING)
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
+
+# Integration is config entry only (deprecated YAML setup triggers repair issue)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

@@ -40,8 +40,16 @@ async def test_sensors_unique_ids(
         entity_registry, mock_config_entry.entry_id
     )
 
-    # Main integration without subentries creates no entities
-    assert len(entity_entries) == 0
+    # Main integration without subentries creates 2 diagnostic entities
+    assert len(entity_entries) == 2
+
+    # Verify diagnostic sensors exist
+    diagnostic_sensors = [
+        e
+        for e in entity_entries
+        if "last_update_time" in e.unique_id or "update_interval" in e.unique_id
+    ]
+    assert len(diagnostic_sensors) == 2
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -71,13 +79,14 @@ async def test_no_entities_without_subentries(
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test main integration creates no entities without stop subentries."""
+    """Test main integration creates diagnostic entities but no stop entities without subentries."""
     entity_entries = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
 
-    # Main integration should not create entities - only subentries do
-    assert len(entity_entries) == 0
+    # Main integration creates 2 diagnostic entities (last_update_time, update_interval)
+    # Stop entities are only created when subentries exist
+    assert len(entity_entries) == 2
 
 
 @pytest.mark.usefixtures("setup_integration_with_stop")
@@ -698,3 +707,47 @@ def test_get_current_departures_filters_past() -> None:
     # Should only include future departure
     assert len(current_departures) == 1
     assert current_departures[0].name == "Future Line"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+async def test_diagnostic_sensor_native_value(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test diagnostic sensor native_value property."""
+    # Get the diagnostic sensor entities
+    entity_entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+
+    # Find last_update_time sensor
+    last_update_entity = next(
+        (e for e in entity_entries if "last_update_time" in e.unique_id), None
+    )
+    assert last_update_entity is not None
+    assert last_update_entity.entity_category == "diagnostic"
+
+    # Find update_interval sensor
+    update_interval_entity = next(
+        (e for e in entity_entries if "update_interval" in e.unique_id), None
+    )
+    assert update_interval_entity is not None
+    assert update_interval_entity.entity_category == "diagnostic"
+
+    # Get the state of update_interval sensor
+    update_interval_state = hass.states.get(update_interval_entity.entity_id)
+    assert update_interval_state is not None
+    # Should have a numeric value in seconds
+    assert update_interval_state.state not in (None, "unknown", "unavailable")
+    # Verify it's a valid number
+    update_interval_value = int(float(update_interval_state.state))
+    assert update_interval_value > 0
+
+    # Get the state of last_update_time sensor
+    last_update_state = hass.states.get(last_update_entity.entity_id)
+    assert last_update_state is not None
+    # When no stops are registered, last_update_time can be unknown
+    # This is expected behavior - it becomes a timestamp after first successful data fetch
+    # For now, just verify the sensor exists and returns a value (even if unknown)
+    assert last_update_state.state is not None
