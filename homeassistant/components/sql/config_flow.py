@@ -42,9 +42,7 @@ _LOGGER = logging.getLogger(__name__)
 
 OPTIONS_SCHEMA: vol.Schema = vol.Schema(
     {
-        vol.Required(CONF_QUERY): selector.TextSelector(
-            selector.TextSelectorConfig(multiline=True)
-        ),
+        vol.Required(CONF_QUERY): selector.TemplateSelector(),
         vol.Required(CONF_COLUMN_NAME): selector.TextSelector(),
         vol.Required(CONF_ADVANCED_OPTIONS): section(
             vol.Schema(

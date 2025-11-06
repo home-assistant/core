@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import re
 from typing import Any
 from unittest.mock import patch
 
@@ -29,7 +30,7 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResultType, InvalidData
 
 from . import (
     ENTRY_CONFIG,
@@ -162,14 +163,12 @@ async def test_form_with_broken_query_template(
         result["flow_id"],
         DATA_CONFIG,
     )
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        ENTRY_CONFIG_WITH_BROKEN_QUERY_TEMPLATE,
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"query": "query_invalid"}
+    message = re.escape("Schema validation failed @ data['query']")
+    with pytest.raises(InvalidData, match=message):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            ENTRY_CONFIG_WITH_BROKEN_QUERY_TEMPLATE,
+        )
 
     with patch(
         "homeassistant.components.sql.async_setup_entry",
@@ -615,15 +614,12 @@ async def test_options_flow_fails_invalid_query(hass: HomeAssistant) -> None:
         CONF_QUERY: "multiple_queries",
     }
 
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input=ENTRY_CONFIG_WITH_BROKEN_QUERY_TEMPLATE_OPT,
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {
-        CONF_QUERY: "query_invalid",
-    }
+    message = re.escape("Schema validation failed @ data['query']")
+    with pytest.raises(InvalidData, match=message):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input=ENTRY_CONFIG_WITH_BROKEN_QUERY_TEMPLATE_OPT,
+        )
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
