@@ -215,6 +215,7 @@ async def test_zeroconf_with_mac_device_exists_abort(
     assert result.get("reason") == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_wled")
 async def test_options_flow(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
