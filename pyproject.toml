@@ -10,7 +10,7 @@ license = "Apache-2.0"
 license-files = ["LICENSE*", "homeassistant/backports/LICENSE*"]
 =======
 name        = "my_smart_homes"
-version     = "20241051.0"
+version     = "20241018.2" # this is current version 20241051.0, the one written is for test
 license     = {text = "Apache-2.0"}
 >>>>>>> cf8b07901f5 (bump: 20241047.0)
 description = "Open-source home automation platform running on Python 3."
