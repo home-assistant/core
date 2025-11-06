@@ -1,6 +1,6 @@
 """Test the Airthings BLE integration init."""
 
-from datetime import timedelta
+from copy import deepcopy
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -104,33 +104,56 @@ async def test_scan_interval_corentium_home_2(
 
     with (
         patch_async_ble_device_from_address(WAVE_SERVICE_INFO.device),
-        patch_airthings_ble(CORENTIUM_HOME_2_DEVICE_INFO) as test,
+        patch_airthings_ble(CORENTIUM_HOME_2_DEVICE_INFO),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        freezer.tick(RADON_SCAN_INTERVAL)
+        assert (
+            hass.states.get("sensor.airthings_corentium_home_2_123456_battery").state
+            == "90"
+        )
+
+    changed_info = deepcopy(CORENTIUM_HOME_2_DEVICE_INFO)
+    changed_info.sensors["battery"] = 89
+
+    with patch_airthings_ble(changed_info):
+        freezer.tick(DEFAULT_SCAN_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
-        assert test.assert_called()
+        assert (
+            hass.states.get("sensor.airthings_corentium_home_2_123456_battery").state
+            == "90"
+        )
 
-        # Coordinator should have radon scan interval
-        coordinator = entry.runtime_data
-        assert coordinator.update_interval == timedelta(seconds=RADON_SCAN_INTERVAL)
+        freezer.tick(RADON_SCAN_INTERVAL - DEFAULT_SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        assert (
+            hass.states.get("sensor.airthings_corentium_home_2_123456_battery").state
+            == "89"
+        )
 
 
 @pytest.mark.parametrize(
-    ("service_info", "device_info"),
+    ("service_info", "device_info", "battery_entity_id"),
     [
-        (WAVE_SERVICE_INFO, WAVE_DEVICE_INFO),
-        (WAVE_ENHANCE_SERVICE_INFO, WAVE_ENHANCE_DEVICE_INFO),
+        (WAVE_SERVICE_INFO, WAVE_DEVICE_INFO, "sensor.airthings_wave_123456_battery"),
+        (
+            WAVE_ENHANCE_SERVICE_INFO,
+            WAVE_ENHANCE_DEVICE_INFO,
+            "sensor.airthings_wave_enhance_123456_battery",
+        ),
     ],
 )
 async def test_coordinator_default_scan_interval(
     hass: HomeAssistant,
     service_info,
     device_info,
+    freezer: FrozenDateTimeFactory,
+    battery_entity_id: str,
 ) -> None:
     """Test that coordinator uses default scan interval."""
     entry = MockConfigEntry(
@@ -149,6 +172,14 @@ async def test_coordinator_default_scan_interval(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    # Coordinator should have default scan interval
-    coordinator = entry.runtime_data
-    assert coordinator.update_interval == timedelta(seconds=DEFAULT_SCAN_INTERVAL)
+        assert hass.states.get(battery_entity_id).state == "85"
+
+    changed_info = deepcopy(device_info)
+    changed_info.sensors["battery"] = 84
+
+    with patch_airthings_ble(changed_info):
+        freezer.tick(DEFAULT_SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        assert hass.states.get(battery_entity_id).state == "84"
