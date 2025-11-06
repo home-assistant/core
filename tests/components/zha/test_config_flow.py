@@ -215,6 +215,15 @@ async def consume_progress_flow(
     return result
 
 
+class DelayedAsyncMock(AsyncMock):
+    """AsyncMock that waits a moment before returning, useful for progress steps."""
+
+    async def __call__(self, *args: Any, **kwargs: Any) -> Any:
+        """Overridden `__call__` with an added delay."""
+        await asyncio.sleep(0)
+        return await super().__call__(*args, **kwargs)
+
+
 @pytest.mark.parametrize(
     ("entry_name", "unique_id", "radio_type", "service_info"),
     [
@@ -720,6 +729,7 @@ async def test_migration_strategy_recommended_cannot_write(
 
     with patch(
         "homeassistant.components.zha.radio_manager.ZhaRadioManager.restore_backup",
+        new_callable=DelayedAsyncMock,
         side_effect=CannotWriteNetworkSettings("test error"),
     ) as mock_restore_backup:
         result_migrate = await hass.config_entries.flow.async_configure(
@@ -1735,7 +1745,7 @@ async def test_strategy_no_network_settings(
     advanced_pick_radio: RadioPicker, mock_app: AsyncMock, hass: HomeAssistant
 ) -> None:
     """Test formation strategy when no network settings are present."""
-    mock_app.load_network_info = MagicMock(side_effect=NetworkNotFormed())
+    mock_app.load_network_info = DelayedAsyncMock(side_effect=NetworkNotFormed())
 
     result = await advanced_pick_radio(RadioType.ezsp)
     assert (
@@ -1773,7 +1783,7 @@ async def test_formation_strategy_form_initial_network(
 ) -> None:
     """Test forming a new network, with no previous settings on the radio."""
     # Initially, no network is formed
-    mock_app.load_network_info = AsyncMock(side_effect=NetworkNotFormed())
+    mock_app.load_network_info = DelayedAsyncMock(side_effect=NetworkNotFormed())
 
     # After form_network is called, load_network_info should return the network settings
     async def form_network_side_effect(*args, **kwargs):
@@ -1807,7 +1817,7 @@ async def test_onboarding_auto_formation_new_hardware(
 ) -> None:
     """Test auto network formation with new hardware during onboarding."""
     # Initially, no network is formed
-    mock_app.load_network_info = AsyncMock(side_effect=NetworkNotFormed())
+    mock_app.load_network_info = DelayedAsyncMock(side_effect=NetworkNotFormed())
     mock_app.get_device = MagicMock(return_value=MagicMock(spec=zigpy.device.Device))
 
     # After form_network is called, load_network_info should return the network settings
@@ -1951,6 +1961,7 @@ async def test_formation_strategy_restore_manual_backup_overwrite_ieee_ezsp(
         ),
         patch(
             "homeassistant.components.zha.radio_manager.ZhaRadioManager.restore_backup",
+            new_callable=DelayedAsyncMock,
             side_effect=[
                 DestructiveWriteNetworkSettings("Radio IEEE change is permanent"),
                 None,
@@ -2014,6 +2025,7 @@ async def test_formation_strategy_restore_manual_backup_ezsp(
         ),
         patch(
             "homeassistant.components.zha.radio_manager.ZhaRadioManager.restore_backup",
+            new_callable=DelayedAsyncMock,
             side_effect=[
                 DestructiveWriteNetworkSettings("Radio IEEE change is permanent"),
                 None,
@@ -2316,6 +2328,7 @@ async def test_options_flow_defaults(
     # ZHA gets unloaded
     with patch(
         "homeassistant.config_entries.ConfigEntries.async_unload",
+        new_callable=DelayedAsyncMock,
         side_effect=[async_unload_effect],
     ) as mock_async_unload:
         result1 = await hass.config_entries.options.async_configure(
@@ -2853,6 +2866,7 @@ async def test_config_flow_port_no_multiprotocol(hass: HomeAssistant) -> None:
         patch("homeassistant.components.zha.config_flow.is_hassio", return_value=True),
         patch(
             "homeassistant.components.hassio.addon_manager.AddonManager.async_get_addon_info",
+            new_callable=DelayedAsyncMock,
             side_effect=AddonError,
         ),
         patch(
@@ -3075,6 +3089,7 @@ async def test_formation_strategy_restore_manual_backup_overwrite_ieee_ezsp_writ
         ),
         patch(
             "homeassistant.components.zha.radio_manager.ZhaRadioManager.restore_backup",
+            new_callable=DelayedAsyncMock,
             side_effect=[
                 DestructiveWriteNetworkSettings("Radio IEEE change is permanent"),
                 CannotWriteNetworkSettings("Failed to write settings"),
@@ -3191,6 +3206,7 @@ async def test_plug_in_new_radio_retry(
         ),
         patch(
             "homeassistant.components.zha.radio_manager.ZhaRadioManager.restore_backup",
+            new_callable=DelayedAsyncMock,
             side_effect=[
                 HomeAssistantError(
                     "Failed to connect to Zigbee adapter: [Errno 2] No such file or directory"
@@ -3277,7 +3293,7 @@ async def test_plug_in_old_radio_retry(hass: HomeAssistant, backup, mock_app) ->
     )
 
     mock_temp_radio_mgr = AsyncMock()
-    mock_temp_radio_mgr.async_reset_adapter = AsyncMock(
+    mock_temp_radio_mgr.async_reset_adapter = DelayedAsyncMock(
         side_effect=HomeAssistantError(
             "Failed to connect to Zigbee adapter: [Errno 2] No such file or directory"
         )
