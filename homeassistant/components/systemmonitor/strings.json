@@ -16,7 +16,7 @@
       }
     },
     "sensor": {
-      "battery_left": {
+      "battery_empty": {
         "name": "Battery empty"
       },
       "disk_free": {

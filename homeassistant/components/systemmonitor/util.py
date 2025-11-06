@@ -78,7 +78,6 @@ def read_cpu_temperature(temps: dict[str, list[shwtemp]]) -> float | None:
     entry: shwtemp
 
     _LOGGER.debug("CPU Temperatures: %s", temps)
-    # {'acpitz': [shwtemp(label='', current=47.0, high=103.0, critical=103.0)] }
     for name, entries in temps.items():
         for i, entry in enumerate(entries, start=1):
             # In case the label is empty (e.g. on Raspberry PI 4),
@@ -99,7 +98,6 @@ def read_fan_speed(fans: dict[str, list[sfan]]) -> dict[str, int]:
     _LOGGER.debug("Fan speed: %s", fans)
     if not fans:
         return {}
-    # {'asus': [sfan(label='cpu_fan', current=3200)] }
     sensor_fans: dict[str, int] = {}
     for name, entries in fans.items():
         for entry in entries:

@@ -61,7 +61,7 @@ SIGNAL_SYSTEMMONITOR_UPDATE = "systemmonitor_update"
 BATTERY_REMAIN_UNKNOWNS = (POWER_TIME_UNKNOWN, POWER_TIME_UNLIMITED)
 
 SENSORS_NO_ARG = (
-    "battery_left",
+    "battery_empty",
     "battery",
     "last_boot",
     "load_",
@@ -183,9 +183,9 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         none_is_unavailable=True,
         add_to_update=lambda entity: ("battery", ""),
     ),
-    "battery_left": SysMonitorSensorEntityDescription(
-        key="battery_left",
-        translation_key="battery_left",
+    "battery_empty": SysMonitorSensorEntityDescription(
+        key="battery_empty",
+        translation_key="battery_empty",
         device_class=SensorDeviceClass.TIMESTAMP,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=battery_time_ends,
