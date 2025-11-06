@@ -10,7 +10,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -44,13 +44,16 @@ SERVER_SENSORS: tuple[BinarySensorEntityDescription, ...] = (
 PLAYER_SENSORS: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
         key=PLAYER_SENSOR_ALARM_UPCOMING,
+        translation_key=PLAYER_SENSOR_ALARM_UPCOMING,
     ),
     BinarySensorEntityDescription(
         key=PLAYER_SENSOR_ALARM_ACTIVE,
+        translation_key=PLAYER_SENSOR_ALARM_ACTIVE,
         device_class=BinarySensorDeviceClass.RUNNING,
     ),
     BinarySensorEntityDescription(
         key=PLAYER_SENSOR_ALARM_SNOOZE,
+        translation_key=PLAYER_SENSOR_ALARM_SNOOZE,
         device_class=BinarySensorDeviceClass.RUNNING,
     ),
 )
@@ -65,7 +68,8 @@ async def async_setup_entry(
 ) -> None:
     """Platform setup using common elements."""
 
-    async def _player_discovered(
+    @callback
+    def _player_discovered(
         player_coordinator: SqueezeBoxPlayerUpdateCoordinator,
     ) -> None:
         _LOGGER.debug(
@@ -111,11 +115,10 @@ class SqueezeboxBinarySensorEntity(SqueezeboxEntity, BinarySensorEntity):
     ) -> None:
         """Initialize the SqueezeBox sensor."""
         super().__init__(coordinator)
-        self.description = description
-        self._attr_translation_key = description.key
+        self.entity_description = description
         self._attr_unique_id = f"{format_mac(self._player.player_id)}_{description.key}"
 
     @property
     def is_on(self) -> bool | None:
         """Return the state of the binary sensor."""
-        return getattr(self.coordinator.player, self.description.key, None)
+        return getattr(self.coordinator.player, self.entity_description.key, None)
