@@ -13,6 +13,7 @@ from homeassistant.components.light import (
     ATTR_XY_COLOR,
     ColorMode,
     LightEntity,
+    filter_supported_color_modes,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
@@ -44,12 +45,11 @@ def get_avaliable_color_modes(api: HueBleLight) -> set[ColorMode]:
         color_modes.add(ColorMode.XY)
     if api.supports_colour_temp:
         color_modes.add(ColorMode.COLOR_TEMP)
-    if api.supports_brightness and len(color_modes) == 0:
+    if api.supports_brightness:
         color_modes.add(ColorMode.BRIGHTNESS)
-    if api.supports_on_off and len(color_modes) == 0:
+    if api.supports_on_off:
         color_modes.add(ColorMode.ONOFF)
-
-    return color_modes
+    return filter_supported_color_modes(color_modes) if color_modes else set()
 
 
 class HueBLELight(LightEntity):
