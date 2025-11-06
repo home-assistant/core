@@ -28,7 +28,10 @@ from tests.typing import ClientSessionGenerator
 
 @pytest.fixture(autouse=True)
 def disable_http_server() -> None:
-    """Revert autouse mock which disables HTTP server during tests."""
+    """Override the global disable_http_server fixture with an empty fixture.
+
+    This allows the HTTP server to start in tests that need it.
+    """
     return
 
 
