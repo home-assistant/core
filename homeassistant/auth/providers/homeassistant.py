@@ -179,7 +179,8 @@ class Data:
         user_hash = base64.b64decode(found["password"])
 
         # bcrypt.checkpw is timing-safe
-        if not bcrypt.checkpw(password.encode(), user_hash):
+        # truncate to 72 chars (#155935)
+        if not bcrypt.checkpw(password[:72].encode(), user_hash):
             raise InvalidAuth
 
     def hash_password(self, password: str, for_storage: bool = False) -> bytes:
