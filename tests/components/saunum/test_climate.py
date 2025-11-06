@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -18,6 +18,8 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
+from homeassistant.components.saunum.climate import LeilSaunaClimate
+from homeassistant.components.saunum.const import DELAYED_REFRESH_SECONDS
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -158,3 +160,60 @@ async def test_climate_temperature_edge_cases(
 
     assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == expected_current
     assert state.attributes.get(ATTR_TEMPERATURE) == expected_target
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_delayed_refresh_after_hvac_mode_change(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_saunum_client,
+) -> None:
+    """Test that a delayed refresh is scheduled after HVAC mode change."""
+    entity_id = "climate.saunum_leil"
+
+    # Reset the call count after init_integration setup
+    mock_saunum_client.async_get_data.reset_mock()
+
+    # Get the initial number of background tasks
+    initial_bg_tasks = len(mock_config_entry._background_tasks)
+
+    # Turn on the heater
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.HEAT},
+        blocking=True,
+    )
+
+    # Should have called once immediately
+    assert mock_saunum_client.async_get_data.call_count == 1
+
+    # Should have created a background task for the delayed refresh
+    assert len(mock_config_entry._background_tasks) == initial_bg_tasks + 1
+
+
+async def test_delayed_refresh_method(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_saunum_client,
+) -> None:
+    """Test the delayed refresh method directly for coverage."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Get the climate entity
+    entity_id = "climate.saunum_leil"
+    entity = hass.data["entity_components"]["climate"].get_entity(entity_id)
+    assert isinstance(entity, LeilSaunaClimate)
+
+    # Reset mock
+    mock_saunum_client.async_get_data.reset_mock()
+
+    # Call the delayed refresh method directly with mocked sleep
+    with patch("asyncio.sleep") as mock_sleep:
+        await entity._async_delayed_refresh()
+        mock_sleep.assert_called_once_with(DELAYED_REFRESH_SECONDS.total_seconds())
+
+    # Verify refresh was called
+    assert mock_saunum_client.async_get_data.call_count == 1

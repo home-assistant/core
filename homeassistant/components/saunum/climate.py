@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any
 
@@ -18,6 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import LeilSaunaConfigEntry
+from .const import DELAYED_REFRESH_SECONDS
 from .entity import LeilSaunaEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -80,6 +82,19 @@ class LeilSaunaClimate(LeilSaunaEntity, ClimateEntity):
             await self.coordinator.client.async_start_session()
         else:
             await self.coordinator.client.async_stop_session()
+        await self.coordinator.async_request_refresh()
+
+        # The device takes 1-2 seconds to turn heater elements on/off and
+        # update heater_elements_active. Schedule a delayed refresh to ensure
+        # the HVAC action state reflects the actual heater status without
+        # waiting for the next polling interval.
+        self.coordinator.config_entry.async_create_background_task(
+            self.hass, self._async_delayed_refresh(), "saunum-delayed-refresh"
+        )
+
+    async def _async_delayed_refresh(self) -> None:
+        """Refresh coordinator data after a delay."""
+        await asyncio.sleep(DELAYED_REFRESH_SECONDS.total_seconds())
         await self.coordinator.async_request_refresh()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
