@@ -287,12 +287,12 @@ def mock_smile_anna_p1() -> Generator[MagicMock]:
         api.heater_id = "36b937e44ad145bab165fa0fe99d742d"
         api.reboot = True
         api.smile = build_smile(
-            hostname = "smile98765",
-            model = "Gateway",
-            model_id = "smile_thermo",
-            name = "Smile Anna P1",
-            type = "thermostat",
-            version = "4.4.4",
+            hostname="smile98765",
+            model="Gateway",
+            model_id="smile_thermo",
+            name="Smile Anna P1",
+            type="thermostat",
+            version="4.4.4",
         )
 
         yield api
