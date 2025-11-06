@@ -616,7 +616,9 @@ class DPCode(StrEnum):
     ARM_DOWN_PERCENT = "arm_down_percent"
     ARM_UP_PERCENT = "arm_up_percent"
     ATMOSPHERIC_PRESSTURE = "atmospheric_pressture"  # Typo is in Tuya API
+    AUTO_CLEAN = "auto_clean"
     BACKUP_RESERVE = "backup_reserve"
+    BAG_CHANGE_MODE = "bag_change_mode"
     BASIC_ANTI_FLICKER = "basic_anti_flicker"
     BASIC_DEVICE_VOLUME = "basic_device_volume"
     BASIC_FLIP = "basic_flip"
@@ -651,9 +653,11 @@ class DPCode(StrEnum):
     CH4_SENSOR_VALUE = "ch4_sensor_value"
     CHARGE_STATE = "charge_state"
     CHILD_LOCK = "child_lock"  # Child lock
+    CHOOSE_CAT_LITTER = "choose_cat_litter"
     CISTERN = "cistern"
     CLEAN_AREA = "clean_area"
     CLEAN_TIME = "clean_time"
+    CLEAN = "clean"
     CLICK_SUSTAIN_TIME = "click_sustain_time"
     CLOSED_OPENED_KIT = "closed_opened_kit"
     CLOUD_RECIPE_NUMBER = "cloud_recipe_number"
@@ -701,8 +705,10 @@ class DPCode(StrEnum):
     CURRENT_SOC = "current_soc"
     DECIBEL_SENSITIVITY = "decibel_sensitivity"
     DECIBEL_SWITCH = "decibel_switch"
+    DEEP_CLEAN = "deep_clean"
     DEHUMIDITY_SET_ENUM = "dehumidify_set_enum"
     DEHUMIDITY_SET_VALUE = "dehumidify_set_value"
+    DELAY_CLEAN_TIME = "delay_clean_time"
     DELAY_SET = "delay_set"
     DEW_POINT_TEMP = "dew_point_temp"
     DISINFECTION = "disinfection"
@@ -713,9 +719,11 @@ class DPCode(StrEnum):
     DUSTER_CLOTH = "duster_cloth"
     ECO2 = "eco2"
     EDGE_BRUSH = "edge_brush"
+    EMPTY = "empty"  # Emptying MSP device
     ELECTRICITY_LEFT = "electricity_left"
     EXCRETION_TIME_DAY = "excretion_time_day"
     EXCRETION_TIMES_DAY = "excretion_times_day"
+    FACTORY_RESET = "factory_reset"
     FAN_BEEP = "fan_beep"  # Sound
     FAN_COOL = "fan_cool"  # Cool wind
     FAN_DIRECTION = "fan_direction"  # Fan direction
@@ -754,7 +762,10 @@ class DPCode(StrEnum):
     HUMIDITY_OUTDOOR_3 = "humidity_outdoor_3"  # Outdoor humidity
     HUMIDITY_SET = "humidity_set"  # Humidity setting
     HUMIDITY_VALUE = "humidity_value"  # Humidity
+    INFRARED_SENSOR_SWITCH = "infrared_sensor_switch"
     INSTALLATION_HEIGHT = "installation_height"
+    INDUCTION_INTERVAL = "induction_interval"
+    INDUCTION_DELAY = "induction_delay"
     INVERTER_OUTPUT_POWER = "inverter_output_power"
     IPC_WORK_MODE = "ipc_work_mode"
     LED_TYPE_1 = "led_type_1"
@@ -763,6 +774,7 @@ class DPCode(StrEnum):
     LEVEL = "level"
     LEVEL_1 = "level_1"
     LEVEL_2 = "level_2"
+    LEVEL_CAT_LITTER = "level_cat_litter"
     LEVEL_CURRENT = "level_current"
     LIGHT = "light"  # Light
     LIGHT_MODE = "light_mode"
@@ -772,6 +784,7 @@ class DPCode(StrEnum):
     LIQUID_STATE = "liquid_state"
     LOCK = "lock"  # Lock / Child lock
     MACH_OPERATE = "mach_operate"
+    MANUAL_CLEAN = "manual_clean"
     MANUAL_FEED = "manual_feed"
     MASTER_MODE = "master_mode"  # alarm mode
     MASTER_STATE = "master_state"  # alarm state
@@ -779,6 +792,7 @@ class DPCode(StrEnum):
     MAX_SET = "max_set"
     MINI_SET = "mini_set"
     MODE = "mode"  # Working mode / Mode
+    MONITORING = "monitoring"  # Presence monitoring of MSP device
     MOODLIGHTING = "moodlighting"  # Mood light
     MOTION_RECORD = "motion_record"
     MOTION_SENSITIVITY = "motion_sensitivity"
@@ -936,6 +950,7 @@ class DPCode(StrEnum):
     TEMP_VALUE = "temp_value"  # Color temperature
     TEMP_VALUE_V2 = "temp_value_v2"
     TEMPER_ALARM = "temper_alarm"  # Tamper alarm
+    THIN_FECES = "thin_feces"
     TIME_TOTAL = "time_total"
     TIME_USE = "time_use"  # Total seconds of irrigation
     TOTAL_CLEAN_AREA = "total_clean_area"

@@ -174,6 +174,13 @@ SELECTS: dict[DeviceCategory, tuple[SelectEntityDescription, ...]] = {
             translation_key="countdown",
         ),
     ),
+    DeviceCategory.MSP: (
+        SelectEntityDescription(
+            key=DPCode.CHOOSE_CAT_LITTER,
+            translation_key="choose_cat_litter",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     DeviceCategory.QN: (
         SelectEntityDescription(
             key=DPCode.LEVEL,

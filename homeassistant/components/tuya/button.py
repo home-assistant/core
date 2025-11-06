@@ -48,6 +48,38 @@ BUTTONS: dict[DeviceCategory, tuple[ButtonEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    DeviceCategory.MSP: (
+        ButtonEntityDescription(
+            key=DPCode.EMPTY,
+            translation_key="empty",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        ButtonEntityDescription(
+            key=DPCode.FACTORY_RESET,
+            translation_key="factory_reset",
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        ButtonEntityDescription(
+            key=DPCode.CLEAN,
+            translation_key="manual_clean",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        ButtonEntityDescription(
+            key=DPCode.MANUAL_CLEAN,
+            translation_key="manual_clean",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        ButtonEntityDescription(
+            key=DPCode.BAG_CHANGE_MODE,
+            translation_key="bag_change_mode",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        ButtonEntityDescription(
+            key=DPCode.LEVEL_CAT_LITTER,
+            translation_key="level_cat_litter",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
 }
 
 

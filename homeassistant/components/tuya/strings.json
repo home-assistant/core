@@ -54,6 +54,9 @@
       "methane": {
         "name": "Methane"
       },
+      "monitoring": {
+        "name": "Occupied"
+      },
       "pm25": {
         "name": "PM2.5"
       },
@@ -77,6 +80,21 @@
       }
     },
     "button": {
+      "bag_change_mode": {
+        "name": "Change bag"
+      },
+      "empty": {
+        "name": "Empty"
+      },
+      "factory_reset": {
+        "name": "Factory reset"
+      },
+      "level_cat_litter": {
+        "name": "Level cat litter"
+      },
+      "manual_clean": {
+        "name": "Manual clean"
+      },
       "reset_duster_cloth": {
         "name": "Reset duster cloth"
       },
@@ -166,6 +184,9 @@
       "cook_time": {
         "name": "Cooking time"
       },
+      "delay_clean_time": {
+        "name": "Delay clean time"
+      },
       "down_delay": {
         "name": "Down delay"
       },
@@ -192,6 +213,12 @@
       },
       "indexed_temperature": {
         "name": "Temperature {index}"
+      },
+      "induction_delay": {
+        "name": "[%key:component::tuya::entity::number::delay_clean_time::name%]"
+      },
+      "induction_interval": {
+        "name": "Pause between cycles"
       },
       "installation_height": {
         "name": "Installation height"
@@ -285,6 +312,13 @@
       },
       "brightness": {
         "name": "Brightness"
+      },
+      "choose_cat_litter": {
+        "name": "Cat litter type",
+        "state": {
+          "mineral_cat_litter": "Mineral (Bentonite)",
+          "mix_cat_litter": "Mixed (Tofu)"
+        }
       },
       "concentration": {
         "name": "Concentration"
@@ -599,6 +633,18 @@
       "carbon_monoxide": {
         "name": "[%key:component::sensor::entity_component::carbon_monoxide::name%]"
       },
+      "cat_litter_box_status": {
+        "name": "[]%key:component::tuya::entity::sensor::status::name%]",
+        "state": {
+          "clean": "Clean",
+          "clock": "Clock",
+          "empty": "[%key:common::state::empty%]",
+          "level": "Level",
+          "sleep": "Sleep",
+          "standby": "[%key:common::state::standby%]",
+          "uv": "UV"
+        }
+      },
       "cat_weight": {
         "name": "Cat weight"
       },
@@ -627,7 +673,7 @@
         "name": "Duster cloth lifetime"
       },
       "excretion_time_day": {
-        "name": "Excretion time (day)"
+        "name": "Excretion duration"
       },
       "excretion_times_day": {
         "name": "Excretion times (day)"
@@ -886,6 +932,9 @@
       "arm_beep": {
         "name": "Arm beep"
       },
+      "auto_clean": {
+        "name": "Auto clean"
+      },
       "battery_lock": {
         "name": "Battery lock"
       },
@@ -894,6 +943,9 @@
       },
       "cry_detection": {
         "name": "Cry detection"
+      },
+      "deep_clean": {
+        "name": "Double cleaning"
       },
       "disinfection": {
         "name": "Disinfection"
@@ -934,8 +986,14 @@
       "indexed_usb": {
         "name": "USB {index}"
       },
+      "infrared_sensor_switch": {
+        "name": "Infrared sensor"
+      },
       "ionizer": {
         "name": "Ionizer"
+      },
+      "light": {
+        "name": "Light"
       },
       "motion_alarm": {
         "name": "Motion alarm"
@@ -1023,6 +1081,9 @@
       },
       "switch": {
         "name": "Switch"
+      },
+      "thin_feces": {
+        "name": "Deep cleaning"
       },
       "time_watermark": {
         "name": "Time watermark"

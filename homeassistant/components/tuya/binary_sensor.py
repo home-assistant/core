@@ -239,6 +239,13 @@ BINARY_SENSORS: dict[DeviceCategory, tuple[TuyaBinarySensorEntityDescription, ..
             bitmap_key="box_out",
             translation_key="cover_off",
         ),
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.MONITORING,
+            dpcode=DPCode.MONITORING,
+            device_class=BinarySensorDeviceClass.PRESENCE,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            translation_key="monitoring",
+        ),
     ),
     DeviceCategory.PIR: (
         TuyaBinarySensorEntityDescription(

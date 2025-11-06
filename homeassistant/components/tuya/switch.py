@@ -522,6 +522,38 @@ SWITCHES: dict[DeviceCategory, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    DeviceCategory.MSP: (
+        SwitchEntityDescription(
+            key=DPCode.AUTO_CLEAN,
+            translation_key="auto_clean",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.CHILD_LOCK,
+            translation_key="child_lock",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.DEEP_CLEAN,
+            translation_key="deep_clean",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.INFRARED_SENSOR_SWITCH,
+            translation_key="infrared_sensor_switch",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.LIGHT,
+            translation_key="light",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.THIN_FECES,
+            translation_key="thin_feces",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     DeviceCategory.MZJ: (
         SwitchEntityDescription(
             key=DPCode.SWITCH,
