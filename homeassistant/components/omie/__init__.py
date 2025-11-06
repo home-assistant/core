@@ -12,8 +12,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: OMIEConfigEntry) -> bool
     """Set up from a config entry."""
     entry.runtime_data = OMIECoordinator(hass, entry)
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     await entry.runtime_data.async_config_entry_first_refresh()
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
