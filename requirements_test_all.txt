@@ -76,7 +76,7 @@ PyQRCode==1.2.1
 # homeassistant.components.rmvtransport
 PyRMVtransport==0.3.3
 
-# homeassistant.components.sunricher_dali_center
+# homeassistant.components.sunricher_dali
 PySrDaliGateway==0.13.1
 
 # homeassistant.components.switchbot
@@ -371,7 +371,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==13.15.0
+aioshelly==13.16.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -1033,10 +1033,10 @@ hole==0.9.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.83
+holidays==0.84
 
 # homeassistant.components.frontend
-home-assistant-frontend==20251103.0
+home-assistant-frontend==20251105.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.10.28
@@ -1178,7 +1178,7 @@ lektricowifi==0.1
 letpot==0.6.3
 
 # homeassistant.components.foscam
-libpyfoscamcgi==0.0.8
+libpyfoscamcgi==0.0.9
 
 # homeassistant.components.libre_hardware_monitor
 librehardwaremonitor-api==1.5.0
@@ -1459,7 +1459,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.8.2
+plugwise==1.8.3
 
 # homeassistant.components.poolsense
 poolsense==0.0.8
@@ -1793,7 +1793,7 @@ pylibrespot-java==0.1.1
 pylitejet==0.6.3
 
 # homeassistant.components.litterrobot
-pylitterbot==2024.2.7
+pylitterbot==2025.0.0
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.25.0
@@ -1909,7 +1909,7 @@ pyplaato==0.0.19
 pypoint==3.0.0
 
 # homeassistant.components.portainer
-pyportainer==1.0.12
+pyportainer==1.0.13
 
 # homeassistant.components.probe_plus
 pyprobeplus==1.1.2
@@ -2097,7 +2097,7 @@ python-overseerr==0.7.1
 python-picnic-api2==1.3.1
 
 # homeassistant.components.pooldose
-python-pooldose==0.7.0
+python-pooldose==0.7.8
 
 # homeassistant.components.rabbitair
 python-rabbitair==0.0.8
@@ -2106,7 +2106,7 @@ python-rabbitair==0.0.8
 python-roborock==3.7.0
 
 # homeassistant.components.smarttub
-python-smarttub==0.0.44
+python-smarttub==0.0.45
 
 # homeassistant.components.snoo
 python-snoo==0.8.3
@@ -2239,7 +2239,7 @@ renault-api==0.5.0
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.16.3
+reolink-aio==0.16.4
 
 # homeassistant.components.rflink
 rflink==0.0.67
@@ -2430,7 +2430,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==1.2.3
+tesla-fleet-api==1.2.5
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.2
@@ -2668,7 +2668,7 @@ zeroconf==0.148.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.75
+zha==0.0.77
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.67.1
