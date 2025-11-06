@@ -589,11 +589,6 @@
         }
       }
     },
-    "august_ble": {
-      "name": "August Bluetooth",
-      "integration_type": "virtual",
-      "supported_by": "yalexs_ble"
-    },
     "aurora": {
       "integration_type": "hub",
       "config_flow": true,
@@ -1742,11 +1737,6 @@
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
-    },
-    "enmax": {
-      "name": "Enmax Energy",
-      "integration_type": "virtual",
-      "supported_by": "opower"
     },
     "enocean": {
       "name": "EnOcean",
@@ -3261,12 +3251,6 @@
       "integration_type": "virtual",
       "supported_by": "opower"
     },
-    "keyboard": {
-      "name": "Keyboard",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_push"
-    },
     "keyboard_remote": {
       "name": "Keyboard Remote",
       "integration_type": "hub",
@@ -3580,12 +3564,6 @@
       "name": "Linx",
       "integration_type": "virtual",
       "supported_by": "motion_blinds"
-    },
-    "lirc": {
-      "name": "LIRC",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_push"
     },
     "litejet": {
       "name": "LiteJet",
@@ -4302,6 +4280,12 @@
       "name": "National Grid US",
       "integration_type": "virtual",
       "supported_by": "opower"
+    },
+    "neato": {
+      "name": "Neato Botvac",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "nederlandse_spoorwegen": {
       "name": "Nederlandse Spoorwegen (NS)",
@@ -5765,8 +5749,7 @@
       "name": "Satel Integra",
       "integration_type": "device",
       "config_flow": true,
-      "iot_class": "local_push",
-      "single_config_entry": true
+      "iot_class": "local_push"
     },
     "schlage": {
       "name": "Schlage",
@@ -6429,8 +6412,8 @@
       "iot_class": "calculated",
       "single_config_entry": true
     },
-    "sunricher_dali_center": {
-      "name": "DALI Center",
+    "sunricher_dali": {
+      "name": "Sunricher DALI",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
@@ -7620,19 +7603,13 @@
       "iot_class": "local_polling"
     },
     "yale": {
-      "name": "Yale",
+      "name": "Yale (non-US/Canada)",
       "integrations": {
-        "august": {
+        "yale": {
           "integration_type": "hub",
           "config_flow": true,
           "iot_class": "cloud_push",
-          "name": "August"
-        },
-        "yale_smart_alarm": {
-          "integration_type": "hub",
-          "config_flow": true,
-          "iot_class": "cloud_polling",
-          "name": "Yale Smart Living"
+          "name": "Yale Home"
         },
         "yalexs_ble": {
           "integration_type": "hub",
@@ -7640,17 +7617,28 @@
           "iot_class": "local_push",
           "name": "Yale Access Bluetooth"
         },
-        "yale_home": {
-          "integration_type": "virtual",
-          "config_flow": false,
-          "supported_by": "yale",
-          "name": "Yale Home"
-        },
-        "yale": {
+        "yale_smart_alarm": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Yale Smart Living"
+        }
+      }
+    },
+    "yale_august": {
+      "name": "Yale August (US/Canada)",
+      "integrations": {
+        "august": {
           "integration_type": "hub",
           "config_flow": true,
           "iot_class": "cloud_push",
-          "name": "Yale"
+          "name": "August"
+        },
+        "august_ble": {
+          "integration_type": "virtual",
+          "config_flow": false,
+          "supported_by": "yalexs_ble",
+          "name": "August Bluetooth"
         }
       }
     },

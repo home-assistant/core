@@ -88,6 +88,10 @@ jobs:
       fail-fast: false
       matrix:
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
+        exclude:
+          - arch: armv7
+          - arch: armhf
+          - arch: i386
     steps:
       - name: Checkout the repository
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
@@ -277,6 +281,7 @@ jobs:
           key-description: "Home Assistant Core"
           version: ${{ needs.init.outputs.version }}
           channel: ${{ needs.init.outputs.channel }}
+          exclude-list: '["odroid-xu","qemuarm","qemux86","raspberrypi","raspberrypi2","raspberrypi3","raspberrypi4","tinker"]'
 
       - name: Update version file (stable -> beta)
         if: needs.init.outputs.channel == 'stable'
@@ -286,6 +291,7 @@ jobs:
           key-description: "Home Assistant Core"
           version: ${{ needs.init.outputs.version }}
           channel: beta
+          exclude-list: '["odroid-xu","qemuarm","qemux86","raspberrypi","raspberrypi2","raspberrypi3","raspberrypi4","tinker"]'
 
   publish_container:
     name: Publish meta container for ${{ matrix.registry }}
