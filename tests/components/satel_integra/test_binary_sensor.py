@@ -92,7 +92,7 @@ async def test_binary_sensor_callback(
     mock_satel: AsyncMock,
     mock_config_entry_with_subentries: MockConfigEntry,
 ) -> None:
-    """Test binary sensors have a correct initial state ON after initialization."""
+    """Test binary sensors correctly change state after a callback from the panel."""
     mock_config_entry_with_subentries.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_config_entry_with_subentries.entry_id)
