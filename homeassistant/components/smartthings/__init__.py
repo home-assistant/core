@@ -505,6 +505,9 @@ KEEP_CAPABILITY_QUIRK: dict[
     Capability.SAMSUNG_CE_AIR_CONDITIONER_LIGHTING: (
         lambda status: status[Attribute.LIGHTING].value is not None
     ),
+    Capability.SAMSUNG_CE_AIR_CONDITIONER_BEEP: (
+        lambda status: status[Attribute.BEEP].value is not None
+    ),
 }
 
 
