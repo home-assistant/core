@@ -12,7 +12,7 @@ from homelink.model.device import Device
 from homelink.mqtt_provider import MQTTProvider
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import BaseDataUpdateCoordinatorProtocol
 from homeassistant.util.ssl import get_default_context
 
@@ -22,6 +22,7 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 type HomeLinkConfigEntry = ConfigEntry[HomeLinkData]
+type EventCallback = Callable[[HomeLinkEventData], None]
 
 
 @dataclass
@@ -36,7 +37,7 @@ class HomeLinkData:
 class HomeLinkEventData(TypedDict):
     """Data for a single event."""
 
-    request_id: str
+    requestId: str
     timestamp: int
 
 
@@ -66,22 +67,20 @@ class HomeLinkCoordinator(BaseDataUpdateCoordinatorProtocol):
         self.last_sync_id = None
         self.device_data: list[Device] = []
         self.buttons: list[HomeLinkEventEntity] = []
-        self._listeners: dict[int, tuple[CALLBACK_TYPE, object | None]] = {}
-        self._last_listener_id: int = 0
+        self._listeners: dict[str, tuple[EventCallback, object | None]] = {}
         self.data: dict[str, HomeLinkEventData] | None = None
         self.last_update_success: bool = True
 
     @callback
-    def async_add_listener(
-        self, update_callback: CALLBACK_TYPE, context: Any = None
+    def async_add_event_listener(
+        self, update_callback: EventCallback, context: Any = None
     ) -> Callable[[], None]:
         """Listen for updates."""
-        self._last_listener_id += 1
-        self._listeners[self._last_listener_id] = (update_callback, context)
-        return partial(self.__async_remove_listener_internal, self._last_listener_id)
+        self._listeners[context] = (update_callback, context)
+        return partial(self.__async_remove_listener_internal, context)
 
-    def __async_remove_listener_internal(self, listener_id: int):
-        self._listeners.pop(listener_id)
+    def __async_remove_listener_internal(self, listener_id: str):
+        del self._listeners[listener_id]
 
     @callback
     def async_set_updated_data(self, data: dict[str, HomeLinkEventData]):
@@ -92,9 +91,12 @@ class HomeLinkCoordinator(BaseDataUpdateCoordinatorProtocol):
 
     @callback
     def async_update_listeners(self) -> None:
-        """Update all registered listeners."""
-        for update_callback, _ in list(self._listeners.values()):
-            update_callback()
+        """Update the listeners who have data relevant to listeners."""
+        if not self.data:
+            return
+        for button_id in self.data:
+            if button_id in self._listeners:
+                self._listeners[button_id][0](self.data[button_id])
 
     async def async_config_entry_first_refresh(self) -> None:
         """Refresh data for the first time when a config entry is setup."""
