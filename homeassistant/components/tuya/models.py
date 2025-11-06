@@ -11,7 +11,7 @@ from typing import Literal, Self, overload
 from tuya_sharing import CustomerDevice
 
 from .const import DPCode, DPType
-from .util import remap_value
+from .util import parse_dptype, remap_value
 
 
 @overload
@@ -53,37 +53,27 @@ def find_dpcode(
     elif not isinstance(dpcodes, tuple):
         dpcodes = (dpcodes,)
 
-    order = ["status_range", "function"]
-    if prefer_function:
-        order = ["function", "status_range"]
+    lookup_tuple = (
+        (device.function, device.status_range)
+        if prefer_function
+        else (device.status_range, device.function)
+    )
 
     for dpcode in dpcodes:
-        for key in order:
-            if dpcode not in getattr(device, key):
+        for device_specs in lookup_tuple:
+            if not (
+                (current_definition := device_specs.get(dpcode))
+                and parse_dptype(current_definition.type) is dptype
+            ):
                 continue
-            if (
-                dptype == DPType.ENUM
-                and getattr(device, key)[dpcode].type == DPType.ENUM
+            if dptype == DPType.ENUM and (
+                enum_type := EnumTypeData.from_json(dpcode, current_definition.values)
             ):
-                if not (
-                    enum_type := EnumTypeData.from_json(
-                        dpcode, getattr(device, key)[dpcode].values
-                    )
-                ):
-                    continue
                 return enum_type
-
-            if (
-                dptype == DPType.INTEGER
-                and getattr(device, key)[dpcode].type == DPType.INTEGER
+            if dptype == DPType.INTEGER and (
+                int_type := IntegerTypeData.from_json(dpcode, current_definition.values)
             ):
-                if not (
-                    integer_type := IntegerTypeData.from_json(
-                        dpcode, getattr(device, key)[dpcode].values
-                    )
-                ):
-                    continue
-                return integer_type
+                return int_type
 
     return None
 
