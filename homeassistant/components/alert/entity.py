@@ -251,9 +251,12 @@ class AlertEntity(Entity):
                     "Failed to call notify.%s, retrying at next notification interval",
                     target,
                 )
-            except Exception as e:
+            except ServiceValidationError as e:
                 LOGGER.error(
-                    "Unexpected error calling notify.%s: %s", target, e, exc_info=True
+                    "Service validation error calling notify.%s: %s",
+                    target,
+                    e,
+                    exc_info=True,
                 )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
