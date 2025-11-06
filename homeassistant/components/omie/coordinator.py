@@ -63,9 +63,4 @@ class OMIECoordinator(DataUpdateCoordinator[Mapping[dt.date, OMIEResults[SpotDat
 
     async def __spot_price(self, date: dt.date) -> OMIEResults[SpotData] | None:
         _LOGGER.debug("Fetching OMIE spot data for %s", date)
-        spot_data = await pyomie.spot_price(self._client_session, date)
-        _LOGGER.debug(
-            "Returned OMIE spot data: %s",
-            spot_data.contents.header if spot_data else spot_data,
-        )
-        return spot_data
+        return await pyomie.spot_price(self._client_session, date)
