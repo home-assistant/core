@@ -24,7 +24,7 @@ from .const import (
     TYPE_HOT_WATER,
     TYPE_POWER,
 )
-from .coordinator import TadoDataUpdateCoordinator
+from .coordinator import TadoDataUpdateCoordinator, TadoDevice
 from .entity import TadoDeviceEntity, TadoZoneEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -41,13 +41,13 @@ class TadoBinarySensorEntityDescription(BinarySensorEntityDescription):
 
 BATTERY_STATE_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
     key="battery state",
-    state_fn=lambda data: data["batteryState"] == "LOW",
+    state_fn=lambda data: data.battery_state == "LOW",
     device_class=BinarySensorDeviceClass.BATTERY,
 )
 CONNECTION_STATE_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
     key="connection state",
     translation_key="connection_state",
-    state_fn=lambda data: data.get("connectionState", {}).get("value", False),
+    state_fn=lambda data: data.connection_state.value,
     device_class=BinarySensorDeviceClass.CONNECTIVITY,
 )
 POWER_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
@@ -57,7 +57,7 @@ POWER_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
 )
 LINK_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
     key="link",
-    state_fn=lambda data: data.link == "ONLINE",
+    state_fn=lambda data: data.link.state == "ONLINE",
     device_class=BinarySensorDeviceClass.CONNECTIVITY,
 )
 OVERLAY_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
@@ -72,7 +72,7 @@ OVERLAY_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
 OPEN_WINDOW_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
     key="open window",
     state_fn=lambda data: bool(data.open_window or data.open_window_detected),
-    attributes_fn=lambda data: data.open_window_attr,
+    # attributes_fn=lambda data: asdict(data.open_window),
     device_class=BinarySensorDeviceClass.WINDOW,
 )
 EARLY_START_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
@@ -122,36 +122,32 @@ async def async_setup_entry(
     """Set up the Tado sensor platform."""
 
     tado = entry.runtime_data.coordinator
-    devices = tado.devices
+    devices = tado.data.devices
     zones = tado.zones
     entities: list[BinarySensorEntity] = []
 
     # Create device sensors
-    for device in devices:
-        if "batteryState" in device:
+    for device in devices.values():
+        if device.device.battery_state is not None:
             device_type = TYPE_BATTERY
         else:
             device_type = TYPE_POWER
 
         entities.extend(
-            [
-                TadoDeviceBinarySensor(tado, device, entity_description)
-                for entity_description in DEVICE_SENSORS[device_type]
-            ]
+            TadoDeviceBinarySensor(tado, device, entity_description)
+            for entity_description in DEVICE_SENSORS[device_type]
         )
 
     # Create zone sensors
-    for zone in zones:
-        zone_type = zone["type"]
+    for zone in zones.values():
+        zone_type = zone.type
         if zone_type not in ZONE_SENSORS:
             _LOGGER.warning("Unknown zone type skipped: %s", zone_type)
             continue
 
         entities.extend(
-            [
-                TadoZoneBinarySensor(tado, zone["name"], zone["id"], entity_description)
-                for entity_description in ZONE_SENSORS[zone_type]
-            ]
+            TadoZoneBinarySensor(tado, zone.name, zone.id, entity_description)
+            for entity_description in ZONE_SENSORS[zone_type]
         )
 
     async_add_entities(entities, True)
@@ -165,7 +161,7 @@ class TadoDeviceBinarySensor(TadoDeviceEntity, BinarySensorEntity):
     def __init__(
         self,
         coordinator: TadoDataUpdateCoordinator,
-        device_info: dict[str, Any],
+        device_info: TadoDevice,
         entity_description: TadoBinarySensorEntityDescription,
     ) -> None:
         """Initialize of the Tado Sensor."""
@@ -180,14 +176,14 @@ class TadoDeviceBinarySensor(TadoDeviceEntity, BinarySensorEntity):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         try:
-            self._device_info = self.coordinator.data["device"][self.device_id]
+            self._device_info = self.coordinator.data.devices[self.device_id]
         except KeyError:
             return
 
-        self._attr_is_on = self.entity_description.state_fn(self._device_info)
+        self._attr_is_on = self.entity_description.state_fn(self._device_info.device)
         if self.entity_description.attributes_fn is not None:
             self._attr_extra_state_attributes = self.entity_description.attributes_fn(
-                self._device_info
+                self._device_info.device
             )
         super()._handle_coordinator_update()
 
@@ -216,7 +212,7 @@ class TadoZoneBinarySensor(TadoZoneEntity, BinarySensorEntity):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         try:
-            tado_zone_data = self.coordinator.data["zone"][self.zone_id]
+            tado_zone_data = self.coordinator.data.zones[str(self.zone_id)]
         except KeyError:
             return
 
