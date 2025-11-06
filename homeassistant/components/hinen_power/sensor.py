@@ -42,8 +42,6 @@ class HinenSensorEntityDescription(SensorEntityDescription):
 
     available_fn: Callable[[Any], bool]
     value_fn: Callable[[Any], StateType]
-    # entity_picture_fn: Callable[[Any], str | None]
-    # attributes_fn: Callable[[Any], dict[str, Any] | None] | None
 
 
 SENSOR_TYPES = [
@@ -122,9 +120,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Hinen sensor."""
-    coordinator: HinenDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        COORDINATOR
-    ]
+    coordinator: HinenDataUpdateCoordinator = entry.runtime_data[COORDINATOR]
+
     hinen_open: HinenOpen = hass.data[DOMAIN][entry.entry_id][AUTH].hinen_open
 
     entities: list = [

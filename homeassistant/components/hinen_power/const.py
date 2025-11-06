@@ -66,6 +66,3 @@ PROPERTIES = {
 ATTR_AUTH_LANGUAGE = "page_language"
 ATTR_REDIRECTION_URL = "redirection_url"
 SUPPORTED_LANGUAGES = [("en_US", "English"), ("zh_CN", "简体中文")]
-
-CLIENT_ID = "6liMmES7"
-CLIENT_SECRET = "41c3eb0e4ce94aabbf7e4140614cbe05"

@@ -31,8 +31,6 @@ from . import application_credentials
 from .const import (
     ATTR_AUTH_LANGUAGE,
     ATTR_REGION_CODE,
-    # CLIENT_ID,
-    # CLIENT_SECRET,
     CONF_DEVICES,
     DOMAIN,
     HOST,

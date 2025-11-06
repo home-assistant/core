@@ -1,16 +1,14 @@
-"""Support for hello auth."""
+"""Support for Hinen Power."""
 
 from __future__ import annotations
 
 from aiohttp.client_exceptions import ClientError, ClientResponseError
-from openai import BaseModel
 
 from homeassistant.components.application_credentials import ClientCredential
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.config_entry_oauth2_flow import (
     AbstractOAuth2Implementation,
     OAuth2Session,
@@ -26,9 +24,7 @@ from .coordinator import HinenDataUpdateCoordinator
 PLATFORMS = [Platform.SENSOR]
 
 
-async def async_setup_entry(
-    hass: HomeAssistant, entry: HinenIntegrationConfigEntry
-) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Hinen Auth component."""
     hinen_auth_impl: AbstractOAuth2Implementation = (
         await application_credentials.async_get_auth_implementation(
@@ -56,13 +52,12 @@ async def async_setup_entry(
 
     coordinator = HinenDataUpdateCoordinator(hass, entry, auth)
     await coordinator.async_config_entry_first_refresh()
-    await delete_devices(hass, entry, coordinator)
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
-        COORDINATOR: coordinator,
         AUTH: auth,
     }
 
-    entry.runtime_data = HinenClient()
+    entry.runtime_data = {COORDINATOR: coordinator}
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -70,27 +65,5 @@ async def async_setup_entry(
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-    return unload_ok
 
-
-async def delete_devices(
-    hass: HomeAssistant, entry: ConfigEntry, coordinator: HinenDataUpdateCoordinator
-) -> None:
-    """Delete all devices created by integration."""
-    device_ids = list(coordinator.data)
-    device_registry = dr.async_get(hass)
-    dev_entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
-    for dev_entry in dev_entries:
-        if any(identifier[1] in device_ids for identifier in dev_entry.identifiers):
-            device_registry.async_update_device(
-                dev_entry.id, remove_config_entry_id=entry.entry_id
-            )
-
-
-class HinenClient(BaseModel):
-    """hinen client."""
-
-
-type HinenIntegrationConfigEntry = ConfigEntry[HinenClient]
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
