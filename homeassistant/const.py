@@ -685,13 +685,6 @@ class UnitOfArea(StrEnum):
     HECTARES = "ha"
 
 
-_DEPRECATED_AREA_SQUARE_METERS: Final = DeprecatedConstantEnum(
-    UnitOfArea.SQUARE_METERS,
-    "2025.12",
-)
-"""Deprecated: please use UnitOfArea.SQUARE_METERS"""
-
-
 # Mass units
 class UnitOfMass(StrEnum):
     """Mass units."""
