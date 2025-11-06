@@ -6,8 +6,8 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.jewish_calendar.const import (
-    CALENDAR_EVENT_TYPES,
     DEFAULT_CALENDAR_EVENTS,
+    CalendarEventType,
 )
 from homeassistant.core import HomeAssistant
 
@@ -40,10 +40,13 @@ async def test_calendar_entity_creation(hass: HomeAssistant) -> None:
     ("calendar_events", "expected_events"),
     [
         (None, DEFAULT_CALENDAR_EVENTS),
-        (["date"], ["date"]),
-        (["date", "holiday"], ["date", "holiday"]),
-        (CALENDAR_EVENT_TYPES, CALENDAR_EVENT_TYPES),
-        (["invalid_event", "date"], ["date"]),
+        ([CalendarEventType.DATE], [CalendarEventType.DATE]),
+        (
+            [CalendarEventType.HOLIDAY, CalendarEventType.DATE],
+            [CalendarEventType.HOLIDAY, CalendarEventType.DATE],
+        ),
+        (list(CalendarEventType), list(CalendarEventType)),
+        (["invalid_event", CalendarEventType.DATE], [CalendarEventType.DATE]),
     ],
 )
 @pytest.mark.usefixtures("setup")
@@ -61,9 +64,7 @@ async def test_calendar_event_configuration(
 
     # Filter out invalid event types from expected
     valid_expected_events = {
-        event_type
-        for event_type in expected_events
-        if event_type in CALENDAR_EVENT_TYPES
+        event_type for event_type in expected_events if event_type in CalendarEventType
     }
 
     # Extract actual event types from descriptions
@@ -71,19 +72,19 @@ async def test_calendar_event_configuration(
     for event in events:
         description = event.get("description", "")
         if description.startswith("Hebrew date"):
-            found_event_types.add("date")
+            found_event_types.add(CalendarEventType.DATE)
         elif description.startswith("Parshat Hashavua"):
-            found_event_types.add("weekly_portion")
+            found_event_types.add(CalendarEventType.WEEKLY_PORTION)
         elif description.startswith("Jewish Holiday"):
-            found_event_types.add("holiday")
+            found_event_types.add(CalendarEventType.HOLIDAY)
         elif description.startswith("Sefirat HaOmer"):
-            found_event_types.add("omer_count")
+            found_event_types.add(CalendarEventType.OMER_COUNT)
         elif description.startswith("Daf Yomi"):
-            found_event_types.add("daf_yomi")
+            found_event_types.add(CalendarEventType.DAF_YOMI)
         elif description.startswith("Candle lighting time"):
-            found_event_types.add("candle_lighting")
+            found_event_types.add(CalendarEventType.CANDLE_LIGHTING)
         elif description.startswith("Havdalah time"):
-            found_event_types.add("havdalah")
+            found_event_types.add(CalendarEventType.HAVDALAH)
 
     # Should not have events from unconfigured types
     unexpected_event_types = found_event_types - valid_expected_events
@@ -119,29 +120,41 @@ async def test_get_events_date_range(
     ("test_date", "calendar_events", "location_data"),
     [
         # Date events (always present)
-        (dt.date(2024, 1, 15), ["date"], "New York"),
-        (dt.date(2024, 1, 15), ["date"], "Jerusalem"),
+        (dt.date(2024, 1, 15), [CalendarEventType.DATE], "New York"),
+        (dt.date(2024, 1, 15), [CalendarEventType.DATE], "Jerusalem"),
         # Weekly portion (Shabbat)
-        (dt.date(2024, 9, 7), ["weekly_portion"], "New York"),
+        (dt.date(2024, 9, 7), [CalendarEventType.WEEKLY_PORTION], "New York"),
         # Holiday (Purim 2024)
-        (dt.date(2024, 3, 25), ["holiday"], "Jerusalem"),
+        (dt.date(2024, 3, 25), [CalendarEventType.HOLIDAY], "Jerusalem"),
         # Omer count (during Omer period)
-        (dt.date(2024, 4, 24), ["omer_count"], "New York"),
+        (dt.date(2024, 4, 24), [CalendarEventType.OMER_COUNT], "New York"),
         # Daf Yomi
-        (dt.date(2024, 7, 15), ["daf_yomi"], "Jerusalem"),
+        (dt.date(2024, 7, 15), [CalendarEventType.DAF_YOMI], "Jerusalem"),
         # Candle lighting (Friday)
-        (dt.date(2024, 1, 12), ["candle_lighting"], "New York"),
-        (dt.date(2024, 1, 12), ["candle_lighting"], "Jerusalem"),
+        (dt.date(2024, 1, 12), [CalendarEventType.CANDLE_LIGHTING], "New York"),
+        (dt.date(2024, 1, 12), [CalendarEventType.CANDLE_LIGHTING], "Jerusalem"),
         # Havdalah (Saturday)
-        (dt.date(2024, 1, 13), ["havdalah"], "New York"),
-        (dt.date(2024, 1, 13), ["havdalah"], "Jerusalem"),
+        (dt.date(2024, 1, 13), [CalendarEventType.HAVDALAH], "New York"),
+        (dt.date(2024, 1, 13), [CalendarEventType.HAVDALAH], "Jerusalem"),
         # Multiple event types
         (
             dt.date(2024, 1, 12),
-            ["date", "weekly_portion", "candle_lighting"],
+            [
+                CalendarEventType.DATE,
+                CalendarEventType.WEEKLY_PORTION,
+                CalendarEventType.CANDLE_LIGHTING,
+            ],
             "New York",
         ),
-        (dt.date(2024, 1, 13), ["date", "weekly_portion", "havdalah"], "Jerusalem"),
+        (
+            dt.date(2024, 1, 13),
+            [
+                CalendarEventType.DATE,
+                CalendarEventType.WEEKLY_PORTION,
+                CalendarEventType.HAVDALAH,
+            ],
+            "Jerusalem",
+        ),
     ],
     indirect=["location_data"],
 )
@@ -162,21 +175,61 @@ async def test_event_types_snapshot(
     ("test_date", "calendar_events", "expected_present", "expected_absent"),
     [
         # Holiday on Purim
-        (dt.date(2024, 3, 25), ["holiday"], ["holiday"], []),
+        (
+            dt.date(2024, 3, 25),
+            [CalendarEventType.HOLIDAY],
+            [CalendarEventType.HOLIDAY],
+            [],
+        ),
         # No holiday on random date
-        (dt.date(2024, 6, 15), ["holiday"], [], ["holiday"]),
+        (
+            dt.date(2024, 6, 15),
+            [CalendarEventType.HOLIDAY],
+            [],
+            [CalendarEventType.HOLIDAY],
+        ),
         # Omer during period
-        (dt.date(2024, 4, 24), ["omer_count"], ["omer_count"], []),
+        (
+            dt.date(2024, 4, 24),
+            [CalendarEventType.OMER_COUNT],
+            [CalendarEventType.OMER_COUNT],
+            [],
+        ),
         # No Omer outside period
-        (dt.date(2024, 1, 15), ["omer_count"], [], ["omer_count"]),
+        (
+            dt.date(2024, 1, 15),
+            [CalendarEventType.OMER_COUNT],
+            [],
+            [CalendarEventType.OMER_COUNT],
+        ),
         # Candle lighting on Friday
-        (dt.date(2024, 1, 12), ["candle_lighting"], ["candle_lighting"], []),
+        (
+            dt.date(2024, 1, 12),
+            [CalendarEventType.CANDLE_LIGHTING],
+            [CalendarEventType.CANDLE_LIGHTING],
+            [],
+        ),
         # No candle lighting on Saturday
-        (dt.date(2024, 1, 13), ["candle_lighting"], [], ["candle_lighting"]),
+        (
+            dt.date(2024, 1, 13),
+            [CalendarEventType.CANDLE_LIGHTING],
+            [],
+            [CalendarEventType.CANDLE_LIGHTING],
+        ),
         # Havdalah on Saturday
-        (dt.date(2024, 1, 13), ["havdalah"], ["havdalah"], []),
+        (
+            dt.date(2024, 1, 13),
+            [CalendarEventType.HAVDALAH],
+            [CalendarEventType.HAVDALAH],
+            [],
+        ),
         # No havdalah on Friday
-        (dt.date(2024, 1, 12), ["havdalah"], [], ["havdalah"]),
+        (
+            dt.date(2024, 1, 12),
+            [CalendarEventType.HAVDALAH],
+            [],
+            [CalendarEventType.HAVDALAH],
+        ),
     ],
 )
 @pytest.mark.usefixtures("setup_at_time")
@@ -195,19 +248,19 @@ async def test_event_presence_and_absence(
     for event in events:
         description = event.get("description", "")
         if description.startswith("Hebrew date"):
-            found_event_types.add("date")
+            found_event_types.add(CalendarEventType.DATE)
         elif description.startswith("Parshat Hashavua"):
-            found_event_types.add("weekly_portion")
+            found_event_types.add(CalendarEventType.WEEKLY_PORTION)
         elif description.startswith("Jewish Holiday"):
-            found_event_types.add("holiday")
+            found_event_types.add(CalendarEventType.HOLIDAY)
         elif description.startswith("Sefirat HaOmer"):
-            found_event_types.add("omer_count")
+            found_event_types.add(CalendarEventType.OMER_COUNT)
         elif description.startswith("Daf Yomi"):
-            found_event_types.add("daf_yomi")
+            found_event_types.add(CalendarEventType.DAF_YOMI)
         elif description.startswith("Candle lighting time"):
-            found_event_types.add("candle_lighting")
+            found_event_types.add(CalendarEventType.CANDLE_LIGHTING)
         elif description.startswith("Havdalah time"):
-            found_event_types.add("havdalah")
+            found_event_types.add(CalendarEventType.HAVDALAH)
 
     # Check expected present
     for event_type in expected_present:
@@ -227,14 +280,14 @@ async def test_event_presence_and_absence(
     ("test_date", "calendar_events", "location_data"),
     [
         # All-day events
-        (dt.date(2024, 1, 15), ["date"], "New York"),
-        (dt.date(2024, 9, 7), ["weekly_portion"], "Jerusalem"),
-        (dt.date(2024, 3, 25), ["holiday"], "New York"),
-        (dt.date(2024, 4, 24), ["omer_count"], "Jerusalem"),
-        (dt.date(2024, 7, 15), ["daf_yomi"], "New York"),
+        (dt.date(2024, 1, 15), [CalendarEventType.DATE], "New York"),
+        (dt.date(2024, 9, 7), [CalendarEventType.WEEKLY_PORTION], "Jerusalem"),
+        (dt.date(2024, 3, 25), [CalendarEventType.HOLIDAY], "New York"),
+        (dt.date(2024, 4, 24), [CalendarEventType.OMER_COUNT], "Jerusalem"),
+        (dt.date(2024, 7, 15), [CalendarEventType.DAF_YOMI], "New York"),
         # Timed events
-        (dt.date(2024, 1, 12), ["candle_lighting"], "New York"),
-        (dt.date(2024, 1, 13), ["havdalah"], "Jerusalem"),
+        (dt.date(2024, 1, 12), [CalendarEventType.CANDLE_LIGHTING], "New York"),
+        (dt.date(2024, 1, 13), [CalendarEventType.HAVDALAH], "Jerusalem"),
     ],
     indirect=["location_data"],
 )
@@ -254,11 +307,11 @@ async def test_event_timing_format(
 
         # All-day events
         if event_type in [
-            "date",
-            "weekly_portion",
-            "holiday",
-            "omer_count",
-            "daf_yomi",
+            CalendarEventType.DATE,
+            CalendarEventType.WEEKLY_PORTION,
+            CalendarEventType.HOLIDAY,
+            CalendarEventType.OMER_COUNT,
+            CalendarEventType.DAF_YOMI,
         ]:
             # Start should be a date string
             assert isinstance(event["start"], str)
@@ -271,7 +324,10 @@ async def test_event_timing_format(
             assert (end_date - start_date).days == 1
 
         # Timed events
-        elif event_type in ["candle_lighting", "havdalah"]:
+        elif event_type in [
+            CalendarEventType.CANDLE_LIGHTING,
+            CalendarEventType.HAVDALAH,
+        ]:
             # Should have datetime with timezone
             assert isinstance(event["start"], str)
             assert "T" in event["start"], "Timed events should have time component"
