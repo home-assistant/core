@@ -66,7 +66,6 @@ async def async_setup_entry(
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="connection_failed",
-            translation_placeholders={"gateway_id": ", ".join(gateway_ids)},
         )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
