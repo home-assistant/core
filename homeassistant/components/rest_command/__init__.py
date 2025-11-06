@@ -40,8 +40,6 @@ from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.ssl import SSLCipherList
 
-from .const import CONF_SKIP_URL_ENCODING
-
 DOMAIN = "rest_command"
 
 _LOGGER = logging.getLogger(__name__)
@@ -54,6 +52,7 @@ SUPPORT_REST_METHODS = ["get", "patch", "post", "put", "delete"]
 
 CONF_CONTENT_TYPE = "content_type"
 CONF_INSECURE_CIPHER = "insecure_cipher"
+CONF_SKIP_URL_ENCODING = "skip_url_encoding"
 
 COMMAND_SCHEMA = vol.Schema(
     {
