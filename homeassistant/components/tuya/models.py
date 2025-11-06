@@ -6,10 +6,84 @@ import base64
 from dataclasses import dataclass
 import json
 import struct
-from typing import Self
+from typing import Literal, Self, overload
 
-from .const import DPCode
+from tuya_sharing import CustomerDevice
+
+from .const import DPCode, DPType
 from .util import remap_value
+
+
+@overload
+def find_dpcode(
+    device: CustomerDevice,
+    dpcodes: str | DPCode | tuple[DPCode, ...] | None,
+    *,
+    prefer_function: bool = False,
+    dptype: Literal[DPType.ENUM],
+) -> EnumTypeData | None: ...
+
+
+@overload
+def find_dpcode(
+    device: CustomerDevice,
+    dpcodes: str | DPCode | tuple[DPCode, ...] | None,
+    *,
+    prefer_function: bool = False,
+    dptype: Literal[DPType.INTEGER],
+) -> IntegerTypeData | None: ...
+
+
+def find_dpcode(
+    device: CustomerDevice,
+    dpcodes: str | DPCode | tuple[DPCode, ...] | None,
+    *,
+    prefer_function: bool = False,
+    dptype: DPType,
+) -> EnumTypeData | IntegerTypeData | None:
+    """Find type information for a matching DP code available for this device."""
+    if dptype not in (DPType.ENUM, DPType.INTEGER):
+        raise NotImplementedError("Only ENUM and INTEGER types are supported")
+
+    if dpcodes is None:
+        return None
+
+    if isinstance(dpcodes, str):
+        dpcodes = (DPCode(dpcodes),)
+    elif not isinstance(dpcodes, tuple):
+        dpcodes = (dpcodes,)
+
+    lookup_tuple = (
+        (device.function, device.status_range)
+        if prefer_function
+        else (device.status_range, device.function)
+    )
+
+    for dpcode in dpcodes:
+        for device_specs in lookup_tuple:
+            if not (
+                (current_definition := device_specs.get(dpcode))
+                and current_definition.type == dptype
+            ):
+                continue
+            if dptype is DPType.ENUM:
+                if not (
+                    enum_type := EnumTypeData.from_json(
+                        dpcode, current_definition.values
+                    )
+                ):
+                    continue
+                return enum_type
+            if dptype is DPType.INTEGER:
+                if not (
+                    integer_type := IntegerTypeData.from_json(
+                        dpcode, current_definition.values
+                    )
+                ):
+                    continue
+                return integer_type
+
+    return None
 
 
 @dataclass

@@ -48,8 +48,8 @@ SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         options=["proportional", "on_off", "timed"],
     ),
     SensorEntityDescription(
-        key="ofa_ph_value",
-        translation_key="ofa_ph_value",
+        key="ofa_ph_time",
+        translation_key="ofa_ph_time",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.DURATION,
         entity_registry_enabled_default=False,
@@ -72,8 +72,8 @@ SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         options=["off", "proportional", "on_off", "timed"],
     ),
     SensorEntityDescription(
-        key="ofa_orp_value",
-        translation_key="ofa_orp_value",
+        key="ofa_orp_time",
+        translation_key="ofa_orp_time",
         device_class=SensorDeviceClass.DURATION,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,

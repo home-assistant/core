@@ -67,6 +67,7 @@ def mock_config_entry() -> MockConfigEntry:
                 "user_id": "AAAAAAAAAAAAAAAAAAAAA",
             },
         },
+        unique_id="271958441785640",
     )
 
 
