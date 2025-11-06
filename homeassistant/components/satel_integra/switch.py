@@ -5,6 +5,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from satel_integra.satel_integra import AsyncSatel
+
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import CONF_CODE, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
@@ -36,8 +38,8 @@ async def async_setup_entry(
     )
 
     for subentry in switchable_output_subentries:
-        switchable_output_num = subentry.data[CONF_SWITCHABLE_OUTPUT_NUMBER]
-        switchable_output_name = subentry.data[CONF_NAME]
+        switchable_output_num: int = subentry.data[CONF_SWITCHABLE_OUTPUT_NUMBER]
+        switchable_output_name: str = subentry.data[CONF_NAME]
 
         async_add_entities(
             [
@@ -57,9 +59,17 @@ class SatelIntegraSwitch(SwitchEntity):
     """Representation of an Satel switch."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
-    def __init__(self, controller, device_number, device_name, code, config_entry_id):
-        """Initialize the binary_sensor."""
+    def __init__(
+        self,
+        controller: AsyncSatel,
+        device_number: int,
+        device_name: str,
+        code: str | None,
+        config_entry_id: str,
+    ) -> None:
+        """Initialize the switch."""
         self._device_number = device_number
         self._attr_unique_id = f"{config_entry_id}_switch_{device_number}"
         self._name = device_name
@@ -74,10 +84,10 @@ class SatelIntegraSwitch(SwitchEntity):
         )
 
     @callback
-    def _devices_updated(self, zones):
+    def _devices_updated(self, outputs: dict[int, int]) -> None:
         """Update switch state, if needed."""
-        _LOGGER.debug("Update switch name: %s zones: %s", self._name, zones)
-        if self._device_number in zones:
+        _LOGGER.debug("Update switch name: %s zones: %s", self._name, outputs)
+        if self._device_number in outputs:
             new_state = self._read_state()
             _LOGGER.debug("New state: %s", new_state)
             if new_state != self._state:
@@ -99,12 +109,12 @@ class SatelIntegraSwitch(SwitchEntity):
         self.async_write_ha_state()
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return true if device is on."""
         self._state = self._read_state()
         return self._state
 
-    def _read_state(self):
+    def _read_state(self) -> bool:
         """Read state of the device."""
         return self._device_number in self._satel.violated_outputs
 
