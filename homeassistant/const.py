@@ -487,13 +487,6 @@ class UnitOfReactivePower(StrEnum):
     KILO_VOLT_AMPERE_REACTIVE = "kvar"
 
 
-_DEPRECATED_POWER_VOLT_AMPERE_REACTIVE: Final = DeprecatedConstantEnum(
-    UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
-    "2025.9",
-)
-"""Deprecated: please use UnitOfReactivePower.VOLT_AMPERE_REACTIVE."""
-
-
 # Energy units
 class UnitOfEnergy(StrEnum):
     """Energy units."""
