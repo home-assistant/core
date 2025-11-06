@@ -6,10 +6,67 @@ import base64
 from dataclasses import dataclass
 import json
 import struct
-from typing import Self
+from typing import Any, Self
+
+from tuya_sharing import CustomerDevice
 
 from .const import DPCode
 from .util import remap_value
+
+
+@dataclass(kw_only=True)
+class DeviceDataParser:
+    """Device Data Parser."""
+
+    dpcode: str
+
+    def _read_device_value_raw(self, device: CustomerDevice) -> Any | None:
+        """Read the device value for the dpcode."""
+        return device.status.get(self.dpcode)
+
+    def read_device_value(self, device: CustomerDevice) -> Any | None:
+        """Read the device value for the dpcode."""
+        raise NotImplementedError
+
+
+@dataclass
+class BooleanDataParser(DeviceDataParser):
+    """Boolean Data Parser."""
+
+    def read_device_value(self, device: CustomerDevice) -> bool | None:
+        """Read the device value for the dpcode."""
+        if (raw_value := self._read_device_value_raw(device)) in (True, False):
+            return raw_value
+        return None
+
+
+@dataclass
+class BitmapDataParser(BooleanDataParser):
+    """Bitmap Data Parser."""
+
+    bit_mask: int
+
+    def read_device_value(self, device: CustomerDevice) -> bool | None:
+        """Read the device value for the dpcode."""
+        if (raw_value := self._read_device_value_raw(device)) is not None:
+            return (raw_value & (1 << self.bit_mask)) != 0
+        return None
+
+
+@dataclass
+class InSetDataParser(BooleanDataParser):
+    """Special boolean data parser.
+
+    This parser is used for values that are in a set of predefined "on" values.
+    """
+
+    on_values: set
+
+    def read_device_value(self, device: CustomerDevice) -> bool | None:
+        """Read the device value for the dpcode."""
+        if (raw_value := self._read_device_value_raw(device)) is not None:
+            return raw_value in self.on_values
+        return None
 
 
 @dataclass
@@ -74,7 +131,7 @@ class IntegerTypeData:
             return None
 
         return cls(
-            dpcode,
+            dpcode=dpcode,
             min=int(parsed["min"]),
             max=int(parsed["max"]),
             scale=float(parsed["scale"]),

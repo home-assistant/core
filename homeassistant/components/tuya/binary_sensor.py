@@ -20,6 +20,7 @@ from homeassistant.util.json import json_loads
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, DPType
 from .entity import TuyaEntity
+from .models import BitmapDataParser, BooleanDataParser, InSetDataParser
 
 
 @dataclass(frozen=True)
@@ -442,20 +443,22 @@ class TuyaBinarySensorEntity(TuyaEntity, BinarySensorEntity):
         super().__init__(device, device_manager)
         self.entity_description = description
         self._attr_unique_id = f"{super().unique_id}{description.key}"
-        self._bit_mask = bit_mask
+
+        dpcode = self.entity_description.dpcode or self.entity_description.key
+        if bit_mask is not None:
+            self._data_parser = BitmapDataParser(dpcode=dpcode, bit_mask=bit_mask)
+        elif description.on_value is True:
+            self._data_parser = BooleanDataParser(dpcode=dpcode)
+        elif isinstance(self.entity_description.on_value, set):
+            self._data_parser = InSetDataParser(
+                dpcode=dpcode, on_values=self.entity_description.on_value
+            )
+        else:
+            self._data_parser = InSetDataParser(
+                dpcode=dpcode, on_values={self.entity_description.on_value}
+            )
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if sensor is on."""
-        dpcode = self.entity_description.dpcode or self.entity_description.key
-        if dpcode not in self.device.status:
-            return False
-
-        if self._bit_mask is not None:
-            # For bitmap sensors, check the specific bit mask
-            return (self.device.status[dpcode] & (1 << self._bit_mask)) != 0
-
-        if isinstance(self.entity_description.on_value, set):
-            return self.device.status[dpcode] in self.entity_description.on_value
-
-        return self.device.status[dpcode] == self.entity_description.on_value
+        return self._data_parser.read_device_value(self.device)
