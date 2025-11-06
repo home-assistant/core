@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_sensors[sensor.pool_device_none-entry]
+# name: test_all_sensors[sensor.pool_device_chlorine-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,7 +12,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.pool_device_none',
+    'entity_id': 'sensor.pool_device_chlorine',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -24,7 +24,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Chlorine',
     'platform': 'pooldose',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -34,21 +34,21 @@
     'unit_of_measurement': 'ppm',
   })
 # ---
-# name: test_all_sensors[sensor.pool_device_none-state]
+# name: test_all_sensors[sensor.pool_device_chlorine-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pool Device None',
+      'friendly_name': 'Pool Device Chlorine',
       'unit_of_measurement': 'ppm',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.pool_device_none',
+    'entity_id': 'sensor.pool_device_chlorine',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.2',
   })
 # ---
-# name: test_all_sensors[sensor.pool_device_none_2-entry]
+# name: test_all_sensors[sensor.pool_device_chlorine_dosing_type-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -66,7 +66,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.pool_device_none_2',
+    'entity_id': 'sensor.pool_device_chlorine_dosing_type',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -78,7 +78,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Chlorine dosing type',
     'platform': 'pooldose',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -88,25 +88,25 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_sensors[sensor.pool_device_none_2-state]
+# name: test_all_sensors[sensor.pool_device_chlorine_dosing_type-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Pool Device None',
+      'friendly_name': 'Pool Device Chlorine dosing type',
       'options': list([
         'low',
         'high',
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.pool_device_none_2',
+    'entity_id': 'sensor.pool_device_chlorine_dosing_type',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'low',
   })
 # ---
-# name: test_all_sensors[sensor.pool_device_none_3-entry]
+# name: test_all_sensors[sensor.pool_device_chlorine_peristaltic_dosing-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -126,7 +126,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.pool_device_none_3',
+    'entity_id': 'sensor.pool_device_chlorine_peristaltic_dosing',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -138,7 +138,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Chlorine peristaltic dosing',
     'platform': 'pooldose',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -148,11 +148,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_sensors[sensor.pool_device_none_3-state]
+# name: test_all_sensors[sensor.pool_device_chlorine_peristaltic_dosing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Pool Device None',
+      'friendly_name': 'Pool Device Chlorine peristaltic dosing',
       'options': list([
         'off',
         'proportional',
@@ -161,11 +161,64 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.pool_device_none_3',
+    'entity_id': 'sensor.pool_device_chlorine_peristaltic_dosing',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
+  })
+# ---
+# name: test_all_sensors[sensor.pool_device_flow_rate-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.pool_device_flow_rate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLUME_FLOW_RATE: 'volume_flow_rate'>,
+    'original_icon': None,
+    'original_name': 'Flow rate',
+    'platform': 'pooldose',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'flow_rate',
+    'unique_id': 'TEST123456789_flow_rate',
+    'unit_of_measurement': 'L/s',
+  })
+# ---
+# name: test_all_sensors[sensor.pool_device_flow_rate-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'volume_flow_rate',
+      'friendly_name': 'Pool Device Flow rate',
+      'unit_of_measurement': 'L/s',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.pool_device_flow_rate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '150',
   })
 # ---
 # name: test_all_sensors[sensor.pool_device_orp-entry]
@@ -999,58 +1052,5 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '25',
-  })
-# ---
-# name: test_all_sensors[sensor.pool_device_volume_flow_rate-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.pool_device_volume_flow_rate',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.VOLUME_FLOW_RATE: 'volume_flow_rate'>,
-    'original_icon': None,
-    'original_name': 'Volume flow rate',
-    'platform': 'pooldose',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'flow_rate',
-    'unique_id': 'TEST123456789_flow_rate',
-    'unit_of_measurement': 'L/s',
-  })
-# ---
-# name: test_all_sensors[sensor.pool_device_volume_flow_rate-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'volume_flow_rate',
-      'friendly_name': 'Pool Device Volume flow rate',
-      'unit_of_measurement': 'L/s',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.pool_device_volume_flow_rate',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '150',
   })
 # ---
