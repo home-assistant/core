@@ -5,14 +5,14 @@ from __future__ import annotations
 from pathlib import Path
 import re
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from sqlalchemy.exc import SQLAlchemyError
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries
-from homeassistant.components.recorder import CONF_DB_URL, Recorder
+from homeassistant.components.recorder import CONF_DB_URL
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     SensorDeviceClass,
@@ -60,7 +60,7 @@ from . import (
 from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
 
-pytestmark = pytest.mark.usefixtures("mock_setup_entry", "recorder_mock")
+pytestmark = pytest.mark.usefixtures("recorder_mock")
 
 DATA_CONFIG = {CONF_NAME: "Get Value"}
 DATA_CONFIG_DB = {CONF_NAME: "Get Value", CONF_DB_URL: "sqlite://"}
@@ -75,6 +75,7 @@ OPTIONS_DATA_CONFIG = {}
     ],
 )
 async def test_form_simple(
+    mock_setup_entry: AsyncMock,
     hass: HomeAssistant,
     data_config: dict[str, Any],
     result_config: dict[str, Any],
@@ -113,9 +114,7 @@ async def test_form_simple(
     }
 
 
-async def test_form_with_query_template(
-    recorder_mock: Recorder, hass: HomeAssistant
-) -> None:
+async def test_form_with_query_template(hass: HomeAssistant) -> None:
     """Test for with query template."""
 
     result = await hass.config_entries.flow.async_init(
@@ -151,9 +150,7 @@ async def test_form_with_query_template(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_with_broken_query_template(
-    recorder_mock: Recorder, hass: HomeAssistant
-) -> None:
+async def test_form_with_broken_query_template(hass: HomeAssistant) -> None:
     """Test form with broken query template."""
 
     result = await hass.config_entries.flow.async_init(
@@ -196,7 +193,7 @@ async def test_form_with_broken_query_template(
 
 
 async def test_form_with_value_template(
-    recorder_mock: Recorder, hass: HomeAssistant
+    mock_setup_entry: AsyncMock, hass: HomeAssistant
 ) -> None:
     """Test for with value template."""
 
@@ -231,7 +228,9 @@ async def test_form_with_value_template(
     }
 
 
-async def test_flow_fails_db_url(hass: HomeAssistant) -> None:
+async def test_flow_fails_db_url(
+    mock_setup_entry: AsyncMock, hass: HomeAssistant
+) -> None:
     """Test config flow fails incorrect db url."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -252,7 +251,9 @@ async def test_flow_fails_db_url(hass: HomeAssistant) -> None:
     assert result["errors"] == {CONF_DB_URL: "db_url_invalid"}
 
 
-async def test_flow_fails_invalid_query(hass: HomeAssistant) -> None:
+async def test_flow_fails_invalid_query(
+    mock_setup_entry: AsyncMock, hass: HomeAssistant
+) -> None:
     """Test config flow fails incorrect db url."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -355,7 +356,9 @@ async def test_flow_fails_invalid_query(hass: HomeAssistant) -> None:
     }
 
 
-async def test_flow_fails_invalid_column_name(hass: HomeAssistant) -> None:
+async def test_flow_fails_invalid_column_name(
+    mock_setup_entry: AsyncMock, hass: HomeAssistant
+) -> None:
     """Test config flow fails invalid column name."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -398,7 +401,7 @@ async def test_flow_fails_invalid_column_name(hass: HomeAssistant) -> None:
     }
 
 
-async def test_options_flow(hass: HomeAssistant) -> None:
+async def test_options_flow(mock_setup_entry: AsyncMock, hass: HomeAssistant) -> None:
     """Test options config flow."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -451,7 +454,9 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     }
 
 
-async def test_options_flow_name_previously_removed(hass: HomeAssistant) -> None:
+async def test_options_flow_name_previously_removed(
+    mock_setup_entry: AsyncMock, hass: HomeAssistant
+) -> None:
     """Test options config flow where the name was missing."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -498,7 +503,9 @@ async def test_options_flow_name_previously_removed(hass: HomeAssistant) -> None
     }
 
 
-async def test_options_flow_fails_db_url(hass: HomeAssistant) -> None:
+async def test_options_flow_fails_db_url(
+    mock_setup_entry: AsyncMock, hass: HomeAssistant
+) -> None:
     """Test options flow fails incorrect db url."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -537,7 +544,9 @@ async def test_options_flow_fails_db_url(hass: HomeAssistant) -> None:
     assert result["errors"] == {CONF_DB_URL: "db_url_invalid"}
 
 
-async def test_options_flow_fails_invalid_query(hass: HomeAssistant) -> None:
+async def test_options_flow_fails_invalid_query(
+    mock_setup_entry: AsyncMock, hass: HomeAssistant
+) -> None:
     """Test options flow fails incorrect query and template."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -645,7 +654,9 @@ async def test_options_flow_fails_invalid_query(hass: HomeAssistant) -> None:
     }
 
 
-async def test_options_flow_fails_invalid_column_name(hass: HomeAssistant) -> None:
+async def test_options_flow_fails_invalid_column_name(
+    mock_setup_entry: AsyncMock, hass: HomeAssistant
+) -> None:
     """Test options flow fails invalid column name."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -697,7 +708,9 @@ async def test_options_flow_fails_invalid_column_name(hass: HomeAssistant) -> No
     }
 
 
-async def test_options_flow_db_url_empty(hass: HomeAssistant) -> None:
+async def test_options_flow_db_url_empty(
+    mock_setup_entry: AsyncMock, hass: HomeAssistant
+) -> None:
     """Test options config flow with leaving db_url empty."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -744,6 +757,7 @@ async def test_options_flow_db_url_empty(hass: HomeAssistant) -> None:
 
 
 async def test_full_flow_not_recorder_db(
+    mock_setup_entry: AsyncMock,
     hass: HomeAssistant,
     tmp_path: Path,
 ) -> None:
@@ -812,7 +826,9 @@ async def test_full_flow_not_recorder_db(
     }
 
 
-async def test_device_state_class(hass: HomeAssistant) -> None:
+async def test_device_state_class(
+    mock_setup_entry: AsyncMock, hass: HomeAssistant
+) -> None:
     """Test we get the form."""
 
     entry = MockConfigEntry(
@@ -947,7 +963,6 @@ async def test_device_state_class(hass: HomeAssistant) -> None:
     ),
 )
 async def test_config_flow_preview(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     user_input: str,
@@ -982,7 +997,6 @@ async def test_config_flow_preview(
 
 
 async def test_config_flow_preview_no_database(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     snapshot: SnapshotAssertion,
@@ -1025,7 +1039,6 @@ async def test_config_flow_preview_no_database(
 
 
 async def test_options_flow_preview(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     snapshot: SnapshotAssertion,
@@ -1065,7 +1078,7 @@ async def test_options_flow_preview(
 
 
 async def test_options_flow_sensor_preview_config_entry_removed(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test the option flow preview where the config entry is removed."""
     client = await hass_ws_client(hass)
