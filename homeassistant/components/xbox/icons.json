@@ -29,6 +29,12 @@
       "gamer_score": {
         "default": "mdi:alpha-g-circle"
       },
+      "in_party": {
+        "default": "mdi:headset",
+        "state": {
+          "0": "mdi:headset-off"
+        }
+      },
       "last_online": {
         "default": "mdi:account-clock"
       },

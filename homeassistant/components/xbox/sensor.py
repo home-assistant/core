@@ -37,6 +37,7 @@ class XboxSensor(StrEnum):
     FOLLOWER = "follower"
     NOW_PLAYING = "now_playing"
     FRIENDS = "friends"
+    IN_PARTY = "in_party"
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -93,6 +94,21 @@ def now_playing_attributes(_: Person, title: Title | None) -> dict[str, Any]:
         )
 
     return attributes
+
+
+def in_party_attributes(person: Person, _: Title | None = None) -> dict[str, Any]:
+    """In party attributes."""
+    MAP = {
+        "local": "invite_only",
+        "followed": "joinable",
+    }
+    return {
+        "join_restrictions": MAP.get(
+            person.multiplayer_summary.party_details[0].join_restriction
+        )
+        if person.multiplayer_summary and person.multiplayer_summary.party_details
+        else None
+    }
 
 
 def title_logo(_: Person, title: Title | None) -> str | None:
@@ -158,6 +174,16 @@ SENSOR_DESCRIPTIONS: tuple[XboxSensorEntityDescription, ...] = (
         key=XboxSensor.FRIENDS,
         translation_key=XboxSensor.FRIENDS,
         value_fn=lambda x, _: x.detail.friend_count if x.detail else None,
+    ),
+    XboxSensorEntityDescription(
+        key=XboxSensor.IN_PARTY,
+        translation_key=XboxSensor.IN_PARTY,
+        value_fn=(
+            lambda x, _: x.multiplayer_summary.in_party
+            if x.multiplayer_summary
+            else None
+        ),
+        attributes_fn=in_party_attributes,
     ),
 )
 
