@@ -26,6 +26,7 @@ from homeassistant.components.libre_hardware_monitor.const import (
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.device_registry import DeviceEntry
 
 from . import init_integration
 
@@ -152,29 +153,16 @@ async def test_sensor_state_is_unknown_when_no_sensor_data_is_provided(
     assert state.state == STATE_UNKNOWN
 
 
-async def test_orphaned_devices_are_removed(
+async def test_orphaned_devices_are_removed_if_not_present_after_update(
     hass: HomeAssistant,
     mock_lhm_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test that devices in HA that do not receive updates are removed."""
-    await init_integration(hass, mock_config_entry)
-
-    mock_lhm_client.get_data.return_value = LibreHardwareMonitorData(
-        main_device_ids_and_names=MappingProxyType(
-            {
-                DeviceId("amdcpu-0"): DeviceName("AMD Ryzen 7 7800X3D"),
-                DeviceId("gpu-nvidia-0"): DeviceName("NVIDIA GeForce RTX 4080 SUPER"),
-            }
-        ),
-        sensor_data=mock_lhm_client.get_data.return_value.sensor_data,
-    )
-
-    device_registry = dr.async_get(hass)
-    orphaned_device = device_registry.async_get_or_create(
-        config_entry_id=mock_config_entry.entry_id,
-        identifiers={(DOMAIN, f"{mock_config_entry.entry_id}_lpc-nct6687d-0")},
+    """Test that devices in HA that are not found in LHM's data after sensor update are removed."""
+    orphaned_device = await _mock_orphaned_device(
+        device_registry, hass, mock_config_entry, mock_lhm_client
     )
 
     with patch.object(
@@ -187,6 +175,51 @@ async def test_orphaned_devices_are_removed(
         await hass.async_block_till_done()
 
         mock_remove.assert_called_once_with(orphaned_device.id)
+
+
+async def test_orphaned_devices_are_removed_if_not_present_during_startup(
+    hass: HomeAssistant,
+    mock_lhm_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that devices in HA that are not found in LHM's data during integration startup are removed."""
+    orphaned_device = await _mock_orphaned_device(
+        device_registry, hass, mock_config_entry, mock_lhm_client
+    )
+
+    with patch.object(
+        device_registry,
+        "async_remove_device",
+        wraps=device_registry.async_update_device,
+    ) as mock_remove:
+        hass.config_entries.async_schedule_reload(mock_config_entry.entry_id)
+
+        mock_remove.assert_called_once_with(orphaned_device.id)
+
+
+async def _mock_orphaned_device(
+    device_registry: dr.DeviceRegistry,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_lhm_client: AsyncMock,
+) -> DeviceEntry:
+    await init_integration(hass, mock_config_entry)
+
+    mock_lhm_client.get_data.return_value = LibreHardwareMonitorData(
+        main_device_ids_and_names=MappingProxyType(
+            {
+                DeviceId("amdcpu-0"): DeviceName("AMD Ryzen 7 7800X3D"),
+                DeviceId("gpu-nvidia-0"): DeviceName("NVIDIA GeForce RTX 4080 SUPER"),
+            }
+        ),
+        sensor_data=mock_lhm_client.get_data.return_value.sensor_data,
+    )
+
+    return device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, f"{mock_config_entry.entry_id}_lpc-nct6687d-0")},
+    )
 
 
 async def test_integration_does_not_log_new_devices_on_first_refresh(
