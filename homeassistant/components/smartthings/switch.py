@@ -91,6 +91,15 @@ CAPABILITY_TO_COMMAND_SWITCHES: dict[
     ),
 }
 CAPABILITY_TO_SWITCHES: dict[Capability | str, SmartThingsSwitchEntityDescription] = {
+    Capability.SAMSUNG_CE_AIR_CONDITIONER_BEEP: SmartThingsSwitchEntityDescription(
+        key=Capability.SAMSUNG_CE_AIR_CONDITIONER_BEEP,
+        translation_key="sound_effect",
+        status_attribute=Attribute.BEEP,
+        on_key="on",
+        on_command=Command.ON,
+        off_command=Command.OFF,
+        entity_category=EntityCategory.CONFIG,
+    ),
     Capability.SAMSUNG_CE_WASHER_BUBBLE_SOAK: SmartThingsSwitchEntityDescription(
         key=Capability.SAMSUNG_CE_WASHER_BUBBLE_SOAK,
         translation_key="bubble_soak",
