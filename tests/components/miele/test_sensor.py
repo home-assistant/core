@@ -23,7 +23,7 @@ from tests.common import (
 )
 
 
-@pytest.mark.usefixtures("mock_date")
+@pytest.mark.freeze_time("2025-05-31 12:30:00+00:00")
 @pytest.mark.parametrize("platforms", [(SENSOR_DOMAIN,)])
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_states(
@@ -38,7 +38,7 @@ async def test_sensor_states(
     await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)
 
 
-@pytest.mark.usefixtures("mock_date")
+@pytest.mark.freeze_time("2025-05-31 12:30:00+00:00")
 @pytest.mark.parametrize("platforms", [(SENSOR_DOMAIN,)])
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_states_api_push(

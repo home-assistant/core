@@ -4,7 +4,6 @@ from collections.abc import AsyncGenerator, Generator
 import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from freezegun import freeze_time
 from pymiele import MieleAction, MieleDevices
 import pytest
 
@@ -182,10 +181,3 @@ async def push_data_and_actions(
     action_callback = get_actions_callback(mock_miele_client)
     await action_callback(act_file)
     await hass.async_block_till_done()
-
-
-@pytest.fixture
-def mock_date() -> Generator[MagicMock]:
-    """Fixture to mock homeassistant.util.dt.utcnow()."""
-    with freeze_time("2025-05-31 12:30:00+00:00"):
-        yield
