@@ -29,6 +29,12 @@ ATTR_GAMECLIPS = "gameclips"
 ATTR_SCREENSHOTS = "screenshots"
 ATTR_GAME_MEDIA = "game_media"
 
+MAP_TITLE = {
+    ATTR_GAMECLIPS: "Gameclips",
+    ATTR_SCREENSHOTS: "Screenshots",
+    ATTR_GAME_MEDIA: "Game media",
+}
+
 MIME_TYPE_MAP = {
     ATTR_GAMECLIPS: "video/mp4",
     ATTR_SCREENSHOTS: "image/png",
@@ -358,7 +364,7 @@ class XboxSource(MediaSource):
                 identifier=f"{identifier}/{media_type}",
                 media_class=MediaClass.DIRECTORY,
                 media_content_type=MediaClass.GAME,
-                title=f"{media_type.capitalize().replace('_', ' ')}",
+                title=MAP_TITLE[media_type],
                 can_play=False,
                 can_expand=True,
                 children_media_class=MEDIA_CLASS_MAP[media_type],
@@ -390,7 +396,7 @@ class XboxSource(MediaSource):
             identifier=str(identifier),
             media_class=MEDIA_CLASS_MAP[identifier.media_type],
             media_content_type=MediaClass.DIRECTORY,
-            title=f"Xbox / {entry.title} / {game.name} / {identifier.media_type.capitalize().replace('_', ' ')}",
+            title=f"Xbox / {entry.title} / {game.name} / {MAP_TITLE[identifier.media_type]}",
             can_play=False,
             can_expand=True,
             children=[
