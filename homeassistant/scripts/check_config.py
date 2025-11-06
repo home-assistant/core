@@ -90,7 +90,9 @@ def run(script_args: list) -> int:
         help="Exit non-zero if warnings are present",
     )
 
-    args, unknown = parser.parse_known_args(script_args)
+    # If we don't have script_args (this is possible if the ran with cli args out of order) then default to letting it parse ALL the cli args passed.
+    # example of out of order args python -m homeassistant --config "." --script check_config. This will result in falling back to the default even though config arg was passed
+    args, unknown = parser.parse_known_args(script_args or None)
     if unknown:
         print(color("red", "Unknown arguments:", ", ".join(unknown)))
 
