@@ -101,7 +101,7 @@ class HueBLELight(LightEntity):
         self._attr_color_temp_kelvin = (
             color_util.color_temperature_mired_to_kelvin(self._api.colour_temp)
             if self._api.colour_temp is not None and self._api.colour_temp != 0
-            else -1
+            else None
         )
         self._attr_xy_color = self._api.colour_xy
 
