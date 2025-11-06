@@ -27,7 +27,8 @@ from homeassistant.helpers.issue_registry import (
 )
 
 from .const import ATTR_CONF_EXPOSE_PLAYER_TO_HA, DOMAIN, LOGGER
-from .services import get_music_assistant_client, register_actions
+from .helpers import get_music_assistant_client
+from .services import register_actions
 
 if TYPE_CHECKING:
     from music_assistant_models.event import MassEvent
