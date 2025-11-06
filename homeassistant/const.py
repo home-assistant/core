@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING, Final
 
 from .generated.entity_platforms import EntityPlatforms
 from .helpers.deprecation import (
-    DeprecatedConstantEnum,
     all_with_deprecated_constants,
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
