@@ -84,16 +84,16 @@ def async_uptime_sensor_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
 def async_client_rx_value_fn(hub: UnifiHub, client: Client) -> float:
     """Calculate receiving data transfer value."""
     if hub.entity_loader.wireless_clients.is_wireless(client):
-        return float(client.rx_bytes_r) / 1000000
-    return float(client.wired_rx_bytes_r) / 1000000
+        return client.rx_bytes_r / 1000000
+    return client.wired_rx_bytes_r / 1000000
 
 
 @callback
 def async_client_tx_value_fn(hub: UnifiHub, client: Client) -> float:
     """Calculate transmission data transfer value."""
     if hub.entity_loader.wireless_clients.is_wireless(client):
-        return float(client.tx_bytes_r) / 1000000
-    return float(client.wired_tx_bytes_r) / 1000000
+        return client.tx_bytes_r / 1000000
+    return client.wired_tx_bytes_r / 1000000
 
 
 @callback
@@ -107,7 +107,7 @@ def async_client_uptime_value_fn(hub: UnifiHub, client: Client) -> datetime:
 @callback
 def async_wired_client_speed_value_fn(hub: UnifiHub, client: Client) -> int:
     """Return wired client speed in Mbps."""
-    return int(client.wired_rate_mbps or 0)
+    return client.wired_rate_mbps or 0
 
 
 @callback
@@ -116,7 +116,11 @@ def async_wired_client_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
     client = hub.api.clients[obj_id]
     if not client.is_wired:
         return False
-    if not hasattr(client, "wired_rate_mbps") or client.wired_rate_mbps is None or client.wired_rate_mbps <= 0:
+    if (
+        not hasattr(client, "wired_rate_mbps")
+        or client.wired_rate_mbps is None
+        or client.wired_rate_mbps <= 0
+    ):
         return False
     return True
 
@@ -180,7 +184,7 @@ def async_device_outlet_power_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Determine if an outlet has the power property."""
     # At this time, an outlet_caps value of 3 is expected to indicate that the outlet
     # supports metering
-    return bool(hub.api.outlets[obj_id].caps == 3)
+    return hub.api.outlets[obj_id].caps == 3
 
 
 @callback
@@ -252,7 +256,7 @@ def async_device_wan_latency_value_fn(
         # Checked by async_device_wan_latency_supported_fn
         assert target
 
-    return int(target.get("latency_average", 0))
+    return target.get("latency_average", 0)
 
 
 @callback
@@ -334,7 +338,7 @@ def _device_temperature(
     """Return the temperature of the device."""
     for temperature in temperatures:
         if temperature_name in temperature["name"]:
-            return float(temperature["value"])
+            return temperature["value"]
     return None
 
 
@@ -436,6 +440,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         api_handler_fn=lambda api: api.clients,
         device_info_fn=async_client_device_info_fn,
         is_connected_fn=async_client_is_connected_fn,
+        name_fn=lambda _: "Link speed",
         object_fn=lambda api, obj_id: api.clients[obj_id],
         unique_id_fn=lambda hub, obj_id: f"wired_speed-{obj_id}",
         value_fn=async_wired_client_speed_value_fn,
