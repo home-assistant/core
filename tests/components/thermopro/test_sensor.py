@@ -1,6 +1,14 @@
-"""Test the ThermoPro config flow."""
+"""Test the ThermoPro sensors."""
 
-from homeassistant.components.sensor import ATTR_STATE_CLASS
+from unittest.mock import MagicMock
+
+import pytest
+
+from homeassistant.components.bluetooth.passive_update_processor import (
+    PassiveBluetoothDataProcessor,
+)
+from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorEntityDescription
+from homeassistant.components.thermopro import sensor as thermopro_sensor
 from homeassistant.components.thermopro.const import DOMAIN
 from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant
@@ -125,3 +133,94 @@ async def test_sensors(hass: HomeAssistant) -> None:
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+
+
+class CoordinatorStub:
+    """Coordinator stub for testing entity restoration behavior."""
+
+    def __init__(self) -> None:
+        """Initialize coordinator stub."""
+        self.calls: list[tuple[MagicMock, type | None]] = []
+        self._saw_sensor_entity_description = False
+        self._restore_cb: MagicMock | None = None
+
+    def async_register_processor(
+        self, processor: MagicMock, entity_description_cls: type | None = None
+    ) -> MagicMock:
+        """Register a processor and track if SensorEntityDescription was provided."""
+        self.calls.append((processor, entity_description_cls))
+
+        if entity_description_cls is SensorEntityDescription:
+            self._saw_sensor_entity_description = True
+
+        return lambda: None
+
+    def trigger_restore_from_test(self) -> None:
+        """Trigger restoration callback if available."""
+        if self._saw_sensor_entity_description and self._restore_cb:
+            self._restore_cb([])
+
+
+async def test_thermopro_restores_entities_on_restart_behavior(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test that entities are restored on restart via SensorEntityDescription."""
+
+    add_entities_callbacks: list[MagicMock] = []
+
+    orig_add_listener = PassiveBluetoothDataProcessor.async_add_entities_listener
+
+    def wrapped_add_listener(
+        self: PassiveBluetoothDataProcessor,
+        entity_cls: type,
+        add_entities: MagicMock,
+    ) -> MagicMock:
+        add_entities_callbacks.append(add_entities)
+        return orig_add_listener(self, entity_cls, add_entities)
+
+    monkeypatch.setattr(
+        PassiveBluetoothDataProcessor,
+        "async_add_entities_listener",
+        wrapped_add_listener,
+    )
+
+    first_called = {"v": False}
+    second_called = {"v": False}
+
+    def add_entities_first(entities: list) -> None:
+        first_called["v"] = True
+
+    def add_entities_second(entities: list) -> None:
+        second_called["v"] = True
+
+    coord = CoordinatorStub()
+
+    # First setup
+    entry1 = MockConfigEntry(domain=DOMAIN)
+    entry1.add_to_hass(hass)
+    hass.data.setdefault(DOMAIN, {})[entry1.entry_id] = coord
+
+    await thermopro_sensor.async_setup_entry(hass, entry1, add_entities_first)
+    await hass.async_block_till_done()
+
+    assert coord.calls, "Processor was not registered on first setup"
+    assert not first_called["v"]
+
+    # Second setup (simulating restart)
+    entry2 = MockConfigEntry(domain=DOMAIN)
+    entry2.add_to_hass(hass)
+    hass.data.setdefault(DOMAIN, {})[entry2.entry_id] = coord
+
+    await thermopro_sensor.async_setup_entry(hass, entry2, add_entities_second)
+    await hass.async_block_till_done()
+
+    assert add_entities_callbacks, "No add_entities callback was registered"
+    coord._restore_cb = add_entities_callbacks[-1]
+
+    coord.trigger_restore_from_test()
+    await hass.async_block_till_done()
+
+    assert second_called["v"], (
+        "ThermoPro did not trigger restoration on startup. "
+        "Ensure async_register_processor(processor, SensorEntityDescription) is used."
+    )
