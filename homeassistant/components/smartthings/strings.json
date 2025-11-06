@@ -626,6 +626,9 @@
       "auto_cycle_link": {
         "name": "Auto Cycle Link"
       },
+      "beep": {
+        "name": "Sound effect"
+      },
       "bubble_soak": {
         "name": "Bubble Soak"
       },
