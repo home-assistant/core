@@ -34,7 +34,6 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import (
-    CALENDAR_EVENT_TYPES,
     CONF_CALENDAR_EVENTS,
     CONF_CANDLE_LIGHT_MINUTES,
     CONF_DIASPORA,
@@ -46,6 +45,7 @@ from .const import (
     DEFAULT_LANGUAGE,
     DEFAULT_NAME,
     DOMAIN,
+    CalendarEventType,
 )
 from .entity import JewishCalendarConfigEntry
 
@@ -59,7 +59,7 @@ OPTIONS_SCHEMA = vol.Schema(
             CONF_CALENDAR_EVENTS, default=DEFAULT_CALENDAR_EVENTS
         ): SelectSelector(
             SelectSelectorConfig(
-                options=CALENDAR_EVENT_TYPES,
+                options=list(CalendarEventType),
                 multiple=True,
                 mode=SelectSelectorMode.DROPDOWN,
             )
