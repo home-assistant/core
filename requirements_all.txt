@@ -2920,9 +2920,6 @@ teslemetry-stream==0.7.9
 # homeassistant.components.tessie
 tessie-api==0.1.1
 
-# homeassistant.components.tensorflow
-# tf-models-official==2.5.0
-
 # homeassistant.components.tfa_me
 tfa-me-ha-local==1.0.1
 
