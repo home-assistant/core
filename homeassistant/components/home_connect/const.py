@@ -13,6 +13,7 @@ DOMAIN = "home_connect"
 API_DEFAULT_RETRY_AFTER = 60
 
 APPLIANCES_WITH_PROGRAMS = (
+    "AirConditioner",
     "CleaningRobot",
     "CoffeeMaker",
     "Dishwasher",

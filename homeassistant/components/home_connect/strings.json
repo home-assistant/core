@@ -115,6 +115,23 @@
         "name": "Stop program"
       }
     },
+    "climate": {
+      "air_conditioner": {
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "auto": "[%key:common::state::auto%]",
+              "manual": "[%key:common::state::manual%]"
+            }
+          },
+          "preset_mode": {
+            "state": {
+              "heating_ventilation_air_conditioning_air_conditioner_program_active_clean": "Active clean"
+            }
+          }
+        }
+      }
+    },
     "light": {
       "ambient_light": {
         "name": "Ambient light"
