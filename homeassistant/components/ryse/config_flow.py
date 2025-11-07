@@ -105,7 +105,6 @@ class RyseBLEDeviceConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.warning("Pairing failed for %s (%s)", name, address)
                 return self.async_show_form(
                     step_id="pair",
-                    data_schema=vol.Schema({}),
                 )
 
             _LOGGER.info("Successfully paired with RYSE device %s (%s)", name, address)
