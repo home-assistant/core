@@ -73,10 +73,9 @@ class HomeLinkEventEntity(EventEntity):
     def _handle_event_data_update(self, update_data: HomeLinkEventData) -> None:
         """Update this button."""
 
-        latest_update = update_data
-        if latest_update["requestId"] != self.last_request_id:
+        if update_data["requestId"] != self.last_request_id:
             self._trigger_event(EVENT_PRESSED)
-            self.last_request_id = latest_update["requestId"]
+            self.last_request_id = update_data["requestId"]
 
         self.async_write_ha_state()
 

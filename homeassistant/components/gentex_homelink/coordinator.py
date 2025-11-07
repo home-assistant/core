@@ -6,7 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from functools import partial
 import logging
-from typing import TYPE_CHECKING, Any, TypedDict
+from typing import TYPE_CHECKING, TypedDict
 
 from homelink.model.device import Device
 from homelink.mqtt_provider import MQTTProvider
@@ -59,44 +59,29 @@ class HomeLinkCoordinator(BaseDataUpdateCoordinatorProtocol):
     ) -> None:
         """Initialize my coordinator."""
         self.hass = hass
-        self.logger = _LOGGER
-        self.name = "HomeLinkCoordinator"
         self.config_entry = config_entry
         self.provider = provider
-        self.last_sync_timestamp = None
-        self.last_sync_id = None
         self.device_data: list[Device] = []
         self.buttons: list[HomeLinkEventEntity] = []
-        self._listeners: dict[str, tuple[EventCallback, object | None]] = {}
-        self.data: dict[str, HomeLinkEventData] | None = None
-        self.last_update_success: bool = True
+        self._listeners: dict[str, EventCallback] = {}
 
     @callback
     def async_add_event_listener(
-        self, update_callback: EventCallback, context: Any = None
+        self, update_callback: EventCallback, target_event_id: str
     ) -> Callable[[], None]:
         """Listen for updates."""
-        self._listeners[context] = (update_callback, context)
-        return partial(self.__async_remove_listener_internal, context)
+        self._listeners[target_event_id] = update_callback
+        return partial(self.__async_remove_listener_internal, target_event_id)
 
     def __async_remove_listener_internal(self, listener_id: str):
         del self._listeners[listener_id]
 
     @callback
-    def async_set_updated_data(self, data: dict[str, HomeLinkEventData]):
-        """Manually update data and notify listeners."""
-        self.data = data
-        self.last_update_success = True
-        self.async_update_listeners()
-
-    @callback
-    def async_update_listeners(self) -> None:
-        """Update the listeners who have data relevant to listeners."""
-        if not self.data:
-            return
-        for button_id in self.data:
-            if button_id in self._listeners:
-                self._listeners[button_id][0](self.data[button_id])
+    def async_handle_state_data(self, data: dict[str, HomeLinkEventData]):
+        """Notify listeners."""
+        for button_id, event in data.items():
+            if listener := self._listeners.get(button_id):
+                listener(event)
 
     async def async_config_entry_first_refresh(self) -> None:
         """Refresh data for the first time when a config entry is setup."""
@@ -121,7 +106,7 @@ class HomeLinkCoordinator(BaseDataUpdateCoordinatorProtocol):
     ):
         "MQTT Callback function."
         if message["type"] == "state":
-            self.hass.add_job(self.async_set_updated_data, message["data"])
+            self.hass.add_job(self.async_handle_state_data, message["data"])
         if message["type"] == "requestSync":
             if self.config_entry:
                 self.hass.add_job(
