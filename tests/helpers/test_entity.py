@@ -2937,10 +2937,6 @@ async def test_included_entities(
     class MockHelloIncludedEntitiesClass(MockHelloBaseClass, entity.Entity):
         """Mock hello grouped entity class for a test integration."""
 
-        async def async_added_to_hass(self) -> None:
-            await super().async_added_to_hass()
-            self.async_set_included_entities()
-
     platform = MockEntityPlatform(hass, domain="hello", platform_name="test")
     mock_entity = MockHelloIncludedEntitiesClass()
     mock_entity.hass = hass

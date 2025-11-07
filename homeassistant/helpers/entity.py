@@ -1384,6 +1384,7 @@ class Entity(
         """Finish adding an entity to a platform."""
         await self.async_internal_added_to_hass()
         await self.async_added_to_hass()
+        self.async_set_included_entities()
         self._platform_state = EntityPlatformState.ADDED
         self.async_write_ha_state()
 
