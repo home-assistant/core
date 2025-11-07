@@ -7,7 +7,7 @@ import pytest
 
 from homeassistant.components.pooldose.const import DOMAIN
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
@@ -256,7 +256,8 @@ async def test_dhcp_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "PoolDose TEST123456789"
-    assert result["data"] == {CONF_HOST: "192.168.0.123"}
+    assert result["data"][CONF_HOST] == "192.168.0.123"
+    assert result["data"][CONF_MAC] == "a4e57caabbcc"
     assert result["result"].unique_id == "TEST123456789"
 
 
@@ -355,3 +356,73 @@ async def test_dhcp_updates_host(
     assert result["reason"] == "already_configured"
 
     assert mock_config_entry.data[CONF_HOST] == "192.168.0.123"
+
+
+async def test_dhcp_adds_mac_if_not_present(
+    hass: HomeAssistant, mock_pooldose_client: AsyncMock, mock_setup_entry: AsyncMock
+) -> None:
+    """Test that DHCP flow adds MAC address if not already in config entry data."""
+    # Create a config entry without MAC address
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="TEST123456789",
+        data={CONF_HOST: "192.168.1.100"},
+    )
+    entry.add_to_hass(hass)
+
+    # Verify initial state has no MAC
+    assert CONF_MAC not in entry.data
+
+    # Simulate DHCP discovery event
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip="192.168.0.123", hostname="kommspot", macaddress="a4e57caabbcc"
+        ),
+    )
+
+    # Verify flow aborts as device is already configured
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    # Verify MAC was added to the config entry
+    assert entry.data[CONF_HOST] == "192.168.0.123"
+    assert entry.data[CONF_MAC] == "a4e57caabbcc"
+
+
+async def test_dhcp_preserves_existing_mac(
+    hass: HomeAssistant, mock_pooldose_client: AsyncMock, mock_setup_entry: AsyncMock
+) -> None:
+    """Test that DHCP flow preserves existing MAC in config entry data."""
+    # Create a config entry with MAC address already set
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="TEST123456789",
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_MAC: "existing11aabb",  # Existing MAC that should be preserved
+        },
+    )
+    entry.add_to_hass(hass)
+
+    # Verify initial state has the expected MAC
+    assert entry.data[CONF_MAC] == "existing11aabb"
+
+    # Simulate DHCP discovery event with different MAC
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip="192.168.0.123", hostname="kommspot", macaddress="different22ccdd"
+        ),
+    )
+
+    # Verify flow aborts as device is already configured
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    # Verify MAC in config entry was NOT updated (original MAC preserved)
+    assert entry.data[CONF_HOST] == "192.168.0.123"  # IP was updated
+    assert entry.data[CONF_MAC] == "existing11aabb"  # MAC remains unchanged
+    assert entry.data[CONF_MAC] != "different22ccdd"  # Not updated to new MAC

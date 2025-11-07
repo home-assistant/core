@@ -78,7 +78,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         scan_interval: timedelta = resource_config.get(
             CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
         )
-        coordinator = ScrapeCoordinator(hass, None, rest, scan_interval)
+        coordinator = ScrapeCoordinator(
+            hass, None, rest, resource_config, scan_interval
+        )
 
         sensors: list[ConfigType] = resource_config.get(SENSOR_DOMAIN, [])
         if sensors:
@@ -108,6 +110,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ScrapeConfigEntry) -> bo
         hass,
         entry,
         rest,
+        rest_config,
         DEFAULT_SCAN_INTERVAL,
     )
     await coordinator.async_config_entry_first_refresh()

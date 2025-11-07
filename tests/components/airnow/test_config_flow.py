@@ -25,6 +25,9 @@ async def test_form(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
+    assert result["description_placeholders"] == {
+        "api_key_url": "https://docs.airnowapi.org/account/request/"
+    }
 
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], config)
     assert result2["type"] is FlowResultType.CREATE_ENTRY

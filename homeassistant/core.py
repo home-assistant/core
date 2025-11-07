@@ -86,7 +86,6 @@ from .exceptions import (
 )
 from .helpers.deprecation import (
     DeferredDeprecatedAlias,
-    EnumWithDeprecatedMembers,
     all_with_deprecated_constants,
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
@@ -133,24 +132,6 @@ BLOCK_LOG_TIMEOUT = 60
 
 type ServiceResponse = JsonObjectType | None
 type EntityServiceResponse = dict[str, ServiceResponse]
-
-
-class ConfigSource(
-    enum.StrEnum,
-    metaclass=EnumWithDeprecatedMembers,
-    deprecated={
-        "DEFAULT": ("core_config.ConfigSource.DEFAULT", "2025.11.0"),
-        "DISCOVERED": ("core_config.ConfigSource.DISCOVERED", "2025.11.0"),
-        "STORAGE": ("core_config.ConfigSource.STORAGE", "2025.11.0"),
-        "YAML": ("core_config.ConfigSource.YAML", "2025.11.0"),
-    },
-):
-    """Source of core configuration."""
-
-    DEFAULT = "default"
-    DISCOVERED = "discovered"
-    STORAGE = "storage"
-    YAML = "yaml"
 
 
 class EventStateEventData(TypedDict):
