@@ -9,8 +9,14 @@ import growattServer
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.growatt_server.const import DOMAIN
+from homeassistant.components.growatt_server.const import (
+    AUTH_API_TOKEN,
+    AUTH_PASSWORD,
+    CONF_AUTH_TYPE,
+    DOMAIN,
+)
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -174,3 +180,79 @@ async def test_multiple_devices_discovered(
     assert device1 == snapshot(name="device_min123456")
     assert device2 is not None
     assert device2 == snapshot(name="device_min789012")
+
+
+async def test_migrate_legacy_api_token_config(
+    hass: HomeAssistant,
+    mock_growatt_v1_api,
+) -> None:
+    """Test migration of legacy config entry with API token but no auth_type."""
+    # Create a legacy config entry without CONF_AUTH_TYPE
+    legacy_config = {
+        CONF_TOKEN: "test_token_123",
+        CONF_URL: "https://openapi.growatt.com/",
+        "plant_id": "plant_123",
+    }
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=legacy_config,
+        unique_id="plant_123",
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    # Verify migration occurred and auth_type was added
+    assert mock_config_entry.data[CONF_AUTH_TYPE] == AUTH_API_TOKEN
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_migrate_legacy_password_config(
+    hass: HomeAssistant,
+    mock_growatt_classic_api,
+) -> None:
+    """Test migration of legacy config entry with password auth but no auth_type."""
+    # Create a legacy config entry without CONF_AUTH_TYPE
+    legacy_config = {
+        CONF_USERNAME: "test_user",
+        CONF_PASSWORD: "test_password",
+        CONF_URL: "https://server.growatt.com/",
+        "plant_id": "plant_456",
+    }
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=legacy_config,
+        unique_id="plant_456",
+    )
+
+    # Classic API doesn't support MIN devices - use TLX device instead
+    mock_growatt_classic_api.device_list.return_value = [
+        {"deviceSn": "TLX123456", "deviceType": "tlx"}
+    ]
+
+    await setup_integration(hass, mock_config_entry)
+
+    # Verify migration occurred and auth_type was added
+    assert mock_config_entry.data[CONF_AUTH_TYPE] == AUTH_PASSWORD
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_migrate_legacy_config_no_auth_fields(
+    hass: HomeAssistant,
+) -> None:
+    """Test that config entry with no recognizable auth fields raises error."""
+    # Create a config entry without any auth fields
+    invalid_config = {
+        CONF_URL: "https://openapi.growatt.com/",
+        "plant_id": "plant_789",
+    }
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=invalid_config,
+        unique_id="plant_789",
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    # The ConfigEntryError is caught by the config entry system
+    # and the entry state is set to SETUP_ERROR
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR

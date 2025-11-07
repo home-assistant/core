@@ -1,10 +1,17 @@
 """Test the Airthings Wave sensor."""
 
+from datetime import timedelta
 import logging
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.airthings_ble.const import DOMAIN
+from homeassistant.components.airthings_ble.const import (
+    DEFAULT_SCAN_INTERVAL,
+    DEVICE_MODEL,
+    DEVICE_SPECIFIC_SCAN_INTERVAL,
+    DOMAIN,
+)
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -12,6 +19,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from . import (
     CO2_V1,
     CO2_V2,
+    CORENTIUM_HOME_2_DEVICE_INFO,
     HUMIDITY_V2,
     TEMPERATURE_V1,
     VOC_V1,
@@ -21,6 +29,8 @@ from . import (
     WAVE_ENHANCE_DEVICE_INFO,
     WAVE_ENHANCE_SERVICE_INFO,
     WAVE_SERVICE_INFO,
+    AirthingsDevice,
+    BluetoothServiceInfoBleak,
     create_device,
     create_entry,
     patch_airthings_ble,
@@ -29,6 +39,7 @@ from . import (
     patch_async_discovered_service_info,
 )
 
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.bluetooth import inject_bluetooth_service_info
 
 _LOGGER = logging.getLogger(__name__)
@@ -267,3 +278,102 @@ async def test_translation_keys(
 
     expected_name = f"Airthings Wave Enhance (123456) {expected_sensor_name}"
     assert state.attributes.get("friendly_name") == expected_name
+
+
+async def test_scan_interval_migration_corentium_home_2(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that radon device migration uses 30-minute scan interval."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=WAVE_SERVICE_INFO.address,
+        data={},
+    )
+    entry.add_to_hass(hass)
+
+    inject_bluetooth_service_info(hass, WAVE_SERVICE_INFO)
+
+    with (
+        patch_async_ble_device_from_address(WAVE_SERVICE_INFO.device),
+        patch_airthings_ble(CORENTIUM_HOME_2_DEVICE_INFO) as mock_update,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        # Migration should have added device_model to entry data
+        assert DEVICE_MODEL in entry.data
+        assert entry.data[DEVICE_MODEL] == CORENTIUM_HOME_2_DEVICE_INFO.model.value
+
+        # Coordinator should have been configured with radon scan interval
+        coordinator = entry.runtime_data
+        assert coordinator.update_interval == timedelta(
+            seconds=DEVICE_SPECIFIC_SCAN_INTERVAL.get(
+                CORENTIUM_HOME_2_DEVICE_INFO.model.value
+            )
+        )
+
+        # Should have 2 calls: 1 for migration + 1 for initial refresh
+        assert mock_update.call_count == 2
+
+        # Fast forward by default interval (300s) - should NOT trigger update
+        freezer.tick(DEFAULT_SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert mock_update.call_count == 2
+
+        # Fast forward to radon interval (1800s) - should trigger update
+        freezer.tick(
+            DEVICE_SPECIFIC_SCAN_INTERVAL.get(CORENTIUM_HOME_2_DEVICE_INFO.model.value)
+        )
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert mock_update.call_count == 3
+
+
+@pytest.mark.parametrize(
+    ("service_info", "device_info"),
+    [
+        (WAVE_SERVICE_INFO, WAVE_DEVICE_INFO),
+        (WAVE_ENHANCE_SERVICE_INFO, WAVE_ENHANCE_DEVICE_INFO),
+    ],
+)
+async def test_default_scan_interval_migration(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    service_info: BluetoothServiceInfoBleak,
+    device_info: AirthingsDevice,
+) -> None:
+    """Test that non-radon device migration uses default 5-minute scan interval."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=service_info.address,
+        data={},
+    )
+    entry.add_to_hass(hass)
+
+    inject_bluetooth_service_info(hass, service_info)
+
+    with (
+        patch_async_ble_device_from_address(service_info.device),
+        patch_airthings_ble(device_info) as mock_update,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        # Migration should have added device_model to entry data
+        assert DEVICE_MODEL in entry.data
+        assert entry.data[DEVICE_MODEL] == device_info.model.value
+
+        # Coordinator should have been configured with default scan interval
+        coordinator = entry.runtime_data
+        assert coordinator.update_interval == timedelta(seconds=DEFAULT_SCAN_INTERVAL)
+
+        # Should have 2 calls: 1 for migration + 1 for initial refresh
+        assert mock_update.call_count == 2
+
+        # Fast forward by default interval (300s) - SHOULD trigger update
+        freezer.tick(DEFAULT_SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert mock_update.call_count == 3

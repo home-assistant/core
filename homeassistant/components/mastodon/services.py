@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID
-from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse
+from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from .const import (
@@ -68,7 +68,8 @@ def async_get_entry(hass: HomeAssistant, config_entry_id: str) -> MastodonConfig
     return cast(MastodonConfigEntry, entry)
 
 
-def setup_services(hass: HomeAssistant) -> None:
+@callback
+def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the services for the Mastodon integration."""
 
     async def async_post(call: ServiceCall) -> ServiceResponse:
