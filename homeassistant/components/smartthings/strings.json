@@ -653,6 +653,9 @@
       "sanitize": {
         "name": "Sanitize"
       },
+      "sound_effect": {
+        "name": "Sound effect"
+      },
       "wrinkle_prevent": {
         "name": "Wrinkle prevent"
       }

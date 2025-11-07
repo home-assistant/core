@@ -23,6 +23,9 @@
       "following": {
         "default": "mdi:account-arrow-right"
       },
+      "friends": {
+        "default": "mdi:account-heart"
+      },
       "gamer_score": {
         "default": "mdi:alpha-g-circle"
       },
