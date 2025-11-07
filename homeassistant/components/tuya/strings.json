@@ -166,6 +166,9 @@
       "cook_time": {
         "name": "Cooking time"
       },
+      "delay_clean_time": {
+        "name": "Delay clean time"
+      },
       "down_delay": {
         "name": "Down delay"
       },
