@@ -776,7 +776,8 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="excretion_times_day",
         ),
         TuyaSensorEntityDescription(
-            key=DPCode.STATUS, translation_key="cat_litter_box_status"
+            key=DPCode.STATUS,
+            translation_key="cat_litter_box_status",
         ),
     ),
     DeviceCategory.MZJ: (
