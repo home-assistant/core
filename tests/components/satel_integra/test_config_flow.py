@@ -96,7 +96,7 @@ async def test_setup_connection_failed(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    mock_satel.return_value.connect.return_value = False
+    mock_satel.connect.return_value = False
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -106,7 +106,7 @@ async def test_setup_connection_failed(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
-    mock_satel.return_value.connect.return_value = True
+    mock_satel.connect.return_value = True
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -174,7 +174,7 @@ async def test_import_flow_connection_failure(
 ) -> None:
     """Test the import flow."""
 
-    mock_satel.return_value.connect.return_value = False
+    mock_satel.connect.return_value = False
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
