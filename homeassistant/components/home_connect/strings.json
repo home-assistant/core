@@ -1851,37 +1851,37 @@
       },
       "name": "Set program and options",
       "sections": {
-        "cleaning_robot_options": {
-          "description": "Options for cleaning robots.",
-          "name": "Cleaning robot options"
+        "cleaning_robot": {
+          "description": "Programs and options for cleaning robots.",
+          "name": "Cleaning robot"
         },
-        "coffee_maker_options": {
-          "description": "Options for coffee makers.",
-          "name": "Coffee maker options"
+        "coffee_maker": {
+          "description": "Programs and options for coffee makers.",
+          "name": "Coffee maker"
         },
-        "dish_washer_options": {
-          "description": "Options for dishwashers.",
-          "name": "Dishwasher options"
+        "dish_washer": {
+          "description": "Programs and options for dishwashers.",
+          "name": "Dishwasher"
         },
-        "dryer_options": {
-          "description": "Options for dryers (and washer dryers).",
-          "name": "Dryer options"
+        "dryer": {
+          "description": "Programs and options for dryers (and washer dryers).",
+          "name": "Dryer"
         },
-        "hood_options": {
-          "description": "Options for hoods.",
-          "name": "Hood options"
+        "hood": {
+          "description": "Programs and options for hoods.",
+          "name": "Hood"
         },
-        "oven_options": {
-          "description": "Options for ovens.",
-          "name": "Oven options"
+        "oven": {
+          "description": "Programs and options for ovens.",
+          "name": "Oven"
         },
-        "warming_drawer_options": {
-          "description": "Options for warming drawers.",
-          "name": "Warming drawer options"
+        "warming_drawer": {
+          "description": "Programs and options for warming drawers.",
+          "name": "Warming drawer"
         },
-        "washer_options": {
-          "description": "Options for washers (and washer dryers).",
-          "name": "Washer options"
+        "washer": {
+          "description": "Programs and options for washers (and washer dryers).",
+          "name": "Washer"
         }
       }
     }

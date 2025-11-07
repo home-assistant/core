@@ -14,172 +14,20 @@ set_program_and_options:
           options:
             - active_program
             - selected_program
-    program:
-      example: dishcare_dishwasher_program_auto2
-      selector:
-        select:
-          mode: dropdown
-          custom_value: false
-          translation_key: programs
-          options:
-            - consumer_products_cleaning_robot_program_cleaning_clean_all
-            - consumer_products_cleaning_robot_program_cleaning_clean_map
-            - consumer_products_cleaning_robot_program_basic_go_home
-            - consumer_products_coffee_maker_program_beverage_ristretto
-            - consumer_products_coffee_maker_program_beverage_espresso
-            - consumer_products_coffee_maker_program_beverage_espresso_doppio
-            - consumer_products_coffee_maker_program_beverage_coffee
-            - consumer_products_coffee_maker_program_beverage_x_l_coffee
-            - consumer_products_coffee_maker_program_beverage_caffe_grande
-            - consumer_products_coffee_maker_program_beverage_espresso_macchiato
-            - consumer_products_coffee_maker_program_beverage_cappuccino
-            - consumer_products_coffee_maker_program_beverage_latte_macchiato
-            - consumer_products_coffee_maker_program_beverage_caffe_latte
-            - consumer_products_coffee_maker_program_beverage_milk_froth
-            - consumer_products_coffee_maker_program_beverage_warm_milk
-            - consumer_products_coffee_maker_program_coffee_world_kleiner_brauner
-            - consumer_products_coffee_maker_program_coffee_world_grosser_brauner
-            - consumer_products_coffee_maker_program_coffee_world_verlaengerter
-            - consumer_products_coffee_maker_program_coffee_world_verlaengerter_braun
-            - consumer_products_coffee_maker_program_coffee_world_wiener_melange
-            - consumer_products_coffee_maker_program_coffee_world_flat_white
-            - consumer_products_coffee_maker_program_coffee_world_cortado
-            - consumer_products_coffee_maker_program_coffee_world_cafe_cortado
-            - consumer_products_coffee_maker_program_coffee_world_cafe_con_leche
-            - consumer_products_coffee_maker_program_coffee_world_cafe_au_lait
-            - consumer_products_coffee_maker_program_coffee_world_doppio
-            - consumer_products_coffee_maker_program_coffee_world_kaapi
-            - consumer_products_coffee_maker_program_coffee_world_koffie_verkeerd
-            - consumer_products_coffee_maker_program_coffee_world_galao
-            - consumer_products_coffee_maker_program_coffee_world_garoto
-            - consumer_products_coffee_maker_program_coffee_world_americano
-            - consumer_products_coffee_maker_program_coffee_world_red_eye
-            - consumer_products_coffee_maker_program_coffee_world_black_eye
-            - consumer_products_coffee_maker_program_coffee_world_dead_eye
-            - consumer_products_coffee_maker_program_beverage_hot_water
-            - dishcare_dishwasher_program_pre_rinse
-            - dishcare_dishwasher_program_auto_1
-            - dishcare_dishwasher_program_auto_2
-            - dishcare_dishwasher_program_auto_3
-            - dishcare_dishwasher_program_eco_50
-            - dishcare_dishwasher_program_quick_45
-            - dishcare_dishwasher_program_intensiv_70
-            - dishcare_dishwasher_program_normal_65
-            - dishcare_dishwasher_program_glas_40
-            - dishcare_dishwasher_program_glass_care
-            - dishcare_dishwasher_program_night_wash
-            - dishcare_dishwasher_program_quick_65
-            - dishcare_dishwasher_program_normal_45
-            - dishcare_dishwasher_program_intensiv_45
-            - dishcare_dishwasher_program_auto_half_load
-            - dishcare_dishwasher_program_intensiv_power
-            - dishcare_dishwasher_program_magic_daily
-            - dishcare_dishwasher_program_super_60
-            - dishcare_dishwasher_program_kurz_60
-            - dishcare_dishwasher_program_express_sparkle_65
-            - dishcare_dishwasher_program_machine_care
-            - dishcare_dishwasher_program_steam_fresh
-            - dishcare_dishwasher_program_maximum_cleaning
-            - dishcare_dishwasher_program_mixed_load
-            - dishcare_dishwasher_program_learning_dishwasher
-            - laundry_care_dryer_program_cotton
-            - laundry_care_dryer_program_synthetic
-            - laundry_care_dryer_program_mix
-            - laundry_care_dryer_program_blankets
-            - laundry_care_dryer_program_business_shirts
-            - laundry_care_dryer_program_down_feathers
-            - laundry_care_dryer_program_hygiene
-            - laundry_care_dryer_program_jeans
-            - laundry_care_dryer_program_outdoor
-            - laundry_care_dryer_program_synthetic_refresh
-            - laundry_care_dryer_program_towels
-            - laundry_care_dryer_program_delicates
-            - laundry_care_dryer_program_super_40
-            - laundry_care_dryer_program_shirts_15
-            - laundry_care_dryer_program_pillow
-            - laundry_care_dryer_program_anti_shrink
-            - laundry_care_dryer_program_my_time_my_drying_time
-            - laundry_care_dryer_program_time_cold
-            - laundry_care_dryer_program_time_warm
-            - laundry_care_dryer_program_in_basket
-            - laundry_care_dryer_program_time_cold_fix_time_cold_20
-            - laundry_care_dryer_program_time_cold_fix_time_cold_30
-            - laundry_care_dryer_program_time_cold_fix_time_cold_60
-            - laundry_care_dryer_program_time_warm_fix_time_warm_30
-            - laundry_care_dryer_program_time_warm_fix_time_warm_40
-            - laundry_care_dryer_program_time_warm_fix_time_warm_60
-            - laundry_care_dryer_program_dessous
-            - cooking_common_program_hood_automatic
-            - cooking_common_program_hood_venting
-            - cooking_common_program_hood_delayed_shut_off
-            - cooking_oven_program_heating_mode_pre_heating
-            - cooking_oven_program_heating_mode_hot_air
-            - cooking_oven_program_heating_mode_hot_air_eco
-            - cooking_oven_program_heating_mode_hot_air_grilling
-            - cooking_oven_program_heating_mode_top_bottom_heating
-            - cooking_oven_program_heating_mode_top_bottom_heating_eco
-            - cooking_oven_program_heating_mode_bottom_heating
-            - cooking_oven_program_heating_mode_pizza_setting
-            - cooking_oven_program_heating_mode_slow_cook
-            - cooking_oven_program_heating_mode_intensive_heat
-            - cooking_oven_program_heating_mode_keep_warm
-            - cooking_oven_program_heating_mode_preheat_ovenware
-            - cooking_oven_program_heating_mode_frozen_heatup_special
-            - cooking_oven_program_heating_mode_desiccation
-            - cooking_oven_program_heating_mode_defrost
-            - cooking_oven_program_heating_mode_proof
-            - cooking_oven_program_heating_mode_hot_air_30_steam
-            - cooking_oven_program_heating_mode_hot_air_60_steam
-            - cooking_oven_program_heating_mode_hot_air_80_steam
-            - cooking_oven_program_heating_mode_hot_air_100_steam
-            - cooking_oven_program_heating_mode_sabbath_programme
-            - cooking_oven_program_microwave_90_watt
-            - cooking_oven_program_microwave_180_watt
-            - cooking_oven_program_microwave_360_watt
-            - cooking_oven_program_microwave_600_watt
-            - cooking_oven_program_microwave_900_watt
-            - cooking_oven_program_microwave_1000_watt
-            - cooking_oven_program_microwave_max
-            - cooking_oven_program_heating_mode_warming_drawer
-            - laundry_care_washer_program_cotton
-            - laundry_care_washer_program_cotton_cotton_eco
-            - laundry_care_washer_program_cotton_eco_4060
-            - laundry_care_washer_program_cotton_colour
-            - laundry_care_washer_program_easy_care
-            - laundry_care_washer_program_mix
-            - laundry_care_washer_program_mix_night_wash
-            - laundry_care_washer_program_delicates_silk
-            - laundry_care_washer_program_wool
-            - laundry_care_washer_program_sensitive
-            - laundry_care_washer_program_auto_30
-            - laundry_care_washer_program_auto_40
-            - laundry_care_washer_program_auto_60
-            - laundry_care_washer_program_chiffon
-            - laundry_care_washer_program_curtains
-            - laundry_care_washer_program_dark_wash
-            - laundry_care_washer_program_dessous
-            - laundry_care_washer_program_monsoon
-            - laundry_care_washer_program_outdoor
-            - laundry_care_washer_program_plush_toy
-            - laundry_care_washer_program_shirts_blouses
-            - laundry_care_washer_program_sport_fitness
-            - laundry_care_washer_program_towels
-            - laundry_care_washer_program_water_proof
-            - laundry_care_washer_program_power_speed_59
-            - laundry_care_washer_program_super_153045_super_15
-            - laundry_care_washer_program_super_153045_super_1530
-            - laundry_care_washer_program_down_duvet_duvet
-            - laundry_care_washer_program_rinse_rinse_spin_drain
-            - laundry_care_washer_program_drum_clean
-            - laundry_care_washer_dryer_program_cotton
-            - laundry_care_washer_dryer_program_cotton_eco_4060
-            - laundry_care_washer_dryer_program_mix
-            - laundry_care_washer_dryer_program_easy_care
-            - laundry_care_washer_dryer_program_wash_and_dry_60
-            - laundry_care_washer_dryer_program_wash_and_dry_90
-    cleaning_robot_options:
+    cleaning_robot:
       collapsed: true
       fields:
+        program:
+          example: dishcare_dishwasher_program_auto2
+          selector:
+            select:
+              mode: dropdown
+              custom_value: false
+              translation_key: programs
+              options:
+                - consumer_products_cleaning_robot_program_cleaning_clean_all
+                - consumer_products_cleaning_robot_program_cleaning_clean_map
+                - consumer_products_cleaning_robot_program_basic_go_home
         consumer_products_cleaning_robot_option_reference_map_id:
           example: consumer_products_cleaning_robot_enum_type_available_maps_map1
           required: false
@@ -219,9 +67,49 @@ set_program_and_options:
                 - consumer_products_cleaning_robot_enum_type_suction_power_silent
                 - consumer_products_cleaning_robot_enum_type_suction_power_standard
                 - consumer_products_cleaning_robot_enum_type_suction_power_max
-    coffee_maker_options:
+    coffee_maker:
       collapsed: true
       fields:
+        program:
+          example: dishcare_dishwasher_program_auto2
+          selector:
+            select:
+              mode: dropdown
+              custom_value: false
+              translation_key: programs
+              options:
+                - consumer_products_coffee_maker_program_beverage_ristretto
+                - consumer_products_coffee_maker_program_beverage_espresso
+                - consumer_products_coffee_maker_program_beverage_espresso_doppio
+                - consumer_products_coffee_maker_program_beverage_coffee
+                - consumer_products_coffee_maker_program_beverage_x_l_coffee
+                - consumer_products_coffee_maker_program_beverage_caffe_grande
+                - consumer_products_coffee_maker_program_beverage_espresso_macchiato
+                - consumer_products_coffee_maker_program_beverage_cappuccino
+                - consumer_products_coffee_maker_program_beverage_latte_macchiato
+                - consumer_products_coffee_maker_program_beverage_caffe_latte
+                - consumer_products_coffee_maker_program_beverage_milk_froth
+                - consumer_products_coffee_maker_program_beverage_warm_milk
+                - consumer_products_coffee_maker_program_coffee_world_kleiner_brauner
+                - consumer_products_coffee_maker_program_coffee_world_grosser_brauner
+                - consumer_products_coffee_maker_program_coffee_world_verlaengerter
+                - consumer_products_coffee_maker_program_coffee_world_verlaengerter_braun
+                - consumer_products_coffee_maker_program_coffee_world_wiener_melange
+                - consumer_products_coffee_maker_program_coffee_world_flat_white
+                - consumer_products_coffee_maker_program_coffee_world_cortado
+                - consumer_products_coffee_maker_program_coffee_world_cafe_cortado
+                - consumer_products_coffee_maker_program_coffee_world_cafe_con_leche
+                - consumer_products_coffee_maker_program_coffee_world_cafe_au_lait
+                - consumer_products_coffee_maker_program_coffee_world_doppio
+                - consumer_products_coffee_maker_program_coffee_world_kaapi
+                - consumer_products_coffee_maker_program_coffee_world_koffie_verkeerd
+                - consumer_products_coffee_maker_program_coffee_world_galao
+                - consumer_products_coffee_maker_program_coffee_world_garoto
+                - consumer_products_coffee_maker_program_coffee_world_americano
+                - consumer_products_coffee_maker_program_coffee_world_red_eye
+                - consumer_products_coffee_maker_program_coffee_world_black_eye
+                - consumer_products_coffee_maker_program_coffee_world_dead_eye
+                - consumer_products_coffee_maker_program_beverage_hot_water
         consumer_products_coffee_maker_option_bean_amount:
           example: consumer_products_coffee_maker_enum_type_bean_amount_normal
           required: false
@@ -351,9 +239,42 @@ set_program_and_options:
                 - consumer_products_coffee_maker_enum_type_hot_water_temperature_194_f
                 - consumer_products_coffee_maker_enum_type_hot_water_temperature_203_f
                 - consumer_products_coffee_maker_enum_type_hot_water_temperature_max
-    dish_washer_options:
+    dish_washer:
       collapsed: true
       fields:
+        program:
+          example: dishcare_dishwasher_program_auto2
+          selector:
+            select:
+              mode: dropdown
+              custom_value: false
+              translation_key: programs
+              options:
+                - dishcare_dishwasher_program_pre_rinse
+                - dishcare_dishwasher_program_auto_1
+                - dishcare_dishwasher_program_auto_2
+                - dishcare_dishwasher_program_auto_3
+                - dishcare_dishwasher_program_eco_50
+                - dishcare_dishwasher_program_quick_45
+                - dishcare_dishwasher_program_intensiv_70
+                - dishcare_dishwasher_program_normal_65
+                - dishcare_dishwasher_program_glas_40
+                - dishcare_dishwasher_program_glass_care
+                - dishcare_dishwasher_program_night_wash
+                - dishcare_dishwasher_program_quick_65
+                - dishcare_dishwasher_program_normal_45
+                - dishcare_dishwasher_program_intensiv_45
+                - dishcare_dishwasher_program_auto_half_load
+                - dishcare_dishwasher_program_intensiv_power
+                - dishcare_dishwasher_program_magic_daily
+                - dishcare_dishwasher_program_super_60
+                - dishcare_dishwasher_program_kurz_60
+                - dishcare_dishwasher_program_express_sparkle_65
+                - dishcare_dishwasher_program_machine_care
+                - dishcare_dishwasher_program_steam_fresh
+                - dishcare_dishwasher_program_maximum_cleaning
+                - dishcare_dishwasher_program_mixed_load
+                - dishcare_dishwasher_program_learning_dishwasher
         b_s_h_common_option_start_in_relative:
           example: 3600
           required: false
@@ -408,9 +329,44 @@ set_program_and_options:
           required: false
           selector:
             boolean:
-    dryer_options:
+    dryer:
       collapsed: true
       fields:
+        program:
+          example: dishcare_dishwasher_program_auto2
+          selector:
+            select:
+              mode: dropdown
+              custom_value: false
+              translation_key: programs
+              options:
+                - laundry_care_dryer_program_cotton
+                - laundry_care_dryer_program_synthetic
+                - laundry_care_dryer_program_mix
+                - laundry_care_dryer_program_blankets
+                - laundry_care_dryer_program_business_shirts
+                - laundry_care_dryer_program_down_feathers
+                - laundry_care_dryer_program_hygiene
+                - laundry_care_dryer_program_jeans
+                - laundry_care_dryer_program_outdoor
+                - laundry_care_dryer_program_synthetic_refresh
+                - laundry_care_dryer_program_towels
+                - laundry_care_dryer_program_delicates
+                - laundry_care_dryer_program_super_40
+                - laundry_care_dryer_program_shirts_15
+                - laundry_care_dryer_program_pillow
+                - laundry_care_dryer_program_anti_shrink
+                - laundry_care_dryer_program_my_time_my_drying_time
+                - laundry_care_dryer_program_time_cold
+                - laundry_care_dryer_program_time_warm
+                - laundry_care_dryer_program_in_basket
+                - laundry_care_dryer_program_time_cold_fix_time_cold_20
+                - laundry_care_dryer_program_time_cold_fix_time_cold_30
+                - laundry_care_dryer_program_time_cold_fix_time_cold_60
+                - laundry_care_dryer_program_time_warm_fix_time_warm_30
+                - laundry_care_dryer_program_time_warm_fix_time_warm_40
+                - laundry_care_dryer_program_time_warm_fix_time_warm_60
+                - laundry_care_dryer_program_dessous
         laundry_care_dryer_option_drying_target:
           example: laundry_care_dryer_enum_type_drying_target_iron_dry
           required: false
@@ -424,9 +380,20 @@ set_program_and_options:
                 - laundry_care_dryer_enum_type_drying_target_cupboard_dry
                 - laundry_care_dryer_enum_type_drying_target_cupboard_dry_plus
                 - laundry_care_dryer_enum_type_drying_target_extra_dry
-    hood_options:
+    hood:
       collapsed: true
       fields:
+        program:
+          example: dishcare_dishwasher_program_auto2
+          selector:
+            select:
+              mode: dropdown
+              custom_value: false
+              translation_key: programs
+              options:
+                - cooking_common_program_hood_automatic
+                - cooking_common_program_hood_venting
+                - cooking_common_program_hood_delayed_shut_off
         cooking_hood_option_venting_level:
           example: cooking_hood_enum_type_stage_fan_stage01
           required: false
@@ -452,9 +419,45 @@ set_program_and_options:
                 - cooking_hood_enum_type_intensive_stage_intensive_stage_off
                 - cooking_hood_enum_type_intensive_stage_intensive_stage1
                 - cooking_hood_enum_type_intensive_stage_intensive_stage2
-    oven_options:
+    oven:
       collapsed: true
       fields:
+        program:
+          example: dishcare_dishwasher_program_auto2
+          selector:
+            select:
+              mode: dropdown
+              custom_value: false
+              translation_key: programs
+              options:
+                - cooking_oven_program_heating_mode_pre_heating
+                - cooking_oven_program_heating_mode_hot_air
+                - cooking_oven_program_heating_mode_hot_air_eco
+                - cooking_oven_program_heating_mode_hot_air_grilling
+                - cooking_oven_program_heating_mode_top_bottom_heating
+                - cooking_oven_program_heating_mode_top_bottom_heating_eco
+                - cooking_oven_program_heating_mode_bottom_heating
+                - cooking_oven_program_heating_mode_pizza_setting
+                - cooking_oven_program_heating_mode_slow_cook
+                - cooking_oven_program_heating_mode_intensive_heat
+                - cooking_oven_program_heating_mode_keep_warm
+                - cooking_oven_program_heating_mode_preheat_ovenware
+                - cooking_oven_program_heating_mode_frozen_heatup_special
+                - cooking_oven_program_heating_mode_desiccation
+                - cooking_oven_program_heating_mode_defrost
+                - cooking_oven_program_heating_mode_proof
+                - cooking_oven_program_heating_mode_hot_air_30_steam
+                - cooking_oven_program_heating_mode_hot_air_60_steam
+                - cooking_oven_program_heating_mode_hot_air_80_steam
+                - cooking_oven_program_heating_mode_hot_air_100_steam
+                - cooking_oven_program_heating_mode_sabbath_programme
+                - cooking_oven_program_microwave_90_watt
+                - cooking_oven_program_microwave_180_watt
+                - cooking_oven_program_microwave_360_watt
+                - cooking_oven_program_microwave_600_watt
+                - cooking_oven_program_microwave_900_watt
+                - cooking_oven_program_microwave_1000_watt
+                - cooking_oven_program_microwave_max
         cooking_oven_option_setpoint_temperature:
           example: 180
           required: false
@@ -478,9 +481,18 @@ set_program_and_options:
           required: false
           selector:
             boolean:
-    warming_drawer_options:
+    warming_drawer:
       collapsed: true
       fields:
+        program:
+          example: dishcare_dishwasher_program_auto2
+          selector:
+            select:
+              mode: dropdown
+              custom_value: false
+              translation_key: programs
+              options:
+                - cooking_oven_program_heating_mode_warming_drawer
         cooking_oven_option_warming_level:
           example: cooking_oven_enum_type_warming_level_medium
           required: false
@@ -492,9 +504,53 @@ set_program_and_options:
                 - cooking_oven_enum_type_warming_level_low
                 - cooking_oven_enum_type_warming_level_medium
                 - cooking_oven_enum_type_warming_level_high
-    washer_options:
+    washer:
       collapsed: true
       fields:
+        program:
+          example: dishcare_dishwasher_program_auto2
+          selector:
+            select:
+              mode: dropdown
+              custom_value: false
+              translation_key: programs
+              options:
+                - laundry_care_washer_program_cotton
+                - laundry_care_washer_program_cotton_cotton_eco
+                - laundry_care_washer_program_cotton_eco_4060
+                - laundry_care_washer_program_cotton_colour
+                - laundry_care_washer_program_easy_care
+                - laundry_care_washer_program_mix
+                - laundry_care_washer_program_mix_night_wash
+                - laundry_care_washer_program_delicates_silk
+                - laundry_care_washer_program_wool
+                - laundry_care_washer_program_sensitive
+                - laundry_care_washer_program_auto_30
+                - laundry_care_washer_program_auto_40
+                - laundry_care_washer_program_auto_60
+                - laundry_care_washer_program_chiffon
+                - laundry_care_washer_program_curtains
+                - laundry_care_washer_program_dark_wash
+                - laundry_care_washer_program_dessous
+                - laundry_care_washer_program_monsoon
+                - laundry_care_washer_program_outdoor
+                - laundry_care_washer_program_plush_toy
+                - laundry_care_washer_program_shirts_blouses
+                - laundry_care_washer_program_sport_fitness
+                - laundry_care_washer_program_towels
+                - laundry_care_washer_program_water_proof
+                - laundry_care_washer_program_power_speed_59
+                - laundry_care_washer_program_super_153045_super_15
+                - laundry_care_washer_program_super_153045_super_1530
+                - laundry_care_washer_program_down_duvet_duvet
+                - laundry_care_washer_program_rinse_rinse_spin_drain
+                - laundry_care_washer_program_drum_clean
+                - laundry_care_washer_dryer_program_cotton
+                - laundry_care_washer_dryer_program_cotton_eco_4060
+                - laundry_care_washer_dryer_program_mix
+                - laundry_care_washer_dryer_program_easy_care
+                - laundry_care_washer_dryer_program_wash_and_dry_60
+                - laundry_care_washer_dryer_program_wash_and_dry_90
         laundry_care_washer_option_temperature:
           example: laundry_care_washer_enum_type_temperature_g_c_40
           required: false
