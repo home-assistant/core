@@ -52,15 +52,10 @@ class OpenRGBProfileSelect(CoordinatorEntity[OpenRGBCoordinator], SelectEntity):
         self._update_attrs()
 
     def _compute_state_hash(self) -> int:
-        """Compute a hash of device states (modes and all LED colors)."""
-        state_data = tuple(
-            (
-                device.active_mode,
-                tuple((color.red, color.green, color.blue) for color in device.colors),
-            )
-            for device in self.coordinator.client.devices
+        """Compute a hash of device states."""
+        return hash(
+            "\n".join(str(device.data) for device in self.coordinator.client.devices)
         )
-        return hash(state_data)
 
     @callback
     def _update_attrs(self) -> None:

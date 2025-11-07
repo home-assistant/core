@@ -66,6 +66,11 @@ def mock_openrgb_device() -> MagicMock:
     device = MagicMock(spec=device_obj)
     device.configure_mock(**vars(device_obj))
 
+    # Used by select entity to track state changes
+    type(device).data = property(
+        lambda self: {attr: getattr(self, attr) for attr in vars(device_obj)}
+    )
+
     # Methods
     device.set_color = MagicMock()
     device.set_mode = MagicMock()
