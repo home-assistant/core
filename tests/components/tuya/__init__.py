@@ -173,6 +173,7 @@ DEVICE_MOCKS = [
     "mcs_oxslv1c9",  # https://github.com/home-assistant/core/issues/139966
     "mcs_qxu3flpqjsc1kqu3",  #  https://github.com/home-assistant/core/issues/141278
     "msp_3ddulzljdjjwkhoy",  # https://github.com/orgs/home-assistant/discussions/262
+    "msp_mzuro9jgjs7uiryn",  # Poopy Nano 2 support
     "mzj_jlapoy5liocmtdvd",  # https://github.com/home-assistant/core/issues/150662
     "mzj_qavcakohisj5adyh",  # https://github.com/home-assistant/core/issues/141278
     "ntq_9mqdhwklpvnnvb7t",  # https://github.com/orgs/home-assistant/discussions/517

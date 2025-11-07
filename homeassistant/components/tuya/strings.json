@@ -80,8 +80,8 @@
       }
     },
     "button": {
-      "bag_change_mode": {
-        "name": "Change bag"
+      "change_litter_bag": {
+        "name": "Change litter bag"
       },
       "empty": {
         "name": "Empty"
@@ -313,7 +313,7 @@
       "brightness": {
         "name": "Brightness"
       },
-      "choose_cat_litter": {
+      "cat_litter_type": {
         "name": "Cat litter type",
         "state": {
           "mineral_cat_litter": "Mineral (Bentonite)",
@@ -636,14 +636,14 @@
       "cat_litter_box_status": {
         "name": "[%key:component::tuya::entity::sensor::status::name%]",
         "state": {
-          "clean": "Clean",
+          "clean": "Cleaning",
           "clock": "Clock",
-          "empty": "[%key:common::state::empty%]",
-          "level": "Level",
-          "sleep": "Sleep",
+          "empty": "Emptying",
+          "level": "Leveling",
+          "sleep": "Sleeping",
           "standby": "[%key:common::state::standby%]",
           "standly": "[%key:common::state::standby%]",
-          "uv": "UV"
+          "uv": "Sanitizing"
         }
       },
       "cat_weight": {
@@ -992,9 +992,6 @@
       },
       "ionizer": {
         "name": "Ionizer"
-      },
-      "light": {
-        "name": "Light"
       },
       "motion_alarm": {
         "name": "Motion alarm"

@@ -177,7 +177,7 @@ SELECTS: dict[DeviceCategory, tuple[SelectEntityDescription, ...]] = {
     DeviceCategory.MSP: (
         SelectEntityDescription(
             key=DPCode.CHOOSE_CAT_LITTER,
-            translation_key="choose_cat_litter",
+            translation_key="cat_litter_type",
             entity_category=EntityCategory.CONFIG,
         ),
     ),

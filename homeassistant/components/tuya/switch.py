@@ -544,11 +544,6 @@ SWITCHES: dict[DeviceCategory, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
         SwitchEntityDescription(
-            key=DPCode.LIGHT,
-            translation_key="light",
-            entity_category=EntityCategory.CONFIG,
-        ),
-        SwitchEntityDescription(
             key=DPCode.THIN_FECES,
             translation_key="thin_feces",
             entity_category=EntityCategory.CONFIG,

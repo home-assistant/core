@@ -241,7 +241,6 @@ BINARY_SENSORS: dict[DeviceCategory, tuple[TuyaBinarySensorEntityDescription, ..
         ),
         TuyaBinarySensorEntityDescription(
             key=DPCode.MONITORING,
-            dpcode=DPCode.MONITORING,
             device_class=BinarySensorDeviceClass.PRESENCE,
             entity_category=EntityCategory.DIAGNOSTIC,
             translation_key="monitoring",
