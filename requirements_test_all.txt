@@ -1962,7 +1962,7 @@ pyrate-limiter==3.9.0
 pyrisco==0.6.7
 
 # homeassistant.components.rituals_perfume_genie
-pyrituals==0.0.6
+pyrituals==0.0.7
 
 # homeassistant.components.thread
 pyroute2==0.7.5
