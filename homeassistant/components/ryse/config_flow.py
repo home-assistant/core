@@ -18,7 +18,6 @@ _LOGGER = logging.getLogger(__name__)
 class RyseBLEDeviceConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle config flow for RYSE BLE Device."""
 
-    VERSION = 1
 
     def __init__(self) -> None:
         """Initialize flow attributes."""
