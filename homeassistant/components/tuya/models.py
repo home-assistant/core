@@ -65,7 +65,7 @@ def find_dpcode(
                 (current_definition := device_specs.get(dpcode))
                 and current_definition.type == dptype
                 and (
-                    type_data := type_data_cls.try_parse(
+                    type_data := type_data_cls.from_json(
                         dpcode, current_definition.values
                     )
                 )
@@ -77,17 +77,17 @@ def find_dpcode(
 
 @dataclass
 class TypeData:
-    """Type data."""
+    """Type Data."""
 
     @classmethod
-    def try_parse(cls, dpcode: DPCode, definition: str) -> Self | None:
+    def from_json(cls, dpcode: DPCode, data: str) -> Self | None:
         """Load JSON string and return a TypeData object."""
-        raise NotImplementedError("try_parse is not implemented for this type")
+        raise NotImplementedError("from_json is not implemented for this type")
 
 
 @dataclass
 class IntegerTypeData(TypeData):
-    """Integer type data."""
+    """Integer Type Data."""
 
     dpcode: DPCode
     min: int
@@ -141,9 +141,9 @@ class IntegerTypeData(TypeData):
         return remap_value(value, from_min, from_max, self.min, self.max, reverse)
 
     @classmethod
-    def try_parse(cls, dpcode: DPCode, definition: str) -> Self | None:
+    def from_json(cls, dpcode: DPCode, data: str) -> IntegerTypeData | None:
         """Load JSON string and return a IntegerTypeData object."""
-        if not (parsed := json.loads(definition)):
+        if not (parsed := json.loads(data)):
             return None
 
         return cls(
@@ -165,9 +165,9 @@ class EnumTypeData(TypeData):
     range: list[str]
 
     @classmethod
-    def try_parse(cls, dpcode: DPCode, definition: str) -> Self | None:
+    def from_json(cls, dpcode: DPCode, data: str) -> EnumTypeData | None:
         """Load JSON string and return a EnumTypeData object."""
-        if not (parsed := json.loads(definition)):
+        if not (parsed := json.loads(data)):
             return None
         return cls(dpcode, **parsed)
 
