@@ -790,10 +790,6 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
                     timestamp=timestamp,
                 )
 
-                # await self._client.write_event(audio_chunk.event())
-                # timestamp += audio_chunk.milliseconds
-                # total_seconds += audio_chunk.seconds
-
                 data_chunk_idx = 0
                 while data_chunk_idx < len(data_chunk):
                     audio_chunk = AudioChunk(
