@@ -196,6 +196,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/azure_service_bus/ @hfurubotten
 /homeassistant/components/azure_storage/ @zweckj
 /tests/components/azure_storage/ @zweckj
+/homeassistant/components/backblaze_b2/ @hugo-vrijswijk @ElCruncharino
+/tests/components/backblaze_b2/ @hugo-vrijswijk @ElCruncharino
 /homeassistant/components/backup/ @home-assistant/core
 /tests/components/backup/ @home-assistant/core
 /homeassistant/components/baf/ @bdraco @jfroy
@@ -316,8 +318,6 @@ build.json @home-assistant/supervisor
 /tests/components/cpuspeed/ @fabaff
 /homeassistant/components/crownstone/ @Crownstone @RicArch97
 /tests/components/crownstone/ @Crownstone @RicArch97
-/homeassistant/components/cups/ @fabaff
-/tests/components/cups/ @fabaff
 /homeassistant/components/cync/ @Kinachi249
 /tests/components/cync/ @Kinachi249
 /homeassistant/components/daikin/ @fredrike
@@ -510,8 +510,6 @@ build.json @home-assistant/supervisor
 /tests/components/fjaraskupan/ @elupus
 /homeassistant/components/flexit_bacnet/ @lellky @piotrbulinski
 /tests/components/flexit_bacnet/ @lellky @piotrbulinski
-/homeassistant/components/flick_electric/ @ZephireNZ
-/tests/components/flick_electric/ @ZephireNZ
 /homeassistant/components/flipr/ @cnico
 /tests/components/flipr/ @cnico
 /homeassistant/components/flo/ @dmulcahey
@@ -1481,8 +1479,6 @@ build.json @home-assistant/supervisor
 /tests/components/smhi/ @gjohansson-ST
 /homeassistant/components/smlight/ @tl-sl
 /tests/components/smlight/ @tl-sl
-/homeassistant/components/sms/ @ocalvo
-/tests/components/sms/ @ocalvo
 /homeassistant/components/snapcast/ @luar123
 /tests/components/snapcast/ @luar123
 /homeassistant/components/snmp/ @nmaggioni
@@ -1545,6 +1541,8 @@ build.json @home-assistant/supervisor
 /tests/components/suez_water/ @ooii @jb101010-2
 /homeassistant/components/sun/ @home-assistant/core
 /tests/components/sun/ @home-assistant/core
+/homeassistant/components/sunricher_dali/ @niracler
+/tests/components/sunricher_dali/ @niracler
 /homeassistant/components/supla/ @mwegrzynek
 /homeassistant/components/surepetcare/ @benleb @danielhiversen
 /tests/components/surepetcare/ @benleb @danielhiversen
@@ -1721,8 +1719,8 @@ build.json @home-assistant/supervisor
 /tests/components/vallox/ @andre-richter @slovdahl @viiru- @yozik04
 /homeassistant/components/valve/ @home-assistant/core
 /tests/components/valve/ @home-assistant/core
-/homeassistant/components/vegehub/ @ghowevege
-/tests/components/vegehub/ @ghowevege
+/homeassistant/components/vegehub/ @thulrus
+/tests/components/vegehub/ @thulrus
 /homeassistant/components/velbus/ @Cereal2nd @brefra
 /tests/components/velbus/ @Cereal2nd @brefra
 /homeassistant/components/velux/ @Julius2342 @DeerMaximum @pawlizio @wollew
@@ -1821,8 +1819,8 @@ build.json @home-assistant/supervisor
 /tests/components/ws66i/ @ssaenger
 /homeassistant/components/wyoming/ @synesthesiam
 /tests/components/wyoming/ @synesthesiam
-/homeassistant/components/xbox/ @hunterjm
-/tests/components/xbox/ @hunterjm
+/homeassistant/components/xbox/ @hunterjm @tr4nt0r
+/tests/components/xbox/ @hunterjm @tr4nt0r
 /homeassistant/components/xiaomi_aqara/ @danielhiversen @syssi
 /tests/components/xiaomi_aqara/ @danielhiversen @syssi
 /homeassistant/components/xiaomi_ble/ @Jc2k @Ernst79
