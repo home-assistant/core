@@ -522,6 +522,13 @@ SWITCHES: dict[DeviceCategory, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    DeviceCategory.MSP: (
+        SwitchEntityDescription(
+            key=DPCode.AUTO_CLEAN,
+            translation_key="auto_clean",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     DeviceCategory.MZJ: (
         SwitchEntityDescription(
             key=DPCode.SWITCH,
