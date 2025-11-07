@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Mapping
 from functools import partial
+import logging
 from typing import Any
 
 from devolo_home_control_api.exceptions.gateway import GatewayOfflineError
@@ -21,6 +22,8 @@ from homeassistant.helpers.device_registry import DeviceEntry
 from .const import DOMAIN, PLATFORMS
 
 type DevoloHomeControlConfigEntry = ConfigEntry[list[HomeControl]]
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -61,6 +64,7 @@ async def async_setup_entry(
             )
         except GatewayOfflineError:
             offline_gateways += 1
+            _LOGGER.info("Central unit %s cannot be reached locally", gateway_id)
     if len(gateway_ids) == offline_gateways:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
