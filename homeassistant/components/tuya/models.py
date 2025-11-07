@@ -6,7 +6,7 @@ import base64
 from dataclasses import dataclass
 import json
 import struct
-from typing import Any, Literal, Self, overload
+from typing import Literal, Self, overload
 
 from tuya_sharing import CustomerDevice
 
@@ -40,7 +40,7 @@ def find_dpcode(
     *,
     prefer_function: bool = False,
     dptype: DPType,
-) -> EnumTypeData | IntegerTypeData | None:
+) -> TypeData | None:
     """Find type information for a matching DP code available for this device."""
     if dptype not in (DPType.ENUM, DPType.INTEGER):
         raise NotImplementedError("Only ENUM and INTEGER types are supported")
@@ -61,22 +61,33 @@ def find_dpcode(
 
     for dpcode in dpcodes:
         for device_specs in lookup_tuple:
-            if not (
+            if (
                 (current_definition := device_specs.get(dpcode))
                 and current_definition.type == dptype
-                and (parsed := json.loads(current_definition.values))
+                and (
+                    type_data := _TYPE_DATA_MAPPINGS[dptype].from_definition(
+                        dpcode, current_definition.values
+                    )
+                )
             ):
-                continue
-            if dptype is DPType.ENUM:
-                return EnumTypeData.from_parsed(dpcode, parsed)
-            if dptype is DPType.INTEGER:
-                return IntegerTypeData.from_parsed(dpcode, parsed)
+                return type_data
+
     return None
 
 
 @dataclass
-class IntegerTypeData:
-    """Integer Type Data."""
+class TypeData:
+    """Type data."""
+
+    @classmethod
+    def from_definition(cls, dpcode: DPCode, definition: str) -> Self | None:
+        """Load JSON string and return a EnumTypeData object."""
+        raise NotImplementedError("from_definition is not implemented for this type")
+
+
+@dataclass
+class IntegerTypeData(TypeData):
+    """Integer type data."""
 
     dpcode: DPCode
     min: int
@@ -130,8 +141,11 @@ class IntegerTypeData:
         return remap_value(value, from_min, from_max, self.min, self.max, reverse)
 
     @classmethod
-    def from_parsed(cls, dpcode: DPCode, parsed: dict[str, Any]) -> Self | None:
+    def from_definition(cls, dpcode: DPCode, definition: str) -> Self | None:
         """Load JSON string and return a IntegerTypeData object."""
+        if not (parsed := json.loads(definition)):
+            return None
+
         return cls(
             dpcode,
             min=int(parsed["min"]),
@@ -144,19 +158,24 @@ class IntegerTypeData:
 
 
 @dataclass
-class EnumTypeData:
+class EnumTypeData(TypeData):
     """Enum Type Data."""
 
     dpcode: DPCode
     range: list[str]
 
     @classmethod
-    def from_parsed(cls, dpcode: DPCode, parsed: dict[str, Any]) -> Self | None:
+    def from_definition(cls, dpcode: DPCode, definition: str) -> Self | None:
         """Load JSON string and return a EnumTypeData object."""
-        return cls(
-            dpcode,
-            parsed["range"],
-        )
+        if not (parsed := json.loads(definition)):
+            return None
+        return cls(dpcode, **parsed)
+
+
+_TYPE_DATA_MAPPINGS: dict[DPType, type[TypeData]] = {
+    DPType.ENUM: EnumTypeData,
+    DPType.INTEGER: IntegerTypeData,
+}
 
 
 class ComplexValue:
