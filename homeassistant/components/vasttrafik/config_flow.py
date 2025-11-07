@@ -119,7 +119,7 @@ async def validate_api_credentials(
             return {"base": "invalid_auth"}
         return {"base": "cannot_connect"}
     except Exception as err:  # noqa: BLE001
-        _LOGGER.error("Unexpected error validating Västtrafik credentials: %s", err)
+        _LOGGER.exception("Unexpected error validating Västtrafik credentials: %s", err)
         return {"base": "unknown"}
 
     return None
