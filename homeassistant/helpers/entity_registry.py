@@ -1269,6 +1269,9 @@ class EntityRegistry(BaseRegistry):
         new_values: dict[str, Any] = {}  # Dict with new key/value pairs
         old_values: dict[str, Any] = {}  # Dict with old key/value pairs
 
+        if aliases is not UNDEFINED:
+            aliases = {s.strip() for s in aliases if s.strip()}
+
         for attr_name, value in (
             ("aliases", aliases),
             ("area_id", area_id),
@@ -1409,6 +1412,10 @@ class EntityRegistry(BaseRegistry):
         unit_of_measurement: str | None | UndefinedType = UNDEFINED,
     ) -> RegistryEntry:
         """Update properties of an entity."""
+
+        if aliases is not UNDEFINED:
+            aliases = {s.strip() for s in aliases if s.strip()}
+
         return self._async_update_entity(
             entity_id,
             aliases=aliases,
