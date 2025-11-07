@@ -23,10 +23,9 @@ from .const import (
     TUYA_DISCOVERY_NEW,
     DeviceCategory,
     DPCode,
-    DPType,
 )
 from .entity import TuyaEntity
-from .models import DPCodeIntegerWrapper, IntegerTypeData, find_dpcode
+from .models import DPCodeIntegerWrapper, IntegerTypeData
 
 NUMBERS: dict[DeviceCategory, tuple[NumberEntityDescription, ...]] = {
     DeviceCategory.BH: (
@@ -455,21 +454,11 @@ async def async_setup_entry(
             device = manager.device_map[device_id]
             if descriptions := NUMBERS.get(device.category):
                 entities.extend(
-                    TuyaNumberEntity(
-                        device,
-                        manager,
-                        description,
-                        DPCodeIntegerWrapper(
-                            dpcode=int_type.dpcode, integer_type_information=int_type
-                        ),
-                    )
+                    TuyaNumberEntity(device, manager, description, dpcode_wrapper)
                     for description in descriptions
                     if (
-                        int_type := find_dpcode(
-                            device,
-                            description.key,
-                            dptype=DPType.INTEGER,
-                            prefer_function=True,
+                        dpcode_wrapper := DPCodeIntegerWrapper.find_dpcode(
+                            device, description.key, prefer_function=True
                         )
                     )
                 )

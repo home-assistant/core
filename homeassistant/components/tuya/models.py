@@ -204,6 +204,21 @@ class DPCodeIntegerWrapper(DPCodeWrapper):
             return None
         return self.type_information.scale_value(raw_value)
 
+    @classmethod
+    def find_dpcode(
+        cls,
+        device: CustomerDevice,
+        dpcodes: str | DPCode | tuple[DPCode, ...],
+        *,
+        prefer_function: bool = False,
+    ) -> Self | None:
+        """Find and return a DPCodeIntegerWrapper for the given DP codes."""
+        if int_type := find_dpcode(
+            device, dpcodes, dptype=DPType.INTEGER, prefer_function=prefer_function
+        ):
+            return cls(dpcode=int_type.dpcode, integer_type_information=int_type)
+        return None
+
 
 @overload
 def find_dpcode(
