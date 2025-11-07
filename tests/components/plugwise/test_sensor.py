@@ -95,6 +95,19 @@ async def test_anna_sensor_snapshot(
     await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)
 
 
+@pytest.mark.parametrize("platforms", [(SENSOR_DOMAIN,)])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_anna_p1_sensor_snapshot(
+    hass: HomeAssistant,
+    mock_smile_anna_p1: MagicMock,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    setup_platform: MockConfigEntry,
+) -> None:
+    """Test Anna P1 sensor snapshot."""
+    await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)
+
+
 @pytest.mark.parametrize("chosen_env", ["p1v4_442_single"], indirect=True)
 @pytest.mark.parametrize(
     "gateway_id", ["a455b61e52394b2db5081ce025a430f3"], indirect=True
