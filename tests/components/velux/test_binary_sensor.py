@@ -16,7 +16,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-@pytest.mark.usefixtures("mock_module")
+@pytest.mark.usefixtures("mock_pyvlx")
 async def test_rain_sensor_state(
     hass: HomeAssistant,
     mock_window: MagicMock,
@@ -39,16 +39,30 @@ async def test_rain_sensor_state(
     assert state is not None
     assert state.state == STATE_OFF
 
-    # simulate rain detected
+    # simulate rain detected (Velux GPU reports 100)
+    mock_window.get_limitation.return_value.min_value = 100
+    await update_polled_entities(hass, freezer)
+    state = hass.states.get(test_entity_id)
+    assert state is not None
+    assert state.state == STATE_ON
+
+    # simulate rain detected (other Velux models report 93)
     mock_window.get_limitation.return_value.min_value = 93
     await update_polled_entities(hass, freezer)
     state = hass.states.get(test_entity_id)
     assert state is not None
     assert state.state == STATE_ON
 
+    # simulate no rain detected again
+    mock_window.get_limitation.return_value.min_value = 95
+    await update_polled_entities(hass, freezer)
+    state = hass.states.get(test_entity_id)
+    assert state is not None
+    assert state.state == STATE_OFF
+
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-@pytest.mark.usefixtures("mock_module")
+@pytest.mark.usefixtures("mock_pyvlx")
 async def test_rain_sensor_device_association(
     hass: HomeAssistant,
     mock_window: MagicMock,
