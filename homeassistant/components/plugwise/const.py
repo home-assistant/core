@@ -30,7 +30,7 @@ SMILE_THERMO: Final = "smile_thermo"
 STRETCH: Final = "stretch"
 STRETCH_USERNAME: Final = "stretch"
 TITLE_PLACEHOLDERS: Final = "title_placeholders"
-UNKNOWN_SMILE : Final = "Unknown Smile"
+UNKNOWN_SMILE: Final = "Unknown Smile"
 
 PLATFORMS: Final[list[str]] = [
     Platform.BINARY_SENSOR,
