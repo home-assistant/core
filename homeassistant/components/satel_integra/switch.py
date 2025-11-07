@@ -69,7 +69,6 @@ class SatelIntegraSwitch(SwitchEntity):
         """Initialize the switch."""
         self._device_number = device_number
         self._attr_unique_id = f"{config_entry_id}_switch_{device_number}"
-        self._state = False
         self._code = code
         self._satel = controller
 
@@ -77,7 +76,7 @@ class SatelIntegraSwitch(SwitchEntity):
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
-        self._state = self._device_number in self._satel.violated_outputs
+        self._attr_is_on = self._device_number in self._satel.violated_outputs
 
         self.async_on_remove(
             async_dispatcher_connect(
@@ -90,23 +89,18 @@ class SatelIntegraSwitch(SwitchEntity):
         """Update switch state, if needed."""
         if self._device_number in outputs:
             new_state = outputs[self._device_number] == 1
-            if new_state != self._state:
-                self._state = new_state
+            if new_state != self._attr_is_on:
+                self._attr_is_on = new_state
                 self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self._satel.set_output(self._code, self._device_number, True)
-        self._state = True
+        self._attr_is_on = True
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self._satel.set_output(self._code, self._device_number, False)
-        self._state = False
+        self._attr_is_on = False
         self.async_write_ha_state()
-
-    @property
-    def is_on(self) -> bool | None:
-        """Return true if device is on."""
-        return self._state
