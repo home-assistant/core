@@ -37,6 +37,7 @@ from . import (
     MOCK_PARTITION_SUBENTRY,
     MOCK_SWITCHABLE_OUTPUT_SUBENTRY,
     MOCK_ZONE_SUBENTRY,
+    setup_integration,
 )
 
 from tests.common import MockConfigEntry
@@ -202,10 +203,7 @@ async def test_options_flow(
     """Test general options flow."""
 
     entry = MockConfigEntry(domain=DOMAIN)
-    entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, entry)
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
@@ -237,10 +235,7 @@ async def test_subentry_creation(
     subentry: ConfigSubentry,
 ) -> None:
     """Test partitions options flow."""
-    mock_config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry)
 
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, subentry.subentry_type),
@@ -311,13 +306,7 @@ async def test_subentry_reconfigure(
     number_property: str,
 ) -> None:
     """Test subentry reconfiguration."""
-
-    mock_config_entry_with_subentries.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(
-        mock_config_entry_with_subentries.entry_id
-    )
-    await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry_with_subentries)
 
     result = await hass.config_entries.subentries.async_init(
         (
@@ -371,13 +360,7 @@ async def test_cannot_create_same_subentry(
     error_field: str,
 ) -> None:
     """Test subentry reconfiguration."""
-    mock_config_entry_with_subentries.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(
-        mock_config_entry_with_subentries.entry_id
-    )
-    await hass.async_block_till_done()
-
+    await setup_integration(hass, mock_config_entry_with_subentries)
     mock_setup_entry.reset_mock()
 
     result = await hass.config_entries.subentries.async_init(

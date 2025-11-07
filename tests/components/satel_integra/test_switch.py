@@ -16,7 +16,7 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from . import MOCK_CODE, MOCK_ENTRY_ID
+from . import MOCK_CODE, MOCK_ENTRY_ID, setup_integration
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -29,14 +29,6 @@ async def switches_only() -> AsyncGenerator[None]:
         [Platform.SWITCH],
     ):
         yield
-
-
-async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry):
-    """Set up the component."""
-    config_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
 
 
 @pytest.mark.usefixtures("mock_satel")
