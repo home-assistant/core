@@ -9,15 +9,15 @@ from homeassistant.components.octoprint.const import (
     DOMAIN,
     SERVICE_CONNECT,
 )
-from homeassistant.const import ATTR_DEVICE_ID, CONF_PORT, CONF_PROFILE_NAME
+from homeassistant.const import ATTR_DEVICE_ID, CONF_PORT, CONF_PROFILE_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 
 @pytest.fixture
-def platform() -> str:
+def platform() -> Platform:
     """Fixture to specify platform."""
-    return "sensor"
+    return Platform.SENSOR
 
 
 @pytest.mark.usefixtures("init_integration")

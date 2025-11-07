@@ -2,15 +2,15 @@
 
 import pytest
 
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 
 @pytest.fixture
-def platform() -> str:
+def platform() -> Platform:
     """Fixture to specify platform."""
-    return "binary_sensor"
+    return Platform.BINARY_SENSOR
 
 
 @pytest.mark.parametrize(

@@ -2,15 +2,15 @@
 
 import pytest
 
-from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 
 @pytest.fixture
-def platform() -> str:
+def platform() -> Platform:
     """Fixture to specify platform."""
-    return CAMERA_DOMAIN
+    return Platform.CAMERA
 
 
 @pytest.mark.parametrize(

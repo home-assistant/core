@@ -9,14 +9,14 @@ from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRE
 from homeassistant.components.octoprint import OctoprintDataUpdateCoordinator
 from homeassistant.components.octoprint.button import InvalidPrinterState
 from homeassistant.components.octoprint.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 
 
 @pytest.fixture
-def platform() -> str:
+def platform() -> Platform:
     """Fixture to specify platform."""
-    return BUTTON_DOMAIN
+    return Platform.BUTTON
 
 
 @pytest.mark.usefixtures("init_integration")

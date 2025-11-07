@@ -12,7 +12,7 @@ from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -20,9 +20,9 @@ from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture
-def platform() -> str:
+def platform() -> Platform:
     """Fixture to specify platform."""
-    return NUMBER_DOMAIN
+    return Platform.NUMBER
 
 
 @pytest.fixture

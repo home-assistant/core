@@ -5,7 +5,12 @@ from typing import Any
 
 import pytest
 
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, UnitOfInformation
+from homeassistant.const import (
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+    UnitOfInformation,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -13,9 +18,9 @@ from . import DEFAULT_JOB
 
 
 @pytest.fixture
-def platform() -> str:
+def platform() -> Platform:
     """Fixture to specify platform."""
-    return "sensor"
+    return Platform.SENSOR
 
 
 @pytest.fixture
