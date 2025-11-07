@@ -12,6 +12,7 @@ DOMAIN: Final = "plugwise"
 
 LOGGER = logging.getLogger(__package__)
 
+ANNA_WITH_ADAM: Final = "adam_with_anna"
 API: Final = "api"
 AVAILABLE: Final = "available"
 DEV_CLASS: Final = "dev_class"
@@ -24,8 +25,11 @@ PW_TYPE: Final = "plugwise_type"
 PLUGWISE: Final = "Plugwise"
 REBOOT: Final = "reboot"
 SMILE: Final = "smile"
+SMILE_OPEN_THERM: Final = "smile_open_therm"
+SMILE_THERMO: Final = "smile_thermo"
 STRETCH: Final = "stretch"
 STRETCH_USERNAME: Final = "stretch"
+TITLE_PLACEHOLDERS: Final = "title_placeholders"
 UNKNOWN_SMILE : Final = "Unknown Smile"
 
 PLATFORMS: Final[list[str]] = [
