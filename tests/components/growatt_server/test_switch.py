@@ -17,7 +17,6 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
-    EntityCategory,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -127,19 +126,19 @@ async def test_turn_off_switch_api_error(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
 async def test_switch_entity_attributes(
     hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test switch entity attributes."""
     # Check entity registry attributes
     entity_entry = entity_registry.async_get("switch.min123456_charge_from_grid")
     assert entity_entry is not None
-    assert entity_entry.entity_category == EntityCategory.CONFIG
-    assert entity_entry.unique_id == "MIN123456_ac_charge"
+    assert entity_entry == snapshot(name="entity_entry")
 
     # Check state attributes
     state = hass.states.get("switch.min123456_charge_from_grid")
     assert state is not None
-    assert state.attributes["friendly_name"] == "MIN123456 Charge from grid"
+    assert state == snapshot(name="state")
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")

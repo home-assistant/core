@@ -1,5 +1,6 @@
 """Tests for the update coordinator."""
 
+import asyncio
 from datetime import datetime, timedelta
 import logging
 from unittest.mock import AsyncMock, Mock, patch
@@ -403,6 +404,70 @@ async def test_update_interval_not_present(
 
     # Test we stop don't update after we lose last subscriber
     assert crd.data is None
+
+
+async def test_update_locks(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    crd: update_coordinator.DataUpdateCoordinator[int],
+) -> None:
+    """Test update interval works."""
+    start = asyncio.Event()
+    block = asyncio.Event()
+
+    async def _update_method() -> int:
+        start.set()
+        await block.wait()
+        block.clear()
+        return 0
+
+    crd.update_method = _update_method
+
+    # Add subscriber
+    update_callback = Mock()
+    crd.async_add_listener(update_callback)
+
+    assert crd.update_interval
+
+    # Trigger timed update, ensure it is started
+    freezer.tick(crd.update_interval)
+    async_fire_time_changed(hass)
+    await start.wait()
+    start.clear()
+
+    # Trigger direct update
+    task = hass.async_create_background_task(crd.async_refresh(), "", eager_start=True)
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+
+    # Ensure it has not started
+    assert not start.is_set()
+
+    # Unblock interval update
+    block.set()
+
+    # Check that direct update starts
+    await start.wait()
+    start.clear()
+
+    # Request update. This should not be blocking
+    # since the lock is held, it should be queued
+    await crd.async_request_refresh()
+    assert not start.is_set()
+
+    # Unblock second update
+    block.set()
+    # Check that task finishes
+    await task
+
+    # Check that queued update starts
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await start.wait()
+    start.clear()
+
+    # Unblock queued update
+    block.set()
 
 
 async def test_refresh_recover(

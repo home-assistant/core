@@ -3031,8 +3031,9 @@ class ConfigFlow(ConfigEntryBaseFlow):
         """Return current unique IDs."""
         return {
             entry.unique_id
-            for entry in self.hass.config_entries.async_entries(self.handler)
-            if include_ignore or entry.source != SOURCE_IGNORE
+            for entry in self.hass.config_entries.async_entries(
+                self.handler, include_ignore=include_ignore
+            )
         }
 
     @callback
@@ -3168,6 +3169,37 @@ class ConfigFlow(ConfigEntryBaseFlow):
         """Handle a flow initialized by Zeroconf discovery."""
         return await self._async_step_discovery_without_unique_id()
 
+    def _async_set_next_flow_if_valid(
+        self,
+        result: ConfigFlowResult,
+        next_flow: tuple[FlowType, str] | None,
+    ) -> None:
+        """Validate and set next_flow in result if provided."""
+        if next_flow is None:
+            return
+        flow_type, flow_id = next_flow
+        if flow_type != FlowType.CONFIG_FLOW:
+            raise HomeAssistantError("Invalid next_flow type")
+        # Raises UnknownFlow if the flow does not exist.
+        self.hass.config_entries.flow.async_get(flow_id)
+        result["next_flow"] = next_flow
+
+    @callback
+    def async_abort(
+        self,
+        *,
+        reason: str,
+        description_placeholders: Mapping[str, str] | None = None,
+        next_flow: tuple[FlowType, str] | None = None,
+    ) -> ConfigFlowResult:
+        """Abort the config flow."""
+        result = super().async_abort(
+            reason=reason,
+            description_placeholders=description_placeholders,
+        )
+        self._async_set_next_flow_if_valid(result, next_flow)
+        return result
+
     @callback
     def async_create_entry(  # type: ignore[override]
         self,
@@ -3182,13 +3214,11 @@ class ConfigFlow(ConfigEntryBaseFlow):
     ) -> ConfigFlowResult:
         """Finish config flow and create a config entry."""
         if self.source in {SOURCE_REAUTH, SOURCE_RECONFIGURE}:
-            report_usage(
-                f"creates a new entry in a '{self.source}' flow, "
-                "when it is expected to update an existing entry and abort",
-                core_behavior=ReportBehavior.LOG,
-                breaks_in_ha_version="2025.11",
-                integration_domain=self.handler,
+            raise HomeAssistantError(
+                f"Creates a new entry in a '{self.source}' flow, "
+                "when it is expected to update an existing entry and abort"
             )
+
         result = super().async_create_entry(
             title=title,
             data=data,
@@ -3197,13 +3227,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         )
 
         result["minor_version"] = self.MINOR_VERSION
-        if next_flow is not None:
-            flow_type, flow_id = next_flow
-            if flow_type != FlowType.CONFIG_FLOW:
-                raise HomeAssistantError("Invalid next_flow type")
-            # Raises UnknownFlow if the flow does not exist.
-            self.hass.config_entries.flow.async_get(flow_id)
-            result["next_flow"] = next_flow
+        self._async_set_next_flow_if_valid(result, next_flow)
         result["options"] = options or {}
         result["subentries"] = subentries or ()
         result["version"] = self.VERSION

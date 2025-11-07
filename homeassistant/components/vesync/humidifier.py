@@ -37,7 +37,7 @@ _LOGGER = logging.getLogger(__name__)
 
 VS_TO_HA_MODE_MAP = {
     VS_HUMIDIFIER_MODE_AUTO: MODE_AUTO,
-    VS_HUMIDIFIER_MODE_HUMIDITY: MODE_AUTO,
+    VS_HUMIDIFIER_MODE_HUMIDITY: VS_HUMIDIFIER_MODE_HUMIDITY,
     VS_HUMIDIFIER_MODE_MANUAL: MODE_NORMAL,
     VS_HUMIDIFIER_MODE_SLEEP: MODE_SLEEP,
 }
@@ -92,6 +92,8 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
     _attr_name = None
 
     _attr_supported_features = HumidifierEntityFeature.MODES
+
+    _attr_translation_key = "vesync"
 
     def __init__(
         self,
