@@ -116,7 +116,7 @@ class RyseBLEDeviceConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         except (TimeoutError, OSError):
             _LOGGER.error("Bluetooth error during pairing")
-            return self.async_abort(reason="Bluetooth error")
+            return self.async_abort(reason="bluetooth_error")
 
         except Exception:
             _LOGGER.exception("Unexpected error during pairing")
