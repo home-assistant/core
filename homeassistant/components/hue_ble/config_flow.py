@@ -60,11 +60,12 @@ async def validate_input(hass: HomeAssistant, address: str) -> Error | None:
         if len(errors) != 0:
             _LOGGER.warning("Errors raised when connecting to light: %s", errors)
             return Error.CANNOT_CONNECT
-        else:  # noqa: RET505
-            return None
+
     except Exception as e:  # noqa: BLE001
         _LOGGER.error("Unexpected error validating light connection: %s", e)
         return Error.UNKNOWN
+    else:
+        return None
     finally:
         await light.disconnect()
 
