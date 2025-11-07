@@ -75,6 +75,19 @@ def mock_config_entry(device_info: dict[str, Any]) -> MockConfigEntry:
     )
 
 
+@pytest.fixture
+def mock_config_entry_v1_1(device_info: dict[str, Any]) -> MockConfigEntry:
+    """Return a mocked config entry for migration testing with version 1.1."""
+    return MockConfigEntry(
+        title="Pool Device",
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.1.100"},
+        unique_id=device_info["SERIAL_NUMBER"],
+        version=1,
+        minor_version=1,
+    )
+
+
 async def init_integration(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> MockConfigEntry:

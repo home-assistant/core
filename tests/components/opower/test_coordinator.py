@@ -10,7 +10,11 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.opower.const import DOMAIN
 from homeassistant.components.opower.coordinator import OpowerCoordinator
 from homeassistant.components.recorder import Recorder
-from homeassistant.components.recorder.models import StatisticData, StatisticMetaData
+from homeassistant.components.recorder.models import (
+    StatisticData,
+    StatisticMeanType,
+    StatisticMetaData,
+)
 from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
     get_last_statistics,
@@ -186,6 +190,7 @@ async def test_coordinator_migration(
     statistic_id = "opower:pge_elec_111111_energy_consumption"
     metadata = StatisticMetaData(
         has_sum=True,
+        mean_type=StatisticMeanType.NONE,
         name="Opower pge elec 111111 consumption",
         source=DOMAIN,
         statistic_id=statistic_id,

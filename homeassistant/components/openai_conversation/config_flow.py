@@ -428,7 +428,9 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
 
         if user_input is not None:
             if user_input.get(CONF_WEB_SEARCH):
-                if user_input.get(CONF_WEB_SEARCH_USER_LOCATION):
+                if user_input.get(CONF_REASONING_EFFORT) == "minimal":
+                    errors[CONF_WEB_SEARCH] = "web_search_minimal_reasoning"
+                if user_input.get(CONF_WEB_SEARCH_USER_LOCATION) and not errors:
                     user_input.update(await self._get_location_data())
                 else:
                     options.pop(CONF_WEB_SEARCH_CITY, None)
@@ -437,16 +439,17 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                     options.pop(CONF_WEB_SEARCH_TIMEZONE, None)
 
             options.update(user_input)
-            if self._is_new:
-                return self.async_create_entry(
-                    title=options.pop(CONF_NAME),
+            if not errors:
+                if self._is_new:
+                    return self.async_create_entry(
+                        title=options.pop(CONF_NAME),
+                        data=options,
+                    )
+                return self.async_update_and_abort(
+                    self._get_entry(),
+                    self._get_reconfigure_subentry(),
                     data=options,
                 )
-            return self.async_update_and_abort(
-                self._get_entry(),
-                self._get_reconfigure_subentry(),
-                data=options,
-            )
 
         return self.async_show_form(
             step_id="model",

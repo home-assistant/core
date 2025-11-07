@@ -1,28 +1,28 @@
 {
   "services": {
     "aux": {
-      "name": "Aux",
       "description": "Changes the state of an aux output.",
       "fields": {
         "output_id": {
-          "name": "Output ID",
-          "description": "The aux output you wish to change."
+          "description": "The aux output you wish to change.",
+          "name": "Output ID"
         },
         "state": {
-          "name": "State",
-          "description": "The on/off state of the output. If P14xE 8E is enabled then turning on will pulse the output for the time specified in P14(x+4)E."
+          "description": "The on/off state of the output. If P14xE 8E is enabled then turning on will pulse the output for the time specified in P14(x+4)E.",
+          "name": "State"
         }
-      }
+      },
+      "name": "Aux"
     },
     "panic": {
-      "name": "Panic",
       "description": "Triggers a panic alarm.",
       "fields": {
         "code": {
-          "name": "Code",
-          "description": "The user code to use to trigger the panic alarm."
+          "description": "The user code to use to trigger the panic alarm.",
+          "name": "Code"
         }
-      }
+      },
+      "name": "Panic"
     }
   }
 }
