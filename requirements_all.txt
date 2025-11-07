@@ -578,7 +578,7 @@ automower-ble==0.2.8
 av==13.1.0
 
 # homeassistant.components.avea
-# avea==1.5.1
+avea==1.6.1
 
 # homeassistant.components.avion
 # avion==0.10
