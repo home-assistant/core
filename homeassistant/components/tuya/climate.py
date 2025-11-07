@@ -18,15 +18,15 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import UnitOfTemperature
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
-from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
+from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, DPType
 from .entity import TuyaEntity
-from .models import IntegerTypeData
+from .models import IntegerTypeData, find_dpcode
 from .util import get_dpcode
 
 TUYA_HVAC_TO_HA = {
@@ -48,40 +48,28 @@ class TuyaClimateEntityDescription(ClimateEntityDescription):
     switch_only_hvac_mode: HVACMode
 
 
-CLIMATE_DESCRIPTIONS: dict[str, TuyaClimateEntityDescription] = {
-    # Electric Fireplace
-    # https://developer.tuya.com/en/docs/iot/f?id=Kacpeobojffop
-    "dbl": TuyaClimateEntityDescription(
+CLIMATE_DESCRIPTIONS: dict[DeviceCategory, TuyaClimateEntityDescription] = {
+    DeviceCategory.DBL: TuyaClimateEntityDescription(
         key="dbl",
         switch_only_hvac_mode=HVACMode.HEAT,
     ),
-    # Air conditioner
-    # https://developer.tuya.com/en/docs/iot/categorykt?id=Kaiuz0z71ov2n
-    "kt": TuyaClimateEntityDescription(
+    DeviceCategory.KT: TuyaClimateEntityDescription(
         key="kt",
         switch_only_hvac_mode=HVACMode.COOL,
     ),
-    # Heater
-    # https://developer.tuya.com/en/docs/iot/f?id=K9gf46epy4j82
-    "qn": TuyaClimateEntityDescription(
+    DeviceCategory.QN: TuyaClimateEntityDescription(
         key="qn",
         switch_only_hvac_mode=HVACMode.HEAT,
     ),
-    # Heater
-    # https://developer.tuya.com/en/docs/iot/categoryrs?id=Kaiuz0nfferyx
-    "rs": TuyaClimateEntityDescription(
+    DeviceCategory.RS: TuyaClimateEntityDescription(
         key="rs",
         switch_only_hvac_mode=HVACMode.HEAT,
     ),
-    # Thermostat
-    # https://developer.tuya.com/en/docs/iot/f?id=K9gf45ld5l0t9
-    "wk": TuyaClimateEntityDescription(
+    DeviceCategory.WK: TuyaClimateEntityDescription(
         key="wk",
         switch_only_hvac_mode=HVACMode.HEAT_COOL,
     ),
-    # Thermostatic Radiator Valve
-    # Not documented
-    "wkf": TuyaClimateEntityDescription(
+    DeviceCategory.WKF: TuyaClimateEntityDescription(
         key="wkf",
         switch_only_hvac_mode=HVACMode.HEAT,
     ),
@@ -94,26 +82,26 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tuya climate dynamically through Tuya discovery."""
-    hass_data = entry.runtime_data
+    manager = entry.runtime_data.manager
 
     @callback
     def async_discover_device(device_ids: list[str]) -> None:
         """Discover and add a discovered Tuya climate."""
         entities: list[TuyaClimateEntity] = []
         for device_id in device_ids:
-            device = hass_data.manager.device_map[device_id]
+            device = manager.device_map[device_id]
             if device and device.category in CLIMATE_DESCRIPTIONS:
                 entities.append(
                     TuyaClimateEntity(
                         device,
-                        hass_data.manager,
+                        manager,
                         CLIMATE_DESCRIPTIONS[device.category],
                         hass.config.units.temperature_unit,
                     )
                 )
         async_add_entities(entities)
 
-    async_discover_device([*hass_data.manager.device_map])
+    async_discover_device([*manager.device_map])
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, TUYA_DISCOVERY_NEW, async_discover_device)
@@ -165,11 +153,13 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         self._attr_temperature_unit = system_temperature_unit
 
         # Figure out current temperature, use preferred unit or what is available
-        celsius_type = self.find_dpcode(
-            (DPCode.TEMP_CURRENT, DPCode.UPPER_TEMP), dptype=DPType.INTEGER
+        celsius_type = find_dpcode(
+            self.device, (DPCode.TEMP_CURRENT, DPCode.UPPER_TEMP), dptype=DPType.INTEGER
         )
-        fahrenheit_type = self.find_dpcode(
-            (DPCode.TEMP_CURRENT_F, DPCode.UPPER_TEMP_F), dptype=DPType.INTEGER
+        fahrenheit_type = find_dpcode(
+            self.device,
+            (DPCode.TEMP_CURRENT_F, DPCode.UPPER_TEMP_F),
+            dptype=DPType.INTEGER,
         )
         if fahrenheit_type and (
             prefered_temperature_unit == UnitOfTemperature.FAHRENHEIT
@@ -185,11 +175,11 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             self._current_temperature = celsius_type
 
         # Figure out setting temperature, use preferred unit or what is available
-        celsius_type = self.find_dpcode(
-            DPCode.TEMP_SET, dptype=DPType.INTEGER, prefer_function=True
+        celsius_type = find_dpcode(
+            self.device, DPCode.TEMP_SET, dptype=DPType.INTEGER, prefer_function=True
         )
-        fahrenheit_type = self.find_dpcode(
-            DPCode.TEMP_SET_F, dptype=DPType.INTEGER, prefer_function=True
+        fahrenheit_type = find_dpcode(
+            self.device, DPCode.TEMP_SET_F, dptype=DPType.INTEGER, prefer_function=True
         )
         if fahrenheit_type and (
             prefered_temperature_unit == UnitOfTemperature.FAHRENHEIT
@@ -213,8 +203,8 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         # Determine HVAC modes
         self._attr_hvac_modes: list[HVACMode] = []
         self._hvac_to_tuya = {}
-        if enum_type := self.find_dpcode(
-            DPCode.MODE, dptype=DPType.ENUM, prefer_function=True
+        if enum_type := find_dpcode(
+            self.device, DPCode.MODE, dptype=DPType.ENUM, prefer_function=True
         ):
             self._attr_hvac_modes = [HVACMode.OFF]
             unknown_hvac_modes: list[str] = []
@@ -237,8 +227,11 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             ]
 
         # Determine dpcode to use for setting the humidity
-        if int_type := self.find_dpcode(
-            DPCode.HUMIDITY_SET, dptype=DPType.INTEGER, prefer_function=True
+        if int_type := find_dpcode(
+            self.device,
+            DPCode.HUMIDITY_SET,
+            dptype=DPType.INTEGER,
+            prefer_function=True,
         ):
             self._attr_supported_features |= ClimateEntityFeature.TARGET_HUMIDITY
             self._set_humidity = int_type
@@ -246,13 +239,14 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             self._attr_max_humidity = int(int_type.max_scaled)
 
         # Determine dpcode to use for getting the current humidity
-        self._current_humidity = self.find_dpcode(
-            DPCode.HUMIDITY_CURRENT, dptype=DPType.INTEGER
+        self._current_humidity = find_dpcode(
+            self.device, DPCode.HUMIDITY_CURRENT, dptype=DPType.INTEGER
         )
 
         # Determine fan modes
         self._fan_mode_dp_code: str | None = None
-        if enum_type := self.find_dpcode(
+        if enum_type := find_dpcode(
+            self.device,
             (DPCode.FAN_SPEED_ENUM, DPCode.LEVEL, DPCode.WINDSPEED),
             dptype=DPType.ENUM,
             prefer_function=True,
@@ -364,7 +358,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
                 {
                     "code": self._set_temperature.dpcode,
                     "value": round(
-                        self._set_temperature.scale_value_back(kwargs["temperature"])
+                        self._set_temperature.scale_value_back(kwargs[ATTR_TEMPERATURE])
                     ),
                 }
             ]

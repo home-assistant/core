@@ -1,9 +1,12 @@
 """Test selectors."""
 
+from collections.abc import Callable, Iterable
+from contextlib import AbstractContextManager, nullcontext as does_not_raise
 from enum import Enum
 from typing import Any
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant.helpers import selector
@@ -42,7 +45,11 @@ def test_invalid_base_schema(schema) -> None:
 
 
 def _test_selector(
-    selector_type, schema, valid_selections, invalid_selections, converter=None
+    selector_type: str,
+    schema: dict,
+    valid_selections: Iterable[Any],
+    invalid_selections: Iterable[Any],
+    converter: Callable[[Any], Any] | None = None,
 ):
     """Help test a selector."""
 
@@ -648,7 +655,38 @@ def test_action_selector_schema(schema, valid_selections, invalid_selections) ->
 @pytest.mark.parametrize(
     ("schema", "valid_selections", "invalid_selections"),
     [
-        ({}, ("abc123",), ()),
+        ({}, ("abc123", None, {"key": "value"}), ()),
+        ({"multiple": False}, ("abc123", None, {"key": "value"}), ()),
+        (
+            {
+                "fields": {
+                    "name": {
+                        "required": True,
+                        "selector": {"text": {}},
+                    },
+                    "percentage": {
+                        "selector": {"number": {}},
+                    },
+                },
+                "multiple": False,
+                "label_field": "name",
+                "description_field": "percentage",
+            },
+            (
+                {"name": "abc123", "percentage": 3},
+                {"name": "abc123"},
+            ),
+            (
+                "abc123",
+                None,
+                {"name": "abc123", "percentage": "nope"},
+                [
+                    {"name": "abc123", "percentage": 3},
+                    {"name": "def987", "percentage": 5},
+                ],
+                [{"name": "abc123"}],
+            ),
+        ),
         (
             {
                 "fields": {
@@ -664,15 +702,202 @@ def test_action_selector_schema(schema, valid_selections, invalid_selections) ->
                 "label_field": "name",
                 "description_field": "percentage",
             },
-            (),
-            (),
+            (
+                [
+                    {"name": "abc123", "percentage": 3},
+                    {"name": "def987", "percentage": 5},
+                ],
+                [{"name": "abc123"}],
+            ),
+            (
+                "abc123",
+                None,
+                [{"name": "abc123", "percentage": "nope"}],
+                [{"name": "abc123", "percentage": 3, "not_exist": 5}],
+            ),
         ),
     ],
-    [],
 )
 def test_object_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test object selector."""
     _test_selector("object", schema, valid_selections, invalid_selections)
+
+
+def test_object_selector_uses_selectors(snapshot: SnapshotAssertion) -> None:
+    """Test ObjectSelector custom serializer for using Selector in ObjectSelectorField."""
+
+    selector_type = "object"
+    schema = {
+        "fields": {
+            "name": {
+                "required": True,
+                "selector": selector.TextSelector(),
+            },
+            "percentage": {
+                "selector": selector.NumberSelector(
+                    selector.NumberSelectorConfig(min=0, max=100)
+                ),
+            },
+        },
+        "multiple": True,
+        "label_field": "name",
+        "description_field": "percentage",
+    }
+
+    # Validate selector configuration
+    config = {selector_type: schema}
+    selector.validate_selector(config)
+    selector_instance = selector.selector(config)
+
+    # Serialize selector
+    selector_instance = selector.selector({selector_type: schema})
+    assert selector_instance.serialize() != {
+        "selector": {selector_type: selector_instance.config}
+    }
+    assert selector_instance.serialize() == snapshot()
+
+    # Test serialized selector can be dumped to YAML
+    yaml_util.dump(selector_instance.serialize())
+
+
+def test_nested_object_selectors(snapshot: SnapshotAssertion) -> None:
+    """Test ObjectSelector custom serializer with nested ObjectSelectors."""
+
+    selector_type = "object"
+    schema = {
+        "fields": {
+            "name": {
+                "required": True,
+                "selector": selector.TextSelector(),
+            },
+            "object": {
+                "selector": selector.ObjectSelector(
+                    selector.ObjectSelectorConfig(
+                        fields={
+                            "no_name": {
+                                "required": True,
+                                "selector": selector.TextSelector(),
+                            },
+                            "other_name": {
+                                "required": True,
+                                "selector": selector.TextSelector(),
+                            },
+                            "new_object": {
+                                "required": True,
+                                "selector": selector.ObjectSelector(
+                                    selector.ObjectSelectorConfig(
+                                        fields={
+                                            "title": {
+                                                "required": True,
+                                                "selector": selector.TextSelector(),
+                                            },
+                                            "description": {
+                                                "required": True,
+                                                "selector": selector.TextSelector(),
+                                            },
+                                        },
+                                        multiple=False,
+                                        label_field="title",
+                                        description_field="description",
+                                    )
+                                ),
+                            },
+                        },
+                        multiple=False,
+                        label_field="no_name",
+                        description_field="other_name",
+                    )
+                ),
+            },
+        },
+        "multiple": True,
+        "label_field": "name",
+        "description_field": "percentage",
+    }
+
+    # Validate selector configuration
+    config = {selector_type: schema}
+    selector.validate_selector(config)
+    selector_instance = selector.selector(config)
+
+    # Serialize selector
+    selector_instance = selector.selector({selector_type: schema})
+    assert selector_instance.serialize() != {
+        "selector": {selector_type: selector_instance.config}
+    }
+    assert selector_instance.serialize() == snapshot()
+
+    # Test serialized selector can be dumped to YAML
+    yaml_util.dump(selector_instance.serialize())
+
+
+@pytest.mark.parametrize(
+    ("schema", "raises"),
+    [
+        ({}, does_not_raise()),
+        ({"multiple": False}, does_not_raise()),
+        (
+            {
+                "fields": {
+                    "name": {
+                        "required": True,
+                        "selector": {"text": {}},
+                    },
+                    "percentage": {
+                        "selector": {"number": {}},
+                    },
+                },
+                "multiple": True,
+                "label_field": "name",
+                "description_field": "percentage",
+            },
+            does_not_raise(),
+        ),
+        (
+            {
+                "fields": {
+                    "name": {
+                        "required": True,
+                        "selector": selector.TextSelector(),
+                    },
+                    "percentage": {
+                        "selector": selector.NumberSelector(),
+                    },
+                },
+                "multiple": True,
+                "label_field": "name",
+                "description_field": "percentage",
+            },
+            does_not_raise(),
+        ),
+        (
+            {
+                "fields": {
+                    "name": {
+                        "required": True,
+                        "selector": {"not_exist": {}},
+                    },
+                    "percentage": {
+                        "selector": {"number": {}},
+                    },
+                },
+                "multiple": True,
+                "label_field": "name",
+                "description_field": "percentage",
+            },
+            pytest.raises(vol.Invalid),
+        ),
+        ({"multiple": "False"}, pytest.raises(vol.Invalid)),
+    ],
+)
+def test_object_selector_validate_schema(
+    schema: dict, raises: AbstractContextManager
+) -> None:
+    """Test object selector schemas."""
+    # Validate selector configuration
+
+    with raises:
+        selector.validate_selector({"object": schema})
 
 
 @pytest.mark.parametrize(
@@ -939,8 +1164,100 @@ def test_media_selector_schema(schema, valid_selections, invalid_selections) -> 
 
     def drop_metadata(data):
         """Drop metadata key from the input."""
+        if isinstance(data, list):
+            return [drop_metadata(item) for item in data]
         data.pop("metadata", None)
         return data
+
+    _test_selector(
+        "media",
+        schema,
+        valid_selections,
+        invalid_selections,
+        drop_metadata,
+    )
+
+
+@pytest.mark.parametrize(
+    ("schema", "valid_selections", "invalid_selections"),
+    [
+        (
+            {"multiple": True},
+            (
+                [
+                    {
+                        "entity_id": "sensor.abc",
+                        "media_content_id": "abc",
+                        "media_content_type": "def",
+                    },
+                    {
+                        "entity_id": "sensor.def",
+                        "media_content_id": "ghi",
+                        "media_content_type": "jkl",
+                    },
+                ],
+                # Not a list is automatically converted to a list
+                {
+                    "entity_id": "sensor.abc",
+                    "media_content_id": "abc",
+                    "media_content_type": "def",
+                },
+            ),
+            (
+                None,
+                # Missing required key in one item
+                [
+                    {
+                        "entity_id": "sensor.abc",
+                        "media_content_id": "abc",
+                        "media_content_type": "def",
+                    },
+                    {
+                        "entity_id": "sensor.def",
+                        "media_content_id": "ghi",
+                    },
+                ],
+            ),
+        ),
+        (
+            {"multiple": True, "accept": ["image/*"]},
+            (
+                [
+                    {
+                        "media_content_id": "abc",
+                        "media_content_type": "def",
+                    },
+                    {
+                        "media_content_id": "ghi",
+                        "media_content_type": "jkl",
+                    },
+                ],
+            ),
+            (
+                None,
+                # entity_id not allowed when accept is set
+                [
+                    {
+                        "entity_id": "sensor.abc",
+                        "media_content_id": "abc",
+                        "media_content_type": "def",
+                    }
+                ],
+            ),
+        ),
+    ],
+)
+def test_media_selector_schema_multiple(
+    schema, valid_selections, invalid_selections
+) -> None:
+    """Test media selector with multiple selections."""
+
+    def drop_metadata(data, root=True):
+        if isinstance(data, list):
+            return [drop_metadata(item, False) for item in data]
+        data.pop("metadata", None)
+        # Multiple=true wraps single values in list.
+        return [data] if root and schema.get("multiple") else data
 
     _test_selector(
         "media",

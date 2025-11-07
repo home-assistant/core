@@ -17,7 +17,7 @@ from ..common import (
 async def test_connectsense_setup(hass: HomeAssistant) -> None:
     """Test that the accessory can be correctly setup in HA."""
     accessories = await setup_accessories_from_file(hass, "connectsense.json")
-    config_entry, pairing = await setup_test_accessories(hass, accessories)
+    config_entry, _pairing = await setup_test_accessories(hass, accessories)
 
     await assert_devices_and_entities_created(
         hass,

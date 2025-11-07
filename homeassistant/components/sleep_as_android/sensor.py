@@ -85,6 +85,12 @@ class SleepAsAndroidSensorEntity(SleepAsAndroidEntity, RestoreSensor):
             ):
                 self._attr_native_value = label
 
+            if (
+                data[ATTR_EVENT] == "alarm_rescheduled"
+                and data.get(ATTR_VALUE1) is None
+            ):
+                self._attr_native_value = None
+
             self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:

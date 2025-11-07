@@ -6,6 +6,7 @@ _LOGGER = logging.getLogger(__package__)
 
 DOMAIN = "alexa_devices"
 CONF_LOGIN_DATA = "login_data"
+CONF_SITE = "site"
 
 DEFAULT_DOMAIN = "com"
 COUNTRY_DOMAINS = {
@@ -25,3 +26,6 @@ COUNTRY_DOMAINS = {
     "us": DEFAULT_DOMAIN,
     "za": "co.za",
 }
+
+CATEGORY_SENSORS = "sensors"
+CATEGORY_NOTIFICATIONS = "notifications"
