@@ -189,18 +189,6 @@ NUMBERS: dict[DeviceCategory, tuple[NumberEntityDescription, ...]] = {
             device_class=NumberDeviceClass.DURATION,
             entity_category=EntityCategory.CONFIG,
         ),
-        NumberEntityDescription(
-            key=DPCode.INDUCTION_DELAY,
-            translation_key="induction_delay",
-            device_class=NumberDeviceClass.DURATION,
-            entity_category=EntityCategory.CONFIG,
-        ),
-        NumberEntityDescription(
-            key=DPCode.INDUCTION_INTERVAL,
-            translation_key="induction_interval",
-            device_class=NumberDeviceClass.DURATION,
-            entity_category=EntityCategory.CONFIG,
-        ),
     ),
     DeviceCategory.MZJ: (
         NumberEntityDescription(

@@ -657,7 +657,6 @@ class DPCode(StrEnum):
     CISTERN = "cistern"
     CLEAN_AREA = "clean_area"
     CLEAN_TIME = "clean_time"
-    CLEAN = "clean"
     CLICK_SUSTAIN_TIME = "click_sustain_time"
     CLOSED_OPENED_KIT = "closed_opened_kit"
     CLOUD_RECIPE_NUMBER = "cloud_recipe_number"
@@ -719,7 +718,6 @@ class DPCode(StrEnum):
     DUSTER_CLOTH = "duster_cloth"
     ECO2 = "eco2"
     EDGE_BRUSH = "edge_brush"
-    EMPTY = "empty"  # Emptying MSP device
     ELECTRICITY_LEFT = "electricity_left"
     EXCRETION_TIME_DAY = "excretion_time_day"
     EXCRETION_TIMES_DAY = "excretion_times_day"
@@ -792,7 +790,6 @@ class DPCode(StrEnum):
     MAX_SET = "max_set"
     MINI_SET = "mini_set"
     MODE = "mode"  # Working mode / Mode
-    MONITORING = "monitoring"  # Presence monitoring of MSP device
     MOODLIGHTING = "moodlighting"  # Mood light
     MOTION_RECORD = "motion_record"
     MOTION_SENSITIVITY = "motion_sensitivity"

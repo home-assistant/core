@@ -50,37 +50,13 @@ BUTTONS: dict[DeviceCategory, tuple[ButtonEntityDescription, ...]] = {
     ),
     DeviceCategory.MSP: (
         ButtonEntityDescription(
-            key=DPCode.EMPTY,
-            translation_key="empty_litter",
-            entity_category=EntityCategory.CONFIG,
-        ),
-        ButtonEntityDescription(
             key=DPCode.FACTORY_RESET,
             translation_key="factory_reset",
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
-        # Poopy Nano 2 uses the DPCode "clean" for starting a manual clean.
-        # We reuse the same translation key.
-        ButtonEntityDescription(
-            key=DPCode.CLEAN,
-            translation_key="manual_clean",
-            entity_category=EntityCategory.CONFIG,
-        ),
-        # ZEDAR K1200 uses the DPCode "manual_clean" for starting a manual clean.
-        # We reuse the same translation key.
         ButtonEntityDescription(
             key=DPCode.MANUAL_CLEAN,
             translation_key="manual_clean",
-            entity_category=EntityCategory.CONFIG,
-        ),
-        ButtonEntityDescription(
-            key=DPCode.BAG_CHANGE_MODE,
-            translation_key="change_litter_bag",
-            entity_category=EntityCategory.CONFIG,
-        ),
-        ButtonEntityDescription(
-            key=DPCode.LEVEL_CAT_LITTER,
-            translation_key="level_cat_litter",
             entity_category=EntityCategory.CONFIG,
         ),
     ),

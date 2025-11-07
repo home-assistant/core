@@ -80,17 +80,8 @@
       }
     },
     "button": {
-      "change_litter_bag": {
-        "name": "Change litter bag"
-      },
-      "empty_litter": {
-        "name": "Empty litter box"
-      },
       "factory_reset": {
         "name": "Factory reset"
-      },
-      "level_cat_litter": {
-        "name": "Level cat litter"
       },
       "manual_clean": {
         "name": "Manual clean"
@@ -214,12 +205,6 @@
       "indexed_temperature": {
         "name": "Temperature {index}"
       },
-      "induction_delay": {
-        "name": "[%key:component::tuya::entity::number::delay_clean_time::name%]"
-      },
-      "induction_interval": {
-        "name": "Pause between cycles"
-      },
       "installation_height": {
         "name": "Installation height"
       },
@@ -312,13 +297,6 @@
       },
       "brightness": {
         "name": "Brightness"
-      },
-      "cat_litter_type": {
-        "name": "Cat litter type",
-        "state": {
-          "mineral_cat_litter": "Mineral (Bentonite)",
-          "mix_cat_litter": "Mixed (Tofu)"
-        }
       },
       "concentration": {
         "name": "Concentration"
@@ -945,9 +923,6 @@
       "cry_detection": {
         "name": "Cry detection"
       },
-      "deep_clean": {
-        "name": "Double cleaning"
-      },
       "disinfection": {
         "name": "Disinfection"
       },
@@ -986,9 +961,6 @@
       },
       "indexed_usb": {
         "name": "USB {index}"
-      },
-      "infrared_sensor_switch": {
-        "name": "Infrared sensor"
       },
       "ionizer": {
         "name": "Ionizer"
@@ -1079,9 +1051,6 @@
       },
       "switch": {
         "name": "Switch"
-      },
-      "thin_feces": {
-        "name": "Deep cleaning"
       },
       "time_watermark": {
         "name": "Time watermark"
