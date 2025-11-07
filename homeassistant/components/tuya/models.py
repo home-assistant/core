@@ -36,6 +36,20 @@ class DPCodeWrapper:
         raise NotImplementedError("read_device_value must be implemented")
 
 
+@dataclass
+class DPCodeBooleanWrapper(DPCodeWrapper):
+    """Simple wrapper for boolean values.
+
+    Supports True/False only.
+    """
+
+    def read_device_status(self, device: CustomerDevice) -> bool | None:
+        """Read the device value for the dpcode."""
+        if (raw_value := self._read_device_status_raw(device)) in (True, False):
+            return raw_value
+        return None
+
+
 @dataclass(kw_only=True)
 class DPCodeEnumWrapper(DPCodeWrapper):
     """Simple wrapper for EnumTypeData values."""
