@@ -198,8 +198,7 @@ class DPCodeIntegerWrapper(DPCodeWrapper):
     def read_device_status(self, device: CustomerDevice) -> float | None:
         """Read the device value for the dpcode.
 
-        Value will be scaled based on the Integer type information
-        return None.
+        Value will be scaled based on the Integer type information.
         """
         if (raw_value := self._read_device_status_raw(device)) is None:
             return None
