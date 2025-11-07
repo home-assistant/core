@@ -33,10 +33,6 @@ class RyseBLEDeviceConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.debug("User started RYSE setup flow")
             return self.async_show_form(
                 step_id="user",
-                description_placeholders={
-                    "instruction": "Press the PAIR button on your RYSE device, then Submit"
-                },
-                data_schema=vol.Schema({}),
             )
 
         _LOGGER.debug("User submitted pairing search trigger")
