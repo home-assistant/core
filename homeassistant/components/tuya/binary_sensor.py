@@ -243,7 +243,7 @@ BINARY_SENSORS: dict[DeviceCategory, tuple[TuyaBinarySensorEntityDescription, ..
             key=DPCode.MONITORING,
             device_class=BinarySensorDeviceClass.PRESENCE,
             entity_category=EntityCategory.DIAGNOSTIC,
-            translation_key="monitoring",
+            translation_key="litter_occupied",
         ),
     ),
     DeviceCategory.PIR: (

@@ -51,7 +51,7 @@ BUTTONS: dict[DeviceCategory, tuple[ButtonEntityDescription, ...]] = {
     DeviceCategory.MSP: (
         ButtonEntityDescription(
             key=DPCode.EMPTY,
-            translation_key="empty",
+            translation_key="empty_litter",
             entity_category=EntityCategory.CONFIG,
         ),
         ButtonEntityDescription(

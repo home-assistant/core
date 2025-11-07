@@ -51,11 +51,11 @@
       "formaldehyde": {
         "name": "Formaldehyde"
       },
+      "litter_occupied": {
+        "name": "Litter box occupied"
+      },
       "methane": {
         "name": "Methane"
-      },
-      "monitoring": {
-        "name": "Occupied"
       },
       "pm25": {
         "name": "PM2.5"
@@ -83,8 +83,8 @@
       "change_litter_bag": {
         "name": "Change litter bag"
       },
-      "empty": {
-        "name": "Empty"
+      "empty_litter": {
+        "name": "Empty litter box"
       },
       "factory_reset": {
         "name": "Factory reset"
