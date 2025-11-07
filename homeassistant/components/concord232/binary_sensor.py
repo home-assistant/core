@@ -127,7 +127,7 @@ class Concord232ZoneSensor(BinarySensorEntity):
     @property
     def unique_id(self):
         """Return a unique id for this sensor."""
-        return f"concord232_zone_{self._number}"
+        return f"{self._number}"
 
     @property
     def device_class(self):
