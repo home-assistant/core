@@ -98,6 +98,7 @@ from .const import (
     DATA_CONFIG_ENTRIES,
     DATA_DELETED_IDS,
     DATA_DEVICES,
+    DATA_PENDING_UPDATES,
     DOMAIN,
     ERR_ENCRYPTION_ALREADY_ENABLED,
     ERR_ENCRYPTION_REQUIRED,
@@ -601,7 +602,19 @@ async def webhook_register_sensor(
         if changes:
             entity_registry.async_update_entity(existing_sensor, **changes)
 
-        async_dispatcher_send(hass, f"{SIGNAL_SENSOR_UPDATE}-{unique_store_key}", data)
+        # Send update signal if entity is not disabled
+        # Otherwise if the entity is enabled back, store it as pending update
+        if not entry.disabled_by:
+            async_dispatcher_send(
+                hass, f"{SIGNAL_SENSOR_UPDATE}-{unique_store_key}", data
+            )
+        elif not should_be_disabled:
+            _LOGGER.debug(
+                "Entity %s is disabled, storing pending update", unique_store_key
+            )
+            hass.data[DOMAIN][DATA_PENDING_UPDATES][unique_store_key] = data
+        else:
+            _LOGGER.debug("Entity %s is disabled, ignoring update", unique_store_key)
     else:
         data[CONF_UNIQUE_ID] = unique_store_key
         data[CONF_NAME] = (
@@ -685,6 +698,15 @@ async def webhook_update_sensor_states(
             continue
 
         sensor[CONF_WEBHOOK_ID] = config_entry.data[CONF_WEBHOOK_ID]
+
+        if unique_store_key in hass.data[DOMAIN][DATA_PENDING_UPDATES]:
+            # Replace existing pending update with the latest sensor data.
+            # This can occur when an entity was recently enabled but not yet initialized.
+            hass.data[DOMAIN][DATA_PENDING_UPDATES][unique_store_key] = sensor
+
+        # Send the dispatcher signal after storing the pending update to handle race conditions.
+        # If the entity initializes before storing the update,
+        # the signal ensures the entity receives the update immediately.
         async_dispatcher_send(
             hass,
             f"{SIGNAL_SENSOR_UPDATE}-{unique_store_key}",
@@ -697,6 +719,7 @@ async def webhook_update_sensor_states(
         entry = entity_registry.async_get(entity_id)
 
         if entry and entry.disabled_by:
+            # Inform the app that the entity is disabled
             resp[unique_id]["is_disabled"] = True
 
     return webhook_response(resp, registration=config_entry.data)

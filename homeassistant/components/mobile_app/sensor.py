@@ -99,7 +99,10 @@ class MobileAppSensor(MobileAppEntity, RestoreSensor):
                 and sensor_unique_id == "battery_temperature"
             ):
                 config[ATTR_SENSOR_UOM] = UnitOfTemperature.CELSIUS
-        else:
+        elif (
+            config[ATTR_SENSOR_STATE] is None
+            or config[ATTR_SENSOR_STATE] == STATE_UNKNOWN
+        ):
             config[ATTR_SENSOR_STATE] = last_sensor_data.native_value
             config[ATTR_SENSOR_UOM] = last_sensor_data.native_unit_of_measurement
 

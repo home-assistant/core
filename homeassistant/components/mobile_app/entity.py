@@ -2,10 +2,17 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ICON, CONF_NAME, CONF_UNIQUE_ID, STATE_UNAVAILABLE
+from homeassistant.const import (
+    ATTR_ICON,
+    CONF_NAME,
+    CONF_UNIQUE_ID,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import State, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -18,9 +25,13 @@ from .const import (
     ATTR_SENSOR_ICON,
     ATTR_SENSOR_STATE,
     ATTR_SENSOR_STATE_CLASS,
+    DATA_PENDING_UPDATES,
+    DOMAIN,
     SIGNAL_SENSOR_UPDATE,
 )
 from .helpers import device_info
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class MobileAppEntity(RestoreEntity):
@@ -61,21 +72,43 @@ class MobileAppEntity(RestoreEntity):
             )
         )
 
+        self._restore_pending_update()
+
         if (state := await self.async_get_last_state()) is None:
             return
 
         await self.async_restore_last_state(state)
 
+    def _restore_pending_update(self) -> None:
+        """Restore any pending update for this entity."""
+        pending_updates = self.hass.data[DOMAIN].get(DATA_PENDING_UPDATES, {})
+        if self._attr_unique_id in pending_updates:
+            _LOGGER.debug(
+                "Restoring pending update for %s: %s",
+                self._attr_unique_id,
+                pending_updates[self._attr_unique_id],
+            )
+            # Apply the pending update
+            self._handle_update(pending_updates[self._attr_unique_id])
+            # Remove from pending updates
+            del pending_updates[self._attr_unique_id]
+
     async def async_restore_last_state(self, last_state: State) -> None:
         """Restore previous state."""
         config = self._config
-        config[ATTR_SENSOR_STATE] = last_state.state
-        config[ATTR_SENSOR_ATTRIBUTES] = {
-            **last_state.attributes,
-            **self._config[ATTR_SENSOR_ATTRIBUTES],
-        }
-        if ATTR_ICON in last_state.attributes:
-            config[ATTR_SENSOR_ICON] = last_state.attributes[ATTR_ICON]
+
+        # Only restore state if we don't have one already, since it can be set by a pending update
+        if (
+            config[ATTR_SENSOR_STATE] is None
+            or config[ATTR_SENSOR_STATE] == STATE_UNKNOWN
+        ):
+            config[ATTR_SENSOR_STATE] = last_state.state
+            config[ATTR_SENSOR_ATTRIBUTES] = {
+                **last_state.attributes,
+                **self._config[ATTR_SENSOR_ATTRIBUTES],
+            }
+            if ATTR_ICON in last_state.attributes:
+                config[ATTR_SENSOR_ICON] = last_state.attributes[ATTR_ICON]
 
     @property
     def device_info(self):
