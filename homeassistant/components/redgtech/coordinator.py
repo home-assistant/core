@@ -94,9 +94,9 @@ class RedgtechDataUpdateCoordinator(DataUpdateCoordinator[list[RedgtechDevice]])
         devices: list[RedgtechDevice] = []
 
         for item in data["boards"]:
-            display_categories = [cat.lower() for cat in item["displayCategories"]]
+            display_categories = {cat.lower() for cat in item["displayCategories"]}
 
-            if "switch" not in display_categories:
+            if "light" in display_categories or "switch" not in display_categories:
                 continue
 
             device = RedgtechDevice(
