@@ -130,12 +130,12 @@ class FakeFirmwareOptionsFlowHandler(BaseFirmwareOptionsFlow):
         """Instantiate options flow."""
         super().__init__(*args, **kwargs)
 
-        self._device = self.config_entry.data["device"]
-        self._hardware_name = self.config_entry.data["hardware"]
+        self._device = self._config_entry.data["device"]
+        self._hardware_name = self._config_entry.data["hardware"]
 
         self._probed_firmware_info = FirmwareInfo(
             device=self._device,
-            firmware_type=ApplicationType(self.config_entry.data["firmware"]),
+            firmware_type=ApplicationType(self._config_entry.data["firmware"]),
             firmware_version=None,
             source="guess",
             owners=[],

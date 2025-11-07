@@ -6240,16 +6240,21 @@ async def test_options_flow_with_config_entry_core() -> None:
 
 
 @pytest.mark.parametrize("integration_frame_path", ["custom_components/my_integration"])
-@pytest.mark.usefixtures("hass", "mock_integration_frame")
-async def test_options_flow_with_config_entry(caplog: pytest.LogCaptureFixture) -> None:
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_options_flow_with_config_entry(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test that OptionsFlowWithConfigEntry doesn't mutate entry options."""
     entry = MockConfigEntry(
         domain="hue",
         data={"first": True},
         options={"sub_dict": {"1": "one"}, "sub_list": ["one"]},
     )
+    entry.add_to_hass(hass)
 
     options_flow = config_entries.OptionsFlowWithConfigEntry(entry)
+    options_flow.hass = hass
+    options_flow.handler = entry.entry_id
     assert caplog.text == ""  # No deprecation warning for custom components
 
     # Ensure available at startup
@@ -9322,12 +9327,12 @@ async def test_options_flow_automatic_reload(
 
 @pytest.mark.parametrize("integration_frame_path", ["custom_components/my_integration"])
 @pytest.mark.usefixtures("mock_integration_frame")
-async def test_options_flow_deprecated_config_entry_setter(
+async def test_options_flow_set_config_entry_fails(
     hass: HomeAssistant,
     manager: config_entries.ConfigEntries,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test that setting config_entry explicitly still works."""
+    """Test that setting config_entry explicitly fails."""
     original_entry = MockConfigEntry(domain="my_integration", data={})
     original_entry.add_to_hass(hass)
 
@@ -9370,20 +9375,17 @@ async def test_options_flow_deprecated_config_entry_setter(
 
             return _OptionsFlow(config_entry)
 
-    with mock_config_flow("my_integration", TestFlow):
-        result = await hass.config_entries.options.async_init(original_entry.entry_id)
-
-    options_flow = hass.config_entries.options._progress.get(result["flow_id"])
-    assert options_flow.config_entry is original_entry
-
-    assert (
-        "Detected that custom integration 'my_integration' sets option flow "
-        "config_entry explicitly, which is deprecated at "
-        "custom_components/my_integration/light.py, line 23: "
-        "self.light.is_on. This will stop working in Home Assistant 2025.12, please "
-        "report it to the author of the 'my_integration' custom integration"
-        in caplog.text
-    )
+    with (
+        mock_config_flow("my_integration", TestFlow),
+        pytest.raises(
+            AttributeError,
+            match="property 'config_entry' of "
+            "'test_options_flow_set_config_entry_fails.<locals>."
+            "TestFlow.async_get_options_flow.<locals>._OptionsFlow'"
+            " object has no setter",
+        ),
+    ):
+        await hass.config_entries.options.async_init(original_entry.entry_id)
 
 
 async def test_add_description_placeholder_automatically(
