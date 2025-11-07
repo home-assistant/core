@@ -33,6 +33,9 @@
         "data": {
           "refresh": "Refresh gateway IP and re-discover devices"
         },
+        "data_description": {
+          "refresh": "Enable this option to refresh the gateway's IP address and re-discover all connected devices, groups, and scenes."
+        },
         "description": "Configure options for your Sunricher DALI gateway."
       },
       "refresh_result": {
