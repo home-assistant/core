@@ -6,7 +6,7 @@ import base64
 from dataclasses import dataclass
 import json
 import struct
-from typing import Literal, Self, overload
+from typing import Any, Literal, Self, overload
 
 from tuya_sharing import CustomerDevice
 
@@ -64,25 +64,13 @@ def find_dpcode(
             if not (
                 (current_definition := device_specs.get(dpcode))
                 and current_definition.type == dptype
+                and (parsed := json.loads(current_definition.values))
             ):
                 continue
             if dptype is DPType.ENUM:
-                if not (
-                    enum_type := EnumTypeData.from_json(
-                        dpcode, current_definition.values
-                    )
-                ):
-                    continue
-                return enum_type
+                return EnumTypeData.from_parsed(dpcode, parsed)
             if dptype is DPType.INTEGER:
-                if not (
-                    integer_type := IntegerTypeData.from_json(
-                        dpcode, current_definition.values
-                    )
-                ):
-                    continue
-                return integer_type
-
+                return IntegerTypeData.from_parsed(dpcode, parsed)
     return None
 
 
@@ -142,11 +130,8 @@ class IntegerTypeData:
         return remap_value(value, from_min, from_max, self.min, self.max, reverse)
 
     @classmethod
-    def from_json(cls, dpcode: DPCode, data: str) -> IntegerTypeData | None:
+    def from_parsed(cls, dpcode: DPCode, parsed: dict[str, Any]) -> Self | None:
         """Load JSON string and return a IntegerTypeData object."""
-        if not (parsed := json.loads(data)):
-            return None
-
         return cls(
             dpcode,
             min=int(parsed["min"]),
@@ -166,11 +151,12 @@ class EnumTypeData:
     range: list[str]
 
     @classmethod
-    def from_json(cls, dpcode: DPCode, data: str) -> EnumTypeData | None:
+    def from_parsed(cls, dpcode: DPCode, parsed: dict[str, Any]) -> Self | None:
         """Load JSON string and return a EnumTypeData object."""
-        if not (parsed := json.loads(data)):
-            return None
-        return cls(dpcode, **parsed)
+        return cls(
+            dpcode,
+            parsed["range"],
+        )
 
 
 class ComplexValue:
