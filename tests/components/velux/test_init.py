@@ -2,16 +2,20 @@
 
 These tests verify that setup retries (ConfigEntryNotReady) are triggered
 when scene or node loading fails.
+
+They also verify that unloading the integration properly disconnects.
 """
 
 from __future__ import annotations
 
+import pytest
 from pyvlx.exception import PyVLXException
 
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from tests.common import AsyncMock, ConfigEntry
+from tests.common import AsyncMock, ConfigEntry, MockConfigEntry
 
 
 async def test_setup_retry_on_nodes_failure(
@@ -53,3 +57,23 @@ async def test_setup_retry_on_oserror_during_scenes(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
     mock_pyvlx.load_scenes.assert_awaited_once()
     mock_pyvlx.load_nodes.assert_not_called()
+
+
+@pytest.fixture
+def platform() -> Platform:
+    """Fixture to specify platform to test."""
+    return Platform.COVER
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_unload_calls_disconnect(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_pyvlx
+) -> None:
+    """Test that unloading the config entry disconnects from the gateway."""
+
+    # Unload the entry
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Verify disconnect was called
+    mock_pyvlx.disconnect.assert_awaited_once()

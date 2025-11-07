@@ -95,4 +95,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: VeluxConfigEntry) -> boo
 
 async def async_unload_entry(hass: HomeAssistant, entry: VeluxConfigEntry) -> bool:
     """Unload a config entry."""
+    # disconnect from the Velux gateway, which will trigger its reboot (in pyvlx lib)
+    await entry.runtime_data.disconnect()
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
