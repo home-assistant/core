@@ -36,6 +36,20 @@ class DPCodeWrapper:
         raise NotImplementedError("read_device_value must be implemented")
 
 
+@dataclass
+class DPCodeBooleanWrapper(DPCodeWrapper):
+    """Simple parser for boolean values.
+
+    Supports True/False only.
+    """
+
+    def read_device_status(self, device: CustomerDevice) -> bool | None:
+        """Read the device value for the dpcode."""
+        if (raw_value := self._read_device_status_raw(device)) in (True, False):
+            return raw_value
+        return None
+
+
 @dataclass(kw_only=True)
 class DPCodeEnumWrapper(DPCodeWrapper):
     """Simple wrapper for EnumTypeData values."""
@@ -140,40 +154,6 @@ def find_dpcode(
                 return integer_type
 
     return None
-
-
-@dataclass
-class DPCodeReader:
-    """Base DPCode reader.
-
-    Used to read and convert raw values from a device for a specific DPCode.
-
-    `read_device_value` must be overridden to implement custom parsing logic.
-    """
-
-    dpcode: str
-
-    def _read_device_value_raw(self, device: CustomerDevice) -> Any | None:
-        """Read the device value for the dpcode."""
-        return device.status.get(self.dpcode)
-
-    def read_device_value(self, device: CustomerDevice) -> Any | None:
-        """Read the device value for the dpcode."""
-        raise NotImplementedError("read_device_value must be implemented")
-
-
-@dataclass
-class BooleanDPCodeReader(DPCodeReader):
-    """Simple parser for boolean values.
-
-    Supports True/False only.
-    """
-
-    def read_device_value(self, device: CustomerDevice) -> bool | None:
-        """Read the device value for the dpcode."""
-        if (raw_value := self._read_device_value_raw(device)) in (True, False):
-            return raw_value
-        return None
 
 
 @dataclass
