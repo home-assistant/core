@@ -1865,7 +1865,7 @@ class RpcSleepingSensor(ShellySleepingRpcAttributeEntity, RestoreSensor):
         super().__init__(coordinator, key, attribute, description, entry)
         self.restored_data: SensorExtraStoredData | None = None
 
-        if hasattr(self, "_attr_name") and description.role != ROLE_GENERIC:
+        if hasattr(self, "_attr_name"):
             delattr(self, "_attr_name")
 
     async def async_added_to_hass(self) -> None:
