@@ -25,7 +25,10 @@ class DPCodeWrapper:
     dpcode: str
 
     def _read_device_status_raw(self, device: CustomerDevice) -> Any | None:
-        """Read the raw device status for the DPCode."""
+        """Read the raw device status for the DPCode.
+
+        Private helper method for `read_device_status`.
+        """
         return device.status.get(self.dpcode)
 
     def read_device_status(self, device: CustomerDevice) -> Any | None:
