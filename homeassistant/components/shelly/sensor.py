@@ -63,6 +63,7 @@ from .utils import (
     get_blu_trv_device_info,
     get_device_entry_gen,
     get_device_uptime,
+    get_entity_translation_attributes,
     get_rpc_channel_name,
     get_shelly_air_lamp_life,
     get_virtual_component_unit,
@@ -71,25 +72,6 @@ from .utils import (
 )
 
 PARALLEL_UPDATES = 0
-
-
-def get_entity_translation_attributes(
-    channel_name: str | None,
-    translation_key: str | None,
-    device_class: str | None,
-    default_to_device_class_name: bool,
-) -> tuple[dict[str, str] | None, str | None]:
-    """Translation attributes for entity with channel name."""
-    if channel_name is None:
-        return None, None
-
-    key = translation_key
-    if key is None and default_to_device_class_name:
-        key = device_class
-
-    final_translation_key = f"{key}_with_channel_name" if key else None
-
-    return {"channel_name": channel_name}, final_translation_key
 
 
 @dataclass(frozen=True, kw_only=True)

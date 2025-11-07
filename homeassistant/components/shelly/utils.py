@@ -459,6 +459,25 @@ def get_rpc_entity_name(
     return channel_name
 
 
+def get_entity_translation_attributes(
+    channel_name: str | None,
+    translation_key: str | None,
+    device_class: str | None,
+    default_to_device_class_name: bool,
+) -> tuple[dict[str, str] | None, str | None]:
+    """Translation attributes for entity with channel name."""
+    if channel_name is None:
+        return None, None
+
+    key = translation_key
+    if key is None and default_to_device_class_name:
+        key = device_class
+
+    final_translation_key = f"{key}_with_channel_name" if key else None
+
+    return {"channel_name": channel_name}, final_translation_key
+
+
 def get_device_entry_gen(entry: ConfigEntry) -> int:
     """Return the device generation from config entry."""
     return entry.data.get(CONF_GEN, 1)  # type: ignore[no-any-return]

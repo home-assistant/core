@@ -40,6 +40,7 @@ from .utils import (
     get_block_channel_name,
     get_blu_trv_device_info,
     get_device_entry_gen,
+    get_entity_translation_attributes,
     get_rpc_channel_name,
     is_block_momentary_input,
     is_rpc_momentary_input,
@@ -47,28 +48,6 @@ from .utils import (
 )
 
 PARALLEL_UPDATES = 0
-
-
-def get_entity_translation_attributes(
-    channel_name: str | None,
-    translation_key: str | None,
-    device_class: str | None,
-    default_to_device_class_name: bool,
-) -> tuple[dict[str, str] | None, str | None]:
-    """Translation attributes for entity with channel name."""
-    return (
-        (
-            {"channel_name": channel_name},
-            f"{key}_with_channel_name"
-            if (
-                key := translation_key
-                or (device_class if default_to_device_class_name else None)
-            )
-            else None,
-        )
-        if channel_name is not None
-        else (None, None)
-    )
 
 
 @dataclass(frozen=True, kw_only=True)
