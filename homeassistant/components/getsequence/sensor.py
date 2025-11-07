@@ -61,7 +61,18 @@ async def async_setup_entry(
 ) -> None:
     """Set up Sequence sensor entities."""
     coordinator: SequenceDataUpdateCoordinator = config_entry.runtime_data
+    entities = build_entities(coordinator, config_entry)
+    async_add_entities(entities)
 
+
+def build_entities(
+    coordinator: SequenceDataUpdateCoordinator, config_entry: ConfigEntry
+) -> list[SensorEntity]:
+    """Build and return the list of sensor entities for the given coordinator and config entry.
+
+    This helper is extracted for testability so unit tests can construct the same
+    entities without registering them with hass.
+    """
     entities: list[SensorEntity] = []
 
     # 1. AGGREGATE ACCOUNT SENSORS (Net balance and account type totals)
@@ -236,7 +247,7 @@ async def async_setup_entry(
     # 4. DATA AGE SENSOR (Last updated tracking)
     entities.append(DataAgeSensor(coordinator, config_entry))
 
-    async_add_entities(entities)
+    return entities
 
 
 class SequenceBaseSensor(CoordinatorEntity, SensorEntity):

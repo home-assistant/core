@@ -20,13 +20,13 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
+from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
     ACCOUNT_TYPE_ACCOUNT,
-    CONF_ACCESS_TOKEN,
     CONF_INVESTMENT_ACCOUNTS,
     CONF_LIABILITY_ACCOUNTS,
     CONF_LIABILITY_CONFIGURED,
@@ -68,9 +68,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
 class SequenceConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Sequence."""
-
-    VERSION = 1
-    MINOR_VERSION = 1
 
     @staticmethod
     @callback

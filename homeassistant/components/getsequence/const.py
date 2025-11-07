@@ -3,7 +3,6 @@
 DOMAIN = "getsequence"
 
 # Config flow
-CONF_ACCESS_TOKEN = "access_token"
 CONF_LIABILITY_ACCOUNTS = "liability_accounts"
 CONF_INVESTMENT_ACCOUNTS = "investment_accounts"
 CONF_LIABILITY_CONFIGURED = "liability_configured"

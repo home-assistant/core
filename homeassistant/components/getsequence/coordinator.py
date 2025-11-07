@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import timedelta
-import json
 import logging
 from typing import Any
 
@@ -11,6 +10,7 @@ import aiohttp
 from GetSequenceIoApiClient import SequenceApiClient, SequenceApiError
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import (
     TimestampDataUpdateCoordinator,
@@ -18,7 +18,6 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import (
-    CONF_ACCESS_TOKEN,
     CONF_INVESTMENT_ACCOUNTS,
     CONF_LIABILITY_ACCOUNTS,
     CONF_LIABILITY_CONFIGURED,
@@ -54,11 +53,6 @@ class SequenceDataUpdateCoordinator(TimestampDataUpdateCoordinator):
         """Update data via Sequence API."""
         try:
             accounts_data = await self.api.async_get_accounts()
-
-            # Debug: Dump the raw JSON payload from Sequence API
-            _LOGGER.debug("=== RAW SEQUENCE API RESPONSE START ===")
-            _LOGGER.debug(json.dumps(accounts_data, indent=2, default=str))
-            _LOGGER.debug("=== RAW SEQUENCE API RESPONSE END ===")
 
             # Get configured account lists from options
             liability_account_ids = self.entry.options.get(CONF_LIABILITY_ACCOUNTS, [])

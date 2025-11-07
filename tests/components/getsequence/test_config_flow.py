@@ -9,6 +9,7 @@ from GetSequenceIoApiClient import (
 )
 
 from homeassistant import config_entries
+from homeassistant.components.getsequence.config_flow import SequenceOptionsFlow
 from homeassistant.components.getsequence.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -421,3 +422,67 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         "investment_accounts": ["1002"],
         "liability_configured": True,
     }
+
+
+async def test_reauth_confirm_unexpected_exception(hass: HomeAssistant) -> None:
+    """Test reauth confirm handles unexpected generic exceptions."""
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        data={"access_token": "old_token"},
+        unique_id="test_unique_id",
+    )
+    mock_config.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": mock_config.entry_id,
+        },
+        data=mock_config.data,
+    )
+    with patch(
+        "homeassistant.components.getsequence.config_flow.SequenceApiClient.async_get_accounts",
+        side_effect=Exception,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"access_token": "bad_token"}
+        )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "unknown"}
+
+
+async def test_options_flow_handles_non_list_values(hass: HomeAssistant) -> None:
+    """Test options flow filters non-list entries via else branch."""
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        data={"access_token": "test_token"},
+        unique_id="test_unique_id",
+    )
+    mock_config.add_to_hass(hass)
+
+    # Provide at least one external account so the options form can be shown
+    # Call the options flow handler directly to bypass the framework schema
+    # validation so we can exercise the else branch for non-list values.
+    # Build a minimal dummy 'self' with the attributes/methods the flow expects
+    class DummyFlow:
+        pass
+
+    dummy = DummyFlow()
+    dummy.hass = hass  # pylint: disable=attribute-defined-outside-init
+    dummy.config_entry = mock_config  # pylint: disable=attribute-defined-outside-init
+
+    def async_create_entry(title: str = "", data: dict | None = None):
+        return {"type": "create_entry", "data": data or {}, "title": title}
+
+    # Attach a simple create entry function to mimic the OptionsFlow behavior
+    dummy.async_create_entry = async_create_entry  # pylint: disable=attribute-defined-outside-init
+
+    # Call the unbound function with our dummy object to bypass framework checks
+    result = await SequenceOptionsFlow.async_step_init(
+        dummy, {"some_flag": "yes", "liability_accounts": ["1001"]}
+    )
+
+    assert result["type"] == "create_entry"
+    assert result["data"]["some_flag"] == "yes"
+    assert result["data"]["liability_configured"] is True
