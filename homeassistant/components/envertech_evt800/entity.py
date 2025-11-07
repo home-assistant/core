@@ -34,14 +34,13 @@ class EnvertechEVT800Entity(CoordinatorEntity[EnvertechEVT800Coordinator]):
             identifiers={
                 (
                     DOMAIN,
-                    f"{DOMAIN}-{entry.data[CONF_IP_ADDRESS]}-{entry.data[CONF_PORT]}",
+                    f"{entry.data[CONF_IP_ADDRESS]}-{entry.data[CONF_PORT]}",
                 )
             },
             configuration_url=f"http://{entry.data[CONF_IP_ADDRESS]}/",
             manufacturer="Envertech",
             model="EVT800",
             name="Envertech EVT800",
-            sw_version="1.0.0",
         )
 
     @property

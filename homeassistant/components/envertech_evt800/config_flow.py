@@ -46,8 +46,6 @@ class EnvertechFlowHandler(ConfigFlow, domain=DOMAIN):
             self._data[CONF_TYPE] = user_input[CONF_TYPE]
 
             if not errors:
-                self._abort_if_unique_id_configured(updates=self._data)
-
                 return self.async_create_entry(
                     title="Envertech EVT800", data=self._data
                 )
