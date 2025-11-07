@@ -49,6 +49,7 @@ def mock_satel() -> Generator[AsyncMock]:
         client.violated_outputs = []
         client.violated_zones = []
         client.connect = AsyncMock(return_value=True)
+        client.set_output = AsyncMock()
 
         yield client
 
