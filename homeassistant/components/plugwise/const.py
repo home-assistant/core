@@ -25,6 +25,7 @@ REBOOT: Final = "reboot"
 SMILE: Final = "smile"
 STRETCH: Final = "stretch"
 STRETCH_USERNAME: Final = "stretch"
+UNKNOWN_SMILE : Final = "Unknown Smile"
 
 PLATFORMS: Final[list[str]] = [
     Platform.BINARY_SENSOR,
