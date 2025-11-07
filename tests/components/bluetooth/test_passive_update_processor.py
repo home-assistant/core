@@ -1967,10 +1967,10 @@ async def test_naming(hass: HomeAssistant) -> None:
         ),
     ],
 )
-async def test_deserialize_entity_description(
+def test_deserialize_entity_description(
     description_type: type[EntityDescription],
     description_dict: dict[str, Any],
-    expected_description: SensorEntityDescription,
+    expected_description: EntityDescription,
 ) -> None:
     """Test deserializing an entity description."""
     description = deserialize_entity_description(description_type, description_dict)
