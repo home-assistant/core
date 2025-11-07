@@ -53,3 +53,4 @@ voluptuous-openapi==0.1.0
 yarl==1.22.0
 webrtc-models==0.3.0
 zeroconf==0.148.0
+pydantic-core==2.41.4
