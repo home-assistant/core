@@ -365,7 +365,10 @@ async def async_setup_entry(
                     if description.key in device.status
                     and (
                         enum_type := find_dpcode(
-                            description.key, dptype=DPType.ENUM, prefer_function=True
+                            device,
+                            description.key,
+                            dptype=DPType.ENUM,
+                            prefer_function=True,
                         )
                     )
                 )
@@ -381,8 +384,6 @@ async def async_setup_entry(
 
 class TuyaSelectEntity(TuyaEntity, SelectEntity):
     """Tuya Select Entity."""
-
-    _enum_type: EnumTypeData | None = None
 
     def __init__(
         self,
