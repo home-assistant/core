@@ -6,14 +6,15 @@ import json
 import voluptuous as vol
 import yaml
 
-from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
+from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 
 from .const import ATTR_FILE_ENCODING, ATTR_FILE_NAME, DOMAIN, SERVICE_READ_FILE
 
 
-def async_register_services(hass: HomeAssistant) -> None:
+@callback
+def async_setup_services(hass: HomeAssistant) -> None:
     """Register services for File integration."""
 
     if not hass.services.has_service(DOMAIN, SERVICE_READ_FILE):
