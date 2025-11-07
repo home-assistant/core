@@ -120,7 +120,6 @@ _TYPE_INFORMATION_MAPPINGS: dict[DPType, type[TypeInformation]] = {
 }
 
 
-@dataclass
 class DPCodeWrapper:
     """Base DPCode wrapper.
 
@@ -160,7 +159,7 @@ class DPCodeBooleanWrapper(DPCodeWrapper):
 class DPCodeEnumWrapper(DPCodeWrapper):
     """Simple wrapper for EnumTypeData values."""
 
-    type_information: EnumTypeData
+    enum_type_information: EnumTypeData
 
     def read_device_status(self, device: CustomerDevice) -> str | None:
         """Read the device value for the dpcode.
@@ -170,7 +169,7 @@ class DPCodeEnumWrapper(DPCodeWrapper):
         """
         if (
             raw_value := self._read_device_status_raw(device)
-        ) in self.type_information.range:
+        ) in self.enum_type_information.range:
             return raw_value
         return None
 
@@ -186,14 +185,15 @@ class DPCodeEnumWrapper(DPCodeWrapper):
         if enum_type := find_dpcode(
             device, dpcodes, dptype=DPType.ENUM, prefer_function=prefer_function
         ):
-            return cls(dpcode=enum_type.dpcode, type_information=enum_type)
+            return cls(dpcode=enum_type.dpcode, enum_type_information=enum_type)
         return None
 
 
+@dataclass(kw_only=True)
 class DPCodeIntegerWrapper(DPCodeWrapper):
     """Simple wrapper for IntegerTypeData values."""
 
-    type_information: IntegerTypeData
+    integer_type_information: IntegerTypeData
 
     def read_device_status(self, device: CustomerDevice) -> float | None:
         """Read the device value for the dpcode.
@@ -202,7 +202,7 @@ class DPCodeIntegerWrapper(DPCodeWrapper):
         """
         if (raw_value := self._read_device_status_raw(device)) is None:
             return None
-        return raw_value / (10**self.type_information.scale)
+        return raw_value / (10**self.integer_type_information.scale)
 
     @classmethod
     def find_dpcode(
@@ -216,7 +216,7 @@ class DPCodeIntegerWrapper(DPCodeWrapper):
         if int_type := find_dpcode(
             device, dpcodes, dptype=DPType.INTEGER, prefer_function=prefer_function
         ):
-            return cls(dpcode=int_type.dpcode, type_information=int_type)
+            return cls(dpcode=int_type.dpcode, integer_type_information=int_type)
         return None
 
 
