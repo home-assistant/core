@@ -6,12 +6,82 @@ import base64
 from dataclasses import dataclass
 import json
 import struct
-from typing import Literal, Self, overload
+from typing import Any, Literal, Self, overload
 
 from tuya_sharing import CustomerDevice
 
 from .const import DPCode, DPType
 from .util import remap_value
+
+
+@dataclass
+class DPCodeWrapper:
+    """Base DPCode wrapper.
+
+    Used as a common interface for referring to a DPCode, and
+    access read conversion routines.
+    """
+
+    dpcode: str
+
+    def _read_device_status_raw(self, device: CustomerDevice) -> Any | None:
+        """Read the raw device status for the DPCode.
+
+        Private helper method for `read_device_status`.
+        """
+        return device.status.get(self.dpcode)
+
+    def read_device_status(self, device: CustomerDevice) -> Any | None:
+        """Read the device value for the dpcode."""
+        raise NotImplementedError("read_device_value must be implemented")
+
+
+@dataclass
+class DPCodeBooleanWrapper(DPCodeWrapper):
+    """Simple wrapper for boolean values.
+
+    Supports True/False only.
+    """
+
+    def read_device_status(self, device: CustomerDevice) -> bool | None:
+        """Read the device value for the dpcode."""
+        if (raw_value := self._read_device_status_raw(device)) in (True, False):
+            return raw_value
+        return None
+
+
+@dataclass(kw_only=True)
+class DPCodeEnumWrapper(DPCodeWrapper):
+    """Simple wrapper for EnumTypeData values."""
+
+    enum_type_information: EnumTypeData
+
+    def read_device_status(self, device: CustomerDevice) -> str | None:
+        """Read the device value for the dpcode.
+
+        Values outside of the list defined by the Enum type information will
+        return None.
+        """
+        if (
+            raw_value := self._read_device_status_raw(device)
+        ) in self.enum_type_information.range:
+            return raw_value
+        return None
+
+    @classmethod
+    def find_dpcode(
+        cls,
+        device: CustomerDevice,
+        dpcodes: str | DPCode | tuple[DPCode, ...],
+        *,
+        prefer_function: bool = False,
+    ) -> Self | None:
+        """Find and return a DPCodeEnumWrapper for the given DP codes."""
+        if enum_type := find_dpcode(
+            device, dpcodes, dptype=DPType.ENUM, prefer_function=prefer_function
+        ):
+            return cls(dpcode=enum_type.dpcode, enum_type_information=enum_type)
+        return None
 
 
 @overload
