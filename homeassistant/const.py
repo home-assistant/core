@@ -3,15 +3,9 @@
 from __future__ import annotations
 
 from enum import StrEnum
-from functools import partial
 from typing import TYPE_CHECKING, Final
 
 from .generated.entity_platforms import EntityPlatforms
-from .helpers.deprecation import (
-    all_with_deprecated_constants,
-    check_if_deprecated_constant,
-    dir_with_deprecated_constants,
-)
 from .util.event_type import EventType
 from .util.hass_dict import HassKey
 from .util.signal_type import SignalType
@@ -999,10 +993,3 @@ FORMAT_DATETIME: Final = f"{FORMAT_DATE} {FORMAT_TIME}"
 # This is not a hard limit, but caches and other
 # data structures will be pre-allocated to this size
 MAX_EXPECTED_ENTITY_IDS: Final = 16384
-
-# These can be removed if no deprecated constant are in this module anymore
-__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = partial(
-    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
-)
-__all__ = all_with_deprecated_constants(globals())
