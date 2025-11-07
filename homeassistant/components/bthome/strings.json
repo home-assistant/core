@@ -90,7 +90,7 @@
         "name": "Count"
       },
       "dew_point": {
-        "name": "Dew Point"
+        "name": "Dew point"
       },
       "direction": {
         "name": "Direction"
@@ -108,7 +108,7 @@
         "name": "Rotation"
       },
       "rotational_speed": {
-        "name": "Rotational Speed"
+        "name": "Rotational speed"
       },
       "text": {
         "name": "Text"
