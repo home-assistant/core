@@ -31,11 +31,13 @@ from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothEntityKey,
     PassiveBluetoothProcessorCoordinator,
     PassiveBluetoothProcessorEntity,
+    deserialize_entity_description,
 )
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import current_entry
 from homeassistant.const import UnitOfTemperature
@@ -1920,3 +1922,23 @@ async def test_naming(hass: HomeAssistant) -> None:
     assert sensor_entity.translation_key is None
 
     cancel_coordinator()
+
+
+async def test_deserialize_entity_description() -> None:
+    """Test deserializing an entity description."""
+    description_dict = {
+        "key": "temperature",
+        "native_unit_of_measurement": "°C",
+        "device_class": "temperature",
+        "state_class": "measurement",
+    }
+    description = deserialize_entity_description(
+        SensorEntityDescription, description_dict
+    )
+
+    assert description == SensorEntityDescription(
+        key="temperature",
+        native_unit_of_measurement="°C",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    )
