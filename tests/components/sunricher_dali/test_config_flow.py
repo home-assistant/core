@@ -243,9 +243,11 @@ async def test_options_flow_refresh_not_found(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_discovery: MagicMock,
+    mock_gateway: MagicMock,
 ) -> None:
-    """Test gateway not found during refresh."""
+    """Test gateway not found during refresh doesn't disconnect running gateway."""
     mock_config_entry.add_to_hass(hass)
+    mock_config_entry.runtime_data = SimpleNamespace(gateway=mock_gateway)
     mock_discovery.discover_gateways.return_value = []
 
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
@@ -256,15 +258,19 @@ async def test_options_flow_refresh_not_found(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "refresh"
     assert result["errors"]["base"] == "gateway_not_found"
+    # Gateway should NOT be disconnected when discovery fails
+    mock_gateway.disconnect.assert_not_awaited()
 
 
 async def test_options_flow_refresh_exception(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_discovery: MagicMock,
+    mock_gateway: MagicMock,
 ) -> None:
-    """Test refresh with exception."""
+    """Test refresh with exception doesn't disconnect running gateway."""
     mock_config_entry.add_to_hass(hass)
+    mock_config_entry.runtime_data = SimpleNamespace(gateway=mock_gateway)
     mock_discovery.discover_gateways.side_effect = DaliGatewayError("failure")
 
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
@@ -275,6 +281,8 @@ async def test_options_flow_refresh_exception(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "refresh"
     assert result["errors"]["base"] == "cannot_connect"
+    # Gateway should NOT be disconnected when discovery raises exception
+    mock_gateway.disconnect.assert_not_awaited()
 
 
 async def test_options_flow_refresh_success(
@@ -318,9 +326,10 @@ async def test_options_flow_refresh_reload_failure(
     mock_discovery: MagicMock,
     mock_gateway: MagicMock,
 ) -> None:
-    """Test refresh when reload fails."""
+    """Test refresh when reload fails - gateway still disconnected since discovery succeeded."""
 
     mock_config_entry.add_to_hass(hass)
+    mock_config_entry.runtime_data = SimpleNamespace(gateway=mock_gateway)
 
     with patch.object(
         hass.config_entries, "async_reload", AsyncMock(return_value=False)
@@ -335,6 +344,8 @@ async def test_options_flow_refresh_reload_failure(
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "refresh"
         assert result["errors"]["base"] == "cannot_connect"
+        # Gateway IS disconnected since discovery succeeded, but reload failed
+        mock_gateway.disconnect.assert_awaited_once()
 
 
 async def test_options_flow_refresh_with_runtime_data(
@@ -343,7 +354,7 @@ async def test_options_flow_refresh_with_runtime_data(
     mock_discovery: MagicMock,
     mock_gateway: MagicMock,
 ) -> None:
-    """Test refresh when config entry has runtime_data."""
+    """Test refresh when config entry has runtime_data disconnects after discovery."""
 
     mock_config_entry.add_to_hass(hass)
     mock_config_entry.runtime_data = SimpleNamespace(gateway=mock_gateway)
@@ -359,6 +370,7 @@ async def test_options_flow_refresh_with_runtime_data(
         )
 
         assert result["type"] is FlowResultType.FORM
+        # Gateway is disconnected after discovery succeeds
         mock_gateway.disconnect.assert_awaited_once()
 
 

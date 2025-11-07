@@ -62,9 +62,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         """Refresh gateway IP, devices, groups, and scenes."""
         current_sn = self._config_entry.data[CONF_SERIAL_NUMBER]
 
-        if hasattr(self._config_entry, "runtime_data"):
-            await self._config_entry.runtime_data.gateway.disconnect()
-
         try:
             discovery = DaliGatewayDiscovery()
             discovered_gateways = await discovery.discover_gateways(current_sn)
@@ -81,6 +78,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 errors={"base": "gateway_not_found"},
                 data_schema=vol.Schema({}),
             )
+
+        if hasattr(self._config_entry, "runtime_data"):
+            await self._config_entry.runtime_data.gateway.disconnect()
 
         updated_gateway = discovered_gateways[0]
         current_data = dict(self._config_entry.data)
