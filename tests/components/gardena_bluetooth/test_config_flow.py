@@ -8,7 +8,9 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries
 from homeassistant.components.gardena_bluetooth.const import DOMAIN
+from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
     MISSING_MANUFACTURER_DATA_SERVICE_INFO,
@@ -18,6 +20,7 @@ from . import (
     WATER_TIMER_UNNAMED_SERVICE_INFO,
 )
 
+from tests.common import MockConfigEntry
 from tests.components.bluetooth import inject_bluetooth_service_info
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
@@ -49,6 +52,39 @@ async def test_user_selection(
         user_input={},
     )
     assert result == snapshot
+
+
+async def test_user_selection_replaces_ignored(hass: HomeAssistant) -> None:
+    """Test setup from service info cache replaces an ignored entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=WATER_TIMER_SERVICE_INFO.address,
+    )
+    entry.source = config_entries.SOURCE_IGNORE
+    entry.add_to_hass(hass)
+
+    inject_bluetooth_service_info(hass, WATER_TIMER_SERVICE_INFO)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_ADDRESS: WATER_TIMER_SERVICE_INFO.address},
+    )
+
+    assert result["type"] == FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_failed_connect(

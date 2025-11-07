@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from pyHomee.const import AttributeType, NodeProfile
-from pyHomee.model import HomeeAttribute
+from pyHomee.model import HomeeAttribute, HomeeNode
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -19,6 +19,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import HomeeConfigEntry
 from .const import CLIMATE_PROFILES, LIGHT_PROFILES
 from .entity import HomeeEntity
+from .helpers import setup_homee_platform
 
 PARALLEL_UPDATES = 0
 
@@ -65,27 +66,35 @@ SWITCH_DESCRIPTIONS: dict[AttributeType, HomeeSwitchEntityDescription] = {
 }
 
 
+async def add_switch_entities(
+    config_entry: HomeeConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+    nodes: list[HomeeNode],
+) -> None:
+    """Add homee switch entities."""
+    async_add_entities(
+        HomeeSwitch(attribute, config_entry, SWITCH_DESCRIPTIONS[attribute.type])
+        for node in nodes
+        for attribute in node.attributes
+        if (attribute.type in SWITCH_DESCRIPTIONS and attribute.editable)
+        and not (
+            attribute.type == AttributeType.ON_OFF and node.profile in LIGHT_PROFILES
+        )
+        and not (
+            attribute.type == AttributeType.MANUAL_OPERATION
+            and node.profile in CLIMATE_PROFILES
+        )
+    )
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: HomeeConfigEntry,
-    async_add_devices: AddConfigEntryEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the switch platform for the Homee component."""
 
-    for node in config_entry.runtime_data.nodes:
-        async_add_devices(
-            HomeeSwitch(attribute, config_entry, SWITCH_DESCRIPTIONS[attribute.type])
-            for attribute in node.attributes
-            if (attribute.type in SWITCH_DESCRIPTIONS and attribute.editable)
-            and not (
-                attribute.type == AttributeType.ON_OFF
-                and node.profile in LIGHT_PROFILES
-            )
-            and not (
-                attribute.type == AttributeType.MANUAL_OPERATION
-                and node.profile in CLIMATE_PROFILES
-            )
-        )
+    await setup_homee_platform(add_switch_entities, async_add_entities, config_entry)
 
 
 class HomeeSwitch(HomeeEntity, SwitchEntity):

@@ -27,7 +27,7 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'sw_version': None,
+      'sw_version': '1.0.0',
       'via_device_id': None,
     }),
   ])
@@ -78,6 +78,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'active_time': 0,
+      'child_lock': False,
+      'display_status': 'on',
       'friendly_name': 'Air Purifier 131s',
       'mode': 'sleep',
       'percentage': None,
@@ -87,7 +89,6 @@
         'auto',
         'sleep',
       ]),
-      'screen_status': 'on',
       'supported_features': <FanEntityFeature: 57>,
     }),
     'context': <ANY>,
@@ -126,7 +127,7 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'sw_version': None,
+      'sw_version': '1.0.0',
       'via_device_id': None,
     }),
   ])
@@ -175,7 +176,9 @@
 # name: test_fan_state[Air Purifier 200s][fan.air_purifier_200s]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'active_time': None,
       'child_lock': False,
+      'display_status': 'on',
       'friendly_name': 'Air Purifier 200s',
       'mode': 'manual',
       'night_light': 'off',
@@ -185,7 +188,6 @@
       'preset_modes': list([
         'sleep',
       ]),
-      'screen_status': True,
       'supported_features': <FanEntityFeature: 57>,
     }),
     'context': <ANY>,
@@ -224,7 +226,7 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'sw_version': None,
+      'sw_version': '1.0.0',
       'via_device_id': None,
     }),
   ])
@@ -274,7 +276,9 @@
 # name: test_fan_state[Air Purifier 400s][fan.air_purifier_400s]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'active_time': None,
       'child_lock': False,
+      'display_status': 'on',
       'friendly_name': 'Air Purifier 400s',
       'mode': 'manual',
       'night_light': 'off',
@@ -285,7 +289,6 @@
         'auto',
         'sleep',
       ]),
-      'screen_status': True,
       'supported_features': <FanEntityFeature: 57>,
     }),
     'context': <ANY>,
@@ -324,7 +327,7 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'sw_version': None,
+      'sw_version': '1.0.0',
       'via_device_id': None,
     }),
   ])
@@ -374,7 +377,9 @@
 # name: test_fan_state[Air Purifier 600s][fan.air_purifier_600s]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'active_time': None,
       'child_lock': False,
+      'display_status': 'on',
       'friendly_name': 'Air Purifier 600s',
       'mode': 'manual',
       'night_light': 'off',
@@ -385,7 +390,6 @@
         'auto',
         'sleep',
       ]),
-      'screen_status': True,
       'supported_features': <FanEntityFeature: 57>,
     }),
     'context': <ANY>,
@@ -424,7 +428,7 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'sw_version': None,
+      'sw_version': '1.0.0',
       'via_device_id': None,
     }),
   ])
@@ -461,7 +465,7 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'sw_version': None,
+      'sw_version': '1.0.0',
       'via_device_id': None,
     }),
   ])
@@ -498,12 +502,49 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'sw_version': None,
+      'sw_version': '1.0.0',
       'via_device_id': None,
     }),
   ])
 # ---
 # name: test_fan_state[Humidifier 200s][entities]
+  list([
+  ])
+# ---
+# name: test_fan_state[Humidifier 6000s][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          '6000s',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'LEH-S601S-WUS',
+      'model_id': None,
+      'name': 'Humidifier 6000s',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_fan_state[Humidifier 6000s][entities]
   list([
   ])
 # ---
@@ -535,7 +576,7 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'sw_version': None,
+      'sw_version': '1.0.0',
       'via_device_id': None,
     }),
   ])
@@ -572,7 +613,7 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'sw_version': None,
+      'sw_version': '1.0.0',
       'via_device_id': None,
     }),
   ])
@@ -609,7 +650,7 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'sw_version': None,
+      'sw_version': '1.0.0',
       'via_device_id': None,
     }),
   ])
@@ -651,7 +692,7 @@
       'platform': 'vesync',
       'previous_unique_id': None,
       'suggested_object_id': None,
-      'supported_features': <FanEntityFeature: 57>,
+      'supported_features': <FanEntityFeature: 59>,
       'translation_key': 'vesync',
       'unique_id': 'smarttowerfan',
       'unit_of_measurement': None,
@@ -661,12 +702,13 @@
 # name: test_fan_state[SmartTowerFan][fan.smarttowerfan]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'child_lock': False,
+      'active_time': None,
+      'display_status': 'off',
       'friendly_name': 'SmartTowerFan',
       'mode': 'normal',
-      'night_light': 'off',
-      'percentage': None,
-      'percentage_step': 7.6923076923076925,
+      'oscillating': True,
+      'percentage': 0,
+      'percentage_step': 8.333333333333334,
       'preset_mode': 'normal',
       'preset_modes': list([
         'advancedSleep',
@@ -674,8 +716,7 @@
         'normal',
         'turbo',
       ]),
-      'screen_status': False,
-      'supported_features': <FanEntityFeature: 57>,
+      'supported_features': <FanEntityFeature: 59>,
     }),
     'context': <ANY>,
     'entity_id': 'fan.smarttowerfan',
@@ -713,7 +754,7 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'sw_version': None,
+      'sw_version': '1.0.0',
       'via_device_id': None,
     }),
   ])
@@ -750,7 +791,7 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'sw_version': None,
+      'sw_version': '1.0.0',
       'via_device_id': None,
     }),
   ])

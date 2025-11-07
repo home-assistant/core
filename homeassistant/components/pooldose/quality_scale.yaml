@@ -44,15 +44,11 @@ rules:
   # Gold
   devices: done
   diagnostics: todo
-  discovery-update-info:
-    status: todo
-    comment: DHCP discovery is possible
-  discovery:
-    status: todo
-    comment: DHCP discovery is possible
+  discovery-update-info: done
+  discovery: done
   docs-data-update: done
   docs-examples: todo
-  docs-known-limitations: todo
+  docs-known-limitations: done
   docs-supported-devices: done
   docs-supported-functions: done
   docs-troubleshooting: done
@@ -76,5 +72,5 @@ rules:
 
   # Platinum
   async-dependency: done
-  inject-websession: todo
+  inject-websession: done
   strict-typing: todo

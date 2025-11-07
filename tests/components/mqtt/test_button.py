@@ -55,7 +55,7 @@ DEFAULT_CONFIG = {
                 button.DOMAIN: {
                     "command_topic": "command-topic",
                     "name": "test",
-                    "object_id": "test_button",
+                    "default_entity_id": "button.test_button",
                     "payload_press": "beer press",
                     "qos": "2",
                 }
