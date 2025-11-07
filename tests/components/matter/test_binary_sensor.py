@@ -373,3 +373,24 @@ async def test_thermostat_occupancy(
     state = hass.states.get("binary_sensor.longan_link_hvac_occupancy")
     assert state
     assert state.state == "off"
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_shutter"])
+async def test_shutter(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test shutter ConfigStatus."""
+    # Eve Shutter default state
+    state = hass.states.get("binary_sensor.eve_shutter_switch_20eci1701_config_status")
+    assert state
+    assert state.state == "off"
+
+    # Eve Shutter ConfigStatus Operational bit set
+    set_node_attribute(matter_node, 1, 258, 7, 1)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("binary_sensor.eve_shutter_switch_20eci1701_config_status")
+    assert state
+    assert state.state == "on"
