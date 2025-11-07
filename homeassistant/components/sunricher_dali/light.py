@@ -38,7 +38,7 @@ async def async_setup_entry(
     entry: DaliCenterConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up DALI Center light entities from config entry."""
+    """Set up Sunricher DALI light entities from config entry."""
     runtime_data = entry.runtime_data
     gateway = runtime_data.gateway
     devices = runtime_data.devices
@@ -57,7 +57,7 @@ async def async_setup_entry(
 
 
 class DaliCenterLight(LightEntity):
-    """Representation of a DALI Center Light."""
+    """Representation of a Sunricher DALI Light."""
 
     _attr_has_entity_name = True
     _attr_name = None
