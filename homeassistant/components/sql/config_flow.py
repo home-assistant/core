@@ -367,7 +367,9 @@ async def ws_start_preview(
         )
         assert flow_sets
         config_entry = hass.config_entries.async_get_entry(flow_status["handler"])
-        name = msg["user_input"][CONF_NAME]
+        print(list(flow_sets)[0].data)
+        name = list(flow_sets)[0].data[CONF_NAME]
+        db_url = resolve_db_url(hass, list(flow_sets)[0].data.get(CONF_DB_URL))
 
     else:
         flow_status = hass.config_entries.options.async_get(msg["flow_id"])
@@ -375,6 +377,7 @@ async def ws_start_preview(
         if not config_entry:
             raise HomeAssistantError("Config entry not found")
         name = config_entry.title
+        db_url = resolve_db_url(hass, config_entry.data.get(CONF_DB_URL))
 
     @callback
     def async_preview_updated(state: str, attributes: Mapping[str, Any]) -> None:
@@ -385,22 +388,24 @@ async def ws_start_preview(
             )
         )
 
-    db_url = resolve_db_url(hass, msg["user_input"].get(CONF_DB_URL))
-
     (
         sessmaker,
         _,
         use_database_executor,
     ) = await async_create_sessionmaker(hass, db_url)
+    print(sessmaker)
+    print(db_url)
     if sessmaker is None:
+        # Can not just return, needs to pass something
         return
 
     name_template = Template(name, hass)
     trigger_entity_config = {CONF_NAME: name_template}
     for key in TRIGGER_ENTITY_OPTIONS:
-        if key not in msg["user_input"]:
-            continue
-        trigger_entity_config[key] = msg["user_input"][key]
+        if key in msg["user_input"]:
+            trigger_entity_config[key] = msg["user_input"][key]
+        if key in msg["user_input"].get(CONF_ADVANCED_OPTIONS, {}):
+            trigger_entity_config[key] = msg["user_input"][CONF_ADVANCED_OPTIONS][key]
 
     query_str: str = msg["user_input"].get(CONF_QUERY)
     template: str | None = msg["user_input"].get(CONF_VALUE_TEMPLATE)

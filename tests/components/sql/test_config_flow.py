@@ -1010,6 +1010,17 @@ async def test_config_flow_preview_no_database(
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
+
+    with patch("homeassistant.components.sql.config_flow.validate_db_connection"):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_DB_URL: "sqlite://not_exist.local", CONF_NAME: "Get Value"},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "options"
+    assert result["errors"] == {}
     assert result["preview"] == "sql"
 
     await client.send_json_auto_id(
@@ -1018,24 +1029,24 @@ async def test_config_flow_preview_no_database(
             "flow_id": result["flow_id"],
             "flow_type": "config_flow",
             "user_input": {
-                CONF_DB_URL: "sqlite://homeassistant.local",
-                CONF_NAME: "Get Value",
                 CONF_QUERY: "SELECT 5 as value",
                 CONF_COLUMN_NAME: "value",
-                CONF_UNIT_OF_MEASUREMENT: "MiB",
-                CONF_DEVICE_CLASS: SensorDeviceClass.DATA_SIZE,
-                CONF_STATE_CLASS: SensorStateClass.TOTAL,
+                CONF_ADVANCED_OPTIONS: {
+                    CONF_UNIT_OF_MEASUREMENT: "MiB",
+                    CONF_DEVICE_CLASS: SensorDeviceClass.DATA_SIZE,
+                    CONF_STATE_CLASS: SensorStateClass.TOTAL,
+                },
             },
         }
     )
-    # msg = await client.receive_json()
-    # assert msg["success"]
-    # assert msg["result"] is None
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] is None
 
-    # msg = await client.receive_json()
-    # assert msg["event"] == snapshot
-    # assert len(hass.states.async_all()) == 0
-    await hass.async_block_till_done(wait_background_tasks=True)
+    msg = await client.receive_json()
+    print(msg)
+    assert msg["event"] == snapshot
+    assert False
 
 
 async def test_options_flow_preview(
@@ -1061,9 +1072,11 @@ async def test_options_flow_preview(
             "user_input": {
                 CONF_QUERY: "SELECT 6 as value",
                 CONF_COLUMN_NAME: "value",
-                CONF_UNIT_OF_MEASUREMENT: "MiB",
-                CONF_DEVICE_CLASS: SensorDeviceClass.DATA_SIZE,
-                CONF_STATE_CLASS: SensorStateClass.TOTAL,
+                CONF_ADVANCED_OPTIONS: {
+                    CONF_UNIT_OF_MEASUREMENT: "MiB",
+                    CONF_DEVICE_CLASS: SensorDeviceClass.DATA_SIZE,
+                    CONF_STATE_CLASS: SensorStateClass.TOTAL,
+                },
             },
         }
     )
