@@ -134,12 +134,12 @@ async def async_call_action_from_config(
     }
     command = build_command(CMD_ES_SET_MODE, payload)
 
-    # 发送并验证：指数退避+抖动重试，且通过 ES.GetMode 验证目标状态
+    # Send and verify: exponential backoff + jitter retry, verify target state via ES.GetMode
     udp = hass.data.get(DOMAIN, {}).get("udp_client")
     if not udp:
         return
 
-    # 尝试参数
+    # Retry parameters (timeout, backoff_base)
     attempts: list[tuple[float, float]] = [
         (2.4, 0.4),
         (3.2, 0.6),
@@ -151,7 +151,7 @@ async def async_call_action_from_config(
         (9.0, 1.8),
     ]
 
-    # 全过程暂停该设备轮询，避免竞态
+    # Pause polling for this device during the entire process to avoid race conditions
     await udp.pause_polling(host)
     try:
         for idx, (timeout_s, backoff_base) in enumerate(attempts, start=1):
@@ -164,10 +164,10 @@ async def async_call_action_from_config(
                     quiet_on_timeout=True,
                 )
             except (TimeoutError, OSError, ValueError) as e:
-                # 发送/等待失败也继续做状态验证；若设备已成功接收则可能已生效
+                # Continue verification even if send fails; device may have received command
                 _LOGGER.debug("ES.SetMode attempt %d send error: %s", idx, e)
 
-            # 验证：轮询 ES.GetMode，确认 enable/power 是否符合期望
+            # Verify: poll ES.GetMode to confirm if enable/power matches expectation
             try:
                 verify_ok = await _verify_es_mode(hass, host, enable, power)
             except (TimeoutError, OSError, ValueError) as ve:
@@ -180,9 +180,9 @@ async def async_call_action_from_config(
                 )
                 return
 
-            # 未验证通过则退避后重试
+            # If verification fails, backoff and retry
             if idx < len(attempts):
-                # 指数退避 + 抖动
+                # Exponential backoff + jitter
                 jitter = 0.30 * idx
                 delay = backoff_base * idx + (jitter)
                 _LOGGER.warning(
@@ -193,7 +193,7 @@ async def async_call_action_from_config(
                     delay,
                 )
                 await asyncio.sleep(delay)
-        # 全部尝试后仍未确认
+        # All attempts exhausted without confirmation
         raise TimeoutError(f"ES.SetMode not confirmed on device {host}")
     finally:
         await udp.resume_polling(host)
@@ -213,14 +213,14 @@ async def async_get_action_capabilities(
 async def _verify_es_mode(
     hass: HomeAssistant, host: str, enable: int, power: int
 ) -> bool:
-    """通过 ES.GetMode 验证目标状态是否生效.
+    """Verify if target state is applied via ES.GetMode.
 
-    规则（经验性）：
-    - 模式应为 Manual
-    - enable=0 视为停止：允许有少量功率波动（|ongrid_power| < 50W）
-    - enable=1 且 power<0 视为充电：ongrid_power 应为负
-    - enable=1 且 power>0 视为放电：ongrid_power 应为正
-    连续进行短轮询，任何一次命中即可视为成功。
+    Verification rules (empirical):
+    - Mode should be Manual
+    - enable=0 means stop: allow slight power fluctuation (|ongrid_power| < 50W)
+    - enable=1 and power<0 means charging: ongrid_power should be negative
+    - enable=1 and power>0 means discharging: ongrid_power should be positive
+    Poll briefly and continuously; any successful match confirms success.
     """
     udp = hass.data.get(DOMAIN, {}).get("udp_client")
     if not udp:
