@@ -60,7 +60,6 @@ from .entity import (
 )
 from .utils import (
     async_remove_orphaned_entities,
-    get_block_channel_name,
     get_blu_trv_device_info,
     get_device_entry_gen,
     get_device_uptime,
