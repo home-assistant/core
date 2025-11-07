@@ -11,9 +11,9 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
-from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, DPType
+from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
-from .models import DPCodeEnumWrapper, find_dpcode
+from .models import DPCodeEnumWrapper
 
 # All descriptions can be found here. Mostly the Enum data types in the
 # default instructions set of each category end up being a select.
@@ -361,21 +361,12 @@ async def async_setup_entry(
             if descriptions := SELECTS.get(device.category):
                 entities.extend(
                     TuyaSelectEntity(
-                        device,
-                        manager,
-                        description,
-                        DPCodeEnumWrapper(
-                            dpcode=enum_type.dpcode, enum_type_information=enum_type
-                        ),
+                        device, manager, description, dpcode_wrapper=dpcode_wrapper
                     )
                     for description in descriptions
-                    if description.key in device.status
-                    and (
-                        enum_type := find_dpcode(
-                            device,
-                            description.key,
-                            dptype=DPType.ENUM,
-                            prefer_function=True,
+                    if (
+                        dpcode_wrapper := DPCodeEnumWrapper.find_dpcode(
+                            device, description.key, prefer_function=True
                         )
                     )
                 )
