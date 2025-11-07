@@ -385,7 +385,7 @@ async def test_shutter(
     # Eve Shutter default state (ConfigStatus = 9)
     state = hass.states.get("binary_sensor.eve_shutter_switch_20eci1701_config_status")
     assert state
-    assert state.state == "on"
+    assert state.state == "off"
 
     # Eve Shutter ConfigStatus Operational bit not set
     set_node_attribute(matter_node, 1, 258, 7, 8)
@@ -393,4 +393,4 @@ async def test_shutter(
 
     state = hass.states.get("binary_sensor.eve_shutter_switch_20eci1701_config_status")
     assert state
-    assert state.state == "off"
+    assert state.state == "on"

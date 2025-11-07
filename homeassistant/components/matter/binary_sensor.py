@@ -489,12 +489,12 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.BINARY_SENSOR,
         entity_description=MatterBinarySensorEntityDescription(
-            key="WindowCoveringConfigStatus",
-            translation_key="window_covering_config_status",
-            device_class=BinarySensorDeviceClass.RUNNING,
+            key="WindowCoveringConfigStatusOperational",
+            translation_key="window_covering_config_status_operational",
+            device_class=BinarySensorDeviceClass.PROBLEM,
             entity_category=EntityCategory.DIAGNOSTIC,
-            # ConfigStatus is a bitmap – return True when the 'Operational' bit(s) is set
-            device_to_ha=lambda x: bool(
+            # ConfigStatus is a bitmap – return True (problem) when the 'Operational' bit is NOT set
+            device_to_ha=lambda x: not bool(
                 x & clusters.WindowCovering.Bitmaps.ConfigStatus.kOperational
             ),
         ),
