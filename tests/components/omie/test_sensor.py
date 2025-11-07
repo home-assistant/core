@@ -3,10 +3,12 @@
 import datetime as dt
 import logging
 
+import aiohttp
 from freezegun import freeze_time
 from pyomie.model import OMIEResults
 import pytest
 
+from homeassistant.components.omie import OMIECoordinator
 from homeassistant.components.omie.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -188,39 +190,30 @@ async def test_sensor_state_madrid_timezone(
         assert es_state.attributes["unit_of_measurement"] == "€/kWh"
 
 
+@pytest.mark.parametrize(
+    "raise_exc", [Exception("something bad"), aiohttp.ClientError("Connection timeout")]
+)
 async def test_sensor_unavailable_when_pyomie_throws(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_pyomie,
+    mock_omie_results_jan15,
+    raise_exc,
 ) -> None:
-    """Test sensor becomes unavailable when no data is available."""
+    """Test sensor becomes unavailable when pyomie throws."""
     mock_config_entry.add_to_hass(hass)
 
-    mock_pyomie.spot_price.side_effect = Exception("something bad")
+    mock_pyomie.spot_price.side_effect = spot_price_fetcher(
+        {"2024-01-15": mock_omie_results_jan15}
+    )
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Both sensors should be unavailable
-    pt_state = hass.states.get("sensor.omie_portugal_spot_price")
-    es_state = hass.states.get("sensor.omie_spain_spot_price")
-
-    assert pt_state.state == "unavailable"
-    assert es_state.state == "unavailable"
-
-
-async def test_sensor_unavailable_when_pyomie_returns_none(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_pyomie,
-) -> None:
-    """Test sensor becomes unavailable when no data is available."""
-    mock_config_entry.add_to_hass(hass)
-
-    mock_pyomie.spot_price.side_effect = spot_price_fetcher({})
-
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    # Trigger another refresh once integration is loaded
+    mock_pyomie.spot_price.side_effect = raise_exc
+    coordinator: OMIECoordinator = mock_config_entry.runtime_data
+    await coordinator.async_refresh()
 
     # Both sensors should be unavailable
     pt_state = hass.states.get("sensor.omie_portugal_spot_price")
@@ -252,6 +245,9 @@ async def test_sensor_unavailable_when_pyomie_returns_incomplete_data(
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
+
+    coordinator: OMIECoordinator = mock_config_entry.runtime_data
+    await coordinator.async_refresh()
 
     # Both sensors should be unavailable
     pt_state = hass.states.get("sensor.omie_portugal_spot_price")
@@ -285,7 +281,7 @@ async def test_coordinator_unavailability_logging(
     assert "ERROR" not in caplog.text
 
     # Mock API failure
-    mock_pyomie.spot_price.side_effect = Exception("Connection timeout")
+    mock_pyomie.spot_price.side_effect = aiohttp.ClientError("Connection timeout")
 
     # Get coordinator from config entry runtime data
     coordinator = mock_config_entry.runtime_data
@@ -294,7 +290,7 @@ async def test_coordinator_unavailability_logging(
     await coordinator.async_refresh()
 
     assert mock_pyomie.spot_price.call_count == 2
-    assert "Unexpected error fetching omie data" in caplog.text
+    assert "Error requesting omie data" in caplog.text
     assert "Connection timeout" in caplog.text
 
     # Second failure should not log again
