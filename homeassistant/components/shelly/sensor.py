@@ -1770,18 +1770,6 @@ class BlockSensor(ShellyBlockAttributeEntity, SensorEntity):
         if hasattr(self, "_attr_name"):
             delattr(self, "_attr_name")
 
-        translation_placeholders, translation_key = get_entity_translation_attributes(
-            get_block_channel_name(coordinator.device, self.block),
-            description.translation_key,
-            description.device_class,
-            self._default_to_device_class_name(),
-        )
-
-        if translation_placeholders:
-            self._attr_translation_placeholders = translation_placeholders
-            if translation_key:
-                self._attr_translation_key = translation_key
-
         self._attr_native_unit_of_measurement = description.native_unit_of_measurement
 
     @property
@@ -1806,18 +1794,6 @@ class RestSensor(ShellyRestAttributeEntity, SensorEntity):
 
         if hasattr(self, "_attr_name"):
             delattr(self, "_attr_name")
-
-        translation_placeholders, translation_key = get_entity_translation_attributes(
-            get_block_channel_name(coordinator.device, None),
-            description.translation_key,
-            description.device_class,
-            self._default_to_device_class_name(),
-        )
-
-        if translation_placeholders:
-            self._attr_translation_placeholders = translation_placeholders
-            if translation_key:
-                self._attr_translation_key = translation_key
 
     @property
     def native_value(self) -> StateType:
