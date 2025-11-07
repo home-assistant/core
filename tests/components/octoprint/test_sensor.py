@@ -3,7 +3,6 @@
 from datetime import UTC, datetime
 from typing import Any
 
-from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, UnitOfInformation
@@ -126,7 +125,6 @@ async def test_sensors(
 @pytest.mark.usefixtures("init_integration")
 async def test_sensors_no_target_temp(
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the underlying sensors."""
@@ -175,7 +173,6 @@ async def test_sensors_no_target_temp(
 @pytest.mark.usefixtures("init_integration")
 async def test_sensors_paused(
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the underlying sensors."""
@@ -199,7 +196,6 @@ async def test_sensors_paused(
 @pytest.mark.usefixtures("init_integration")
 async def test_sensors_printer_disconnected(
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the underlying sensors."""

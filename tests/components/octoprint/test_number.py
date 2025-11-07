@@ -4,7 +4,6 @@ from datetime import UTC, datetime
 from typing import Any
 from unittest.mock import patch
 
-from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -215,7 +214,6 @@ async def test_set_tool_n_temp(
 @pytest.mark.usefixtures("init_integration")
 async def test_numbers_printer_disconnected(
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test number entities when printer is disconnected."""
     # When printer is disconnected, no number entities should be created
