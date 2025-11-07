@@ -77,6 +77,12 @@ class EVSEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initial step: broadcast discovery and collect responses."""
 
         try:
+            if not mqtt.is_connected(self.hass):
+                return self.async_abort(reason="mqtt_not_connected")
+        except KeyError:
+            return self.async_abort(reason="mqtt_not_configured")
+
+        try:
             remove_listener = await mqtt.async_subscribe(
                 self.hass, GREENCELL_DISC_TOPIC, self._mqtt_message_received
             )
