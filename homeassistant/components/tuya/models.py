@@ -10,10 +10,46 @@ from typing import Any, Literal, Self, overload
 
 from tuya_sharing import CustomerDevice
 
-from tuya_sharing import CustomerDevice
-
 from .const import DPCode, DPType
 from .util import remap_value
+
+
+@dataclass
+class DPCodeWrapper:
+    """Base DPCode wrapper.
+
+    Used as a common interface for referring to a DPCode, and
+    access read conversion routines.
+    """
+
+    dpcode: str
+
+    def _read_device_status_raw(self, device: CustomerDevice) -> Any | None:
+        """Read the raw device status for the DPCode."""
+        return device.status.get(self.dpcode)
+
+    def read_device_status(self, device: CustomerDevice) -> Any | None:
+        """Read the device value for the dpcode."""
+        raise NotImplementedError("read_device_value must be implemented")
+
+
+@dataclass(kw_only=True)
+class DPCodeEnumWrapper(DPCodeWrapper):
+    """Simple wrapper for EnumTypeData values."""
+
+    enum_type_information: EnumTypeData
+
+    def read_device_status(self, device: CustomerDevice) -> str | None:
+        """Read the device value for the dpcode.
+
+        Supports True/False only, all other values are deemed incorrect and
+        return None.
+        """
+        if (
+            raw_value := self._read_device_status_raw(device)
+        ) in self.enum_type_information.range:
+            return raw_value
+        return None
 
 
 @overload

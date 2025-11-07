@@ -13,7 +13,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, DPType
 from .entity import TuyaEntity
-from .models import EnumTypeData, find_dpcode
+from .models import DPCodeEnumWrapper, find_dpcode
 
 # All descriptions can be found here. Mostly the Enum data types in the
 # default instructions set of each category end up being a select.
@@ -360,7 +360,14 @@ async def async_setup_entry(
             device = manager.device_map[device_id]
             if descriptions := SELECTS.get(device.category):
                 entities.extend(
-                    TuyaSelectEntity(device, manager, description, enum_type)
+                    TuyaSelectEntity(
+                        device,
+                        manager,
+                        description,
+                        DPCodeEnumWrapper(
+                            dpcode=enum_type.dpcode, enum_type_information=enum_type
+                        ),
+                    )
                     for description in descriptions
                     if description.key in device.status
                     and (
@@ -390,20 +397,20 @@ class TuyaSelectEntity(TuyaEntity, SelectEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: SelectEntityDescription,
-        data_parser: EnumTypeData,
+        dpcode_wrapper: DPCodeEnumWrapper,
     ) -> None:
         """Init Tuya sensor."""
         super().__init__(device, device_manager)
         self.entity_description = description
         self._attr_unique_id = f"{super().unique_id}{description.key}"
-        self._data_parser = data_parser
-        self._attr_options = data_parser.range
+        self._dpcode_wrapper = dpcode_wrapper
+        self._attr_options = dpcode_wrapper.enum_type_information.range
 
     @property
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
-        return self._data_parser.read_device_value(self.device)
+        return self._dpcode_wrapper.read_device_status(self.device)
 
     def select_option(self, option: str) -> None:
         """Change the selected option."""
-        self._send_command([{"code": self._data_parser.dpcode, "value": option}])
+        self._send_command([{"code": self._dpcode_wrapper.dpcode, "value": option}])
