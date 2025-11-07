@@ -124,21 +124,6 @@ def find_dpcode(
     return None
 
 
-@dataclass(kw_only=True)
-class DeviceDataParser:
-    """Base class for reading and converting DPCode data from Tuya devices."""
-
-    dpcode: str
-
-    def _read_device_value_raw(self, device: CustomerDevice) -> Any | None:
-        """Read the device value for the dpcode."""
-        return device.status.get(self.dpcode)
-
-    def read_device_value(self, device: CustomerDevice) -> Any | None:
-        """Read the device value for the dpcode."""
-        raise NotImplementedError
-
-
 @dataclass
 class IntegerTypeData:
     """Integer Type Data."""
@@ -211,27 +196,19 @@ class IntegerTypeData:
         )
 
 
-@dataclass(kw_only=True)
-class EnumTypeData(DeviceDataParser):
+@dataclass
+class EnumTypeData:
     """Enum Type Data."""
 
+    dpcode: DPCode
     range: list[str]
-
-    def read_device_value(self, device: CustomerDevice) -> str | None:
-        """Read the device value for the dpcode.
-
-        Values outside of the defined range will return None.
-        """
-        if (raw_value := self._read_device_value_raw(device)) in self.range:
-            return raw_value
-        return None
 
     @classmethod
     def from_json(cls, dpcode: DPCode, data: str) -> EnumTypeData | None:
         """Load JSON string and return a EnumTypeData object."""
         if not (parsed := json.loads(data)):
             return None
-        return cls(dpcode=dpcode, **parsed)
+        return cls(dpcode, **parsed)
 
 
 class ComplexValue:
