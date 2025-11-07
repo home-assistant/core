@@ -1,6 +1,4 @@
-# Home Assistant  Integration for Marstek 
-
-[English](../README.md) | [简体中文](./README_zh.md)
+# Home Assistant Integration for Marstek
 
 Marstek Integration is an integration component provided by Marstek official for Home Assistant, which can be used to monitor and control Marstek devices.
 
@@ -31,9 +29,9 @@ Download the Marstek integration file and copy the `custom_components/Marstek` f
 ## Communication Protocol
 
 ### UDP 
-- Default port ：30000
-- Timeout ：10秒
-- Communication mode ：
+- Default port: 30000
+- Timeout: 10 seconds
+- Communication mode:
   - OPEN API
   - Bidirectional UDP communication
 
