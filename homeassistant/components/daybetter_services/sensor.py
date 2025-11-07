@@ -9,30 +9,30 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DOMAIN, DayBetterConfigEntry, DayBetterRuntimeData
 from .coordinator import DayBetterCoordinator
+
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: DayBetterConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up DayBetter sensors from a config entry."""
-    entry_data = hass.data[DOMAIN][entry.entry_id]
-    coordinator: DayBetterCoordinator = entry_data["coordinator"]
+    runtime_data: DayBetterRuntimeData = entry.runtime_data
+    coordinator = runtime_data.coordinator
     devices = coordinator.data or []
 
     entities: list[SensorEntity] = []
     for device in devices:
-        # Library already filters sensor devices, no need to check type
         device_name = device.get("deviceName", "unknown")
         device_id = device.get("deviceId", device_name)
         group = (

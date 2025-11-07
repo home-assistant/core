@@ -2,7 +2,10 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.daybetter_services.const import DOMAIN
+from homeassistant.components.daybetter_services.const import (
+    DOMAIN,
+    DayBetterRuntimeData,
+)
 from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 
@@ -201,7 +204,8 @@ async def test_sensor_update(hass: HomeAssistant) -> None:
         ]
 
         # Trigger coordinator refresh
-        coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
+        runtime_data: DayBetterRuntimeData = hass.data[DOMAIN][entry.entry_id]
+        coordinator = runtime_data.coordinator
         await coordinator.async_refresh()
         await hass.async_block_till_done()
 

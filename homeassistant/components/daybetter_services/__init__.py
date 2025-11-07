@@ -6,12 +6,18 @@ from datetime import timedelta
 
 from daybetter_python import DayBetterClient
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_TOKEN, DEFAULT_SCAN_INTERVAL, DOMAIN, PLATFORMS
+from .const import CONF_TOKEN, DOMAIN, DayBetterConfigEntry, DayBetterRuntimeData
 from .coordinator import DayBetterCoordinator
+
+PLATFORMS = [Platform.SENSOR]
+SCAN_INTERVAL = timedelta(seconds=300)
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -19,38 +25,38 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: DayBetterConfigEntry) -> bool:
     """Set up DayBetter from a config entry."""
-    token = entry.data.get(CONF_TOKEN)
-
-    if not token:
-        return False
-
-    client = DayBetterClient(token=token)
+    client = DayBetterClient(token=entry.data[CONF_TOKEN])
 
     coordinator = DayBetterCoordinator(
         hass,
         client,
-        timedelta(seconds=DEFAULT_SCAN_INTERVAL),
+        SCAN_INTERVAL,
     )
 
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
-        "coordinator": coordinator,
-        "client": client,
-    }
+    runtime_data = DayBetterRuntimeData(coordinator=coordinator, client=client)
+    entry.runtime_data = runtime_data
+
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = runtime_data
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: DayBetterConfigEntry) -> bool:
     """Unload DayBetter config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        entry_data = hass.data[DOMAIN].pop(entry.entry_id, None)
-        if entry_data and "client" in entry_data:
-            await entry_data["client"].close()
+        domain_data = hass.data.get(DOMAIN, {})
+        runtime_data = domain_data.pop(entry.entry_id, None)
+        if not domain_data:
+            hass.data.pop(DOMAIN, None)
+        if runtime_data is None:
+            runtime_data = getattr(entry, "runtime_data", None)
+        if runtime_data is not None:
+            await runtime_data.client.close()
     return unload_ok

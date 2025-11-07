@@ -2,21 +2,35 @@
   "config": {
     "step": {
       "user": {
-        "title": "设置 DayBetter Services",
-        "description": "请输入您的 DayBetter 用户代码以创建集成。\n\n集成将自动：\n1. 创建连接并获取访问令牌\n2. 获取您的设备列表\n3. 获取设备类型信息 (PIDs)\n4. 定时同步温湿度传感器状态",
+        "title": "Set up DayBetter Services",
+        "description": "Please enter your DayBetter user code to create the integration.\n\nThe integration will automatically:\n1. Create connection and obtain access token\n2. Fetch your device list\n3. Fetch device type information (PIDs)\n4. Periodically sync temperature and humidity sensor status",
         "data": {
-          "user_code": "用户代码 (User Code)"
+          "user_code": "User Code"
+        },
+        "data_description": {
+          "user_code": "Enter the DayBetter user code used to generate access tokens."
+        }
+      },
+      "reauth_confirm": {
+        "title": "Reauthenticate DayBetter Services",
+        "description": "Your DayBetter authentication has expired. Please enter your DayBetter user code to restore the connection.",
+        "data": {
+          "user_code": "User Code"
+        },
+        "data_description": {
+          "user_code": "Enter the DayBetter user code associated with this integration."
         }
       }
     },
     "error": {
-      "cannot_connect": "无法连接到 DayBetter 服务，请检查网络连接",
-      "invalid_code": "用户代码无效，请检查后重试",
-      "unknown": "未知错误，请查看日志"
+      "cannot_connect": "Cannot connect to DayBetter service, please check network connection",
+      "invalid_code": "User code is invalid, please check and retry",
+      "unknown": "Unknown error, please check logs"
     },
     "abort": {
-      "single_instance_allowed": "已经配置过了。只允许配置一个实例。",
-      "already_configured": "此集成已经配置过了"
+      "single_instance_allowed": "Already configured. Only one instance is allowed.",
+      "already_configured": "This integration has already been configured",
+      "reauth_successful": "Reauthentication successful"
     }
   }
 }

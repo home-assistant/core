@@ -6,10 +6,11 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from daybetter_python import DayBetterClient
+from daybetter_python import APIError, AuthenticationError, DayBetterClient
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 
 class DayBetterCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
@@ -32,4 +33,11 @@ class DayBetterCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
 
     async def _async_update_data(self) -> list[dict[str, Any]]:
         """Fetch data from API."""
-        return await self._client.fetch_sensor_data()
+        try:
+            return await self._client.fetch_sensor_data()
+        except AuthenticationError as err:
+            raise ConfigEntryAuthFailed("Authentication failed") from err
+        except APIError as err:
+            raise UpdateFailed(f"API error: {err}") from err
+        except Exception as err:
+            raise UpdateFailed(f"Unexpected error: {err}") from err
