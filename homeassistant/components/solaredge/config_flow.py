@@ -133,8 +133,11 @@ class SolarEdgeConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 if api_key_ok and web_login_ok:
                     data = {CONF_SITE_ID: site_id}
-                    data.update(api_auth)
-                    data.update(web_auth)
+                    if api_key:
+                        data[CONF_API_KEY] = api_key
+                    if username:
+                        data[CONF_USERNAME] = username
+                        data[CONF_PASSWORD] = web_auth[CONF_PASSWORD]
 
                     if self.source == SOURCE_RECONFIGURE:
                         if TYPE_CHECKING:
