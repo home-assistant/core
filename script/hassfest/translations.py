@@ -174,8 +174,10 @@ def gen_data_entry_schema(
     flow_title: int,
     require_step_title: bool,
     mandatory_description: str | None = None,
+    subentry_flow: bool = False,
 ) -> vol.All:
     """Generate a data entry schema."""
+    key_classifier = vol.Required if subentry_flow else vol.Optional
     step_title_class = vol.Required if require_step_title else vol.Optional
     schema = {
         vol.Optional("flow_title"): translation_value_validator,
@@ -206,9 +208,13 @@ def gen_data_entry_schema(
         vol.Optional("abort"): {str: translation_value_validator},
         vol.Optional("progress"): {str: translation_value_validator},
         vol.Optional("create_entry"): {str: translation_value_validator},
-        vol.Optional("initiate_flow"): {str: translation_value_validator},
-        vol.Optional("entry_type"): translation_value_validator,
+        key_classifier("initiate_flow"): {
+            vol.Required("user"): translation_value_validator,
+            str: translation_value_validator,
+        },
     }
+    if subentry_flow:
+        schema[vol.Required("entry_type")] = translation_value_validator
     if flow_title == REQUIRED:
         schema[vol.Required("title")] = translation_value_validator
     elif flow_title == REMOVED:
@@ -314,6 +320,7 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                     integration=integration,
                     flow_title=REMOVED,
                     require_step_title=False,
+                    subentry_flow=True,
                 ),
                 slug_validator=vol.Any("_", cv.slug),
             ),
