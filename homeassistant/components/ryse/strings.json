@@ -1,7 +1,10 @@
 {
   "config": {
     "error": {
-      "no_devices_found": "No RYSE BLE gear found."
+      "bluetooth_error": "Bluetooth error occurred during pairing. Please ensure the device is in range and try again.",
+      "device_not_selected": "No device selected. Please choose a RYSE device before pairing.",
+      "no_devices_found": "No RYSE BLE gear found.",
+      "unexpected_error": "An unexpected error occurred during pairing. Please try again later."
     },
     "step": {
       "pair": {

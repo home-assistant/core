@@ -9,6 +9,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components.bluetooth import async_discovered_service_info
 from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.const import CONF_ADDRESS
 
 from .const import DOMAIN
 
@@ -17,7 +18,6 @@ _LOGGER = logging.getLogger(__name__)
 
 class RyseBLEDeviceConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle config flow for RYSE BLE Device."""
-
 
     def __init__(self) -> None:
         """Initialize flow attributes."""
@@ -72,7 +72,7 @@ class RyseBLEDeviceConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 description_placeholders={},
             )
 
-        selected_device = user_input["device"]
+        selected_device = user_input[CONF_ADDRESS]
         address = selected_device.split("(")[-1].rstrip(")")
         name = selected_device.split("(")[0].strip()
 
@@ -118,4 +118,4 @@ class RyseBLEDeviceConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         except Exception:
             _LOGGER.exception("Unexpected error during pairing")
-            return self.async_abort(reason="Unexpected error")
+            return self.async_abort(reason="unexpected_error")

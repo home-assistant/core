@@ -15,8 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_ADDRESS
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -26,9 +24,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up RYSE Smart Shade cover from a config entry."""
-    device = RyseBLEDevice(
-        entry.data[CONF_ADDRESS],
-    )
+    device = RyseBLEDevice(entry.unique_id)
     async_add_entities([RyseCoverEntity(device)])
 
 
