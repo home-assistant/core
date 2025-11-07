@@ -68,7 +68,7 @@ class RyseBLEDeviceConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="select_device",
                 data_schema=vol.Schema(
-                    {vol.Required("device"): vol.In(device_options)}
+                    {vol.Required(CONF_ADDRESS): vol.In(device_options)}
                 ),
                 description_placeholders={},
             )
