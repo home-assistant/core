@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import logging
 from typing import Any
 
@@ -101,7 +102,9 @@ class HomematicipGenericEntity(Entity):
         self._channel_real_index: int | None = channel_real_index
 
         self._is_multi_channel = is_multi_channel
-        self.functional_channel = self.get_current_channel()
+        self.functional_channel = None
+        with contextlib.suppress(ValueError):
+            self.functional_channel = self.get_current_channel()
 
         # Marker showing that the HmIP device hase been removed.
         self.hmip_device_removed = False
@@ -269,27 +272,47 @@ class HomematicipGenericEntity(Entity):
 
         return state_attr
 
-    def get_current_channel(self) -> FunctionalChannel | None:
-        """Return the FunctionalChannel for device."""
+    def get_current_channel(self) -> FunctionalChannel:
+        """Return the FunctionalChannel for the device.
+
+        Resolution priority:
+        1. For multi-channel entities with a real index, find channel by index match.
+        2. For multi-channel entities without a real index, use the provided channel position.
+        3. For non multi-channel entities with >1 channels, use channel at position 1
+           (index 0 is often a meta/service channel in HmIP).
+        Raises ValueError if no suitable channel can be resolved.
+        """
         functional_channels = getattr(self._device, "functionalChannels", None)
-        if functional_channels:
-            if self._is_multi_channel:
-                if self._channel_real_index is not None:
-                    return next(
-                        (
-                            channel
-                            for channel in functional_channels
-                            if channel.index == self._channel_real_index
-                        ),
-                        None,
-                    )
+        if not functional_channels:
+            raise ValueError(
+                f"Device {getattr(self._device, 'id', 'unknown')} has no functionalChannels"
+            )
 
+        # Multi-channel handling
+        if self._is_multi_channel:
+            # Prefer real index mapping when provided to avoid ordering issues.
+            if self._channel_real_index is not None:
+                for channel in functional_channels:
+                    if channel.index == self._channel_real_index:
+                        return channel
+                raise ValueError(
+                    f"Real channel index {self._channel_real_index} not found for device "
+                    f"{getattr(self._device, 'id', 'unknown')}"
+                )
+            # Fallback: positional channel (already sorted as strings upstream).
+            if self._channel is not None and 0 <= self._channel < len(
+                functional_channels
+            ):
                 return functional_channels[self._channel]
+            raise ValueError(
+                f"Channel position {self._channel} invalid for device "
+                f"{getattr(self._device, 'id', 'unknown')} (len={len(functional_channels)})"
+            )
 
-            if len(functional_channels) > 1:
-                return functional_channels[1]
-
-        return None
+        # Single-channel / non multi-channel entity: choose second element if available
+        if len(functional_channels) > 1:
+            return functional_channels[1]
+        return functional_channels[0]
 
     def get_channel_index(self) -> int:
         """Return the correct channel index for this entity.
