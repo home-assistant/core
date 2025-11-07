@@ -381,9 +381,9 @@ async def test_shutter(
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
-    """Test shutter ConfigStatus."""
+    """Test shutter Problem."""
     # Eve Shutter default state (ConfigStatus = 9)
-    state = hass.states.get("binary_sensor.eve_shutter_switch_20eci1701_config_status")
+    state = hass.states.get("binary_sensor.eve_shutter_switch_20eci1701_problem")
     assert state
     assert state.state == "off"
 
@@ -391,6 +391,6 @@ async def test_shutter(
     set_node_attribute(matter_node, 1, 258, 7, 8)
     await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get("binary_sensor.eve_shutter_switch_20eci1701_config_status")
+    state = hass.states.get("binary_sensor.eve_shutter_switch_20eci1701_problem")
     assert state
     assert state.state == "on"
