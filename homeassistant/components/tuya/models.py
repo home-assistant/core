@@ -38,7 +38,7 @@ class DPCodeWrapper:
 
 @dataclass
 class DPCodeBooleanWrapper(DPCodeWrapper):
-    """Simple parser for boolean values.
+    """Simple wrapper for boolean values.
 
     Supports True/False only.
     """

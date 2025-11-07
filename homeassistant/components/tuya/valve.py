@@ -17,7 +17,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
-from .models import BooleanDPCodeWrapper
+from .models import DPCodeBooleanWrapper
 
 VALVES: dict[DeviceCategory, tuple[ValveEntityDescription, ...]] = {
     DeviceCategory.SFKZQ: (
@@ -98,7 +98,7 @@ async def async_setup_entry(
                         device,
                         manager,
                         description,
-                        BooleanDPCodeWrapper(description.key),
+                        DPCodeBooleanWrapper(description.key),
                     )
                     for description in descriptions
                     if description.key in device.status
@@ -123,7 +123,7 @@ class TuyaValveEntity(TuyaEntity, ValveEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: ValveEntityDescription,
-        dpcode_wrapper: BooleanDPCodeWrapper,
+        dpcode_wrapper: DPCodeBooleanWrapper,
     ) -> None:
         """Init TuyaValveEntity."""
         super().__init__(device, device_manager)
