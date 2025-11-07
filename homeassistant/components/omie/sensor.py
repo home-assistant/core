@@ -74,9 +74,8 @@ class OMIEPriceSensor(CoordinatorEntity[OMIECoordinator], SensorEntity):
     def _get_current_quarter_hour_value(self) -> float | None:
         """Get current quarter-hour's price value from coordinator data."""
         current_quarter_hour_cet = util.current_quarter_hour_cet()
-        current_date_cet = current_quarter_hour_cet.date()
 
-        pyomie_results = self.coordinator.data.get(current_date_cet)
+        pyomie_results = self.coordinator.data
         pyomie_quarter_hours = util.pick_series_cet(
             pyomie_results, self._pyomie_series_name
         )

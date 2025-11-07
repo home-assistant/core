@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 import datetime as dt
 import logging
 
@@ -26,7 +25,7 @@ _SCHEDULE_MAX_DELAY = dt.timedelta(seconds=10)
 type OMIEConfigEntry = ConfigEntry[OMIECoordinator]
 
 
-class OMIECoordinator(DataUpdateCoordinator[Mapping[dt.date, OMIEResults[SpotData]]]):
+class OMIECoordinator(DataUpdateCoordinator[OMIEResults[SpotData]]):
     """Coordinator that manages OMIE data for yesterday, today, and tomorrow."""
 
     def __init__(self, hass: HomeAssistant, config_entry: OMIEConfigEntry) -> None:
@@ -38,15 +37,16 @@ class OMIECoordinator(DataUpdateCoordinator[Mapping[dt.date, OMIEResults[SpotDat
             config_entry=config_entry,
             update_interval=dt.timedelta(minutes=1),
         )
-        self.data = {}
         self._client_session = async_get_clientsession(hass)
 
-    async def _async_update_data(self) -> Mapping[dt.date, OMIEResults[SpotData]]:
+    async def _async_update_data(self) -> OMIEResults[SpotData]:
         """Update OMIE data, fetching the current CET day."""
         cet_today = util.dt.now().astimezone(CET).date()
-        spot_data = self.data.get(cet_today) or await self.__spot_price(cet_today)
+        if self.data and self.data.market_date == cet_today:
+            data = self.data
+        else:
+            data = await self._spot_price(cet_today)
 
-        data = {cet_today: spot_data} if spot_data else {}
         self._set_update_interval()
         return data
 
@@ -61,6 +61,6 @@ class OMIECoordinator(DataUpdateCoordinator[Mapping[dt.date, OMIEResults[SpotDat
 
         _LOGGER.debug("Next refresh at %s", refresh_at.astimezone())
 
-    async def __spot_price(self, date: dt.date) -> OMIEResults[SpotData] | None:
+    async def _spot_price(self, date: dt.date) -> OMIEResults[SpotData]:
         _LOGGER.debug("Fetching OMIE spot data for %s", date)
         return await pyomie.spot_price(self._client_session, date)

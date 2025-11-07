@@ -4,7 +4,7 @@ import datetime as dt
 from typing import Final
 from zoneinfo import ZoneInfo
 
-from pyomie.model import OMIEResults, _DataT
+from pyomie.model import OMIEResults, SpotData
 from pyomie.util import localize_quarter_hourly_data
 
 CET: Final = ZoneInfo("CET")
@@ -18,7 +18,7 @@ def current_quarter_hour_cet() -> dt.datetime:
 
 
 def pick_series_cet(
-    res: OMIEResults[_DataT] | None,
+    res: OMIEResults[SpotData] | None,
     series_name: str,
 ) -> dict[dt.datetime, float]:
     """Pick the values for this series from the market data, keyed by a datetime in CET."""
