@@ -144,23 +144,23 @@ class FoscamCoordinator(DataUpdateCoordinator[FoscamDeviceInfo]):
             if ret_sw == 0
             else False
         )
-        ret_md, mothion_config_val = self.session.get_motion_detect_config()
+        ret_md, motion_config_val = self.session.get_motion_detect_config()
         if pet_adjustment_val:
             is_pet_detection_on_val = (
-                mothion_config_val["petEnable"] == "1" if ret_md == 0 else False
+                motion_config_val.get("petEnable") == "1" if ret_md == 0 else False
             )
         else:
             is_pet_detection_on_val = False
 
         if car_adjustment_val:
             is_car_detection_on_val = (
-                mothion_config_val["carEnable"] == "1" if ret_md == 0 else False
+                motion_config_val.get("carEnable") == "1" if ret_md == 0 else False
             )
         else:
             is_car_detection_on_val = False
 
         is_human_detection_on_val = (
-            mothion_config_val["humanEnable"] == "1" if ret_md == 0 else False
+            motion_config_val.get("humanEnable") == "1" if ret_md == 0 else False
         )
 
         return FoscamDeviceInfo(
