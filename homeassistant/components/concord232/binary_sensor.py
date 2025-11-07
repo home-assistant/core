@@ -104,6 +104,12 @@ def get_opening_type(zone):
         return BinarySensorDeviceClass.SMOKE
     if "WATER" in zone["name"]:
         return "water"
+    if "DOOR" in zone["name"]:
+        return BinarySensorDeviceClass.DOOR
+    if "WINDOW" in zone["name"]:
+        return BinarySensorDeviceClass.WINDOW
+    if "SOUND" in zone["name"]:
+        return BinarySensorDeviceClass.SOUND
     return BinarySensorDeviceClass.OPENING
 
 
@@ -117,6 +123,11 @@ class Concord232ZoneSensor(BinarySensorEntity):
         self._zone = zone
         self._number = zone["number"]
         self._zone_type = zone_type
+
+    @property
+    def unique_id(self):
+        """Return a unique id for this sensor."""
+        return f"concord232_zone_{self._number}"
 
     @property
     def device_class(self):
