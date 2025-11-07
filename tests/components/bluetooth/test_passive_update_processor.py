@@ -43,6 +43,7 @@ from homeassistant.config_entries import current_entry
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -1924,21 +1925,53 @@ async def test_naming(hass: HomeAssistant) -> None:
     cancel_coordinator()
 
 
-async def test_deserialize_entity_description() -> None:
+@pytest.mark.parametrize(
+    ("description_type", "description_dict", "expected_description"),
+    [
+        (
+            SensorEntityDescription,
+            {
+                "key": "humidity",
+                "native_unit_of_measurement": "%",
+                "device_class": "humidity",
+                "state_class": "measurement",
+            },
+            SensorEntityDescription(
+                key="humidity",
+                native_unit_of_measurement="%",
+                device_class=SensorDeviceClass.HUMIDITY,
+                state_class=SensorStateClass.MEASUREMENT,
+            ),
+        ),
+        (
+            BinarySensorEntityDescription,
+            {
+                "key": "motion",
+                "device_class": "motion",
+            },
+            BinarySensorEntityDescription(
+                key="motion",
+                device_class=BinarySensorDeviceClass.MOTION,
+            ),
+        ),
+        (
+            SensorEntityDescription,
+            {
+                "key": "temperature",
+                "name": None,
+            },
+            SensorEntityDescription(
+                key="temperature",
+                name=None,
+            ),
+        ),
+    ],
+)
+async def test_deserialize_entity_description(
+    description_type: type[EntityDescription],
+    description_dict: dict[str, Any],
+    expected_description: SensorEntityDescription,
+) -> None:
     """Test deserializing an entity description."""
-    description_dict = {
-        "key": "temperature",
-        "native_unit_of_measurement": "°C",
-        "device_class": "temperature",
-        "state_class": "measurement",
-    }
-    description = deserialize_entity_description(
-        SensorEntityDescription, description_dict
-    )
-
-    assert description == SensorEntityDescription(
-        key="temperature",
-        native_unit_of_measurement="°C",
-        device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
-    )
+    description = deserialize_entity_description(description_type, description_dict)
+    assert description == expected_description
