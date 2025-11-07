@@ -101,9 +101,7 @@ class GeolocationEvent(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @property
     def state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of this external event."""
-        data: dict[str, Any] = self.generate_entity_state_attributes()
-
-        data[ATTR_SOURCE] = self.source
+        data: dict[str, Any] = {ATTR_SOURCE: self.source}
         if self.latitude is not None:
             data[ATTR_LATITUDE] = round(self.latitude, 5)
         if self.longitude is not None:

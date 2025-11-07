@@ -233,36 +233,32 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @property
     def state_attributes(self) -> dict[str, Any]:
         """Return the optional state attributes."""
-        data: dict[str, Any] = self.generate_entity_state_attributes()
-
-        data.update(
-            {
-                ATTR_CURRENT_TEMPERATURE: show_temp(
-                    self.hass,
-                    self.current_temperature,
-                    self.temperature_unit,
-                    self.precision,
-                ),
-                ATTR_TEMPERATURE: show_temp(
-                    self.hass,
-                    self.target_temperature,
-                    self.temperature_unit,
-                    self.precision,
-                ),
-                ATTR_TARGET_TEMP_HIGH: show_temp(
-                    self.hass,
-                    self.target_temperature_high,
-                    self.temperature_unit,
-                    self.precision,
-                ),
-                ATTR_TARGET_TEMP_LOW: show_temp(
-                    self.hass,
-                    self.target_temperature_low,
-                    self.temperature_unit,
-                    self.precision,
-                ),
-            }
-        )
+        data: dict[str, Any] = {
+            ATTR_CURRENT_TEMPERATURE: show_temp(
+                self.hass,
+                self.current_temperature,
+                self.temperature_unit,
+                self.precision,
+            ),
+            ATTR_TEMPERATURE: show_temp(
+                self.hass,
+                self.target_temperature,
+                self.temperature_unit,
+                self.precision,
+            ),
+            ATTR_TARGET_TEMP_HIGH: show_temp(
+                self.hass,
+                self.target_temperature_high,
+                self.temperature_unit,
+                self.precision,
+            ),
+            ATTR_TARGET_TEMP_LOW: show_temp(
+                self.hass,
+                self.target_temperature_low,
+                self.temperature_unit,
+                self.precision,
+            ),
+        }
 
         supported_features = self.supported_features
 

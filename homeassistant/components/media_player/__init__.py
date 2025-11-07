@@ -1124,7 +1124,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @property
     def state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        state_attr: dict[str, Any] = self.generate_entity_state_attributes()
+        state_attr: dict[str, Any] = {}
 
         if self.support_grouping:
             state_attr[ATTR_GROUP_MEMBERS] = self.group_members

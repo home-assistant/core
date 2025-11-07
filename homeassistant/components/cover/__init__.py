@@ -267,7 +267,7 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @property
     def state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        data: dict[str, Any] = self.generate_entity_state_attributes()
+        data = {}
 
         if (current := self.current_cover_position) is not None:
             data[ATTR_CURRENT_POSITION] = current

@@ -437,8 +437,6 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @override
     def state_attributes(self) -> dict[str, Any] | None:
         """Return state attributes."""
-        state_attr: dict[str, Any] = self.generate_entity_state_attributes()
-
         if last_reset := self.last_reset:
             state_class = self.state_class
             if state_class != SensorStateClass.TOTAL:
@@ -450,9 +448,9 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 )
 
             if state_class == SensorStateClass.TOTAL:
-                state_attr[ATTR_LAST_RESET] = last_reset.isoformat()
+                return {ATTR_LAST_RESET: last_reset.isoformat()}
 
-        return state_attr or None
+        return None
 
     @cached_property
     def native_value(self) -> StateType | date | datetime | Decimal:

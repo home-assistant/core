@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any, final
+from typing import final
 
 from propcache.api import cached_property
 
@@ -28,6 +28,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_platform import EntityPlatform
+from homeassistant.helpers.typing import StateType
 from homeassistant.util.hass_dict import HassKey
 
 from .const import (
@@ -188,11 +189,9 @@ class BaseTrackerEntity(Entity):
         raise NotImplementedError
 
     @property
-    def state_attributes(self) -> dict[str, Any]:
+    def state_attributes(self) -> dict[str, StateType]:
         """Return the device state attributes."""
-        attr: dict[str, Any] = self.generate_entity_state_attributes()
-
-        attr[ATTR_SOURCE_TYPE] = self.source_type
+        attr: dict[str, StateType] = {ATTR_SOURCE_TYPE: self.source_type}
 
         if self.battery_level is not None:
             attr[ATTR_BATTERY_LEVEL] = self.battery_level
@@ -279,9 +278,9 @@ class TrackerEntity(
 
     @final
     @property
-    def state_attributes(self) -> dict[str, Any]:
+    def state_attributes(self) -> dict[str, StateType]:
         """Return the device state attributes."""
-        attr: dict[str, Any] = {}
+        attr: dict[str, StateType] = {}
         attr.update(super().state_attributes)
 
         if self.latitude is not None and self.longitude is not None:
@@ -432,10 +431,9 @@ class ScannerEntity(
 
     @final
     @property
-    def state_attributes(self) -> dict[str, Any]:
+    def state_attributes(self) -> dict[str, StateType]:
         """Return the device state attributes."""
-        attr: dict[str, Any] = self.generate_entity_state_attributes()
-        attr.update(super().state_attributes)
+        attr = super().state_attributes
 
         if ip_address := self.ip_address:
             attr[ATTR_IP] = ip_address

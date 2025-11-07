@@ -180,9 +180,7 @@ class EventEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
     @property
     def state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        attributes: dict[str, Any] = self.generate_entity_state_attributes()
-
-        attributes[ATTR_EVENT_TYPE] = self.__last_event_type
+        attributes = {ATTR_EVENT_TYPE: self.__last_event_type}
         if last_event_attributes := self.__last_event_attributes:
             attributes |= last_event_attributes
         return attributes

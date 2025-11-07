@@ -301,12 +301,11 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
     @property
     def state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
-        data: dict[str, Any] = self.generate_entity_state_attributes()
-
-        data[ATTR_CODE_FORMAT] = self.code_format
-        data[ATTR_CHANGED_BY] = self.changed_by
-        data[ATTR_CODE_ARM_REQUIRED] = self.code_arm_required
-        return data
+        return {
+            ATTR_CODE_FORMAT: self.code_format,
+            ATTR_CHANGED_BY: self.changed_by,
+            ATTR_CODE_ARM_REQUIRED: self.code_arm_required,
+        }
 
     async def async_internal_added_to_hass(self) -> None:
         """Call when the alarm control panel entity is added to hass."""

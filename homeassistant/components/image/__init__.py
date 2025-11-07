@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 import logging
 import os
 from random import SystemRandom
-from typing import Any, Final, final
+from typing import Final, final
 
 from aiohttp import hdrs, web
 import httpx
@@ -281,12 +281,9 @@ class ImageEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @final
     @property
-    def state_attributes(self) -> dict[str, Any]:
+    def state_attributes(self) -> dict[str, str | None]:
         """Return the state attributes."""
-        data: dict[str, Any] = self.generate_entity_state_attributes()
-
-        data["access_token"] = self.access_tokens[-1]
-        return data
+        return {"access_token": self.access_tokens[-1]}
 
     @callback
     def async_update_token(self) -> None:

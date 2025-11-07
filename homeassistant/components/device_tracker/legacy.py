@@ -48,7 +48,7 @@ from homeassistant.helpers.event import (
     async_track_utc_time_change,
 )
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import ConfigType, GPSType
+from homeassistant.helpers.typing import ConfigType, GPSType, StateType
 from homeassistant.setup import (
     SetupPhases,
     async_notify_setup_error,
@@ -842,11 +842,9 @@ class Device(RestoreEntity):
 
     @final
     @property
-    def state_attributes(self) -> dict[str, Any]:
+    def state_attributes(self) -> dict[str, StateType]:
         """Return the device state attributes."""
-        attributes: dict[str, Any] = self.generate_entity_state_attributes()
-
-        attributes[ATTR_SOURCE_TYPE] = self.source_type
+        attributes: dict[str, StateType] = {ATTR_SOURCE_TYPE: self.source_type}
 
         if self.gps is not None:
             attributes[ATTR_LATITUDE] = self.gps[0]

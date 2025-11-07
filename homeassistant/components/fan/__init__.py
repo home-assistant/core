@@ -385,10 +385,9 @@ class FanEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @final
     @property
-    def state_attributes(self) -> dict[str, Any]:
+    def state_attributes(self) -> dict[str, float | str | None]:
         """Return optional state attributes."""
-        data: dict[str, Any] = self.generate_entity_state_attributes()
-
+        data: dict[str, float | str | None] = {}
         supported_features = self.supported_features
 
         if FanEntityFeature.DIRECTION in supported_features:

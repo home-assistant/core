@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any, Final, final
+from typing import Final, final
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
@@ -133,9 +133,9 @@ class AirQualityEntity(Entity):
 
     @final
     @property
-    def state_attributes(self) -> dict[str, Any]:
+    def state_attributes(self) -> dict[str, str | int | float]:
         """Return the state attributes."""
-        data: dict[str, Any] = self.generate_entity_state_attributes()
+        data: dict[str, str | int | float] = {}
 
         for prop, attr in PROP_TO_ATTR.items():
             if (value := getattr(self, prop)) is not None:

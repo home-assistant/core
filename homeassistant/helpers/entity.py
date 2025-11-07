@@ -781,27 +781,14 @@ class Entity(
         """
         return None
 
-    @property
+    @cached_property
     def state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes.
 
         Implemented by component base class, should not be extended by integrations.
-        An entity base class should use self.generate_entity_state_attributes()
-        to generate the initial state attributes.
         Convention for attribute names is lowercase snake_case.
         """
-        return self.generate_entity_state_attributes() or None
-
-    def generate_entity_state_attributes(self) -> dict[str, Any]:
-        """Generate base state attributes dict for entity base components.
-
-        Base entity classes can extend the state attributes. This helper
-        creates a new dict and sets the sharedcommon entity attributes
-        """
-        state_attrs: dict[str, Any] = {}
-        if included_entities := getattr(self, "included_entities", None):
-            state_attrs[ATTR_ENTITY_ID] = included_entities
-        return state_attrs
+        return None
 
     @cached_property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
@@ -1104,6 +1091,8 @@ class Entity(
         available = self.available  # only call self.available once per update cycle
         state = self._stringify_state(available)
         if available:
+            if self._included_entities:
+                attr[ATTR_ENTITY_ID] = self._included_entities.copy()
             if state_attributes := self.state_attributes:
                 attr |= state_attributes
             if extra_state_attributes := self.extra_state_attributes:
@@ -1653,17 +1642,16 @@ class Entity(
         )
 
     @callback
-    def async_set_included_entities(self, unique_ids: list[str]) -> None:
+    def async_set_included_entities(self) -> None:
         """Set the list of included entities identified by their unique IDs.
 
         Integrations need to initialize this in entity.async_async_added_to_hass,
         and when the list of included entities changes.
         The entity ids of included entities will will be looked up and they will be
         tracked for changes.
-        None existing entities for the supplied unique IDs will be ignored.
+        None existing entities for supplied unique IDs will be ignored.
         """
         entity_registry = er.async_get(self.hass)
-        self._attr_included_unique_ids = unique_ids
         assert self.entity_id is not None
 
         def _update_group_entity_ids() -> None:
@@ -1682,8 +1670,8 @@ class Entity(
                 and entry.unique_id in self.included_unique_ids
             ) or (
                 event.data["action"] == "remove"
-                and self.included_entities is not None
-                and event.data["entity_id"] in self.included_entities
+                and self._included_entities is not None
+                and event.data["entity_id"] in self._included_entities
             ):
                 _update_group_entity_ids()
                 self.async_write_ha_state()
@@ -1709,7 +1697,7 @@ class Entity(
         return []
 
     @property
-    def included_entities(self) -> list[str] | None:
+    def _included_entities(self) -> list[str] | None:
         """Return a list of entity IDs if the entity represents a group.
 
         Included entities will be shown as members in the UI.

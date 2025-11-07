@@ -364,12 +364,10 @@ class StateVacuumEntity(
         """Get the list of available fan speed steps of the vacuum cleaner."""
         return self._attr_fan_speed_list
 
-    @final
     @property
     def state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the vacuum cleaner."""
-        data: dict[str, Any] = self.generate_entity_state_attributes()
-
+        data: dict[str, Any] = {}
         supported_features = self.supported_features
 
         if VacuumEntityFeature.BATTERY in supported_features:

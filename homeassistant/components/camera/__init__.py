@@ -664,9 +664,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @property
     def state_attributes(self) -> dict[str, str | None]:
         """Return the camera state attributes."""
-        attrs: dict[str, Any] = self.generate_entity_state_attributes()
-
-        attrs["access_token"] = self.access_tokens[-1]
+        attrs = {"access_token": self.access_tokens[-1]}
 
         if model := self.model:
             attrs["model_name"] = model

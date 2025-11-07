@@ -562,7 +562,7 @@ class WeatherEntity(Entity, PostInit, cached_properties=CACHED_PROPERTIES_WITH_A
 
         Attributes are configured from native units to user-configured units.
         """
-        data: dict[str, Any] = self.generate_entity_state_attributes()
+        data: dict[str, Any] = {}
 
         precision = self.precision
 

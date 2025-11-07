@@ -433,8 +433,6 @@ class UpdateEntity(
     @property
     def state_attributes(self) -> dict[str, Any] | None:
         """Return state attributes."""
-        state_attr: dict[str, Any] = self.generate_entity_state_attributes()
-
         if (release_summary := self.release_summary) is not None:
             release_summary = release_summary[:255]
 
@@ -461,17 +459,18 @@ class UpdateEntity(
             skipped_version = None
             self.__skipped_version = None
 
-        state_attr[ATTR_AUTO_UPDATE] = self.auto_update
-        state_attr[ATTR_DISPLAY_PRECISION] = self.display_precision
-        state_attr[ATTR_INSTALLED_VERSION] = installed_version
-        state_attr[ATTR_IN_PROGRESS] = in_progress
-        state_attr[ATTR_LATEST_VERSION] = latest_version
-        state_attr[ATTR_RELEASE_SUMMARY] = release_summary
-        state_attr[ATTR_RELEASE_URL] = self.release_url
-        state_attr[ATTR_SKIPPED_VERSION] = skipped_version
-        state_attr[ATTR_TITLE] = self.title
-        state_attr[ATTR_UPDATE_PERCENTAGE] = update_percentage
-        return state_attr
+        return {
+            ATTR_AUTO_UPDATE: self.auto_update,
+            ATTR_DISPLAY_PRECISION: self.display_precision,
+            ATTR_INSTALLED_VERSION: installed_version,
+            ATTR_IN_PROGRESS: in_progress,
+            ATTR_LATEST_VERSION: latest_version,
+            ATTR_RELEASE_SUMMARY: release_summary,
+            ATTR_RELEASE_URL: self.release_url,
+            ATTR_SKIPPED_VERSION: skipped_version,
+            ATTR_TITLE: self.title,
+            ATTR_UPDATE_PERCENTAGE: update_percentage,
+        }
 
     @final
     async def async_install_with_progress(
