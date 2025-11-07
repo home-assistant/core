@@ -48,7 +48,7 @@ class RyseBLEDeviceConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Check already discovered BLE devices for pairing mode."""
         _LOGGER.info("Checking already discovered BLE devices for RYSE in pairing mode")
 
-        devices = async_discovered_service_info(self.hass)
+        devices = async_discovered_service_info(self.hass, connectable=True)
         existing_addresses = {
             entry.data["address"]
             for entry in self._async_current_entries()
