@@ -168,7 +168,7 @@ _LOGGER = logging.getLogger(__name__)
             [
                 {
                     "sensor_entity": "sensor.test_device_18b2_dew_point",
-                    "friendly_name": "Test Device 18B2 Dew Point",
+                    "friendly_name": "Test Device 18B2 Dew point",
                     "unit_of_measurement": "°C",
                     "state_class": "measurement",
                     "expected_state": "17.38",
@@ -522,7 +522,7 @@ async def test_v1_sensors(
             [
                 {
                     "sensor_entity": "sensor.test_device_18b2_dew_point",
-                    "friendly_name": "Test Device 18B2 Dew Point",
+                    "friendly_name": "Test Device 18B2 Dew point",
                     "unit_of_measurement": "°C",
                     "state_class": "measurement",
                     "expected_state": "17.38",
