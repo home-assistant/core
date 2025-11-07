@@ -348,7 +348,7 @@ class HomeAssistantYellowOptionsFlowHandler(
 
         self._probed_firmware_info = FirmwareInfo(
             device=self._device,
-            firmware_type=ApplicationType(self.config_entry.data["firmware"]),
+            firmware_type=ApplicationType(self._config_entry.data["firmware"]),
             firmware_version=None,
             source="guess",
             owners=[],
