@@ -12,7 +12,7 @@ DOMAIN: Final = "plugwise"
 
 LOGGER = logging.getLogger(__package__)
 
-ANNA_WITH_ADAM: Final = "adam_with_anna"
+ANNA_WITH_ADAM: Final = "anna_with_adam"
 API: Final = "api"
 AVAILABLE: Final = "available"
 DEV_CLASS: Final = "dev_class"
