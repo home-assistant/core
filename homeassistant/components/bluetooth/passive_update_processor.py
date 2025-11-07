@@ -102,7 +102,7 @@ def deserialize_entity_description(
         # Only set fields that are in the data
         # otherwise we would override default values with None
         # causing side effects
-        if field_name in data:
+        if field_name not in data:
             continue
 
         # It would be nice if field.type returned the actual
