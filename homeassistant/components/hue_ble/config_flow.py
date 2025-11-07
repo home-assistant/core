@@ -17,6 +17,7 @@ from homeassistant.components.bluetooth.api import (
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_MAC, CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN, URL_PAIRING_MODE
@@ -53,7 +54,9 @@ async def validate_input(hass: HomeAssistant, address: str) -> Error | None:
         if not light.connected:
             return Error.CANNOT_CONNECT
 
-        if len(get_avaliable_color_modes(light)) == 0:
+        try:
+            get_avaliable_color_modes(light)
+        except HomeAssistantError:
             return Error.NOT_SUPPORTED
 
         _, errors = await light.poll_state()

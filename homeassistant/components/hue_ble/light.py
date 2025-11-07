@@ -49,7 +49,7 @@ def get_avaliable_color_modes(api: HueBleLight) -> set[ColorMode]:
         color_modes.add(ColorMode.BRIGHTNESS)
     if api.supports_on_off:
         color_modes.add(ColorMode.ONOFF)
-    return filter_supported_color_modes(color_modes) if color_modes else set()
+    return filter_supported_color_modes(color_modes)
 
 
 class HueBLELight(LightEntity):
