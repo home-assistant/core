@@ -163,7 +163,29 @@
       }
     },
     "sensor": {
+      "adc": {
+        "name": "ADC"
+      },
+      "analog": {
+        "name": "Analog"
+      },
+      "analog_value": {
+        "name": "Analog value"
+      },
+      "analog_value_with_channel_name": {
+        "name": "{channel_name} analog value"
+      },
+      "analog_with_channel_name": {
+        "name": "{channel_name} analog"
+      },
+      "apparent_power_with_channel_name": {
+        "name": "{channel_name} apparent power"
+      },
+      "average_temperature": {
+        "name": "Average temperature"
+      },
       "charger_state": {
+        "name": "Charger state",
         "state": {
           "charger_charging": "[%key:common::state::charging%]",
           "charger_end": "Charge completed",
@@ -175,10 +197,43 @@
           "charger_wait": "Charging paused by vehicle"
         }
       },
+      "current_with_channel_name": {
+        "name": "{channel_name} current"
+      },
       "detected_objects": {
+        "name": "Detected objects",
         "unit_of_measurement": "objects"
       },
+      "detected_objects_with_channel_name": {
+        "name": "{channel_name} detected objects",
+        "unit_of_measurement": "objects"
+      },
+      "device_temperature": {
+        "name": "Device temperature"
+      },
+      "energy_consumed": {
+        "name": "Energy consumed"
+      },
+      "energy_consumed_with_channel_name": {
+        "name": "{channel_name} energy consumed"
+      },
+      "energy_returned": {
+        "name": "Energy returned"
+      },
+      "energy_returned_with_channel_name": {
+        "name": "{channel_name} energy returned"
+      },
+      "energy_with_channel_name": {
+        "name": "{channel_name} energy"
+      },
+      "frequency_with_channel_name": {
+        "name": "{channel_name} frequency"
+      },
+      "gas_concentration": {
+        "name": "Gas concentration"
+      },
       "gas_detected": {
+        "name": "Gas detected",
         "state": {
           "heavy": "Heavy",
           "mild": "Mild",
@@ -196,21 +251,81 @@
           }
         }
       },
+      "humidity_with_channel_name": {
+        "name": "{channel_name} humidity"
+      },
       "illuminance_level": {
+        "name": "Illuminance level",
         "state": {
           "bright": "Bright",
           "dark": "Dark",
           "twilight": "Twilight"
         }
       },
+      "lamp_life": {
+        "name": "Lamp life"
+      },
+      "last_restart": {
+        "name": "Last restart"
+      },
+      "left_slot_level": {
+        "name": "Left slot level"
+      },
+      "left_slot_vial": {
+        "name": "Left slot vial"
+      },
+      "neutral_current": {
+        "name": "Neutral current"
+      },
       "operation": {
+        "name": "Operation",
         "state": {
           "fault": "[%key:common::state::fault%]",
           "normal": "[%key:common::state::normal%]",
           "warmup": "Warm-up"
         }
       },
+      "power_factor_with_channel_name": {
+        "name": "{channel_name} power factor"
+      },
+      "power_with_channel_name": {
+        "name": "{channel_name} power"
+      },
+      "pulse_counter": {
+        "name": "Pulse counter"
+      },
+      "pulse_counter_frequency": {
+        "name": "Pulse counter frequency"
+      },
+      "pulse_counter_frequency_value": {
+        "name": "Pulse counter frequency value"
+      },
+      "pulse_counter_frequency_value_with_channel_name": {
+        "name": "{channel_name} pulse counter frequency value"
+      },
+      "pulse_counter_frequency_with_channel_name": {
+        "name": "{channel_name} pulse counter frequency"
+      },
+      "pulse_counter_value": {
+        "name": "Pulse counter value"
+      },
+      "pulse_counter_value_with_channel_name": {
+        "name": "{channel_name} Pulse counter value"
+      },
+      "pulse_counter_with_channel_name": {
+        "name": "{channel_name} pulse counter"
+      },
+      "rainfall_last_24h": {
+        "name": "Rainfall last 24h"
+      },
+      "right_slot_level": {
+        "name": "Right slot level"
+      },
+      "right_slot_vial": {
+        "name": "Right slot vial"
+      },
       "self_test": {
+        "name": "Self test",
         "state": {
           "completed": "Completed",
           "not_completed": "Not completed",
@@ -228,7 +343,23 @@
           }
         }
       },
+      "session_duration": {
+        "name": "Session duration"
+      },
+      "session_energy": {
+        "name": "Session energy"
+      },
+      "temperature_with_channel_name": {
+        "name": "{channel_name} temperature"
+      },
+      "tilt": {
+        "name": "Tilt"
+      },
+      "valve_position": {
+        "name": "Valve position"
+      },
       "valve_status": {
+        "name": "Valve status",
         "state": {
           "checking": "Checking",
           "closed": "[%key:common::state::closed%]",
@@ -237,6 +368,30 @@
           "opened": "Opened",
           "opening": "[%key:common::state::opening%]"
         }
+      },
+      "voltage_with_channel_name": {
+        "name": "{channel_name} voltage"
+      },
+      "voltage_with_phase_name": {
+        "name": "Phase {phase_name} voltage"
+      },
+      "voltmeter": {
+        "name": "Voltmeter"
+      },
+      "voltmeter_value": {
+        "name": "Voltmeter value"
+      },
+      "water_consumption": {
+        "name": "Water consumption"
+      },
+      "water_flow_rate": {
+        "name": "Water flow rate"
+      },
+      "water_pressure": {
+        "name": "Water pressure"
+      },
+      "water_temperature": {
+        "name": "Water temperature"
       }
     }
   },
