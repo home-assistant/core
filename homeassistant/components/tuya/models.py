@@ -42,8 +42,8 @@ def find_dpcode(
     dptype: DPType,
 ) -> TypeData | None:
     """Find type information for a matching DP code available for this device."""
-    if dptype not in (DPType.ENUM, DPType.INTEGER):
-        raise NotImplementedError("Only ENUM and INTEGER types are supported")
+    if not (type_data_cls := _TYPE_DATA_MAPPINGS.get(dptype)):
+        raise NotImplementedError(f"find_dpcode not supported for {dptype}")
 
     if dpcodes is None:
         return None
@@ -65,7 +65,7 @@ def find_dpcode(
                 (current_definition := device_specs.get(dpcode))
                 and current_definition.type == dptype
                 and (
-                    type_data := _TYPE_DATA_MAPPINGS[dptype].from_definition(
+                    type_data := type_data_cls.try_parse(
                         dpcode, current_definition.values
                     )
                 )
@@ -80,9 +80,9 @@ class TypeData:
     """Type data."""
 
     @classmethod
-    def from_definition(cls, dpcode: DPCode, definition: str) -> Self | None:
-        """Load JSON string and return a EnumTypeData object."""
-        raise NotImplementedError("from_definition is not implemented for this type")
+    def try_parse(cls, dpcode: DPCode, definition: str) -> Self | None:
+        """Load JSON string and return a TypeData object."""
+        raise NotImplementedError("try_parse is not implemented for this type")
 
 
 @dataclass
@@ -141,7 +141,7 @@ class IntegerTypeData(TypeData):
         return remap_value(value, from_min, from_max, self.min, self.max, reverse)
 
     @classmethod
-    def from_definition(cls, dpcode: DPCode, definition: str) -> Self | None:
+    def try_parse(cls, dpcode: DPCode, definition: str) -> Self | None:
         """Load JSON string and return a IntegerTypeData object."""
         if not (parsed := json.loads(definition)):
             return None
@@ -165,7 +165,7 @@ class EnumTypeData(TypeData):
     range: list[str]
 
     @classmethod
-    def from_definition(cls, dpcode: DPCode, definition: str) -> Self | None:
+    def try_parse(cls, dpcode: DPCode, definition: str) -> Self | None:
         """Load JSON string and return a EnumTypeData object."""
         if not (parsed := json.loads(definition)):
             return None
