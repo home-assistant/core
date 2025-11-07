@@ -101,16 +101,16 @@ class MobileAppEntity(RestoreEntity):
     @callback
     def _handle_update(self) -> None:
         """Handle async event updates."""
-        self._restore_pending_update()
+        self._apply_pending_update()
         self._async_update_attr_from_config()
         self.async_write_ha_state()
 
-    def _restore_pending_update(self) -> None:
+    def _apply_pending_update(self) -> None:
         """Restore any pending update for this entity."""
         pending_updates = self.hass.data[DOMAIN].get(DATA_PENDING_UPDATES, {})
         if self._attr_unique_id in pending_updates:
             _LOGGER.debug(
-                "Restoring pending update for %s: %s",
+                "Applying pending update for %s: %s",
                 self._attr_unique_id,
                 pending_updates[self._attr_unique_id],
             )
