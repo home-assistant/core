@@ -1,0 +1,55 @@
+charge:
+  name: Charge
+  description: Charge in manual mode all day, negative power represents charging.
+  fields:
+    host:
+      name: Device IP
+      description: Target device IP address, e.g. 192.168.3.91
+      example: 192.168.3.91
+      required: true
+      selector:
+        text:
+    power:
+      name: Power (W)
+      description: Charging power (negative for charging), default -1300.
+      example: -1300
+      required: false
+      selector:
+        number:
+          min: -3000
+          max: 0
+          step: 100
+
+discharge:
+  name: Discharge
+  description: Discharge in manual mode all day, positive power represents discharging.
+  fields:
+    host:
+      name: Device IP
+      description: Target device IP address, e.g. 192.168.3.91
+      example: 192.168.3.91
+      required: true
+      selector:
+        text:
+    power:
+      name: Power (W)
+      description: Discharging power (positive for discharging), default 1300.
+      example: 1300
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 3000
+          step: 100
+
+stop:
+  name: Stop Charge/Discharge
+  description: Set enable to 0 in manual mode.
+  fields:
+    host:
+      name: Device IP
+      description: Target device IP address, e.g. 192.168.3.91
+      example: 192.168.3.91
+      required: true
+      selector:
+        text:
