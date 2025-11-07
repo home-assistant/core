@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import asyncio
+from collections.abc import Sequence
 import logging
 from typing import Any
+from urllib.parse import quote
 
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
@@ -21,6 +24,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
@@ -29,6 +33,7 @@ from .const import (
     ATTR_STATE_OFF,
     ATTR_STATE_ON,
     ATTR_TARGET_TEMPERATURE,
+    DOMAIN,
 )
 from .coordinator import DaikinConfigEntry, DaikinCoordinator
 from .entity import DaikinEntity
@@ -78,6 +83,155 @@ HA_ATTR_TO_DAIKIN = {
 }
 
 DAIKIN_ATTR_ADVANCED = "adv"
+ZONE_TEMPERATURE_WINDOW = 2
+
+
+def _zone_error(
+    translation_key: str, placeholders: dict[str, str] | None = None
+) -> HomeAssistantError:
+    """Return a Home Assistant error with Daikin translation info."""
+    return HomeAssistantError(
+        translation_domain=DOMAIN,
+        translation_key=translation_key,
+        translation_placeholders=placeholders,
+    )
+
+
+def _zone_is_configured(zone: Sequence[Any]) -> bool:
+    """Return True if the Daikin zone represents a configured zone."""
+    return bool(zone) and zone[0] != "-"
+
+
+def _zone_temperature_lists(device: Any) -> tuple[list[str], list[str]]:
+    """Return the decoded zone temperature lists."""
+    try:
+        heating = device.represent("lztemp_h")[1]
+        cooling = device.represent("lztemp_c")[1]
+    except AttributeError:
+        return ([], [])
+    return (list(heating or []), list(cooling or []))
+
+
+def _supports_zone_temperature_control(device: Any) -> bool:
+    """Return True if the device exposes zone temperature settings."""
+    zones = getattr(device, "zones", None)
+    if not zones:
+        return False
+    heating, cooling = _zone_temperature_lists(device)
+    return bool(
+        heating
+        and cooling
+        and len(heating) >= len(zones)
+        and len(cooling) >= len(zones)
+    )
+
+
+def _system_target_temperature(device: Any) -> float:
+    """Return the system target temperature with a fallback."""
+    try:
+        return float(device.target_temperature)
+    except (AttributeError, TypeError, ValueError):
+        return 22.0
+
+
+def _zone_temperature_from_list(values: list[str], zone_id: int) -> float | None:
+    """Return the parsed temperature for a zone from a Daikin list."""
+    if zone_id >= len(values):
+        return None
+    try:
+        return float(values[zone_id])
+    except (TypeError, ValueError):
+        return None
+
+
+async def _async_set_zone_temperature(
+    coordinator: DaikinCoordinator, zone_id: int, temperature: float
+) -> None:
+    """Write the requested temperature for a Daikin zone."""
+    device = coordinator.device
+    zones = getattr(device, "zones", None)
+    if not zones:
+        raise _zone_error("zone_parameters_unavailable")
+
+    try:
+        zone = zones[zone_id]
+    except (IndexError, TypeError) as err:
+        raise _zone_error(
+            "zone_missing",
+            {
+                "zone_id": str(zone_id),
+                "max_zone": str(len(zones) - 1),
+            },
+        ) from err
+
+    if not _zone_is_configured(zone):
+        raise _zone_error("zone_inactive", {"zone_id": str(zone_id)})
+
+    target = _system_target_temperature(device)
+    min_temp = target - ZONE_TEMPERATURE_WINDOW
+    max_temp = target + ZONE_TEMPERATURE_WINDOW
+    if not (min_temp <= temperature <= max_temp):
+        raise _zone_error(
+            "temperature_out_of_range",
+            {
+                "temperature": f"{temperature:g}",
+                "min_temp": f"{min_temp:g}",
+                "max_temp": f"{max_temp:g}",
+            },
+        )
+
+    retries = 3
+    for attempt in range(retries):
+        try:
+            current_state = await device._get_resource(  # noqa: SLF001
+                "aircon/get_zone_setting"
+            )
+            if not current_state:
+                raise _zone_error("zone_settings_unavailable")
+            device.values.update(current_state)
+            current_heating, current_cooling = _zone_temperature_lists(device)
+            if (
+                not current_heating
+                or not current_cooling
+                or zone_id >= len(current_heating)
+                or zone_id >= len(current_cooling)
+            ):
+                raise _zone_error("zone_parameters_unavailable")
+
+            current_heating[zone_id] = str(round(temperature))
+            current_cooling[zone_id] = str(round(temperature))
+            device.values["lztemp_h"] = quote(";".join(current_heating)).lower()
+            device.values["lztemp_c"] = quote(";".join(current_cooling)).lower()
+            path = "aircon/set_zone_setting"
+            params = {
+                "zone_name": current_state["zone_name"],
+                "zone_onoff": device.values["zone_onoff"],
+                "lztemp_c": device.values["lztemp_c"],
+                "lztemp_h": device.values["lztemp_h"],
+            }
+            params_str = "&".join(f"{key}={value}" for key, value in params.items())
+            response = await device._get_resource(  # noqa: SLF001
+                f"{path}?{params_str}"
+            )
+            if isinstance(response, str) and "ret=PARAM NG" in response:
+                raise _zone_error("zone_set_failed")
+            await coordinator.async_request_refresh()
+        except HomeAssistantError:
+            raise
+        except (IndexError, KeyError, AttributeError) as err:
+            _LOGGER.error(
+                "Attempt %s: Failed to set zone temperature on device %s: %s",
+                attempt + 1,
+                getattr(device, "mac", "unknown"),
+                err,
+            )
+            if attempt == retries - 1:
+                raise _zone_error(
+                    "zone_set_retries_exceeded", {"retries": str(retries)}
+                ) from err
+            await asyncio.sleep(1)
+        else:
+            return
 
 
 async def async_setup_entry(
@@ -86,8 +240,16 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Daikin climate based on config_entry."""
-    daikin_api = entry.runtime_data
-    async_add_entities([DaikinClimate(daikin_api)])
+    coordinator = entry.runtime_data
+    entities: list[ClimateEntity] = [DaikinClimate(coordinator)]
+    zones = getattr(coordinator.device, "zones", None) or []
+    if _supports_zone_temperature_control(coordinator.device):
+        entities.extend(
+            DaikinZoneClimate(coordinator, zone_id)
+            for zone_id, zone in enumerate(zones)
+            if _zone_is_configured(zone)
+        )
+    async_add_entities(entities)
 
 
 def format_target_temperature(target_temperature: float) -> str:
@@ -284,3 +446,93 @@ class DaikinClimate(DaikinEntity, ClimateEntity):
             {HA_ATTR_TO_DAIKIN[ATTR_HVAC_MODE]: HA_STATE_TO_DAIKIN[HVACMode.OFF]}
         )
         await self.coordinator.async_refresh()
+
+
+class DaikinZoneClimate(DaikinEntity, ClimateEntity):
+    """Representation of a Daikin zone temperature controller."""
+
+    _attr_translation_key = "zone_temperature"
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+    _attr_target_temperature_step = 1
+
+    def __init__(self, coordinator: DaikinCoordinator, zone_id: int) -> None:
+        """Initialize the zone climate entity."""
+        super().__init__(coordinator)
+        self._zone_id = zone_id
+        self._attr_unique_id = f"{self.device.mac}-zone{zone_id}-temperature"
+        self._attr_has_entity_name = True
+        try:
+            zone_name = self.device.zones[self._zone_id][0]
+        except (IndexError, TypeError):
+            zone_name = f"Zone {self._zone_id}"
+        self._attr_name = f"{zone_name} temperature"
+
+    @property
+    def hvac_modes(self) -> list[HVACMode]:
+        """Return the hvac modes (mirrors the main unit)."""
+        return list(HA_STATE_TO_DAIKIN)
+
+    @property
+    def hvac_mode(self) -> HVACMode:
+        """Return the current HVAC mode."""
+        daikin_mode = self.device.represent(HA_ATTR_TO_DAIKIN[ATTR_HVAC_MODE])[1]
+        return DAIKIN_TO_HA_STATE.get(daikin_mode, HVACMode.HEAT_COOL)
+
+    @property
+    def hvac_action(self) -> HVACAction | None:
+        """Return the current HVAC action."""
+        return HA_STATE_TO_CURRENT_HVAC.get(self.hvac_mode)
+
+    @property
+    def target_temperature(self) -> float | None:
+        """Return the zone target temperature for the active mode."""
+        heating, cooling = _zone_temperature_lists(self.device)
+        mode = self.hvac_mode
+        if mode == HVACMode.HEAT:
+            return _zone_temperature_from_list(heating, self._zone_id)
+        if mode == HVACMode.COOL:
+            return _zone_temperature_from_list(cooling, self._zone_id)
+        return _zone_temperature_from_list(
+            heating, self._zone_id
+        ) or _zone_temperature_from_list(cooling, self._zone_id)
+
+    @property
+    def min_temp(self) -> float:
+        """Return the minimum selectable temperature."""
+        return _system_target_temperature(self.device) - ZONE_TEMPERATURE_WINDOW
+
+    @property
+    def max_temp(self) -> float:
+        """Return the maximum selectable temperature."""
+        return _system_target_temperature(self.device) + ZONE_TEMPERATURE_WINDOW
+
+    @property
+    def available(self) -> bool:
+        """Return if the entity is available."""
+        return super().available and _supports_zone_temperature_control(self.device)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return additional metadata."""
+        attrs = dict(super().extra_state_attributes or {})
+        attrs["zone_id"] = self._zone_id
+        return attrs
+
+    async def async_set_temperature(self, **kwargs: Any) -> None:
+        """Set the zone temperature."""
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="zone_temperature_missing",
+            )
+        await _async_set_zone_temperature(
+            self.coordinator, self._zone_id, float(temperature)
+        )
+
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Disallow changing HVAC mode via zone climate."""
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="zone_hvac_read_only",
+        )
