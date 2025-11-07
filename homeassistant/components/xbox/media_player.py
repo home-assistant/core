@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from xbox.webapi.api.provider.catalog.models import Image
-from xbox.webapi.api.provider.smartglass.models import (
+from pythonxbox.api.provider.catalog.models import Image
+from pythonxbox.api.provider.smartglass.models import (
     PlaybackState,
     PowerState,
     VolumeDirection,
@@ -70,6 +70,7 @@ class XboxMediaPlayer(XboxConsoleBaseEntity, MediaPlayerEntity):
     """Representation of an Xbox Media Player."""
 
     _attr_media_image_remotely_accessible = True
+    _attr_translation_key = "xbox"
 
     @property
     def state(self) -> MediaPlayerState | None:

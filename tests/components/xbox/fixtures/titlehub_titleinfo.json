@@ -1,0 +1,186 @@
+{
+  "xuid": "2535446026190660",
+  "titles": [
+    {
+      "titleId": "1297287135",
+      "pfn": null,
+      "bingId": "66acd000-77fe-1000-9115-d8024d5307df",
+      "serviceConfigId": "7f2e0100-2f8c-4b64-b2be-675b266ec2cd",
+      "windowsPhoneProductId": null,
+      "name": "Blue Dragon",
+      "type": "Game",
+      "devices": ["Xbox360", "XboxOne", "XboxSeries"],
+      "displayImage": "http://store-images.s-microsoft.com/image/apps.45451.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.3abf2cc3-00cc-417d-a93d-97110cdfb261",
+      "mediaItemType": "Xbox360Game",
+      "modernTitleId": "644793037",
+      "isBundle": false,
+      "achievement": {
+        "currentAchievements": 2,
+        "totalAchievements": 43,
+        "currentGamerscore": 10,
+        "totalGamerscore": 1000,
+        "progressPercentage": 1.0,
+        "sourceVersion": 1
+      },
+      "stats": null,
+      "gamePass": null,
+      "images": [
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.35725.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.c4bf34f8-ad40-4af3-914e-a85e75a76bed",
+          "type": "Screenshot",
+          "caption": ""
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.64736.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.6491fb2f-52e7-4129-bcbd-d23a67117ae0",
+          "type": "BrandedKeyArt",
+          "caption": ""
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.55545.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.4c2daefb-fbf6-4b90-b392-bf8ecc39a92e",
+          "type": "TitledHeroArt",
+          "caption": ""
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.22570.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.bf29284d-808a-4e4a-beaa-6621c9898d0e",
+          "type": "Poster",
+          "caption": ""
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.55545.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.4c2daefb-fbf6-4b90-b392-bf8ecc39a92e",
+          "type": "SuperHeroArt",
+          "caption": ""
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.45451.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.3abf2cc3-00cc-417d-a93d-97110cdfb261",
+          "type": "BoxArt",
+          "caption": ""
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.35072.13670972585585116.70570f0d-17aa-4f97-b692-5412fa183673.25a97451-9369-4f6b-b66b-3427913235eb",
+          "type": "Logo",
+          "caption": ""
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.45451.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.3abf2cc3-00cc-417d-a93d-97110cdfb261",
+          "type": "FeaturePromotionalSquareArt",
+          "caption": ""
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.38628.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.c2a205af-5146-405b-b2b7-56845351f1f3",
+          "type": "Screenshot",
+          "caption": ""
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.22150.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.b147895c-e947-424d-a731-faefc8c9906a",
+          "type": "Screenshot",
+          "caption": ""
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.37559.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.479d2dc1-db2d-4ffa-8c54-a2bebb093ec6",
+          "type": "Screenshot",
+          "caption": ""
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.32737.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.6a16ae3e-2918-46e9-90d9-232c79cb9d9d",
+          "type": "Screenshot",
+          "caption": ""
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.57046.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.0c0dd072-aa27-4e83-9010-474dfbb42277",
+          "type": "Screenshot",
+          "caption": ""
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.19315.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.6293a7b7-07ca-4df0-9eea-6018285a0a8d",
+          "type": "Screenshot",
+          "caption": ""
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.23374.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.66498a73-52f5-4247-a1e2-d3c84b9b315d",
+          "type": "Screenshot",
+          "caption": ""
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.64646.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.83182b76-4294-496d-90a7-f4e31e7aa80a",
+          "type": "Screenshot",
+          "caption": ""
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.24470.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.72d2abc3-aa69-4aeb-960b-6f6d25f498e4",
+          "type": "Screenshot",
+          "caption": ""
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.15604.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.27cee011-660b-49a4-bd33-38db6fff5226",
+          "type": "Screenshot",
+          "caption": ""
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.39987.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.be285efe-78f8-4984-9d28-9159881bacd4",
+          "type": "Screenshot",
+          "caption": ""
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.38206.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.2409803d-7378-4a69-a10b-1574ac42b98b",
+          "type": "Screenshot",
+          "caption": ""
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.14938.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.ef6ee72c-4beb-45ec-bd10-6235bd6a7c7f",
+          "type": "Screenshot",
+          "caption": ""
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.12835.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.6165ee24-df01-44f5-80fe-7411f9366d1c",
+          "type": "Screenshot",
+          "caption": ""
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.40786.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.b7607a0d-0101-4864-9bf8-ad889f820489",
+          "type": "Screenshot",
+          "caption": ""
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.55686.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.ecbb0e91-36a9-4f76-ab1e-5a5de009840e",
+          "type": "Screenshot",
+          "caption": ""
+        }
+      ],
+      "titleHistory": null,
+      "titleRecord": null,
+      "detail": {
+        "attributes": [],
+        "availabilities": [
+          {
+            "Actions": [
+              "Details",
+              "Fulfill",
+              "Purchase",
+              "Browse",
+              "Curate",
+              "Redeem"
+            ],
+            "AvailabilityId": "9TWPXS4C28K1",
+            "Platforms": ["Xbox"],
+            "SkuId": "0001",
+            "ProductId": "C2HGK9J5367F"
+          }
+        ],
+        "capabilities": [],
+        "description": "Hironobu Sakaguchi, the Father of the Final Fantasy series, and Artoon present the world of Blue Dragon on Xbox 360. Featuring the character design of Akira Toriyama, the Father of \"Dragon Ball Z\", and music by Nobuo Uematsu, the composer for Final Fantasy, Blue Dragon is an epic role-playing game (RPG) centered on five youngsters who possess miraculous strength and magical power to control shadow creatures that mirror the actions of their masters.",
+        "developerName": "Mistwalker / Artoon",
+        "genres": ["Role Playing"],
+        "minAge": 13,
+        "publisherName": "Microsoft",
+        "releaseDate": "2016-12-14T09:00:00Z",
+        "shortDescription": "Hironobu Sakaguchi, the Father of the Final Fantasy series, and Artoon present the world of Blue Dragon on Xbox 360. Featuring the character design of Akira Toriyama, the Father of \"Dragon Ball Z\", and music by Nobuo Uematsu, the composer for Final Fantasy, Blue Dragon is an epic role-playing game (RPG) centered on five youngsters who possess miraculous strength and magical power to control shadow creatures that mirror the actions of their masters.",
+        "vuiDisplayName": "Blue Dragon",
+        "xboxLiveGoldRequired": false
+      },
+      "friendsWhoPlayed": null,
+      "alternateTitleIds": [],
+      "contentBoards": null,
+      "xboxLiveTier": "Full"
+    }
+  ]
+}
