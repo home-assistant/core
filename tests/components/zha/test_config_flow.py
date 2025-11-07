@@ -3242,7 +3242,7 @@ async def test_plug_in_new_radio_retry(
             valid_step_ids=("restore_backup",),
         )
 
-        # Prompt user to plug old adapter back in when restore fails
+        # Prompt user to plug new adapter back in when restore fails
         assert result3["type"] is FlowResultType.FORM
         assert result3["step_id"] == "plug_in_new_radio"
         assert result3["description_placeholders"] == {"device_path": "/dev/ttyUSB1234"}
@@ -3275,7 +3275,7 @@ async def test_plug_in_new_radio_retry(
             valid_step_ids=("restore_backup",),
         )
 
-        # Prompt user to plug old adapter back in again
+        # Prompt user to plug new adapter back in again
         assert result5["type"] is FlowResultType.FORM
         assert result5["step_id"] == "plug_in_new_radio"
         assert result5["description_placeholders"] == {"device_path": "/dev/ttyUSB1234"}
