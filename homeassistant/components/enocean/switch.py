@@ -5,9 +5,9 @@ from __future__ import annotations
 from typing import Any
 
 from enocean.protocol.packet import Packet
-from home_assistant_enocean.enocean_device_type import EnOceanDeviceType
-from home_assistant_enocean.entity_id import EnOceanEntityID
-from home_assistant_enocean.gateway import EnOceanHomeAssistantGateway
+from homeassistant_enocean.device_type import EnOceanDeviceType
+from homeassistant_enocean.entity_id import EnOceanEntityID
+from homeassistant_enocean.gateway import EnOceanHomeAssistantGateway
 import voluptuous as vol
 
 from homeassistant.components.switch import (
@@ -48,7 +48,7 @@ async def async_setup_entry(
     #     eep = device_type.eep
 
     #     if eep[0:5] == "D2-01":
-    #         device_id = EnOceanID(device["id"])
+    #         device_id = EnOceanDevice(device["id"])
 
     #         # number of switches depends on EEP's TYPE value:
     #         num_switches = 0
@@ -99,7 +99,7 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
         enocean_entity_id: EnOceanEntityID,
         gateway: EnOceanHomeAssistantGateway,
         channel: int,
-        dev_type: EnOceanDeviceType = EnOceanDeviceType(),
+        dev_type: EnOceanDeviceType,
         name: str | None = None,
     ) -> None:
         """Initialize the EnOcean switch device."""

@@ -1,8 +1,8 @@
 """Representation of an EnOcean device."""
 
-from home_assistant_enocean.address import EnOceanDeviceAddress
-from home_assistant_enocean.entity_id import EnOceanEntityID
-from home_assistant_enocean.gateway import EnOceanHomeAssistantGateway
+from homeassistant_enocean.address import EnOceanDeviceAddress
+from homeassistant_enocean.entity_id import EnOceanEntityID
+from homeassistant_enocean.gateway import EnOceanHomeAssistantGateway
 
 from homeassistant.config_entries import _LOGGER
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -86,14 +86,11 @@ class EnOceanEntity(Entity):
                 "serial_number": self.__enocean_entity_id.device_address.to_string(),
                 "sw_version": None,
                 "hw_version": None,
-                "model_id": "EEP " + device_properties.device_type.eep,
+                "model_id": "EEP " + device_properties.device_type.eep.to_string(),
                 "via_device": (DOMAIN, self.gateway_id.to_string()),
             }
         )
 
     def __update(self) -> None:
         """Notify entity of changes."""
-        _LOGGER.warning(
-            "Entity %s received update notification", self._friendly_name_internal()
-        )
         self.schedule_update_ha_state()

@@ -5,8 +5,9 @@ from collections.abc import Coroutine
 from typing import Any
 
 from enocean.protocol.packet import Packet
-from home_assistant_enocean.enocean_device_type import EnOceanDeviceType
-from home_assistant_enocean.enocean_id import EnOceanID
+from homeassistant_enocean.address import EnOceanDeviceAddress
+from homeassistant_enocean.device_type import EnOceanDeviceType
+from homeassistant_enocean.eep import EEP
 
 from homeassistant.components.event import EventDeviceClass, EventEntity
 from homeassistant.core import _LOGGER, HomeAssistant, callback
@@ -49,7 +50,7 @@ async def async_setup_entry(
         eep = device_type.eep
 
         if eep in ENOCEAN_BINARY_SENSOR_EEPS:
-            device_id = EnOceanID(device["id"])
+            device_id = EnOceanDeviceAddress(device["id"])
 
             async_add_entities(
                 [
@@ -70,11 +71,11 @@ class EnOceanEventEntity(EventEntity):
 
     def __init__(
         self,
-        enocean_id: EnOceanID,
-        gateway_id: EnOceanID,
+        enocean_id: EnOceanDeviceAddress,
+        gateway_id: EnOceanDeviceAddress,
         device_name: str,
         name: str | None = None,
-        device_type: EnOceanDeviceType = EnOceanDeviceType(),
+        device_type: EnOceanDeviceType = EnOceanDeviceType(EEP(0, 0, 0)),
     ) -> None:
         """Initialize the entity."""
         super().__init__()
@@ -85,7 +86,7 @@ class EnOceanEventEntity(EventEntity):
         self._attr_should_poll = False
 
         # define EnOcean-specific attributes
-        self.__enocean_id: EnOceanID = enocean_id
+        self.__enocean_id: EnOceanDeviceAddress = enocean_id
         self.__device_name: str = device_name
         self.__device_type = device_type
         self.__gateway_id = gateway_id
@@ -153,7 +154,7 @@ class EnOceanEventEntity(EventEntity):
             return info
 
         info.update({"via_device": (DOMAIN, self.__gateway_id.to_string())})
-        info.update({"model_id": "EEP " + self.__device_type.eep})
+        info.update({"model_id": "EEP " + self.__device_type.eep.to_string()})
         return info
 
 
@@ -172,11 +173,11 @@ class EnOceanButtonEvent(EnOceanEventEntity):
 
     def __init__(
         self,
-        enocean_id: EnOceanID,
-        gateway_id: EnOceanID,
+        enocean_id: EnOceanDeviceAddress,
+        gateway_id: EnOceanDeviceAddress,
         device_name: str,
         name: str,
-        device_type: EnOceanDeviceType = EnOceanDeviceType(),
+        device_type: EnOceanDeviceType = EnOceanDeviceType(EEP(0, 0, 0)),
     ) -> None:
         """Initialize the EnOcean button event."""
         super().__init__(

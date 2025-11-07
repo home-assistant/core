@@ -6,9 +6,9 @@ import math
 from typing import Any
 
 from enocean.protocol.packet import Packet
-from home_assistant_enocean.enocean_id import EnOceanID
-from home_assistant_enocean.entity_id import EnOceanEntityID
-from home_assistant_enocean.gateway import EnOceanHomeAssistantGateway
+from homeassistant_enocean.address import EnOceanAddress
+from homeassistant_enocean.entity_id import EnOceanEntityID
+from homeassistant_enocean.gateway import EnOceanHomeAssistantGateway
 import voluptuous as vol
 
 from homeassistant.components.light import (
@@ -51,10 +51,10 @@ async def async_setup_entry(
     #     device_type = EnOceanDeviceType.get_supported_device_types()[device_type_id]
 
     #     if device_type.unique_id == "Eltako_FUD61NPN":
-    #         device_id = EnOceanID(device["id"])
-    #         sender_id = EnOceanID(0)
+    #         device_id = EnOceanDeviceAddress(device["id"])
+    #         sender_id = EnOceanAddress(0)
     #         if device["sender_id"] != "":
-    #             sender_id = EnOceanID(device["sender_id"])
+    #             sender_id = EnOceanAddress(device["sender_id"])
 
     #         async_add_entities(
     #             [
@@ -79,7 +79,7 @@ class EnOceanLight(EnOceanEntity, LightEntity):
 
     def __init__(
         self,
-        sender_id: EnOceanID,
+        sender_id: EnOceanAddress,
         enocean_entity_id: EnOceanEntityID,
         gateway: EnOceanHomeAssistantGateway,
     ) -> None:

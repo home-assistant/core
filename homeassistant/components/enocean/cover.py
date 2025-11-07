@@ -9,9 +9,9 @@ from typing import Any
 
 from enocean.protocol.constants import RORG
 from enocean.protocol.packet import Packet, RadioPacket
-from home_assistant_enocean.enocean_id import EnOceanID
-from home_assistant_enocean.entity_id import EnOceanEntityID
-from home_assistant_enocean.gateway import EnOceanHomeAssistantGateway
+from homeassistant_enocean.address import EnOceanAddress
+from homeassistant_enocean.entity_id import EnOceanEntityID
+from homeassistant_enocean.gateway import EnOceanHomeAssistantGateway
 import voluptuous as vol
 
 from homeassistant.components.cover import (
@@ -67,10 +67,10 @@ async def async_setup_entry(
     #     if eep != "D2-05-00":
     #         continue
 
-    #     device_id = EnOceanID(device[CONF_ENOCEAN_DEVICE_ID])
+    #     device_id = EnOceanAddress(device[CONF_ENOCEAN_DEVICE_ID])
     #     sender_id = config_entry.runtime_data.gateway.base_id
     #     if device[CONF_ENOCEAN_SENDER_ID] != "":
-    #         sender_id = EnOceanID(device[CONF_ENOCEAN_SENDER_ID])
+    #         sender_id = EnOceanAddress(device[CONF_ENOCEAN_SENDER_ID])
 
     #     async_add_entities(
     #         [
@@ -99,7 +99,7 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
 
     def __init__(
         self,
-        sender_id: EnOceanID,
+        sender_id: EnOceanAddress,
         enocean_entity_id: EnOceanEntityID,
         gateway: EnOceanHomeAssistantGateway,
     ) -> None:
@@ -123,7 +123,7 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         self._attr_is_closed: bool | None = None
         self._is_opening = False
         self._is_closing = False
-        self._sender_id: EnOceanID = sender_id
+        self._sender_id: EnOceanAddress = sender_id
         self._state_changed_by_command = False
         self._stop_suspected = False
         self._watchdog_enabled = False

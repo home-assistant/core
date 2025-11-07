@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 from enocean.protocol.packet import Packet
-from home_assistant_enocean.enocean_device_type import EnOceanDeviceType
-from home_assistant_enocean.enocean_id import EnOceanID
-from home_assistant_enocean.entity_id import EnOceanEntityID
-from home_assistant_enocean.gateway import EnOceanHomeAssistantGateway
+from homeassistant_enocean.address import EnOceanDeviceAddress
+from homeassistant_enocean.device_type import EnOceanDeviceType
+from homeassistant_enocean.entity_id import EnOceanEntityID
+from homeassistant_enocean.gateway import EnOceanHomeAssistantGateway
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -99,7 +99,7 @@ async def async_setup_entry(
 
     # for device in []:
     #     # get config data
-    #     device_id = EnOceanID(device[CONF_ENOCEAN_DEVICE_ID])
+    #     device_id = EnOceanDeviceAddress(device[CONF_ENOCEAN_DEVICE_ID])
     #     device_name = device[CONF_ENOCEAN_DEVICE_NAME]
     #     device_type_id = device[CONF_ENOCEAN_DEVICE_TYPE_ID]
     #     device_type = EnOceanDeviceType.get_supported_device_types()[device_type_id]
@@ -352,7 +352,7 @@ class EnOceanTemperatureSensor(EnOceanSensor):
     def __init__(
         self,
         enocean_entity_id: EnOceanEntityID,
-        gateway: EnOceanID,
+        gateway: EnOceanDeviceAddress,
         dev_name: str,
         description: SensorEntityDescription,
         *,
@@ -360,7 +360,7 @@ class EnOceanTemperatureSensor(EnOceanSensor):
         scale_max: int,
         range_from: int,
         range_to: int,
-        dev_type: EnOceanDeviceType = EnOceanDeviceType(),
+        dev_type: EnOceanDeviceType,
         name: str | None = None,
     ) -> None:
         """Initialize the EnOcean temperature sensor device."""

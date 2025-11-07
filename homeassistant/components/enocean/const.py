@@ -2,6 +2,8 @@
 
 import logging
 
+from homeassistant_enocean.eep import EEP
+
 from homeassistant.const import Platform
 
 DOMAIN = "enocean"
@@ -58,6 +60,6 @@ PLATFORMS: list[Platform] = [
 
 
 ENOCEAN_BINARY_SENSOR_EEPS = [
-    "F6-02-01",  # Rocker Switch 1BS
-    "F6-02-02",  # Rocker Switch 2BS
+    EEP(0xF6, 0x02, 0x01),  # Rocker Switch 1BS
+    EEP(0xF6, 0x02, 0x02),  # Rocker Switch 2BS
 ]

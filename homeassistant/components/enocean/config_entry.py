@@ -1,6 +1,6 @@
 """Config entry type runtime_data type specification for EnOcean integration."""
 
-from home_assistant_enocean.gateway import EnOceanHomeAssistantGateway
+from homeassistant_enocean.gateway import EnOceanHomeAssistantGateway
 
 from homeassistant.config_entries import ConfigEntry
 

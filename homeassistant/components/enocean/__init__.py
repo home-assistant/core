@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from home_assistant_enocean.enocean_device_type import EnOceanDeviceType
-from home_assistant_enocean.enocean_id import EnOceanID
-from home_assistant_enocean.gateway import EnOceanHomeAssistantGateway
+from homeassistant_enocean.address import EnOceanDeviceAddress
+from homeassistant_enocean.device_type import EnOceanDeviceType
+from homeassistant_enocean.gateway import EnOceanHomeAssistantGateway
 
 from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant, callback
@@ -52,7 +52,9 @@ async def async_setup_entry(
     devices = config_entry.options.get(CONF_ENOCEAN_DEVICES, [])
     for device in devices:
         try:
-            enocean_id = EnOceanID.from_string(device[CONF_ENOCEAN_DEVICE_ID])
+            enocean_id = EnOceanDeviceAddress.from_string(
+                device[CONF_ENOCEAN_DEVICE_ID]
+            )
             device_type_id = device[CONF_ENOCEAN_DEVICE_TYPE_ID]
             device_type: EnOceanDeviceType = (
                 EnOceanDeviceType.get_supported_device_types()[device_type_id]

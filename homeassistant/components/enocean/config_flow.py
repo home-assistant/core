@@ -3,8 +3,9 @@
 from copy import deepcopy
 from typing import Any
 
-from home_assistant_enocean.enocean_device_type import EnOceanDeviceType
-from home_assistant_enocean.enocean_id import EnOceanID
+from homeassistant_enocean.address import EnOceanAddress, EnOceanDeviceAddress
+from homeassistant_enocean.device_type import EnOceanDeviceType
+from homeassistant_enocean.eep import EEP
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
@@ -162,23 +163,27 @@ class OptionsFlowHandler(OptionsFlow):
         runtime_data: EnOceanConfigRuntimeData = self.config_entry.runtime_data
         default_sender_id = runtime_data.gateway.base_id.to_string()
 
-        device_id: EnOceanID | None = None
+        device_id: EnOceanDeviceAddress | None = None
         device_name: str | None = None
-        sender_id: EnOceanID | None = None
+        sender_id: EnOceanAddress | None = None
 
         if user_input is not None:
             # device id must be a valid EnOcean ID and not already configured
-            if not EnOceanID.validate_string(user_input[CONF_ENOCEAN_DEVICE_ID]):
+            if not EnOceanDeviceAddress.validate_string(
+                user_input[CONF_ENOCEAN_DEVICE_ID]
+            ):
                 errors[CONF_ENOCEAN_DEVICE_ID] = ENOCEAN_ERROR_INVALID_DEVICE_ID
 
             else:
-                device_id = EnOceanID(user_input[CONF_ENOCEAN_DEVICE_ID])
+                device_id = EnOceanDeviceAddress(user_input[CONF_ENOCEAN_DEVICE_ID])
 
                 for dev in devices:
-                    if not EnOceanID.validate_string(dev[CONF_ENOCEAN_DEVICE_ID]):
+                    if not EnOceanDeviceAddress.validate_string(
+                        dev[CONF_ENOCEAN_DEVICE_ID]
+                    ):
                         continue
                     if (
-                        EnOceanID(dev[CONF_ENOCEAN_DEVICE_ID]).to_number()
+                        EnOceanDeviceAddress(dev[CONF_ENOCEAN_DEVICE_ID]).to_number()
                         == device_id.to_number()
                     ):
                         errors[CONF_ENOCEAN_DEVICE_ID] = (
@@ -189,13 +194,13 @@ class OptionsFlowHandler(OptionsFlow):
             device_type_id = user_input[ENOCEAN_DEVICE_TYPE_ID]
             device_type = EnOceanDeviceType.get_supported_device_types()[device_type_id]
 
-            # sender id must be a valid EnOceanID string
+            # sender id must be a valid EnOcean address string
             if user_input[CONF_ENOCEAN_SENDER_ID].strip() == "":
                 sender_id = self.config_entry.runtime_data.gateway.base_id
-            elif not EnOceanID.validate_string(user_input[CONF_ENOCEAN_SENDER_ID]):
+            elif not EnOceanAddress.validate_string(user_input[CONF_ENOCEAN_SENDER_ID]):
                 errors[CONF_ENOCEAN_SENDER_ID] = ENOCEAN_ERROR_INVALID_SENDER_ID
             else:
-                sender_id = EnOceanID(user_input[CONF_ENOCEAN_SENDER_ID])
+                sender_id = EnOceanAddress(user_input[CONF_ENOCEAN_SENDER_ID])
 
             # if the device name was not set, use a default name
             device_name = user_input[CONF_ENOCEAN_DEVICE_NAME].strip()
@@ -325,8 +330,8 @@ class OptionsFlowHandler(OptionsFlow):
 
         device_id = "none"
         device_name = "none"
-        device_type = EnOceanDeviceType()
-        sender_id: EnOceanID = EnOceanID(0)
+        device_type = EnOceanDeviceType(EEP(0, 0, 0))
+        sender_id: EnOceanAddress = EnOceanAddress(0)
         sender_id_string: str = ""
 
         if device is not None:  # user_input will be ignored in this case
@@ -344,8 +349,8 @@ class OptionsFlowHandler(OptionsFlow):
             # sender id must be either empty or a valid EnOcean ID
             sender_id_string = user_input[CONF_ENOCEAN_SENDER_ID].strip()
             if sender_id_string != "":
-                if EnOceanID.validate_string(sender_id_string):
-                    sender_id = EnOceanID(sender_id_string)
+                if EnOceanAddress.validate_string(sender_id_string):
+                    sender_id = EnOceanAddress(sender_id_string)
                 else:
                     errors[CONF_ENOCEAN_SENDER_ID] = ENOCEAN_ERROR_INVALID_SENDER_ID
 

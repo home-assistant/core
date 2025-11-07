@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from home_assistant_enocean.entity_id import EnOceanEntityID
-from home_assistant_enocean.gateway import EnOceanHomeAssistantGateway
+from homeassistant_enocean.entity_id import EnOceanEntityID
+from homeassistant_enocean.gateway import EnOceanHomeAssistantGateway
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
