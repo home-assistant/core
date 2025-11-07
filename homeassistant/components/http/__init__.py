@@ -108,6 +108,7 @@ _DEFAULT_BIND = ["0.0.0.0", "::"] if _HAS_IPV6 else ["0.0.0.0"]
 
 HTTP_SCHEMA: Final = vol.All(
     cv.deprecated(CONF_BASE_URL),
+    cv.deprecated(CONF_SERVER_HOST),  # Deprecated in HA Core 2025.12
     vol.Schema(
         {
             vol.Optional(CONF_SERVER_HOST): vol.All(
@@ -208,14 +209,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if conf is None:
         conf = cast(ConfData, HTTP_SCHEMA({}))
 
-    if CONF_SERVER_HOST in conf and is_hassio(hass):
+    if CONF_SERVER_HOST in conf:
+        if is_hassio(hass):
+            issue_id = "server_host_deprecated_hassio"
+            severity = ir.IssueSeverity.ERROR
+        else:
+            issue_id = "server_host_deprecated"
+            severity = ir.IssueSeverity.WARNING
         ir.async_create_issue(
             hass,
             DOMAIN,
-            "server_host_may_break_hassio",
+            issue_id,
+            breaks_in_ha_version="2026.6.0",
             is_fixable=False,
-            severity=ir.IssueSeverity.ERROR,
-            translation_key="server_host_may_break_hassio",
+            severity=severity,
+            translation_key=issue_id,
         )
 
     server_host = conf.get(CONF_SERVER_HOST, _DEFAULT_BIND)
