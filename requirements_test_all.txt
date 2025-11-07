@@ -1826,7 +1826,7 @@ pymonoprice==0.5
 pymysensors==0.26.0
 
 # homeassistant.components.iron_os
-pynecil==4.2.0
+pynecil==4.2.1
 
 # homeassistant.components.netgear
 pynetgear==0.10.10
