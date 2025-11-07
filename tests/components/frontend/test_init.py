@@ -694,6 +694,11 @@ async def test_panel_sidebar_default_visible(
     """Test sidebar_default_visible property in panels."""
     async_register_built_in_panel(
         hass,
+        "default_panel",
+        "Default Panel",
+    )
+    async_register_built_in_panel(
+        hass,
         "visible_panel",
         "Visible Panel",
         "mdi:eye",
@@ -715,6 +720,7 @@ async def test_panel_sidebar_default_visible(
     assert msg["id"] == 5
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
+    assert msg["result"]["default_panel"]["default_visible"] is True
     assert msg["result"]["visible_panel"]["default_visible"] is True
     assert msg["result"]["hidden_panel"]["default_visible"] is False
 
