@@ -1487,3 +1487,25 @@ async def test_no_discovery_info_sensor(
     )
     await hass.async_block_till_done()
     assert SENSOR_DOMAIN in hass.config.components
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 51,
+                    CONF_DATA_TYPE: DataType.INT16,
+                    CONF_SCALE: 0,
+                }
+            ]
+        },
+    ],
+)
+async def test_err_config_sensor(
+    hass: HomeAssistant, mock_modbus_to_test_errors_config
+) -> None:
+    """Run a wrong configuration test for sensor."""
+    assert SENSOR_DOMAIN not in hass.config.components
