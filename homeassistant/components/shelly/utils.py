@@ -473,9 +473,7 @@ def get_entity_translation_attributes(
     if key is None and default_to_device_class_name:
         key = device_class
 
-    final_translation_key = f"{key}_with_channel_name" if key else None
-
-    return {"channel_name": channel_name}, final_translation_key
+    return {"channel_name": channel_name}, f"{key}_with_channel_name" if key else None
 
 
 def get_device_entry_gen(entry: ConfigEntry) -> int:
