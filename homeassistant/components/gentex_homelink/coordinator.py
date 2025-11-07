@@ -108,8 +108,7 @@ class HomeLinkCoordinator(BaseDataUpdateCoordinatorProtocol):
         if message["type"] == "state":
             self.hass.add_job(self.async_handle_state_data, message["data"])
         if message["type"] == "requestSync":
-            if self.config_entry:
-                self.hass.add_job(
-                    self.hass.config_entries.async_reload,
-                    self.config_entry.entry_id,
-                )
+            self.hass.add_job(
+                self.hass.config_entries.async_reload,
+                self.config_entry.entry_id,
+            )
