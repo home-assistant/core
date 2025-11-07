@@ -42,7 +42,7 @@ class DPCodeEnumWrapper(DPCodeWrapper):
     def read_device_status(self, device: CustomerDevice) -> str | None:
         """Read the device value for the dpcode.
 
-        Supports True/False only, all other values are deemed incorrect and
+        Values outside of the list defined by the Enum type information will
         return None.
         """
         if (
