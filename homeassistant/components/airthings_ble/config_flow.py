@@ -23,7 +23,7 @@ from homeassistant.components.bluetooth import (
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS
 
-from .const import DOMAIN, MFCT_ID
+from .const import DEVICE_MODEL, DOMAIN, MFCT_ID
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -128,19 +128,15 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm discovery."""
-        if user_input is not None:
-            if (
-                self._discovered_device is not None
-                and self._discovered_device.device.firmware.need_firmware_upgrade
-            ):
-                return self.async_abort(reason="firmware_upgrade_required")
+        assert self._discovered_device is not None
 
-            if self._discovered_device is None:
-                return self.async_abort(reason="no_devices_found")
+        if user_input is not None:
+            if self._discovered_device.device.firmware.need_firmware_upgrade:
+                return self.async_abort(reason="firmware_upgrade_required")
 
             return self.async_create_entry(
                 title=self.context["title_placeholders"]["name"],
-                data={"device_model": self._discovered_device.device.model.value},
+                data={DEVICE_MODEL: self._discovered_device.device.model.value},
             )
 
         self._set_confirm_only()
@@ -170,7 +166,7 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
 
             return self.async_create_entry(
                 title=discovery.name,
-                data={"device_model": discovery.device.model.value},
+                data={DEVICE_MODEL: discovery.device.model.value},
             )
 
         current_addresses = self._async_current_ids(include_ignore=False)

@@ -2,13 +2,15 @@
 
 from copy import deepcopy
 
+from airthings_ble import AirthingsDeviceType
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.airthings_ble.const import (
     DEFAULT_SCAN_INTERVAL,
+    DEVICE_MODEL,
+    DEVICE_SPECIFIC_SCAN_INTERVAL,
     DOMAIN,
-    RADON_SCAN_INTERVAL,
 )
 from homeassistant.core import HomeAssistant
 
@@ -50,7 +52,7 @@ async def test_migration_existing_entries(
 
     inject_bluetooth_service_info(hass, service_info)
 
-    assert "device_model" not in entry.data
+    assert DEVICE_MODEL not in entry.data
 
     with (
         patch_async_ble_device_from_address(service_info.device),
@@ -60,8 +62,8 @@ async def test_migration_existing_entries(
         await hass.async_block_till_done()
 
     # Migration should have added device_model to entry data
-    assert "device_model" in entry.data
-    assert entry.data["device_model"] == device_info.model.value
+    assert DEVICE_MODEL in entry.data
+    assert entry.data[DEVICE_MODEL] == device_info.model.value
 
 
 async def test_no_migration_when_device_model_exists(
@@ -71,7 +73,7 @@ async def test_no_migration_when_device_model_exists(
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=WAVE_SERVICE_INFO.address,
-        data={"device_model": WAVE_DEVICE_INFO.model.value},
+        data={DEVICE_MODEL: WAVE_DEVICE_INFO.model.value},
     )
     entry.add_to_hass(hass)
 
@@ -86,7 +88,7 @@ async def test_no_migration_when_device_model_exists(
 
     # Should have only 1 call for initial refresh (no migration call)
     assert mock_update.call_count == 1
-    assert entry.data["device_model"] == WAVE_DEVICE_INFO.model.value
+    assert entry.data[DEVICE_MODEL] == WAVE_DEVICE_INFO.model.value
 
 
 async def test_scan_interval_corentium_home_2(
@@ -96,7 +98,7 @@ async def test_scan_interval_corentium_home_2(
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=WAVE_SERVICE_INFO.address,
-        data={"device_model": CORENTIUM_HOME_2_DEVICE_INFO.model.value},
+        data={DEVICE_MODEL: CORENTIUM_HOME_2_DEVICE_INFO.model.value},
     )
     entry.add_to_hass(hass)
 
@@ -127,7 +129,12 @@ async def test_scan_interval_corentium_home_2(
             == "90"
         )
 
-        freezer.tick(RADON_SCAN_INTERVAL - DEFAULT_SCAN_INTERVAL)
+        freezer.tick(
+            DEVICE_SPECIFIC_SCAN_INTERVAL.get(
+                AirthingsDeviceType.CORENTIUM_HOME_2.value
+            )
+            - DEFAULT_SCAN_INTERVAL
+        )
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
@@ -159,7 +166,7 @@ async def test_coordinator_default_scan_interval(
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=service_info.address,
-        data={"device_model": device_info.model.value},
+        data={DEVICE_MODEL: device_info.model.value},
     )
     entry.add_to_hass(hass)
 
