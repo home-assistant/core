@@ -111,6 +111,12 @@
       }
     },
     "event": {
+      "alarm_message": {
+        "name": "Alarm message"
+      },
+      "doorbell_picture": {
+        "name": "Doorbell picture"
+      },
       "numbered_button": {
         "name": "Button {button_number}",
         "state_attributes": {
@@ -581,9 +587,6 @@
           "level_6": "Level 6"
         }
       },
-      "alarm_message": {
-        "name": "Alarm message"
-      },
       "battery": {
         "name": "[%key:component::sensor::entity_component::battery::name%]"
       },
@@ -625,9 +628,6 @@
       },
       "dew_point_temperature": {
         "name": "Dew point"
-      },
-      "doorbell_picture": {
-        "name": "Doorbell picture"
       },
       "duster_cloth_life": {
         "name": "Duster cloth lifetime"
