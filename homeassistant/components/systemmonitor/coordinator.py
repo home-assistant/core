@@ -273,7 +273,6 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
             except AttributeError:
                 _LOGGER.debug("OS does not provide temperature sensors")
 
-
         fan_speed: dict[str, int] = {}
         if self.update_subscribers[("fan_speed", "")] or self._initial_update:
             try:
