@@ -493,8 +493,9 @@ DISCOVERY_SCHEMAS = [
             translation_key="window_covering_config_status",
             device_class=BinarySensorDeviceClass.RUNNING,
             entity_category=EntityCategory.DIAGNOSTIC,
-            device_to_ha=lambda x: (
-                x == clusters.WindowCovering.Bitmaps.ConfigStatus.kOperational
+            # ConfigStatus is a bitmap – return True when the 'Operational' bit(s) is set
+            device_to_ha=lambda x: bool(
+                x & clusters.WindowCovering.Bitmaps.ConfigStatus.kOperational
             ),
         ),
         entity_class=MatterBinarySensor,
