@@ -40,9 +40,9 @@ def find_dpcode(
     *,
     prefer_function: bool = False,
     dptype: DPType,
-) -> TypeData | None:
+) -> TypeInformation | None:
     """Find type information for a matching DP code available for this device."""
-    if not (type_data_cls := _TYPE_DATA_MAPPINGS.get(dptype)):
+    if not (type_information_cls := _TYPE_INFORMATION_MAPPINGS.get(dptype)):
         raise NotImplementedError(f"find_dpcode not supported for {dptype}")
 
     if dpcodes is None:
@@ -65,28 +65,31 @@ def find_dpcode(
                 (current_definition := device_specs.get(dpcode))
                 and current_definition.type == dptype
                 and (
-                    type_data := type_data_cls.from_json(
+                    type_information := type_information_cls.from_json(
                         dpcode, current_definition.values
                     )
                 )
             ):
-                return type_data
+                return type_information
 
     return None
 
 
 @dataclass
-class TypeData:
-    """Type Data."""
+class TypeInformation:
+    """Type information.
+
+    As provided by the SDK, from `device.function` / `device.status_range`.
+    """
 
     @classmethod
     def from_json(cls, dpcode: DPCode, data: str) -> Self | None:
-        """Load JSON string and return a TypeData object."""
+        """Load JSON string and return a TypeInformation object."""
         raise NotImplementedError("from_json is not implemented for this type")
 
 
 @dataclass
-class IntegerTypeData(TypeData):
+class IntegerTypeData(TypeInformation):
     """Integer Type Data."""
 
     dpcode: DPCode
@@ -158,7 +161,7 @@ class IntegerTypeData(TypeData):
 
 
 @dataclass
-class EnumTypeData(TypeData):
+class EnumTypeData(TypeInformation):
     """Enum Type Data."""
 
     dpcode: DPCode
@@ -172,7 +175,7 @@ class EnumTypeData(TypeData):
         return cls(dpcode, **parsed)
 
 
-_TYPE_DATA_MAPPINGS: dict[DPType, type[TypeData]] = {
+_TYPE_INFORMATION_MAPPINGS: dict[DPType, type[TypeInformation]] = {
     DPType.ENUM: EnumTypeData,
     DPType.INTEGER: IntegerTypeData,
 }
