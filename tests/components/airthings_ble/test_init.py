@@ -12,6 +12,7 @@ from homeassistant.components.airthings_ble.const import (
     DEVICE_SPECIFIC_SCAN_INTERVAL,
     DOMAIN,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 
@@ -259,3 +260,83 @@ async def test_connectivity_issue_no_trigger(
     issue_id = f"smartlink_detected_{device.address}"
     issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert issue is None
+
+
+async def test_setup_ble_device_not_found(
+    hass: HomeAssistant,
+) -> None:
+    """Test that setup fails when BLE device is not found."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=WAVE_SERVICE_INFO.address,
+        data={DEVICE_MODEL: WAVE_DEVICE_INFO.model.value},
+    )
+    entry.add_to_hass(hass)
+
+    inject_bluetooth_service_info(hass, WAVE_SERVICE_INFO)
+
+    # BLE device not found
+    with patch_async_ble_device_from_address(None):
+        result = await hass.config_entries.async_setup(entry.entry_id)
+
+    # Setup should fail and retry
+    assert result is False
+    assert entry.state == ConfigEntryState.SETUP_RETRY
+
+
+async def test_migration_update_failed(
+    hass: HomeAssistant,
+) -> None:
+    """Test that setup fails when migration fetch fails."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=WAVE_SERVICE_INFO.address,
+        data={},  # No device_model - triggers migration
+    )
+    entry.add_to_hass(hass)
+
+    inject_bluetooth_service_info(hass, WAVE_SERVICE_INFO)
+
+    # Migration fetch fails
+    with (
+        patch_async_ble_device_from_address(WAVE_SERVICE_INFO.device),
+        patch_airthings_ble(side_effect=Exception("Migration failed")),
+    ):
+        result = await hass.config_entries.async_setup(entry.entry_id)
+
+    # Setup should fail and retry
+    assert result is False
+    assert entry.state == ConfigEntryState.SETUP_RETRY
+
+
+async def test_update_data_failed(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that coordinator handles update failures gracefully."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=WAVE_SERVICE_INFO.address,
+        data={DEVICE_MODEL: WAVE_DEVICE_INFO.model.value},
+    )
+    entry.add_to_hass(hass)
+
+    inject_bluetooth_service_info(hass, WAVE_SERVICE_INFO)
+
+    with (
+        patch_async_ble_device_from_address(WAVE_SERVICE_INFO.device),
+        patch_airthings_ble(WAVE_DEVICE_INFO),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Verify initial setup worked
+    coordinator = entry.runtime_data
+    assert coordinator.last_update_success is True
+
+    # Now make update fail
+    with patch_airthings_ble(side_effect=Exception("Update failed")):
+        await coordinator.async_refresh()
+
+    # Coordinator should handle the failure
+    assert coordinator.last_update_success is False
