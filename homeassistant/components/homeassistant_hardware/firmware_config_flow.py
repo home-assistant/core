@@ -193,10 +193,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
             return self.async_show_progress(
                 step_id=step_id,
                 progress_action="install_firmware",
-                description_placeholders={
-                    **self._get_translation_placeholders(),
-                    "firmware_name": firmware_name,
-                },
+                description_placeholders=self._get_translation_placeholders(),
                 progress_task=self.firmware_install_task,
             )
 
