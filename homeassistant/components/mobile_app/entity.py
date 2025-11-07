@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -72,36 +71,20 @@ class MobileAppEntity(RestoreEntity):
             )
         )
 
-        self._restore_pending_update()
+        # Apply any pending updates
+        self._handle_update()
 
         if (state := await self.async_get_last_state()) is None:
             return
 
         await self.async_restore_last_state(state)
 
-    def _restore_pending_update(self) -> None:
-        """Restore any pending update for this entity."""
-        pending_updates = self.hass.data[DOMAIN].get(DATA_PENDING_UPDATES, {})
-        if self._attr_unique_id in pending_updates:
-            _LOGGER.debug(
-                "Restoring pending update for %s: %s",
-                self._attr_unique_id,
-                pending_updates[self._attr_unique_id],
-            )
-            # Apply the pending update
-            self._handle_update(pending_updates[self._attr_unique_id])
-            # Remove from pending updates
-            del pending_updates[self._attr_unique_id]
-
     async def async_restore_last_state(self, last_state: State) -> None:
         """Restore previous state."""
         config = self._config
 
         # Only restore state if we don't have one already, since it can be set by a pending update
-        if (
-            config[ATTR_SENSOR_STATE] is None
-            or config[ATTR_SENSOR_STATE] == STATE_UNKNOWN
-        ):
+        if config[ATTR_SENSOR_STATE] in (None, STATE_UNKNOWN):
             config[ATTR_SENSOR_STATE] = last_state.state
             config[ATTR_SENSOR_ATTRIBUTES] = {
                 **last_state.attributes,
@@ -116,8 +99,22 @@ class MobileAppEntity(RestoreEntity):
         return device_info(self._registration)
 
     @callback
-    def _handle_update(self, data: dict[str, Any]) -> None:
+    def _handle_update(self) -> None:
         """Handle async event updates."""
-        self._config.update(data)
+        self._restore_pending_update()
         self._async_update_attr_from_config()
         self.async_write_ha_state()
+
+    def _restore_pending_update(self) -> None:
+        """Restore any pending update for this entity."""
+        pending_updates = self.hass.data[DOMAIN].get(DATA_PENDING_UPDATES, {})
+        if self._attr_unique_id in pending_updates:
+            _LOGGER.debug(
+                "Restoring pending update for %s: %s",
+                self._attr_unique_id,
+                pending_updates[self._attr_unique_id],
+            )
+            # Apply the pending update
+            self._config.update(pending_updates[self._attr_unique_id])
+            # Remove from pending updates
+            del pending_updates[self._attr_unique_id]

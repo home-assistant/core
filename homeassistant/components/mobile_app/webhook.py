@@ -602,19 +602,7 @@ async def webhook_register_sensor(
         if changes:
             entity_registry.async_update_entity(existing_sensor, **changes)
 
-        # Send update signal if entity is not disabled
-        # Otherwise if the entity is enabled back, store it as pending update
-        if not entry.disabled_by:
-            async_dispatcher_send(
-                hass, f"{SIGNAL_SENSOR_UPDATE}-{unique_store_key}", data
-            )
-        elif not should_be_disabled:
-            _LOGGER.debug(
-                "Entity %s is disabled, storing pending update", unique_store_key
-            )
-            hass.data[DOMAIN][DATA_PENDING_UPDATES][unique_store_key] = data
-        else:
-            _LOGGER.debug("Entity %s is disabled, ignoring update", unique_store_key)
+        _async_update_sensor_entity(hass, unique_store_key, data)
     else:
         data[CONF_UNIQUE_ID] = unique_store_key
         data[CONF_NAME] = (
@@ -699,19 +687,7 @@ async def webhook_update_sensor_states(
 
         sensor[CONF_WEBHOOK_ID] = config_entry.data[CONF_WEBHOOK_ID]
 
-        if unique_store_key in hass.data[DOMAIN][DATA_PENDING_UPDATES]:
-            # Replace existing pending update with the latest sensor data.
-            # This can occur when an entity was recently enabled but not yet initialized.
-            hass.data[DOMAIN][DATA_PENDING_UPDATES][unique_store_key] = sensor
-
-        # Send the dispatcher signal after storing the pending update to handle race conditions.
-        # If the entity initializes before storing the update,
-        # the signal ensures the entity receives the update immediately.
-        async_dispatcher_send(
-            hass,
-            f"{SIGNAL_SENSOR_UPDATE}-{unique_store_key}",
-            sensor,
-        )
+        _async_update_sensor_entity(hass, unique_store_key, sensor)
 
         resp[unique_id] = {"success": True}
 
@@ -723,6 +699,18 @@ async def webhook_update_sensor_states(
             resp[unique_id]["is_disabled"] = True
 
     return webhook_response(resp, registration=config_entry.data)
+
+
+def _async_update_sensor_entity(
+    hass: HomeAssistant, unique_store_key: str, data: dict[str, Any]
+) -> None:
+    """Update a sensor entity with new data."""
+    # Replace existing pending update with the latest sensor data.
+    hass.data[DOMAIN][DATA_PENDING_UPDATES][unique_store_key] = data
+
+    # The signal might not be handled if the entity was just enabled, but the data is stored
+    # in pending updates and will be applied on entity initialization.
+    async_dispatcher_send(hass, f"{SIGNAL_SENSOR_UPDATE}-{unique_store_key}")
 
 
 @WEBHOOK_COMMANDS.register("get_zones")

@@ -153,64 +153,6 @@ async def test_pending_update_applied_when_entity_enabled(
     assert unique_store_key not in pending_updates
 
 
-async def test_pending_update_not_stored_when_staying_disabled(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    create_registrations: tuple[dict[str, Any], dict[str, Any]],
-    webhook_client: TestClient,
-) -> None:
-    """Test that updates are not stored when re-registering as disabled."""
-    webhook_id = create_registrations[1]["webhook_id"]
-    webhook_url = f"/api/webhook/{webhook_id}"
-
-    # Register a sensor as disabled
-    reg_resp = await webhook_client.post(
-        webhook_url,
-        json={
-            "type": "register_sensor",
-            "data": {
-                "name": "Battery State",
-                "state": 100,
-                "type": "sensor",
-                "unique_id": "battery_state",
-                "unit_of_measurement": PERCENTAGE,
-                "disabled": True,
-            },
-        },
-    )
-
-    assert reg_resp.status == HTTPStatus.CREATED
-    await hass.async_block_till_done()
-
-    # Entity should not exist in states
-    entity = hass.states.get("sensor.test_1_battery_state")
-    assert entity is None
-
-    # Re-register while still disabled - should NOT store as pending
-    reg_resp = await webhook_client.post(
-        webhook_url,
-        json={
-            "type": "register_sensor",
-            "data": {
-                "name": "Battery State",
-                "state": 75,
-                "type": "sensor",
-                "unique_id": "battery_state",
-                "unit_of_measurement": PERCENTAGE,
-                "disabled": True,
-            },
-        },
-    )
-
-    assert reg_resp.status == HTTPStatus.CREATED
-    await hass.async_block_till_done()
-
-    # Verify NO pending update is stored
-    unique_store_key = f"{webhook_id}_battery_state"
-    pending_updates = hass.data[DOMAIN]["pending_updates"]
-    assert unique_store_key not in pending_updates
-
-
 async def test_pending_update_with_attributes(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -571,3 +513,282 @@ async def test_multiple_pending_updates_for_different_sensors(
     pending_updates = hass.data[DOMAIN]["pending_updates"]
     assert f"{webhook_id}_battery_state" not in pending_updates
     assert f"{webhook_id}_battery_temp" not in pending_updates
+
+
+async def test_update_sensor_states_with_pending_updates(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    create_registrations: tuple[dict[str, Any], dict[str, Any]],
+    webhook_client: TestClient,
+) -> None:
+    """Test that update_sensor_states works with pending updates mechanism."""
+    webhook_id = create_registrations[1]["webhook_id"]
+    webhook_url = f"/api/webhook/{webhook_id}"
+
+    # Register a sensor
+    reg_resp = await webhook_client.post(
+        webhook_url,
+        json={
+            "type": "register_sensor",
+            "data": {
+                "name": "Battery State",
+                "state": 100,
+                "type": "sensor",
+                "unique_id": "battery_state",
+                "unit_of_measurement": PERCENTAGE,
+            },
+        },
+    )
+
+    assert reg_resp.status == HTTPStatus.CREATED
+    await hass.async_block_till_done()
+
+    entity = hass.states.get("sensor.test_1_battery_state")
+    assert entity is not None
+    assert entity.state == "100"
+
+    # Disable the entity
+    entity_registry.async_update_entity(
+        "sensor.test_1_battery_state", disabled_by=er.RegistryEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+
+    # Use update_sensor_states while disabled - should store as pending
+    resp = await webhook_client.post(
+        webhook_url,
+        json={
+            "type": "update_sensor_states",
+            "data": [
+                {
+                    "state": 75,
+                    "type": "sensor",
+                    "unique_id": "battery_state",
+                }
+            ],
+        },
+    )
+
+    assert resp.status == HTTPStatus.OK
+    await hass.async_block_till_done()
+
+    # Verify the pending update is stored
+    unique_store_key = f"{webhook_id}_battery_state"
+    pending_updates = hass.data[DOMAIN]["pending_updates"]
+    assert unique_store_key in pending_updates
+    assert pending_updates[unique_store_key]["state"] == 75
+
+    # Re-enable the entity
+    entity_registry.async_update_entity("sensor.test_1_battery_state", disabled_by=None)
+
+    # Reload the config entry to trigger entity re-creation
+    config_entry = hass.config_entries.async_entries("mobile_app")[1]
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Verify the pending update was applied
+    entity = hass.states.get("sensor.test_1_battery_state")
+    assert entity is not None
+    assert entity.state == "75"
+
+    # Verify pending update was removed
+    pending_updates = hass.data[DOMAIN]["pending_updates"]
+    assert unique_store_key not in pending_updates
+
+
+async def test_update_sensor_states_always_stores_pending(
+    hass: HomeAssistant,
+    create_registrations: tuple[dict[str, Any], dict[str, Any]],
+    webhook_client: TestClient,
+) -> None:
+    """Test that update_sensor_states always stores data in pending updates."""
+    webhook_id = create_registrations[1]["webhook_id"]
+    webhook_url = f"/api/webhook/{webhook_id}"
+
+    # Register a sensor
+    reg_resp = await webhook_client.post(
+        webhook_url,
+        json={
+            "type": "register_sensor",
+            "data": {
+                "name": "Battery State",
+                "state": 100,
+                "type": "sensor",
+                "unique_id": "battery_state",
+            },
+        },
+    )
+
+    assert reg_resp.status == HTTPStatus.CREATED
+    await hass.async_block_till_done()
+
+    entity = hass.states.get("sensor.test_1_battery_state")
+    assert entity is not None
+    assert entity.state == "100"
+
+    # Use update_sensor_states while enabled
+    resp = await webhook_client.post(
+        webhook_url,
+        json={
+            "type": "update_sensor_states",
+            "data": [
+                {
+                    "state": 50,
+                    "type": "sensor",
+                    "unique_id": "battery_state",
+                }
+            ],
+        },
+    )
+
+    assert resp.status == HTTPStatus.OK
+    await hass.async_block_till_done()
+
+    # Verify update was applied
+    entity = hass.states.get("sensor.test_1_battery_state")
+    assert entity is not None
+    assert entity.state == "50"
+
+    # Pending update should be cleaned up after successful signal handling
+    unique_store_key = f"{webhook_id}_battery_state"
+    pending_updates = hass.data[DOMAIN]["pending_updates"]
+    # The pending update is removed by the entity's _handle_update method
+    assert unique_store_key not in pending_updates
+
+
+async def test_binary_sensor_pending_update(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    create_registrations: tuple[dict[str, Any], dict[str, Any]],
+    webhook_client: TestClient,
+) -> None:
+    """Test that binary sensors properly handle pending updates."""
+    webhook_id = create_registrations[1]["webhook_id"]
+    webhook_url = f"/api/webhook/{webhook_id}"
+
+    # Register a binary sensor
+    reg_resp = await webhook_client.post(
+        webhook_url,
+        json={
+            "type": "register_sensor",
+            "data": {
+                "name": "Motion Detected",
+                "state": False,
+                "type": "binary_sensor",
+                "unique_id": "motion_sensor",
+            },
+        },
+    )
+
+    assert reg_resp.status == HTTPStatus.CREATED
+    await hass.async_block_till_done()
+
+    entity = hass.states.get("binary_sensor.test_1_motion_detected")
+    assert entity is not None
+    assert entity.state == "off"
+
+    # Disable the entity
+    entity_registry.async_update_entity(
+        "binary_sensor.test_1_motion_detected",
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+    await hass.async_block_till_done()
+
+    # Send update while disabled - should store as pending
+    reg_resp = await webhook_client.post(
+        webhook_url,
+        json={
+            "type": "register_sensor",
+            "data": {
+                "name": "Motion Detected",
+                "state": True,
+                "type": "binary_sensor",
+                "unique_id": "motion_sensor",
+            },
+        },
+    )
+
+    assert reg_resp.status == HTTPStatus.CREATED
+    await hass.async_block_till_done()
+
+    # Verify pending update exists
+    unique_store_key = f"{webhook_id}_motion_sensor"
+    pending_updates = hass.data[DOMAIN]["pending_updates"]
+    assert unique_store_key in pending_updates
+
+    # Re-enable the entity
+    entity_registry.async_update_entity(
+        "binary_sensor.test_1_motion_detected", disabled_by=None
+    )
+
+    # Reload the config entry
+    config_entry = hass.config_entries.async_entries("mobile_app")[1]
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Verify the pending update was applied
+    entity = hass.states.get("binary_sensor.test_1_motion_detected")
+    assert entity is not None
+    assert entity.state == "on"
+
+    # Verify pending update was removed
+    pending_updates = hass.data[DOMAIN]["pending_updates"]
+    assert unique_store_key not in pending_updates
+
+
+async def test_register_sensor_always_stores_pending(
+    hass: HomeAssistant,
+    create_registrations: tuple[dict[str, Any], dict[str, Any]],
+    webhook_client: TestClient,
+) -> None:
+    """Test that register_sensor always stores data in pending updates."""
+    webhook_id = create_registrations[1]["webhook_id"]
+    webhook_url = f"/api/webhook/{webhook_id}"
+
+    # Register a sensor
+    reg_resp = await webhook_client.post(
+        webhook_url,
+        json={
+            "type": "register_sensor",
+            "data": {
+                "name": "Battery State",
+                "state": 100,
+                "type": "sensor",
+                "unique_id": "battery_state",
+            },
+        },
+    )
+
+    assert reg_resp.status == HTTPStatus.CREATED
+    await hass.async_block_till_done()
+
+    entity = hass.states.get("sensor.test_1_battery_state")
+    assert entity is not None
+    assert entity.state == "100"
+
+    # Re-register with new state while enabled
+    reg_resp = await webhook_client.post(
+        webhook_url,
+        json={
+            "type": "register_sensor",
+            "data": {
+                "name": "Battery State",
+                "state": 75,
+                "type": "sensor",
+                "unique_id": "battery_state",
+            },
+        },
+    )
+
+    assert reg_resp.status == HTTPStatus.CREATED
+    await hass.async_block_till_done()
+
+    # Verify update was applied
+    entity = hass.states.get("sensor.test_1_battery_state")
+    assert entity is not None
+    assert entity.state == "75"
+
+    # Pending update should be cleaned up after successful signal handling
+    unique_store_key = f"{webhook_id}_battery_state"
+    pending_updates = hass.data[DOMAIN]["pending_updates"]
+    # The pending update is removed by the entity's _handle_update method
+    assert unique_store_key not in pending_updates
