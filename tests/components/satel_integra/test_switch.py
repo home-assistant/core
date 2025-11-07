@@ -8,15 +8,19 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import STATE_OFF, STATE_ON
 from homeassistant.components.satel_integra.const import SIGNAL_OUTPUTS_UPDATED
+from homeassistant.components.switch import (
+    DOMAIN as SWITCH_DOMAIN,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+)
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from . import MOCK_CODE
+from . import MOCK_CODE, MOCK_ENTRY_ID
 
 from tests.common import MockConfigEntry, async_dispatcher_send, snapshot_platform
-from tests.components.switch import common
 
 
 @pytest.fixture(autouse=True)
@@ -29,41 +33,32 @@ async def switches_only() -> AsyncGenerator[None]:
         yield
 
 
+async def add_mock_config_entry(hass: HomeAssistant, config_entry: MockConfigEntry):
+    """Add and fully set up a config entry, asserting it loads correctly."""
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+
+@pytest.fixture
+async def setup_mock_config_entry(
+    hass: HomeAssistant, mock_config_entry_with_subentries: MockConfigEntry
+):
+    """Fixture to set up the config entry."""
+    await add_mock_config_entry(hass, mock_config_entry_with_subentries)
+
+
+@pytest.mark.usefixtures("mock_satel", "setup_mock_config_entry")
 async def test_switches(
     hass: HomeAssistant,
-    mock_satel: AsyncMock,
-    mock_config_entry_with_subentries: MockConfigEntry,
     entity_registry: EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test switch correctly being set up."""
-
-    mock_config_entry_with_subentries.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(mock_config_entry_with_subentries.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry_with_subentries.state is ConfigEntryState.LOADED
-
-    await snapshot_platform(
-        hass, entity_registry, snapshot, mock_config_entry_with_subentries.entry_id
-    )
-
-
-async def test_switch_initial_state_off(
-    hass: HomeAssistant,
-    mock_satel: AsyncMock,
-    mock_config_entry_with_subentries: MockConfigEntry,
-) -> None:
-    """Test switch has a correct initial state OFF after initialization."""
-    mock_config_entry_with_subentries.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(mock_config_entry_with_subentries.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry_with_subentries.state is ConfigEntryState.LOADED
-
-    assert hass.states.get("switch.switchable_output").state == STATE_OFF
+    await snapshot_platform(hass, entity_registry, snapshot, MOCK_ENTRY_ID)
 
 
 async def test_switch_initial_state_on(
@@ -74,29 +69,16 @@ async def test_switch_initial_state_on(
     """Test switch has a correct initial state ON after initialization."""
     mock_satel.return_value.violated_outputs = [1]
 
-    mock_config_entry_with_subentries.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(mock_config_entry_with_subentries.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry_with_subentries.state is ConfigEntryState.LOADED
+    await add_mock_config_entry(hass, mock_config_entry_with_subentries)
 
     assert hass.states.get("switch.switchable_output").state == STATE_ON
 
 
+@pytest.mark.usefixtures("mock_satel", "setup_mock_config_entry")
 async def test_switch_callback(
     hass: HomeAssistant,
-    mock_satel: AsyncMock,
-    mock_config_entry_with_subentries: MockConfigEntry,
 ) -> None:
     """Test switch correctly changes state after a callback from the panel."""
-    mock_config_entry_with_subentries.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(mock_config_entry_with_subentries.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry_with_subentries.state is ConfigEntryState.LOADED
-
     assert hass.states.get("switch.switchable_output").state == STATE_OFF
 
     # Should do nothing, only react to it's own number
@@ -109,32 +91,39 @@ async def test_switch_callback(
     assert hass.states.get("switch.switchable_output").state == STATE_ON
 
 
+@pytest.mark.usefixtures("mock_satel", "setup_mock_config_entry")
 async def test_switch_change_state(
     hass: HomeAssistant,
     mock_satel: AsyncMock,
-    mock_config_entry_with_subentries: MockConfigEntry,
 ) -> None:
     """Test switch correctly changes state after a callback from the panel."""
     controller = mock_satel.return_value
     controller.set_output = AsyncMock()
 
-    mock_config_entry_with_subentries.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(mock_config_entry_with_subentries.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry_with_subentries.state is ConfigEntryState.LOADED
-
     assert hass.states.get("switch.switchable_output").state == STATE_OFF
 
     # Test turn on
-    await common.async_turn_on(hass, "switch.switchable_output")
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.switchable_output"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
     assert hass.states.get("switch.switchable_output").state == STATE_ON
     controller.set_output.assert_awaited_once_with(MOCK_CODE, 1, True)
 
     controller.set_output.reset_mock()
 
-    # Test turn on
-    await common.async_turn_off(hass, "switch.switchable_output")
+    # Test turn off
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.switchable_output"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
     assert hass.states.get("switch.switchable_output").state == STATE_OFF
     controller.set_output.assert_awaited_once_with(MOCK_CODE, 1, False)
