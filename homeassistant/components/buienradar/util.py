@@ -3,7 +3,7 @@
 from datetime import datetime, timedelta
 from http import HTTPStatus
 import logging
-from typing import Any
+from typing import Any, Callable, Mapping, TypeVar
 
 import aiohttp
 from buienradar.buienradar import parse_data
@@ -36,14 +36,14 @@ from homeassistant.util import dt as dt_util
 
 from .const import DEFAULT_TIMEOUT, SCHEDULE_NOK, SCHEDULE_OK
 
-__all__ = ["BrData"]
-_LOGGER = logging.getLogger(__name__)
-
 """
 Log at WARN level after WARN_THRESHOLD failures, otherwise log at
 DEBUG level.
 """
 WARN_THRESHOLD = 4
+_LOGGER = logging.getLogger(__name__)
+__all__ = ["BrData", "resolve_coordinates"]
+T = TypeVar("T")
 
 
 def threshold_log(count: int, *args, **kwargs) -> None:
@@ -52,6 +52,22 @@ def threshold_log(count: int, *args, **kwargs) -> None:
         _LOGGER.warning(*args, **kwargs)
     else:
         _LOGGER.debug(*args, **kwargs)
+
+
+def resolve_coordinates(
+    hass: HomeAssistant, config: Mapping[str, Any]
+) -> dict[str, float] | None:
+    """Resolve coordinates using entry data or hass defaults."""
+    latitude = config.get(CONF_LATITUDE, hass.config.latitude)
+    longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
+
+    if None in (latitude, longitude):
+        return None
+
+    return {
+        CONF_LATITUDE: float(latitude),
+        CONF_LONGITUDE: float(longitude),
+    }
 
 
 class BrData:
@@ -64,18 +80,17 @@ class BrData:
     def __init__(self, hass: HomeAssistant, coordinates, timeframe, devices) -> None:
         """Initialize the data object."""
         self.devices = devices
-        self.data: dict[str, Any] | None = {}
+        self.data: dict[str, Any] = {}
         self.hass = hass
         self.coordinates = coordinates
         self.timeframe = timeframe
         self.unsub_schedule_update: CALLBACK_TYPE | None = None
 
-    async def update_devices(self):
+    def update_devices(self):
         """Update all devices/sensors."""
         if not self.devices:
             return
 
-        # Update all devices
         for dev in self.devices:
             dev.data_updated(self)
 
@@ -167,7 +182,7 @@ class BrData:
 
         return result[DATA]
 
-    async def async_update(self, *_):
+    async def async_update(self, *_) -> None:
         """Update the data from buienradar and schedule the next update."""
         data = await self._async_update()
 
@@ -176,8 +191,20 @@ class BrData:
             return
 
         self.data = data
-        await self.update_devices()
+        self.update_devices()
         self.async_schedule_update(SCHEDULE_OK)
+
+    def _get_cast_value(self, key: str, caster: Callable[[Any], T]) -> T | None:
+        """Return the value for key converted by caster or None."""
+        if not self.data:
+            return None
+        value = self.data.get(key)
+        if value is None:
+            return None
+        try:
+            return caster(value)
+        except (TypeError, ValueError):
+            return None
 
     @property
     def attribution(self):
@@ -197,66 +224,42 @@ class BrData:
     @property
     def temperature(self):
         """Return the temperature, or None."""
-        try:
-            return float(self.data.get(TEMPERATURE))
-        except (ValueError, TypeError):
-            return None
+        return self._get_cast_value(TEMPERATURE, float)
 
     @property
     def feeltemperature(self):
         """Return the feeltemperature, or None."""
-        try:
-            return float(self.data.get(FEELTEMPERATURE))
-        except (ValueError, TypeError):
-            return None
+        return self._get_cast_value(FEELTEMPERATURE, float)
 
     @property
     def pressure(self):
         """Return the pressure, or None."""
-        try:
-            return float(self.data.get(PRESSURE))
-        except (ValueError, TypeError):
-            return None
+        return self._get_cast_value(PRESSURE, float)
 
     @property
     def humidity(self):
         """Return the humidity, or None."""
-        try:
-            return int(self.data.get(HUMIDITY))
-        except (ValueError, TypeError):
-            return None
+        return self._get_cast_value(HUMIDITY, int)
 
     @property
     def visibility(self):
         """Return the visibility, or None."""
-        try:
-            return int(self.data.get(VISIBILITY))
-        except (ValueError, TypeError):
-            return None
+        return self._get_cast_value(VISIBILITY, int)
 
     @property
     def wind_gust(self):
         """Return the windgust, or None."""
-        try:
-            return float(self.data.get(WINDGUST))
-        except (ValueError, TypeError):
-            return None
+        return self._get_cast_value(WINDGUST, float)
 
     @property
     def wind_speed(self):
         """Return the windspeed, or None."""
-        try:
-            return float(self.data.get(WINDSPEED))
-        except (ValueError, TypeError):
-            return None
+        return self._get_cast_value(WINDSPEED, float)
 
     @property
     def wind_bearing(self):
         """Return the wind bearing, or None."""
-        try:
-            return int(self.data.get(WINDAZIMUTH))
-        except (ValueError, TypeError):
-            return None
+        return self._get_cast_value(WINDAZIMUTH, int)
 
     @property
     def forecast(self):

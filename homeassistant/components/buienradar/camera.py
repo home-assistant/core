@@ -18,6 +18,7 @@ from homeassistant.util import dt as dt_util
 
 from . import BuienRadarConfigEntry
 from .const import CONF_DELTA, DEFAULT_COUNTRY, DEFAULT_DELTA, DEFAULT_DIMENSION
+from .util import resolve_coordinates
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,10 +44,20 @@ async def async_setup_entry(
 
     delta = options.get(CONF_DELTA, config.get(CONF_DELTA, DEFAULT_DELTA))
 
-    latitude = config.get(CONF_LATITUDE, hass.config.latitude)
-    longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
+    if not (coordinates := resolve_coordinates(hass, config)):
+        _LOGGER.error("Latitude or longitude not set in Home Assistant config")
+        return
 
-    async_add_entities([BuienradarCam(latitude, longitude, delta, country)])
+    async_add_entities(
+        [
+            BuienradarCam(
+                coordinates[CONF_LATITUDE],
+                coordinates[CONF_LONGITUDE],
+                delta,
+                country,
+            )
+        ]
+    )
 
 
 class BuienradarCam(Camera):
@@ -96,25 +107,30 @@ class BuienradarCam(Camera):
 
         self._attr_unique_id = f"{latitude:2.6f}{longitude:2.6f}"
 
-    def __needs_refresh(self) -> bool:
+    def _needs_refresh(self) -> bool:
         if not (self._delta and self._deadline and self._last_image):
             return True
 
         return dt_util.utcnow() > self._deadline
 
-    async def __retrieve_radar_image(self) -> bool:
-        """Retrieve new radar image and return whether this succeeded."""
-        session = async_get_clientsession(self.hass)
-
-        url = (
+    def _radar_url(self) -> str:
+        """Return the radar image endpoint."""
+        return (
             f"https://api.buienradar.nl/image/1.0/RadarMap{self._country}"
             f"?w={self._dimension}&h={self._dimension}"
         )
 
-        if self._last_modified:
-            headers = {"If-Modified-Since": self._last_modified}
-        else:
-            headers = {}
+    def _request_headers(self) -> dict[str, str]:
+        """Return the headers for the radar request."""
+        if not self._last_modified:
+            return {}
+        return {"If-Modified-Since": self._last_modified}
+
+    async def _async_retrieve_radar_image(self) -> bool:
+        """Retrieve new radar image and return whether this succeeded."""
+        session = async_get_clientsession(self.hass)
+        url = self._radar_url()
+        headers = self._request_headers()
 
         try:
             async with session.get(
@@ -157,7 +173,7 @@ class BuienradarCam(Camera):
             again before continuing.
           * :func:`asyncio.Condition.notify_all` requires the lock to be held.
         """
-        if not self.__needs_refresh():
+        if not self._needs_refresh():
             return self._last_image
 
         # get lock, check iff loading, await notification if loading
@@ -173,7 +189,7 @@ class BuienradarCam(Camera):
 
         try:
             now = dt_util.utcnow()
-            was_updated = await self.__retrieve_radar_image()
+            was_updated = await self._async_retrieve_radar_image()
             # was updated? Set new deadline relative to now before loading
             if was_updated:
                 self._deadline = now + timedelta(seconds=self._delta)

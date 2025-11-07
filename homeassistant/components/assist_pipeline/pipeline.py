@@ -180,13 +180,7 @@ def _async_resolve_default_pipeline_settings(
         pipeline_language = hass.config.language
         conversation_language = conversation_languages[0]
 
-    if stt_engine_id is None:
-        stt_engine_id = stt.async_default_engine(hass)
-
-    if stt_engine_id is not None:
-        stt_engine = stt.async_get_speech_to_text_engine(hass, stt_engine_id)
-        if stt_engine is None:
-            stt_engine_id = None
+    stt_engine_id, stt_engine = _resolve_stt_engine(hass, stt_engine_id)
 
     if stt_engine:
         stt_languages = language_util.matches(
@@ -204,13 +198,7 @@ def _async_resolve_default_pipeline_settings(
             )
             stt_engine_id = None
 
-    if tts_engine_id is None:
-        tts_engine_id = tts.async_default_engine(hass)
-
-    if tts_engine_id is not None:
-        tts_engine = tts.get_engine_instance(hass, tts_engine_id)
-        if tts_engine is None:
-            tts_engine_id = None
+    tts_engine_id, tts_engine = _resolve_tts_engine(hass, tts_engine_id)
 
     if tts_engine:
         tts_languages = language_util.matches(
@@ -244,6 +232,34 @@ def _async_resolve_default_pipeline_settings(
         "wake_word_entity": wake_word_entity,
         "wake_word_id": wake_word_id,
     }
+
+
+def _resolve_tts_engine(
+    hass: HomeAssistant, tts_engine_id: str | None
+) -> tuple[str | None, tts.TextToSpeechEntity | tts.Provider | None]:
+    tts_engine = None
+    if tts_engine_id is None:
+        tts_engine_id = tts.async_default_engine(hass)
+
+    if tts_engine_id is not None:
+        tts_engine = tts.get_engine_instance(hass, tts_engine_id)
+        if tts_engine is None:
+            tts_engine_id = None
+    return tts_engine_id, tts_engine
+
+
+def _resolve_stt_engine(
+    hass: HomeAssistant, stt_engine_id: str | None
+) -> tuple[str | None, stt.SpeechToTextEntity | stt.Provider | None]:
+    stt_engine = None
+    if stt_engine_id is None:
+        stt_engine_id = stt.async_default_engine(hass)
+
+    if stt_engine_id is not None:
+        stt_engine = stt.async_get_speech_to_text_engine(hass, stt_engine_id)
+        if stt_engine is None:
+            stt_engine_id = None
+    return stt_engine_id, stt_engine
 
 
 async def _async_create_default_pipeline(
@@ -1091,21 +1107,7 @@ class PipelineRun:
         if self.intent_agent is None or self._conversation_data is None:
             raise RuntimeError("Recognize intent was not prepared")
 
-        if self.pipeline.conversation_language == MATCH_ALL:
-            # LLMs support all languages ('*') so use languages from the
-            # pipeline for intent fallback.
-            #
-            # We prioritize the STT and TTS languages because they may be more
-            # specific, such as "zh-CN" instead of just "zh". This is necessary
-            # for languages whose intents are split out by region when
-            # preferring local intent matching.
-            input_language = (
-                self.pipeline.stt_language
-                or self.pipeline.tts_language
-                or self.pipeline.language
-            )
-        else:
-            input_language = self.pipeline.conversation_language
+        input_language = self._set_input_language()
 
         self.process_event(
             PipelineEvent(
@@ -1138,52 +1140,15 @@ class PipelineRun:
             processed_locally = agent_id == conversation.HOME_ASSISTANT_AGENT
             all_targets_in_satellite_area = False
             intent_response: intent.IntentResponse | None = None
-            if not processed_locally and not self._intent_agent_only:
-                # Sentence triggers override conversation agent
-                if (
-                    trigger_response_text
-                    := await conversation.async_handle_sentence_triggers(
-                        self.hass, user_input
-                    )
-                ) is not None:
-                    # Sentence trigger matched
-                    agent_id = "sentence_trigger"
-                    processed_locally = True
-                    intent_response = intent.IntentResponse(
-                        self.pipeline.conversation_language
-                    )
-                    intent_response.async_set_speech(trigger_response_text)
+            (
+                agent_id,
+                processed_locally,
+                intent_response,
+            ) = await self._check_triggers_and_local_intents(
+                user_input, agent_id, processed_locally, intent_response
+            )
 
-                intent_filter: Callable[[RecognizeResult], bool] | None = None
-                # If the LLM has API access, we filter out some sentences that are
-                # interfering with LLM operation.
-                if (
-                    intent_agent_state := self.hass.states.get(self.intent_agent.id)
-                ) and intent_agent_state.attributes.get(
-                    ATTR_SUPPORTED_FEATURES, 0
-                ) & conversation.ConversationEntityFeature.CONTROL:
-                    intent_filter = _async_local_fallback_intent_filter
-
-                # Try local intents
-                if (
-                    intent_response is None
-                    and self.pipeline.prefer_local_intents
-                    and (
-                        intent_response := await conversation.async_handle_intents(
-                            self.hass,
-                            user_input,
-                            intent_filter=intent_filter,
-                        )
-                    )
-                ):
-                    # Local intent matched
-                    agent_id = conversation.HOME_ASSISTANT_AGENT
-                    processed_locally = True
-
-            if self.tts_stream and self.tts_stream.supports_streaming_input:
-                tts_input_stream: asyncio.Queue[str | None] | None = asyncio.Queue()
-            else:
-                tts_input_stream = None
+            tts_input_stream = self._set_stream()
             chat_log_role = None
             delta_character_count = 0
 
@@ -1265,64 +1230,13 @@ class PipelineRun:
                 assert self.tts_stream is not None
                 self.tts_stream.async_set_message_stream(tts_input_stream_generator())
 
-            with (
-                chat_session.async_get_chat_session(
-                    self.hass, user_input.conversation_id
-                ) as session,
-                conversation.async_get_chat_log(
-                    self.hass,
-                    session,
-                    user_input,
-                    chat_log_delta_listener=chat_log_delta_listener,
-                ) as chat_log,
-            ):
-                # It was already handled, create response and add to chat history
-                if intent_response is not None:
-                    speech: str = intent_response.speech.get("plain", {}).get(
-                        "speech", ""
-                    )
-                    chat_log.async_add_assistant_content_without_tools(
-                        conversation.AssistantContent(
-                            agent_id=agent_id,
-                            content=speech,
-                        )
-                    )
-                    conversation_result = conversation.ConversationResult(
-                        response=intent_response,
-                        conversation_id=session.conversation_id,
-                    )
-
-                else:
-                    # Fall back to pipeline conversation agent
-                    conversation_result = await conversation.async_converse(
-                        hass=self.hass,
-                        text=user_input.text,
-                        conversation_id=user_input.conversation_id,
-                        device_id=user_input.device_id,
-                        satellite_id=user_input.satellite_id,
-                        context=user_input.context,
-                        language=user_input.language,
-                        agent_id=user_input.agent_id,
-                        extra_system_prompt=user_input.extra_system_prompt,
-                    )
-                    speech = conversation_result.response.speech.get("plain", {}).get(
-                        "speech", ""
-                    )
-                    if tts_input_stream and self._streamed_response_text:
-                        tts_input_stream.put_nowait(None)
-
-                if agent_id == conversation.HOME_ASSISTANT_AGENT:
-                    # Check if all targeted entities were in the same area as
-                    # the satellite device.
-                    # If so, the satellite should respond with an acknowledge beep
-                    # instead of a full response.
-                    all_targets_in_satellite_area = (
-                        self._get_all_targets_in_satellite_area(
-                            conversation_result.response,
-                            self._satellite_id,
-                            self._device_id,
-                        )
-                    )
+            speech, conversation_result = await self._process_chat_response(
+                user_input,
+                agent_id,
+                intent_response,
+                tts_input_stream,
+                chat_log_delta_listener,
+            )
 
         except Exception as src_error:
             _LOGGER.exception("Unexpected error during intent recognition")
@@ -1346,68 +1260,136 @@ class PipelineRun:
         if conversation_result.continue_conversation:
             self._conversation_data.continue_conversation_agent = agent_id
 
-        return (speech, all_targets_in_satellite_area)
+        return speech
 
-    def _get_all_targets_in_satellite_area(
+    async def _process_chat_response(
         self,
-        intent_response: intent.IntentResponse,
-        satellite_id: str | None,
-        device_id: str | None,
-    ) -> bool:
-        """Return true if all targeted entities were in the same area as the device."""
-        if (
-            intent_response.response_type != intent.IntentResponseType.ACTION_DONE
-            or not intent_response.matched_states
+        user_input: conversation.ConversationInput,
+        agent_id: str,
+        intent_response: intent.IntentResponse | None,
+        tts_input_stream: asyncio.Queue[str | None] | None,
+        chat_log_delta_listener: Callable[[conversation.ChatLog, dict], None],
+    ) -> tuple[str, conversation.ConversationResult]:
+        with (
+            chat_session.async_get_chat_session(
+                self.hass, user_input.conversation_id
+            ) as session,
+            conversation.async_get_chat_log(
+                self.hass,
+                session,
+                user_input,
+                chat_log_delta_listener=chat_log_delta_listener,
+            ) as chat_log,
         ):
-            return False
-
-        entity_registry = er.async_get(self.hass)
-        device_registry = dr.async_get(self.hass)
-
-        area_id: str | None = None
-
-        if (
-            satellite_id is not None
-            and (target_entity_entry := entity_registry.async_get(satellite_id))
-            is not None
-        ):
-            area_id = target_entity_entry.area_id
-            device_id = target_entity_entry.device_id
-
-        if area_id is None:
-            if device_id is None:
-                return False
-
-            device_entry = device_registry.async_get(device_id)
-            if device_entry is None:
-                return False
-
-            area_id = device_entry.area_id
-            if area_id is None:
-                return False
-
-        for state in intent_response.matched_states:
-            target_entity_entry = entity_registry.async_get(state.entity_id)
-            if target_entity_entry is None:
-                return False
-
-            target_area_id = target_entity_entry.area_id
-            if target_area_id is None:
-                if target_entity_entry.device_id is None:
-                    return False
-
-                target_device_entry = device_registry.async_get(
-                    target_entity_entry.device_id
+            # It was already handled, create response and add to chat history
+            if intent_response is not None:
+                speech: str = intent_response.speech.get("plain", {}).get("speech", "")
+                chat_log.async_add_assistant_content_without_tools(
+                    conversation.AssistantContent(
+                        agent_id=agent_id,
+                        content=speech,
+                    )
                 )
-                if target_device_entry is None:
-                    return False
+                conversation_result = conversation.ConversationResult(
+                    response=intent_response,
+                    conversation_id=session.conversation_id,
+                )
 
-                target_area_id = target_device_entry.area_id
+            else:
+                # Fall back to pipeline conversation agent
+                conversation_result = await conversation.async_converse(
+                    hass=self.hass,
+                    text=user_input.text,
+                    conversation_id=user_input.conversation_id,
+                    device_id=user_input.device_id,
+                    context=user_input.context,
+                    language=user_input.language,
+                    agent_id=user_input.agent_id,
+                    extra_system_prompt=user_input.extra_system_prompt,
+                )
+                speech = conversation_result.response.speech.get("plain", {}).get(
+                    "speech", ""
+                )
+                if tts_input_stream and self._streamed_response_text:
+                    tts_input_stream.put_nowait(None)
+        return speech, conversation_result
 
-            if target_area_id != area_id:
-                return False
+    def _set_stream(self) -> asyncio.Queue[str | None] | None:
+        if self.tts_stream and self.tts_stream.supports_streaming_input:
+            tts_input_stream: asyncio.Queue[str | None] | None = asyncio.Queue()
+        else:
+            tts_input_stream = None
+        return tts_input_stream
 
-        return True
+    async def _check_triggers_and_local_intents(
+        self,
+        user_input: conversation.ConversationInput,
+        agent_id: str,
+        processed_locally: bool,
+        intent_response: intent.IntentResponse | None,
+    ) -> tuple[str, bool, intent.IntentResponse | None]:
+        result_agent_id = agent_id
+
+        if not processed_locally and not self._intent_agent_only:
+            # Sentence triggers override conversation agent
+            if (
+                trigger_response_text
+                := await conversation.async_handle_sentence_triggers(
+                    self.hass, user_input
+                )
+            ) is not None:
+                # Sentence trigger matched
+                result_agent_id = "sentence_trigger"
+                processed_locally = True
+                intent_response = intent.IntentResponse(
+                    self.pipeline.conversation_language
+                )
+                intent_response.async_set_speech(trigger_response_text)
+
+            intent_filter: Callable[[RecognizeResult], bool] | None = None
+            # If the LLM has API access, we filter out some sentences that are
+            # interfering with LLM operation.
+            if (
+                intent_agent_state := self.hass.states.get(agent_id)
+            ) and intent_agent_state.attributes.get(
+                ATTR_SUPPORTED_FEATURES, 0
+            ) & conversation.ConversationEntityFeature.CONTROL:
+                intent_filter = _async_local_fallback_intent_filter
+
+                # Try local intents
+            if (
+                intent_response is None
+                and self.pipeline.prefer_local_intents
+                and (
+                    intent_response := await conversation.async_handle_intents(
+                        self.hass,
+                        user_input,
+                        intent_filter=intent_filter,
+                    )
+                )
+            ):
+                # Local intent matched
+                result_agent_id = conversation.HOME_ASSISTANT_AGENT
+                processed_locally = True
+        return result_agent_id, processed_locally, intent_response
+
+    def _set_input_language(self) -> str:
+        if self.pipeline.conversation_language == MATCH_ALL:
+            # LLMs support all languages ('*') so use languages from the
+            # pipeline for intent fallback.
+            #
+            # We prioritize the STT and TTS languages because they may be more
+            # specific, such as "zh-CN" instead of just "zh". This is necessary
+            # for languages whose intents are split out by region when
+            # preferring local intent matching.
+            input_language = (
+                self.pipeline.stt_language
+                or self.pipeline.tts_language
+                or self.pipeline.language
+            )
+        else:
+            input_language = self.pipeline.conversation_language
+        return input_language
 
     async def prepare_text_to_speech(self) -> None:
         """Prepare text-to-speech."""
@@ -1691,13 +1673,7 @@ class PipelineInput:
         stt_audio_buffer: list[EnhancedAudioChunk] = []
         stt_processed_stream: AsyncIterable[EnhancedAudioChunk] | None = None
 
-        if self.stt_stream is not None:
-            if self.run.audio_settings.needs_processor:
-                # VAD/noise suppression/auto gain/volume
-                stt_processed_stream = self.run.process_enhance_audio(self.stt_stream)
-            else:
-                # Volume multiplier only
-                stt_processed_stream = self.run.process_volume_only(self.stt_stream)
+        stt_processed_stream = self._handle_audio_stream()
 
         try:
             if current_stage == PipelineStage.WAKE_WORD:
@@ -1718,24 +1694,7 @@ class PipelineInput:
                 assert self.stt_metadata is not None
                 assert stt_processed_stream is not None
 
-                if self.wake_word_phrase is not None:
-                    # Avoid duplicate wake-ups by checking cooldown
-                    last_wake_up = self.run.hass.data[DATA_LAST_WAKE_UP].get(
-                        self.wake_word_phrase
-                    )
-                    if last_wake_up is not None:
-                        sec_since_last_wake_up = time.monotonic() - last_wake_up
-                        if sec_since_last_wake_up < WAKE_WORD_COOLDOWN:
-                            _LOGGER.debug(
-                                "Speech-to-text cancelled to avoid duplicate wake-up for %s",
-                                self.wake_word_phrase,
-                            )
-                            raise DuplicateWakeUpDetectedError(self.wake_word_phrase)
-
-                    # Record last wake up time to block duplicate detections
-                    self.run.hass.data[DATA_LAST_WAKE_UP][self.wake_word_phrase] = (
-                        time.monotonic()
-                    )
+                self._check_wake_word_cooldown()
 
                 stt_input_stream = stt_processed_stream
 
@@ -1762,38 +1721,7 @@ class PipelineInput:
                 )
                 current_stage = PipelineStage.INTENT
 
-            if self.run.end_stage != PipelineStage.STT:
-                tts_input = self.tts_input
-                all_targets_in_satellite_area = False
-
-                if current_stage == PipelineStage.INTENT:
-                    # intent-recognition
-                    assert intent_input is not None
-                    (
-                        tts_input,
-                        all_targets_in_satellite_area,
-                    ) = await self.run.recognize_intent(
-                        intent_input,
-                        self.session.conversation_id,
-                        self.conversation_extra_system_prompt,
-                    )
-                    if all_targets_in_satellite_area or tts_input.strip():
-                        current_stage = PipelineStage.TTS
-                    else:
-                        # Skip TTS
-                        current_stage = PipelineStage.END
-
-                if self.run.end_stage != PipelineStage.INTENT:
-                    # text-to-speech
-                    if current_stage == PipelineStage.TTS:
-                        if all_targets_in_satellite_area:
-                            # Use acknowledge media instead of full response
-                            await self.run.text_to_speech(
-                                tts_input or "", override_media_path=ACKNOWLEDGE_PATH
-                            )
-                        else:
-                            assert tts_input is not None
-                            await self.run.text_to_speech(tts_input)
+            await self._process_intent_and_tts(current_stage, intent_input)
 
         except PipelineError as err:
             self.run.process_event(
@@ -1807,21 +1735,68 @@ class PipelineInput:
             # thread, etc.
             await self.run.end()
 
+    async def _process_intent_and_tts(
+        self, current_stage: PipelineStage | None, intent_input: str | None
+    ) -> None:
+        if self.run.end_stage != PipelineStage.STT:
+            tts_input = self.tts_input
+
+            if current_stage == PipelineStage.INTENT:
+                # intent-recognition
+                assert intent_input is not None
+                tts_input = await self.run.recognize_intent(
+                    intent_input,
+                    self.session.conversation_id,
+                    self.device_id,
+                    self.conversation_extra_system_prompt,
+                )
+                if tts_input.strip():
+                    current_stage = PipelineStage.TTS
+                else:
+                    # Skip TTS
+                    current_stage = PipelineStage.END
+
+            if self.run.end_stage != PipelineStage.INTENT:
+                # text-to-speech
+                if current_stage == PipelineStage.TTS:
+                    assert tts_input is not None
+                    await self.run.text_to_speech(tts_input)
+
+    def _check_wake_word_cooldown(self) -> None:
+        if self.wake_word_phrase is not None:
+            # Avoid duplicate wake-ups by checking cooldown
+            last_wake_up = self.run.hass.data[DATA_LAST_WAKE_UP].get(
+                self.wake_word_phrase
+            )
+            if last_wake_up is not None:
+                sec_since_last_wake_up = time.monotonic() - last_wake_up
+                if sec_since_last_wake_up < WAKE_WORD_COOLDOWN:
+                    _LOGGER.debug(
+                        "Speech-to-text cancelled to avoid duplicate wake-up for %s",
+                        self.wake_word_phrase,
+                    )
+                    raise DuplicateWakeUpDetectedError(self.wake_word_phrase)
+
+                    # Record last wake up time to block duplicate detections
+            self.run.hass.data[DATA_LAST_WAKE_UP][self.wake_word_phrase] = (
+                time.monotonic()
+            )
+
+    def _handle_audio_stream(self) -> AsyncIterable[EnhancedAudioChunk] | None:
+        stt_processed_stream = None
+        if self.stt_stream is not None:
+            if self.run.audio_settings.needs_processor:
+                # VAD/noise suppression/auto gain/volume
+                stt_processed_stream = self.run.process_enhance_audio(self.stt_stream)
+            else:
+                # Volume multiplier only
+                stt_processed_stream = self.run.process_volume_only(self.stt_stream)
+        return stt_processed_stream
+
     async def validate(self) -> None:
         """Validate pipeline input against start stage."""
         if self.run.start_stage in (PipelineStage.WAKE_WORD, PipelineStage.STT):
-            if self.run.pipeline.stt_engine is None:
-                raise PipelineRunValidationError(
-                    "the pipeline does not support speech-to-text"
-                )
-            if self.stt_metadata is None:
-                raise PipelineRunValidationError(
-                    "stt_metadata is required for speech-to-text"
-                )
-            if self.stt_stream is None:
-                raise PipelineRunValidationError(
-                    "stt_stream is required for speech-to-text"
-                )
+            self._validate_stt_requirements()
         elif self.run.start_stage == PipelineStage.INTENT:
             if self.intent_input is None:
                 raise PipelineRunValidationError(
@@ -1874,6 +1849,20 @@ class PipelineInput:
 
         if prepare_tasks:
             await asyncio.gather(*prepare_tasks)
+
+    def _validate_stt_requirements(self) -> None:
+        if self.run.pipeline.stt_engine is None:
+            raise PipelineRunValidationError(
+                "the pipeline does not support speech-to-text"
+            )
+        if self.stt_metadata is None:
+            raise PipelineRunValidationError(
+                "stt_metadata is required for speech-to-text"
+            )
+        if self.stt_stream is None:
+            raise PipelineRunValidationError(
+                "stt_stream is required for speech-to-text"
+            )
 
 
 class PipelinePreferred(CollectionError):

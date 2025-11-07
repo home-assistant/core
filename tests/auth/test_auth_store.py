@@ -393,3 +393,29 @@ async def test_set_expiry_date(
 
     store.async_set_expiry(token, enable_expiry=True)
     assert token.expire_at is not None
+
+
+async def test_get_groups_by_ids(hass: HomeAssistant) -> None:
+    """Test that _get_groups_by_ids returns the correct groups and raises on invalid IDs."""
+    store = auth_store.AuthStore(hass)
+    # Manually load defaults since async_load is more complex
+    store._set_defaults()
+
+    # Test single valid group ID
+    groups = store._get_groups_by_ids([auth_store.GROUP_ID_ADMIN])
+    assert len(groups) == 1
+    assert groups[0].id == auth_store.GROUP_ID_ADMIN
+
+    # Test multiple valid group IDs
+    group_ids = [auth_store.GROUP_ID_ADMIN, auth_store.GROUP_ID_USER]
+    groups = store._get_groups_by_ids(group_ids)
+    assert len(groups) == 2
+    assert {g.id for g in groups} == set(group_ids)
+
+    # Test invalid group ID raises ValueError
+    with pytest.raises(ValueError, match="Invalid group specified invalid-id"):
+        store._get_groups_by_ids(["invalid-id"])
+
+    # Test empty input returns empty list
+    groups = store._get_groups_by_ids([])
+    assert groups == []

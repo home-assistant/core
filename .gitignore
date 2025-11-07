@@ -143,3 +143,5 @@ pytest_buckets.txt
 .claude/settings.local.json
 .serena/
 
+refactoring-changes.patch
+sonar-project.properties
