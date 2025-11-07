@@ -477,14 +477,13 @@ class MqttAttributesMixin(Entity):
     def __init__(self, config: ConfigType) -> None:
         """Initialize the JSON attributes mixin."""
         self._attributes_sub_state: dict[str, EntitySubscription] = {}
+        if CONF_GROUP in config:
+            self._attr_included_unique_ids = config[CONF_GROUP]
         self._attributes_config = config
 
     async def async_added_to_hass(self) -> None:
         """Subscribe MQTT events."""
         await super().async_added_to_hass()
-        if CONF_GROUP in self._attributes_config:
-            self.async_set_included_entities(self._attributes_config[CONF_GROUP])
-
         self._attributes_prepare_subscribe_topics()
         self._attributes_subscribe_topics()
 
