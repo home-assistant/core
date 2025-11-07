@@ -35,6 +35,25 @@
     "button": {
       "activate_onetimecharge": {
         "default": "mdi:shower-head"
+      },
+      "deactivate_onetimecharge": {
+        "default": "mdi:shower-head"
+      }
+    },
+    "fan": {
+      "ventilation": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "permanent": "mdi:fan",
+              "sensor_driven": "mdi:refresh-auto",
+              "sensor_override": "mdi:refresh-auto",
+              "standard": "mdi:snail",
+              "standby": "mdi:power-standby",
+              "ventilation": "mdi:clock-outline"
+            }
+          }
+        }
       }
     },
     "number": {
