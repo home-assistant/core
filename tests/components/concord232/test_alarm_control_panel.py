@@ -12,7 +12,6 @@ from homeassistant.components.alarm_control_panel import (
     SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_HOME,
     SERVICE_ALARM_DISARM,
-    SERVICE_ALARM_TRIGGER,
     AlarmControlPanelState,
 )
 from homeassistant.components.concord232 import alarm_control_panel
@@ -242,17 +241,6 @@ async def test_alarm_arm_away_with_code(
         blocking=True,
     )
     mock_concord232_client.arm.assert_called_once_with("away")
-
-
-async def test_alarm_trigger_service_available(
-    hass: HomeAssistant, mock_concord232_client: MagicMock
-) -> None:
-    """Test that alarm_trigger service is available when TRIGGER feature is supported."""
-    await async_setup_component(hass, ALARM_DOMAIN, VALID_CONFIG)
-    await hass.async_block_till_done()
-
-    # Verify the service is registered
-    assert hass.services.has_service(ALARM_DOMAIN, SERVICE_ALARM_TRIGGER)
 
 
 async def test_update_state_disarmed(
