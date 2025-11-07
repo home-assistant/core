@@ -37,7 +37,6 @@ from .entity import (
 )
 from .utils import (
     async_remove_orphaned_entities,
-    get_block_channel_name,
     get_blu_trv_device_info,
     get_device_entry_gen,
     get_entity_translation_attributes,
@@ -450,18 +449,6 @@ class BlockBinarySensor(ShellyBlockAttributeEntity, BinarySensorEntity):
         if hasattr(self, "_attr_name"):
             delattr(self, "_attr_name")
 
-        translation_placeholders, translation_key = get_entity_translation_attributes(
-            get_block_channel_name(coordinator.device, self.block),
-            description.translation_key,
-            description.device_class,
-            self._default_to_device_class_name(),
-        )
-
-        if translation_placeholders:
-            self._attr_translation_placeholders = translation_placeholders
-            if translation_key:
-                self._attr_translation_key = translation_key
-
     @property
     def is_on(self) -> bool:
         """Return true if sensor state is on."""
@@ -484,18 +471,6 @@ class RestBinarySensor(ShellyRestAttributeEntity, BinarySensorEntity):
 
         if hasattr(self, "_attr_name"):
             delattr(self, "_attr_name")
-
-        translation_placeholders, translation_key = get_entity_translation_attributes(
-            get_block_channel_name(coordinator.device, None),
-            description.translation_key,
-            description.device_class,
-            self._default_to_device_class_name(),
-        )
-
-        if translation_placeholders:
-            self._attr_translation_placeholders = translation_placeholders
-            if translation_key:
-                self._attr_translation_key = translation_key
 
     @property
     def is_on(self) -> bool:
@@ -521,23 +496,8 @@ class BlockSleepingBinarySensor(
         """Initialize the sleeping sensor."""
         super().__init__(coordinator, block, attribute, description, entry)
 
-        if block is not None:
-            if hasattr(self, "_attr_name"):
-                delattr(self, "_attr_name")
-
-            translation_placeholders, translation_key = (
-                get_entity_translation_attributes(
-                    get_block_channel_name(coordinator.device, block),
-                    description.translation_key,
-                    description.device_class,
-                    self._default_to_device_class_name(),
-                )
-            )
-
-            if translation_placeholders:
-                self._attr_translation_placeholders = translation_placeholders
-                if translation_key:
-                    self._attr_translation_key = translation_key
+        if hasattr(self, "_attr_name"):
+            delattr(self, "_attr_name")
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
@@ -574,24 +534,8 @@ class RpcSleepingBinarySensor(
         """Initialize the sleeping sensor."""
         super().__init__(coordinator, key, attribute, description, entry)
 
-        if coordinator.device.initialized:
-            if hasattr(self, "_attr_name") and description.role != ROLE_GENERIC:
-                delattr(self, "_attr_name")
-
-            if not description.role:
-                translation_placeholders, translation_key = (
-                    get_entity_translation_attributes(
-                        get_rpc_channel_name(coordinator.device, key),
-                        description.translation_key,
-                        description.device_class,
-                        self._default_to_device_class_name(),
-                    )
-                )
-
-                if translation_placeholders:
-                    self._attr_translation_placeholders = translation_placeholders
-                    if translation_key:
-                        self._attr_translation_key = translation_key
+        if hasattr(self, "_attr_name"):
+            delattr(self, "_attr_name")
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
