@@ -216,6 +216,9 @@
       "energy_forecast": {
         "name": "Energy forecast"
       },
+      "finish": {
+        "name": "Finish"
+      },
       "plate": {
         "name": "Plate {plate_no}",
         "state": {
@@ -1014,6 +1017,9 @@
       },
       "spin_speed": {
         "name": "Spin speed"
+      },
+      "start": {
+        "name": "Start"
       },
       "start_time": {
         "name": "Start in"

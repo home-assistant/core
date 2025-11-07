@@ -6,10 +6,140 @@ import base64
 from dataclasses import dataclass
 import json
 import struct
-from typing import Self
+from typing import Any, Literal, Self, overload
 
-from .const import DPCode
+from tuya_sharing import CustomerDevice
+
+from .const import DPCode, DPType
 from .util import remap_value
+
+
+@dataclass
+class DPCodeWrapper:
+    """Base DPCode wrapper.
+
+    Used as a common interface for referring to a DPCode, and
+    access read conversion routines.
+    """
+
+    dpcode: str
+
+    def _read_device_status_raw(self, device: CustomerDevice) -> Any | None:
+        """Read the raw device status for the DPCode.
+
+        Private helper method for `read_device_status`.
+        """
+        return device.status.get(self.dpcode)
+
+    def read_device_status(self, device: CustomerDevice) -> Any | None:
+        """Read the device value for the dpcode."""
+        raise NotImplementedError("read_device_value must be implemented")
+
+
+@dataclass(kw_only=True)
+class DPCodeEnumWrapper(DPCodeWrapper):
+    """Simple wrapper for EnumTypeData values."""
+
+    enum_type_information: EnumTypeData
+
+    def read_device_status(self, device: CustomerDevice) -> str | None:
+        """Read the device value for the dpcode.
+
+        Values outside of the list defined by the Enum type information will
+        return None.
+        """
+        if (
+            raw_value := self._read_device_status_raw(device)
+        ) in self.enum_type_information.range:
+            return raw_value
+        return None
+
+    @classmethod
+    def find_dpcode(
+        cls,
+        device: CustomerDevice,
+        dpcodes: str | DPCode | tuple[DPCode, ...],
+        *,
+        prefer_function: bool = False,
+    ) -> Self | None:
+        """Find and return a DPCodeEnumWrapper for the given DP codes."""
+        if enum_type := find_dpcode(
+            device, dpcodes, dptype=DPType.ENUM, prefer_function=prefer_function
+        ):
+            return cls(dpcode=enum_type.dpcode, enum_type_information=enum_type)
+        return None
+
+
+@overload
+def find_dpcode(
+    device: CustomerDevice,
+    dpcodes: str | DPCode | tuple[DPCode, ...] | None,
+    *,
+    prefer_function: bool = False,
+    dptype: Literal[DPType.ENUM],
+) -> EnumTypeData | None: ...
+
+
+@overload
+def find_dpcode(
+    device: CustomerDevice,
+    dpcodes: str | DPCode | tuple[DPCode, ...] | None,
+    *,
+    prefer_function: bool = False,
+    dptype: Literal[DPType.INTEGER],
+) -> IntegerTypeData | None: ...
+
+
+def find_dpcode(
+    device: CustomerDevice,
+    dpcodes: str | DPCode | tuple[DPCode, ...] | None,
+    *,
+    prefer_function: bool = False,
+    dptype: DPType,
+) -> EnumTypeData | IntegerTypeData | None:
+    """Find type information for a matching DP code available for this device."""
+    if dptype not in (DPType.ENUM, DPType.INTEGER):
+        raise NotImplementedError("Only ENUM and INTEGER types are supported")
+
+    if dpcodes is None:
+        return None
+
+    if isinstance(dpcodes, str):
+        dpcodes = (DPCode(dpcodes),)
+    elif not isinstance(dpcodes, tuple):
+        dpcodes = (dpcodes,)
+
+    lookup_tuple = (
+        (device.function, device.status_range)
+        if prefer_function
+        else (device.status_range, device.function)
+    )
+
+    for dpcode in dpcodes:
+        for device_specs in lookup_tuple:
+            if not (
+                (current_definition := device_specs.get(dpcode))
+                and current_definition.type == dptype
+            ):
+                continue
+            if dptype is DPType.ENUM:
+                if not (
+                    enum_type := EnumTypeData.from_json(
+                        dpcode, current_definition.values
+                    )
+                ):
+                    continue
+                return enum_type
+            if dptype is DPType.INTEGER:
+                if not (
+                    integer_type := IntegerTypeData.from_json(
+                        dpcode, current_definition.values
+                    )
+                ):
+                    continue
+                return integer_type
+
+    return None
 
 
 @dataclass
