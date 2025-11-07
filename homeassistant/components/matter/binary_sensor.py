@@ -486,4 +486,18 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(clusters.RefrigeratorAlarm.Attributes.State,),
         allow_multi=True,
     ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="WindowCoveringConfigStatus",
+            translation_key="window_covering_config_status",
+            device_class=BinarySensorDeviceClass.RUNNING,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            device_to_ha=lambda x: (
+                x == clusters.WindowCovering.Bitmaps.ConfigStatus.kOperational
+            ),
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(clusters.WindowCovering.Attributes.ConfigStatus,),
+    ),
 ]
