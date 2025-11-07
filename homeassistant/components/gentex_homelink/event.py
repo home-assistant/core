@@ -2,18 +2,14 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import Any
-
 from homeassistant.components.event import EventDeviceClass, EventEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import BaseCoordinatorEntity
 
 from .const import DOMAIN, EVENT_PRESSED
-from .coordinator import HomeLinkCoordinator
+from .coordinator import HomeLinkCoordinator, HomeLinkEventData
 
 
 async def async_setup_entry(
@@ -37,7 +33,7 @@ async def async_setup_entry(
 PARALLEL_UPDATES = 0
 
 
-class HomeLinkEventEntity(BaseCoordinatorEntity[HomeLinkCoordinator], EventEntity):
+class HomeLinkEventEntity(EventEntity):
     """Event Entity."""
 
     _attr_has_entity_name = True
@@ -53,7 +49,6 @@ class HomeLinkEventEntity(BaseCoordinatorEntity[HomeLinkCoordinator], EventEntit
         coordinator: HomeLinkCoordinator,
     ) -> None:
         """Initialize the event entity."""
-        super().__init__(coordinator, context=id)
 
         self.id: str = id
         self._attr_name: str = param_name
@@ -65,16 +60,20 @@ class HomeLinkEventEntity(BaseCoordinatorEntity[HomeLinkCoordinator], EventEntit
         self.coordinator = coordinator
         self.last_request_id: str | None = None
 
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self.coordinator.async_add_event_listener(
+                self._handle_event_data_update, self.id
+            )
+        )
+
     @callback
-    def _handle_coordinator_update(self) -> None:
+    def _handle_event_data_update(self, update_data: HomeLinkEventData) -> None:
         """Update this button."""
 
-        if not self.coordinator.data or self.id not in self.coordinator.data:
-            # Not for us, or no data from the update
-            return
-
-        data: Mapping[str, Any] = self.coordinator.data
-        latest_update = data[self.id]
+        latest_update = update_data
         if latest_update["requestId"] != self.last_request_id:
             self._trigger_event(EVENT_PRESSED)
             self.last_request_id = latest_update["requestId"]
@@ -82,5 +81,4 @@ class HomeLinkEventEntity(BaseCoordinatorEntity[HomeLinkCoordinator], EventEntit
         self.async_write_ha_state()
 
     async def async_update(self):
-        """Manually update the entity."""
-        self._handle_coordinator_update()
+        """Request early polling. Left intentionally blank because it's not possible in this implementation."""
