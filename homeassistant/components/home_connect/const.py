@@ -65,7 +65,6 @@ SERVICE_SET_PROGRAM_AND_OPTIONS = "set_program_and_options"
 SERVICE_SETTING = "change_setting"
 
 ATTR_AFFECTS_TO = "affects_to"
-ATTR_START_SELECTED = "start_selected"
 ATTR_KEY = "key"
 ATTR_PROGRAM = "program"
 ATTR_VALUE = "value"

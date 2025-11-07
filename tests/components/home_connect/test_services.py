@@ -274,7 +274,7 @@ async def test_start_selected_program_and_options(
     additional_service_data: dict[str, Any],
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test recognized options."""
+    """Test starting the selected program with optional parameter overrides."""
     client.get_selected_program = AsyncMock(
         return_value=Program(
             key=ProgramKey.DISHCARE_DISHWASHER_ECO_50,
@@ -336,7 +336,7 @@ async def test_start_selected_program_and_options_exceptions(
     mock_attr: str,
     error_regex: str,
 ) -> None:
-    """Test recognized options."""
+    """Test error handling when starting the selected program."""
     client.get_selected_program = AsyncMock(
         return_value=Program(
             key=ProgramKey.DISHCARE_DISHWASHER_ECO_50,
@@ -373,7 +373,7 @@ async def test_start_selected_program_and_options_no_program_exception(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
 ) -> None:
-    """Test recognized options."""
+    """Test error when selected program is None."""
     client.get_selected_program = AsyncMock(return_value=Program(key=None))
 
     assert await integration_setup(client)
