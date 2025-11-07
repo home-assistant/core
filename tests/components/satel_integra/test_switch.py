@@ -103,7 +103,6 @@ async def test_switch_change_state(
         {ATTR_ENTITY_ID: "switch.switchable_output"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     assert hass.states.get("switch.switchable_output").state == STATE_ON
     mock_satel.set_output.assert_awaited_once_with(MOCK_CODE, 1, True)
@@ -117,7 +116,6 @@ async def test_switch_change_state(
         {ATTR_ENTITY_ID: "switch.switchable_output"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     assert hass.states.get("switch.switchable_output").state == STATE_OFF
     mock_satel.set_output.assert_awaited_once_with(MOCK_CODE, 1, False)
