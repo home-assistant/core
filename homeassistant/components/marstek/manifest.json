@@ -1,0 +1,13 @@
+{
+  "domain": "marstek",
+  "name": "Marstek",
+  "version": "1.0.0",
+  "codeowners": ["@ame"],
+  "config_flow": true,
+  "dependencies": ["network"],
+  "documentation": "https://github.com/MarstekEnergy/ha_marstek",
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "requirements": [],
+  "logo": "logo.png"
+}
