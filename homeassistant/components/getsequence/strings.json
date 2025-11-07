@@ -1,54 +1,54 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "title": "Set up Sequence",
-        "description": "Enter your Sequence API access token to connect your account.",
-        "data": {
-          "access_token": "Access Token"
-        },
-        "data_description": {
-          "access_token": "Your Sequence API access token from the developer dashboard"
-        }
-      },
-      "reauth_confirm": {
-        "title": "Reauthenticate Sequence",
-        "description": "Please enter your Sequence API access token to reauthenticate.",
-        "data": {
-          "access_token": "Access Token"
-        },
-        "data_description": {
-          "access_token": "Your updated Sequence API access token"
-        }
-      }
+    "abort": {
+      "already_configured": "Sequence account is already configured.",
+      "reauth_successful": "Reauthentication successful."
     },
     "error": {
       "cannot_connect": "Failed to connect to Sequence API. Please check your internet connection and try again.",
       "invalid_auth": "Invalid access token. Please check your token and try again.",
       "unknown": "Unexpected error occurred. Please try again."
     },
-    "abort": {
-      "already_configured": "Sequence account is already configured.",
-      "reauth_successful": "Reauthentication successful."
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "access_token": "Access Token"
+        },
+        "data_description": {
+          "access_token": "Your updated Sequence API access token"
+        },
+        "description": "Please enter your Sequence API access token to reauthenticate.",
+        "title": "Reauthenticate Sequence"
+      },
+      "user": {
+        "data": {
+          "access_token": "Access Token"
+        },
+        "data_description": {
+          "access_token": "Your Sequence API access token from the developer dashboard"
+        },
+        "description": "Enter your Sequence API access token to connect your account.",
+        "title": "Set up Sequence"
+      }
     }
   },
   "options": {
-    "step": {
-      "init": {
-        "title": "Configure Account Types",
-        "description": "Select which external accounts should be categorized as liabilities or investments. Found {account_count} external accounts. Select 'None' if you have no accounts of that type.",
-        "data": {
-          "liability_accounts": "Liability Accounts",
-          "investment_accounts": "Investment Accounts"
-        },
-        "data_description": {
-          "liability_accounts": "Select accounts that represent liabilities (debts, loans, credit cards). Choose 'None' if you have no liabilities.",
-          "investment_accounts": "Select accounts that represent investments (brokerage, retirement, savings). Choose 'None' if you have no investments."
-        }
-      }
-    },
     "error": {
       "cannot_connect": "Cannot connect to Sequence API. Please check your network and credentials."
+    },
+    "step": {
+      "init": {
+        "data": {
+          "investment_accounts": "Investment Accounts",
+          "liability_accounts": "Liability Accounts"
+        },
+        "data_description": {
+          "investment_accounts": "Select accounts that represent investments (brokerage, retirement, savings). Choose 'None' if you have no investments.",
+          "liability_accounts": "Select accounts that represent liabilities (debts, loans, credit cards). Choose 'None' if you have no liabilities."
+        },
+        "description": "Select which external accounts should be categorized as liabilities or investments. Found {account_count} external accounts. Select 'None' if you have no accounts of that type.",
+        "title": "Configure Account Types"
+      }
     }
   }
 }
