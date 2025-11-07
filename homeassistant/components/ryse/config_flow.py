@@ -110,8 +110,8 @@ class RyseBLEDeviceConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             _LOGGER.info("Successfully paired with RYSE device %s (%s)", name, address)
             return self.async_create_entry(
-                title=f"RYSE gear {name}",
-                data={"address": address},
+                title=name,
+                data={},
             )
 
         except (TimeoutError, OSError):
