@@ -65,12 +65,14 @@ SERVICE_SET_PROGRAM_AND_OPTIONS = "set_program_and_options"
 SERVICE_SETTING = "change_setting"
 
 ATTR_AFFECTS_TO = "affects_to"
+ATTR_START_SELECTED = "start_selected"
 ATTR_KEY = "key"
 ATTR_PROGRAM = "program"
 ATTR_VALUE = "value"
 
 AFFECTS_TO_ACTIVE_PROGRAM = "active_program"
 AFFECTS_TO_SELECTED_PROGRAM = "selected_program"
+AFFECTS_TO_START_SELECTED = "start_selected"
 
 
 TRANSLATION_KEYS_PROGRAMS_MAP = {

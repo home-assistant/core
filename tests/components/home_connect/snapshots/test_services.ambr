@@ -77,3 +77,183 @@
     }),
   )
 # ---
+# name: test_start_selected_program_and_options[additional_service_data0-Washer]
+  _Call(
+    tuple(
+      'SIEMENS-HCS03WCH1-7BC6383CF794',
+    ),
+    dict({
+      'options': list([
+        dict({
+          'display_value': None,
+          'key': <OptionKey.DISHCARE_DISHWASHER_HALF_LOAD: 'Dishcare.Dishwasher.Option.HalfLoad'>,
+          'name': None,
+          'unit': None,
+          'value': True,
+        }),
+      ]),
+      'program_key': <ProgramKey.DISHCARE_DISHWASHER_ECO_50: 'Dishcare.Dishwasher.Program.Eco50'>,
+    }),
+  )
+# ---
+# name: test_start_selected_program_and_options[additional_service_data1-Washer]
+  _Call(
+    tuple(
+      'SIEMENS-HCS03WCH1-7BC6383CF794',
+    ),
+    dict({
+      'options': list([
+        dict({
+          'display_value': None,
+          'key': <OptionKey.DISHCARE_DISHWASHER_HALF_LOAD: 'Dishcare.Dishwasher.Option.HalfLoad'>,
+          'name': None,
+          'unit': None,
+          'value': True,
+        }),
+      ]),
+      'program_key': <ProgramKey.DISHCARE_DISHWASHER_AUTO_1: 'Dishcare.Dishwasher.Program.Auto1'>,
+    }),
+  )
+# ---
+# name: test_start_selected_program_and_options[additional_service_data2-Washer]
+  _Call(
+    tuple(
+      'SIEMENS-HCS03WCH1-7BC6383CF794',
+    ),
+    dict({
+      'options': list([
+        dict({
+          'display_value': None,
+          'key': <OptionKey.DISHCARE_DISHWASHER_HALF_LOAD: 'Dishcare.Dishwasher.Option.HalfLoad'>,
+          'name': None,
+          'unit': None,
+          'value': True,
+        }),
+        dict({
+          'display_value': None,
+          'key': <OptionKey.BSH_COMMON_START_IN_RELATIVE: 'BSH.Common.Option.StartInRelative'>,
+          'name': None,
+          'unit': None,
+          'value': 1200,
+        }),
+      ]),
+      'program_key': <ProgramKey.DISHCARE_DISHWASHER_ECO_50: 'Dishcare.Dishwasher.Program.Eco50'>,
+    }),
+  )
+# ---
+# name: test_start_selected_program_and_options[additional_service_data3-Washer]
+  _Call(
+    tuple(
+      'SIEMENS-HCS03WCH1-7BC6383CF794',
+    ),
+    dict({
+      'options': list([
+        dict({
+          'display_value': None,
+          'key': <OptionKey.DISHCARE_DISHWASHER_HALF_LOAD: 'Dishcare.Dishwasher.Option.HalfLoad'>,
+          'name': None,
+          'unit': None,
+          'value': False,
+        }),
+      ]),
+      'program_key': <ProgramKey.DISHCARE_DISHWASHER_ECO_50: 'Dishcare.Dishwasher.Program.Eco50'>,
+    }),
+  )
+# ---
+# name: test_start_selected_program_and_options[additional_service_data4-Washer]
+  _Call(
+    tuple(
+      'SIEMENS-HCS03WCH1-7BC6383CF794',
+    ),
+    dict({
+      'options': list([
+        dict({
+          'display_value': None,
+          'key': <OptionKey.DISHCARE_DISHWASHER_HALF_LOAD: 'Dishcare.Dishwasher.Option.HalfLoad'>,
+          'name': None,
+          'unit': None,
+          'value': False,
+        }),
+        dict({
+          'display_value': None,
+          'key': <OptionKey.BSH_COMMON_START_IN_RELATIVE: 'BSH.Common.Option.StartInRelative'>,
+          'name': None,
+          'unit': None,
+          'value': 1200,
+        }),
+      ]),
+      'program_key': <ProgramKey.DISHCARE_DISHWASHER_ECO_50: 'Dishcare.Dishwasher.Program.Eco50'>,
+    }),
+  )
+# ---
+# name: test_start_selected_program_and_options[additional_service_data5-Washer]
+  _Call(
+    tuple(
+      'SIEMENS-HCS03WCH1-7BC6383CF794',
+    ),
+    dict({
+      'options': list([
+        dict({
+          'display_value': None,
+          'key': <OptionKey.DISHCARE_DISHWASHER_HALF_LOAD: 'Dishcare.Dishwasher.Option.HalfLoad'>,
+          'name': None,
+          'unit': None,
+          'value': True,
+        }),
+        dict({
+          'display_value': None,
+          'key': <OptionKey.BSH_COMMON_START_IN_RELATIVE: 'BSH.Common.Option.StartInRelative'>,
+          'name': None,
+          'unit': None,
+          'value': 1200,
+        }),
+      ]),
+      'program_key': <ProgramKey.DISHCARE_DISHWASHER_AUTO_1: 'Dishcare.Dishwasher.Program.Auto1'>,
+    }),
+  )
+# ---
+# name: test_start_selected_program_and_options[additional_service_data6-Washer]
+  _Call(
+    tuple(
+      'SIEMENS-HCS03WCH1-7BC6383CF794',
+    ),
+    dict({
+      'options': list([
+        dict({
+          'display_value': None,
+          'key': <OptionKey.DISHCARE_DISHWASHER_HALF_LOAD: 'Dishcare.Dishwasher.Option.HalfLoad'>,
+          'name': None,
+          'unit': None,
+          'value': False,
+        }),
+      ]),
+      'program_key': <ProgramKey.DISHCARE_DISHWASHER_AUTO_1: 'Dishcare.Dishwasher.Program.Auto1'>,
+    }),
+  )
+# ---
+# name: test_start_selected_program_and_options[additional_service_data7-Washer]
+  _Call(
+    tuple(
+      'SIEMENS-HCS03WCH1-7BC6383CF794',
+    ),
+    dict({
+      'options': list([
+        dict({
+          'display_value': None,
+          'key': <OptionKey.DISHCARE_DISHWASHER_HALF_LOAD: 'Dishcare.Dishwasher.Option.HalfLoad'>,
+          'name': None,
+          'unit': None,
+          'value': False,
+        }),
+        dict({
+          'display_value': None,
+          'key': <OptionKey.BSH_COMMON_START_IN_RELATIVE: 'BSH.Common.Option.StartInRelative'>,
+          'name': None,
+          'unit': None,
+          'value': 1200,
+        }),
+      ]),
+      'program_key': <ProgramKey.DISHCARE_DISHWASHER_AUTO_1: 'Dishcare.Dishwasher.Program.Auto1'>,
+    }),
+  )
+# ---
