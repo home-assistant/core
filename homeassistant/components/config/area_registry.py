@@ -67,6 +67,11 @@ def websocket_create_area(
         # Convert aliases to a set
         data["aliases"] = set(data["aliases"])
 
+        # Cleans the aliases set:
+        #   - Removes empty strings
+        #   - Removes trailing and leasing whitespace characters from aliases
+        data["aliases"] = {s.strip() for s in data["aliases"] if s.strip()}
+
     if "labels" in data:
         # Convert labels to a set
         data["labels"] = set(data["labels"])
@@ -134,6 +139,11 @@ def websocket_update_area(
     if "aliases" in data:
         # Convert aliases to a set
         data["aliases"] = set(data["aliases"])
+
+        # Cleans the aliases set:
+        #   - Removes empty strings
+        #   - Removes trailing and leasing whitespace characters from aliases
+        data["aliases"] = {s.strip() for s in data["aliases"] if s.strip()}
 
     if "labels" in data:
         # Convert labels to a set
