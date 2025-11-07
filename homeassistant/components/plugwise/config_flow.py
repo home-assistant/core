@@ -42,7 +42,6 @@ from .const import (
     SMILE_THERMO,
     STRETCH,
     STRETCH_USERNAME,
-    TITLE_PLACEHOLDERS,
     UNKNOWN_SMILE,
     ZEROCONF_MAP,
 )
@@ -173,7 +172,7 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self.context.update(
             {
-                TITLE_PLACEHOLDERS: {CONF_NAME: _name},
+                "title_placeholders": {CONF_NAME: _name},
                 ATTR_CONFIGURATION_URL: (
                     f"http://{discovery_info.host}:{discovery_info.port}"
                 ),

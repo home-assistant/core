@@ -8,7 +8,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .const import DEV_CLASS, DOMAIN, LOGGER, PLATFORMS, PLUGWISE
+from .const import DEV_CLASS, DOMAIN, LOGGER, PLATFORMS
 from .coordinator import PlugwiseConfigEntry, PlugwiseDataUpdateCoordinator
 
 
@@ -26,7 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PlugwiseConfigEntry) -> 
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, str(coordinator.api.gateway_id))},
-        manufacturer=PLUGWISE,
+        manufacturer="Plugwise",
         model=coordinator.api.smile.model,
         model_id=coordinator.api.smile.model_id,
         name=coordinator.api.smile.name,
