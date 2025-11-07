@@ -1,15 +1,13 @@
 """Tests for the Hinen integration init module."""
 
 import time
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.hinen_power import delete_devices
 from homeassistant.components.hinen_power.const import AUTH, COORDINATOR, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
 
 from . import MockHinen
 from .conftest import TOKEN_URL, ComponentSetup
@@ -32,10 +30,6 @@ async def test_async_setup_entry_success(
             "homeassistant.components.hinen_power.AsyncConfigEntryAuth.check_and_refresh_token",
             return_value=None,
         ),
-        patch(
-            "homeassistant.components.hinen_power.delete_devices",
-            return_value=None,
-        ),
     ):
         result = await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -44,7 +38,7 @@ async def test_async_setup_entry_success(
     assert config_entry.state is ConfigEntryState.LOADED
     assert DOMAIN in hass.data
     assert config_entry.entry_id in hass.data[DOMAIN]
-    assert COORDINATOR in hass.data[DOMAIN][config_entry.entry_id]
+    assert COORDINATOR in config_entry.runtime_data
     assert AUTH in hass.data[DOMAIN][config_entry.entry_id]
 
     assert hasattr(config_entry, "runtime_data")
@@ -100,10 +94,6 @@ async def test_async_unload_entry(
             "homeassistant.components.hinen_power.AsyncConfigEntryAuth.check_and_refresh_token",
             return_value=None,
         ),
-        patch(
-            "homeassistant.components.hinen_power.delete_devices",
-            return_value=None,
-        ),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -111,63 +101,3 @@ async def test_async_unload_entry(
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.NOT_LOADED
-
-
-async def test_delete_devices(
-    hass: HomeAssistant, config_entry: MockConfigEntry
-) -> None:
-    """Test delete_devices function."""
-    config_entry.add_to_hass(hass)
-    mock_coordinator = MagicMock()
-    mock_coordinator.data = {"device_1": {}, "device_2": {}}
-
-    device_registry = dr.async_get(hass)
-    device1 = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, "device_1")},
-        manufacturer="Hinen Power",
-        name="Test Device 1",
-    )
-    device2 = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, "device_3")},  # Different device ID
-        manufacturer="Hinen Power",
-        name="Test Device 2",
-    )
-
-    with patch(
-        "homeassistant.components.hinen_power.dr.async_get",
-        return_value=device_registry,
-    ):
-        await delete_devices(hass, config_entry, mock_coordinator)
-
-    updated_device1 = device_registry.async_get(device1.id)
-    updated_device2 = device_registry.async_get(device2.id)
-    assert updated_device1 is None
-    assert updated_device2 is not None
-    assert config_entry.entry_id in updated_device2.config_entries
-
-
-async def test_delete_devices_empty_coordinator_data(
-    hass: HomeAssistant, config_entry: MockConfigEntry
-) -> None:
-    """Test delete_devices function with empty coordinator data."""
-    config_entry.add_to_hass(hass)
-    mock_coordinator = MagicMock()
-    mock_coordinator.data = {}
-    device_registry = dr.async_get(hass)
-    device = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, "device_1")},
-        manufacturer="Hinen Power",
-        name="Test Device",
-    )
-    with patch(
-        "homeassistant.components.hinen_power.dr.async_get",
-        return_value=device_registry,
-    ):
-        await delete_devices(hass, config_entry, mock_coordinator)
-
-    updated_device = device_registry.async_get(device.id)
-    assert updated_device is not None
-    assert config_entry.entry_id in updated_device.config_entries
