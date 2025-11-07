@@ -112,6 +112,11 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
                 if self._probed_firmware_info is not None
                 else "unknown"
             ),
+            "firmware_name": (
+                self.installing_firmware_name
+                if self.installing_firmware_name is not None
+                else "unknown"
+            ),
             "model": self._hardware_name,
         }
 
@@ -202,7 +207,11 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
             return self.async_show_progress_done(next_step_id="progress_failed")
         except HomeAssistantError:
             _LOGGER.exception("Failed to flash firmware")
-            return self.async_show_progress_done(next_step_id="firmware_install_failed")
+            self._progress_error = AbortFlow(
+                reason="fw_install_failed",
+                description_placeholders=self._get_translation_placeholders(),
+            )
+            return self.async_show_progress_done(next_step_id="progress_failed")
         finally:
             self.firmware_install_task = None
 
@@ -246,7 +255,10 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
                 _LOGGER.debug("Skipping firmware upgrade due to index download failure")
                 return
 
-            raise AbortFlow(reason="fw_download_failed") from err
+            raise AbortFlow(
+                reason="fw_download_failed",
+                description_placeholders=self._get_translation_placeholders(),
+            ) from err
 
         if not firmware_install_required:
             assert self._probed_firmware_info is not None
@@ -275,7 +287,10 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
                 return
 
             # Otherwise, fail
-            raise AbortFlow(reason="fw_download_failed") from err
+            raise AbortFlow(
+                reason="fw_download_failed",
+                description_placeholders=self._get_translation_placeholders(),
+            ) from err
 
         self._probed_firmware_info = await async_flash_silabs_firmware(
             hass=self.hass,
@@ -317,41 +332,6 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
             ) from err
 
         await otbr_manager.async_start_addon_waiting()
-
-    async def async_step_fw_download_failed(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Abort when firmware download failed."""
-        assert self.installing_firmware_name is not None
-        return self.async_abort(
-            reason="fw_download_failed",
-            description_placeholders={
-                **self._get_translation_placeholders(),
-                "firmware_name": self.installing_firmware_name,
-            },
-        )
-
-    async def async_step_firmware_install_failed(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Abort when firmware install failed."""
-        assert self.installing_firmware_name is not None
-        return self.async_abort(
-            reason="fw_install_failed",
-            description_placeholders={
-                **self._get_translation_placeholders(),
-                "firmware_name": self.installing_firmware_name,
-            },
-        )
-
-    async def async_step_unsupported_firmware(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Abort when unsupported firmware is detected."""
-        return self.async_abort(
-            reason="unsupported_firmware",
-            description_placeholders=self._get_translation_placeholders(),
-        )
 
     async def async_step_zigbee_installation_type(
         self, user_input: dict[str, Any] | None = None
