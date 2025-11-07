@@ -207,7 +207,7 @@ class AbstractTemplateLock(AbstractTemplateEntity, LockEntity):
         return self._code_format
 
     def _handle_state(self, result: Any) -> None:
-        self._state = self._result_handler.as_enum_with_on_off(
+        self._state = self._result_handler.enum(
             CONF_STATE, LockState, LockState.LOCKED, LockState.UNLOCKED
         )(result)
 

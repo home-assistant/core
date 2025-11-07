@@ -342,7 +342,7 @@ class StateAlarmControlPanelEntity(TemplateEntity, AbstractTemplateAlarmControlP
             self.add_template_attribute(
                 "_attr_alarm_state",
                 self._template,
-                self._result_handler.as_enum(CONF_STATE, AlarmControlPanelState),
+                self._result_handler.enum(CONF_STATE, AlarmControlPanelState),
                 none_on_template_error=True,
             )
         super()._async_setup_templates()
@@ -390,7 +390,7 @@ class TriggerAlarmControlPanelEntity(TriggerEntity, AbstractTemplateAlarmControl
             return
 
         if (rendered := self._rendered.get(CONF_STATE)) is not None:
-            self._attr_alarm_state = self._result_handler.as_enum(
+            self._attr_alarm_state = self._result_handler.enum(
                 CONF_STATE, AlarmControlPanelState
             )(rendered)
             self.async_set_context(self.coordinator.data["context"])

@@ -429,7 +429,7 @@ async def test_template_code_template_syntax_error(hass: HomeAssistant) -> None:
     assert hass.states.async_all("lock") == []
 
 
-@pytest.mark.parametrize(("count", "state_template"), [(1, "{{ 1 + 1 }}")])
+@pytest.mark.parametrize(("count", "state_template"), [(1, "{{ 0 + 0 }}")])
 @pytest.mark.parametrize(
     "style",
     [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],

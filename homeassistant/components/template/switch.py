@@ -215,7 +215,7 @@ class StateSwitchEntity(TemplateEntity, AbstractTemplateSwitch):
             self.add_template_attribute(
                 "_attr_is_on",
                 self._template,
-                validator=self._result_handler.as_boolean(CONF_STATE),
+                validator=self._result_handler.boolean(CONF_STATE),
                 none_on_template_error=True,
             )
 
@@ -271,7 +271,7 @@ class TriggerSwitchEntity(TriggerEntity, AbstractTemplateSwitch):
 
         write_ha_state = False
         if (state := self._rendered.get(CONF_STATE)) is not None:
-            self._attr_is_on = self._result_handler.as_boolean(CONF_STATE)(state)
+            self._attr_is_on = self._result_handler.boolean(CONF_STATE)(state)
             write_ha_state = True
 
         elif len(self._rendered) > 0:

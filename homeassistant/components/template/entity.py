@@ -159,15 +159,19 @@ class TemplateResultHandler:
         """Initialize the converter."""
         self._entity = entity
 
-    def as_enum[T: StrEnum](
+    def enum[T: StrEnum](
         self,
         attribute: str,
         state_enum: type[T],
+        state_on: T | None = None,
+        state_off: T | None = None,
         none_on_unknown_unavailable: bool = False,
     ) -> Callable[[Any], T | None]:
         """Converts the template result to an StrEnum.
 
         All strings will attempt to convert to the StrEnum
+        If state_on or state_off are provided, boolean values will return the
+         enum that represents each boolean value.
         Anything that cannot convert will result in None.
         """
 
@@ -182,59 +186,35 @@ class TemplateResultHandler:
                 except ValueError:
                     pass
 
-            log_result_error(
-                self._entity,
-                attribute,
-                result,
-                tuple(s.value for s in state_enum),
-            )
-            return None
-
-        return convert
-
-    def as_enum_with_on_off[T: StrEnum](
-        self,
-        attribute: str,
-        state_enum: type[T],
-        on_state: T,
-        off_state: T,
-        none_on_unknown_unavailable: bool = False,
-    ) -> Callable[[Any], T | None]:
-        """Converts the template result to an StrEnum.
-
-        Boolean results will be converted to `on_state` and `off_state`
-        All strings will attempt to convert to the StrEnum
-        Anything that cannot convert will result in None.
-        """
-
-        def convert(result: Any) -> T | None:
-            if _check_result_for_none(result, none_on_unknown_unavailable):
-                return None
-
-            if isinstance(result, bool):
-                return on_state if result else off_state
-
-            if isinstance(result, str):
-                value = result.lower().strip()
+            if state_on or state_off:
                 try:
-                    return state_enum(value)
-                except ValueError:
-                    try:
-                        return on_state if cv.boolean(value) else off_state
-                    except vol.Invalid:
-                        pass
+                    bool_value = cv.boolean(result)
+                    if state_on and bool_value:
+                        return state_on
+
+                    if state_off and not bool_value:
+                        return state_off
+
+                except vol.Invalid:
+                    pass
+
+            expected = tuple(s.value for s in state_enum)
+            if state_on:
+                expected += RESULT_ON
+            if state_off:
+                expected += RESULT_OFF
 
             log_result_error(
                 self._entity,
                 attribute,
                 result,
-                RESULT_ON + RESULT_OFF + tuple(s.value for s in state_enum),
+                expected,
             )
             return None
 
         return convert
 
-    def as_boolean(
+    def boolean(
         self,
         attribute: str,
         as_true: tuple[str, ...] | None = None,
@@ -277,38 +257,12 @@ class TemplateResultHandler:
 
         return convert
 
-    def as_number(
+    def number(
         self,
         attribute: str,
-        number_type: type[float] | type[int] = float,
-        none_on_unknown_unavailable: bool = False,
-    ) -> Callable[[Any], float | int | None]:
-        """Convert the result to a number (float or int).
-
-        Any value is converted to a float or in
-        All other values are None
-        """
-
-        def convert(result: Any) -> float | int | None:
-            if _check_result_for_none(result, none_on_unknown_unavailable):
-                return None
-
-            try:
-                if number_type is int:
-                    return vol.Coerce(int)(result)
-                return vol.Coerce(float)(result)
-            except vol.Invalid:
-                log_result_error(self._entity, attribute, result, "expected a number")
-                return None
-
-        return convert
-
-    def as_number_in_range(
-        self,
-        attribute: str,
-        minimum: float = 0.0,
-        maximum: float = 100.0,
-        range_type: type[float] | type[int] = float,
+        minimum: float | None = None,
+        maximum: float | None = None,
+        return_type: type[float] | type[int] = float,
         none_on_unknown_unavailable: bool = False,
     ) -> Callable[[Any], float | int | None]:
         """Convert the result to a number (float or int).
@@ -316,22 +270,49 @@ class TemplateResultHandler:
         Any value in the range is converted to a float or int
         All other values are None
         """
-        message = f"expected a value between {minimum:0.1f} and {maximum:0.1f}"
+        message = "expected a number"
+        if minimum is not None and maximum is not None:
+            message = f"{message} between {minimum:0.1f} and {maximum:0.1f}"
+        elif minimum is not None and maximum is None:
+            message = f"{message} greater than or equal to {minimum:0.1f}"
+        elif minimum is None and maximum is not None:
+            message = f"{message} less than or equal to {maximum:0.1f}"
 
         def convert(result: Any) -> float | int | None:
             if _check_result_for_none(result, none_on_unknown_unavailable):
                 return None
 
-            try:
-                if range_type is int:
-                    value = vol.Coerce(int)(result)
-                else:
-                    value = vol.Coerce(float)(result)
-            except vol.Invalid:
+            if (result_type := type(result)) is bool:
                 log_result_error(self._entity, attribute, result, message)
                 return None
 
-            if minimum <= value <= maximum:
+            if isinstance(result, (float, int)):
+                value = result
+                if return_type is int and result_type is float:
+                    value = int(value)
+                elif return_type is float and result_type is int:
+                    value = float(value)
+            else:
+                try:
+                    value = vol.Coerce(float)(result)
+                    if return_type is int:
+                        value = int(value)
+                except vol.Invalid:
+                    log_result_error(self._entity, attribute, result, message)
+                    return None
+
+            if minimum is None and maximum is None:
+                return value
+
+            if (
+                (
+                    minimum is not None
+                    and maximum is not None
+                    and minimum <= value <= maximum
+                )
+                or (minimum is not None and maximum is None and value >= minimum)
+                or (minimum is None and maximum is not None and value <= maximum)
+            ):
                 return value
 
             log_result_error(self._entity, attribute, result, message)
@@ -339,7 +320,7 @@ class TemplateResultHandler:
 
         return convert
 
-    def as_list_of_strings(
+    def list_of_strings(
         self,
         attribute: str,
         none_on_empty: bool = False,
@@ -374,7 +355,7 @@ class TemplateResultHandler:
 
         return convert
 
-    def as_item_in_list[T](
+    def item_in_list[T](
         self,
         attribute: str,
         items: list[Any] | None,

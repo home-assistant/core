@@ -418,7 +418,7 @@ class TemplateStateVacuumEntity(TemplateEntity, AbstractTemplateVacuum):
                 self._attr_available = True
             return
 
-        self._attr_activity = self._result_handler.as_enum(
+        self._attr_activity = self._result_handler.enum(
             CONF_STATE, VacuumActivity, none_on_unknown_unavailable=True
         )(result)
 
@@ -472,9 +472,9 @@ class TriggerVacuumEntity(TriggerEntity, AbstractTemplateVacuum):
 
         write_ha_state = False
         if (rendered := self._rendered.get(CONF_STATE)) is not None:
-            self._attr_activity = self._result_handler.as_enum(
-                CONF_STATE, VacuumActivity
-            )(rendered)
+            self._attr_activity = self._result_handler.enum(CONF_STATE, VacuumActivity)(
+                rendered
+            )
         for key, updater in (
             (CONF_FAN_SPEED, self._update_fan_speed),
             (CONF_BATTERY_LEVEL, self._update_battery_level),

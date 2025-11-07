@@ -278,35 +278,35 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
             self._state = False
             return
 
-        self._state = self._result_handler.as_boolean(CONF_STATE)(result) or False
+        self._state = self._result_handler.boolean(CONF_STATE)(result) or False
 
     @callback
     def _update_percentage(self, percentage):
         # Update the percentage, All None cases should be 0.
         self._percentage = (
-            self._result_handler.as_number_in_range(CONF_PERCENTAGE, range_type=int)(
-                percentage
-            )
+            self._result_handler.number(
+                CONF_PERCENTAGE, minimum=0.0, maximum=100.0, return_type=int
+            )(percentage)
             or 0
         )
 
     @callback
     def _update_preset_mode(self, preset_mode):
         # Validate preset mode
-        self._preset_mode = self._result_handler.as_item_in_list(
+        self._preset_mode = self._result_handler.item_in_list(
             CONF_PRESET_MODE, self.preset_modes, none_on_unknown_unavailable=True
         )(str(preset_mode))
 
     @callback
     def _update_oscillating(self, oscillating):
-        self._oscillating = self._result_handler.as_boolean(
+        self._oscillating = self._result_handler.boolean(
             CONF_OSCILLATING, none_on_unknown_unavailable=True
         )(oscillating)
 
     @callback
     def _update_direction(self, direction):
         # Validate direction
-        self._direction = self._result_handler.as_item_in_list(
+        self._direction = self._result_handler.item_in_list(
             CONF_DIRECTION, _VALID_DIRECTIONS, none_on_unknown_unavailable=True
         )(direction)
 
