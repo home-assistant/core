@@ -49,11 +49,7 @@ class RyseBLEDeviceConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         _LOGGER.info("Checking already discovered BLE devices for RYSE in pairing mode")
 
         devices = async_discovered_service_info(self.hass, connectable=True)
-        existing_addresses = {
-            entry.data["address"]
-            for entry in self._async_current_entries()
-            if "address" in entry.data
-        }
+        existing_addresses = self._async_current_ids(include_ignore=False)
 
         device_options = await filter_ryse_devices_pairing(devices, existing_addresses)
         if not device_options:
