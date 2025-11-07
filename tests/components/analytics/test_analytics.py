@@ -61,9 +61,31 @@ def uuid_mock() -> Generator[None]:
 @pytest.fixture(autouse=True)
 def ha_version_mock() -> Generator[None]:
     """Mock the core version."""
-    with patch(
-        "homeassistant.components.analytics.analytics.HA_VERSION",
-        MOCK_VERSION,
+    with (
+        patch(
+            "homeassistant.components.analytics.analytics.HA_VERSION",
+            MOCK_VERSION,
+        ),
+        patch(
+            "homeassistant.components.analytics.analytics._IS_HA_DEV_VERSION",
+            False,
+        ),
+    ):
+        yield
+
+
+@pytest.fixture
+def ha_dev_version_mock() -> Generator[None]:
+    """Mock the core version as a dev version."""
+    with (
+        patch(
+            "homeassistant.components.analytics.analytics.HA_VERSION",
+            MOCK_VERSION_DEV,
+        ),
+        patch(
+            "homeassistant.components.analytics.analytics._IS_HA_DEV_VERSION",
+            True,
+        ),
     ):
         yield
 
@@ -616,7 +638,7 @@ async def test_custom_integrations(
     assert snapshot == submitted_data
 
 
-@pytest.mark.usefixtures("supervisor_client")
+@pytest.mark.usefixtures("ha_dev_version_mock", "supervisor_client")
 async def test_dev_url(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
@@ -626,16 +648,13 @@ async def test_dev_url(
     analytics = Analytics(hass)
     await analytics.save_preferences({ATTR_BASE: True})
 
-    with patch(
-        "homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION_DEV
-    ):
-        await analytics.send_analytics()
+    await analytics.send_analytics()
 
     payload = aioclient_mock.mock_calls[0]
     assert str(payload[1]) == ANALYTICS_ENDPOINT_URL_DEV
 
 
-@pytest.mark.usefixtures("supervisor_client")
+@pytest.mark.usefixtures("ha_dev_version_mock", "supervisor_client")
 async def test_dev_url_error(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
@@ -646,10 +665,7 @@ async def test_dev_url_error(
     analytics = Analytics(hass)
     await analytics.save_preferences({ATTR_BASE: True})
 
-    with patch(
-        "homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION_DEV
-    ):
-        await analytics.send_analytics()
+    await analytics.send_analytics()
 
     payload = aioclient_mock.mock_calls[0]
     assert str(payload[1]) == ANALYTICS_ENDPOINT_URL_DEV
@@ -861,7 +877,7 @@ async def test_send_with_problems_loading_yaml(
     assert len(aioclient_mock.mock_calls) == 0
 
 
-@pytest.mark.usefixtures("mock_hass_config", "supervisor_client")
+@pytest.mark.usefixtures("ha_dev_version_mock", "mock_hass_config", "supervisor_client")
 async def test_timeout_while_sending(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
@@ -872,10 +888,7 @@ async def test_timeout_while_sending(
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL_DEV, exc=TimeoutError())
 
     await analytics.save_preferences({ATTR_BASE: True})
-    with patch(
-        "homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION_DEV
-    ):
-        await analytics.send_analytics()
+    await analytics.send_analytics()
 
     assert "Timeout sending analytics" in caplog.text
 
@@ -1489,7 +1502,7 @@ async def test_send_snapshot_with_existing_identifier(
 
     assert len(aioclient_mock.mock_calls) == 1
     call_headers = aioclient_mock.mock_calls[0][3]
-    assert call_headers["x-device-database-submission-identifier"] == "old-identifier"
+    assert call_headers["X-Device-Database-Submission-Identifier"] == "old-identifier"
     assert analytics._data.submission_identifier == "test-identifier-123"
     assert "Submitted snapshot analytics to Home Assistant servers" in caplog.text
 
@@ -1617,37 +1630,9 @@ async def test_async_schedule_not_onboarded(
     assert analytics._snapshot_scheduled is None
 
 
-async def test_async_schedule_base_disabled(
-    hass: HomeAssistant,
-) -> None:
-    """Test scheduling when base is disabled."""
-    analytics = Analytics(hass)
-    await analytics.save_preferences({ATTR_BASE: False})
-
-    await analytics.async_schedule()
-
-    assert analytics._basic_scheduled is None
-    assert analytics._snapshot_scheduled is None
-
-
-async def test_async_schedule_basic_only(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test scheduling basic analytics only."""
-    analytics = Analytics(hass)
-    await analytics.save_preferences({ATTR_BASE: True, ATTR_SNAPSHOTS: False})
-
-    await analytics.async_schedule()
-
-    assert analytics._basic_scheduled is not None
-    assert analytics._snapshot_scheduled is None
-
-
-async def test_async_schedule_with_snapshots(
-    hass: HomeAssistant,
-) -> None:
-    """Test scheduling with snapshots enabled."""
+@pytest.mark.usefixtures("ha_dev_version_mock")
+async def test_async_schedule_enabled(hass: HomeAssistant) -> None:
+    """Test scheduling when enabled."""
     analytics = Analytics(hass)
     await analytics.save_preferences({ATTR_BASE: True, ATTR_SNAPSHOTS: True})
 
@@ -1659,20 +1644,45 @@ async def test_async_schedule_with_snapshots(
     assert 0 <= analytics._data.snapshot_submission_time <= 86400
 
 
-async def test_async_schedule_snapshots_already_scheduled(
-    hass: HomeAssistant,
-) -> None:
-    """Test that snapshots are not rescheduled if already scheduled."""
+@pytest.mark.usefixtures("ha_dev_version_mock")
+async def test_async_schedule_disabled(hass: HomeAssistant) -> None:
+    """Test scheduling when disabled."""
+    analytics = Analytics(hass)
+    await analytics.save_preferences({ATTR_BASE: False, ATTR_SNAPSHOTS: False})
+
+    await analytics.async_schedule()
+
+    assert analytics._basic_scheduled is None
+    assert analytics._snapshot_scheduled is None
+
+
+async def test_async_schedule_snapshots_not_dev(hass: HomeAssistant) -> None:
+    """Test that snapshots are not scheduled on non-dev versions."""
     analytics = Analytics(hass)
     await analytics.save_preferences({ATTR_BASE: True, ATTR_SNAPSHOTS: True})
 
     await analytics.async_schedule()
-    first_scheduled = analytics._snapshot_scheduled
+
+    assert analytics._basic_scheduled is not None
+    assert analytics._snapshot_scheduled is None
+
+
+@pytest.mark.usefixtures("ha_dev_version_mock")
+async def test_async_schedule_already_scheduled(hass: HomeAssistant) -> None:
+    """Test not rescheduled if already scheduled."""
+    analytics = Analytics(hass)
+    await analytics.save_preferences({ATTR_BASE: True, ATTR_SNAPSHOTS: True})
 
     await analytics.async_schedule()
-    assert analytics._snapshot_scheduled is first_scheduled
+    first_basic_scheduled = analytics._basic_scheduled
+    first_snapshot_scheduled = analytics._snapshot_scheduled
+
+    await analytics.async_schedule()
+    assert analytics._basic_scheduled is first_basic_scheduled
+    assert analytics._snapshot_scheduled is first_snapshot_scheduled
 
 
+@pytest.mark.usefixtures("ha_dev_version_mock")
 async def test_async_schedule_cancel_when_disabled(
     hass: HomeAssistant,
 ) -> None:
@@ -1681,31 +1691,13 @@ async def test_async_schedule_cancel_when_disabled(
     await analytics.save_preferences({ATTR_BASE: True, ATTR_SNAPSHOTS: True})
 
     await analytics.async_schedule()
+
     assert analytics._basic_scheduled is not None
     assert analytics._snapshot_scheduled is not None
 
     # Disable analytics
-    await analytics.save_preferences({ATTR_BASE: False})
+    await analytics.save_preferences({ATTR_BASE: False, ATTR_SNAPSHOTS: False})
     await analytics.async_schedule()
 
     assert analytics._basic_scheduled is None
-    assert analytics._snapshot_scheduled is None
-
-
-async def test_async_schedule_cancel_snapshots_only(
-    hass: HomeAssistant,
-) -> None:
-    """Test that snapshot tasks are cancelled when snapshots disabled."""
-    analytics = Analytics(hass)
-    await analytics.save_preferences({ATTR_BASE: True, ATTR_SNAPSHOTS: True})
-
-    await analytics.async_schedule()
-    assert analytics._basic_scheduled is not None
-    assert analytics._snapshot_scheduled is not None
-
-    # Disable only snapshots
-    await analytics.save_preferences({ATTR_BASE: True, ATTR_SNAPSHOTS: False})
-    await analytics.async_schedule()
-
-    assert analytics._basic_scheduled is not None
     assert analytics._snapshot_scheduled is None

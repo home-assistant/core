@@ -201,6 +201,9 @@ def gen_uuid() -> str:
     return uuid.uuid4().hex
 
 
+_IS_HA_DEV_VERSION = HA_VERSION.endswith("0.dev0")
+
+
 @dataclass
 class AnalyticsData:
     """Analytics data."""
@@ -260,7 +263,7 @@ class Analytics:
     @property
     def endpoint(self) -> str:
         """Return the endpoint that will receive the payload."""
-        if HA_VERSION.endswith("0.dev0"):
+        if _IS_HA_DEV_VERSION:
             # dev installations will contact the dev analytics environment
             return ANALYTICS_ENDPOINT_URL_DEV
         return ANALYTICS_ENDPOINT_URL
@@ -517,11 +520,14 @@ class Analytics:
 
         hass = self.hass
 
-        payload = await async_devices_payload(hass)
+        payload = await async_devices_payload(hass, include_version=False)
 
-        headers = {"Content-Type": "application/json"}
+        headers = {
+            "Content-Type": "application/json",
+            "User-Agent": f"home-assistant/{HA_VERSION}",
+        }
         if self._data.submission_identifier is not None:
-            headers["x-device-database-submission-identifier"] = (
+            headers["X-Device-Database-Submission-Identifier"] = (
                 self._data.submission_identifier
             )
 
@@ -594,7 +600,7 @@ class Analytics:
 
     async def async_schedule(self) -> None:
         """Schedule analytics."""
-        if not self.onboarded or not self.preferences.get(ATTR_BASE, False):
+        if not self.onboarded:
             LOGGER.debug("Analytics not scheduled")
             if self._basic_scheduled is not None:
                 self._basic_scheduled()
@@ -604,7 +610,12 @@ class Analytics:
                 self._snapshot_scheduled = None
             return
 
-        if self._basic_scheduled is None:
+        if not self.preferences.get(ATTR_BASE, False):
+            LOGGER.debug("Basic analytics not scheduled")
+            if self._basic_scheduled is not None:
+                self._basic_scheduled()
+                self._basic_scheduled = None
+        elif self._basic_scheduled is None:
             # Wait 15 min after started for basic analytics
             self._basic_scheduled = async_call_later(
                 self.hass,
@@ -616,7 +627,7 @@ class Analytics:
                 ),
             )
 
-        if not self.preferences.get(ATTR_SNAPSHOTS, False):
+        if not self.preferences.get(ATTR_SNAPSHOTS, False) or not _IS_HA_DEV_VERSION:
             LOGGER.debug("Snapshot analytics not scheduled")
             if self._snapshot_scheduled:
                 self._snapshot_scheduled()
@@ -693,7 +704,9 @@ DEFAULT_DEVICE_ANALYTICS_CONFIG = DeviceAnalyticsModifications()
 DEFAULT_ENTITY_ANALYTICS_CONFIG = EntityAnalyticsModifications()
 
 
-async def async_devices_payload(hass: HomeAssistant) -> dict:  # noqa: C901
+async def async_devices_payload(  # noqa: C901
+    hass: HomeAssistant, include_version: bool = True
+) -> dict:
     """Return detailed information about entities and devices."""
     dev_reg = dr.async_get(hass)
     ent_reg = er.async_get(hass)
@@ -898,6 +911,9 @@ async def async_devices_payload(hass: HomeAssistant) -> dict:  # noqa: C901
                     continue
 
             entities_info.append(entity_info)
+
+    if not include_version:
+        return integrations_info
 
     return {
         "version": f"home-assistant:{SNAPSHOT_VERSION}",
