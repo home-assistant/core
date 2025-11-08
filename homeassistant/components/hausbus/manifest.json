@@ -15,7 +15,9 @@
   ],
   "documentation": "https://www.home-assistant.io/integrations/hausbus",
   "iot_class": "local_push",
+  "reload": true,
   "loggers": ["pyhausbus"],
   "quality_scale": "bronze",
-  "requirements": ["pyhausbus==1.0.15"]
+  "requirements": ["pyhausbus==1.0.29"],
+  "version": "1.0.2"
 }

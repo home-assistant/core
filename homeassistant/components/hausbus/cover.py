@@ -15,7 +15,6 @@ from pyhausbus.de.hausbus.homeassistant.proxy.rollladen.data.Status import Statu
 from pyhausbus.de.hausbus.homeassistant.proxy.rollladen.params.EDirection import (
     EDirection,
 )
-import voluptuous as vol
 
 from homeassistant.components.cover import (
     DOMAIN as COVER_DOMAIN,
@@ -24,11 +23,9 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_platform
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .device import HausbusDevice
 from .entity import HausbusEntity
 
 if TYPE_CHECKING:
@@ -47,7 +44,6 @@ async def async_setup_entry(
     """Set up a cover from a config entry."""
 
     gateway = config_entry.runtime_data
-    platform = entity_platform.async_get_current_platform()
 
     async def async_add_cover(channel: HausbusEntity) -> None:
         """Add cover entity."""
@@ -60,9 +56,9 @@ async def async_setup_entry(
 class HausbusCover(HausbusEntity, CoverEntity):
     """Representation of a Haus-Bus cover."""
 
-    def __init__(self, channel: Rollladen, device: HausbusDevice) -> None:
+    def __init__(self, channel: Rollladen, device_info: DeviceInfo) -> None:
         """Set up cover."""
-        super().__init__(channel, device)
+        super().__init__(channel, device_info)
 
         self._attr_device_class = CoverDeviceClass.SHUTTER
         self._attr_supported_features = (
@@ -71,13 +67,10 @@ class HausbusCover(HausbusEntity, CoverEntity):
             | CoverEntityFeature.STOP
             | CoverEntityFeature.SET_POSITION
         )
-        self._attr_reports_position = (
-            True  # Position wird berichtet :contentReference[oaicite:0]{index=0}
-        )
+        self._attr_reports_position = True  # Position is reported
         self._position: int | None = None
         self._is_opening: bool | None = None
         self._is_closing: bool | None = None
-        self._attr_unit_of_measurement = "%"
 
     @property
     def current_cover_position(self) -> int | None:
@@ -103,29 +96,29 @@ class HausbusCover(HausbusEntity, CoverEntity):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Opens the cover."""
-        LOGGER.debug("async_open_cover")
+        LOGGER.debug("%s: opening cover", self.name)
         self._channel.start(EDirection.TO_OPEN)
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Closes the cover."""
-        LOGGER.debug("async_close_cover")
+        LOGGER.debug("%s: closing cover", self.name)
         self._channel.start(EDirection.TO_CLOSE)
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stops the actual cover movevent."""
-        LOGGER.debug("async_stop_cover")
+        LOGGER.debug("%s: stop cover", self.name)
         self._channel.stop()
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Moves cover to the given position."""
         position = kwargs.get("position")
-        LOGGER.debug("async_set_cover_position position %s", position)
+        LOGGER.debug("%s: set cover position to %s", self.name, position)
 
         if position is None:
             return
+
         position = min(position, 100)
         position = max(position, 0)
-
         self._channel.moveToPosition(100 - position)
 
     def handle_event(self, data: Any) -> None:

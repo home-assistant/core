@@ -10,10 +10,8 @@ from pyhausbus.ABusFeature import ABusFeature
 from pyhausbus.ObjectId import ObjectId
 
 from homeassistant.core import callback
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
-
-from .device import HausbusDevice
 
 DOMAIN = "hausbus"
 
@@ -28,14 +26,16 @@ class HausbusEntity(Entity):
     def __init__(
         self,
         channel: ABusFeature,
-        device: HausbusDevice,
+        device_info: DeviceInfo,
         alternativeType: str | None = None,
     ) -> None:
         """Set up channel."""
         super().__init__()
 
         self._channel = channel
-        self._device = device
+
+        self._objectId = ObjectId(channel.getObjectId())
+        self._device_id = self._objectId.getDeviceId()
 
         self._type = "to be overridden"
         self._attr_name = "to be overridden"
@@ -44,17 +44,18 @@ class HausbusEntity(Entity):
         if channel is not None:
             self._type = channel.__class__.__name__.lower()
             self._attr_name = channel.getName()
-            self._attr_unique_id = f"{self._device.device_id}-{self._type}-{ObjectId(channel.getObjectId()).getInstanceId()}"
+            self._attr_unique_id = (
+                f"{self._device_id}-{self._type}-{self._objectId.getInstanceId()}"
+            )
 
         if alternativeType is not None:
             self._type = alternativeType
 
-        self._attr_device_info = self._device.device_info
+        self._attr_device_info = device_info
+
         self._attr_translation_key = self._type
         self._attr_extra_state_attributes = {}
         self._configuration: Any = None
-        if device is not None:
-            self._special_type = device.special_type
 
     def get_hardware_status(self) -> None:
         """Request status and configuration of this channel from hardware."""
@@ -72,19 +73,15 @@ class HausbusEntity(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Called when entity is added to HA."""
-        registry = er.async_get(self.hass)
-        registry.async_update_entity_options(
-            self.entity_id, DOMAIN, {"hausbus_type": self.__class__.__name__}
-        )
-        if self._special_type != 0:
-            registry.async_update_entity_options(
-                self.entity_id, DOMAIN, {"hausbus_special_type": self._special_type}
-            )
+
+        # add type information for individual actions
+        self.hass.data.setdefault(DOMAIN, {}).setdefault("device_types", {})
+        self.hass.data[DOMAIN]["device_types"][self.entity_id] = self.__class__.__name__
+
         LOGGER.debug(
-            "added_to_hass %s type %s special_type %s",
+            "added_to_hass %s type %s",
             self._attr_name,
             self.__class__.__name__,
-            self._special_type,
         )
 
     async def ensure_configuration(self) -> bool:

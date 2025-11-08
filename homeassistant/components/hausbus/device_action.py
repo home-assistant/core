@@ -11,7 +11,7 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.typing import TemplateVarsType
 
-DOMAIN = "hausbus"
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,7 +29,7 @@ ACTION_COVER_TOGGLE = "toggle"
 
 
 # ----------------------------
-# Actions für ein Device holen
+# read actions for a device
 # ----------------------------
 async def async_get_actions(
     hass: HomeAssistant, device_id: str
@@ -40,25 +40,21 @@ async def async_get_actions(
 
     registry = er.async_get(hass)
     entities = [ent for ent in registry.entities.values() if ent.device_id == device_id]
-    _LOGGER.debug("entities for %s returns %s", device_id, entities)
+    _LOGGER.debug("entities for device_id %s are %s", device_id, entities)
+
     for ent in entities:
         if DOMAIN in ent.options:
-            hausbus_type = ent.options[DOMAIN].get("hausbus_type")
-            hausbus_special_type = ent.options[DOMAIN].get("hausbus_special_type")
             name = ent.name or ent.original_name
+            hausbus_type = hass.data[DOMAIN]["device_types"].get(ent.entity_id)
+            _LOGGER.debug("hausbus_type is %s", hausbus_type)
 
-            _LOGGER.debug(
-                "%s is type %s special_type %s",
-                name,
-                hausbus_type,
-                hausbus_special_type,
-            )
+            _LOGGER.debug("name is %s type is %s", name, hausbus_type)
 
             # add cover.toggle as device action to make it appear in automation ui
             if hausbus_type == "HausbusCover":
                 addAction(ACTION_COVER_TOGGLE, name, device_id, ent.entity_id, actions)
 
-    _LOGGER.debug("async_get_actions for %s returns %s", device_id, actions)
+    _LOGGER.debug("async_get_actions id %s returns %s", device_id, actions)
     return actions
 
 
@@ -81,7 +77,7 @@ def addAction(
 
 
 # ----------------------------
-# Action ausführen
+# perform action
 # ----------------------------
 async def async_call_action_from_config(
     hass: HomeAssistant,
@@ -96,12 +92,12 @@ async def async_call_action_from_config(
     }
 
     if service == ACTION_COVER_TOGGLE:
-        _LOGGER.debug("Rufe Service cover.%s mit %s auf", service, service_data)
+        _LOGGER.debug("calling service cover.%s with %s", service, service_data)
         await hass.services.async_call(
             COVER_DOMAIN, service, service_data, context=context
         )
     else:
-        _LOGGER.debug("Rufe Service hausbus.%s mit %s auf", service, service_data)
+        _LOGGER.debug("calling service cover.%s with %s", service, service_data)
         await hass.services.async_call(DOMAIN, service, service_data, context=context)
 
 
@@ -114,29 +110,21 @@ async def async_get_action_capabilities(
     """Returns capabilities for a device action."""
 
     service_type = config["type"]
-    _LOGGER.debug("async_get_action_capabilities %s ", service_type)
+    _LOGGER.debug("async_get_action_capabilities %s", service_type)
 
-    result = {}
+    result: dict[str, Schema] = {}
 
-    registry = er.async_get(hass)
-    entity = registry.entities.get(config["entity_id"])
-    _LOGGER.debug("entity %s", entity)
+    entity_id = config["entity_id"]
+    hausbus_type = hass.data[DOMAIN]["device_types"].get(entity_id)
 
-    if entity and DOMAIN in entity.options:
-        hausbus_type = entity.options[DOMAIN].get("hausbus_type")
-        hausbus_special_type = entity.options[DOMAIN].get("hausbus_special_type")
+    _LOGGER.debug("entity_id %s hausbus_type is %s", entity_id, hausbus_type)
 
-        _LOGGER.debug(
-            "hausbus_type %s hausbus_special_type %s",
-            hausbus_type,
-            hausbus_special_type,
-        )
+    SCHEMA: Schema = vol.Schema({})  # default leeres Schema
 
-        if hausbus_type == "HausbusCover":
-            if service_type.startswith("toggle"):
-                SCHEMA = vol.Schema({})
+    if hausbus_type == "HausbusCover":
+        if service_type.startswith("toggle"):
+            SCHEMA = vol.Schema({})  # hier kannst du gewünschte Felder definieren
 
-        result = {"extra_fields": SCHEMA}
-
+    result = {"extra_fields": SCHEMA}
     _LOGGER.debug("returns %s", result)
     return result
