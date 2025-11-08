@@ -206,7 +206,7 @@
       },
       "detected_objects_with_channel_name": {
         "name": "{channel_name} detected objects",
-        "unit_of_measurement": "objects"
+        "unit_of_measurement": "[%key:component::shelly::entity::sensor::detected_objects::unit_of_measurement%]"
       },
       "device_temperature": {
         "name": "Device temperature"
@@ -310,7 +310,7 @@
         "name": "Pulse counter value"
       },
       "pulse_counter_value_with_channel_name": {
-        "name": "{channel_name} Pulse counter value"
+        "name": "{channel_name} pulse counter value"
       },
       "pulse_counter_with_channel_name": {
         "name": "{channel_name} pulse counter"
@@ -392,6 +392,11 @@
       },
       "water_temperature": {
         "name": "Water temperature"
+      }
+    },
+    "update": {
+      "beta_firmware": {
+        "name": "Beta firmware"
       }
     }
   },
