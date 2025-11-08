@@ -389,6 +389,8 @@ build.json @home-assistant/supervisor
 /tests/components/dsmr/ @Robbie1221
 /homeassistant/components/dsmr_reader/ @sorted-bits @glodenox @erwindouna
 /tests/components/dsmr_reader/ @sorted-bits @glodenox @erwindouna
+/homeassistant/components/duckdns/ @tr4nt0r
+/tests/components/duckdns/ @tr4nt0r
 /homeassistant/components/duke_energy/ @hunterjm
 /tests/components/duke_energy/ @hunterjm
 /homeassistant/components/duotecno/ @cereal2nd
