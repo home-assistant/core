@@ -69,7 +69,7 @@ class CoolmasterConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_PORT: DEFAULT_PORT,
                 CONF_SUPPORTED_MODES: supported_modes,
                 CONF_SWING_SUPPORT: data[CONF_SWING_SUPPORT],
-                CONF_SEND_WAKEUP_PROMPT: data[CONF_SEND_WAKEUP_PROMPT],
+                CONF_SEND_WAKEUP_PROMPT: data.get(CONF_SEND_WAKEUP_PROMPT, False),
             },
         )
 
