@@ -164,6 +164,7 @@
     },
     "select": {
       "cury_mode": {
+        "name": "Mode",
         "state": {
           "bedroom": "Bedroom",
           "hall": "Hall",

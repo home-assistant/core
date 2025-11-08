@@ -14,7 +14,12 @@ from homeassistant.components.select import (
 )
 from homeassistant.components.shelly.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_FRIENDLY_NAME,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceRegistry
@@ -291,9 +296,11 @@ async def test_rpc_cury_mode_select(
         "reception",
         "workplace",
     ]
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Test name Mode"
 
     assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-cury:0-cury_mode"
+    assert entry.translation_key == "cury_mode"
 
     monkeypatch.setitem(mock_rpc_device.status["cury:0"], "mode", "living_room")
     mock_rpc_device.mock_update()
