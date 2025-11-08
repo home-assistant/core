@@ -39,7 +39,7 @@ class VictronTime(VictronBaseEntity, TimeEntity):
     """Implementation of a Victron Venus time entity (represented as a sensor)."""
 
     @staticmethod
-    def victorn_time_to_time(value: int | None) -> time | None:
+    def victron_time_to_time(value: int | None) -> time | None:
         """Convert minutes since midnight to time object."""
         if value is None:
             return None
@@ -62,7 +62,7 @@ class VictronTime(VictronBaseEntity, TimeEntity):
         installation_id: str,
     ) -> None:
         """Initialize the time entity based on details in the metric."""
-        self._attr_native_value = VictronTime.victorn_time_to_time(
+        self._attr_native_value = VictronTime.victron_time_to_time(
             writable_metric.value
         )
         assert writable_metric.unit_of_measurement == "min"
@@ -78,7 +78,7 @@ class VictronTime(VictronBaseEntity, TimeEntity):
 
     def _on_update_task(self, value: Any) -> None:
         """Convert minutes since midnight to time object and update state."""
-        time_value = VictronTime.victorn_time_to_time(value)
+        time_value = VictronTime.victron_time_to_time(value)
         if self._attr_native_value == time_value:
             return
 

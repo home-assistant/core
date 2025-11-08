@@ -46,7 +46,7 @@ class VictronSensor(VictronBaseEntity, SensorEntity):
         simple_naming: bool,
         installation_id: str,
     ) -> None:
-        """Initialize the sensor based on detauls in the metric."""
+        """Initialize the sensor."""
         self._attr_native_value = metric.value
         super().__init__(
             device, metric, device_info, "sensor", simple_naming, installation_id

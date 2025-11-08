@@ -87,5 +87,4 @@ class VictronSelect(VictronBaseEntity, SelectEntity):
 
     def _map_value_to_state(self, value) -> str:
         """Map metric value to switch state."""
-        # for now jut return the same thing
         return str(value)
