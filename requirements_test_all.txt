@@ -371,7 +371,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==13.16.0
+aioshelly==13.17.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -755,7 +755,7 @@ elevenlabs==2.3.0
 elgato==5.1.2
 
 # homeassistant.components.elkm1
-elkm1-lib==2.2.11
+elkm1-lib==2.2.12
 
 # homeassistant.components.inels
 elkoep-aio-mqtt==0.1.0b4
@@ -2100,7 +2100,7 @@ python-pooldose==0.7.8
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==3.7.0
+python-roborock==3.7.1
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.45
