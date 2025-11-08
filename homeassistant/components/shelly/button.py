@@ -30,6 +30,7 @@ from .const import (
     MODEL_FRANKEVER_WATER_VALVE,
     ROLE_GENERIC,
     SHELLY_GAS_MODELS,
+    SHELLY_WALL_DISPLAY_MODELS,
 )
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
@@ -62,6 +63,7 @@ class ShellyButtonDescription[
     """Class to describe a Button entity."""
 
     press_action: str
+    params: dict[str, Any] | None = None
 
     supported: Callable[[_ShellyCoordinatorT], bool] = lambda _: True
 
@@ -102,6 +104,20 @@ BUTTONS: Final[list[ShellyButtonDescription[Any]]] = [
         entity_category=EntityCategory.CONFIG,
         press_action="trigger_shelly_gas_unmute",
         supported=lambda coordinator: coordinator.model in SHELLY_GAS_MODELS,
+    ),
+    ShellyButtonDescription[ShellyRpcCoordinator](
+        key="turn_on_screen",
+        name="Turn on the screen",
+        press_action="wall_display_set_screen",
+        params={"value": True},
+        supported=lambda coordinator: coordinator.model in SHELLY_WALL_DISPLAY_MODELS,
+    ),
+    ShellyButtonDescription[ShellyRpcCoordinator](
+        key="turn_off_screen",
+        name="Turn off the screen",
+        press_action="wall_display_set_screen",
+        params={"value": False},
+        supported=lambda coordinator: coordinator.model in SHELLY_WALL_DISPLAY_MODELS,
     ),
 ]
 
@@ -317,7 +333,7 @@ class ShellyButton(ShellyBaseButton):
         if TYPE_CHECKING:
             assert method is not None
 
-        await method()
+        await method(**(self.entity_description.params or {}))
 
 
 class ShellyBluTrvButton(ShellyRpcAttributeEntity, ButtonEntity):
