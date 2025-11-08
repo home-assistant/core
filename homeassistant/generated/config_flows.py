@@ -720,6 +720,7 @@ FLOWS = {
         "version",
         "vesync",
         "vicare",
+        "victron",
         "victron_remote_monitoring",
         "vilfo",
         "vizio",
