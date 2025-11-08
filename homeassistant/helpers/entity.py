@@ -1646,8 +1646,10 @@ class Entity(
     def async_set_included_entities(self) -> None:
         """Set the list of included entities identified by their unique IDs.
 
-        Integrations need to when the list of included entities changes.
+        Integrations need to call this when the list of included unique IDs.
         """
+        if not self.included_unique_ids:
+            return
         entity_registry = er.async_get(self.hass)
         assert self.entity_id is not None
 
