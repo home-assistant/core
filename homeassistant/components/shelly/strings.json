@@ -145,6 +145,12 @@
       "self_test": {
         "name": "Self-test"
       },
+      "turn_off_the_screen": {
+        "name": "Turn off the screen"
+      },
+      "turn_on_the_screen": {
+        "name": "Turn on the screen"
+      },
       "unmute_alarm": {
         "name": "Unmute alarm"
       }

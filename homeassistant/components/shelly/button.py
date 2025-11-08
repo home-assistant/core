@@ -104,14 +104,14 @@ BUTTONS: Final[list[ShellyButtonDescription[Any]]] = [
     ),
     ShellyButtonDescription[ShellyRpcCoordinator](
         key="turn_on_screen",
-        name="Turn on the screen",
+        translation_key="turn_on_the_screen",
         press_action="wall_display_set_screen",
         params={"value": True},
         supported=lambda coordinator: coordinator.model in SHELLY_WALL_DISPLAY_MODELS,
     ),
     ShellyButtonDescription[ShellyRpcCoordinator](
         key="turn_off_screen",
-        name="Turn off the screen",
+        translation_key="turn_off_the_screen",
         press_action="wall_display_set_screen",
         params={"value": False},
         supported=lambda coordinator: coordinator.model in SHELLY_WALL_DISPLAY_MODELS,
