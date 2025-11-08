@@ -206,7 +206,7 @@
       },
       "detected_objects_with_channel_name": {
         "name": "{channel_name} detected objects",
-        "unit_of_measurement": "objects"
+        "unit_of_measurement": "[%key:component::shelly::entity::sensor::detected_objects::unit_of_measurement%]"
       },
       "device_temperature": {
         "name": "Device temperature"
