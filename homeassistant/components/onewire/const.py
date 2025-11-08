@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Final
 
+CONF_COMMAND_TIMEOUT: Final = "command_timeout"
 CONF_CONNECTION_TIMEOUT: Final = "connection_timeout"
 
 DEFAULT_HOST = "localhost"

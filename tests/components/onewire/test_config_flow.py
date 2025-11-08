@@ -3,11 +3,12 @@
 from ipaddress import ip_address
 from unittest.mock import AsyncMock, patch
 
-from aio_ownet.connection import DEFAULT_CONNECTION_TIMEOUT
+from aio_ownet.connection import DEFAULT_COMMAND_TIMEOUT, DEFAULT_CONNECTION_TIMEOUT
 from aio_ownet.exceptions import OWServerConnectionError
 import pytest
 
 from homeassistant.components.onewire.const import (
+    CONF_COMMAND_TIMEOUT,
     CONF_CONNECTION_TIMEOUT,
     DOMAIN,
     INPUT_ENTRY_CLEAR_OPTIONS,
@@ -75,6 +76,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
                 CONF_HOST: "1.2.3.4",
                 CONF_PORT: 1234,
                 CONF_CONNECTION_TIMEOUT: DEFAULT_CONNECTION_TIMEOUT,
+                CONF_COMMAND_TIMEOUT: DEFAULT_COMMAND_TIMEOUT,
             },
         )
 
@@ -85,6 +87,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
         CONF_HOST: "1.2.3.4",
         CONF_PORT: 1234,
         CONF_CONNECTION_TIMEOUT: DEFAULT_CONNECTION_TIMEOUT,
+        CONF_COMMAND_TIMEOUT: DEFAULT_COMMAND_TIMEOUT,
     }
 
 
@@ -105,6 +108,7 @@ async def test_user_flow_recovery(hass: HomeAssistant) -> None:
                 CONF_HOST: "1.2.3.4",
                 CONF_PORT: 1234,
                 CONF_CONNECTION_TIMEOUT: DEFAULT_CONNECTION_TIMEOUT,
+                CONF_COMMAND_TIMEOUT: DEFAULT_COMMAND_TIMEOUT,
             },
         )
 
@@ -122,6 +126,7 @@ async def test_user_flow_recovery(hass: HomeAssistant) -> None:
                 CONF_HOST: "1.2.3.4",
                 CONF_PORT: 1234,
                 CONF_CONNECTION_TIMEOUT: DEFAULT_CONNECTION_TIMEOUT,
+                CONF_COMMAND_TIMEOUT: DEFAULT_COMMAND_TIMEOUT,
             },
         )
 
@@ -132,6 +137,7 @@ async def test_user_flow_recovery(hass: HomeAssistant) -> None:
         CONF_HOST: "1.2.3.4",
         CONF_PORT: 1234,
         CONF_CONNECTION_TIMEOUT: DEFAULT_CONNECTION_TIMEOUT,
+        CONF_COMMAND_TIMEOUT: DEFAULT_COMMAND_TIMEOUT,
     }
 
 
@@ -157,6 +163,7 @@ async def test_user_duplicate(
             CONF_HOST: "1.2.3.4",
             CONF_PORT: 1234,
             CONF_CONNECTION_TIMEOUT: DEFAULT_CONNECTION_TIMEOUT,
+            CONF_COMMAND_TIMEOUT: DEFAULT_COMMAND_TIMEOUT,
         },
     )
     assert result["type"] is FlowResultType.ABORT
@@ -183,6 +190,7 @@ async def test_reconfigure_flow(
                 CONF_HOST: "2.3.4.5",
                 CONF_PORT: 2345,
                 CONF_CONNECTION_TIMEOUT: DEFAULT_CONNECTION_TIMEOUT,
+                CONF_COMMAND_TIMEOUT: DEFAULT_COMMAND_TIMEOUT,
             },
         )
 
@@ -200,6 +208,7 @@ async def test_reconfigure_flow(
                 CONF_HOST: "2.3.4.5",
                 CONF_PORT: 2345,
                 CONF_CONNECTION_TIMEOUT: DEFAULT_CONNECTION_TIMEOUT,
+                CONF_COMMAND_TIMEOUT: DEFAULT_COMMAND_TIMEOUT,
             },
         )
 
@@ -209,6 +218,7 @@ async def test_reconfigure_flow(
         CONF_HOST: "2.3.4.5",
         CONF_PORT: 2345,
         CONF_CONNECTION_TIMEOUT: DEFAULT_CONNECTION_TIMEOUT,
+        CONF_COMMAND_TIMEOUT: DEFAULT_COMMAND_TIMEOUT,
     }
 
     assert len(mock_setup_entry.mock_calls) == 1
@@ -225,6 +235,7 @@ async def test_reconfigure_duplicate(
             CONF_HOST: "2.3.4.5",
             CONF_PORT: 2345,
             CONF_CONNECTION_TIMEOUT: DEFAULT_CONNECTION_TIMEOUT,
+            CONF_COMMAND_TIMEOUT: DEFAULT_COMMAND_TIMEOUT,
         },
         entry_id="other",
     )
@@ -242,6 +253,7 @@ async def test_reconfigure_duplicate(
             CONF_HOST: "2.3.4.5",
             CONF_PORT: 2345,
             CONF_CONNECTION_TIMEOUT: DEFAULT_CONNECTION_TIMEOUT,
+            CONF_COMMAND_TIMEOUT: DEFAULT_COMMAND_TIMEOUT,
         },
     )
     assert result["type"] is FlowResultType.ABORT
@@ -252,11 +264,13 @@ async def test_reconfigure_duplicate(
         CONF_HOST: "1.2.3.4",
         CONF_PORT: 1234,
         CONF_CONNECTION_TIMEOUT: DEFAULT_CONNECTION_TIMEOUT,
+        CONF_COMMAND_TIMEOUT: DEFAULT_COMMAND_TIMEOUT,
     }
     assert other_config_entry.data == {
         CONF_HOST: "2.3.4.5",
         CONF_PORT: 2345,
         CONF_CONNECTION_TIMEOUT: DEFAULT_CONNECTION_TIMEOUT,
+        CONF_COMMAND_TIMEOUT: DEFAULT_COMMAND_TIMEOUT,
     }
 
 
@@ -301,6 +315,7 @@ async def test_hassio_flow(hass: HomeAssistant) -> None:
         CONF_HOST: "1302b8e0-owserver",
         CONF_PORT: 4304,
         CONF_CONNECTION_TIMEOUT: DEFAULT_CONNECTION_TIMEOUT,
+        CONF_COMMAND_TIMEOUT: DEFAULT_COMMAND_TIMEOUT,
     }
 
 
@@ -357,6 +372,7 @@ async def test_zeroconf_flow(hass: HomeAssistant) -> None:
         CONF_HOST: "ubuntu.local.",
         CONF_PORT: 4304,
         CONF_CONNECTION_TIMEOUT: DEFAULT_CONNECTION_TIMEOUT,
+        CONF_COMMAND_TIMEOUT: DEFAULT_COMMAND_TIMEOUT,
     }
 
 

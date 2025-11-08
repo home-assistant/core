@@ -23,6 +23,7 @@
     }),
     'entry': dict({
       'data': dict({
+        'command_timeout': 10,
         'connection_timeout': 10,
         'host': '**REDACTED**',
         'port': 1234,
@@ -67,6 +68,7 @@
     ]),
     'entry': dict({
       'data': dict({
+        'command_timeout': 10,
         'connection_timeout': 10,
         'host': '**REDACTED**',
         'port': 1234,

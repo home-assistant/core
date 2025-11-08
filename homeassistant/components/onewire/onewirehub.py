@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 import logging
 import os
 
+from aio_ownet.connection import DEFAULT_COMMAND_TIMEOUT
 from aio_ownet.definitions import OWServerCommonPath
 from aio_ownet.exceptions import OWServerProtocolError, OWServerReturnError
 from aio_ownet.proxy import OWServerStatelessProxy
@@ -68,6 +69,9 @@ class OneWireHub:
         """Initialize."""
         self._hass = hass
         self._config_entry = config_entry
+        self.command_timeout: int = self._config_entry.data.get(
+            "command_timeout", DEFAULT_COMMAND_TIMEOUT
+        )
 
     async def _initialize(self) -> None:
         """Connect to the server, and discover connected devices."""
@@ -83,15 +87,19 @@ class OneWireHub:
         self.owproxy = OWServerStatelessProxy(
             self._config_entry.data[CONF_HOST],
             self._config_entry.data[CONF_PORT],
-            connection_timeout=self._config_entry.data[CONF_CONNECTION_TIMEOUT],
+            connection_timeout=connection_timeout,
         )
         await self.owproxy.validate()
         with contextlib.suppress(OWServerReturnError):
             # Version is not available on all servers
             self._version = (
-                await self.owproxy.read(OWServerCommonPath.VERSION)
+                await self.owproxy.read(
+                    OWServerCommonPath.VERSION, command_timeout=self.command_timeout
+                )
             ).decode()
-        self.devices = await _discover_devices(self.owproxy)
+        self.devices = await _discover_devices(
+            self.owproxy, command_timeout=self.command_timeout
+        )
 
     async def initialize(self) -> None:
         """Initialize a config entry."""
@@ -119,7 +127,9 @@ class OneWireHub:
 
     async def _scan_for_new_devices(self, _: datetime) -> None:
         """Scan the bus for new devices."""
-        devices = await _discover_devices(self.owproxy)
+        devices = await _discover_devices(
+            self.owproxy, command_timeout=self.command_timeout
+        )
         existing_device_ids = [device.id for device in self.devices]
         new_devices = [
             device for device in devices if device.id not in existing_device_ids
@@ -133,15 +143,20 @@ class OneWireHub:
 
 
 async def _discover_devices(
-    owproxy: OWServerStatelessProxy, path: str = "/", parent_id: str | None = None
+    owproxy: OWServerStatelessProxy,
+    path: str = "/",
+    parent_id: str | None = None,
+    command_timeout: int = DEFAULT_COMMAND_TIMEOUT,
 ) -> list[OWDeviceDescription]:
     """Discover all server devices."""
     devices: list[OWDeviceDescription] = []
-    for device_path in await owproxy.dir(path):
+    for device_path in await owproxy.dir(path, command_timeout=command_timeout):
         device_id = os.path.split(os.path.split(device_path)[0])[1]
-        device_family = (await owproxy.read(f"{device_path}family")).decode()
+        device_family = (
+            await owproxy.read(f"{device_path}family", command_timeout=command_timeout)
+        ).decode()
         _LOGGER.debug("read `%sfamily`: %s", device_path, device_family)
-        device_type = await _get_device_type(owproxy, device_path)
+        device_type = await _get_device_type(owproxy, device_path, command_timeout)
         if not _is_known_device(device_family, device_type):
             _LOGGER.warning(
                 "Ignoring unknown device family/type (%s/%s) found for device %s",
@@ -171,23 +186,34 @@ async def _discover_devices(
         if device_branches := DEVICE_COUPLERS.get(device_family):
             for branch in device_branches:
                 devices += await _discover_devices(
-                    owproxy, f"{device_path}{branch}", device_id
+                    owproxy,
+                    f"{device_path}{branch}",
+                    device_id,
+                    command_timeout=command_timeout,
                 )
 
     return devices
 
 
 async def _get_device_type(
-    owproxy: OWServerStatelessProxy, device_path: str
+    owproxy: OWServerStatelessProxy,
+    device_path: str,
+    command_timeout: int = DEFAULT_COMMAND_TIMEOUT,
 ) -> str | None:
     """Get device model."""
     try:
-        device_type = (await owproxy.read(f"{device_path}type")).decode()
+        device_type = (
+            await owproxy.read(f"{device_path}type", command_timeout=command_timeout)
+        ).decode()
     except OWServerProtocolError as exc:
         _LOGGER.debug("Unable to read `%stype`: %s", device_path, exc)
         return None
     _LOGGER.debug("read `%stype`: %s", device_path, device_type)
     if device_type == "EDS":
-        device_type = (await owproxy.read(f"{device_path}device_type")).decode()
+        device_type = (
+            await owproxy.read(
+                f"{device_path}device_type", command_timeout=command_timeout
+            )
+        ).decode()
         _LOGGER.debug("read `%sdevice_type`: %s", device_path, device_type)
     return device_type

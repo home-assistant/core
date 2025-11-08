@@ -5,7 +5,7 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any
 
-from aio_ownet.connection import DEFAULT_CONNECTION_TIMEOUT
+from aio_ownet.connection import DEFAULT_COMMAND_TIMEOUT, DEFAULT_CONNECTION_TIMEOUT
 from aio_ownet.exceptions import OWServerConnectionError
 from aio_ownet.proxy import OWServerStatelessProxy
 import voluptuous as vol
@@ -23,6 +23,7 @@ from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import (
+    CONF_COMMAND_TIMEOUT,
     CONF_CONNECTION_TIMEOUT,
     DEFAULT_HOST,
     DEFAULT_PORT,
@@ -41,6 +42,7 @@ DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_HOST, default=DEFAULT_HOST): str,
         vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
         vol.Optional(CONF_CONNECTION_TIMEOUT, default=DEFAULT_CONNECTION_TIMEOUT): int,
+        vol.Optional(CONF_COMMAND_TIMEOUT, default=DEFAULT_COMMAND_TIMEOUT): int,
     }
 )
 
@@ -140,6 +142,9 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
             "title": discovery_info.name,
             CONF_HOST: discovery_info.hostname,
             CONF_PORT: discovery_info.port,
+            CONF_COMMAND_TIMEOUT: getattr(
+                discovery_info, CONF_COMMAND_TIMEOUT, DEFAULT_COMMAND_TIMEOUT
+            ),
             CONF_CONNECTION_TIMEOUT: getattr(
                 discovery_info, CONF_CONNECTION_TIMEOUT, DEFAULT_CONNECTION_TIMEOUT
             ),
@@ -155,6 +160,9 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
             data = {
                 CONF_HOST: self._discovery_data[CONF_HOST],
                 CONF_PORT: self._discovery_data[CONF_PORT],
+                CONF_COMMAND_TIMEOUT: self._discovery_data.get(
+                    CONF_COMMAND_TIMEOUT, DEFAULT_COMMAND_TIMEOUT
+                ),
                 CONF_CONNECTION_TIMEOUT: self._discovery_data.get(
                     CONF_CONNECTION_TIMEOUT, DEFAULT_CONNECTION_TIMEOUT
                 ),

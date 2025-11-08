@@ -26,6 +26,7 @@ class OneWireEntity(Entity):
         device_info: DeviceInfo,
         device_file: str,
         owproxy: OWServerStatelessProxy,
+        command_timeout: int,
     ) -> None:
         """Initialize the entity."""
         self.entity_description = description
@@ -35,6 +36,7 @@ class OneWireEntity(Entity):
         self._device_file = device_file
         self._state: str | None = None
         self._owproxy = owproxy
+        self._command_timeout = command_timeout
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
@@ -45,12 +47,16 @@ class OneWireEntity(Entity):
 
     async def _write_value(self, value: bytes) -> None:
         """Write a value to the server."""
-        await self._owproxy.write(self._device_file, value)
+        await self._owproxy.write(
+            self._device_file, value, command_timeout=self._command_timeout
+        )
 
     async def async_update(self) -> None:
         """Get the latest data from the device."""
         try:
-            state = await self._owproxy.read(self._device_file)
+            state = await self._owproxy.read(
+                self._device_file, command_timeout=self._command_timeout
+            )
         except OWServerError as exc:
             if self._last_update_success:
                 _LOGGER.error("Error fetching %s data: %s", self.name, exc)

@@ -194,6 +194,7 @@ def get_entities(
                     device_file=device_file,
                     device_info=device_info,
                     owproxy=onewire_hub.owproxy,
+                    command_timeout=onewire_hub.command_timeout,
                 )
             )
 
