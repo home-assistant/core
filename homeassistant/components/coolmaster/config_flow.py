@@ -12,7 +12,13 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 
-from .const import CONF_SUPPORTED_MODES, CONF_SWING_SUPPORT, DEFAULT_PORT, DOMAIN
+from .const import (
+    CONF_SEND_WAKEUP_PROMPT,
+    CONF_SUPPORTED_MODES,
+    CONF_SWING_SUPPORT,
+    DEFAULT_PORT,
+    DOMAIN,
+)
 
 AVAILABLE_MODES = [
     HVACMode.OFF.value,
@@ -30,12 +36,13 @@ DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_HOST): str,
         **MODES_SCHEMA,
         vol.Required(CONF_SWING_SUPPORT, default=False): bool,
+        vol.Required(CONF_SEND_WAKEUP_PROMPT, default=False): bool,
     }
 )
 
 
-async def _validate_connection(host: str) -> bool:
-    cool = CoolMasterNet(host, DEFAULT_PORT)
+async def _validate_connection(host: str, send_wakeup_prompt: bool) -> bool:
+    cool = CoolMasterNet(host, DEFAULT_PORT, send_initial_line_feed=send_wakeup_prompt)
     units = await cool.status()
     return bool(units)
 
@@ -57,6 +64,7 @@ class CoolmasterConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_PORT: DEFAULT_PORT,
                 CONF_SUPPORTED_MODES: supported_modes,
                 CONF_SWING_SUPPORT: data[CONF_SWING_SUPPORT],
+                CONF_SEND_WAKEUP_PROMPT: data[CONF_SEND_WAKEUP_PROMPT],
             },
         )
 
@@ -72,7 +80,9 @@ class CoolmasterConfigFlow(ConfigFlow, domain=DOMAIN):
         host = user_input[CONF_HOST]
 
         try:
-            result = await _validate_connection(host)
+            result = await _validate_connection(
+                host, user_input.get(CONF_SEND_WAKEUP_PROMPT, False)
+            )
             if not result:
                 errors["base"] = "no_units"
         except OSError:

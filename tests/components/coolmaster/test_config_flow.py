@@ -14,6 +14,7 @@ def _flow_data():
     for mode in AVAILABLE_MODES:
         options[mode] = True
     options["swing_support"] = False
+    options["send_wakeup_prompt"] = False
     return options
 
 
@@ -47,6 +48,7 @@ async def test_form(hass: HomeAssistant) -> None:
         "port": 10102,
         "supported_modes": AVAILABLE_MODES,
         "swing_support": False,
+        "send_wakeup_prompt": False,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 

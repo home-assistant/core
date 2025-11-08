@@ -11,12 +11,16 @@
           "heat_cool": "Support automatic heat/cool mode",
           "dry": "Support dry mode",
           "fan_only": "Support fan only mode",
-          "swing_support": "Control swing mode"
+          "swing_support": "Control swing mode",
+          "send_wakeup_prompt": "Send wakeup prompt"
         },
         "data_description": {
           "host": "The hostname or IP address of your CoolMasterNet device."
         }
       }
+    },
+    "abort": {
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
