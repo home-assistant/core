@@ -49,7 +49,7 @@
     },
     "select": {
       "auto_lock_duration": {
-        "name": "Autolock duration",
+        "name": "Auto-lock duration",
         "state": {
           "0": "[%key:common::state::off%]",
           "10": "0m:10s",
@@ -67,7 +67,7 @@
         }
       },
       "auto_lock_mode": {
-        "name": "Autolock mode",
+        "name": "Auto-lock mode",
         "state": {
           "instant": "Instant",
           "off": "[%key:common::state::off%]",

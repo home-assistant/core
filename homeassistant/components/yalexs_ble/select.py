@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 from yalexs_ble import AutoLockMode, DoorStatus
 
 from homeassistant.components.select import SelectEntity
@@ -12,6 +14,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import YALEXSBLEConfigEntry
 from .entity import YALEXSBLEEntity
 from .models import YaleXSBLEData
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -59,12 +63,26 @@ class YaleXSBLEAutoLockModeSelect(YALEXSBLEEntity, SelectEntity):
     def current_option(self) -> str | None:
         """Retrieve the current auto lock mode value as a string."""
         if self._device.auto_lock is None:
+            _LOGGER.debug("%s: auto_lock is None", self._device.address)
             return None
         mode = self._device.auto_lock.mode
+        duration = self._device.auto_lock.duration
+        _LOGGER.debug(
+            "%s: current auto_lock mode=%s (%s), duration=%s",
+            self._device.address,
+            mode,
+            type(mode).__name__,
+            duration,
+        )
         try:
-            return AUTO_LOCK_MODE_TO_OPTION[mode]
+            option = AUTO_LOCK_MODE_TO_OPTION[mode]
         except KeyError as err:
             raise ValueError(f"Unknown AutoLockMode: {mode}") from err
+        else:
+            _LOGGER.debug(
+                "%s: mapped mode to option '%s'", self._device.address, option
+            )
+            return option
 
     async def async_select_option(self, option: str) -> None:
         """Change the auto lock mode."""
