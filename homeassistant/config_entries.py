@@ -1419,7 +1419,7 @@ class ConfigEntriesFlowManager(
             SOURCE_RECONFIGURE,
         } and "entry_id" not in context:
             raise HomeAssistantError(
-                f"Initialises a {source} flow without a link to the config entry"
+                f"Cannot initialize a {source} flow without a link to the config entry"
             )
 
         flow_id = ulid_util.ulid_now()
