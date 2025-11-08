@@ -200,6 +200,9 @@
       "current_with_channel_name": {
         "name": "{channel_name} current"
       },
+      "current_with_phase_name": {
+        "name": "Phase {phase_name} current"
+      },
       "detected_objects": {
         "name": "Detected objects",
         "unit_of_measurement": "objects"
@@ -290,6 +293,9 @@
       },
       "power_with_channel_name": {
         "name": "{channel_name} power"
+      },
+      "power_with_phase_name": {
+        "name": "Phase {phase_name} power"
       },
       "pulse_counter": {
         "name": "Pulse counter"
