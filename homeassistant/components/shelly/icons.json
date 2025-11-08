@@ -70,9 +70,6 @@
       }
     },
     "switch": {
-      "left_slot_boost": {
-        "default": "mdi:rocket-launch"
-      },
       "left_slot": {
         "default": "mdi:scent",
         "state": {
@@ -80,7 +77,7 @@
           "on": "mdi:scent"
         }
       },
-      "right_slot_boost": {
+      "left_slot_boost": {
         "default": "mdi:rocket-launch"
       },
       "right_slot": {
@@ -89,6 +86,9 @@
           "off": "mdi:scent-off",
           "on": "mdi:scent"
         }
+      },
+      "right_slot_boost": {
+        "default": "mdi:rocket-launch"
       },
       "valve_switch": {
         "default": "mdi:valve",
