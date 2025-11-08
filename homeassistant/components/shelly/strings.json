@@ -129,6 +129,20 @@
     }
   },
   "entity": {
+    "button": {
+      "calibrate": {
+        "name": "Calibrate"
+      },
+      "mute": {
+        "name": "Mute"
+      },
+      "self_test": {
+        "name": "Self test"
+      },
+      "unmute": {
+        "name": "Unmute"
+      }
+    },
     "climate": {
       "thermostat": {
         "state_attributes": {
