@@ -14,13 +14,25 @@ from homeassistant.components.event import (
     DOMAIN as EVENT_DOMAIN,
     EventDeviceClass,
 )
-from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNKNOWN
+from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from . import init_integration, inject_rpc_device_event, register_entity
+from . import (
+    init_integration,
+    inject_rpc_device_event,
+    patch_platforms,
+    register_entity,
+)
 
 DEVICE_BLOCK_ID = 4
+
+
+@pytest.fixture(autouse=True)
+def fixture_platforms():
+    """Limit platforms under test."""
+    with patch_platforms([Platform.EVENT]):
+        yield
 
 
 async def test_rpc_button(
