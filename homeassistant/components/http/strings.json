@@ -1,7 +1,11 @@
 {
   "issues": {
-    "server_host_may_break_hassio": {
-      "description": "The `server_host` configuration option in the HTTP integration is prone to break the communication between Home Assistant Core and Supervisor, and will be removed in a future release.\n\nIf you are using this option to bind Home Assistant to specific network interfaces, please remove it from your configuration. Home Assistant will automatically bind to all available interfaces by default.\n\nIf you have specific networking requirements, consider using firewall rules or other network configuration to control access to Home Assistant.",
+    "server_host_deprecated": {
+      "description": "The `server_host` configuration option in the HTTP integration is deprecated and will be removed.\n\nIf you are using this option to bind Home Assistant to specific network interfaces, please remove it from your configuration. Home Assistant will automatically bind to all available interfaces by default.\n\nIf you have specific networking requirements, consider using firewall rules or other network configuration to control access to Home Assistant.",
+      "title": "The `server_host` HTTP configuration option is deprecated"
+    },
+    "server_host_deprecated_hassio": {
+      "description": "The deprecated `server_host` configuration option in the HTTP integration is prone to break the communication between Home Assistant Core and Supervisor, and will be removed.\n\nIf you are using this option to bind Home Assistant to specific network interfaces, please remove it from your configuration. Home Assistant will automatically bind to all available interfaces by default.\n\nIf you have specific networking requirements, consider using firewall rules or other network configuration to control access to Home Assistant.",
       "title": "The `server_host` HTTP configuration may break Home Assistant Core - Supervisor communication"
     },
     "ssl_configured_without_configured_urls": {
