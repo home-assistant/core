@@ -46,15 +46,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: HiveConfigEntry) -> bool
     except HiveReauthRequired as err:
         raise ConfigEntryAuthFailed from err
 
-
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, devices['parent'][0]['device_id'])},
-        name=devices['parent'][0]['hiveName'],
-        model=devices['parent'][0]['deviceData']['model'],
-        sw_version=devices['parent'][0]['deviceData']['version'],
-        manufacturer=devices['parent'][0]['deviceData']['manufacturer'],
+        identifiers={(DOMAIN, devices["parent"][0]["device_id"])},
+        name=devices["parent"][0]["hiveName"],
+        model=devices["parent"][0]["deviceData"]["model"],
+        sw_version=devices["parent"][0]["deviceData"]["version"],
+        manufacturer=devices["parent"][0]["deviceData"]["manufacturer"],
     )
 
     await hass.config_entries.async_forward_entry_setups(
