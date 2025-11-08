@@ -70,10 +70,20 @@
       }
     },
     "switch": {
-      "cury_boost": {
+      "left_slot_boost": {
         "default": "mdi:rocket-launch"
       },
-      "cury_slot": {
+      "left_slot": {
+        "default": "mdi:scent",
+        "state": {
+          "off": "mdi:scent-off",
+          "on": "mdi:scent"
+        }
+      },
+      "right_slot_boost": {
+        "default": "mdi:rocket-launch"
+      },
+      "right_slot": {
         "default": "mdi:scent",
         "state": {
           "off": "mdi:scent-off",
