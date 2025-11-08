@@ -12,7 +12,7 @@
           "dry": "Support dry mode",
           "fan_only": "Support fan only mode",
           "swing_support": "Control swing mode",
-          "send_wakeup_prompt": "Send wakeup prompt"
+          "send_wakeup_prompt": "Send wakeup prompt (required with serial models)"
         },
         "data_description": {
           "host": "The hostname or IP address of your CoolMasterNet device."

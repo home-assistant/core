@@ -29,17 +29,6 @@ AVAILABLE_MODES = [
     HVACMode.FAN_ONLY.value,
 ]
 
-MODES_SCHEMA = {vol.Required(mode, default=True): bool for mode in AVAILABLE_MODES}
-
-DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_HOST): str,
-        **MODES_SCHEMA,
-        vol.Required(CONF_SWING_SUPPORT, default=False): bool,
-        vol.Required(CONF_SEND_WAKEUP_PROMPT, default=False): bool,
-    }
-)
-
 
 async def _validate_connection(host: str, send_wakeup_prompt: bool) -> bool:
     cool = CoolMasterNet(host, DEFAULT_PORT, send_initial_line_feed=send_wakeup_prompt)
@@ -51,6 +40,22 @@ class CoolmasterConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a Coolmaster config flow."""
 
     VERSION = 1
+
+    def _get_data_schema(self) -> vol.Schema:
+        MODES_SCHEMA = {
+            vol.Required(mode, default=True): bool for mode in AVAILABLE_MODES
+        }
+
+        schema_dict = {
+            vol.Required(CONF_HOST): str,
+            **MODES_SCHEMA,
+            vol.Required(CONF_SWING_SUPPORT, default=False): bool,
+        }
+
+        if self.show_advanced_options:
+            schema_dict[vol.Required(CONF_SEND_WAKEUP_PROMPT, default=False)] = bool
+
+        return vol.Schema(schema_dict)
 
     @callback
     def _async_get_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
@@ -72,8 +77,10 @@ class CoolmasterConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
+        data_schema = self._get_data_schema()
+
         if user_input is None:
-            return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA)
+            return self.async_show_form(step_id="user", data_schema=data_schema)
 
         errors = {}
 
@@ -90,7 +97,7 @@ class CoolmasterConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if errors:
             return self.async_show_form(
-                step_id="user", data_schema=DATA_SCHEMA, errors=errors
+                step_id="user", data_schema=data_schema, errors=errors
             )
 
         return self._async_get_entry(user_input)
