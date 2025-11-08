@@ -490,13 +490,11 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
         self._attr_unique_id = f"{super().unique_id}{description.key}"
         self._dpcode_wrapper = dpcode_wrapper
 
-        self._attr_native_max_value = dpcode_wrapper.integer_type_information.max_scaled
-        self._attr_native_min_value = dpcode_wrapper.integer_type_information.min_scaled
-        self._attr_native_step = dpcode_wrapper.integer_type_information.step_scaled
+        self._attr_native_max_value = dpcode_wrapper.type_information.max_scaled
+        self._attr_native_min_value = dpcode_wrapper.type_information.min_scaled
+        self._attr_native_step = dpcode_wrapper.type_information.step_scaled
         if description.native_unit_of_measurement is None:
-            self._attr_native_unit_of_measurement = (
-                dpcode_wrapper.integer_type_information.unit
-            )
+            self._attr_native_unit_of_measurement = dpcode_wrapper.type_information.unit
 
         # Logic to ensure the set device class and API received Unit Of Measurement
         # match Home Assistants requirements.
@@ -549,9 +547,7 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
                 {
                     "code": self._dpcode_wrapper.dpcode,
                     "value": (
-                        self._dpcode_wrapper.integer_type_information.scale_value_back(
-                            value
-                        )
+                        self._dpcode_wrapper.type_information.scale_value_back(value)
                     ),
                 }
             ]

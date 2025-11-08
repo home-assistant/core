@@ -156,53 +156,11 @@ class DPCodeBooleanWrapper(DPCodeWrapper):
 
 
 @dataclass(kw_only=True)
-class DPCodeEnumWrapper(DPCodeWrapper):
-    """Simple wrapper for EnumTypeData values."""
+class DPCodeTypeInformationWrapper[T: TypeInformation](DPCodeWrapper):
+    """Base DPCode wrapper with Type Information."""
 
-    enum_type_information: EnumTypeData
-
-    def read_device_status(self, device: CustomerDevice) -> str | None:
-        """Read the device value for the dpcode.
-
-        Values outside of the list defined by the Enum type information will
-        return None.
-        """
-        if (
-            raw_value := self._read_device_status_raw(device)
-        ) in self.enum_type_information.range:
-            return raw_value
-        return None
-
-    @classmethod
-    def find_dpcode(
-        cls,
-        device: CustomerDevice,
-        dpcodes: str | DPCode | tuple[DPCode, ...],
-        *,
-        prefer_function: bool = False,
-    ) -> Self | None:
-        """Find and return a DPCodeEnumWrapper for the given DP codes."""
-        if enum_type := find_dpcode(
-            device, dpcodes, dptype=DPType.ENUM, prefer_function=prefer_function
-        ):
-            return cls(dpcode=enum_type.dpcode, enum_type_information=enum_type)
-        return None
-
-
-@dataclass(kw_only=True)
-class DPCodeIntegerWrapper(DPCodeWrapper):
-    """Simple wrapper for IntegerTypeData values."""
-
-    integer_type_information: IntegerTypeData
-
-    def read_device_status(self, device: CustomerDevice) -> float | None:
-        """Read the device value for the dpcode.
-
-        Value will be scaled based on the Integer type information.
-        """
-        if (raw_value := self._read_device_status_raw(device)) is None:
-            return None
-        return raw_value / (10**self.integer_type_information.scale)
+    dptype: DPType = None  # type: ignore[assignment]
+    type_information: T
 
     @classmethod
     def find_dpcode(
@@ -213,11 +171,48 @@ class DPCodeIntegerWrapper(DPCodeWrapper):
         prefer_function: bool = False,
     ) -> Self | None:
         """Find and return a DPCodeIntegerWrapper for the given DP codes."""
-        if int_type := find_dpcode(
-            device, dpcodes, dptype=DPType.INTEGER, prefer_function=prefer_function
+        if type_information := find_dpcode(  # type: ignore[call-overload]
+            device, dpcodes, dptype=cls.dptype, prefer_function=prefer_function
         ):
-            return cls(dpcode=int_type.dpcode, integer_type_information=int_type)
+            return cls(
+                dpcode=type_information.dpcode, type_information=type_information
+            )
         return None
+
+
+@dataclass(kw_only=True)
+class DPCodeEnumWrapper(DPCodeTypeInformationWrapper[EnumTypeData]):
+    """Simple wrapper for EnumTypeData values."""
+
+    dptype = DPType.ENUM
+
+    def read_device_status(self, device: CustomerDevice) -> str | None:
+        """Read the device value for the dpcode.
+
+        Values outside of the list defined by the Enum type information will
+        return None.
+        """
+        if (
+            raw_value := self._read_device_status_raw(device)
+        ) in self.type_information.range:
+            return raw_value
+        return None
+
+
+@dataclass(kw_only=True)
+class DPCodeIntegerWrapper(DPCodeTypeInformationWrapper[IntegerTypeData]):
+    """Simple wrapper for IntegerTypeData values."""
+
+    dptype = DPType.INTEGER
+
+    def read_device_status(self, device: CustomerDevice) -> float | None:
+        """Read the device value for the dpcode.
+
+        Value will be scaled based on the Integer type information.
+        """
+        if (raw_value := self._read_device_status_raw(device)) is None:
+            return None
+        return raw_value / (10**self.type_information.scale)
 
 
 @overload
