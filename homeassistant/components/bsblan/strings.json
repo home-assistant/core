@@ -70,6 +70,15 @@
     }
   },
   "exceptions": {
+    "config_entry_not_loaded": {
+      "message": "The device `{device_name}` is not currently loaded or available"
+    },
+    "invalid_device_id": {
+      "message": "Invalid device ID: {device_id}"
+    },
+    "no_config_entry_for_device": {
+      "message": "No configuration entry found for device: {device_id}"
+    },
     "set_data_error": {
       "message": "An error occurred while sending the data to the BSB-Lan device"
     },
@@ -78,6 +87,9 @@
     },
     "set_preset_mode_error": {
       "message": "Can't set preset mode to {preset_mode} when HVAC mode is not set to auto"
+    },
+    "set_schedule_failed": {
+      "message": "Failed to set hot water schedule: {error}"
     },
     "set_temperature_error": {
       "message": "An error occurred while setting the temperature"
@@ -90,6 +102,22 @@
     },
     "setup_general_error": {
       "message": "An unknown error occurred while retrieving static device data"
+    }
+  },
+  "services": {
+    "set_hot_water_schedule": {
+      "description": "Set the hot water heating schedule for a BSB-Lan device.",
+      "fields": {
+        "device": {
+          "description": "The BSB-Lan device to configure.",
+          "name": "Device"
+        },
+        "schedule": {
+          "description": "Hot water schedule configuration. Each day can have time periods specified as strings in the format \"HH:MM-HH:MM HH:MM-HH:MM\" (e.g., \"06:00-08:00 17:00-21:00\" for morning and evening periods). Set a day to null to clear its schedule.",
+          "name": "Schedule"
+        }
+      },
+      "name": "Set hot water schedule"
     }
   }
 }
