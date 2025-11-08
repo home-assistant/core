@@ -11,7 +11,10 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.myuplink.const import DOMAIN, OAUTH2_TOKEN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_entry_oauth2_flow, device_registry as dr
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
+)
 from homeassistant.setup import async_setup_component
 
 from . import setup_integration
@@ -48,11 +51,8 @@ async def test_oauth2_implementation_unavailable(
     mock_config_entry.add_to_hass(hass)
 
     with patch(
-        (
-            "homeassistant.components.myuplink.config_flow."
-            "config_entry_oauth2_flow.async_get_config_entry_implementation"
-        ),
-        side_effect=config_entry_oauth2_flow.ImplementationUnavailableError,
+        f"homeassistant.components.{DOMAIN}.async_get_config_entry_implementation",
+        side_effect=ImplementationUnavailableError,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
