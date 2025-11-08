@@ -126,6 +126,13 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState]):
         await self.properties_api.status.refresh()
 
         self._last_home_update_attempt = dt_util.utcnow()
+
+        # This populates a cache of maps/rooms so we have the information
+        # even for maps that are inactive but is a no-op if we already have
+        # the information. This will cycle through all the available maps and
+        # requires the device to be idle. If the device is busy cleaning, then
+        # we'll retry later in `update_map` and in the mean time we won't have
+        # all map/room information.
         try:
             await self.properties_api.home.discover_home()
         except RoborockDeviceBusy:
