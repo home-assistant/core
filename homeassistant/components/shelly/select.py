@@ -71,8 +71,6 @@ class RpcSelect(ShellyRpcAttributeEntity, SelectEntity):
         if self.option_map:
             return self.option_map[self.attribute_value]
 
-        return self.attribute_value
-
     @rpc_call
     async def async_select_option(self, option: str) -> None:
         """Change the value."""
