@@ -54,6 +54,7 @@ from .const import (
     CONF_UPDATE_FREQUENCY_SECONDS,
     DEFAULT_HOST,
     DEFAULT_PORT,
+    DEFAULT_SIMPLE_NAMING,
     DEFAULT_UPDATE_FREQUENCY_SECONDS,
     DOMAIN,
 )
@@ -109,7 +110,8 @@ def _get_user_schema(defaults: MappingProxyType[str, Any] | None = None) -> vol.
                 )
             ),
             vol.Optional(
-                CONF_SIMPLE_NAMING, default=defaults.get(CONF_SIMPLE_NAMING, True)
+                CONF_SIMPLE_NAMING,
+                default=defaults.get(CONF_SIMPLE_NAMING, DEFAULT_SIMPLE_NAMING),
             ): bool,
             vol.Optional(
                 CONF_ROOT_TOPIC_PREFIX,

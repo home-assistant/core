@@ -1,6 +1,6 @@
-"""Constants for the victron integration."""
+"""Constants for the victron_mqtt integration."""
 
-DOMAIN = "victron"
+DOMAIN = "victron_mqtt"
 
 CONF_INSTALLATION_ID = "installation_id"
 CONF_MODEL = "model"
@@ -31,3 +31,7 @@ ATTR_VALUE = "value"
 # It has to be with value "On" to be on and "Off" to be off.
 SWITCH_ON = "On"
 SWITCH_OFF = "Off"
+
+# Integration specific values (custom / builtin Home Assistant)
+ENTITY_PREFIX = "victron"
+DEFAULT_SIMPLE_NAMING = True
