@@ -111,7 +111,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '15',
+    'state': '15.0',
   })
 # ---
 # name: test_multiple_devices_create_individual_sensors[sensor.room_1_energy-entry]
@@ -226,7 +226,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '15',
+    'state': '15.0',
   })
 # ---
 # name: test_multiple_devices_create_individual_sensors[sensor.room_2_energy-entry]
@@ -341,7 +341,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '18',
+    'state': '18.0',
   })
 # ---
 # name: test_sensor_cloud[sensor.room_1_energy-entry]
