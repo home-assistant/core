@@ -1,5 +1,12 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "Already configured"
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to host",
+      "unknown": "Unknown failure"
+    },
     "step": {
       "user": {
         "data": {
