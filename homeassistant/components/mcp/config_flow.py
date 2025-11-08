@@ -155,34 +155,24 @@ async def async_autodiscover_transport(mcp_server_url: str) -> tuple[str, str]:
     except httpx.HTTPStatusError as error:
         if 400 <= error.response.status_code < 500:
             # Try SSE transport (old HTTP+SSE transport)
-            try:
-                async with httpx.AsyncClient(follow_redirects=True) as client:
-                    response = await client.get(
-                        mcp_server_url,
-                        headers={"Accept": "text/event-stream"},
-                        timeout=5,
-                    )
-                    response.raise_for_status()
-                    if response.headers.get("content-type", "").startswith(
-                        "text/event-stream"
-                    ):
-                        final_url = str(response.url)
-                        _LOGGER.debug("Transport autodiscovery: SSE transport detected")
-                        return TRANSPORT_SSE, final_url
-            except (httpx.HTTPError, httpx.TimeoutException) as sse_error:
-                _LOGGER.debug(
-                    "Transport autodiscovery: SSE detection failed: %s", sse_error
+            async with httpx.AsyncClient(follow_redirects=True) as client:
+                response = await client.get(
+                    mcp_server_url,
+                    headers={"Accept": "text/event-stream"},
+                    timeout=5,
                 )
-        # If both methods fail, fall back to default
-        _LOGGER.debug(
-            "Transport autodiscovery: Failed to detect transport, using default SSE"
-        )
-        return TRANSPORT_SSE, mcp_server_url
-    except (httpx.HTTPError, httpx.TimeoutException) as error:
-        _LOGGER.debug(
-            "Transport autodiscovery: Network error, using default SSE: %s", error
-        )
-        return TRANSPORT_SSE, mcp_server_url
+                response.raise_for_status()
+                if response.headers.get("content-type", "").startswith(
+                    "text/event-stream"
+                ):
+                    final_url = str(response.url)
+                    _LOGGER.debug("Transport autodiscovery: SSE transport detected")
+                    return TRANSPORT_SSE, final_url
+    # If both methods fail, fall back to default
+    _LOGGER.debug(
+        "Transport autodiscovery: Failed to detect transport, using default SSE"
+    )
+    return TRANSPORT_SSE, mcp_server_url
 
 
 async def validate_input(
