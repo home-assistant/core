@@ -133,4 +133,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> bo
 
 async def async_unload_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> bool:
     """Unload BSBLAN config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+    # Remove services only if this is the last loaded entry for this integration
+    if unload_ok and not hass.config_entries.async_loaded_entries(DOMAIN):
+        for service_name in hass.services.async_services()[DOMAIN]:
+            hass.services.async_remove(DOMAIN, service_name)
+
+    return unload_ok
