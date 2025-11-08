@@ -144,13 +144,14 @@ class SwitcherPollingDataUpdateCoordinator(
                         raise update_coordinator.UpdateFailed(
                             f"Failed to get state from device at {self._ip_address}"
                         )
+                    # MAC address not available via TCP, use placeholder
                     return SwitcherThermostat(
                         device_type=self._device_type,
                         device_state=response.state,
                         device_id=self._device_id,
                         device_key=self._device_key,
                         ip_address=self._ip_address,
-                        mac_address="00:00:00:00:00:00",
+                        mac_address="",
                         name=self.name,
                         token_needed=self._device_type.token_needed,
                         mode=response.mode,
@@ -177,7 +178,7 @@ class SwitcherPollingDataUpdateCoordinator(
                         device_id=self._device_id,
                         device_key=self._device_key,
                         ip_address=self._ip_address,
-                        mac_address="00:00:00:00:00:00",
+                        mac_address="",
                         name=self.name,
                         token_needed=self._device_type.token_needed,
                         position=[response.position],
@@ -197,7 +198,7 @@ class SwitcherPollingDataUpdateCoordinator(
                         device_id=self._device_id,
                         device_key=self._device_key,
                         ip_address=self._ip_address,
-                        mac_address="00:00:00:00:00:00",
+                        mac_address="",
                         name=self.name,
                         token_needed=self._device_type.token_needed,
                         light=[response.state],
@@ -215,7 +216,7 @@ class SwitcherPollingDataUpdateCoordinator(
                         device_id=self._device_id,
                         device_key=self._device_key,
                         ip_address=self._ip_address,
-                        mac_address="00:00:00:00:00:00",
+                        mac_address="",
                         name=self.name,
                         token_needed=self._device_type.token_needed,
                         power_consumption=response.power_consumption,
@@ -234,7 +235,7 @@ class SwitcherPollingDataUpdateCoordinator(
                     device_id=self._device_id,
                     device_key=self._device_key,
                     ip_address=self._ip_address,
-                    mac_address="00:00:00:00:00:00",
+                    mac_address="",
                     name=self.name,
                     token_needed=self._device_type.token_needed,
                     remaining_time=response.time_left,
@@ -261,15 +262,20 @@ class SwitcherPollingDataUpdateCoordinator(
     @property
     def mac_address(self) -> str:
         """Switcher device mac address."""
-        return self.data.mac_address if self.data else "00:00:00:00:00:00"
+        return self.data.mac_address if self.data else ""
 
     @callback
     def async_setup(self) -> None:
         """Set up the coordinator."""
         dev_reg = dr.async_get(self.hass)
+        # Don't register MAC connection for manual devices (not available via TCP)
+        connections = set()
+        if self.mac_address:
+            connections.add((dr.CONNECTION_NETWORK_MAC, self.mac_address))
+
         dev_reg.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
-            connections={(dr.CONNECTION_NETWORK_MAC, self.mac_address)},
+            connections=connections,
             identifiers={(DOMAIN, self.device_id)},
             manufacturer="Switcher",
             name=self.name,

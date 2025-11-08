@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import logging
 
-from aioswitcher.api import SwitcherApi
 from aioswitcher.bridge import SwitcherBridge
 from aioswitcher.device import DeviceType, SwitcherBase
 
@@ -24,6 +23,7 @@ from .coordinator import (
     SwitcherDataUpdateCoordinator,
     SwitcherPollingDataUpdateCoordinator,
 )
+from .utils import async_test_device_connection
 
 PLATFORMS = [
     Platform.BUTTON,
@@ -114,21 +114,15 @@ async def async_setup_manual_entry(
     # Convert device type name to DeviceType enum (e.g., "MINI" -> DeviceType.MINI)
     device_type = DeviceType[device_type_name]
 
-    # Test connection to device
+    # Test connection to device using utility function
     try:
-        async with SwitcherApi(
-            device_type,
+        await async_test_device_connection(
             ip_address,
             device_id,
             device_key,
-            token,
-        ) as api:
-            response = await api.get_state()
-
-        if not response or not response.successful:
-            raise ConfigEntryNotReady(f"Failed to connect to device at {ip_address}")
-
-    except (TimeoutError, OSError, RuntimeError) as err:
+            device_type,
+        )
+    except (TimeoutError, ValueError) as err:
         raise ConfigEntryNotReady(
             f"Unable to connect to Switcher device at {ip_address}"
         ) from err
