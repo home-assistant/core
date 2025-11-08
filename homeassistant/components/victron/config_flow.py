@@ -73,9 +73,12 @@ def _get_user_schema(defaults: MappingProxyType[str, Any] | None = None) -> vol.
     if defaults is None:
         defaults = MappingProxyType({})
     # Ensure operation_mode default is a string value (not an Enum instance)
-    op_default = defaults.get(CONF_OPERATION_MODE, OperationMode.FULL.value)
-    if isinstance(op_default, OperationMode):
-        op_default = op_default.value
+    op_mode_default = defaults.get(CONF_OPERATION_MODE, OperationMode.FULL.value)
+    op_default = (
+        op_mode_default.value
+        if isinstance(op_mode_default, OperationMode)
+        else op_mode_default
+    )
 
     return vol.Schema(
         {
@@ -217,10 +220,7 @@ class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 self._abort_if_unique_id_configured()
 
-                if self.friendlyName:
-                    title = self.friendlyName
-                else:
-                    title = f"Victron OS {unique_id}"
+                title = self.friendlyName or f"Victron OS {unique_id}"
                 return self.async_create_entry(title=title, data=data)
 
         if len(errors) > 0:
