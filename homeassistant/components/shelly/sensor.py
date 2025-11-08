@@ -30,12 +30,12 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfFrequency,
     UnitOfPower,
-    UnitOfPrecipitationDepth,
     UnitOfPressure,
     UnitOfTemperature,
     UnitOfTime,
     UnitOfVolume,
     UnitOfVolumeFlowRate,
+    UnitOfVolumetricFlux,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -1465,9 +1465,9 @@ RPC_SENSORS: Final = {
     "number_last_precipitation": RpcSensorDescription(
         key="number",
         sub_key="value",
-        translation_key="rainfall_last_24h",
-        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
-        device_class=SensorDeviceClass.PRECIPITATION,
+        translation_key="rainfall",
+        native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_DAY,
+        device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
         role="last_precipitation",
         removal_condition=lambda config, _s, _k: not config.get("service:0", {}).get(
             "weather_api", False

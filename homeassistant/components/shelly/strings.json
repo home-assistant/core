@@ -315,8 +315,8 @@
       "pulse_counter_with_channel_name": {
         "name": "{channel_name} pulse counter"
       },
-      "rainfall_last_24h": {
-        "name": "Rainfall last 24h"
+      "rainfall": {
+        "name": "Rainfall"
       },
       "right_slot_level": {
         "name": "Right slot level"

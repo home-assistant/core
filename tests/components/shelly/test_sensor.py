@@ -2025,7 +2025,7 @@ async def test_shelly_irrigation_weather_sensors(
 
     config_entry = await init_integration(hass, gen=3)
 
-    for entity in ("average_temperature", "rainfall_last_24h"):
+    for entity in ("average_temperature", "rainfall"):
         entity_id = f"{SENSOR_DOMAIN}.test_name_{entity}"
 
         state = hass.states.get(entity_id)
@@ -2039,6 +2039,6 @@ async def test_shelly_irrigation_weather_sensors(
     await hass.config_entries.async_reload(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    for entity in ("average_temperature", "rainfall_last_24h"):
+    for entity in ("average_temperature", "rainfall"):
         entity_id = f"{SENSOR_DOMAIN}.test_name_{entity}"
         assert hass.states.get(entity_id) is None
