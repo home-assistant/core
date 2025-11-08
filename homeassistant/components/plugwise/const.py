@@ -12,7 +12,10 @@ DOMAIN: Final = "plugwise"
 
 LOGGER = logging.getLogger(__package__)
 
+ANNA_WITH_ADAM: Final = "anna_with_adam"
 API: Final = "api"
+AVAILABLE: Final = "available"
+DEV_CLASS: Final = "dev_class"
 FLOW_SMILE: Final = "smile (Adam/Anna/P1)"
 FLOW_STRETCH: Final = "stretch (Stretch)"
 FLOW_TYPE: Final = "flow_type"
@@ -21,8 +24,11 @@ LOCATION: Final = "location"
 PW_TYPE: Final = "plugwise_type"
 REBOOT: Final = "reboot"
 SMILE: Final = "smile"
+SMILE_OPEN_THERM: Final = "smile_open_therm"
+SMILE_THERMO: Final = "smile_thermo"
 STRETCH: Final = "stretch"
 STRETCH_USERNAME: Final = "stretch"
+UNKNOWN_SMILE: Final = "Unknown Smile"
 
 PLATFORMS: Final[list[str]] = [
     Platform.BINARY_SENSOR,

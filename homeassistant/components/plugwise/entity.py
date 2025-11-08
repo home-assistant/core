@@ -12,7 +12,7 @@ from homeassistant.helpers.device_registry import (
 )
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import AVAILABLE, DOMAIN
 from .coordinator import PlugwiseDataUpdateCoordinator
 
 
@@ -56,7 +56,7 @@ class PlugwiseEntity(CoordinatorEntity[PlugwiseDataUpdateCoordinator]):
         if device_id != coordinator.api.gateway_id:
             self._attr_device_info.update(
                 {
-                    ATTR_NAME: data.get("name"),
+                    ATTR_NAME: data.get(ATTR_NAME),
                     ATTR_VIA_DEVICE: (
                         DOMAIN,
                         str(self.coordinator.api.gateway_id),
@@ -69,7 +69,7 @@ class PlugwiseEntity(CoordinatorEntity[PlugwiseDataUpdateCoordinator]):
         """Return if entity is available."""
         return (
             self._dev_id in self.coordinator.data
-            and ("available" not in self.device or self.device["available"] is True)
+            and (AVAILABLE not in self.device or self.device[AVAILABLE] is True)
             and super().available
         )
 
