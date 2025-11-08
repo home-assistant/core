@@ -109,7 +109,7 @@ def _get_user_schema(defaults: MappingProxyType[str, Any] | None = None) -> vol.
                 )
             ),
             vol.Optional(
-                CONF_SIMPLE_NAMING, default=defaults.get(CONF_SIMPLE_NAMING, False)
+                CONF_SIMPLE_NAMING, default=defaults.get(CONF_SIMPLE_NAMING, True)
             ): bool,
             vol.Optional(
                 CONF_ROOT_TOPIC_PREFIX,
