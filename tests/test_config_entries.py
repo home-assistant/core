@@ -5984,7 +5984,7 @@ async def test_reauth_reconfigure_missing_entry(
 
     with pytest.raises(
         HomeAssistantError,
-        match=f"Initialises a {source} flow without a link to the config entry",
+        match=f"Cannot initialize a {source} flow without a link to the config entry",
     ):
         await manager.flow.async_init("test", context={"source": source})
     await hass.async_block_till_done()
