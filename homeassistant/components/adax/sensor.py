@@ -106,8 +106,8 @@ class AdaxSensor(CoordinatorEntity[AdaxCloudCoordinator], SensorEntity):
         )
 
     @property
-    def native_value(self) -> int:
+    def native_value(self) -> int | float | None:
         """Return the native value of the sensor."""
-        return int(
-            self.coordinator.data[self._device_id][self.entity_description.data_key]
+        return self.coordinator.data[self._device_id].get(
+            self.entity_description.data_key
         )
