@@ -162,6 +162,23 @@
         }
       }
     },
+    "number": {
+      "external_temperature": {
+        "name": "External temperature"
+      },
+      "left_slot_intensity": {
+        "name": "Left slot intensity"
+      },
+      "position": {
+        "name": "Position"
+      },
+      "right_slot_intensity": {
+        "name": "Right slot intensity"
+      },
+      "valve_position": {
+        "name": "Valve position"
+      }
+    },
     "sensor": {
       "adc": {
         "name": "ADC"

@@ -12,6 +12,7 @@ from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
 
 from homeassistant.components.number import (
     DOMAIN as NUMBER_PLATFORM,
+    NumberDeviceClass,
     NumberEntity,
     NumberEntityDescription,
     NumberExtraStoredData,
@@ -107,6 +108,9 @@ class RpcNumber(ShellyRpcAttributeEntity, NumberEntity):
         if description.mode_fn is not None:
             self._attr_mode = description.mode_fn(coordinator.device.config[key])
 
+        if hasattr(self, "_attr_name") and description.role != ROLE_GENERIC:
+            delattr(self, "_attr_name")
+
     @property
     def native_value(self) -> float | None:
         """Return value of number."""
@@ -181,7 +185,6 @@ NUMBERS: dict[tuple[str, str], BlockNumberDescription] = {
     ("device", "valvePos"): BlockNumberDescription(
         key="device|valvepos",
         translation_key="valve_position",
-        name="Valve position",
         native_unit_of_measurement=PERCENTAGE,
         available=lambda block: cast(int, block.valveError) != 1,
         entity_category=EntityCategory.CONFIG,
@@ -200,12 +203,12 @@ RPC_NUMBERS: Final = {
         key="blutrv",
         sub_key="current_C",
         translation_key="external_temperature",
-        name="External temperature",
         native_min_value=-50,
         native_max_value=50,
         native_step=0.1,
         mode=NumberMode.BOX,
         entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         method="blu_trv_set_external_temperature",
         entity_class=RpcBluTrvExtTempNumber,
@@ -229,6 +232,7 @@ RPC_NUMBERS: Final = {
     "number_current_limit": RpcNumberDescription(
         key="number",
         sub_key="value",
+        device_class=NumberDeviceClass.CURRENT,
         max_fn=lambda config: config["max"],
         min_fn=lambda config: config["min"],
         mode_fn=lambda config: NumberMode.SLIDER,
@@ -241,6 +245,7 @@ RPC_NUMBERS: Final = {
     "number_position": RpcNumberDescription(
         key="number",
         sub_key="value",
+        translation_key="position",
         entity_registry_enabled_default=False,
         max_fn=lambda config: config["max"],
         min_fn=lambda config: config["min"],
@@ -254,6 +259,7 @@ RPC_NUMBERS: Final = {
     "number_target_humidity": RpcNumberDescription(
         key="number",
         sub_key="value",
+        device_class=NumberDeviceClass.HUMIDITY,
         entity_registry_enabled_default=False,
         max_fn=lambda config: config["max"],
         min_fn=lambda config: config["min"],
@@ -267,6 +273,7 @@ RPC_NUMBERS: Final = {
     "number_target_temperature": RpcNumberDescription(
         key="number",
         sub_key="value",
+        device_class=NumberDeviceClass.TEMPERATURE,
         entity_registry_enabled_default=False,
         max_fn=lambda config: config["max"],
         min_fn=lambda config: config["min"],
@@ -281,7 +288,6 @@ RPC_NUMBERS: Final = {
         key="blutrv",
         sub_key="pos",
         translation_key="valve_position",
-        name="Valve position",
         native_min_value=0,
         native_max_value=100,
         native_step=1,
@@ -295,7 +301,7 @@ RPC_NUMBERS: Final = {
     "left_slot_intensity": RpcNumberDescription(
         key="cury",
         sub_key="slots",
-        name="Left slot intensity",
+        translation_key="left_slot_intensity",
         value=lambda status, _: status["left"]["intensity"],
         native_min_value=0,
         native_max_value=100,
@@ -311,7 +317,7 @@ RPC_NUMBERS: Final = {
     "right_slot_intensity": RpcNumberDescription(
         key="cury",
         sub_key="slots",
-        name="Right slot intensity",
+        translation_key="right_slot_intensity",
         value=lambda status, _: status["right"]["intensity"],
         native_min_value=0,
         native_max_value=100,
@@ -401,6 +407,9 @@ class BlockSleepingNumber(ShellySleepingBlockAttributeEntity, RestoreNumber):
         """Initialize the sleeping sensor."""
         self.restored_data: NumberExtraStoredData | None = None
         super().__init__(coordinator, block, attribute, description, entry)
+
+        if hasattr(self, "_attr_name"):
+            delattr(self, "_attr_name")
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
