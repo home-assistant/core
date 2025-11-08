@@ -2011,6 +2011,8 @@ _SCRIPT_STOP_SCHEMA = vol.Schema(
 _SCRIPT_SEQUENCE_SCHEMA = vol.Schema(
     {
         **SCRIPT_ACTION_BASE_SCHEMA,
+        # The frontend stores data here. Don't use in core.
+        vol.Remove("metadata"): dict,
         vol.Required(CONF_SEQUENCE): SCRIPT_SCHEMA,
     }
 )
