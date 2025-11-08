@@ -88,13 +88,14 @@ async def async_test_device_connection(
             err,
         )
         raise ValueError("Invalid device credentials or device type") from err
-    else:
-        if not response or not response.successful:
-            _LOGGER.error("Device at %s returned unsuccessful response", ip_address)
-            raise ConnectionError(f"Failed to get state from device at {ip_address}")
 
-        _LOGGER.info("Successfully connected to device at %s", ip_address)
-        return response
+    # Process response outside try block
+    if not response or not response.successful:
+        _LOGGER.error("Device at %s returned unsuccessful response", ip_address)
+        raise ConnectionError(f"Failed to get state from device at {ip_address}")
+
+    _LOGGER.info("Successfully connected to device at %s", ip_address)
+    return response
 
 
 @singleton.singleton("switcher_breeze_remote_manager")

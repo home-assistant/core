@@ -12,7 +12,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_TOKEN, CONF_USERNAME
-from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
@@ -146,18 +145,31 @@ class SwitcherFlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            try:
-                # Get the selected device type by name (e.g., "MINI")
-                device_type_name = user_input[CONF_DEVICE_TYPE]
-                device_type = DeviceType[device_type_name]
+            # Get the selected device type by name (e.g., "MINI")
+            device_type_name = user_input[CONF_DEVICE_TYPE]
+            device_type = DeviceType[device_type_name]
 
+            # Test connection (only wrap exception-prone code)
+            try:
                 response = await async_test_device_connection(
                     user_input[CONF_HOST],
                     user_input[CONF_DEVICE_ID],
                     user_input[CONF_DEVICE_KEY],
                     device_type,
                 )
-
+            except TimeoutError:
+                _LOGGER.error("Network timeout connecting to device")
+                errors["base"] = "cannot_connect"
+            except ValueError:
+                _LOGGER.error(
+                    "Authentication failed - invalid credentials or device type"
+                )
+                errors["base"] = "invalid_auth"
+            except Exception:
+                _LOGGER.exception("Unexpected exception during manual configuration")
+                errors["base"] = "unknown"
+            else:
+                # Process successful response outside try block
                 self.manual_device_data = {
                     CONF_HOST: user_input[CONF_HOST],
                     CONF_DEVICE_ID: user_input[CONF_DEVICE_ID],
@@ -172,20 +184,6 @@ class SwitcherFlowHandler(ConfigFlow, domain=DOMAIN):
                     return await self.async_step_credentials()
 
                 return await self._create_entry()
-
-            except AbortFlow:
-                raise
-            except TimeoutError:
-                _LOGGER.error("Network timeout connecting to device")
-                errors["base"] = "cannot_connect"
-            except ValueError:
-                _LOGGER.error(
-                    "Authentication failed - invalid credentials or device type"
-                )
-                errors["base"] = "invalid_auth"
-            except Exception:
-                _LOGGER.exception("Unexpected exception during manual configuration")
-                errors["base"] = "unknown"
 
         return self.async_show_form(
             step_id="manual",

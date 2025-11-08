@@ -122,7 +122,7 @@ async def async_setup_manual_entry(
             device_key,
             device_type,
         )
-    except (TimeoutError, ValueError) as err:
+    except (TimeoutError, ValueError, ConnectionError) as err:
         raise ConfigEntryNotReady(
             f"Unable to connect to Switcher device at {ip_address}"
         ) from err
