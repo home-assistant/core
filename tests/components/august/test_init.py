@@ -20,10 +20,12 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
-    config_entry_oauth2_flow,
     device_registry as dr,
     entity_registry as er,
     issue_registry as ir,
+)
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
 )
 from homeassistant.setup import async_setup_component
 
@@ -295,8 +297,8 @@ async def test_oauth_implementation_not_available(hass: HomeAssistant) -> None:
     entry = await mock_august_config_entry(hass)
 
     with patch(
-        "homeassistant.components.august.config_entry_oauth2_flow.async_get_config_entry_implementation",
-        side_effect=config_entry_oauth2_flow.ImplementationUnavailableError,
+        "homeassistant.components.august.async_get_config_entry_implementation",
+        side_effect=ImplementationUnavailableError,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
