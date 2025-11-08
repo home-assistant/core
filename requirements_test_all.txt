@@ -1281,7 +1281,7 @@ motionblindsble==0.1.3
 motioneye-client==0.3.14
 
 # homeassistant.components.bang_olufsen
-mozart-api==4.1.1.116.4
+mozart-api==5.1.0.247.1
 
 # homeassistant.components.mullvad
 mullvad-api==1.0.0
