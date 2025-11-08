@@ -7,7 +7,10 @@ import pytest
 from homeassistant.components.yolink import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_entry_oauth2_flow, device_registry as dr
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
+)
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -50,8 +53,8 @@ async def test_oauth_implementation_not_available(
     assert await async_setup_component(hass, "cloud", {})
 
     with patch(
-        "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
-        side_effect=config_entry_oauth2_flow.ImplementationUnavailableError,
+        "homeassistant.components.yolink.async_get_config_entry_implementation",
+        side_effect=ImplementationUnavailableError,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
