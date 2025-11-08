@@ -33,10 +33,10 @@
         "data_description": {
           "host": "The IP address of your Switcher device",
           "device_id": "6-character hex ID",
-          "device_key": "2-character hex key (example: '1b', '00', '01')",
+          "device_key": "2-character hex key (example: '1b')",
           "device_type": "Select your Switcher device model"
         },
-        "description": "Manual configuration for cross-subnet devices. To get device ID and key: 1) Temporarily connect to the same network as your Switcher, 2) Use automatic discovery to add it, 3) Go to device info to note the device ID and key values, 4) Remove that entry, 5) Use manual configuration with those values from your normal network."
+        "description": "Configure a Switcher device using its IP address. Device ID and key can be obtained via automatic discovery. See documentation for details."
       },
       "credentials": {
         "data": {

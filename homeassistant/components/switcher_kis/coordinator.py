@@ -125,7 +125,6 @@ class SwitcherPollingDataUpdateCoordinator(
         self._device_key = device_key
         self._device_type = device_type
         self.token = token
-        self.data: SwitcherBase | None = None
 
     async def _async_update_data(self) -> SwitcherBase:
         """Fetch data from device via polling."""
