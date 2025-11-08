@@ -393,6 +393,11 @@
       "water_temperature": {
         "name": "Water temperature"
       }
+    },
+    "update": {
+      "beta_firmware": {
+        "name": "Beta firmware"
+      }
     }
   },
   "exceptions": {
