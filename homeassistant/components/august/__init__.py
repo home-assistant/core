@@ -42,7 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AugustConfigEntry) -> bo
                 hass, entry
             )
         )
-    except ValueError as err:
+    except config_entry_oauth2_flow.ImplementationUnavailableError as err:
         raise ConfigEntryNotReady("OAuth implementation not available") from err
     oauth_session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
     august_gateway = AugustGateway(Path(hass.config.config_dir), session, oauth_session)
