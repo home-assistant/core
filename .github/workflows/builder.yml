@@ -88,6 +88,10 @@ jobs:
       fail-fast: false
       matrix:
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
+        exclude:
+          - arch: armv7
+          - arch: armhf
+          - arch: i386
     steps:
       - name: Checkout the repository
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
@@ -162,18 +166,6 @@ jobs:
             sed -i "s|home-assistant-intents==.*||" requirements_all.txt
           fi
 
-      - name: Adjustments for armhf
-        if: matrix.arch == 'armhf'
-        run: |
-          # Pandas has issues building on armhf, it is expected they
-          # will drop the platform in the near future (they consider it
-          # "flimsy" on 386). The following packages depend on pandas,
-          # so we comment them out.
-          sed -i "s|env-canada|# env-canada|g" requirements_all.txt
-          sed -i "s|noaa-coops|# noaa-coops|g" requirements_all.txt
-          sed -i "s|pyezviz|# pyezviz|g" requirements_all.txt
-          sed -i "s|pykrakenapi|# pykrakenapi|g" requirements_all.txt
-
       - name: Download translations
         uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
         with:
@@ -226,19 +218,11 @@ jobs:
           - odroid-c4
           - odroid-m1
           - odroid-n2
-          - odroid-xu
-          - qemuarm
           - qemuarm-64
-          - qemux86
           - qemux86-64
-          - raspberrypi
-          - raspberrypi2
-          - raspberrypi3
           - raspberrypi3-64
-          - raspberrypi4
           - raspberrypi4-64
           - raspberrypi5-64
-          - tinker
           - yellow
           - green
     steps:
@@ -297,6 +281,7 @@ jobs:
           key-description: "Home Assistant Core"
           version: ${{ needs.init.outputs.version }}
           channel: ${{ needs.init.outputs.channel }}
+          exclude-list: '["odroid-xu","qemuarm","qemux86","raspberrypi","raspberrypi2","raspberrypi3","raspberrypi4","tinker"]'
 
       - name: Update version file (stable -> beta)
         if: needs.init.outputs.channel == 'stable'
@@ -306,6 +291,7 @@ jobs:
           key-description: "Home Assistant Core"
           version: ${{ needs.init.outputs.version }}
           channel: beta
+          exclude-list: '["odroid-xu","qemuarm","qemux86","raspberrypi","raspberrypi2","raspberrypi3","raspberrypi4","tinker"]'
 
   publish_container:
     name: Publish meta container for ${{ matrix.registry }}
@@ -357,26 +343,11 @@ jobs:
 
             docker manifest create "${registry}/home-assistant:${tag_l}" \
               "${registry}/amd64-homeassistant:${tag_r}" \
-              "${registry}/i386-homeassistant:${tag_r}" \
-              "${registry}/armhf-homeassistant:${tag_r}" \
-              "${registry}/armv7-homeassistant:${tag_r}" \
               "${registry}/aarch64-homeassistant:${tag_r}"
 
             docker manifest annotate "${registry}/home-assistant:${tag_l}" \
               "${registry}/amd64-homeassistant:${tag_r}" \
               --os linux --arch amd64
-
-            docker manifest annotate "${registry}/home-assistant:${tag_l}" \
-              "${registry}/i386-homeassistant:${tag_r}" \
-              --os linux --arch 386
-
-            docker manifest annotate "${registry}/home-assistant:${tag_l}" \
-              "${registry}/armhf-homeassistant:${tag_r}" \
-              --os linux --arch arm --variant=v6
-
-            docker manifest annotate "${registry}/home-assistant:${tag_l}" \
-              "${registry}/armv7-homeassistant:${tag_r}" \
-              --os linux --arch arm --variant=v7
 
             docker manifest annotate "${registry}/home-assistant:${tag_l}" \
               "${registry}/aarch64-homeassistant:${tag_r}" \
@@ -405,23 +376,14 @@ jobs:
 
           # Pull images from github container registry and verify signature
           docker pull "ghcr.io/home-assistant/amd64-homeassistant:${{ needs.init.outputs.version }}"
-          docker pull "ghcr.io/home-assistant/i386-homeassistant:${{ needs.init.outputs.version }}"
-          docker pull "ghcr.io/home-assistant/armhf-homeassistant:${{ needs.init.outputs.version }}"
-          docker pull "ghcr.io/home-assistant/armv7-homeassistant:${{ needs.init.outputs.version }}"
           docker pull "ghcr.io/home-assistant/aarch64-homeassistant:${{ needs.init.outputs.version }}"
 
           validate_image "ghcr.io/home-assistant/amd64-homeassistant:${{ needs.init.outputs.version }}"
-          validate_image "ghcr.io/home-assistant/i386-homeassistant:${{ needs.init.outputs.version }}"
-          validate_image "ghcr.io/home-assistant/armhf-homeassistant:${{ needs.init.outputs.version }}"
-          validate_image "ghcr.io/home-assistant/armv7-homeassistant:${{ needs.init.outputs.version }}"
           validate_image "ghcr.io/home-assistant/aarch64-homeassistant:${{ needs.init.outputs.version }}"
 
           if [[ "${{ matrix.registry }}" ==  "docker.io/homeassistant" ]]; then
             # Upload images to dockerhub
             push_dockerhub "amd64-homeassistant" "${{ needs.init.outputs.version }}"
-            push_dockerhub "i386-homeassistant" "${{ needs.init.outputs.version }}"
-            push_dockerhub "armhf-homeassistant" "${{ needs.init.outputs.version }}"
-            push_dockerhub "armv7-homeassistant" "${{ needs.init.outputs.version }}"
             push_dockerhub "aarch64-homeassistant" "${{ needs.init.outputs.version }}"
           fi
 

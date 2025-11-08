@@ -11,6 +11,11 @@
         "default": "mdi:account"
       }
     },
+    "media_player": {
+      "xbox": {
+        "default": "mdi:microsoft-xbox"
+      }
+    },
     "sensor": {
       "follower": {
         "default": "mdi:account-arrow-left"
@@ -18,11 +23,21 @@
       "following": {
         "default": "mdi:account-arrow-right"
       },
+      "friends": {
+        "default": "mdi:account-heart"
+      },
       "gamer_score": {
         "default": "mdi:alpha-g-circle"
       },
       "last_online": {
         "default": "mdi:account-clock"
+      },
+      "now_playing": {
+        "default": "mdi:microsoft-xbox-controller",
+        "state": {
+          "unavailable": "mdi:microsoft-xbox-controller-off",
+          "unknown": "mdi:microsoft-xbox-controller-off"
+        }
       },
       "status": {
         "default": "mdi:message-text-outline"
