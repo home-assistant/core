@@ -128,7 +128,6 @@ async def async_setup_entry(
     )
 
 
-
 class ThermoProBluetoothSensorEntity(
     PassiveBluetoothProcessorEntity[
         PassiveBluetoothDataProcessor[float | int | None, SensorUpdate]
