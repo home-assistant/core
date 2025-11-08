@@ -65,11 +65,10 @@ class RpcSelect(ShellyRpcAttributeEntity, SelectEntity):
     @property
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
-        if not isinstance(self.attribute_value, str):
-            return None
-
-        if self.option_map:
+        if isinstance(self.attribute_value, str) and self.option_map:
             return self.option_map[self.attribute_value]
+
+        return None
 
     @rpc_call
     async def async_select_option(self, option: str) -> None:
