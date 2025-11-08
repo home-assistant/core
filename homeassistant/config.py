@@ -131,8 +131,11 @@ class IntegrationConfigInfo:
 
 def get_default_config_dir() -> str:
     """Put together the default configuration directory based on the OS."""
+    config_dirname = CONFIG_DIR_NAME
+    if "SUPERVISOR" in os.environ or is_docker_env():
+        config_dirname = HOMEASSISTANT_DOMAIN
     data_dir = os.path.expanduser("~")
-    return os.path.join(data_dir, CONFIG_DIR_NAME)
+    return os.path.join(data_dir, config_dirname)
 
 
 async def async_ensure_config_exists(hass: HomeAssistant) -> bool:
