@@ -88,14 +88,14 @@ BUTTONS: Final[list[ShellyButtonDescription[Any]]] = [
     ),
     ShellyButtonDescription[ShellyBlockCoordinator](
         key="mute",
-        translation_key="mute",
+        translation_key="mute_alarm",
         entity_category=EntityCategory.CONFIG,
         press_action="trigger_shelly_gas_mute",
         supported=lambda coordinator: coordinator.model in SHELLY_GAS_MODELS,
     ),
     ShellyButtonDescription[ShellyBlockCoordinator](
         key="unmute",
-        translation_key="unmute",
+        translation_key="unmute_alarm",
         entity_category=EntityCategory.CONFIG,
         press_action="trigger_shelly_gas_unmute",
         supported=lambda coordinator: coordinator.model in SHELLY_GAS_MODELS,
@@ -447,6 +447,6 @@ RPC_BUTTONS = {
     "smoke_mute": RpcButtonDescription(
         key="smoke",
         sub_key="mute",
-        translation_key="mute",
+        translation_key="mute_alarm",
     ),
 }

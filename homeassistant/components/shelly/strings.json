@@ -136,17 +136,17 @@
       "close": {
         "name": "Close"
       },
-      "mute": {
-        "name": "Mute"
+      "mute_alarm": {
+        "name": "Mute alarm"
       },
       "open": {
         "name": "Open"
       },
       "self_test": {
-        "name": "Self test"
+        "name": "Self-test"
       },
-      "unmute": {
-        "name": "Unmute"
+      "unmute_alarm": {
+        "name": "Unmute alarm"
       }
     },
     "climate": {

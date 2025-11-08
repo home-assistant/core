@@ -1,13 +1,13 @@
 {
   "entity": {
     "button": {
-      "mute": {
+      "mute_alarm": {
         "default": "mdi:volume-mute"
       },
       "self_test": {
         "default": "mdi:progress-wrench"
       },
-      "unmute": {
+      "unmute_alarm": {
         "default": "mdi:volume-high"
       }
     },
