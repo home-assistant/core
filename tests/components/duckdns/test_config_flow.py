@@ -14,6 +14,8 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_SUBDOMAIN, TEST_TOKEN
 
+from tests.common import MockConfigEntry
+
 
 @pytest.mark.usefixtures("mock_update_duckdns")
 async def test_form(
@@ -42,6 +44,32 @@ async def test_form(
         CONF_ACCESS_TOKEN: TEST_TOKEN,
     }
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("mock_update_duckdns")
+async def test_form_already_configured(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test we abort if already configured."""
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_DOMAIN: TEST_SUBDOMAIN,
+            CONF_ACCESS_TOKEN: "123e4567-e89b-12d3-a456-426614174000",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_form_unknown_exception(

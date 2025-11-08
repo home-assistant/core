@@ -41,6 +41,7 @@ class DuckDnsConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            self._async_abort_entries_match({CONF_DOMAIN: user_input[CONF_DOMAIN]})
             session = async_get_clientsession(self.hass)
             try:
                 if not await _update_duckdns(
@@ -70,6 +71,7 @@ class DuckDnsConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_info: dict[str, Any]) -> ConfigFlowResult:
         """Import config from yaml."""
 
+        self._async_abort_entries_match({CONF_DOMAIN: import_info[CONF_DOMAIN]})
         result = await self.async_step_user(import_info)
         if errors := result.get("errors"):
             deprecate_yaml_issue(self.hass, import_success=False)
