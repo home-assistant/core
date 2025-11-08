@@ -30,7 +30,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status',
-    'unique_id': 'portainer_test_entry_123_dd19facfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf_status',
+    'unique_id': 'portainer_test_entry_123_focused_einstein_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -79,7 +79,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status',
-    'unique_id': 'portainer_test_entry_123_aa86eacfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf_status',
+    'unique_id': 'portainer_test_entry_123_funny_chatelet_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -177,7 +177,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status',
-    'unique_id': 'portainer_test_entry_123_ee20facfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf_status',
+    'unique_id': 'portainer_test_entry_123_practical_morse_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -226,7 +226,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status',
-    'unique_id': 'portainer_test_entry_123_bb97facfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf_status',
+    'unique_id': 'portainer_test_entry_123_serene_banach_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -275,7 +275,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status',
-    'unique_id': 'portainer_test_entry_123_cc08facfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf_status',
+    'unique_id': 'portainer_test_entry_123_stoic_turing_status',
     'unit_of_measurement': None,
   })
 # ---
