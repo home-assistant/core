@@ -157,9 +157,6 @@
       "flood_with_channel_name": {
         "name": "{channel_name} flood"
       },
-      "input": {
-        "name": "Input"
-      },
       "mute": {
         "name": "Mute"
       },
