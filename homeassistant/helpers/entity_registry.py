@@ -1270,7 +1270,7 @@ class EntityRegistry(BaseRegistry):
         old_values: dict[str, Any] = {}  # Dict with old key/value pairs
 
         if aliases is not UNDEFINED:
-            aliases = {s.strip() for s in aliases if s.strip()}
+            aliases = {s_strip for s in aliases if (s_strip := s.strip())}
 
         for attr_name, value in (
             ("aliases", aliases),
@@ -1414,7 +1414,7 @@ class EntityRegistry(BaseRegistry):
         """Update properties of an entity."""
 
         if aliases is not UNDEFINED:
-            aliases = {s.strip() for s in aliases if s.strip()}
+            aliases = {s_strip for s in aliases if (s_strip := s.strip())}
 
         return self._async_update_entity(
             entity_id,

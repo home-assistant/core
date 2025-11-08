@@ -188,7 +188,7 @@ class FloorRegistry(BaseRegistry[FloorRegistryStoreData]):
             )
 
         if aliases:
-            aliases = {s.strip() for s in aliases if s.strip()}
+            aliases = {s_strip for s in aliases if (s_strip := s.strip())}
 
         floor = FloorEntry(
             aliases=aliases or set(),
@@ -235,7 +235,7 @@ class FloorRegistry(BaseRegistry[FloorRegistryStoreData]):
         old = self.floors[floor_id]
 
         if aliases is not UNDEFINED:
-            aliases = {s.strip() for s in aliases if s.strip()}
+            aliases = {s_strip for s in aliases if (s_strip := s.strip())}
 
         changes: dict[str, Any] = {
             attr_name: value

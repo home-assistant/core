@@ -295,7 +295,7 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
             _validate_temperature_entity(self.hass, temperature_entity_id)
 
         if aliases:
-            aliases = {s.strip() for s in aliases if s.strip()}
+            aliases = {s_strip for s in aliases if (s_strip := s.strip())}
 
         area = AreaEntry(
             aliases=aliases or set(),
@@ -353,7 +353,7 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         """Update name of area."""
 
         if aliases is not UNDEFINED:
-            aliases = {s.strip() for s in aliases if s.strip()}
+            aliases = {s_strip for s in aliases if (s_strip := s.strip())}
 
         updated = self._async_update(
             area_id,
