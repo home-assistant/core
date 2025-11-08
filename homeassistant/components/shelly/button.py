@@ -333,10 +333,7 @@ class ShellyButton(ShellyBaseButton):
         if TYPE_CHECKING:
             assert method is not None
 
-        if self.entity_description.params:
-            await method(**self.entity_description.params)
-        else:
-            await method()
+        await method(**(self.entity_description.params or {}))
 
 
 class ShellyBluTrvButton(ShellyRpcAttributeEntity, ButtonEntity):
