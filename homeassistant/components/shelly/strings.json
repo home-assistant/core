@@ -2,13 +2,20 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_on_wifi": "Device is already connected to WiFi and was discovered via the network.",
       "another_device": "Re-configuration was unsuccessful, the IP address/hostname of another Shelly device was used.",
+      "ble_not_permitted": "Device is bound to a Shelly cloud account and cannot be provisioned via Bluetooth. Please use the Shelly app to provision WiFi credentials, then add the device when it appears on your network.",
+      "cannot_connect": "Failed to connect to the device. Ensure the device is powered on and within range.",
       "firmware_not_fully_provisioned": "Device not fully provisioned. Please contact Shelly support",
+      "invalid_discovery_info": "Invalid Bluetooth discovery information.",
       "ipv6_not_supported": "IPv6 is not supported.",
       "mac_address_mismatch": "[%key:component::shelly::config::error::mac_address_mismatch%]",
+      "no_wifi_networks": "No WiFi networks found during scan.",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reauth_unsuccessful": "Re-authentication was unsuccessful, please remove the integration and set it up again.",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "wifi_provisioned": "WiFi credentials for {ssid} have been provisioned to {name}. The device is connecting to WiFi and will complete setup automatically."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -19,7 +26,13 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "flow_title": "{name}",
+    "progress": {
+      "provisioning": "Provisioning WiFi credentials and waiting for device to connect"
+    },
     "step": {
+      "bluetooth_confirm": {
+        "description": "The Shelly device {name} has been discovered via Bluetooth but is not connected to WiFi.\n\nDo you want to provision WiFi credentials to this device?"
+      },
       "confirm_discovery": {
         "description": "Do you want to set up the {model} at {host}?\n\nBattery-powered devices that are password-protected must be woken up before continuing with setting up.\nBattery-powered devices that are not password-protected will be added when the device wakes up, you can now manually wake the device up using a button on it or wait for the next data update from the device."
       },
@@ -32,6 +45,9 @@
           "password": "Password for the device's web panel.",
           "username": "Username for the device's web panel."
         }
+      },
+      "provision_failed": {
+        "description": "The device did not connect to {ssid}. This may be due to an incorrect password or the network being out of range. Would you like to try again?"
       },
       "reauth_confirm": {
         "data": {
@@ -64,6 +80,27 @@
           "port": "The TCP port of the Shelly device to connect to (Gen2+)."
         },
         "description": "Before setup, battery-powered devices must be woken up, you can now wake the device up using a button on it."
+      },
+      "wifi_credentials": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "Password for the WiFi network."
+        },
+        "description": "Enter the password for {ssid}."
+      },
+      "wifi_scan": {
+        "data": {
+          "ssid": "WiFi network"
+        },
+        "data_description": {
+          "ssid": "Select a WiFi network from the list or enter a custom SSID for hidden networks."
+        },
+        "description": "Select a WiFi network from the list or enter a custom SSID for hidden networks."
+      },
+      "wifi_scan_failed": {
+        "description": "Failed to scan for WiFi networks via Bluetooth. The device may be out of range or Bluetooth connection failed. Would you like to try again?"
       }
     }
   },
@@ -126,7 +163,29 @@
       }
     },
     "sensor": {
+      "adc": {
+        "name": "ADC"
+      },
+      "analog": {
+        "name": "Analog"
+      },
+      "analog_value": {
+        "name": "Analog value"
+      },
+      "analog_value_with_channel_name": {
+        "name": "{channel_name} analog value"
+      },
+      "analog_with_channel_name": {
+        "name": "{channel_name} analog"
+      },
+      "apparent_power_with_channel_name": {
+        "name": "{channel_name} apparent power"
+      },
+      "average_temperature": {
+        "name": "Average temperature"
+      },
       "charger_state": {
+        "name": "Charger state",
         "state": {
           "charger_charging": "[%key:common::state::charging%]",
           "charger_end": "Charge completed",
@@ -138,10 +197,46 @@
           "charger_wait": "Charging paused by vehicle"
         }
       },
+      "current_with_channel_name": {
+        "name": "{channel_name} current"
+      },
+      "current_with_phase_name": {
+        "name": "Phase {phase_name} current"
+      },
       "detected_objects": {
+        "name": "Detected objects",
         "unit_of_measurement": "objects"
       },
+      "detected_objects_with_channel_name": {
+        "name": "{channel_name} detected objects",
+        "unit_of_measurement": "[%key:component::shelly::entity::sensor::detected_objects::unit_of_measurement%]"
+      },
+      "device_temperature": {
+        "name": "Device temperature"
+      },
+      "energy_consumed": {
+        "name": "Energy consumed"
+      },
+      "energy_consumed_with_channel_name": {
+        "name": "{channel_name} energy consumed"
+      },
+      "energy_returned": {
+        "name": "Energy returned"
+      },
+      "energy_returned_with_channel_name": {
+        "name": "{channel_name} energy returned"
+      },
+      "energy_with_channel_name": {
+        "name": "{channel_name} energy"
+      },
+      "frequency_with_channel_name": {
+        "name": "{channel_name} frequency"
+      },
+      "gas_concentration": {
+        "name": "Gas concentration"
+      },
       "gas_detected": {
+        "name": "Gas detected",
         "state": {
           "heavy": "Heavy",
           "mild": "Mild",
@@ -159,21 +254,84 @@
           }
         }
       },
+      "humidity_with_channel_name": {
+        "name": "{channel_name} humidity"
+      },
       "illuminance_level": {
+        "name": "Illuminance level",
         "state": {
           "bright": "Bright",
           "dark": "Dark",
           "twilight": "Twilight"
         }
       },
+      "lamp_life": {
+        "name": "Lamp life"
+      },
+      "last_restart": {
+        "name": "Last restart"
+      },
+      "left_slot_level": {
+        "name": "Left slot level"
+      },
+      "left_slot_vial": {
+        "name": "Left slot vial"
+      },
+      "neutral_current": {
+        "name": "Neutral current"
+      },
       "operation": {
+        "name": "Operation",
         "state": {
           "fault": "[%key:common::state::fault%]",
           "normal": "[%key:common::state::normal%]",
           "warmup": "Warm-up"
         }
       },
+      "power_factor_with_channel_name": {
+        "name": "{channel_name} power factor"
+      },
+      "power_with_channel_name": {
+        "name": "{channel_name} power"
+      },
+      "power_with_phase_name": {
+        "name": "Phase {phase_name} power"
+      },
+      "pulse_counter": {
+        "name": "Pulse counter"
+      },
+      "pulse_counter_frequency": {
+        "name": "Pulse counter frequency"
+      },
+      "pulse_counter_frequency_value": {
+        "name": "Pulse counter frequency value"
+      },
+      "pulse_counter_frequency_value_with_channel_name": {
+        "name": "{channel_name} pulse counter frequency value"
+      },
+      "pulse_counter_frequency_with_channel_name": {
+        "name": "{channel_name} pulse counter frequency"
+      },
+      "pulse_counter_value": {
+        "name": "Pulse counter value"
+      },
+      "pulse_counter_value_with_channel_name": {
+        "name": "{channel_name} pulse counter value"
+      },
+      "pulse_counter_with_channel_name": {
+        "name": "{channel_name} pulse counter"
+      },
+      "rainfall": {
+        "name": "Rainfall"
+      },
+      "right_slot_level": {
+        "name": "Right slot level"
+      },
+      "right_slot_vial": {
+        "name": "Right slot vial"
+      },
       "self_test": {
+        "name": "Self test",
         "state": {
           "completed": "Completed",
           "not_completed": "Not completed",
@@ -191,7 +349,23 @@
           }
         }
       },
+      "session_duration": {
+        "name": "Session duration"
+      },
+      "session_energy": {
+        "name": "Session energy"
+      },
+      "temperature_with_channel_name": {
+        "name": "{channel_name} temperature"
+      },
+      "tilt": {
+        "name": "Tilt"
+      },
+      "valve_position": {
+        "name": "Valve position"
+      },
       "valve_status": {
+        "name": "Valve status",
         "state": {
           "checking": "Checking",
           "closed": "[%key:common::state::closed%]",
@@ -200,6 +374,35 @@
           "opened": "Opened",
           "opening": "[%key:common::state::opening%]"
         }
+      },
+      "voltage_with_channel_name": {
+        "name": "{channel_name} voltage"
+      },
+      "voltage_with_phase_name": {
+        "name": "Phase {phase_name} voltage"
+      },
+      "voltmeter": {
+        "name": "Voltmeter"
+      },
+      "voltmeter_value": {
+        "name": "Voltmeter value"
+      },
+      "water_consumption": {
+        "name": "Water consumption"
+      },
+      "water_flow_rate": {
+        "name": "Water flow rate"
+      },
+      "water_pressure": {
+        "name": "Water pressure"
+      },
+      "water_temperature": {
+        "name": "Water temperature"
+      }
+    },
+    "update": {
+      "beta_firmware": {
+        "name": "Beta firmware"
       }
     }
   },
