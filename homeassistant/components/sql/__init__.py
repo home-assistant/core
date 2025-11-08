@@ -49,7 +49,9 @@ QUERY_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_COLUMN_NAME): cv.string,
         vol.Required(CONF_NAME): cv.template,
-        vol.Required(CONF_QUERY): vol.All(cv.string, validate_sql_select),
+        vol.Required(CONF_QUERY): vol.All(
+            cv.template, ValueTemplate.from_template, validate_sql_select
+        ),
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
         vol.Optional(CONF_VALUE_TEMPLATE): vol.All(
             cv.template, ValueTemplate.from_template
