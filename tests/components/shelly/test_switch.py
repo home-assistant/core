@@ -829,6 +829,7 @@ async def test_cury_switch_entity(
     status = {
         "cury:0": {
             "id": 0,
+            "away_mode": False,
             "slots": {
                 "left": {
                     "intensity": 70,
@@ -848,7 +849,13 @@ async def test_cury_switch_entity(
     monkeypatch.setattr(mock_rpc_device, "status", status)
     await init_integration(hass, 3)
 
-    for entity in ("left_slot", "left_slot_boost", "right_slot", "right_slot_boost"):
+    for entity in (
+        "away_mode",
+        "left_slot",
+        "left_slot_boost",
+        "right_slot",
+        "right_slot_boost",
+    ):
         entity_id = f"{SWITCH_DOMAIN}.test_name_{entity}"
 
         state = hass.states.get(entity_id)
