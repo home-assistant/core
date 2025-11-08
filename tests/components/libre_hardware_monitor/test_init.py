@@ -1,6 +1,6 @@
 """Tests for the LibreHardwareMonitor init."""
 
-import logging
+import pytest
 
 from homeassistant.components.libre_hardware_monitor.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -11,9 +11,8 @@ from .conftest import VALID_CONFIG
 
 from tests.common import MockConfigEntry
 
-_LOGGER = logging.getLogger(__name__)
 
-
+@pytest.mark.usefixtures("mock_lhm_client")
 async def test_migration_to_unique_ids(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
