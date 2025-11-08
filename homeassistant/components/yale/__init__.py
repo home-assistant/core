@@ -35,7 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: YaleConfigEntry) -> bool
                 hass, entry
             )
         )
-    except ValueError as err:
+    except config_entry_oauth2_flow.ImplementationUnavailableError as err:
         raise ConfigEntryNotReady("OAuth implementation not available") from err
     oauth_session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
     yale_gateway = YaleGateway(Path(hass.config.config_dir), session, oauth_session)
