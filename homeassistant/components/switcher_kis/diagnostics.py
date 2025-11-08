@@ -19,10 +19,16 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     coordinators = entry.runtime_data
 
+    devices = [
+        asdict(data)
+        for coordinator in coordinators.values()
+        if (data := coordinator.data) is not None
+    ]
+
     return async_redact_data(
         {
             "entry": entry.as_dict(),
-            "devices": [asdict(coordinators[d].data) for d in coordinators],
+            "devices": devices,
         },
         TO_REDACT,
     )

@@ -4,16 +4,26 @@ from __future__ import annotations
 
 import logging
 
+from aioswitcher.api import SwitcherApi
 from aioswitcher.bridge import SwitcherBridge
-from aioswitcher.device import SwitcherBase
+from aioswitcher.device import DeviceType, SwitcherBase
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_TOKEN, EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_TOKEN,
+    EVENT_HOMEASSISTANT_STOP,
+    Platform,
+)
 from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
-from .const import DOMAIN
-from .coordinator import SwitcherDataUpdateCoordinator
+from .const import CONF_DEVICE_ID, CONF_DEVICE_KEY, CONF_DEVICE_TYPE, DOMAIN
+from .coordinator import (
+    SwitcherDataUpdateCoordinator,
+    SwitcherPollingDataUpdateCoordinator,
+)
 
 PLATFORMS = [
     Platform.BUTTON,
@@ -27,13 +37,19 @@ PLATFORMS = [
 _LOGGER = logging.getLogger(__name__)
 
 
-type SwitcherConfigEntry = ConfigEntry[dict[str, SwitcherDataUpdateCoordinator]]
+type SwitcherConfigEntry = ConfigEntry[
+    dict[str, SwitcherDataUpdateCoordinator | SwitcherPollingDataUpdateCoordinator]
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SwitcherConfigEntry) -> bool:
     """Set up Switcher from a config entry."""
 
     token = entry.data.get(CONF_TOKEN)
+
+    # Check if this is a manual configuration
+    if CONF_HOST in entry.data:
+        return await async_setup_manual_entry(hass, entry)
 
     @callback
     def on_device_data_callback(device: SwitcherBase) -> None:
@@ -80,6 +96,62 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitcherConfigEntry) -> 
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_bridge)
     )
+
+    return True
+
+
+async def async_setup_manual_entry(
+    hass: HomeAssistant, entry: SwitcherConfigEntry
+) -> bool:
+    """Set up Switcher from a manually configured entry."""
+
+    ip_address = entry.data[CONF_HOST]
+    device_id = entry.data[CONF_DEVICE_ID]
+    device_key = entry.data[CONF_DEVICE_KEY]
+    device_type_name = entry.data[CONF_DEVICE_TYPE]
+    token = entry.data.get(CONF_TOKEN)
+
+    # Convert device type name to DeviceType enum (e.g., "MINI" -> DeviceType.MINI)
+    device_type = DeviceType[device_type_name]
+
+    # Test connection to device
+    try:
+        async with SwitcherApi(
+            device_type,
+            ip_address,
+            device_id,
+            device_key,
+            token,
+        ) as api:
+            response = await api.get_state()
+
+        if not response or not response.successful:
+            raise ConfigEntryNotReady(f"Failed to connect to device at {ip_address}")
+
+    except (TimeoutError, OSError, RuntimeError) as err:
+        raise ConfigEntryNotReady(
+            f"Unable to connect to Switcher device at {ip_address}"
+        ) from err
+
+    # Must be ready before dispatcher is called
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    # Create coordinator for manual device with polling
+    coordinator = SwitcherPollingDataUpdateCoordinator(
+        hass,
+        entry,
+        ip_address,
+        device_id,
+        device_key,
+        device_type,
+        token,
+    )
+
+    # Fetch initial data
+    await coordinator.async_config_entry_first_refresh()
+
+    coordinator.async_setup()
+    entry.runtime_data = {device_id: coordinator}
 
     return True
 
