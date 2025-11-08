@@ -26,8 +26,6 @@ from .entity import (
 from .utils import (
     async_remove_orphaned_entities,
     get_device_entry_gen,
-    get_entity_translation_attributes,
-    get_rpc_channel_name,
     get_virtual_component_ids,
     is_view_for_platform,
 )
@@ -63,21 +61,6 @@ class RpcSelect(ShellyRpcAttributeEntity, SelectEntity):
 
         if hasattr(self, "_attr_name") and description.role != ROLE_GENERIC:
             delattr(self, "_attr_name")
-
-        if not description.role:
-            translation_placeholders, translation_key = (
-                get_entity_translation_attributes(
-                    get_rpc_channel_name(coordinator.device, key),
-                    description.translation_key,
-                    description.device_class,
-                    self._default_to_device_class_name(),
-                )
-            )
-
-            if translation_placeholders:
-                self._attr_translation_placeholders = translation_placeholders
-                if translation_key:
-                    self._attr_translation_key = translation_key
 
     @property
     def current_option(self) -> str | None:
