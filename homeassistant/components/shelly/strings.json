@@ -400,6 +400,32 @@
         "name": "Water temperature"
       }
     },
+    "switch": {
+      "motion_switch": {
+        "name": "Motion detection"
+      },
+      "start_charging": {
+        "name": "Charging"
+      },
+      "cury_slot": {
+        "name": "Slot"
+      },
+      "cury_boost": {
+        "name": "Boost"
+      },
+      "cury_left_slot": {
+        "name": "Left slot"
+      },
+      "cury_left_boost": {
+        "name": "Left slot boost"
+      },
+      "cury_right_slot": {
+        "name": "Right slot"
+      },
+      "cury_right_boost": {
+        "name": "Right slot boost"
+      }
+    },
     "update": {
       "beta_firmware": {
         "name": "Beta firmware"

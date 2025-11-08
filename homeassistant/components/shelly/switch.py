@@ -143,7 +143,7 @@ RPC_SWITCHES = {
     "boolean_start_charging": RpcSwitchDescription(
         key="boolean",
         sub_key="value",
-        name="Charging",
+        translation_key="start_charging",
         is_on=lambda status: bool(status["value"]),
         method_on="boolean_set",
         method_off="boolean_set",
@@ -241,8 +241,7 @@ RPC_SWITCHES = {
     "cury_left": RpcSwitchDescription(
         key="cury",
         sub_key="slots",
-        name="Left slot",
-        translation_key="cury_slot",
+        translation_key="cury_left_slot",
         is_on=lambda status: bool(status["slots"]["left"]["on"]),
         method_on="cury_set",
         method_off="cury_set",
@@ -254,8 +253,7 @@ RPC_SWITCHES = {
     "cury_left_boost": RpcSwitchDescription(
         key="cury",
         sub_key="slots",
-        name="Left slot boost",
-        translation_key="cury_boost",
+        translation_key="cury_left_boost",
         is_on=lambda status: status["slots"]["left"]["boost"] is not None,
         method_on="cury_boost",
         method_off="cury_stop_boost",
@@ -267,8 +265,7 @@ RPC_SWITCHES = {
     "cury_right": RpcSwitchDescription(
         key="cury",
         sub_key="slots",
-        name="Right slot",
-        translation_key="cury_slot",
+        translation_key="cury_right_slot",
         is_on=lambda status: bool(status["slots"]["right"]["on"]),
         method_on="cury_set",
         method_off="cury_set",
@@ -280,8 +277,7 @@ RPC_SWITCHES = {
     "cury_right_boost": RpcSwitchDescription(
         key="cury",
         sub_key="slots",
-        name="Right slot boost",
-        translation_key="cury_boost",
+        translation_key="cury_right_boost",
         is_on=lambda status: status["slots"]["right"]["boost"] is not None,
         method_on="cury_boost",
         method_off="cury_stop_boost",
