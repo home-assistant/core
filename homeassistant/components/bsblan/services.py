@@ -69,20 +69,20 @@ async def set_hot_water_schedule(service_call: ServiceCall) -> None:
         )
 
     # Find the config entry for this device
-    loaded_entries: list[BSBLanConfigEntry] = [
+    matching_entries: list[BSBLanConfigEntry] = [
         entry
-        for entry in service_call.hass.config_entries.async_loaded_entries(DOMAIN)
+        for entry in service_call.hass.config_entries.async_entries(DOMAIN)
         if entry.entry_id in device_entry.config_entries
     ]
 
-    if not loaded_entries:
+    if not matching_entries:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="no_config_entry_for_device",
             translation_placeholders={"device_id": device_entry.name or device_id},
         )
 
-    entry = loaded_entries[0]
+    entry = matching_entries[0]
 
     # Verify the config entry is loaded
     if entry.state is not ConfigEntryState.LOADED:
