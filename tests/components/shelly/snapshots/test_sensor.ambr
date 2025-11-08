@@ -766,7 +766,7 @@
     'state': '0',
   })
 # ---
-# name: test_shelly_irrigation_weather_sensors[sensor.test_name_rainfall_last_24h-entry]
+# name: test_shelly_irrigation_weather_sensors[sensor.test_name_rainfall-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -779,7 +779,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_name_rainfall_last_24h',
+    'entity_id': 'sensor.test_name_rainfall',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -792,27 +792,27 @@
         'suggested_display_precision': 0,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
+    'original_device_class': <SensorDeviceClass.PRECIPITATION_INTENSITY: 'precipitation_intensity'>,
     'original_icon': None,
-    'original_name': 'Rainfall last 24h',
+    'original_name': 'Rainfall',
     'platform': 'shelly',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'rainfall_last_24h',
+    'translation_key': 'rainfall',
     'unique_id': '123456789ABC-number:201-number_last_precipitation',
-    'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+    'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_DAY: 'mm/d'>,
   })
 # ---
-# name: test_shelly_irrigation_weather_sensors[sensor.test_name_rainfall_last_24h-state]
+# name: test_shelly_irrigation_weather_sensors[sensor.test_name_rainfall-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'precipitation',
-      'friendly_name': 'Test name Rainfall last 24h',
-      'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+      'device_class': 'precipitation_intensity',
+      'friendly_name': 'Test name Rainfall',
+      'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_DAY: 'mm/d'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_name_rainfall_last_24h',
+    'entity_id': 'sensor.test_name_rainfall',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
