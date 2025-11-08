@@ -256,6 +256,7 @@ class PlaystationNetworkFriendDataCoordinator(
                 account_id=self.user.account_id,
                 presence=self.user.get_presence(),
                 profile=self.profile,
+                trophy_summary=self.user.trophy_summary(),
             )
         except PSNAWPForbiddenError as error:
             raise UpdateFailed(
