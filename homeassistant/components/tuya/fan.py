@@ -23,7 +23,7 @@ from homeassistant.util.percentage import (
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, DPType
 from .entity import TuyaEntity
-from .models import EnumTypeData, IntegerTypeData
+from .models import EnumTypeData, IntegerTypeData, find_dpcode
 from .util import get_dpcode
 
 _DIRECTION_DPCODES = (DPCode.FAN_DIRECTION,)
@@ -106,21 +106,24 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
         self._switch = get_dpcode(self.device, _SWITCH_DPCODES)
 
         self._attr_preset_modes = []
-        if enum_type := self.find_dpcode(
-            (DPCode.FAN_MODE, DPCode.MODE), dptype=DPType.ENUM, prefer_function=True
+        if enum_type := find_dpcode(
+            self.device,
+            (DPCode.FAN_MODE, DPCode.MODE),
+            dptype=DPType.ENUM,
+            prefer_function=True,
         ):
             self._presets = enum_type
             self._attr_supported_features |= FanEntityFeature.PRESET_MODE
             self._attr_preset_modes = enum_type.range
 
         # Find speed controls, can be either percentage or a set of speeds
-        if int_type := self.find_dpcode(
-            _SPEED_DPCODES, dptype=DPType.INTEGER, prefer_function=True
+        if int_type := find_dpcode(
+            self.device, _SPEED_DPCODES, dptype=DPType.INTEGER, prefer_function=True
         ):
             self._attr_supported_features |= FanEntityFeature.SET_SPEED
             self._speed = int_type
-        elif enum_type := self.find_dpcode(
-            _SPEED_DPCODES, dptype=DPType.ENUM, prefer_function=True
+        elif enum_type := find_dpcode(
+            self.device, _SPEED_DPCODES, dptype=DPType.ENUM, prefer_function=True
         ):
             self._attr_supported_features |= FanEntityFeature.SET_SPEED
             self._speeds = enum_type
@@ -129,8 +132,8 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
             self._oscillate = dpcode
             self._attr_supported_features |= FanEntityFeature.OSCILLATE
 
-        if enum_type := self.find_dpcode(
-            _DIRECTION_DPCODES, dptype=DPType.ENUM, prefer_function=True
+        if enum_type := find_dpcode(
+            self.device, _DIRECTION_DPCODES, dptype=DPType.ENUM, prefer_function=True
         ):
             self._direction = enum_type
             self._attr_supported_features |= FanEntityFeature.DIRECTION

@@ -292,7 +292,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'last_restart',
     'unique_id': '123456789ABC-sys-uptime',
     'unit_of_measurement': None,
   })
@@ -343,7 +343,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'vial_level',
+    'translation_key': 'left_slot_level',
     'unique_id': '123456789ABC-cury:0-cury_left_level',
     'unit_of_measurement': '%',
   })
@@ -393,7 +393,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'vial_name',
+    'translation_key': 'left_slot_vial',
     'unique_id': '123456789ABC-cury:0-cury_left_vial',
     'unit_of_measurement': None,
   })
@@ -443,7 +443,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'vial_level',
+    'translation_key': 'right_slot_level',
     'unique_id': '123456789ABC-cury:0-cury_right_level',
     'unit_of_measurement': '%',
   })
@@ -493,7 +493,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'vial_name',
+    'translation_key': 'right_slot_vial',
     'unique_id': '123456789ABC-cury:0-cury_right_vial',
     'unit_of_measurement': None,
   })
@@ -786,7 +786,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <UpdateEntityFeature: 5>,
-    'translation_key': None,
+    'translation_key': 'beta_firmware',
     'unique_id': '123456789ABC-sys-fwupdate_beta',
     'unit_of_measurement': None,
   })
@@ -1126,7 +1126,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'last_restart',
     'unique_id': '123456789ABC-sys-uptime',
     'unit_of_measurement': None,
   })
@@ -1183,7 +1183,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'energy_with_channel_name',
     'unique_id': '123456789ABC-cct:0-energy_cct',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -1239,7 +1239,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'power_with_channel_name',
     'unique_id': '123456789ABC-cct:0-power_cct',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
@@ -1343,7 +1343,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <UpdateEntityFeature: 5>,
-    'translation_key': None,
+    'translation_key': 'beta_firmware',
     'unique_id': '123456789ABC-sys-fwupdate_beta',
     'unit_of_measurement': None,
   })
@@ -2576,7 +2576,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'energy_consumed',
     'unique_id': '123456789ABC-switch:1-consumed_energy_switch',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -2635,7 +2635,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'energy_returned',
     'unique_id': '123456789ABC-switch:1-ret_energy',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -2977,7 +2977,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'energy_consumed',
     'unique_id': '123456789ABC-switch:3-consumed_energy_switch',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -3036,7 +3036,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'energy_returned',
     'unique_id': '123456789ABC-switch:3-ret_energy',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -3255,7 +3255,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'last_restart',
     'unique_id': '123456789ABC-sys-uptime',
     'unit_of_measurement': None,
   })
@@ -3480,7 +3480,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'energy_consumed',
     'unique_id': '123456789ABC-switch:0-consumed_energy_switch',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -3539,7 +3539,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'energy_returned',
     'unique_id': '123456789ABC-switch:0-ret_energy',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -3881,7 +3881,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'energy_consumed',
     'unique_id': '123456789ABC-switch:2-consumed_energy_switch',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -3940,7 +3940,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'energy_returned',
     'unique_id': '123456789ABC-switch:2-ret_energy',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -4303,7 +4303,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <UpdateEntityFeature: 5>,
-    'translation_key': None,
+    'translation_key': 'beta_firmware',
     'unique_id': '123456789ABC-sys-fwupdate_beta',
     'unit_of_measurement': None,
   })
@@ -4779,7 +4779,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'last_restart',
     'unique_id': '123456789ABC-sys-uptime',
     'unit_of_measurement': None,
   })
@@ -4830,7 +4830,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'detected_objects',
+    'translation_key': 'detected_objects_with_channel_name',
     'unique_id': '123456789ABC-presencezone:201-presencezone_num_objects',
     'unit_of_measurement': 'objects',
   })
@@ -4882,7 +4882,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'detected_objects',
+    'translation_key': 'detected_objects_with_channel_name',
     'unique_id': '123456789ABC-presencezone:202-presencezone_num_objects',
     'unit_of_measurement': 'objects',
   })
@@ -4934,7 +4934,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'detected_objects',
+    'translation_key': 'detected_objects_with_channel_name',
     'unique_id': '123456789ABC-presencezone:200-presencezone_num_objects',
     'unit_of_measurement': 'objects',
   })
@@ -5037,7 +5037,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <UpdateEntityFeature: 5>,
-    'translation_key': None,
+    'translation_key': 'beta_firmware',
     'unique_id': '123456789ABC-sys-fwupdate_beta',
     'unit_of_measurement': None,
   })
@@ -5750,7 +5750,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'last_restart',
     'unique_id': '123456789ABC-sys-uptime',
     'unit_of_measurement': None,
   })
@@ -5956,7 +5956,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <UpdateEntityFeature: 5>,
-    'translation_key': None,
+    'translation_key': 'beta_firmware',
     'unique_id': '123456789ABC-sys-fwupdate_beta',
     'unit_of_measurement': None,
   })
@@ -6740,7 +6740,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'last_restart',
     'unique_id': '123456789ABC-sys-uptime',
     'unit_of_measurement': None,
   })
@@ -7010,7 +7010,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <UpdateEntityFeature: 5>,
-    'translation_key': None,
+    'translation_key': 'beta_firmware',
     'unique_id': '123456789ABC-sys-fwupdate_beta',
     'unit_of_measurement': None,
   })
@@ -7769,7 +7769,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'last_restart',
     'unique_id': '123456789ABC-sys-uptime',
     'unit_of_measurement': None,
   })
@@ -7994,7 +7994,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'energy_consumed',
     'unique_id': '123456789ABC-switch:0-consumed_energy_switch',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -8053,7 +8053,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'energy_returned',
     'unique_id': '123456789ABC-switch:0-ret_energy',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -8451,7 +8451,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'energy_consumed',
     'unique_id': '123456789ABC-switch:1-consumed_energy_switch',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -8510,7 +8510,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'energy_returned',
     'unique_id': '123456789ABC-switch:1-ret_energy',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -8881,7 +8881,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <UpdateEntityFeature: 5>,
-    'translation_key': None,
+    'translation_key': 'beta_firmware',
     'unique_id': '123456789ABC-sys-fwupdate_beta',
     'unit_of_measurement': None,
   })
@@ -9329,7 +9329,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'energy_returned',
     'unique_id': '123456789ABC-emdata:0-total_act_ret',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -9380,7 +9380,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'last_restart',
     'unique_id': '123456789ABC-sys-uptime',
     'unit_of_measurement': None,
   })
@@ -9434,7 +9434,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'neutral_current',
     'unique_id': '123456789ABC-em:0-n_current',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
@@ -9664,7 +9664,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'energy_returned',
     'unique_id': '123456789ABC-emdata:0-a_total_act_ret_energy',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -10114,7 +10114,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'energy_returned',
     'unique_id': '123456789ABC-emdata:0-b_total_act_ret_energy',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -10564,7 +10564,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'energy_returned',
     'unique_id': '123456789ABC-emdata:0-c_total_act_ret_energy',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -11000,7 +11000,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <UpdateEntityFeature: 5>,
-    'translation_key': None,
+    'translation_key': 'beta_firmware',
     'unique_id': '123456789ABC-sys-fwupdate_beta',
     'unit_of_measurement': None,
   })
