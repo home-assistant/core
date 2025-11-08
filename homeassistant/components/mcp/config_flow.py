@@ -260,13 +260,6 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                     transport,
                     user_input[CONF_URL],
                 )
-            except (httpx.HTTPError, httpx.TimeoutException, OSError) as error:
-                _LOGGER.debug("Transport autodiscovery failed: %s", error)
-                # Fall back to default SSE transport
-                transport = TRANSPORT_SSE
-                user_input[CONF_TRANSPORT] = transport
-
-            try:
                 info = await validate_input(self.hass, user_input)
             except InvalidUrl:
                 errors[CONF_URL] = "invalid_url"
