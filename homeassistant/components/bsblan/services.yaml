@@ -1,0 +1,20 @@
+set_hot_water_schedule:
+  fields:
+    device:
+      required: true
+      example: "abc123device456"
+      selector:
+        device:
+          integration: bsblan
+    schedule:
+      required: true
+      example:
+        monday: "06:00-08:00 17:00-21:00"
+        tuesday: "06:00-08:00 17:00-21:00"
+        wednesday: "06:00-08:00 17:00-21:00"
+        thursday: "06:00-08:00 17:00-21:00"
+        friday: "06:00-08:00 17:00-21:00"
+        saturday: "08:00-22:00"
+        sunday: "08:00-22:00"
+      selector:
+        object:
