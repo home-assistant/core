@@ -110,10 +110,10 @@ def find_dpcode(
     *,
     prefer_function: bool = False,
     dptype: DPType,
-) -> EnumTypeData | IntegerTypeData | None:
+) -> TypeInformation | None:
     """Find type information for a matching DP code available for this device."""
-    if dptype not in (DPType.ENUM, DPType.INTEGER):
-        raise NotImplementedError("Only ENUM and INTEGER types are supported")
+    if not (type_information_cls := _TYPE_INFORMATION_MAPPINGS.get(dptype)):
+        raise NotImplementedError(f"find_dpcode not supported for {dptype}")
 
     if dpcodes is None:
         return None
@@ -131,33 +131,35 @@ def find_dpcode(
 
     for dpcode in dpcodes:
         for device_specs in lookup_tuple:
-            if not (
+            if (
                 (current_definition := device_specs.get(dpcode))
                 and current_definition.type == dptype
+                and (
+                    type_information := type_information_cls.from_json(
+                        dpcode, current_definition.values
+                    )
+                )
             ):
-                continue
-            if dptype is DPType.ENUM:
-                if not (
-                    enum_type := EnumTypeData.from_json(
-                        dpcode, current_definition.values
-                    )
-                ):
-                    continue
-                return enum_type
-            if dptype is DPType.INTEGER:
-                if not (
-                    integer_type := IntegerTypeData.from_json(
-                        dpcode, current_definition.values
-                    )
-                ):
-                    continue
-                return integer_type
+                return type_information
 
     return None
 
 
 @dataclass
-class IntegerTypeData:
+class TypeInformation:
+    """Type information.
+
+    As provided by the SDK, from `device.function` / `device.status_range`.
+    """
+
+    @classmethod
+    def from_json(cls, dpcode: DPCode, data: str) -> Self | None:
+        """Load JSON string and return a TypeInformation object."""
+        raise NotImplementedError("from_json is not implemented for this type")
+
+
+@dataclass
+class IntegerTypeData(TypeInformation):
     """Integer Type Data."""
 
     dpcode: DPCode
@@ -229,7 +231,7 @@ class IntegerTypeData:
 
 
 @dataclass
-class EnumTypeData:
+class EnumTypeData(TypeInformation):
     """Enum Type Data."""
 
     dpcode: DPCode
@@ -241,6 +243,12 @@ class EnumTypeData:
         if not (parsed := json.loads(data)):
             return None
         return cls(dpcode, **parsed)
+
+
+_TYPE_INFORMATION_MAPPINGS: dict[DPType, type[TypeInformation]] = {
+    DPType.ENUM: EnumTypeData,
+    DPType.INTEGER: IntegerTypeData,
+}
 
 
 class ComplexValue:
