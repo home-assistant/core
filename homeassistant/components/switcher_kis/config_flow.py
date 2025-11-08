@@ -191,9 +191,6 @@ class SwitcherFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="manual",
             data_schema=MANUAL_SCHEMA,
             errors=errors,
-            description_placeholders={
-                "device_info": "Device ID and key can be found in the Switcher app settings"
-            },
         )
 
     async def _create_entry(self) -> ConfigFlowResult:
