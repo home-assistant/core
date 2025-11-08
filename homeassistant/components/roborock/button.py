@@ -127,6 +127,9 @@ class RoborockButtonEntity(RoborockEntityV1, ButtonEntity):
         try:
             await self._consumable.reset_consumable(self.entity_description.attribute)
         except RoborockException as err:
+            # This error message could be improved since it is fairly low level
+            # and technical. Can add a more user friendly message with the
+            # name of the attribute being reset.
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="command_failed",
