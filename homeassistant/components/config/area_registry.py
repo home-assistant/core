@@ -143,7 +143,7 @@ def websocket_update_area(
         # Cleans the aliases set:
         #   - Removes empty strings
         #   - Removes trailing and leasing whitespace characters from aliases
-        data["aliases"] = {s.strip() for s in data["aliases"] if s.strip()}
+        data["aliases"] = {s_strip for s in data["aliases"] if (s_strip := s.strip())}
 
     if "labels" in data:
         # Convert labels to a set
