@@ -47,30 +47,7 @@
         "name": "Secure mode"
       }
     },
-    "sensor": {
-      "battery_voltage": {
-        "name": "Battery voltage"
-      }
-    }
-  },
-  "options": {
-    "step": {
-      "device_options": {
-        "data": {
-          "always_connected": "Always connected"
-        },
-        "description": "If the lock does not support push updates via advertisements or you want lock operation to be more responsive, you can enable always connected mode. Always connected will cause the lock to stay connected to Home Assistant via Bluetooth, which will use more battery."
-      }
-    },
     "select": {
-      "auto_lock_mode": {
-        "name": "Autolock mode",
-        "state": {
-          "off": "[%key:common::state::off%]",
-          "instant": "Instant",
-          "timer": "On a timer"
-        }
-      },
       "auto_lock_duration": {
         "name": "Autolock duration",
         "state": {
@@ -88,6 +65,29 @@
           "1200": "20m:00s",
           "1800": "30m:00s"
         }
+      },
+      "auto_lock_mode": {
+        "name": "Autolock mode",
+        "state": {
+          "instant": "Instant",
+          "off": "[%key:common::state::off%]",
+          "timer": "On a timer"
+        }
+      }
+    },
+    "sensor": {
+      "battery_voltage": {
+        "name": "Battery voltage"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "device_options": {
+        "data": {
+          "always_connected": "Always connected"
+        },
+        "description": "If the lock does not support push updates via advertisements or you want lock operation to be more responsive, you can enable always connected mode. Always connected will cause the lock to stay connected to Home Assistant via Bluetooth, which will use more battery."
       }
     }
   }
