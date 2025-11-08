@@ -168,7 +168,9 @@ SENSORS: dict[tuple[str, str], BlockBinarySensorDescription] = {
         available=lambda block: cast(int, block.dwIsOpened) != -1,
     ),
     ("sensor", "flood"): BlockBinarySensorDescription(
-        key="sensor|flood", name="Flood", device_class=BinarySensorDeviceClass.MOISTURE
+        key="sensor|flood",
+        translation_key="flood",
+        device_class=BinarySensorDeviceClass.MOISTURE,
     ),
     ("sensor", "gas"): BlockBinarySensorDescription(
         key="sensor|gas",
@@ -176,7 +178,7 @@ SENSORS: dict[tuple[str, str], BlockBinarySensorDescription] = {
         value=lambda value: value in ["mild", "heavy"],
     ),
     ("sensor", "smoke"): BlockBinarySensorDescription(
-        key="sensor|smoke", name="Smoke", device_class=BinarySensorDeviceClass.SMOKE
+        key="sensor|smoke", device_class=BinarySensorDeviceClass.SMOKE
     ),
     ("sensor", "vibration"): BlockBinarySensorDescription(
         key="sensor|vibration",
@@ -204,7 +206,7 @@ SENSORS: dict[tuple[str, str], BlockBinarySensorDescription] = {
         entity_registry_enabled_default=False,
     ),
     ("sensor", "motion"): BlockBinarySensorDescription(
-        key="sensor|motion", name="Motion", device_class=BinarySensorDeviceClass.MOTION
+        key="sensor|motion", device_class=BinarySensorDeviceClass.MOTION
     ),
 }
 
