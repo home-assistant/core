@@ -133,9 +133,3 @@ def async_setup_services(hass: HomeAssistant) -> None:
         set_hot_water_schedule,
         schema=SERVICE_SET_HOT_WATER_SCHEDULE_SCHEMA,
     )
-
-
-@callback
-def async_unload_services(hass: HomeAssistant) -> None:
-    """Unload BSB-Lan services."""
-    hass.services.async_remove(DOMAIN, SERVICE_SET_HOT_WATER_SCHEDULE)
