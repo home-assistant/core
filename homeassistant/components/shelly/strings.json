@@ -133,8 +133,14 @@
       "calibrate": {
         "name": "Calibrate"
       },
+      "close": {
+        "name": "Close"
+      },
       "mute": {
         "name": "Mute"
+      },
+      "open": {
+        "name": "Open"
       },
       "self_test": {
         "name": "Self test"

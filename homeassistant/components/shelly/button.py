@@ -342,11 +342,7 @@ class ShellyBluTrvButton(ShellyRpcAttributeEntity, ButtonEntity):
             config, ble_addr, coordinator.mac, fw_ver
         )
 
-        if (
-            hasattr(self, "_attr_name")
-            and description.role != ROLE_GENERIC
-            and description.key != "button"
-        ):
+        if hasattr(self, "_attr_name") and description.role != ROLE_GENERIC:
             delattr(self, "_attr_name")
 
     @rpc_call
@@ -371,11 +367,7 @@ class RpcVirtualButton(ShellyRpcAttributeEntity, ButtonEntity):
         """Initialize select."""
         super().__init__(coordinator, key, attribute, description)
 
-        if (
-            hasattr(self, "_attr_name")
-            and description.role != ROLE_GENERIC
-            and description.key != "button"
-        ):
+        if hasattr(self, "_attr_name") and description.role != ROLE_GENERIC:
             delattr(self, "_attr_name")
 
     @rpc_call
@@ -433,12 +425,14 @@ RPC_BUTTONS = {
     ),
     "button_open": RpcButtonDescription(
         key="button",
+        translation_key="open",
         entity_registry_enabled_default=False,
         role="open",
         models={MODEL_FRANKEVER_WATER_VALVE},
     ),
     "button_close": RpcButtonDescription(
         key="button",
+        translation_key="close",
         entity_registry_enabled_default=False,
         role="close",
         models={MODEL_FRANKEVER_WATER_VALVE},
