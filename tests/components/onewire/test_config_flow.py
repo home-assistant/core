@@ -3,10 +3,12 @@
 from ipaddress import ip_address
 from unittest.mock import AsyncMock, patch
 
+from aio_ownet.connection import DEFAULT_CONNECTION_TIMEOUT
 from aio_ownet.exceptions import OWServerConnectionError
 import pytest
 
 from homeassistant.components.onewire.const import (
+    CONF_CONNECTION_TIMEOUT,
     DOMAIN,
     INPUT_ENTRY_CLEAR_OPTIONS,
     INPUT_ENTRY_DEVICE_SELECTION,
@@ -69,13 +71,21 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={CONF_HOST: "1.2.3.4", CONF_PORT: 1234},
+            user_input={
+                CONF_HOST: "1.2.3.4",
+                CONF_PORT: 1234,
+                CONF_CONNECTION_TIMEOUT: DEFAULT_CONNECTION_TIMEOUT,
+            },
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     new_entry = result["result"]
     assert new_entry.title == "1.2.3.4"
-    assert new_entry.data == {CONF_HOST: "1.2.3.4", CONF_PORT: 1234}
+    assert new_entry.data == {
+        CONF_HOST: "1.2.3.4",
+        CONF_PORT: 1234,
+        CONF_CONNECTION_TIMEOUT: DEFAULT_CONNECTION_TIMEOUT,
+    }
 
 
 async def test_user_flow_recovery(hass: HomeAssistant) -> None:
@@ -91,7 +101,11 @@ async def test_user_flow_recovery(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={CONF_HOST: "1.2.3.4", CONF_PORT: 1234},
+            user_input={
+                CONF_HOST: "1.2.3.4",
+                CONF_PORT: 1234,
+                CONF_CONNECTION_TIMEOUT: DEFAULT_CONNECTION_TIMEOUT,
+            },
         )
 
     assert result["type"] is FlowResultType.FORM
@@ -104,13 +118,21 @@ async def test_user_flow_recovery(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={CONF_HOST: "1.2.3.4", CONF_PORT: 1234},
+            user_input={
+                CONF_HOST: "1.2.3.4",
+                CONF_PORT: 1234,
+                CONF_CONNECTION_TIMEOUT: DEFAULT_CONNECTION_TIMEOUT,
+            },
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     new_entry = result["result"]
     assert new_entry.title == "1.2.3.4"
-    assert new_entry.data == {CONF_HOST: "1.2.3.4", CONF_PORT: 1234}
+    assert new_entry.data == {
+        CONF_HOST: "1.2.3.4",
+        CONF_PORT: 1234,
+        CONF_CONNECTION_TIMEOUT: DEFAULT_CONNECTION_TIMEOUT,
+    }
 
 
 async def test_user_duplicate(
@@ -131,7 +153,11 @@ async def test_user_duplicate(
     # Duplicate server
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_HOST: "1.2.3.4", CONF_PORT: 1234},
+        user_input={
+            CONF_HOST: "1.2.3.4",
+            CONF_PORT: 1234,
+            CONF_CONNECTION_TIMEOUT: DEFAULT_CONNECTION_TIMEOUT,
+        },
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -153,7 +179,11 @@ async def test_reconfigure_flow(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={CONF_HOST: "2.3.4.5", CONF_PORT: 2345},
+            user_input={
+                CONF_HOST: "2.3.4.5",
+                CONF_PORT: 2345,
+                CONF_CONNECTION_TIMEOUT: DEFAULT_CONNECTION_TIMEOUT,
+            },
         )
 
     assert result["type"] is FlowResultType.FORM
@@ -166,12 +196,20 @@ async def test_reconfigure_flow(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={CONF_HOST: "2.3.4.5", CONF_PORT: 2345},
+            user_input={
+                CONF_HOST: "2.3.4.5",
+                CONF_PORT: 2345,
+                CONF_CONNECTION_TIMEOUT: DEFAULT_CONNECTION_TIMEOUT,
+            },
         )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    assert config_entry.data == {CONF_HOST: "2.3.4.5", CONF_PORT: 2345}
+    assert config_entry.data == {
+        CONF_HOST: "2.3.4.5",
+        CONF_PORT: 2345,
+        CONF_CONNECTION_TIMEOUT: DEFAULT_CONNECTION_TIMEOUT,
+    }
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -186,6 +224,7 @@ async def test_reconfigure_duplicate(
         data={
             CONF_HOST: "2.3.4.5",
             CONF_PORT: 2345,
+            CONF_CONNECTION_TIMEOUT: DEFAULT_CONNECTION_TIMEOUT,
         },
         entry_id="other",
     )
@@ -199,14 +238,26 @@ async def test_reconfigure_duplicate(
     # Duplicate server
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_HOST: "2.3.4.5", CONF_PORT: 2345},
+        user_input={
+            CONF_HOST: "2.3.4.5",
+            CONF_PORT: 2345,
+            CONF_CONNECTION_TIMEOUT: DEFAULT_CONNECTION_TIMEOUT,
+        },
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
     assert len(mock_setup_entry.mock_calls) == 0
-    assert config_entry.data == {CONF_HOST: "1.2.3.4", CONF_PORT: 1234}
-    assert other_config_entry.data == {CONF_HOST: "2.3.4.5", CONF_PORT: 2345}
+    assert config_entry.data == {
+        CONF_HOST: "1.2.3.4",
+        CONF_PORT: 1234,
+        CONF_CONNECTION_TIMEOUT: DEFAULT_CONNECTION_TIMEOUT,
+    }
+    assert other_config_entry.data == {
+        CONF_HOST: "2.3.4.5",
+        CONF_PORT: 2345,
+        CONF_CONNECTION_TIMEOUT: DEFAULT_CONNECTION_TIMEOUT,
+    }
 
 
 async def test_hassio_flow(hass: HomeAssistant) -> None:
@@ -246,7 +297,11 @@ async def test_hassio_flow(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     new_entry = result["result"]
     assert new_entry.title == "owserver (1-wire)"
-    assert new_entry.data == {CONF_HOST: "1302b8e0-owserver", CONF_PORT: 4304}
+    assert new_entry.data == {
+        CONF_HOST: "1302b8e0-owserver",
+        CONF_PORT: 4304,
+        CONF_CONNECTION_TIMEOUT: DEFAULT_CONNECTION_TIMEOUT,
+    }
 
 
 @pytest.mark.usefixtures("config_entry")
@@ -298,7 +353,11 @@ async def test_zeroconf_flow(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     new_entry = result["result"]
     assert new_entry.title == "OWFS (1-wire) Server"
-    assert new_entry.data == {CONF_HOST: "ubuntu.local.", CONF_PORT: 4304}
+    assert new_entry.data == {
+        CONF_HOST: "ubuntu.local.",
+        CONF_PORT: 4304,
+        CONF_CONNECTION_TIMEOUT: DEFAULT_CONNECTION_TIMEOUT,
+    }
 
 
 @pytest.mark.usefixtures("config_entry")

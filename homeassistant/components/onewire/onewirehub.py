@@ -21,6 +21,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util.signal_type import SignalType
 
 from .const import (
+    CONF_CONNECTION_TIMEOUT,
     DEVICE_SUPPORT,
     DOMAIN,
     MANUFACTURER_EDS,
@@ -72,9 +73,17 @@ class OneWireHub:
         """Connect to the server, and discover connected devices."""
         host = self._config_entry.data[CONF_HOST]
         port = self._config_entry.data[CONF_PORT]
-        _LOGGER.debug("Initializing connection to %s:%s", host, port)
+        connection_timeout = self._config_entry.data[CONF_CONNECTION_TIMEOUT]
+        _LOGGER.debug(
+            "Initializing connection to %s:%s with timeout %s",
+            host,
+            port,
+            connection_timeout,
+        )
         self.owproxy = OWServerStatelessProxy(
-            self._config_entry.data[CONF_HOST], self._config_entry.data[CONF_PORT]
+            self._config_entry.data[CONF_HOST],
+            self._config_entry.data[CONF_PORT],
+            connection_timeout=self._config_entry.data[CONF_CONNECTION_TIMEOUT],
         )
         await self.owproxy.validate()
         with contextlib.suppress(OWServerReturnError):

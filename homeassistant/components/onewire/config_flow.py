@@ -5,6 +5,7 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any
 
+from aio_ownet.connection import DEFAULT_CONNECTION_TIMEOUT
 from aio_ownet.exceptions import OWServerConnectionError
 from aio_ownet.proxy import OWServerStatelessProxy
 import voluptuous as vol
@@ -22,6 +23,7 @@ from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import (
+    CONF_CONNECTION_TIMEOUT,
     DEFAULT_HOST,
     DEFAULT_PORT,
     DEVICE_SUPPORT_OPTIONS,
@@ -38,6 +40,7 @@ DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST, default=DEFAULT_HOST): str,
         vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+        vol.Optional(CONF_CONNECTION_TIMEOUT, default=DEFAULT_CONNECTION_TIMEOUT): int,
     }
 )
 
@@ -46,7 +49,11 @@ async def validate_input(
     hass: HomeAssistant, data: dict[str, Any], errors: dict[str, str]
 ) -> None:
     """Validate the user input allows us to connect."""
-    proxy = OWServerStatelessProxy(data[CONF_HOST], data[CONF_PORT])
+    proxy = OWServerStatelessProxy(
+        data[CONF_HOST],
+        data[CONF_PORT],
+        connection_timeout=data[CONF_CONNECTION_TIMEOUT],
+    )
     try:
         await proxy.validate()
     except OWServerConnectionError:
@@ -117,6 +124,9 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
             "title": discovery_info.config["addon"],
             CONF_HOST: discovery_info.config[CONF_HOST],
             CONF_PORT: discovery_info.config[CONF_PORT],
+            CONF_CONNECTION_TIMEOUT: discovery_info.config.get(
+                CONF_CONNECTION_TIMEOUT, DEFAULT_CONNECTION_TIMEOUT
+            ),
         }
         return await self.async_step_discovery_confirm()
 
@@ -130,6 +140,9 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
             "title": discovery_info.name,
             CONF_HOST: discovery_info.hostname,
             CONF_PORT: discovery_info.port,
+            CONF_CONNECTION_TIMEOUT: getattr(
+                discovery_info, CONF_CONNECTION_TIMEOUT, DEFAULT_CONNECTION_TIMEOUT
+            ),
         }
         return await self.async_step_discovery_confirm()
 
@@ -142,6 +155,9 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
             data = {
                 CONF_HOST: self._discovery_data[CONF_HOST],
                 CONF_PORT: self._discovery_data[CONF_PORT],
+                CONF_CONNECTION_TIMEOUT: self._discovery_data.get(
+                    CONF_CONNECTION_TIMEOUT, DEFAULT_CONNECTION_TIMEOUT
+                ),
             }
             await validate_input(self.hass, data, errors)
             if not errors:

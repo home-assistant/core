@@ -13,10 +13,12 @@
       },
       "reconfigure": {
         "data": {
+          "connection_timeout": "[%key:component::onewire::config::step::user::data::connection_timeout%]",
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]"
         },
         "data_description": {
+          "connection_timeout": "[%key:component::onewire::config::step::user::data_description::connection_timeout%]",
           "host": "[%key:component::onewire::config::step::user::data_description::host%]",
           "port": "[%key:component::onewire::config::step::user::data_description::port%]"
         },
@@ -24,10 +26,12 @@
       },
       "user": {
         "data": {
+          "connection_timeout": "Connection timeout",
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]"
         },
         "data_description": {
+          "connection_timeout": "The connection timeout in seconds.",
           "host": "The hostname or IP address of your OWServer instance.",
           "port": "The port of your OWServer instance (default is 4304)."
         },

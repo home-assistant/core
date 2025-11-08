@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from typing import Final
+
+CONF_CONNECTION_TIMEOUT: Final = "connection_timeout"
+
 DEFAULT_HOST = "localhost"
 DEFAULT_PORT = 4304
 

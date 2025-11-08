@@ -3,10 +3,11 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from aio_ownet.connection import DEFAULT_CONNECTION_TIMEOUT
 from aio_ownet.exceptions import OWServerConnectionError
 import pytest
 
-from homeassistant.components.onewire.const import DOMAIN
+from homeassistant.components.onewire.const import CONF_CONNECTION_TIMEOUT, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -40,6 +41,7 @@ def get_config_entry(hass: HomeAssistant) -> MockConfigEntry:
         data={
             CONF_HOST: "1.2.3.4",
             CONF_PORT: 1234,
+            CONF_CONNECTION_TIMEOUT: DEFAULT_CONNECTION_TIMEOUT,
         },
         options={
             "device_options": {
