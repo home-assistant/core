@@ -8,6 +8,7 @@ import collections
 from contextlib import suppress
 from enum import StrEnum
 import json
+import logging
 import os
 from typing import Any
 
@@ -56,6 +57,8 @@ from .radio_manager import (
     ProbeResult,
     ZhaRadioManager,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 CONF_MANUAL_PATH = "Enter Manually"
 DECONZ_DOMAIN = "deconz"
@@ -527,6 +530,7 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         try:
             await self._reset_old_radio_task
         except HomeAssistantError:
+            _LOGGER.exception("Failed to reset old radio during migration")
             # Old adapter not found or cannot connect, show prompt to plug back in
             return self.async_show_progress_done(next_step_id="plug_in_old_radio")
         finally:
@@ -785,6 +789,7 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
                 next_step_id="pre_confirm_ezsp_ieee_overwrite"
             )
         except HomeAssistantError:
+            _LOGGER.exception("Failed to restore network backup to new radio")
             # User unplugged the new adapter, allow retry
             return self.async_show_progress_done(next_step_id="pre_plug_in_new_radio")
         except CannotWriteNetworkSettings as exc:

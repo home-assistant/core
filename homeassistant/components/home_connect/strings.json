@@ -1242,6 +1242,9 @@
     "no_selected_program_to_start": {
       "message": "No selected program to start"
     },
+    "oauth2_implementation_unavailable": {
+      "message": "OAuth2 implementation temporarily unavailable, will retry"
+    },
     "pause_program": {
       "message": "Error pausing program: {error}"
     },
