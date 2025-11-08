@@ -252,7 +252,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==42.6.0
+aioesphomeapi==42.7.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -389,7 +389,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==13.16.0
+aioshelly==13.17.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -772,7 +772,7 @@ datadog==0.52.0
 datapoint==0.12.1
 
 # homeassistant.components.bluetooth
-dbus-fast==2.44.5
+dbus-fast==2.45.0
 
 # homeassistant.components.debugpy
 debugpy==1.8.16
@@ -867,7 +867,7 @@ elgato==5.1.2
 eliqonline==1.2.2
 
 # homeassistant.components.elkm1
-elkm1-lib==2.2.11
+elkm1-lib==2.2.12
 
 # homeassistant.components.inels
 elkoep-aio-mqtt==0.1.0b4
@@ -2534,7 +2534,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==3.7.0
+python-roborock==3.7.1
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.45
