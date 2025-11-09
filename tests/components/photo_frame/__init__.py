@@ -1,1 +1,1 @@
-"""Tests for the derivative component."""
+"""Tests for the Photo Frame component."""
