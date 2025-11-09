@@ -10,9 +10,9 @@ from goodwe.const import GOODWE_TCP_PORT, GOODWE_UDP_PORT
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_PROTOCOL
+from homeassistant.const import CONF_HOST, CONF_PORT
 
-from .const import CONF_MODEL_FAMILY, DEFAULT_NAME, DOMAIN, PROTOCOL_TCP, PROTOCOL_UDP
+from .const import CONF_MODEL_FAMILY, DEFAULT_NAME, DOMAIN
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -32,7 +32,7 @@ class GoodweFlowHandler(ConfigFlow, domain=DOMAIN):
         self,
         inverter: Inverter,
         host: str,
-        protocol: str,
+        port: int,
     ) -> ConfigFlowResult:
         """Handle a successful connection storing it's values on the entry data."""
         await self.async_set_unique_id(inverter.serial_number)
@@ -42,7 +42,7 @@ class GoodweFlowHandler(ConfigFlow, domain=DOMAIN):
             title=DEFAULT_NAME,
             data={
                 CONF_HOST: host,
-                CONF_PROTOCOL: protocol,
+                CONF_PORT: port,
                 CONF_MODEL_FAMILY: type(inverter).__name__,
             },
         )
@@ -55,12 +55,12 @@ class GoodweFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             host = user_input[CONF_HOST]
             try:
-                inverter, protocol = await self.async_detect_inverter_port(host=host)
+                inverter, port = await self.async_detect_inverter_port(host=host)
             except InverterError:
                 errors[CONF_HOST] = "connection_error"
             else:
                 return await self.async_handle_successful_connection(
-                    inverter, host, protocol
+                    inverter, host, port
                 )
         return self.async_show_form(
             step_id="user", data_schema=CONFIG_SCHEMA, errors=errors
@@ -69,14 +69,12 @@ class GoodweFlowHandler(ConfigFlow, domain=DOMAIN):
     @staticmethod
     async def async_detect_inverter_port(
         host: str,
-    ) -> tuple[Inverter, str]:
+    ) -> tuple[Inverter, int]:
         """Detects the port of the Inverter."""
         port = GOODWE_UDP_PORT
-        protocol = PROTOCOL_UDP
         try:
             inverter = await connect(host=host, port=port, retries=10)
         except InverterError:
             port = GOODWE_TCP_PORT
-            protocol = PROTOCOL_TCP
             inverter = await connect(host=host, port=port, retries=10)
-        return inverter, protocol
+        return inverter, port

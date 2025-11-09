@@ -1,24 +1,22 @@
 """The Goodwe inverter component."""
 
 from goodwe import Inverter, InverterError, connect
-from goodwe.const import GOODWE_TCP_PORT, GOODWE_UDP_PORT
 
-from homeassistant.const import CONF_HOST, CONF_PROTOCOL
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import DeviceInfo
 
 from .config_flow import GoodweFlowHandler
-from .const import CONF_MODEL_FAMILY, DOMAIN, PLATFORMS, PROTOCOL_TCP, PROTOCOL_UDP
+from .const import CONF_MODEL_FAMILY, DOMAIN, PLATFORMS
 from .coordinator import GoodweConfigEntry, GoodweRuntimeData, GoodweUpdateCoordinator
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: GoodweConfigEntry) -> bool:
     """Set up the Goodwe components from a config entry or updates an old config entry before setting up."""
     host = entry.data[CONF_HOST]
-    protocol = entry.data[CONF_PROTOCOL]
+    port = entry.data[CONF_PORT]
     model_family = entry.data[CONF_MODEL_FAMILY]
-    port = _get_port(protocol)
     # Connect to Goodwe inverter
     try:
         inverter = await connect(
@@ -62,25 +60,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoodweConfigEntry) -> bo
     return True
 
 
-def _get_port(protocol: str) -> int:
-    if protocol == PROTOCOL_UDP:
-        port = GOODWE_UDP_PORT
-    elif protocol == PROTOCOL_TCP:
-        port = GOODWE_TCP_PORT
-    return port
-
-
 async def async_reconfigure_entry(
     hass: HomeAssistant, entry: GoodweConfigEntry, host: str
 ) -> Inverter:
     """Try to reconfigure an Inverter that is not able to be connected with actual config. Actual host could be reused by a new Inverter with a different protocol."""
-    inverter, protocol = await GoodweFlowHandler.async_detect_inverter_port(host=host)
+    inverter, port = await GoodweFlowHandler.async_detect_inverter_port(host=host)
     family = type(inverter).__name__
     hass.config_entries.async_update_entry(
         entry,
         data={
             CONF_HOST: host,
-            CONF_PROTOCOL: protocol,
+            CONF_PORT: port,
             CONF_MODEL_FAMILY: family,
         },
     )
@@ -112,14 +102,14 @@ async def async_migrate_entry(
         # Update from version 1 to version 2 adding the PROTOCOL to the config entry
         host = config_entry.data[CONF_HOST]
         try:
-            inverter, protocol = await GoodweFlowHandler.async_detect_inverter_port(
+            inverter, port = await GoodweFlowHandler.async_detect_inverter_port(
                 host=host
             )
         except InverterError as err:
             raise ConfigEntryNotReady from err
         new_data = {
             CONF_HOST: host,
-            CONF_PROTOCOL: protocol,
+            CONF_PORT: port,
             CONF_MODEL_FAMILY: type(inverter).__name__,
         }
         hass.config_entries.async_update_entry(config_entry, data=new_data, version=2)

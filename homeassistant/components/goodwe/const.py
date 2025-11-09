@@ -12,6 +12,3 @@ DEFAULT_NAME = "GoodWe"
 SCAN_INTERVAL = timedelta(seconds=10)
 
 CONF_MODEL_FAMILY = "model_family"
-
-PROTOCOL_TCP = "TCP"
-PROTOCOL_UDP = "UDP"
