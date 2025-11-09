@@ -171,7 +171,7 @@ class DPCodeTypeInformationWrapper[T: TypeInformation](DPCodeWrapper):
         *,
         prefer_function: bool = False,
     ) -> Self | None:
-        """Find and return a DPCodeIntegerWrapper for the given DP codes."""
+        """Find and return a DPCodeTypeInformationWrapper for the given DP codes."""
         if type_information := find_dpcode(  # type: ignore[call-overload]
             device, dpcodes, dptype=cls.dptype, prefer_function=prefer_function
         ):
