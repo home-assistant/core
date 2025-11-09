@@ -169,11 +169,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         "here-routing": {"async-timeout"},
         "here-transit": {"async-timeout"},
     },
-    "hive": {
-        # https://github.com/Pyhass/Pyhiveapi/pull/88
-        # pyhive-integration > unasync > setuptools
-        "unasync": {"setuptools"}
-    },
     "homewizard": {"python-homewizard-energy": {"async-timeout"}},
     "imeon_inverter": {"imeon-inverter-api": {"async-timeout"}},
     "influxdb": {
