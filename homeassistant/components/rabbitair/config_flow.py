@@ -31,15 +31,12 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
             info = await client.get_info()
     except ValueError as err:
         # Most likely caused by an invalid access token.
-        _LOGGER.debug("Invalid access token during validation")
         raise InvalidAccessToken from err
     except TimeoutError as err:
         # Either the host didn't respond or the auth failed.
-        _LOGGER.debug("Timeout connecting to host")
         raise TimeoutConnect from err
     except OSError as err:
         # Most likely caused by an invalid host.
-        _LOGGER.debug("OS error connecting to host")
         raise InvalidHost from err
     except Exception as err:
         # Other possible errors.
@@ -140,11 +137,19 @@ class RabbitAirConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_HOST: user_input[CONF_HOST],
                 CONF_ACCESS_TOKEN: entry.data[CONF_ACCESS_TOKEN],
             }
-            errors, _ = await self._validate_and_map_errors(validate_input_dict)
+            errors, info = await self._validate_and_map_errors(validate_input_dict)
             if not errors:
-                return self.async_update_reload_and_abort(
-                    entry, data={**entry.data, CONF_HOST: user_input[CONF_HOST]}
+                expected_mac = entry.unique_id or dr.format_mac(
+                    entry.data.get(CONF_MAC, "")
                 )
+                if not expected_mac or not info or "mac" not in info:
+                    errors["base"] = "unknown"
+                elif expected_mac != dr.format_mac(info["mac"]):
+                    return self.async_abort(reason="reconfigure_device_mismatch")
+                else:
+                    return self.async_update_reload_and_abort(
+                        entry, data={**entry.data, CONF_HOST: user_input[CONF_HOST]}
+                    )
 
         return self.async_show_form(
             step_id="reconfigure",
