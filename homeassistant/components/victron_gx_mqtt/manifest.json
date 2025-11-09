@@ -1,5 +1,5 @@
 {
-  "domain": "victron",
+  "domain": "victron_gx_mqtt",
   "name": "Victron GX monitoring",
   "codeowners": ["@tomer-w"],
   "config_flow": true,

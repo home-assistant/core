@@ -3081,7 +3081,7 @@ velbus-aio==2025.8.0
 # homeassistant.components.venstar
 venstarcolortouch==0.21
 
-# homeassistant.components.victron
+# homeassistant.components.victron_gx_mqtt
 victron-mqtt==2025.10.25
 
 # homeassistant.components.victron_remote_monitoring

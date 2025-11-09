@@ -1732,8 +1732,8 @@ build.json @home-assistant/supervisor
 /tests/components/vesync/ @markperdue @webdjoe @thegardenmonkey @cdnninja @iprak @sapuseven
 /homeassistant/components/vicare/ @CFenner
 /tests/components/vicare/ @CFenner
-/homeassistant/components/victron/ @tomer-w
-/tests/components/victron/ @tomer-w
+/homeassistant/components/victron_gx_mqtt/ @tomer-w
+/tests/components/victron_gx_mqtt/ @tomer-w
 /homeassistant/components/victron_remote_monitoring/ @AndyTempel
 /tests/components/victron_remote_monitoring/ @AndyTempel
 /homeassistant/components/vilfo/ @ManneW

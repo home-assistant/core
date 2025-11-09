@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from victron_mqtt import CannotConnectError, OperationMode
 
-from homeassistant.components.victron.const import (
+from homeassistant.components.victron_gx_mqtt.const import (
     CONF_ELEVATED_TRACING,
     CONF_EXCLUDED_DEVICES,
     CONF_INSTALLATION_ID,

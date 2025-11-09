@@ -1,11 +1,11 @@
 """Constants for the victron_mqtt integration."""
 
 # Integration specific values (custom / builtin Home Assistant)
-DOMAIN = "victron"
+DOMAIN = "victron_gx_mqtt"
 DEFAULT_SIMPLE_NAMING = True
+ENTITY_PREFIX = "victron"
 
 # generic config values
-ENTITY_PREFIX = DOMAIN
 CONF_INSTALLATION_ID = "installation_id"
 CONF_MODEL = "model"
 CONF_SERIAL = "serial"

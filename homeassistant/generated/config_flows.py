@@ -721,7 +721,7 @@ FLOWS = {
         "version",
         "vesync",
         "vicare",
-        "victron",
+        "victron_gx_mqtt",
         "victron_remote_monitoring",
         "vilfo",
         "vizio",

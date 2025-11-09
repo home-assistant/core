@@ -1,0 +1,5 @@
+{
+  "domain": "victron",
+  "name": "Victron",
+  "integrations": ["victron_gx_mqtt", "victron_remote_monitoring"]
+}
