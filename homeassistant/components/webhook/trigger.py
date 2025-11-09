@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import json
 import logging
 from typing import Any
 
@@ -62,7 +63,15 @@ async def _handle_webhook(
     base_result: dict[str, Any] = {"platform": "webhook", "webhook_id": webhook_id}
 
     if "json" in request.headers.get(hdrs.CONTENT_TYPE, ""):
-        base_result["json"] = await request.json()
+        # Only attempt to parse if theres an actual body
+        if request.can_read_body:
+            text = await request.text()
+            if text.strip():
+                base_result["json"] = json.loads(text)
+            else:
+                base_result["json"] = {}
+        else:
+            base_result["json"] = {}
     else:
         base_result["data"] = await request.post()
 
