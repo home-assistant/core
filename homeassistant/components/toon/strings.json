@@ -32,6 +32,11 @@
       }
     }
   },
+  "exceptions": {
+    "oauth2_implementation_unavailable": {
+      "message": "OAuth2 implementation unavailable, will retry"
+    }
+  },
   "services": {
     "update": {
       "description": "Updates all entities with fresh data from Toon.",
