@@ -1,4 +1,4 @@
-"""Test the Dali Center light platform."""
+"""Test the Sunricher DALI light platform."""
 
 from typing import Any
 from unittest.mock import MagicMock, patch
@@ -50,7 +50,7 @@ async def init_integration(
     """Set up the integration for testing."""
     mock_config_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.sunricher_dali_center._PLATFORMS", platforms):
+    with patch("homeassistant.components.sunricher_dali._PLATFORMS", platforms):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
