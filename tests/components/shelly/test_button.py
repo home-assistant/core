@@ -3,7 +3,7 @@
 from copy import deepcopy
 from unittest.mock import Mock
 
-from aioshelly.const import MODEL_BLU_GATEWAY_G3, MODEL_PLUS_SMOKE
+from aioshelly.const import MODEL_BLU_GATEWAY_G3, MODEL_PLUS_SMOKE, MODEL_WALL_DISPLAY
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -538,3 +538,31 @@ async def test_rpc_smoke_mute_alarm_button(
     )
     mock_rpc_device.mock_update()
     mock_rpc_device.smoke_mute_alarm.assert_called_once_with(0)
+
+
+@pytest.mark.parametrize(("action", "value"), [("turn_on", True), ("turn_off", False)])
+async def test_wall_display_screen_buttons(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    mock_rpc_device: Mock,
+    snapshot: SnapshotAssertion,
+    action: str,
+    value: bool,
+) -> None:
+    """Test a Wall Display screen buttons."""
+    await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
+    entity_id = f"button.test_name_{action}_the_screen"
+
+    assert (state := hass.states.get(entity_id))
+    assert state == snapshot(name=f"{entity_id}-state")
+
+    assert (entry := entity_registry.async_get(entity_id))
+    assert entry == snapshot(name=f"{entity_id}-entry")
+
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    mock_rpc_device.wall_display_set_screen.assert_called_once_with(value=value)
