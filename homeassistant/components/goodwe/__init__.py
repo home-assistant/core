@@ -28,7 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoodweConfigEntry) -> bo
     except InverterError as err:
         # Try to reconfigure the Inverter
         try:
-            inverter = await async_reconfigure_entry(hass, entry, host)
+            inverter = await async_check_port(hass, entry, host)
         except InverterError:
             raise ConfigEntryNotReady from err
 
@@ -60,10 +60,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoodweConfigEntry) -> bo
     return True
 
 
-async def async_reconfigure_entry(
+async def async_check_port(
     hass: HomeAssistant, entry: GoodweConfigEntry, host: str
 ) -> Inverter:
-    """Try to reconfigure an Inverter that is not able to be connected with actual config. Actual host could be reused by a new Inverter with a different protocol."""
+    """Check the communication port of the inverter, it may have changed after a firmware update."""
     inverter, port = await GoodweFlowHandler.async_detect_inverter_port(host=host)
     family = type(inverter).__name__
     hass.config_entries.async_update_entry(
