@@ -27,6 +27,7 @@ from homeassistant.helpers.issue_registry import (
 from . import TuyaConfigEntry
 from .const import DOMAIN, TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
+from .models import DPCodeBooleanWrapper
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -945,7 +946,12 @@ async def async_setup_entry(
             device = manager.device_map[device_id]
             if descriptions := SWITCHES.get(device.category):
                 entities.extend(
-                    TuyaSwitchEntity(device, manager, description)
+                    TuyaSwitchEntity(
+                        device,
+                        manager,
+                        description,
+                        DPCodeBooleanWrapper(description.key),
+                    )
                     for description in descriptions
                     if description.key in device.status
                     and _check_deprecation(
@@ -1022,21 +1028,23 @@ class TuyaSwitchEntity(TuyaEntity, SwitchEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: SwitchEntityDescription,
+        dpcode_wrapper: DPCodeBooleanWrapper,
     ) -> None:
         """Init TuyaHaSwitch."""
         super().__init__(device, device_manager)
         self.entity_description = description
         self._attr_unique_id = f"{super().unique_id}{description.key}"
+        self._dpcode_wrapper = dpcode_wrapper
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if switch is on."""
-        return self.device.status.get(self.entity_description.key, False)
+        return self._dpcode_wrapper.read_device_status(self.device)
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        self._send_command([{"code": self.entity_description.key, "value": True}])
+        self._send_command([{"code": self._dpcode_wrapper.dpcode, "value": True}])
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        self._send_command([{"code": self.entity_description.key, "value": False}])
+        self._send_command([{"code": self._dpcode_wrapper.dpcode, "value": False}])
