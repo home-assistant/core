@@ -537,6 +537,8 @@ async def test_probe_silabs_firmware_type(
 
 async def test_async_flash_silabs_firmware(hass: HomeAssistant) -> None:
     """Test async_flash_silabs_firmware."""
+    await async_setup_component(hass, "homeassistant_hardware", {})
+
     owner1 = create_mock_owner()
     owner2 = create_mock_owner()
 
@@ -610,7 +612,6 @@ async def test_async_flash_silabs_firmware(hass: HomeAssistant) -> None:
         call(hass),
         # pylint: disable-next=unnecessary-dunder-call
         call().__aenter__(ANY),
-        # pylint: disable-next=unnecessary-dunder-call
         call().__aexit__(ANY, None, None, None),
     ]
 
@@ -618,13 +619,14 @@ async def test_async_flash_silabs_firmware(hass: HomeAssistant) -> None:
         call(hass),
         # pylint: disable-next=unnecessary-dunder-call
         call().__aenter__(ANY),
-        # pylint: disable-next=unnecessary-dunder-call
         call().__aexit__(ANY, None, None, None),
     ]
 
 
 async def test_async_flash_silabs_firmware_flash_failure(hass: HomeAssistant) -> None:
     """Test async_flash_silabs_firmware flash failure."""
+    await async_setup_component(hass, "homeassistant_hardware", {})
+
     owner1 = create_mock_owner()
     owner2 = create_mock_owner()
 
@@ -665,20 +667,20 @@ async def test_async_flash_silabs_firmware_flash_failure(hass: HomeAssistant) ->
         call(hass),
         # pylint: disable-next=unnecessary-dunder-call
         call().__aenter__(ANY),
-        # pylint: disable-next=unnecessary-dunder-call
         call().__aexit__(ANY, HomeAssistantError, exc.value, ANY),
     ]
     assert owner2.temporarily_stop.mock_calls == [
         call(hass),
         # pylint: disable-next=unnecessary-dunder-call
         call().__aenter__(ANY),
-        # pylint: disable-next=unnecessary-dunder-call
         call().__aexit__(ANY, HomeAssistantError, exc.value, ANY),
     ]
 
 
 async def test_async_flash_silabs_firmware_probe_failure(hass: HomeAssistant) -> None:
     """Test async_flash_silabs_firmware probe failure."""
+    await async_setup_component(hass, "homeassistant_hardware", {})
+
     owner1 = create_mock_owner()
     owner2 = create_mock_owner()
 
@@ -725,13 +727,11 @@ async def test_async_flash_silabs_firmware_probe_failure(hass: HomeAssistant) ->
         call(hass),
         # pylint: disable-next=unnecessary-dunder-call
         call().__aenter__(ANY),
-        # pylint: disable-next=unnecessary-dunder-call
         call().__aexit__(ANY, None, None, None),
     ]
     assert owner2.temporarily_stop.mock_calls == [
         call(hass),
         # pylint: disable-next=unnecessary-dunder-call
         call().__aenter__(ANY),
-        # pylint: disable-next=unnecessary-dunder-call
         call().__aexit__(ANY, None, None, None),
     ]

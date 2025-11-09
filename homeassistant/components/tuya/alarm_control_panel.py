@@ -21,7 +21,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, DPType
 from .entity import TuyaEntity
-from .models import EnumTypeData
+from .models import EnumTypeData, find_dpcode
 from .util import get_dpcode
 
 
@@ -118,8 +118,8 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
         self._attr_unique_id = f"{super().unique_id}{description.key}"
 
         # Determine supported  modes
-        if supported_modes := self.find_dpcode(
-            description.key, dptype=DPType.ENUM, prefer_function=True
+        if supported_modes := find_dpcode(
+            self.device, description.key, dptype=DPType.ENUM, prefer_function=True
         ):
             if Mode.HOME in supported_modes.range:
                 self._attr_supported_features |= AlarmControlPanelEntityFeature.ARM_HOME
@@ -131,8 +131,11 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
                 self._attr_supported_features |= AlarmControlPanelEntityFeature.TRIGGER
 
         # Determine master state
-        if enum_type := self.find_dpcode(
-            description.master_state, dptype=DPType.ENUM, prefer_function=True
+        if enum_type := find_dpcode(
+            self.device,
+            description.master_state,
+            dptype=DPType.ENUM,
+            prefer_function=True,
         ):
             self._master_state = enum_type
 
@@ -149,7 +152,11 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
             self._master_state is not None
             and self.device.status.get(self._master_state.dpcode) == State.ALARM
         ):
-            return AlarmControlPanelState.TRIGGERED
+            # Only report as triggered if NOT a battery warning
+            if (
+                changed_by := self.changed_by
+            ) is None or "Sensor Low Battery" not in changed_by:
+                return AlarmControlPanelState.TRIGGERED
 
         if not (status := self.device.status.get(self.entity_description.key)):
             return None
