@@ -25,7 +25,7 @@
         "data": {
           "region": "Region"
         },
-        "description": "Choose a state to browse districts"
+        "description": "Choose a state"
       }
     }
   },

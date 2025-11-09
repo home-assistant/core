@@ -66,7 +66,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             return False
 
         hass.config_entries.async_update_entry(config_entry, version=2)
-        _LOGGER.info("Migration to version %s successful", config_entry.version)
+        _LOGGER.info("Migration to version %s successful", 2)
         return True
 
     _LOGGER.error("Unknown version %s", config_entry.version)
