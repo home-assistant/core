@@ -50,6 +50,49 @@ class DPCodeBooleanWrapper(DPCodeWrapper):
         return None
 
 
+@dataclass
+class DPCodeB64DecodeWrapper(DPCodeWrapper):
+    """Wrapper for base64 encoded string/raw values.
+
+    Used for DPType.STRING and DPType.RAW that contain base64 encoded data.
+    Returns a dictionary with the dpcode as event_type and decoded value in attributes.
+    """
+
+    def read_device_status(self, device: CustomerDevice) -> dict[str, Any] | None:
+        """Read the device value for the dpcode and return as event structure."""
+        raw_value = self._read_device_status_raw(device)
+        if raw_value is None:
+            return None
+
+        # Decode base64 value to UTF-8 string
+        try:
+            decoded_value = base64.b64decode(raw_value).decode("utf-8")
+        except (ValueError, UnicodeDecodeError):
+            # If decoding fails, use raw value
+            decoded_value = raw_value
+
+        # Return structure suitable for events: dpcode as type, decoded value in attributes
+        return {"event_type": self.dpcode, "event_attributes": {"value": decoded_value}}
+
+    @classmethod
+    def find_dpcode(
+        cls,
+        device: CustomerDevice,
+        dpcodes: str | DPCode | tuple[DPCode, ...],
+        *,
+        prefer_function: bool = False,
+    ) -> Self | None:
+        """Find and return a DPCodeB64DecodeWrapper for STRING/RAW types."""
+        # Try STRING type first, then RAW
+        for dptype in (DPType.STRING, DPType.RAW):
+            if string_type := find_dpcode(
+                device, dpcodes, dptype=dptype, prefer_function=prefer_function
+            ):
+                return cls(dpcode=string_type.dpcode)
+
+        return None
+
+
 @dataclass(kw_only=True)
 class DPCodeEnumWrapper(DPCodeWrapper):
     """Simple wrapper for EnumTypeData values."""
@@ -102,6 +145,16 @@ def find_dpcode(
     prefer_function: bool = False,
     dptype: Literal[DPType.INTEGER],
 ) -> IntegerTypeData | None: ...
+
+
+@overload
+def find_dpcode(
+    device: CustomerDevice,
+    dpcodes: str | DPCode | tuple[DPCode, ...] | None,
+    *,
+    prefer_function: bool = False,
+    dptype: Literal[DPType.STRING, DPType.RAW],
+) -> StringTypeData | None: ...
 
 
 def find_dpcode(
@@ -245,9 +298,31 @@ class EnumTypeData(TypeInformation):
         return cls(dpcode, **parsed)
 
 
+@dataclass
+class StringTypeData(TypeInformation):
+    """String/Raw Type Data.
+
+    Used for DPType.STRING and DPType.RAW which don't have
+    structured type information.
+    """
+
+    dpcode: DPCode
+
+    @classmethod
+    def from_json(cls, dpcode: DPCode, data: str) -> StringTypeData | None:
+        """Load JSON string and return a StringTypeData object.
+
+        STRING/RAW types typically don't have structured values,
+        so we just return the wrapper with the dpcode.
+        """
+        return cls(dpcode)
+
+
 _TYPE_INFORMATION_MAPPINGS: dict[DPType, type[TypeInformation]] = {
     DPType.ENUM: EnumTypeData,
     DPType.INTEGER: IntegerTypeData,
+    DPType.STRING: StringTypeData,
+    DPType.RAW: StringTypeData,
 }
 
 
