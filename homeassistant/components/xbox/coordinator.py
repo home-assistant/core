@@ -22,7 +22,12 @@ from pythonxbox.common.signed_session import SignedSession
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_entry_oauth2_flow, device_registry as dr
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
+    OAuth2Session,
+    async_get_config_entry_implementation,
+)
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.ssl import get_default_context
 
@@ -77,20 +82,16 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
     async def _async_setup(self) -> None:
         """Set up coordinator."""
         try:
-            implementation = (
-                await config_entry_oauth2_flow.async_get_config_entry_implementation(
-                    self.hass, self.config_entry
-                )
+            implementation = await async_get_config_entry_implementation(
+                self.hass, self.config_entry
             )
-        except ValueError as e:
+        except ImplementationUnavailableError as e:
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
-                translation_key="request_exception",
+                translation_key="oauth2_implementation_unavailable",
             ) from e
 
-        session = config_entry_oauth2_flow.OAuth2Session(
-            self.hass, self.config_entry, implementation
-        )
+        session = OAuth2Session(self.hass, self.config_entry, implementation)
         signed_session = SignedSession(ssl_context=get_default_context())
         auth = api.AsyncConfigEntryAuth(signed_session, session)
         self.client = XboxLiveClient(auth)

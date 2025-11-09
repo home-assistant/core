@@ -262,6 +262,73 @@
     'state': '45',
   })
 # ---
+# name: test_device[cury_gen4][select.test_name_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'hall',
+        'bedroom',
+        'living_room',
+        'lavatory_room',
+        'none',
+        'reception',
+        'workplace',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.test_name_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Mode',
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cury_mode',
+    'unique_id': '123456789ABC-cury:0-cury_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_device[cury_gen4][select.test_name_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test name Mode',
+      'options': list([
+        'hall',
+        'bedroom',
+        'living_room',
+        'lavatory_room',
+        'none',
+        'reception',
+        'workplace',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_name_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'living_room',
+  })
+# ---
 # name: test_device[cury_gen4][sensor.test_name_last_restart-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -564,6 +631,54 @@
     'state': '-49',
   })
 # ---
+# name: test_device[cury_gen4][switch.test_name_away_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.test_name_away_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Away mode',
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cury_away_mode',
+    'unique_id': '123456789ABC-cury:0-cury_away_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_device[cury_gen4][switch.test_name_away_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test name Away mode',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.test_name_away_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_device[cury_gen4][switch.test_name_left_slot-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -786,7 +901,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <UpdateEntityFeature: 5>,
-    'translation_key': None,
+    'translation_key': 'beta_firmware',
     'unique_id': '123456789ABC-sys-fwupdate_beta',
     'unit_of_measurement': None,
   })
@@ -1343,7 +1458,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <UpdateEntityFeature: 5>,
-    'translation_key': None,
+    'translation_key': 'beta_firmware',
     'unique_id': '123456789ABC-sys-fwupdate_beta',
     'unit_of_measurement': None,
   })
@@ -4303,7 +4418,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <UpdateEntityFeature: 5>,
-    'translation_key': None,
+    'translation_key': 'beta_firmware',
     'unique_id': '123456789ABC-sys-fwupdate_beta',
     'unit_of_measurement': None,
   })
@@ -5037,7 +5152,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <UpdateEntityFeature: 5>,
-    'translation_key': None,
+    'translation_key': 'beta_firmware',
     'unique_id': '123456789ABC-sys-fwupdate_beta',
     'unit_of_measurement': None,
   })
@@ -5368,6 +5483,102 @@
     }),
     'context': <ANY>,
     'entity_id': 'button.test_name_restart',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_device[wall_display_xl][button.test_name_turn_off_the_screen-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.test_name_turn_off_the_screen',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Turn off the screen',
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'turn_off_the_screen',
+    'unique_id': '123456789ABC-turn_off_screen',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_device[wall_display_xl][button.test_name_turn_off_the_screen-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test name Turn off the screen',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_name_turn_off_the_screen',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_device[wall_display_xl][button.test_name_turn_on_the_screen-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.test_name_turn_on_the_screen',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Turn on the screen',
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'turn_on_the_screen',
+    'unique_id': '123456789ABC-turn_on_screen',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_device[wall_display_xl][button.test_name_turn_on_the_screen-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test name Turn on the screen',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_name_turn_on_the_screen',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -5956,7 +6167,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <UpdateEntityFeature: 5>,
-    'translation_key': None,
+    'translation_key': 'beta_firmware',
     'unique_id': '123456789ABC-sys-fwupdate_beta',
     'unit_of_measurement': None,
   })
@@ -7010,7 +7221,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <UpdateEntityFeature: 5>,
-    'translation_key': None,
+    'translation_key': 'beta_firmware',
     'unique_id': '123456789ABC-sys-fwupdate_beta',
     'unit_of_measurement': None,
   })
@@ -8881,7 +9092,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <UpdateEntityFeature: 5>,
-    'translation_key': None,
+    'translation_key': 'beta_firmware',
     'unique_id': '123456789ABC-sys-fwupdate_beta',
     'unit_of_measurement': None,
   })
@@ -11000,7 +11211,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <UpdateEntityFeature: 5>,
-    'translation_key': None,
+    'translation_key': 'beta_firmware',
     'unique_id': '123456789ABC-sys-fwupdate_beta',
     'unit_of_measurement': None,
   })

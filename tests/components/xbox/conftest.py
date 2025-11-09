@@ -40,7 +40,7 @@ async def setup_credentials(hass: HomeAssistant) -> None:
 def mock_oauth2_implementation() -> Generator[AsyncMock]:
     """Mock config entry oauth2 implementation."""
     with patch(
-        "homeassistant.components.xbox.coordinator.config_entry_oauth2_flow.async_get_config_entry_implementation",
+        "homeassistant.components.xbox.coordinator.async_get_config_entry_implementation",
         return_value=AsyncMock(),
     ) as mock_client:
         client = mock_client.return_value
