@@ -28,6 +28,13 @@
       "manufacturer": "nabu casa",
       "pid": "4001",
       "vid": "303A"
+    },
+    {
+      "description": "*sonoff*zwave*",
+      "known_devices": ["SONOFF ZWave 800 Dongle Plus ZG23"],
+      "manufacturer": "sonoff",
+      "pid": "EA60",
+      "vid": "10C4"
     }
   ],
   "zeroconf": ["_zwave-js-server._tcp.local."]
