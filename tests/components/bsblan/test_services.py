@@ -204,7 +204,6 @@ async def test_service_error_scenarios(
 
     assert exc_info.value.translation_key == expected_translation_key
 
-    assert exc_info.value.translation_key == expected_translation_key
 
 
 async def test_async_setup_services(hass: HomeAssistant) -> None:
