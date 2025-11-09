@@ -672,10 +672,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         light: LightEntity, call: ServiceCall
     ) -> None:
         """Handle toggling a light."""
-        if light.is_on:
-            await async_handle_light_off_service(light, call)
-        else:
-            await async_handle_light_on_service(light, call)
+        params: dict[str, Any] = _process_turn_on_params(light, call)
+        await light.async_toggle(**params)
 
     # Listen for light on and light off service calls.
 
