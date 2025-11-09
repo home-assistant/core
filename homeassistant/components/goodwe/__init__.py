@@ -75,7 +75,7 @@ async def async_reconfigure_entry(
 ) -> Inverter:
     """Try to reconfigure an Inverter that is not able to be connected with actual config. Actual host could be reused by a new Inverter with a different protocol."""
     inverter, protocol = await GoodweFlowHandler.async_detect_inverter_port(host=host)
-    family = (type(inverter).__name__,)
+    family = type(inverter).__name__
     hass.config_entries.async_update_entry(
         entry,
         data={
