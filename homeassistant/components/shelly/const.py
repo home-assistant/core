@@ -36,6 +36,10 @@ DOMAIN: Final = "shelly"
 
 LOGGER: Logger = getLogger(__package__)
 
+# BLE provisioning
+PROVISIONING_TIMEOUT: Final = 35  # 35 seconds to wait for device to connect to WiFi
+CONF_SSID: Final = "ssid"
+
 CONF_COAP_PORT: Final = "coap_port"
 FIRMWARE_PATTERN: Final = re.compile(r"^(\d{8})")
 
@@ -219,6 +223,11 @@ UPTIME_DEVIATION: Final = 60
 ENTRY_RELOAD_COOLDOWN = 60
 
 SHELLY_GAS_MODELS = [MODEL_GAS]
+SHELLY_WALL_DISPLAY_MODELS = (
+    MODEL_WALL_DISPLAY,
+    MODEL_WALL_DISPLAY_X2,
+    MODEL_WALL_DISPLAY_XL,
+)
 
 CONF_BLE_SCANNER_MODE = "ble_scanner_mode"
 
@@ -328,3 +337,5 @@ MODEL_LINKEDGO_ST802_THERMOSTAT = "ST-802"
 MODEL_LINKEDGO_ST1820_THERMOSTAT = "ST1820"
 MODEL_TOP_EV_CHARGER_EVE01 = "EVE01"
 MODEL_FRANKEVER_IRRIGATION_CONTROLLER = "Irrigation"
+
+ROLE_GENERIC = "generic"
