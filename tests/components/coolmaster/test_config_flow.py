@@ -14,7 +14,6 @@ def _flow_data():
     for mode in AVAILABLE_MODES:
         options[mode] = True
     options["swing_support"] = False
-    options["send_wakeup_prompt"] = False
     return options
 
 
