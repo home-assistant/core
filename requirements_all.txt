@@ -717,7 +717,7 @@ buienradar==1.0.6
 cached-ipaddress==1.0.1
 
 # homeassistant.components.caldav
-caldav==1.6.0
+caldav==2.1.0
 
 # homeassistant.components.cisco_mobility_express
 ciscomobilityexpress==0.3.9
@@ -3086,6 +3086,9 @@ victron-vrm==0.1.8
 
 # homeassistant.components.vilfo
 vilfo-api-client==0.5.0
+
+# homeassistant.components.caldav
+vobject==0.9.9
 
 # homeassistant.components.voip
 voip-utils==0.3.4
