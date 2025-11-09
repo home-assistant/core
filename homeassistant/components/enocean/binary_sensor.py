@@ -1,7 +1,5 @@
 """Support for EnOcean binary sensors."""
 
-from __future__ import annotations
-
 from homeassistant_enocean.entity_id import EnOceanEntityID
 from homeassistant_enocean.gateway import EnOceanHomeAssistantGateway
 
@@ -15,10 +13,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .config_entry import EnOceanConfigEntry
 from .entity import EnOceanEntity
 
-DEFAULT_NAME = ""
-DEPENDENCIES = ["enocean"]
-EVENT_BUTTON_PRESSED = "button_pressed"
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -28,8 +22,14 @@ async def async_setup_entry(
     """Set up entry."""
     gateway = config_entry.runtime_data.gateway
 
-    for entity_id in gateway.binary_sensor_entities:
-        async_add_entities([EnOceanBinarySensor(entity_id, gateway=gateway)])
+    for entity_id, properties in gateway.binary_sensor_entities:
+        async_add_entities(
+            [
+                EnOceanBinarySensor(
+                    entity_id, gateway=gateway, device_class=properties.device_class
+                )
+            ]
+        )
 
 
 class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
@@ -44,14 +44,14 @@ class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
         """Initialize the EnOcean binary sensor."""
         super().__init__(enocean_entity_id=entity_id, gateway=gateway)
         self._attr_device_class = device_class
+        self.gateway.register_binary_sensor_callback(self.entity_id, self.update)
 
     @property
     def device_class(self) -> BinarySensorDeviceClass | None:
         """Return the class of this sensor."""
         return self._attr_device_class
 
-    @property
-    def is_on(self) -> bool | None:
-        """Return true if the binary sensor is on."""
-        is_on: bool | None = self.gateway.binary_sensor_is_on(self.enocean_entity_id)
-        return is_on
+    def update(self, is_on: bool) -> None:
+        """Update the binary sensor state."""
+        self._attr_is_on = is_on
+        self.schedule_update_ha_state()
