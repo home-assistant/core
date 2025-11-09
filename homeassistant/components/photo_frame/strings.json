@@ -1,0 +1,20 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "media": "Media",
+          "name": "Photo frame name"
+        },
+        "submit": "Create"
+      }
+    }
+  },
+  "services": {
+    "shuffle": {
+      "description": "Update the image entity with a new random image from the configured media.",
+      "name": "Shuffle"
+    }
+  },
+  "title": "Photo Frame"
+}

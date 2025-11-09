@@ -1,0 +1,7 @@
+{
+  "services": {
+    "shuffle": {
+      "service": "mdi:shuffle"
+    }
+  }
+}
