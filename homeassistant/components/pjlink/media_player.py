@@ -12,7 +12,13 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaPlayerState,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_UNIQUE_ID,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -29,6 +35,7 @@ PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): cv.string,
         vol.Optional(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -45,6 +52,7 @@ def setup_platform(
     name = config.get(CONF_NAME)
     encoding = config.get(CONF_ENCODING)
     password = config.get(CONF_PASSWORD)
+    unique_id = config.get(CONF_UNIQUE_ID)
 
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
@@ -54,7 +62,7 @@ def setup_platform(
     if device_label in hass_data:
         return
 
-    device = PjLinkDevice(host, port, name, encoding, password)
+    device = PjLinkDevice(host, port, name, encoding, password, unique_id)
     hass_data[device_label] = device
     add_entities([device], True)
 
@@ -74,7 +82,7 @@ class PjLinkDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.SELECT_SOURCE
     )
 
-    def __init__(self, host, port, name, encoding, password):
+    def __init__(self, host, port, name, encoding, password, unique_id):
         """Iinitialize the PJLink device."""
         self._host = host
         self._port = port
@@ -88,6 +96,7 @@ class PjLinkDevice(MediaPlayerEntity):
         self._attr_source = None
         self._attr_source_list = []
         self._attr_available = False
+        self._attr_unique_id = unique_id
 
     def _force_off(self):
         self._attr_state = MediaPlayerState.OFF
