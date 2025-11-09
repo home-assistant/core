@@ -1,4 +1,4 @@
-"""Test the victron config flow."""
+"""Test the victron GX config flow."""
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -46,7 +46,7 @@ MOCK_HOST = "192.168.1.100"
 def mock_victron_hub():
     """Mock the Victron Hub."""
     with patch(
-        "homeassistant.components.victron.config_flow.VictronVenusHub"
+        "homeassistant.components.victron_gx_mqtt.config_flow.VictronVenusHub"
     ) as mock_hub:
         hub_instance = MagicMock()
         hub_instance.connect = AsyncMock()
