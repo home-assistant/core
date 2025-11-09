@@ -179,7 +179,7 @@ async def test_async_remove_config_entry_device(
     # Create a fake device entry tied to the config entry
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        identifiers={("your_domain", "test_device")},
+        identifiers={(DOMAIN, "test_device")},
     )
 
     # Call the remove method
