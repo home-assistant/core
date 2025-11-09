@@ -7,6 +7,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import STATE_OFF, STATE_ON
+from homeassistant.components.satel_integra.const import DOMAIN
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
@@ -14,6 +15,7 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
 from . import MOCK_CODE, MOCK_ENTRY_ID, setup_integration
@@ -37,11 +39,18 @@ async def test_switches(
     snapshot: SnapshotAssertion,
     mock_config_entry_with_subentries: MockConfigEntry,
     entity_registry: EntityRegistry,
+    device_registry: DeviceRegistry,
 ) -> None:
     """Test switch correctly being set up."""
     await setup_integration(hass, mock_config_entry_with_subentries)
 
     await snapshot_platform(hass, entity_registry, snapshot, MOCK_ENTRY_ID)
+
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, "1234567890_switch_1")}
+    )
+
+    assert device_entry == snapshot(name="device")
 
 
 async def test_switch_initial_state_on(

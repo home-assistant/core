@@ -1,4 +1,35 @@
 # serializer version: 1
+# name: test_switches[device]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'satel_integra',
+        '1234567890_switch_1',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': None,
+    'model': None,
+    'model_id': None,
+    'name': 'Switchable Output',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_switches[switch.switchable_output-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -24,7 +55,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Switchable Output',
+    'original_name': None,
     'platform': 'satel_integra',
     'previous_unique_id': None,
     'suggested_object_id': None,
