@@ -819,7 +819,57 @@
       'unique_id': '6000s-humidity',
       'unit_of_measurement': '%',
     }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': dict({
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+      'entity_id': 'sensor.humidifier_6000s_filter_lifetime',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Filter lifetime',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'filter_life',
+      'unique_id': '6000s-filter-life',
+      'unit_of_measurement': '%',
+    }),
   ])
+# ---
+# name: test_sensor_state[Humidifier 6000s][sensor.humidifier_6000s_filter_lifetime]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Humidifier 6000s Filter lifetime',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.humidifier_6000s_filter_lifetime',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '77',
+  })
 # ---
 # name: test_sensor_state[Humidifier 6000s][sensor.humidifier_6000s_humidity]
   StateSnapshot({
