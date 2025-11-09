@@ -17,7 +17,6 @@ from pythonxbox.api.provider.smartglass.models import (
     SmartglassConsoleStatus,
 )
 from pythonxbox.api.provider.titlehub.models import Title
-from pythonxbox.common.signed_session import SignedSession
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -28,8 +27,8 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
     async_get_config_entry_implementation,
 )
+from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util.ssl import get_default_context
 
 from . import api
 from .const import DOMAIN
@@ -92,8 +91,8 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
             ) from e
 
         session = OAuth2Session(self.hass, self.config_entry, implementation)
-        signed_session = SignedSession(ssl_context=get_default_context())
-        auth = api.AsyncConfigEntryAuth(signed_session, session)
+        async_session = get_async_client(self.hass)
+        auth = api.AsyncConfigEntryAuth(async_session, session)
         self.client = XboxLiveClient(auth)
 
         try:
