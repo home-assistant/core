@@ -19,12 +19,12 @@
       },
       "user": {
         "data": {
-          "url": "URL of the Music Assistant server"
+          "url": "[%key:common::config_flow::data::url%]"
         },
         "data_description": {
           "url": "Enter the base URL of your Music Assistant server including the http prefix"
         },
-        "description": "Add a Music Assistant server `{url}` to Home Assistant?",
+        "description": "URL of the Music Assistant server",
         "title": "Connect to a Music Assistant server"
       }
     }
