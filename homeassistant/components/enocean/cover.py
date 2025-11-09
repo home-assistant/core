@@ -35,11 +35,13 @@ async def async_setup_entry(
     """Set up entry."""
     gateway = config_entry.runtime_data.gateway
 
-    for entity_id, properties in gateway.cover_entities:
+    for entity_id in gateway.cover_entities:
         async_add_entities(
             [
                 EnOceanCover(
-                    entity_id, gateway=gateway, device_class=properties.device_class
+                    entity_id,
+                    gateway=gateway,
+                    device_class=gateway.cover_entities[entity_id].device_class,
                 )
             ]
         )
@@ -59,7 +61,7 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
             enocean_entity_id=enocean_entity_id,
             gateway=gateway,
         )
-        self.gateway.register_cover_callback(self.entity_id, self.update)
+        self.gateway.register_cover_callback(enocean_entity_id, self.update)
 
         # set base class attributes
         self._attr_device_class = device_class or CoverDeviceClass.BLIND
@@ -69,6 +71,9 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
             | CoverEntityFeature.STOP
             | CoverEntityFeature.SET_POSITION
         )
+
+        self._attr_is_closed: bool | None = None
+        """Flag to indicate whether the cover is closed."""
 
         self.__stop_suspected = False
         """Flag to indicate that a stop of the cover movement is suspected."""

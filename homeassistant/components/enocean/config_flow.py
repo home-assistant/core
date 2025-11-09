@@ -264,7 +264,7 @@ class OptionsFlowHandler(OptionsFlow):
                     default=default_sender_id,
                 ): selector.SelectSelector(
                     selector.SelectSelectorConfig(
-                        options=self.config_entry.runtime_data.gateway.valid_sender_ids(),
+                        options=self.config_entry.runtime_data.gateway.valid_sender_ids,
                         custom_value=False,
                     )
                 ),

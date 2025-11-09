@@ -22,11 +22,13 @@ async def async_setup_entry(
     """Set up entry."""
     gateway = config_entry.runtime_data.gateway
 
-    for entity_id, properties in gateway.binary_sensor_entities:
+    for entity_id in gateway.binary_sensor_entities:
         async_add_entities(
             [
                 EnOceanBinarySensor(
-                    entity_id, gateway=gateway, device_class=properties.device_class
+                    entity_id,
+                    gateway=gateway,
+                    device_class=gateway.binary_sensor_entities[entity_id].device_class,
                 )
             ]
         )
@@ -44,7 +46,7 @@ class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
         """Initialize the EnOcean binary sensor."""
         super().__init__(enocean_entity_id=entity_id, gateway=gateway)
         self._attr_device_class = device_class
-        self.gateway.register_binary_sensor_callback(self.entity_id, self.update)
+        self.gateway.register_binary_sensor_callback(entity_id, self.update)
 
     @property
     def device_class(self) -> BinarySensorDeviceClass | None:

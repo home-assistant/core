@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from homeassistant_enocean.address import EnOceanDeviceAddress
+from homeassistant_enocean.address import EnOceanAddress, EnOceanDeviceAddress
 from homeassistant_enocean.device_type import EnOceanDeviceType
 from homeassistant_enocean.gateway import EnOceanHomeAssistantGateway
 
@@ -16,6 +16,7 @@ from .const import (
     CONF_ENOCEAN_DEVICE_ID,
     CONF_ENOCEAN_DEVICE_NAME,
     CONF_ENOCEAN_DEVICE_TYPE_ID,
+    CONF_ENOCEAN_SENDER_ID,
     DATA_ENOCEAN,
     DOMAIN,
     LOGGER,
@@ -60,15 +61,25 @@ async def async_setup_entry(
                 EnOceanDeviceType.get_supported_device_types()[device_type_id]
             )
             device_name = device.get(CONF_ENOCEAN_DEVICE_NAME, "EnOcean Device")
+
+            sender_id = gateway.base_id
+            sender_id_string: str | None = device.get(CONF_ENOCEAN_SENDER_ID)
+            if sender_id_string:
+                sender_id = EnOceanAddress.from_string(sender_id_string)
+
             LOGGER.warning(
-                "Adding EnOcean device %s of type %s with name %s",
+                "Adding EnOcean device %s of type %s with name %s and sender ID %s",
                 enocean_id,
                 device_type.unique_id,
                 device_name,
+                sender_id.to_string(),
             )
 
             gateway.add_device(
-                enocean_id=enocean_id, device_type=device_type, device_name=device_name
+                enocean_id=enocean_id,
+                device_type=device_type,
+                device_name=device_name,
+                sender_id=sender_id,
             )
 
         except ValueError as ex:
@@ -122,7 +133,7 @@ async def async_reload_entry(hass: HomeAssistant, entry: EnOceanConfigEntry) -> 
 
 async def async_unload_entry(hass: HomeAssistant, entry: EnOceanConfigEntry) -> bool:
     """Unload EnOcean config entry."""
-    entry.runtime_data.gateway.unload()
+    entry.runtime_data.gateway.stop()
 
     if unload_platforms := await hass.config_entries.async_unload_platforms(
         entry, PLATFORMS
