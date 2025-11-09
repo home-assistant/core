@@ -27,7 +27,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoodweConfigEntry) -> bo
             retries=10,
         )
     except InverterError as err:
-        # Try to reconfigure the Inverter
         try:
             inverter = await async_check_port(hass, entry, host)
         except InverterError:
