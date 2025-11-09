@@ -11,7 +11,7 @@ from pyyardian.typing import OperationInfo
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -104,7 +104,7 @@ class YardianUpdateCoordinator(DataUpdateCoordinator[YardianCombinedState]):
         except TimeoutError as e:
             raise UpdateFailed("Timeout communicating with device") from e
         except NotAuthorizedException as e:
-            raise ConfigEntryError("Invalid access token") from e
+            raise ConfigEntryAuthFailed("Invalid access token") from e
         except NetworkException as e:
             raise UpdateFailed("Failed to communicate with device") from e
         except Exception as e:  # safety net for tests to surface failure reason
