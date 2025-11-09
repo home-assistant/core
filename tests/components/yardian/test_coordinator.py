@@ -30,17 +30,16 @@ async def _create_coordinator(hass: HomeAssistant) -> YardianUpdateCoordinator:
     entry.add_to_hass(hass)
     controller = AsyncMock()
     controller.fetch_oper_info = AsyncMock()
-    coordinator = YardianUpdateCoordinator(hass, entry, controller)
-    return coordinator
+    return YardianUpdateCoordinator(hass, entry, controller)
 
 
 @pytest.mark.parametrize(
     ("exception", "expected"),
-    (
+    [
         (TimeoutError(), UpdateFailed),
         (NetworkException("down"), UpdateFailed),
         (Exception("boom"), UpdateFailed),
-    ),
+    ],
 )
 async def test_async_update_data_wraps_known_failures(
     hass: HomeAssistant,
@@ -60,7 +59,9 @@ async def test_async_update_data_handles_auth_error(hass: HomeAssistant) -> None
     """NotAuthorizedException should raise ConfigEntryError."""
 
     coordinator = await _create_coordinator(hass)
-    coordinator.controller.fetch_device_state.side_effect = NotAuthorizedException("bad")
+    coordinator.controller.fetch_device_state.side_effect = NotAuthorizedException(
+        "bad"
+    )
 
     with pytest.raises(ConfigEntryError):
         await coordinator._async_update_data()

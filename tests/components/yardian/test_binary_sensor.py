@@ -7,12 +7,11 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from homeassistant.components.yardian.binary_sensor import _zone_enabled_value
 from homeassistant.components.yardian.const import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from homeassistant.components.yardian.binary_sensor import _zone_enabled_value
 
 from . import setup_integration
 
@@ -30,7 +29,9 @@ async def test_all_entities(
     with patch("homeassistant.components.yardian.PLATFORMS", [Platform.BINARY_SENSOR]):
         await setup_integration(hass, mock_config_entry)
 
-    entries = er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
+    entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
     entity_ids = {entry.entity_id for entry in entries}
     assert entity_ids == {
         "binary_sensor.yardian_smart_sprinkler_watering_running",
