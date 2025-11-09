@@ -21,6 +21,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -76,14 +77,12 @@ class RpcButtonDescription(RpcEntityDescription, ButtonEntityDescription):
 BUTTONS: Final[list[ShellyButtonDescription[Any]]] = [
     ShellyButtonDescription[ShellyBlockCoordinator | ShellyRpcCoordinator](
         key="reboot",
-        name="Restart",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
         press_action="trigger_reboot",
     ),
     ShellyButtonDescription[ShellyBlockCoordinator](
         key="self_test",
-        name="Self test",
         translation_key="self_test",
         entity_category=EntityCategory.DIAGNOSTIC,
         press_action="trigger_shelly_gas_self_test",
@@ -91,30 +90,28 @@ BUTTONS: Final[list[ShellyButtonDescription[Any]]] = [
     ),
     ShellyButtonDescription[ShellyBlockCoordinator](
         key="mute",
-        name="Mute",
-        translation_key="mute",
+        translation_key="mute_alarm",
         entity_category=EntityCategory.CONFIG,
         press_action="trigger_shelly_gas_mute",
         supported=lambda coordinator: coordinator.model in SHELLY_GAS_MODELS,
     ),
     ShellyButtonDescription[ShellyBlockCoordinator](
         key="unmute",
-        name="Unmute",
-        translation_key="unmute",
+        translation_key="unmute_alarm",
         entity_category=EntityCategory.CONFIG,
         press_action="trigger_shelly_gas_unmute",
         supported=lambda coordinator: coordinator.model in SHELLY_GAS_MODELS,
     ),
     ShellyButtonDescription[ShellyRpcCoordinator](
         key="turn_on_screen",
-        name="Turn on the screen",
+        translation_key="turn_on_the_screen",
         press_action="wall_display_set_screen",
         params={"value": True},
         supported=lambda coordinator: coordinator.model in SHELLY_WALL_DISPLAY_MODELS,
     ),
     ShellyButtonDescription[ShellyRpcCoordinator](
         key="turn_off_screen",
-        name="Turn off the screen",
+        translation_key="turn_off_the_screen",
         press_action="wall_display_set_screen",
         params={"value": False},
         supported=lambda coordinator: coordinator.model in SHELLY_WALL_DISPLAY_MODELS,
@@ -347,7 +344,7 @@ class ShellyBluTrvButton(ShellyRpcAttributeEntity, ButtonEntity):
         coordinator: ShellyRpcCoordinator,
         key: str,
         attribute: str,
-        description: RpcEntityDescription,
+        description: RpcButtonDescription,
     ) -> None:
         """Initialize button."""
         super().__init__(coordinator, key, attribute, description)
@@ -361,6 +358,9 @@ class ShellyBluTrvButton(ShellyRpcAttributeEntity, ButtonEntity):
             config, ble_addr, coordinator.mac, fw_ver
         )
 
+        if hasattr(self, "_attr_name") and description.role != ROLE_GENERIC:
+            delattr(self, "_attr_name")
+
     @rpc_call
     async def async_press(self) -> None:
         """Triggers the Shelly button press service."""
@@ -372,6 +372,19 @@ class RpcVirtualButton(ShellyRpcAttributeEntity, ButtonEntity):
 
     entity_description: RpcButtonDescription
     _id: int
+
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        attribute: str,
+        description: RpcButtonDescription,
+    ) -> None:
+        """Initialize select."""
+        super().__init__(coordinator, key, attribute, description)
+
+        if hasattr(self, "_attr_name") and description.role != ROLE_GENERIC:
+            delattr(self, "_attr_name")
 
     @rpc_call
     async def async_press(self) -> None:
@@ -386,6 +399,20 @@ class RpcSleepingSmokeMuteButton(ShellySleepingRpcAttributeEntity, ButtonEntity)
     """Defines a Shelly RPC Smoke mute alarm button."""
 
     entity_description: RpcButtonDescription
+
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        attribute: str,
+        description: RpcButtonDescription,
+        entry: RegistryEntry | None = None,
+    ) -> None:
+        """Initialize the sleeping sensor."""
+        super().__init__(coordinator, key, attribute, description, entry)
+
+        if hasattr(self, "_attr_name"):
+            delattr(self, "_attr_name")
 
     @rpc_call
     async def async_press(self) -> None:
@@ -414,19 +441,20 @@ RPC_BUTTONS = {
     ),
     "button_open": RpcButtonDescription(
         key="button",
+        translation_key="open",
         entity_registry_enabled_default=False,
         role="open",
         models={MODEL_FRANKEVER_WATER_VALVE},
     ),
     "button_close": RpcButtonDescription(
         key="button",
+        translation_key="close",
         entity_registry_enabled_default=False,
         role="close",
         models={MODEL_FRANKEVER_WATER_VALVE},
     ),
     "calibrate": RpcButtonDescription(
         key="blutrv",
-        name="Calibrate",
         translation_key="calibrate",
         entity_category=EntityCategory.CONFIG,
         entity_class=ShellyBluTrvButton,
@@ -435,7 +463,6 @@ RPC_BUTTONS = {
     "smoke_mute": RpcButtonDescription(
         key="smoke",
         sub_key="mute",
-        name="Mute alarm",
-        translation_key="mute",
+        translation_key="mute_alarm",
     ),
 }
