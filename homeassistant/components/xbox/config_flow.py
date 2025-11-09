@@ -1,6 +1,5 @@
 """Config flow for xbox."""
 
-from contextlib import suppress
 import logging
 from typing import Any
 
@@ -45,8 +44,7 @@ class OAuth2FlowHandler(
         """Create an entry for the flow."""
 
         async with AsyncClient() as session:
-            with suppress(DeprecationWarning):
-                auth = AuthenticationManager(session, "", "", "")  # type: ignore[arg-type]
+            auth = AuthenticationManager(session, "", "", "")
             auth.oauth = OAuth2TokenResponse(**data["token"])
             await auth.refresh_tokens()
 

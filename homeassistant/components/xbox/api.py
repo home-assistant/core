@@ -1,7 +1,5 @@
 """API for xbox bound to Home Assistant OAuth."""
 
-from contextlib import suppress
-
 from httpx import AsyncClient
 from pythonxbox.authentication.manager import AuthenticationManager
 from pythonxbox.authentication.models import OAuth2TokenResponse
@@ -15,14 +13,8 @@ class AsyncConfigEntryAuth(AuthenticationManager):
 
     def __init__(self, session: AsyncClient, oauth_session: OAuth2Session) -> None:
         """Initialize xbox auth."""
-
-        # The library deprecated direct use of httpx.AsyncClient in favor of SignedSession,
-        # which wraps it. Since SignedSession is only needed for XAL authentication and Home Assistant
-        # uses XUser authentication instead, we can safely inject a standard httpx.AsyncClient session
-        # and ignore the deprecation warning.
-        with suppress(DeprecationWarning):
-            # Leaving out client credentials as they are handled by Home Assistant
-            super().__init__(session, "", "", "")  # type: ignore[arg-type]
+        # Leaving out client credentials as they are handled by Home Assistant
+        super().__init__(session, "", "", "")
         self._oauth_session = oauth_session
         self.oauth = self._get_oauth_token()
 
