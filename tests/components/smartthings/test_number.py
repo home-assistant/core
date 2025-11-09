@@ -131,16 +131,18 @@ async def test_fsv_native_value(
     """Test FSV setting native_value method."""
     await setup_integration(hass, mock_config_entry)
 
-    # Check that FSV setting entities exist and have correct values
+    # Check that FSV setting entities exist and have correct values and min/max
     fsv_1031_state = hass.states.get("number.eco_heating_system_fsv_setting_1031")
     assert fsv_1031_state is not None
     assert fsv_1031_state.state == "70"  # From test fixture
+    assert fsv_1031_state.attributes["min"] == 37
+    assert fsv_1031_state.attributes["max"] == 70
 
     fsv_1032_state = hass.states.get("number.eco_heating_system_fsv_setting_1032")
     assert fsv_1032_state is not None
-    assert (
-        fsv_1032_state.state == "25"
-    )  # From test fixture    # Test state update for FSV settings
+    assert fsv_1032_state.state == "25"  # From test fixture
+    assert fsv_1032_state.attributes["min"] == 15
+    assert fsv_1032_state.attributes["max"] == 37
     await trigger_update(
         hass,
         devices,

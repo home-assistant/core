@@ -276,8 +276,8 @@ class SmartThingsFsvSettings(SmartThingsEntity, NumberEntity):
 
         self._attr_translation_key = "fsv_setting"
         self._attr_translation_placeholders = {"fsv_id": str(self._fsv_id)}
-        self._attr_min_value = fsv_setting[FsvSettingProperty.MIN_VALUE]
-        self._attr_max_value = fsv_setting[FsvSettingProperty.MAX_VALUE]
+        self._attr_native_min_value = fsv_setting[FsvSettingProperty.MIN_VALUE]
+        self._attr_native_max_value = fsv_setting[FsvSettingProperty.MAX_VALUE]
         self._attr_step = fsv_setting[FsvSettingProperty.RESOLUTION]
         self._attr_entity_category = EntityCategory.CONFIG
 
