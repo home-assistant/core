@@ -11,7 +11,14 @@ from pyyardian import OperationInfo
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.yardian.const import DOMAIN
-from homeassistant.components.yardian.coordinator import SCAN_INTERVAL
+from homeassistant.components.yardian.coordinator import (
+    SCAN_INTERVAL,
+    YardianUpdateCoordinator,
+)
+from homeassistant.components.yardian.sensor import (
+    _active_zone_count_value,
+    _water_hammer_duration_value,
+)
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -147,3 +154,27 @@ async def test_zone_delay_sensor_interprets_timestamp_and_errors(
     )
     await _async_trigger_refresh(hass, freezer)
     assert hass.states.get(entity_id).state == STATE_UNKNOWN
+
+
+async def test_active_zone_count_value_reports_length(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_yardian_client: AsyncMock,
+) -> None:
+    """Active zone count helper returns number of active zones."""
+
+    await setup_integration(hass, mock_config_entry)
+    coordinator: YardianUpdateCoordinator = hass.data[DOMAIN][mock_config_entry.entry_id]
+    assert _active_zone_count_value(coordinator) == 1
+
+
+async def test_water_hammer_duration_value_returns_duration(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_yardian_client: AsyncMock,
+) -> None:
+    """Water hammer helper exposes raw duration in seconds."""
+
+    await setup_integration(hass, mock_config_entry)
+    coordinator: YardianUpdateCoordinator = hass.data[DOMAIN][mock_config_entry.entry_id]
+    assert _water_hammer_duration_value(coordinator) == 2
