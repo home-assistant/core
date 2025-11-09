@@ -13,10 +13,11 @@ from .coordinator import GoodweConfigEntry, GoodweRuntimeData, GoodweUpdateCoord
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: GoodweConfigEntry) -> bool:
-    """Set up the Goodwe components from a config entry or updates an old config entry before setting up."""
+    """Set up the Goodwe components from a config entry."""
     host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
     model_family = entry.data[CONF_MODEL_FAMILY]
+
     # Connect to Goodwe inverter
     try:
         inverter = await connect(
