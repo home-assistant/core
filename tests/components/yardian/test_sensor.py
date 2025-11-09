@@ -164,7 +164,9 @@ async def test_active_zone_count_value_reports_length(
     """Active zone count helper returns number of active zones."""
 
     await setup_integration(hass, mock_config_entry)
-    coordinator: YardianUpdateCoordinator = hass.data[DOMAIN][mock_config_entry.entry_id]
+    coordinator: YardianUpdateCoordinator = hass.data[DOMAIN][
+        mock_config_entry.entry_id
+    ]
     assert _active_zone_count_value(coordinator) == 1
 
 
@@ -176,5 +178,7 @@ async def test_water_hammer_duration_value_returns_duration(
     """Water hammer helper exposes raw duration in seconds."""
 
     await setup_integration(hass, mock_config_entry)
-    coordinator: YardianUpdateCoordinator = hass.data[DOMAIN][mock_config_entry.entry_id]
+    coordinator: YardianUpdateCoordinator = hass.data[DOMAIN][
+        mock_config_entry.entry_id
+    ]
     assert _water_hammer_duration_value(coordinator) == 2
