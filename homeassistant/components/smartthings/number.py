@@ -265,9 +265,9 @@ class SmartThingsFsvSettings(SmartThingsEntity, NumberEntity):
             {Capability.SAMSUNG_CE_EHS_FSV_SETTINGS},
             component=component,
         )
-        self._attr_unique_id = f"{device.device.device_id}_{component}_{Capability.SAMSUNG_CE_EHS_FSV_SETTINGS}_{Attribute.FSV_SETTINGS}_{fsv_setting}"
-
         self._fsv_id = fsv_setting[FsvSettingProperty.ID]
+        self._attr_unique_id = f"{device.device.device_id}_{component}_{Capability.SAMSUNG_CE_EHS_FSV_SETTINGS}_{Attribute.FSV_SETTINGS}_{self._fsv_id}"
+
         if fsv_setting[FsvSettingProperty.TYPE] == FsvSettingType.TEMPERATURE:
             self._attr_native_unit_of_measurement = UNIT_MAP[
                 fsv_setting[FsvSettingProperty.TEMPERATURE_UNIT]

@@ -35,7 +35,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '1031', 'inUse': True, 'resolution': 1, 'type': 'temperature', 'minValue': 37, 'maxValue': 75, 'value': 65, 'isValid': True, 'temperatureUnit': 'C'}",
+    'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_1031',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -94,7 +94,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '1032', 'inUse': True, 'resolution': 1, 'type': 'temperature', 'minValue': 15, 'maxValue': 37, 'value': 26, 'isValid': True, 'temperatureUnit': 'C'}",
+    'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_1032',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -153,7 +153,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '1051', 'inUse': True, 'resolution': 1, 'type': 'temperature', 'minValue': 50, 'maxValue': 70, 'value': 69, 'isValid': True, 'temperatureUnit': 'C'}",
+    'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_1051',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -212,7 +212,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '1052', 'inUse': True, 'resolution': 1, 'type': 'temperature', 'minValue': 30, 'maxValue': 40, 'value': 38, 'isValid': True, 'temperatureUnit': 'C'}",
+    'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_1052',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -271,7 +271,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '2011', 'inUse': True, 'resolution': 1, 'type': 'temperature', 'minValue': -20, 'maxValue': 5, 'value': -5, 'isValid': True, 'temperatureUnit': 'C'}",
+    'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_2011',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -330,7 +330,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '2012', 'inUse': True, 'resolution': 1, 'type': 'temperature', 'minValue': 10, 'maxValue': 20, 'value': 10, 'isValid': True, 'temperatureUnit': 'C'}",
+    'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_2012',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -389,7 +389,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '2021', 'inUse': True, 'resolution': 1, 'type': 'temperature', 'minValue': 17, 'maxValue': 75, 'value': 70, 'isValid': True, 'temperatureUnit': 'C'}",
+    'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_2021',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -448,7 +448,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '2022', 'inUse': True, 'resolution': 1, 'type': 'temperature', 'minValue': 17, 'maxValue': 75, 'value': 45, 'isValid': True, 'temperatureUnit': 'C'}",
+    'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_2022',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -507,7 +507,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '2031', 'inUse': True, 'resolution': 1, 'type': 'temperature', 'minValue': 17, 'maxValue': 75, 'value': 70, 'isValid': True, 'temperatureUnit': 'C'}",
+    'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_2031',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -566,7 +566,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '2032', 'inUse': True, 'resolution': 1, 'type': 'temperature', 'minValue': 17, 'maxValue': 75, 'value': 40, 'isValid': True, 'temperatureUnit': 'C'}",
+    'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_2032',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -625,7 +625,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '2091', 'inUse': True, 'resolution': 1, 'type': 'etc', 'minValue': 0, 'maxValue': 4, 'value': 0, 'isValid': True}",
+    'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_2091',
     'unit_of_measurement': None,
   })
 # ---
@@ -682,7 +682,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '2092', 'inUse': True, 'resolution': 1, 'type': 'etc', 'minValue': 0, 'maxValue': 4, 'value': 0, 'isValid': True}",
+    'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_2092',
     'unit_of_measurement': None,
   })
 # ---
@@ -739,7 +739,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '2093', 'inUse': True, 'resolution': 1, 'type': 'etc', 'minValue': 1, 'maxValue': 4, 'value': 2, 'isValid': True}",
+    'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_2093',
     'unit_of_measurement': None,
   })
 # ---
@@ -796,7 +796,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '3011', 'inUse': True, 'resolution': 1, 'type': 'etc', 'minValue': 0, 'maxValue': 2, 'value': 1, 'isValid': True}",
+    'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_3011',
     'unit_of_measurement': None,
   })
 # ---
@@ -853,7 +853,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '3071', 'inUse': True, 'resolution': 1, 'type': 'etc', 'minValue': 0, 'maxValue': 1, 'value': 0, 'isValid': True}",
+    'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_3071',
     'unit_of_measurement': None,
   })
 # ---
@@ -910,7 +910,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '4011', 'inUse': True, 'resolution': 1, 'type': 'etc', 'minValue': 0, 'maxValue': 1, 'value': 1, 'isValid': True}",
+    'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_4011',
     'unit_of_measurement': None,
   })
 # ---
@@ -967,7 +967,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '4012', 'inUse': True, 'resolution': 1, 'type': 'temperature', 'minValue': -15, 'maxValue': 20, 'value': 0, 'isValid': True, 'temperatureUnit': 'C'}",
+    'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_4012',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -1026,7 +1026,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '4021', 'inUse': True, 'resolution': 1, 'type': 'etc', 'minValue': 0, 'maxValue': 2, 'value': 0, 'isValid': True}",
+    'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_4021',
     'unit_of_measurement': None,
   })
 # ---
@@ -1083,7 +1083,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '4042', 'inUse': True, 'resolution': 1, 'type': 'temperature', 'minValue': 5, 'maxValue': 15, 'value': 10, 'isValid': True, 'temperatureUnit': 'C'}",
+    'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_4042',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -1142,7 +1142,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '4061', 'inUse': True, 'resolution': 1, 'type': 'etc', 'minValue': 0, 'maxValue': 1, 'value': 0, 'isValid': True}",
+    'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_4061',
     'unit_of_measurement': None,
   })
 # ---
@@ -1610,7 +1610,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '1031', 'inUse': True, 'resolution': 1, 'type': 'temperature', 'minValue': 37, 'maxValue': 70, 'value': 70, 'isValid': True, 'temperatureUnit': 'C'}",
+    'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_1031',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -1669,7 +1669,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '1032', 'inUse': True, 'resolution': 1, 'type': 'temperature', 'minValue': 15, 'maxValue': 37, 'value': 25, 'isValid': True, 'temperatureUnit': 'C'}",
+    'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_1032',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -1728,7 +1728,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '1051', 'inUse': True, 'resolution': 1, 'type': 'temperature', 'minValue': 50, 'maxValue': 70, 'value': 55, 'isValid': True, 'temperatureUnit': 'C'}",
+    'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_1051',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -1787,7 +1787,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '1052', 'inUse': True, 'resolution': 1, 'type': 'temperature', 'minValue': 30, 'maxValue': 40, 'value': 40, 'isValid': True, 'temperatureUnit': 'C'}",
+    'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_1052',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -1846,7 +1846,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '2011', 'inUse': True, 'resolution': 1, 'type': 'temperature', 'minValue': -20, 'maxValue': 5, 'value': -3, 'isValid': True, 'temperatureUnit': 'C'}",
+    'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_2011',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -1905,7 +1905,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '2012', 'inUse': True, 'resolution': 1, 'type': 'temperature', 'minValue': 10, 'maxValue': 20, 'value': 15, 'isValid': True, 'temperatureUnit': 'C'}",
+    'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_2012',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -1964,7 +1964,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '2021', 'inUse': True, 'resolution': 1, 'type': 'temperature', 'minValue': 17, 'maxValue': 70, 'value': 50, 'isValid': True, 'temperatureUnit': 'C'}",
+    'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_2021',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -2023,7 +2023,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '2022', 'inUse': True, 'resolution': 1, 'type': 'temperature', 'minValue': 17, 'maxValue': 70, 'value': 32, 'isValid': True, 'temperatureUnit': 'C'}",
+    'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_2022',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -2082,7 +2082,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '2031', 'inUse': True, 'resolution': 1, 'type': 'temperature', 'minValue': 17, 'maxValue': 70, 'value': 50, 'isValid': True, 'temperatureUnit': 'C'}",
+    'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_2031',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -2141,7 +2141,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '2032', 'inUse': True, 'resolution': 1, 'type': 'temperature', 'minValue': 17, 'maxValue': 70, 'value': 38, 'isValid': True, 'temperatureUnit': 'C'}",
+    'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_2032',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -2200,7 +2200,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '2091', 'inUse': True, 'resolution': 1, 'type': 'etc', 'minValue': 0, 'maxValue': 4, 'value': 0, 'isValid': True}",
+    'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_2091',
     'unit_of_measurement': None,
   })
 # ---
@@ -2257,7 +2257,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '2092', 'inUse': True, 'resolution': 1, 'type': 'etc', 'minValue': 0, 'maxValue': 4, 'value': 0, 'isValid': True}",
+    'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_2092',
     'unit_of_measurement': None,
   })
 # ---
@@ -2314,7 +2314,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '2093', 'inUse': True, 'resolution': 1, 'type': 'etc', 'minValue': 1, 'maxValue': 4, 'value': 4, 'isValid': True}",
+    'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_2093',
     'unit_of_measurement': None,
   })
 # ---
@@ -2371,7 +2371,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '3011', 'inUse': True, 'resolution': 1, 'type': 'etc', 'minValue': 0, 'maxValue': 2, 'value': 2, 'isValid': True}",
+    'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_3011',
     'unit_of_measurement': None,
   })
 # ---
@@ -2428,7 +2428,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '3071', 'inUse': True, 'resolution': 1, 'type': 'etc', 'minValue': 0, 'maxValue': 1, 'value': 0, 'isValid': True}",
+    'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_3071',
     'unit_of_measurement': None,
   })
 # ---
@@ -2485,7 +2485,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '4011', 'inUse': True, 'resolution': 1, 'type': 'etc', 'minValue': 0, 'maxValue': 1, 'value': 0, 'isValid': True}",
+    'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_4011',
     'unit_of_measurement': None,
   })
 # ---
@@ -2542,7 +2542,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '4012', 'inUse': True, 'resolution': 1, 'type': 'temperature', 'minValue': -15, 'maxValue': 20, 'value': 0, 'isValid': True, 'temperatureUnit': 'C'}",
+    'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_4012',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -2601,7 +2601,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '4021', 'inUse': True, 'resolution': 1, 'type': 'etc', 'minValue': 0, 'maxValue': 2, 'value': 0, 'isValid': True}",
+    'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_4021',
     'unit_of_measurement': None,
   })
 # ---
@@ -2658,7 +2658,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '4042', 'inUse': True, 'resolution': 1, 'type': 'temperature', 'minValue': 5, 'maxValue': 15, 'value': 10, 'isValid': True, 'temperatureUnit': 'C'}",
+    'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_4042',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -2717,7 +2717,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '4061', 'inUse': True, 'resolution': 1, 'type': 'etc', 'minValue': 0, 'maxValue': 1, 'value': 0, 'isValid': True}",
+    'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_4061',
     'unit_of_measurement': None,
   })
 # ---
@@ -2774,7 +2774,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '1031', 'inUse': True, 'resolution': 1, 'type': 'temperature', 'minValue': 37, 'maxValue': 75, 'value': 75, 'isValid': True, 'temperatureUnit': 'C'}",
+    'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_1031',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -2833,7 +2833,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '1032', 'inUse': True, 'resolution': 1, 'type': 'temperature', 'minValue': 15, 'maxValue': 37, 'value': 25, 'isValid': True, 'temperatureUnit': 'C'}",
+    'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_1032',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -2892,7 +2892,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '1051', 'inUse': True, 'resolution': 1, 'type': 'temperature', 'minValue': 50, 'maxValue': 70, 'value': 60, 'isValid': True, 'temperatureUnit': 'C'}",
+    'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_1051',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -2951,7 +2951,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '1052', 'inUse': True, 'resolution': 1, 'type': 'temperature', 'minValue': 30, 'maxValue': 40, 'value': 40, 'isValid': True, 'temperatureUnit': 'C'}",
+    'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_1052',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -3010,7 +3010,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '2011', 'inUse': True, 'resolution': 1, 'type': 'temperature', 'minValue': -20, 'maxValue': 5, 'value': -2, 'isValid': True, 'temperatureUnit': 'C'}",
+    'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_2011',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -3069,7 +3069,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '2012', 'inUse': True, 'resolution': 1, 'type': 'temperature', 'minValue': 10, 'maxValue': 20, 'value': 15, 'isValid': True, 'temperatureUnit': 'C'}",
+    'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_2012',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -3128,7 +3128,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '2021', 'inUse': True, 'resolution': 1, 'type': 'temperature', 'minValue': 17, 'maxValue': 75, 'value': 60, 'isValid': True, 'temperatureUnit': 'C'}",
+    'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_2021',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -3187,7 +3187,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '2022', 'inUse': True, 'resolution': 1, 'type': 'temperature', 'minValue': 17, 'maxValue': 75, 'value': 40, 'isValid': True, 'temperatureUnit': 'C'}",
+    'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_2022',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -3246,7 +3246,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '2031', 'inUse': True, 'resolution': 1, 'type': 'temperature', 'minValue': 17, 'maxValue': 75, 'value': 60, 'isValid': True, 'temperatureUnit': 'C'}",
+    'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_2031',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -3305,7 +3305,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '2032', 'inUse': True, 'resolution': 1, 'type': 'temperature', 'minValue': 17, 'maxValue': 75, 'value': 40, 'isValid': True, 'temperatureUnit': 'C'}",
+    'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_2032',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -3364,7 +3364,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '2091', 'inUse': True, 'resolution': 1, 'type': 'etc', 'minValue': 0, 'maxValue': 4, 'value': 1, 'isValid': True}",
+    'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_2091',
     'unit_of_measurement': None,
   })
 # ---
@@ -3421,7 +3421,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '2092', 'inUse': True, 'resolution': 1, 'type': 'etc', 'minValue': 0, 'maxValue': 4, 'value': 1, 'isValid': True}",
+    'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_2092',
     'unit_of_measurement': None,
   })
 # ---
@@ -3478,7 +3478,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '2093', 'inUse': True, 'resolution': 1, 'type': 'etc', 'minValue': 1, 'maxValue': 4, 'value': 4, 'isValid': True}",
+    'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_2093',
     'unit_of_measurement': None,
   })
 # ---
@@ -3535,7 +3535,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '3011', 'inUse': True, 'resolution': 1, 'type': 'etc', 'minValue': 0, 'maxValue': 2, 'value': 0, 'isValid': True}",
+    'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_3011',
     'unit_of_measurement': None,
   })
 # ---
@@ -3592,7 +3592,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '3071', 'inUse': True, 'resolution': 1, 'type': 'etc', 'minValue': 0, 'maxValue': 1, 'value': 0, 'isValid': True}",
+    'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_3071',
     'unit_of_measurement': None,
   })
 # ---
@@ -3649,7 +3649,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '4011', 'inUse': True, 'resolution': 1, 'type': 'etc', 'minValue': 0, 'maxValue': 1, 'value': 1, 'isValid': True}",
+    'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_4011',
     'unit_of_measurement': None,
   })
 # ---
@@ -3706,7 +3706,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '4012', 'inUse': True, 'resolution': 1, 'type': 'temperature', 'minValue': -15, 'maxValue': 20, 'value': 0, 'isValid': True, 'temperatureUnit': 'C'}",
+    'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_4012',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -3765,7 +3765,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '4021', 'inUse': True, 'resolution': 1, 'type': 'etc', 'minValue': 0, 'maxValue': 2, 'value': 0, 'isValid': True}",
+    'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_4021',
     'unit_of_measurement': None,
   })
 # ---
@@ -3822,7 +3822,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '4042', 'inUse': True, 'resolution': 1, 'type': 'temperature', 'minValue': 5, 'maxValue': 15, 'value': 10, 'isValid': True, 'temperatureUnit': 'C'}",
+    'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_4042',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -3881,7 +3881,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '4061', 'inUse': True, 'resolution': 1, 'type': 'etc', 'minValue': 0, 'maxValue': 1, 'value': 0, 'isValid': True}",
+    'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_4061',
     'unit_of_measurement': None,
   })
 # ---
@@ -3938,7 +3938,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '1031', 'inUse': True, 'resolution': 1, 'type': 'temperature', 'minValue': 37, 'maxValue': 65, 'value': 43, 'isValid': True, 'temperatureUnit': 'C'}",
+    'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_1031',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -3997,7 +3997,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '1032', 'inUse': True, 'resolution': 1, 'type': 'temperature', 'minValue': 15, 'maxValue': 37, 'value': 25, 'isValid': True, 'temperatureUnit': 'C'}",
+    'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_1032',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -4056,7 +4056,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '1051', 'inUse': True, 'resolution': 1, 'type': 'temperature', 'minValue': 50, 'maxValue': 70, 'value': 57, 'isValid': True, 'temperatureUnit': 'C'}",
+    'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_1051',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -4115,7 +4115,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '1052', 'inUse': True, 'resolution': 1, 'type': 'temperature', 'minValue': 30, 'maxValue': 40, 'value': 40, 'isValid': True, 'temperatureUnit': 'C'}",
+    'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_1052',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -4174,7 +4174,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '2011', 'inUse': True, 'resolution': 1, 'type': 'temperature', 'minValue': -20, 'maxValue': 5, 'value': -10, 'isValid': True, 'temperatureUnit': 'C'}",
+    'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_2011',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -4233,7 +4233,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '2012', 'inUse': True, 'resolution': 1, 'type': 'temperature', 'minValue': 10, 'maxValue': 20, 'value': 20, 'isValid': True, 'temperatureUnit': 'C'}",
+    'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_2012',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -4292,7 +4292,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '2021', 'inUse': True, 'resolution': 1, 'type': 'temperature', 'minValue': 17, 'maxValue': 65, 'value': 37, 'isValid': True, 'temperatureUnit': 'C'}",
+    'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_2021',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -4351,7 +4351,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '2022', 'inUse': True, 'resolution': 1, 'type': 'temperature', 'minValue': 17, 'maxValue': 65, 'value': 25, 'isValid': True, 'temperatureUnit': 'C'}",
+    'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_2022',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -4410,7 +4410,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '2031', 'inUse': True, 'resolution': 1, 'type': 'temperature', 'minValue': 17, 'maxValue': 65, 'value': 40, 'isValid': True, 'temperatureUnit': 'C'}",
+    'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_2031',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -4469,7 +4469,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '2032', 'inUse': True, 'resolution': 1, 'type': 'temperature', 'minValue': 17, 'maxValue': 65, 'value': 25, 'isValid': True, 'temperatureUnit': 'C'}",
+    'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_2032',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -4528,7 +4528,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '2091', 'inUse': True, 'resolution': 1, 'type': 'etc', 'minValue': 0, 'maxValue': 4, 'value': 0, 'isValid': True}",
+    'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_2091',
     'unit_of_measurement': None,
   })
 # ---
@@ -4585,7 +4585,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '2092', 'inUse': True, 'resolution': 1, 'type': 'etc', 'minValue': 0, 'maxValue': 4, 'value': 0, 'isValid': True}",
+    'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_2092',
     'unit_of_measurement': None,
   })
 # ---
@@ -4642,7 +4642,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '2093', 'inUse': True, 'resolution': 1, 'type': 'etc', 'minValue': 1, 'maxValue': 4, 'value': 4, 'isValid': True}",
+    'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_2093',
     'unit_of_measurement': None,
   })
 # ---
@@ -4699,7 +4699,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '3011', 'inUse': True, 'resolution': 1, 'type': 'etc', 'minValue': 0, 'maxValue': 2, 'value': 1, 'isValid': True}",
+    'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_3011',
     'unit_of_measurement': None,
   })
 # ---
@@ -4756,7 +4756,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '3071', 'inUse': True, 'resolution': 1, 'type': 'etc', 'minValue': 0, 'maxValue': 1, 'value': 0, 'isValid': True}",
+    'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_3071',
     'unit_of_measurement': None,
   })
 # ---
@@ -4813,7 +4813,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '4011', 'inUse': True, 'resolution': 1, 'type': 'etc', 'minValue': 0, 'maxValue': 1, 'value': 0, 'isValid': True}",
+    'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_4011',
     'unit_of_measurement': None,
   })
 # ---
@@ -4870,7 +4870,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '4012', 'inUse': True, 'resolution': 1, 'type': 'temperature', 'minValue': -15, 'maxValue': 20, 'value': 0, 'isValid': True, 'temperatureUnit': 'C'}",
+    'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_4012',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -4929,7 +4929,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '4021', 'inUse': True, 'resolution': 1, 'type': 'etc', 'minValue': 0, 'maxValue': 2, 'value': 0, 'isValid': True}",
+    'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_4021',
     'unit_of_measurement': None,
   })
 # ---
@@ -4986,7 +4986,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '4042', 'inUse': True, 'resolution': 1, 'type': 'temperature', 'minValue': 5, 'maxValue': 15, 'value': 10, 'isValid': True, 'temperatureUnit': 'C'}",
+    'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_4042',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -5045,7 +5045,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fsv_setting',
-    'unique_id': "3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_{'id': '4061', 'inUse': True, 'resolution': 1, 'type': 'etc', 'minValue': 0, 'maxValue': 1, 'value': 1, 'isValid': True}",
+    'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_4061',
     'unit_of_measurement': None,
   })
 # ---
