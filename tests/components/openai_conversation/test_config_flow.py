@@ -874,7 +874,7 @@ async def test_subentry_web_search_user_location(
         CONF_WEB_SEARCH_REGION: "California",
         CONF_WEB_SEARCH_COUNTRY: "US",
         CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
-        CONF_WEB_SEARCH_INLINE_CITATIONS: True,
+        CONF_WEB_SEARCH_INLINE_CITATIONS: False,
         CONF_CODE_INTERPRETER: False,
     }
 
