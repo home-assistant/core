@@ -798,6 +798,41 @@
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': None,
+      'entity_id': 'sensor.humidifier_6000s_humidity',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
+      'original_icon': None,
+      'original_name': 'Humidity',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': None,
+      'unique_id': '6000s-humidity',
+      'unit_of_measurement': '%',
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': dict({
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': None,
       'entity_id': 'sensor.humidifier_6000s_temperature',
       'has_entity_name': True,
       'hidden_by': None,
@@ -821,41 +856,6 @@
       'translation_key': None,
       'unique_id': '6000s-temperature',
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
-      'area_id': None,
-      'capabilities': dict({
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      }),
-      'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
-      'device_class': None,
-      'device_id': <ANY>,
-      'disabled_by': None,
-      'domain': 'sensor',
-      'entity_category': None,
-      'entity_id': 'sensor.humidifier_6000s_humidity',
-      'has_entity_name': True,
-      'hidden_by': None,
-      'icon': None,
-      'id': <ANY>,
-      'labels': set({
-      }),
-      'name': None,
-      'options': dict({
-      }),
-      'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
-      'original_icon': None,
-      'original_name': 'Humidity',
-      'platform': 'vesync',
-      'previous_unique_id': None,
-      'suggested_object_id': None,
-      'supported_features': 0,
-      'translation_key': None,
-      'unique_id': '6000s-humidity',
-      'unit_of_measurement': '%',
     }),
     EntityRegistryEntrySnapshot({
       'aliases': set({
@@ -938,7 +938,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '337.777777777778',
+    'state': '17.7777777777778',
   })
 # ---
 # name: test_sensor_state[Humidifier 600S][devices]
