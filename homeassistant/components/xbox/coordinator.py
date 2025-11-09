@@ -22,7 +22,12 @@ from pythonxbox.common.signed_session import SignedSession
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_entry_oauth2_flow, device_registry as dr
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
+    OAuth2Session,
+    async_get_config_entry_implementation,
+)
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.ssl import get_default_context
 
@@ -77,20 +82,16 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
     async def _async_setup(self) -> None:
         """Set up coordinator."""
         try:
-            implementation = (
-                await config_entry_oauth2_flow.async_get_config_entry_implementation(
-                    self.hass, self.config_entry
-                )
+            implementation = await async_get_config_entry_implementation(
+                self.hass, self.config_entry
             )
-        except ValueError as e:
+        except ImplementationUnavailableError as e:
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
-                translation_key="request_exception",
+                translation_key="oauth2_implementation_unavailable",
             ) from e
 
-        session = config_entry_oauth2_flow.OAuth2Session(
-            self.hass, self.config_entry, implementation
-        )
+        session = OAuth2Session(self.hass, self.config_entry, implementation)
         signed_session = SignedSession(ssl_context=get_default_context())
         auth = api.AsyncConfigEntryAuth(signed_session, session)
         self.client = XboxLiveClient(auth)
@@ -199,8 +200,13 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
             ) from e
         else:
             presence_data = {self.client.xuid: batch.people[0]}
+            configured_xuids = self.configured_as_entry()
             presence_data.update(
-                {friend.xuid: friend for friend in friends.people if friend.is_favorite}
+                {
+                    friend.xuid: friend
+                    for friend in friends.people
+                    if friend.is_favorite and friend.xuid not in configured_xuids
+                }
             )
 
         # retrieve title details
@@ -252,9 +258,11 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
         """Remove stale devices from registry."""
 
         device_reg = dr.async_get(self.hass)
-        identifiers = {(DOMAIN, xuid) for xuid in xuids} | {
-            (DOMAIN, console.id) for console in self.consoles.result
-        }
+        identifiers = (
+            {(DOMAIN, xuid) for xuid in xuids}
+            | {(DOMAIN, console.id) for console in self.consoles.result}
+            | self.configured_as_entry()
+        )
 
         for device in dr.async_entries_for_config_entry(
             device_reg, self.config_entry.entry_id
@@ -264,3 +272,12 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
                 device_reg.async_update_device(
                     device.id, remove_config_entry_id=self.config_entry.entry_id
                 )
+
+    def configured_as_entry(self) -> set[str]:
+        """Get xuids of configured entries."""
+
+        return {
+            entry.unique_id
+            for entry in self.hass.config_entries.async_entries(DOMAIN)
+            if entry.unique_id is not None
+        }
