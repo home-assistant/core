@@ -69,14 +69,12 @@ async def async_setup_entry(
 
     _LOGGER.debug("Adding compressor min temp number and aux heat")
     for index, thermostat in enumerate(data.ecobee.thermostats):
-        if thermostat["settings"]["hasHeatPump"]:
+        thermostat_settings = thermostat["settings"]
+        if thermostat_settings["hasHeatPump"]:
             compressor_entity = EcobeeCompressorMinTemp(data, index)
             entities.append(compressor_entity)
 
-            if (
-                thermostat["settings"]["hasForcedAir"]
-                or thermostat["settings"]["hasBoiler"]
-            ):
+            if thermostat_settings["hasForcedAir"] or thermostat_settings["hasBoiler"]:
                 aux_entity = EcobeeAuxMaxOutdoorTemp(data, index, compressor_entity)
                 compressor_entity.aux_entity = aux_entity
                 entities.append(aux_entity)

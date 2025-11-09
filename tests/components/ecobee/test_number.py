@@ -107,6 +107,8 @@ async def test_set_compressor_protection_min_temp(hass: HomeAssistant) -> None:
     Ecobee runs in Fahrenheit; the test rig runs in Celsius. Conversions are necessary
     """
     target_value = 10
+    await setup_platform(hass, NUMBER_DOMAIN)
+
     with (
         patch(
             "homeassistant.components.ecobee.Ecobee.set_aux_cutover_threshold"
@@ -115,15 +117,13 @@ async def test_set_compressor_protection_min_temp(hass: HomeAssistant) -> None:
             "homeassistant.components.ecobee.Ecobee.set_aux_maxtemp_threshold"
         ) as mock_set_aux_max_temp_threshold,
     ):
-        await setup_platform(hass, NUMBER_DOMAIN)
-
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
             {ATTR_ENTITY_ID: COMPRESSOR_MIN_TEMP_ID, ATTR_VALUE: target_value},
             blocking=True,
         )
-        await hass.async_block_till_done()
+
         mock_set_compressor_min_temp.assert_called_once_with(1, 50)
         mock_set_aux_max_temp_threshold.assert_called_once_with(1, 55)
 
@@ -134,7 +134,7 @@ async def test_set_compressor_protection_min_temp(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: COMPRESSOR_MIN_TEMP_ID, ATTR_VALUE: target_value},
             blocking=True,
         )
-        await hass.async_block_till_done()
+
         assert mock_set_compressor_min_temp.call_count == 2
         calls = mock_set_compressor_min_temp.call_args_list
         assert calls[1].args == (1, 64)
@@ -168,6 +168,7 @@ async def test_set_auxiliary_max_outdoor_temp(hass: HomeAssistant) -> None:
     Ecobee runs in Fahrenheit; the test rig runs in Celsius. Conversions are necessary.
     """
     target_value = -14
+    await setup_platform(hass, NUMBER_DOMAIN)
     with (
         patch(
             "homeassistant.components.ecobee.Ecobee.set_aux_cutover_threshold"
@@ -176,15 +177,13 @@ async def test_set_auxiliary_max_outdoor_temp(hass: HomeAssistant) -> None:
             "homeassistant.components.ecobee.Ecobee.set_aux_maxtemp_threshold"
         ) as mock_set_aux_max_temp_threshold,
     ):
-        await setup_platform(hass, NUMBER_DOMAIN)
-
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
             {ATTR_ENTITY_ID: AUX_MAX_OUTDOOR_TEMP_ID, ATTR_VALUE: target_value},
             blocking=True,
         )
-        await hass.async_block_till_done()
+
         mock_set_aux_max_temp_threshold.assert_called_once_with(1, 6)
         mock_set_compressor_min_temp.assert_called_once_with(1, 0)
 
@@ -195,7 +194,7 @@ async def test_set_auxiliary_max_outdoor_temp(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: AUX_MAX_OUTDOOR_TEMP_ID, ATTR_VALUE: target_value},
             blocking=True,
         )
-        await hass.async_block_till_done()
+
         assert mock_set_aux_max_temp_threshold.call_count == 2
         calls = mock_set_aux_max_temp_threshold.call_args_list
         assert calls[1].args == (1, 77)
