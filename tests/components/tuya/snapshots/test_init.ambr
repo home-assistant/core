@@ -5393,6 +5393,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[nyriu7sjgj9oruzmpsm]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'nyriu7sjgj9oruzmpsm',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Poopy Nano 2',
+    'model_id': 'mzuro9jgjs7uiryn',
+    'name': 'Poopy Nano 2',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[o5kqedcacfng0plpnocfw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -6130,6 +6161,37 @@
     'model': 'Wi-Fi solar grid micro inverter （GT）',
     'model_id': '6b3pbbuqbfabhfiq',
     'name': 'Wi-Fi solar grid micro inverter （GT）',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_registry[qt0o5jlatiqf2rscps]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'qt0o5jlatiqf2rscps',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Security Camera ',
+    'model_id': 'csr2fqitalj5o0tq',
+    'name': 'Intercom',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
