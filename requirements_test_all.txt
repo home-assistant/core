@@ -2121,7 +2121,7 @@ python-technove==2.0.0
 python-telegram-bot[socks]==22.1
 
 # homeassistant.components.xbox
-python-xbox==0.1.0
+python-xbox==0.1.1
 
 # homeassistant.components.uptime_kuma
 pythonkuma==0.3.1
