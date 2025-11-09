@@ -1,7 +1,7 @@
 """Test the xbox config flow."""
 
 from http import HTTPStatus
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -167,3 +167,21 @@ async def test_unique_id_migration(
     assert config_entry.minor_version == 2
     assert config_entry.unique_id == "271958441785640"
     assert config_entry.title == "GSR Ae"
+
+
+@pytest.mark.usefixtures("xbox_live_client")
+async def test_flow_reauth(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    xbox_live_client: AsyncMock,
+) -> None:
+    """Test reauth flow."""
+
+    config_entry.add_to_hass(hass)
+    result = await config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    await hass.async_block_till_done()
