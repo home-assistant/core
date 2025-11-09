@@ -2542,7 +2542,7 @@ async def test_non_default_response(hass: HomeAssistant, init_components) -> Non
         )
     )
     assert len(calls) == 1
-    assert result.response.speech["plain"]["speech"] == "Opened"
+    assert result.response.speech["plain"]["speech"] == "Opening"
 
 
 async def test_turn_on_area(
@@ -3342,6 +3342,11 @@ async def test_language_with_alternative_code(
             "50% office light",
             "HassLightSet",
             {"name": "office light", "brightness": "50%"},
+        ),
+        (
+            "turn on the lights in the spaceship",
+            "HassTurnOn",
+            {"domain": "lights", "area": "office"},  # context area
         ),
     ],
 )

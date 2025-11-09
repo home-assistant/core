@@ -58,7 +58,7 @@ ACTION_PARAMETERS_CACHE: HassKey[
 
 LLM_API_ASSIST = "assist"
 
-BASE_PROMPT = (
+DATE_TIME_PROMPT = (
     'Current time is {{ now().strftime("%H:%M:%S") }}. '
     'Today\'s date is {{ now().strftime("%Y-%m-%d") }}.\n'
 )
@@ -592,6 +592,8 @@ class AssistAPI(API):
             for intent_handler in intent_handlers
         ]
 
+        tools.append(GetDateTimeTool())
+
         if exposed_entities:
             if exposed_entities[CALENDAR_DOMAIN]:
                 names = []
@@ -780,8 +782,18 @@ def selector_serializer(schema: Any) -> Any:  # noqa: C901
             return {"type": "string", "enum": schema.config["languages"]}
         return {"type": "string", "format": "RFC 5646"}
 
-    if isinstance(schema, (selector.LocationSelector, selector.MediaSelector)):
+    if isinstance(schema, selector.LocationSelector):
         return convert(schema.DATA_SCHEMA)
+
+    if isinstance(schema, selector.MediaSelector):
+        item_schema = convert(schema.DATA_SCHEMA)
+        # Media selector allows multiple when configured
+        if schema.config.get("multiple"):
+            return {
+                "type": "array",
+                "items": item_schema,
+            }
+        return item_schema
 
     if isinstance(schema, selector.NumberSelector):
         result = {"type": "number"}
@@ -1180,4 +1192,30 @@ class GetLiveContextTool(Tool):
         return {
             "success": True,
             "result": "\n".join(prompt),
+        }
+
+
+class GetDateTimeTool(Tool):
+    """Tool for getting the current date and time."""
+
+    name = "GetDateTime"
+    description = "Provides the current date and time."
+
+    async def async_call(
+        self,
+        hass: HomeAssistant,
+        tool_input: ToolInput,
+        llm_context: LLMContext,
+    ) -> JsonObjectType:
+        """Get the current date and time."""
+        now = dt_util.now()
+
+        return {
+            "success": True,
+            "result": {
+                "date": now.strftime("%Y-%m-%d"),
+                "time": now.strftime("%H:%M:%S"),
+                "timezone": now.strftime("%Z"),
+                "weekday": now.strftime("%A"),
+            },
         }

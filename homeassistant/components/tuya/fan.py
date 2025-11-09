@@ -21,9 +21,9 @@ from homeassistant.util.percentage import (
 )
 
 from . import TuyaConfigEntry
-from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
+from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, DPType
 from .entity import TuyaEntity
-from .models import EnumTypeData, IntegerTypeData
+from .models import EnumTypeData, IntegerTypeData, find_dpcode
 from .util import get_dpcode
 
 _DIRECTION_DPCODES = (DPCode.FAN_DIRECTION,)
@@ -36,24 +36,13 @@ _SPEED_DPCODES = (
 )
 _SWITCH_DPCODES = (DPCode.SWITCH_FAN, DPCode.FAN_SWITCH, DPCode.SWITCH)
 
-TUYA_SUPPORT_TYPE = {
-    # Dehumidifier
-    # https://developer.tuya.com/en/docs/iot/categorycs?id=Kaiuz1vcz4dha
-    "cs",
-    # Fan
-    # https://developer.tuya.com/en/docs/iot/categoryfs?id=Kaiuz1xweel1c
-    "fs",
-    # Ceiling Fan Light
-    # https://developer.tuya.com/en/docs/iot/fsd?id=Kaof8eiei4c2v
-    "fsd",
-    # Fan wall switch
-    "fskg",
-    # Air Purifier
-    # https://developer.tuya.com/en/docs/iot/f?id=K9gf46h2s6dzm
-    "kj",
-    # Undocumented tower fan
-    # https://github.com/orgs/home-assistant/discussions/329
-    "ks",
+TUYA_SUPPORT_TYPE: set[DeviceCategory] = {
+    DeviceCategory.CS,
+    DeviceCategory.FS,
+    DeviceCategory.FSD,
+    DeviceCategory.FSKG,
+    DeviceCategory.KJ,
+    DeviceCategory.KS,
 }
 
 
@@ -76,19 +65,19 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up tuya fan dynamically through tuya discovery."""
-    hass_data = entry.runtime_data
+    manager = entry.runtime_data.manager
 
     @callback
     def async_discover_device(device_ids: list[str]) -> None:
         """Discover and add a discovered tuya fan."""
         entities: list[TuyaFanEntity] = []
         for device_id in device_ids:
-            device = hass_data.manager.device_map[device_id]
+            device = manager.device_map[device_id]
             if device.category in TUYA_SUPPORT_TYPE and _has_a_valid_dpcode(device):
-                entities.append(TuyaFanEntity(device, hass_data.manager))
+                entities.append(TuyaFanEntity(device, manager))
         async_add_entities(entities)
 
-    async_discover_device([*hass_data.manager.device_map])
+    async_discover_device([*manager.device_map])
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, TUYA_DISCOVERY_NEW, async_discover_device)
@@ -117,21 +106,24 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
         self._switch = get_dpcode(self.device, _SWITCH_DPCODES)
 
         self._attr_preset_modes = []
-        if enum_type := self.find_dpcode(
-            (DPCode.FAN_MODE, DPCode.MODE), dptype=DPType.ENUM, prefer_function=True
+        if enum_type := find_dpcode(
+            self.device,
+            (DPCode.FAN_MODE, DPCode.MODE),
+            dptype=DPType.ENUM,
+            prefer_function=True,
         ):
             self._presets = enum_type
             self._attr_supported_features |= FanEntityFeature.PRESET_MODE
             self._attr_preset_modes = enum_type.range
 
         # Find speed controls, can be either percentage or a set of speeds
-        if int_type := self.find_dpcode(
-            _SPEED_DPCODES, dptype=DPType.INTEGER, prefer_function=True
+        if int_type := find_dpcode(
+            self.device, _SPEED_DPCODES, dptype=DPType.INTEGER, prefer_function=True
         ):
             self._attr_supported_features |= FanEntityFeature.SET_SPEED
             self._speed = int_type
-        elif enum_type := self.find_dpcode(
-            _SPEED_DPCODES, dptype=DPType.ENUM, prefer_function=True
+        elif enum_type := find_dpcode(
+            self.device, _SPEED_DPCODES, dptype=DPType.ENUM, prefer_function=True
         ):
             self._attr_supported_features |= FanEntityFeature.SET_SPEED
             self._speeds = enum_type
@@ -140,8 +132,8 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
             self._oscillate = dpcode
             self._attr_supported_features |= FanEntityFeature.OSCILLATE
 
-        if enum_type := self.find_dpcode(
-            _DIRECTION_DPCODES, dptype=DPType.ENUM, prefer_function=True
+        if enum_type := find_dpcode(
+            self.device, _DIRECTION_DPCODES, dptype=DPType.ENUM, prefer_function=True
         ):
             self._direction = enum_type
             self._attr_supported_features |= FanEntityFeature.DIRECTION
