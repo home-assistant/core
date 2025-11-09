@@ -17,13 +17,17 @@
         "description": "Do you want to add the Music Assistant server `{url}` to Home Assistant?",
         "title": "Discovered Music Assistant server"
       },
-      "user": {
+      "init": {
+        "data": {
+          "url": "URL of the Music Assistant server"
+        }
+      },
+      "manual": {
         "data": {
           "url": "URL of the Music Assistant server"
         },
-        "data_description": {
-          "url": "URL of the Music Assistant server"
-        }
+        "description": "Enter the URL to your already running Music Assistant server. If you do not have the Music Assistant server running, you should install it first.",
+        "title": "Manually add Music Assistant server"
       }
     }
   },
