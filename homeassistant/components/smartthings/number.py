@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from enum import StrEnum
+
 from pysmartthings import Attribute, Capability, Command, SmartThings
 
 from homeassistant.components.number import NumberDeviceClass, NumberEntity, NumberMode
@@ -12,6 +14,24 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import FullDevice, SmartThingsConfigEntry
 from .const import MAIN, UNIT_MAP
 from .entity import SmartThingsEntity
+
+
+class FsvSettingProperty(StrEnum):
+    """FSV setting property keys."""
+
+    ID = "id"
+    TYPE = "type"
+    TEMPERATURE_UNIT = "temperatureUnit"
+    MIN_VALUE = "minValue"
+    MAX_VALUE = "maxValue"
+    RESOLUTION = "resolution"
+    VALUE = "value"
+
+
+class FsvSettingType(StrEnum):
+    """FSV setting types."""
+
+    TEMPERATURE = "temperature"
 
 
 async def async_setup_entry(
@@ -43,6 +63,17 @@ async def async_setup_entry(
         for component in device.status
         if component in ("cooler", "freezer")
         and Capability.THERMOSTAT_COOLING_SETPOINT in device.status[component]
+    )
+    entities.extend(
+        SmartThingsFsvSettings(entry_data.client, device, component, fsv_setting)
+        for device in entry_data.devices.values()
+        for component in device.status
+        if Capability.SAMSUNG_CE_EHS_FSV_SETTINGS in device.status[component]
+        for fsv_settings in device.status[component][
+            Capability.SAMSUNG_CE_EHS_FSV_SETTINGS
+        ].values()
+        if fsv_settings.value is not None and isinstance(fsv_settings.value, list)
+        for fsv_setting in fsv_settings.value
     )
     async_add_entities(entities)
 
@@ -216,4 +247,56 @@ class SmartThingsRefrigeratorTemperatureNumberEntity(SmartThingsEntity, NumberEn
             Capability.THERMOSTAT_COOLING_SETPOINT,
             Command.SET_COOLING_SETPOINT,
             int(value),
+        )
+
+
+class SmartThingsFsvSettings(SmartThingsEntity, NumberEntity):
+    """Define a SmartThings FSV setting number."""
+
+    editable = True
+
+    def __init__(
+        self, client: SmartThings, device: FullDevice, component: str, fsv_setting: dict
+    ) -> None:
+        """Initialize the instance."""
+        super().__init__(
+            client,
+            device,
+            {Capability.SAMSUNG_CE_EHS_FSV_SETTINGS},
+            component=component,
+        )
+        self._attr_unique_id = f"{device.device.device_id}_{component}_{Capability.SAMSUNG_CE_EHS_FSV_SETTINGS}_{Attribute.FSV_SETTINGS}_{fsv_setting}"
+
+        self._fsv_id = fsv_setting[FsvSettingProperty.ID]
+        if fsv_setting[FsvSettingProperty.TYPE] == FsvSettingType.TEMPERATURE:
+            self._attr_native_unit_of_measurement = UNIT_MAP[
+                fsv_setting[FsvSettingProperty.TEMPERATURE_UNIT]
+            ]
+            self._attr_device_class = NumberDeviceClass.TEMPERATURE
+
+        self._attr_translation_key = "fsv_setting"
+        self._attr_translation_placeholders = {"fsv_id": str(self._fsv_id)}
+        self._attr_min_value = fsv_setting[FsvSettingProperty.MIN_VALUE]
+        self._attr_max_value = fsv_setting[FsvSettingProperty.MAX_VALUE]
+        self._attr_step = fsv_setting[FsvSettingProperty.RESOLUTION]
+        self._attr_entity_category = EntityCategory.CONFIG
+
+    @property
+    def native_value(self) -> int | None:
+        """Return the current value."""
+        fsv_settings = self.get_attribute_value(
+            Capability.SAMSUNG_CE_EHS_FSV_SETTINGS, Attribute.FSV_SETTINGS
+        )
+        if fsv_settings:
+            for setting in fsv_settings:
+                if setting.get(FsvSettingProperty.ID) == self._fsv_id:
+                    return int(setting[FsvSettingProperty.VALUE])
+        return None
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Set the value."""
+        await self.execute_device_command(
+            Capability.SAMSUNG_CE_EHS_FSV_SETTINGS,
+            Command.SET_VALUE,
+            [self._fsv_id, int(value)],
         )

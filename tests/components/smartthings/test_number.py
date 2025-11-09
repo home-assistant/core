@@ -120,3 +120,104 @@ async def test_availability_at_start(
     """Test unavailable at boot."""
     await setup_integration(hass, mock_config_entry)
     assert hass.states.get("number.washer_rinse_cycles").state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize("device_fixture", ["da_sac_ehs_000001_sub"])
+async def test_fsv_native_value(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test FSV setting native_value method."""
+    await setup_integration(hass, mock_config_entry)
+
+    # Check that FSV setting entities exist and have correct values
+    fsv_1031_state = hass.states.get("number.eco_heating_system_fsv_setting_1031")
+    assert fsv_1031_state is not None
+    assert fsv_1031_state.state == "70"  # From test fixture
+
+    fsv_1032_state = hass.states.get("number.eco_heating_system_fsv_setting_1032")
+    assert fsv_1032_state is not None
+    assert (
+        fsv_1032_state.state == "25"
+    )  # From test fixture    # Test state update for FSV settings
+    await trigger_update(
+        hass,
+        devices,
+        "1f98ebd0-ac48-d802-7f62-000001200100",
+        Capability.SAMSUNG_CE_EHS_FSV_SETTINGS,
+        Attribute.FSV_SETTINGS,
+        [
+            {
+                "id": "1031",
+                "inUse": True,
+                "resolution": 1,
+                "type": "temperature",
+                "minValue": 37,
+                "maxValue": 70,
+                "value": 65,  # Changed value
+                "isValid": True,
+                "temperatureUnit": "C",
+            },
+            {
+                "id": "1032",
+                "inUse": True,
+                "resolution": 1,
+                "type": "temperature",
+                "minValue": 15,
+                "maxValue": 37,
+                "value": 30,  # Changed value
+                "isValid": True,
+                "temperatureUnit": "C",
+            },
+        ],
+    )
+
+    # Verify updated values
+    fsv_1031_updated = hass.states.get("number.eco_heating_system_fsv_setting_1031")
+    assert fsv_1031_updated is not None
+    assert fsv_1031_updated.state == "65"
+
+    fsv_1032_updated = hass.states.get("number.eco_heating_system_fsv_setting_1032")
+    assert fsv_1032_updated is not None
+    assert fsv_1032_updated.state == "30"
+
+
+@pytest.mark.parametrize("device_fixture", ["da_sac_ehs_000001_sub"])
+async def test_fsv_async_set_native_value(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test FSV setting async_set_native_value method."""
+    await setup_integration(hass, mock_config_entry)
+
+    # Test setting value for FSV setting 1031
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: "number.eco_heating_system_fsv_setting_1031", ATTR_VALUE: 55},
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_with(
+        "1f98ebd0-ac48-d802-7f62-000001200100",
+        Capability.SAMSUNG_CE_EHS_FSV_SETTINGS,
+        Command.SET_VALUE,
+        MAIN,
+        argument=["1031", 55],
+    )
+
+    # Test setting value for FSV setting 1032
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: "number.eco_heating_system_fsv_setting_1032", ATTR_VALUE: 20},
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_with(
+        "1f98ebd0-ac48-d802-7f62-000001200100",
+        Capability.SAMSUNG_CE_EHS_FSV_SETTINGS,
+        Command.SET_VALUE,
+        MAIN,
+        argument=["1032", 20],
+    )

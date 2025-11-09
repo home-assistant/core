@@ -142,6 +142,9 @@
       "freezer_temperature": {
         "name": "Freezer temperature"
       },
+      "fsv_setting": {
+        "name": "FSV Setting {fsv_id}"
+      },
       "hood_fan_speed": {
         "name": "Fan speed"
       },
