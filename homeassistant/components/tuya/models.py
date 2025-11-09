@@ -120,6 +120,7 @@ _TYPE_INFORMATION_MAPPINGS: dict[DPType, type[TypeInformation]] = {
 }
 
 
+@dataclass
 class DPCodeWrapper:
     """Base DPCode wrapper.
 
