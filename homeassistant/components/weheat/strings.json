@@ -124,5 +124,10 @@
         "name": "Water outlet temperature"
       }
     }
+  },
+  "exceptions": {
+    "oauth2_implementation_unavailable": {
+      "message": "OAuth2 implementation unavailable, will retry"
+    }
   }
 }
