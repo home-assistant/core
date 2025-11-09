@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 from goodwe import InverterError
+from goodwe.const import GOODWE_UDP_PORT
 
 from homeassistant.components.goodwe.const import (
     CONF_MODEL_FAMILY,
@@ -17,7 +18,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 TEST_HOST = "1.2.3.4"
-TEST_PORT = 123
+TEST_PORT = GOODWE_UDP_PORT
 TEST_SERIAL = "123456789"
 
 
