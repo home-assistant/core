@@ -1,12 +1,13 @@
 """Config flow for xbox."""
 
+from contextlib import suppress
 import logging
 from typing import Any
 
+from httpx import AsyncClient
 from pythonxbox.api.client import XboxLiveClient
 from pythonxbox.authentication.manager import AuthenticationManager
 from pythonxbox.authentication.models import OAuth2TokenResponse
-from pythonxbox.common.signed_session import SignedSession
 
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -43,8 +44,9 @@ class OAuth2FlowHandler(
     async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
         """Create an entry for the flow."""
 
-        async with SignedSession() as session:
-            auth = AuthenticationManager(session, "", "", "")
+        async with AsyncClient() as session:
+            with suppress(DeprecationWarning):
+                auth = AuthenticationManager(session, "", "", "")  # type: ignore[arg-type]
             auth.oauth = OAuth2TokenResponse(**data["token"])
             await auth.refresh_tokens()
 
