@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import AsyncIterator, Callable, Coroutine
+from dataclasses import dataclass
 import json
 import logging
 from typing import Any
@@ -25,6 +26,16 @@ _UPLOAD_AND_DOWNLOAD_TIMEOUT = 12 * 3600
 _UPLOAD_MAX_RETRIES = 20
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class StorageQuotaData:
+    """Class to represent storage quota data."""
+
+    limit: int
+    usage: int
+    usage_in_drive: int
+    usage_in_trash: int
 
 
 class AsyncConfigEntryAuth(AbstractAuth):
@@ -94,6 +105,18 @@ class DriveClient:
         """Get email address of the current user."""
         res = await self._api.get_user(params={"fields": "user(emailAddress)"})
         return str(res["user"]["emailAddress"])
+
+    async def async_get_storage_quota(self) -> StorageQuotaData:
+        """Get storage quota of the current user."""
+        res = await self._api.get_user(params={"fields": "storageQuota"})
+
+        storageQuota = res["storageQuota"]
+        return StorageQuotaData(
+            limit=int(storageQuota.get("limit", 0)),
+            usage=int(storageQuota.get("usage", 0)),
+            usage_in_drive=int(storageQuota.get("usageInDrive", 0)),
+            usage_in_trash=int(storageQuota.get("usageInTrash", 0)),
+        )
 
     async def async_create_ha_root_folder_if_not_exists(self) -> tuple[str, str]:
         """Create Home Assistant folder if it doesn't exist."""

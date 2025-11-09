@@ -42,6 +42,17 @@ def mock_api() -> Generator[MagicMock]:
         "homeassistant.components.google_drive.api.GoogleDriveApi"
     ) as mock_api_cl:
         mock_api = mock_api_cl.return_value
+        mock_api.get_user = AsyncMock(
+            return_value={
+                "user": {"emailAddress": TEST_USER_EMAIL},
+                "storageQuota": {
+                    "limit": "1000",
+                    "usage": "100",
+                    "usageInDrive": "50",
+                    "usageInTrash": "10",
+                },
+            }
+        )
         yield mock_api
 
 

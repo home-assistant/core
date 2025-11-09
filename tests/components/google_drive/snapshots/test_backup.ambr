@@ -13,6 +13,26 @@
       }),
     ),
     tuple(
+      'get_user',
+      tuple(
+      ),
+      dict({
+        'params': dict({
+          'fields': 'user(emailAddress)',
+        }),
+      }),
+    ),
+    tuple(
+      'get_user',
+      tuple(
+      ),
+      dict({
+        'params': dict({
+          'fields': 'storageQuota',
+        }),
+      }),
+    ),
+    tuple(
       'list_files',
       tuple(
       ),
@@ -43,6 +63,26 @@
         'params': dict({
           'fields': 'files(id,name)',
           'q': "properties has { key='home_assistant' and value='root' } and properties has { key='instance_id' and value='0a123c' } and trashed=false",
+        }),
+      }),
+    ),
+    tuple(
+      'get_user',
+      tuple(
+      ),
+      dict({
+        'params': dict({
+          'fields': 'user(emailAddress)',
+        }),
+      }),
+    ),
+    tuple(
+      'get_user',
+      tuple(
+      ),
+      dict({
+        'params': dict({
+          'fields': 'storageQuota',
         }),
       }),
     ),
@@ -99,6 +139,26 @@
       }),
     ),
     tuple(
+      'get_user',
+      tuple(
+      ),
+      dict({
+        'params': dict({
+          'fields': 'user(emailAddress)',
+        }),
+      }),
+    ),
+    tuple(
+      'get_user',
+      tuple(
+      ),
+      dict({
+        'params': dict({
+          'fields': 'storageQuota',
+        }),
+      }),
+    ),
+    tuple(
       'list_files',
       tuple(
       ),
@@ -121,6 +181,26 @@
         'params': dict({
           'fields': 'files(id,name)',
           'q': "properties has { key='home_assistant' and value='root' } and properties has { key='instance_id' and value='0a123c' } and trashed=false",
+        }),
+      }),
+    ),
+    tuple(
+      'get_user',
+      tuple(
+      ),
+      dict({
+        'params': dict({
+          'fields': 'user(emailAddress)',
+        }),
+      }),
+    ),
+    tuple(
+      'get_user',
+      tuple(
+      ),
+      dict({
+        'params': dict({
+          'fields': 'storageQuota',
         }),
       }),
     ),
@@ -164,6 +244,16 @@
         }),
       }),
     ),
+    tuple(
+      'get_user',
+      tuple(
+      ),
+      dict({
+        'params': dict({
+          'fields': 'storageQuota',
+        }),
+      }),
+    ),
   ])
 # ---
 # name: test_agents_upload_create_folder_if_missing
@@ -176,6 +266,26 @@
         'params': dict({
           'fields': 'files(id,name)',
           'q': "properties has { key='home_assistant' and value='root' } and properties has { key='instance_id' and value='0a123c' } and trashed=false",
+        }),
+      }),
+    ),
+    tuple(
+      'get_user',
+      tuple(
+      ),
+      dict({
+        'params': dict({
+          'fields': 'user(emailAddress)',
+        }),
+      }),
+    ),
+    tuple(
+      'get_user',
+      tuple(
+      ),
+      dict({
+        'params': dict({
+          'fields': 'storageQuota',
         }),
       }),
     ),
@@ -234,6 +344,16 @@
           'sock_connect': None,
           'sock_read': None,
           'total': 43200,
+        }),
+      }),
+    ),
+    tuple(
+      'get_user',
+      tuple(
+      ),
+      dict({
+        'params': dict({
+          'fields': 'storageQuota',
         }),
       }),
     ),
