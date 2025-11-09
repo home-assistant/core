@@ -13,6 +13,7 @@ from pyyardian import OperationInfo, YardianDeviceState
 
 from homeassistant.components.yardian import DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_NAME, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import translation as translation_helper
 
 from tests.common import MockConfigEntry
@@ -114,7 +115,7 @@ def yardian_translation_overrides(monkeypatch: pytest.MonkeyPatch) -> None:
     original_async_get_translations = translation_helper.async_get_translations
 
     async def _async_get_translations(
-        hass,
+        hass: HomeAssistant,
         language: str,
         category: str,
         integrations: list[str] | None = None,
