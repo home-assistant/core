@@ -29,6 +29,14 @@ AVAILABLE_MODES = [
     HVACMode.FAN_ONLY.value,
 ]
 
+MODES_SCHEMA = {vol.Required(mode, default=True): bool for mode in AVAILABLE_MODES}
+
+DATA_SCHEMA = {
+    vol.Required(CONF_HOST): str,
+    **MODES_SCHEMA,
+    vol.Required(CONF_SWING_SUPPORT, default=False): bool,
+}
+
 
 async def _validate_connection(host: str, send_wakeup_prompt: bool) -> bool:
     cool = CoolMasterNet(host, DEFAULT_PORT, send_initial_line_feed=send_wakeup_prompt)
@@ -42,15 +50,7 @@ class CoolmasterConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     def _get_data_schema(self) -> vol.Schema:
-        MODES_SCHEMA = {
-            vol.Required(mode, default=True): bool for mode in AVAILABLE_MODES
-        }
-
-        schema_dict = {
-            vol.Required(CONF_HOST): str,
-            **MODES_SCHEMA,
-            vol.Required(CONF_SWING_SUPPORT, default=False): bool,
-        }
+        schema_dict = DATA_SCHEMA.copy()
 
         if self.show_advanced_options:
             schema_dict[vol.Required(CONF_SEND_WAKEUP_PROMPT, default=False)] = bool
