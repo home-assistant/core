@@ -18,14 +18,14 @@
         "title": "Discovered Music Assistant server"
       },
       "user": {
-        "description": "Add a Music Assistant server `{url}` to Home Assistant?",
-        "title": "Connect to a Music Assistant server",
         "data": {
           "url": "URL of the Music Assistant server"
         },
         "data_description": {
           "url": "Enter the base URL of your Music Assistant server including the http prefix"
-        }
+        },
+        "description": "Add a Music Assistant server `{url}` to Home Assistant?",
+        "title": "Connect to a Music Assistant server"
       }
     }
   },
