@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
-from bsblan import DHWTimeSwitchPrograms
+from bsblan import BSBLANError, DHWTimeSwitchPrograms
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState
@@ -111,7 +111,7 @@ async def set_hot_water_schedule(service_call: ServiceCall) -> None:
     try:
         # Call the BSB-Lan API to set the schedule
         await client.set_hot_water(dhw_time_programs=dhw_programs)
-    except Exception as err:
+    except BSBLANError as err:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="set_schedule_failed",
