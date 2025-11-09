@@ -127,4 +127,15 @@ async def async_remove_config_entry_device(
     hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
 ) -> bool:
     """Remove a config entry from a device."""
+    manager = hass.data[DOMAIN][VS_MANAGER]
+    await manager.get_devices()
+    for dev in manager.devices:
+        if isinstance(dev.sub_device_no, int):
+            device_id = f"{dev.cid}{dev.sub_device_no!s}"
+        else:
+            device_id = dev.cid
+        identifier = next(iter(device_entry.identifiers), None)
+        if identifier and device_id == identifier[1]:
+            return False
+
     return True
