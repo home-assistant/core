@@ -62,7 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoodweConfigEntry) -> bo
     return True
 
 
-def _get_port(protocol):
+def _get_port(protocol: str) -> int:
     if protocol == PROTOCOL_UDP:
         port = GOODWE_UDP_PORT
     elif protocol == PROTOCOL_TCP:
