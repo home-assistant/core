@@ -73,7 +73,7 @@ AUTH_SCHEMA = vol.Schema(
                 type=TextSelectorType.PASSWORD,
                 autocomplete="current-password",
             )
-        )
+        ),
     }
 )
 
