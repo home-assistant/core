@@ -68,12 +68,7 @@ DATA_SCHEMA = vol.Any(
 AUTH_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): TextSelector(
-            TextSelectorConfig(
-                type=TextSelectorType.PASSWORD,
-                autocomplete="current-password",
-            )
-        ),
+        vol.Required(CONF_PASSWORD): cv.string,
     }
 )
 
