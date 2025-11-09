@@ -68,6 +68,11 @@
         "name": "Wi-Fi status"
       }
     },
+    "button": {
+      "clear_traffic_statistics": {
+        "name": "Clear traffic statistics"
+      }
+    },
     "select": {
       "preferred_network_mode": {
         "name": "Preferred network mode",
