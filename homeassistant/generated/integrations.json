@@ -7267,7 +7267,7 @@
           "integration_type": "hub",
           "config_flow": true,
           "iot_class": "local_push",
-          "name": "Victron GX monitoring"
+          "name": "Victron GX"
         },
         "victron_remote_monitoring": {
           "integration_type": "service",

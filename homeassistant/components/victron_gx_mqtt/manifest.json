@@ -1,6 +1,6 @@
 {
   "domain": "victron_gx_mqtt",
-  "name": "Victron GX monitoring",
+  "name": "Victron GX",
   "codeowners": ["@tomer-w"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/victron",
