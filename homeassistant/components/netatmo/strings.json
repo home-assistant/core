@@ -143,6 +143,11 @@
       }
     }
   },
+  "exceptions": {
+    "oauth2_implementation_unavailable": {
+      "message": "OAuth2 implementation unavailable, will retry"
+    }
+  },
   "options": {
     "step": {
       "public_weather": {
