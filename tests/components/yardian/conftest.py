@@ -115,12 +115,17 @@ def yardian_translation_overrides(monkeypatch: pytest.MonkeyPatch) -> None:
     original_async_get_translations = translation_helper.async_get_translations
 
     async def _async_get_translations(
-        hass: HomeAssistant,
+        hass: HomeAssistant | None,
         language: str,
         category: str,
         integrations: list[str] | None = None,
         config_flow: bool | None = None,
     ) -> dict[str, str]:
+        if hass is None:
+            return await original_async_get_translations(
+                hass, language, category, integrations, config_flow
+            )
+
         translations = await original_async_get_translations(
             hass, language, category, integrations, config_flow
         )
