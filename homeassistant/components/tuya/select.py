@@ -402,6 +402,6 @@ class TuyaSelectEntity(TuyaEntity, SelectEntity):
         """Return the selected entity option to represent the entity state."""
         return self._dpcode_wrapper.read_device_status(self.device)
 
-    def select_option(self, option: str) -> None:
+    async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        self._send_command([{"code": self._dpcode_wrapper.dpcode, "value": option}])
+        await self._async_send_dpcode_update(self._dpcode_wrapper, option)
