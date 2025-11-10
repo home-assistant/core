@@ -161,7 +161,6 @@ ENDPOINT_SENSORS: tuple[PortainerEndpointSensorEntityDescription, ...] = (
         translation_key="containers_count",
         value_fn=lambda data: data.docker_info.containers,
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     PortainerEndpointSensorEntityDescription(
@@ -169,7 +168,6 @@ ENDPOINT_SENSORS: tuple[PortainerEndpointSensorEntityDescription, ...] = (
         translation_key="containers_running",
         value_fn=lambda data: data.docker_info.containers_running,
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     PortainerEndpointSensorEntityDescription(
@@ -177,7 +175,6 @@ ENDPOINT_SENSORS: tuple[PortainerEndpointSensorEntityDescription, ...] = (
         translation_key="containers_stopped",
         value_fn=lambda data: data.docker_info.containers_stopped,
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     PortainerEndpointSensorEntityDescription(
@@ -185,7 +182,6 @@ ENDPOINT_SENSORS: tuple[PortainerEndpointSensorEntityDescription, ...] = (
         translation_key="containers_paused",
         value_fn=lambda data: data.docker_info.containers_paused,
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     PortainerEndpointSensorEntityDescription(
@@ -193,7 +189,6 @@ ENDPOINT_SENSORS: tuple[PortainerEndpointSensorEntityDescription, ...] = (
         translation_key="images_count",
         value_fn=lambda data: data.docker_info.images,
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     PortainerEndpointSensorEntityDescription(
@@ -203,6 +198,7 @@ ENDPOINT_SENSORS: tuple[PortainerEndpointSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.MEBIBYTES,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),

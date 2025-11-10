@@ -216,6 +216,9 @@
       "energy_forecast": {
         "name": "Energy forecast"
       },
+      "finish": {
+        "name": "Finish"
+      },
       "plate": {
         "name": "Plate {plate_no}",
         "state": {
@@ -1006,7 +1009,7 @@
           "cleaning_care_program": "Cleaning/care program",
           "maintenance_program": "Maintenance program",
           "normal_operation_mode": "Normal operation mode",
-          "own_program": "Own program"
+          "own_program": "Program"
         }
       },
       "remaining_time": {
@@ -1014,6 +1017,9 @@
       },
       "spin_speed": {
         "name": "Spin speed"
+      },
+      "start": {
+        "name": "Start"
       },
       "start_time": {
         "name": "Start in"
@@ -1081,6 +1087,9 @@
     },
     "invalid_target": {
       "message": "Invalid device targeted."
+    },
+    "oauth2_implementation_unavailable": {
+      "message": "OAuth2 implementation unavailable, will retry"
     },
     "set_program_error": {
       "message": "'Set program' action failed: {status} / {message}"
