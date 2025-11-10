@@ -103,7 +103,7 @@ async def has_calls_after_trigger(
 
 @pytest.mark.parametrize(
     ("condition", "state", "reverse_state"),
-    [("light.state_on", STATE_ON, STATE_OFF), ("light.state_off", STATE_OFF, STATE_ON)],
+    [("light.is_on", STATE_ON, STATE_OFF), ("light.is_off", STATE_OFF, STATE_ON)],
 )
 async def test_light_state_condition_behavior_any(
     hass: HomeAssistant,
@@ -154,7 +154,7 @@ async def test_light_state_condition_behavior_any(
 
 @pytest.mark.parametrize(
     ("condition", "state", "reverse_state"),
-    [("light.state_on", STATE_ON, STATE_OFF), ("light.state_off", STATE_OFF, STATE_ON)],
+    [("light.is_on", STATE_ON, STATE_OFF), ("light.is_off", STATE_OFF, STATE_ON)],
 )
 async def test_light_state_condition_behavior_all(
     hass: HomeAssistant,

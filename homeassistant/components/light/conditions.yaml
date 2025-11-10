@@ -1,4 +1,4 @@
-state_off:
+is_off:
   target:
     entity:
       domain: light
@@ -12,7 +12,7 @@ state_off:
           options:
             - all
             - any
-state_on:
+is_on:
   target:
     entity:
       domain: light

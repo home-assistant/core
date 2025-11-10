@@ -1,9 +1,9 @@
 {
   "conditions": {
-    "state_off": {
+    "is_off": {
       "condition": "mdi:lightbulb-off"
     },
-    "state_on": {
+    "is_on": {
       "condition": "mdi:lightbulb-on"
     }
   },

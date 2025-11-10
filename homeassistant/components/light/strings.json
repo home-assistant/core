@@ -37,7 +37,7 @@
     "section_advanced_fields_name": "Advanced options"
   },
   "conditions": {
-    "state_off": {
+    "is_off": {
       "description": "Test if a light is off.",
       "description_configured": "Test if a light is off",
       "fields": {
@@ -48,7 +48,7 @@
       },
       "name": "If a light is off"
     },
-    "state_on": {
+    "is_on": {
       "description": "Test if a light is on.",
       "description_configured": "Test if a light is on",
       "fields": {

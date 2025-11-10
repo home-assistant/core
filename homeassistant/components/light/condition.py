@@ -104,16 +104,16 @@ class StateConditionBase(Condition):
         return test_state
 
 
-class StateOnCondition(StateConditionBase):
-    """State ON condition."""
+class IsOnCondition(StateConditionBase):
+    """Is on condition."""
 
     def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
         """Initialize condition."""
         super().__init__(hass, config, STATE_ON)
 
 
-class StateOffCondition(StateConditionBase):
-    """State OFF condition."""
+class IsOffCondition(StateConditionBase):
+    """Is off condition."""
 
     def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
         """Initialize condition."""
@@ -121,8 +121,8 @@ class StateOffCondition(StateConditionBase):
 
 
 CONDITIONS: dict[str, type[Condition]] = {
-    "state_off": StateOffCondition,
-    "state_on": StateOnCondition,
+    "is_off": IsOffCondition,
+    "is_on": IsOnCondition,
 }
 
 
