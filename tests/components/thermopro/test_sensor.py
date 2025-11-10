@@ -138,8 +138,16 @@ async def test_sensors(hass: HomeAssistant) -> None:
 class CoordinatorStub:
     """Coordinator stub for testing entity restoration behavior."""
 
-    def __init__(self) -> None:
-        """Initialize coordinator stub."""
+    def __init__(
+        self,
+        hass: HomeAssistant | None = None,
+        logger: MagicMock | None = None,
+        *,
+        address: str | None = None,
+        mode: MagicMock | None = None,
+        update_method: MagicMock | None = None,
+    ) -> None:
+        """Initialize coordinator stub with signature matching real coordinator."""
         self.calls: list[tuple[MagicMock, type | None]] = []
         self._saw_sensor_entity_description = False
         self._restore_cb: MagicMock | None = None
@@ -153,6 +161,10 @@ class CoordinatorStub:
         if entity_description_cls is SensorEntityDescription:
             self._saw_sensor_entity_description = True
 
+        return lambda: None
+
+    def async_start(self) -> MagicMock:
+        """Return a no-op unsub function for start lifecycle."""
         return lambda: None
 
     def trigger_restore_from_test(self) -> None:
@@ -193,31 +205,43 @@ async def test_thermopro_restores_entities_on_restart_behavior(
     def add_entities_second(entities: list) -> None:
         second_called["v"] = True
 
-    coord = CoordinatorStub()
+    # Patch the integration to avoid platform forwarding and use the coordinator stub
+    monkeypatch.setattr(
+        "homeassistant.components.thermopro.__init__.PLATFORMS", [],
+    )
+    monkeypatch.setattr(
+        "homeassistant.components.thermopro.__init__.PassiveBluetoothProcessorCoordinator",
+        CoordinatorStub,
+    )
 
-    # First setup
-    entry1 = MockConfigEntry(domain=DOMAIN)
+    # First setup using real config entry setup to populate hass.data
+    entry1 = MockConfigEntry(domain=DOMAIN, unique_id="00:11:22:33:44:55")
     entry1.add_to_hass(hass)
-    hass.data.setdefault(DOMAIN, {})[entry1.entry_id] = coord
+    assert await hass.config_entries.async_setup(entry1.entry_id)
+    await hass.async_block_till_done()
 
+    # Manually set up sensor platform with our callback
     await thermopro_sensor.async_setup_entry(hass, entry1, add_entities_first)
     await hass.async_block_till_done()
 
+    coord = hass.data[DOMAIN][entry1.entry_id]
     assert coord.calls, "Processor was not registered on first setup"
     assert not first_called["v"]
 
     # Second setup (simulating restart)
-    entry2 = MockConfigEntry(domain=DOMAIN)
+    entry2 = MockConfigEntry(domain=DOMAIN, unique_id="AA:BB:CC:DD:EE:FF")
     entry2.add_to_hass(hass)
-    hass.data.setdefault(DOMAIN, {})[entry2.entry_id] = coord
+    assert await hass.config_entries.async_setup(entry2.entry_id)
+    await hass.async_block_till_done()
 
     await thermopro_sensor.async_setup_entry(hass, entry2, add_entities_second)
     await hass.async_block_till_done()
 
     assert add_entities_callbacks, "No add_entities callback was registered"
-    coord._restore_cb = add_entities_callbacks[-1]
+    coord2 = hass.data[DOMAIN][entry2.entry_id]
+    coord2._restore_cb = add_entities_callbacks[-1]
 
-    coord.trigger_restore_from_test()
+    coord2.trigger_restore_from_test()
     await hass.async_block_till_done()
 
     assert second_called["v"], (
