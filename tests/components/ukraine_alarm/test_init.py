@@ -2,7 +2,6 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.ukraine_alarm import async_migrate_entry
 from homeassistant.components.ukraine_alarm.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
@@ -12,7 +11,10 @@ from . import REGIONS
 from tests.common import MockConfigEntry
 
 
-async def test_migration_v1_to_v2_state_without_districts(hass: HomeAssistant) -> None:
+async def test_migration_v1_to_v2_state_without_districts(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
     """Test migration allows states without districts."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -22,15 +24,20 @@ async def test_migration_v1_to_v2_state_without_districts(hass: HomeAssistant) -
     )
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.ukraine_alarm.Client.get_regions",
-        return_value=REGIONS,
+    with (
+        patch(
+            "homeassistant.components.ukraine_alarm.Client.get_regions",
+            return_value=REGIONS,
+        ),
+        patch(
+            "homeassistant.components.ukraine_alarm.Client.get_alerts",
+            return_value=[{"activeAlerts": []}],
+        ),
     ):
-        result = await async_migrate_entry(hass, entry)
+        result = await hass.config_entries.async_setup(entry.entry_id)
         assert result is True
         assert entry.version == 2
 
-        issue_registry = ir.async_get(hass)
         assert (
             DOMAIN,
             f"deprecated_state_region_{entry.entry_id}",
@@ -39,6 +46,7 @@ async def test_migration_v1_to_v2_state_without_districts(hass: HomeAssistant) -
 
 async def test_migration_v1_to_v2_state_with_districts_fails(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test migration rejects states with districts."""
     entry = MockConfigEntry(
@@ -53,10 +61,9 @@ async def test_migration_v1_to_v2_state_with_districts_fails(
         "homeassistant.components.ukraine_alarm.Client.get_regions",
         return_value=REGIONS,
     ):
-        result = await async_migrate_entry(hass, entry)
+        result = await hass.config_entries.async_setup(entry.entry_id)
         assert result is False
 
-        issue_registry = ir.async_get(hass)
         assert (
             DOMAIN,
             f"deprecated_state_region_{entry.entry_id}",
