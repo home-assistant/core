@@ -362,6 +362,9 @@
     "no_vehicle": {
       "message": "Unable to retrieve vehicle details."
     },
+    "oauth2_implementation_unavailable": {
+      "message": "OAuth2 implementation unavailable, will retry"
+    },
     "unauthorized": {
       "message": "Authentication failed. {message}"
     },
