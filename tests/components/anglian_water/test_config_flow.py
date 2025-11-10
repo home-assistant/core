@@ -23,7 +23,7 @@ async def test_full_flow(
 ) -> None:
     """Test a full and successful config flow."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result is not None
     assert result["type"] is FlowResultType.FORM
