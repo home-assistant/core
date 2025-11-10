@@ -10,7 +10,6 @@ import homeassistant.helpers.config_validation as cv
 from .const import DOMAIN
 from .coordinator import PTDevicesCoordinator
 
-# PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.BINARY_SENSOR]
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 

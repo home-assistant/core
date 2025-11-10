@@ -82,24 +82,12 @@ RESOURCES: dict[str, SensorEntityDescription] = {
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    # "created": SensorEntityDescription(
-    #     key="created",
-    #     translation_key="device_created",
-    #     entity_registry_enabled_default=False,
-    #     entity_category=EntityCategory.DIAGNOSTIC,
-    # ),
     "user_id": SensorEntityDescription(
         key="user_id",
         translation_key="user_id",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    # "device_type": SensorEntityDescription(
-    #     key="device_type",
-    #     translation_key="device_type",
-    #     entity_registry_enabled_default=False,
-    #     entity_category=EntityCategory.DIAGNOSTIC,
-    # ),
     "version": SensorEntityDescription(
         key="version",
         translation_key="device_version",
@@ -116,12 +104,6 @@ RESOURCES: dict[str, SensorEntityDescription] = {
         key="status",
         translation_key="device_status",
     ),
-    # "delivery_notes": SensorEntityDescription(
-    #     key="delivery_notes",
-    #     translation_key="device_delivery_notes",
-    #     entity_registry_enabled_default=False,
-    #     entity_category=EntityCategory.DIAGNOSTIC,
-    # ),
     "reported": SensorEntityDescription(
         key="reported",
         translation_key="device_reported",
@@ -163,7 +145,7 @@ def _format_dict(input: dict[str, Any]) -> dict[str, Any]:
     result: dict[str, Any] = {}
 
     # Recurse through key value pairs and convert from nested to flat
-    def recurse(sub_dict: dict[str, Any]):
+    def recurse(sub_dict: dict[str, Any]) -> None:
         for key, value in sub_dict.items():
             if isinstance(value, dict):
                 recurse(value)
