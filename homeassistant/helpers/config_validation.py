@@ -1440,7 +1440,7 @@ def _raise_on_templated_service(
         _raise_on_templated_service(domain, _service, schema.schema, _path)
     if domain == "camera" and _service in ("record", "snapshot"):
         return
-    if domain == "unifiprotect" and _service == "set_chime_paired_doorbells":
+    if domain == "velbus" and _service == "set_memo_text":
         return
     if schema in (dynamic_template, template, template_complex):
         raise ValueError(
