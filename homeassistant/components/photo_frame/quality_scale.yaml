@@ -13,10 +13,10 @@ rules:
   dependency-transparency:
     status: exempt
     comment: No dependencies.
-  docs-actions: todo
-  docs-high-level-description: todo
-  docs-installation-instructions: todo
-  docs-removal-instructions: todo
+  docs-actions: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
   entity-event-setup:
     status: exempt
     comment: No entity event subscriptions.
