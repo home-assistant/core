@@ -7,7 +7,7 @@ from dataclasses import dataclass
 import logging
 from typing import Any, Final, cast
 
-import aiohttp
+from aiohttp import ClientResponseError
 from pymiele import MieleDevice, MieleTemperature
 
 from homeassistant.components.climate import (
@@ -250,12 +250,13 @@ class MieleClimate(MieleEntity, ClimateEntity):
                 cast(float, kwargs.get(ATTR_TEMPERATURE)),
                 self.entity_description.zone,
             )
-        except aiohttp.ClientError as err:
+        except ClientResponseError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="set_state_error",
                 translation_placeholders={
                     "entity": self.entity_id,
+                    "err_status": str(err.status),
                 },
             ) from err
         await self.coordinator.async_request_refresh()

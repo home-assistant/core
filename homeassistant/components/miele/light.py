@@ -7,7 +7,7 @@ from dataclasses import dataclass
 import logging
 from typing import Any, Final
 
-import aiohttp
+from aiohttp import ClientResponseError
 
 from homeassistant.components.light import (
     ColorMode,
@@ -131,11 +131,12 @@ class MieleLight(MieleEntity, LightEntity):
             await self.api.send_action(
                 self._device_id, {self.entity_description.light_type: mode}
             )
-        except aiohttp.ClientError as err:
+        except ClientResponseError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="set_state_error",
                 translation_placeholders={
                     "entity": self.entity_id,
+                    "err_status": str(err.status),
                 },
             ) from err

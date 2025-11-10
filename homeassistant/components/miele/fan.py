@@ -148,6 +148,7 @@ class MieleFan(MieleEntity, FanEntity):
                     translation_key="set_state_error",
                     translation_placeholders={
                         "entity": self.entity_id,
+                        "err_status": str(ex.status),
                     },
                 ) from ex
             self.device.state_ventilation_step = ventilation_step
@@ -171,6 +172,7 @@ class MieleFan(MieleEntity, FanEntity):
                 translation_key="set_state_error",
                 translation_placeholders={
                     "entity": self.entity_id,
+                    "err_status": str(ex.status),
                 },
             ) from ex
 
@@ -188,6 +190,7 @@ class MieleFan(MieleEntity, FanEntity):
                 translation_key="set_state_error",
                 translation_placeholders={
                     "entity": self.entity_id,
+                    "err_status": str(ex.status),
                 },
             ) from ex
 
