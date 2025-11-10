@@ -221,9 +221,9 @@
           "preparing-defrost": "Preparing defrost",
           "defrost": "[%key:component::climate::entity_component::_::hvac_action::state::defrosting%]",
           "passive-defrost": "Passive defrosting",
-          "ready": "[%key:component::climate::entity_component::_::hvac_action::state::idle%]",
-          "pause": "[%key:component::climate::entity_component::_::hvac_action::state::idle%]",
-          "off": "[%key:component::climate::entity_component::_::hvac_action::state::off%]"
+          "ready": "[%key:common::state::idle%]",
+          "pause": "[%key:common::state::idle%]",
+          "off": "[%key:common::state::off%]"
         }
       },
       "compressor_starts": {
