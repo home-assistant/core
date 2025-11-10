@@ -103,53 +103,6 @@ async def has_calls_after_trigger(
 
 
 @pytest.mark.parametrize("condition_state", [STATE_ON, STATE_OFF])
-async def test_light_state_condition_behavior_one(
-    hass: HomeAssistant,
-    service_calls: list[ServiceCall],
-    label_entities: list[str],
-    condition_state: str,
-) -> None:
-    """Test the light state condition with the 'one' behavior."""
-    await async_setup_component(hass, "light", {})
-
-    # Set state for two switches to ensure that they don't impact the condition
-    hass.states.async_set("switch.label_switch_1", STATE_OFF)
-    hass.states.async_set("switch.label_switch_2", STATE_ON)
-
-    reverse_state = STATE_OFF if condition_state == STATE_ON else STATE_ON
-    for entity_id in label_entities:
-        hass.states.async_set(entity_id, reverse_state)
-
-    await setup_automation_with_light_condition(
-        hass,
-        target={ATTR_LABEL_ID: "test_label", "entity_id": "light.nonexistent"},
-        behavior="one",
-        condition_state=condition_state,
-    )
-
-    # No lights on the condition state
-    assert not await has_calls_after_trigger(hass, service_calls)
-
-    # Set one light to the condition state -> condition pass
-    hass.states.async_set(label_entities[0], condition_state)
-    assert await has_calls_after_trigger(hass, service_calls)
-
-    # Set second light to the condition state -> condition fail
-    hass.states.async_set(label_entities[1], condition_state)
-    assert not await has_calls_after_trigger(hass, service_calls)
-
-    # Set first light to unavailable -> condition pass again since only the
-    # second light is on the condition state
-    hass.states.async_set(label_entities[0], STATE_UNAVAILABLE)
-    assert await has_calls_after_trigger(hass, service_calls)
-
-    # Set all lights to unavailable -> condition fail
-    for entity_id in label_entities:
-        hass.states.async_set(entity_id, STATE_UNAVAILABLE)
-    assert not await has_calls_after_trigger(hass, service_calls)
-
-
-@pytest.mark.parametrize("condition_state", [STATE_ON, STATE_OFF])
 async def test_light_state_condition_behavior_any(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
@@ -237,7 +190,7 @@ async def test_light_state_condition_behavior_all(
     hass.states.async_set(label_entities[0], STATE_UNAVAILABLE)
     assert await has_calls_after_trigger(hass, service_calls)
 
-    # Set all lights to unavailable -> condition fail
+    # Set all lights to unavailable -> condition passes
     for entity_id in label_entities:
         hass.states.async_set(entity_id, STATE_UNAVAILABLE)
-    assert not await has_calls_after_trigger(hass, service_calls)
+    assert await has_calls_after_trigger(hass, service_calls)

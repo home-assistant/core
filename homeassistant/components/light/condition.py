@@ -25,7 +25,6 @@ from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from .const import DOMAIN
 
 ATTR_BEHAVIOR: Final = "behavior"
-BEHAVIOR_ONE: Final = "one"
 BEHAVIOR_ANY: Final = "any"
 BEHAVIOR_ALL: Final = "all"
 
@@ -35,7 +34,7 @@ STATE_CONDITION_VALID_STATES: Final = [STATE_ON, STATE_OFF]
 STATE_CONDITION_OPTIONS_SCHEMA: dict[vol.Marker, Any] = {
     vol.Required(CONF_STATE): vol.In(STATE_CONDITION_VALID_STATES),
     vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
-        [BEHAVIOR_ONE, BEHAVIOR_ANY, BEHAVIOR_ALL]
+        [BEHAVIOR_ANY, BEHAVIOR_ALL]
     ),
 }
 STATE_CONDITION_SCHEMA = vol.Schema(
@@ -77,28 +76,13 @@ class StateCondition(Condition):
 
         def check_all_match_state(states: list[str]) -> bool:
             """Test if all entities match the state."""
-            if not states:
-                return False
             return all(state == self._state for state in states)
-
-        def check_one_match_state(states: list[str]) -> bool:
-            """Check that only one entity matches the state."""
-            matched = False
-            for state in states:
-                if state != self._state:
-                    continue
-                if matched:
-                    return False
-                matched = True
-            return matched
 
         matcher: Callable[[list[str]], bool]
         if self._behavior == BEHAVIOR_ANY:
             matcher = check_any_match_state
         elif self._behavior == BEHAVIOR_ALL:
             matcher = check_all_match_state
-        elif self._behavior == BEHAVIOR_ONE:
-            matcher = check_one_match_state
 
         @trace_condition_function
         def test_state(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
