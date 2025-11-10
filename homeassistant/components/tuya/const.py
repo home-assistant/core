@@ -704,6 +704,7 @@ class DPCode(StrEnum):
     DECIBEL_SWITCH = "decibel_switch"
     DEHUMIDITY_SET_ENUM = "dehumidify_set_enum"
     DEHUMIDITY_SET_VALUE = "dehumidify_set_value"
+    DELAY_CLEAN_TIME = "delay_clean_time"
     DELAY_SET = "delay_set"
     DEW_POINT_TEMP = "dew_point_temp"
     DISINFECTION = "disinfection"
