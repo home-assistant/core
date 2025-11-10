@@ -377,9 +377,9 @@ DISCOVERY_SCHEMAS = [
             key="PumpStatusRunning",
             translation_key="pump_running",
             device_class=BinarySensorDeviceClass.RUNNING,
-            device_to_ha=lambda x: (
+            device_to_ha=lambda x: bool(
                 x
-                == clusters.PumpConfigurationAndControl.Bitmaps.PumpStatusBitmap.kRunning
+                & clusters.PumpConfigurationAndControl.Bitmaps.PumpStatusBitmap.kRunning
             ),
         ),
         entity_class=MatterBinarySensor,
@@ -395,8 +395,8 @@ DISCOVERY_SCHEMAS = [
             translation_key="dishwasher_alarm_inflow",
             device_class=BinarySensorDeviceClass.PROBLEM,
             entity_category=EntityCategory.DIAGNOSTIC,
-            device_to_ha=lambda x: (
-                x == clusters.DishwasherAlarm.Bitmaps.AlarmBitmap.kInflowError
+            device_to_ha=lambda x: bool(
+                x & clusters.DishwasherAlarm.Bitmaps.AlarmBitmap.kInflowError
             ),
         ),
         entity_class=MatterBinarySensor,
@@ -410,8 +410,8 @@ DISCOVERY_SCHEMAS = [
             translation_key="alarm_door",
             device_class=BinarySensorDeviceClass.PROBLEM,
             entity_category=EntityCategory.DIAGNOSTIC,
-            device_to_ha=lambda x: (
-                x == clusters.DishwasherAlarm.Bitmaps.AlarmBitmap.kDoorError
+            device_to_ha=lambda x: bool(
+                x & clusters.DishwasherAlarm.Bitmaps.AlarmBitmap.kDoorError
             ),
         ),
         entity_class=MatterBinarySensor,
@@ -478,8 +478,8 @@ DISCOVERY_SCHEMAS = [
             translation_key="alarm_door",
             device_class=BinarySensorDeviceClass.PROBLEM,
             entity_category=EntityCategory.DIAGNOSTIC,
-            device_to_ha=lambda x: (
-                x == clusters.RefrigeratorAlarm.Bitmaps.AlarmBitmap.kDoorOpen
+            device_to_ha=lambda x: bool(
+                x & clusters.RefrigeratorAlarm.Bitmaps.AlarmBitmap.kDoorOpen
             ),
         ),
         entity_class=MatterBinarySensor,
