@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Coroutine, Sequence
-import dataclasses
 from datetime import datetime, timedelta
 from functools import partial
 import logging
@@ -198,7 +197,6 @@ class USBDiscovery:
         """Init USB Discovery."""
         self.hass = hass
         self.usb = usb
-        self.seen: set[tuple[str, ...]] = set()
         self.observer_active = False
         self._request_debouncer: Debouncer[Coroutine[Any, Any, None]] | None = None
         self._add_remove_debouncer: Debouncer[Coroutine[Any, Any, None]] | None = None
@@ -347,11 +345,6 @@ class USBDiscovery:
     async def _async_process_discovered_usb_device(self, device: USBDevice) -> None:
         """Process a USB discovery."""
         _LOGGER.debug("Discovered USB Device: %s", device)
-        device_tuple = dataclasses.astuple(device)
-        if device_tuple in self.seen:
-            return
-        self.seen.add(device_tuple)
-
         matched = self.async_get_usb_matchers_for_device(device)
         if not matched:
             return
@@ -418,7 +411,7 @@ class USBDiscovery:
                 except Exception:
                     _LOGGER.exception("Error in USB port event callback")
 
-        for usb_device in filtered_usb_devices:
+        for usb_device in added_devices:
             await self._async_process_discovered_usb_device(usb_device)
 
     @hass_callback
