@@ -83,7 +83,7 @@ PyRMVtransport==0.3.3
 PySrDaliGateway==0.13.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.72.1
+PySwitchbot==0.73.0
 
 # homeassistant.components.switchmate
 PySwitchmate==0.5.1
@@ -354,7 +354,7 @@ aiopulse==0.4.6
 aiopurpleair==2025.08.1
 
 # homeassistant.components.hunterdouglas_powerview
-aiopvapi==3.2.1
+aiopvapi==3.3.0
 
 # homeassistant.components.pvpc_hourly_pricing
 aiopvpc==4.2.2
