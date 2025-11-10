@@ -30,3 +30,7 @@ class ConversationEntityFeature(IntFlag):
     """Supported features of the conversation entity."""
 
     CONTROL = 1
+
+
+METADATA_CUSTOM_SENTENCE = "hass_custom_sentence"
+METADATA_CUSTOM_FILE = "hass_custom_file"
