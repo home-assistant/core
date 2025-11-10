@@ -578,7 +578,7 @@ automower-ble==0.2.8
 av==13.1.0
 
 # homeassistant.components.avea
-# avea==1.5.1
+avea==1.6.1
 
 # homeassistant.components.avion
 # avion==0.10
@@ -717,7 +717,7 @@ buienradar==1.0.6
 cached-ipaddress==1.0.1
 
 # homeassistant.components.caldav
-caldav==1.6.0
+caldav==2.1.0
 
 # homeassistant.components.cisco_mobility_express
 ciscomobilityexpress==0.3.9
@@ -2050,7 +2050,7 @@ pyhaversion==22.8.0
 pyheos==1.0.6
 
 # homeassistant.components.hive
-pyhive-integration==1.0.2
+pyhive-integration==1.0.6
 
 # homeassistant.components.homematic
 pyhomematic==0.1.77
@@ -2558,7 +2558,7 @@ python-telegram-bot[socks]==22.1
 python-vlc==3.0.18122
 
 # homeassistant.components.xbox
-python-xbox==0.1.0
+python-xbox==0.1.1
 
 # homeassistant.components.egardia
 pythonegardia==1.0.52
@@ -2604,7 +2604,7 @@ pyvera==0.3.16
 pyversasense==0.0.6
 
 # homeassistant.components.vesync
-pyvesync==3.1.4
+pyvesync==3.2.1
 
 # homeassistant.components.vizio
 pyvizio==0.1.61
@@ -3087,6 +3087,9 @@ victron-vrm==0.1.8
 # homeassistant.components.vilfo
 vilfo-api-client==0.5.0
 
+# homeassistant.components.caldav
+vobject==0.9.9
+
 # homeassistant.components.voip
 voip-utils==0.3.4
 
@@ -3161,7 +3164,7 @@ wyoming==1.7.2
 xiaomi-ble==1.2.0
 
 # homeassistant.components.knx
-xknx==3.10.0
+xknx==3.10.1
 
 # homeassistant.components.knx
 xknxproject==3.8.2
