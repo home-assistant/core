@@ -68,7 +68,6 @@ class GoogleDriveBackupAgent(BackupAgent):
         assert config_entry.unique_id
         self.name = config_entry.title
         self.unique_id = slugify(config_entry.unique_id)
-        self._coordinator = config_entry.runtime_data
         self._client = config_entry.runtime_data.client
 
     async def async_upload_backup(
@@ -85,7 +84,6 @@ class GoogleDriveBackupAgent(BackupAgent):
         """
         try:
             await self._client.async_upload_backup(open_stream, backup)
-            await self._coordinator.async_request_refresh()
         except (GoogleDriveApiError, HomeAssistantError, TimeoutError) as err:
             raise BackupAgentError(f"Failed to upload backup: {err}") from err
 

@@ -1,4 +1,4 @@
-"""DataUpdateCoordinator for WLED."""
+"""DataUpdateCoordinator for Google Drive."""
 
 from __future__ import annotations
 

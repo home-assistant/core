@@ -11,8 +11,10 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.google_drive.const import DOMAIN
+from homeassistant.const import UnitOfInformation
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+from homeassistant.util.unit_conversion import InformationConverter
 
 from tests.common import MockConfigEntry
 
@@ -42,17 +44,32 @@ def mock_api() -> Generator[MagicMock]:
         "homeassistant.components.google_drive.api.GoogleDriveApi"
     ) as mock_api_cl:
         mock_api = mock_api_cl.return_value
-        mock_api.get_user = AsyncMock(
-            return_value={
-                "user": {"emailAddress": TEST_USER_EMAIL},
-                "storageQuota": {
-                    "limit": "1000",
-                    "usage": "100",
-                    "usageInDrive": "50",
-                    "usageInTrash": "10",
-                },
-            }
-        )
+
+        def mock_get_user(params=None):
+            params = params or {}
+            fields = params.get("fields")
+            result = {}
+            if not fields or "storageQuota" in fields:
+                result["storageQuota"] = {
+                    "limit": InformationConverter.convert(
+                        10, UnitOfInformation.GIBIBYTES, UnitOfInformation.BYTES
+                    ),
+                    "usage": InformationConverter.convert(
+                        10, UnitOfInformation.GIBIBYTES, UnitOfInformation.BYTES
+                    ),
+                    "usageInDrive": InformationConverter.convert(
+                        512, UnitOfInformation.MEBIBYTES, UnitOfInformation.BYTES
+                    ),
+                    "usageInTrash": InformationConverter.convert(
+                        512, UnitOfInformation.MEBIBYTES, UnitOfInformation.BYTES
+                    ),
+                }
+            if not fields or "user(emailAddress)" in fields:
+                result["user"] = {"emailAddress": TEST_USER_EMAIL}
+
+            return result
+
+        mock_api.get_user = AsyncMock(side_effect=mock_get_user)
         yield mock_api
 
 

@@ -1,46 +1,5 @@
 # serializer version: 1
-# name: test_sesnor.8
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.testuser_domain_com_total_available_storage',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
-    'original_icon': None,
-    'original_name': 'Total available storage',
-    'platform': 'google_drive',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'storage_total',
-    'unique_id': 'testuser_domain_com_storage_total',
-    'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
-  })
-# ---
-# name: test_sesnor.9
+# name: test_sensor.8
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -71,7 +30,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_sesnor[sensor.testuser_domain_com_total_available_storage-entry]
+# name: test_sensor[sensor.testuser_domain_com_total_available_storage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -112,7 +71,7 @@
     'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
   })
 # ---
-# name: test_sesnor[sensor.testuser_domain_com_total_available_storage-state]
+# name: test_sensor[sensor.testuser_domain_com_total_available_storage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'data_size',
@@ -124,10 +83,10 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '9.31322574615479e-07',
+    'state': '10.0',
   })
 # ---
-# name: test_sesnor[sensor.testuser_domain_com_used_storage-entry]
+# name: test_sensor[sensor.testuser_domain_com_used_storage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -168,7 +127,7 @@
     'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
   })
 # ---
-# name: test_sesnor[sensor.testuser_domain_com_used_storage-state]
+# name: test_sensor[sensor.testuser_domain_com_used_storage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'data_size',
@@ -180,10 +139,10 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '9.31322574615479e-08',
+    'state': '10.0',
   })
 # ---
-# name: test_sesnor[sensor.testuser_domain_com_used_storage_in_drive-entry]
+# name: test_sensor[sensor.testuser_domain_com_used_storage_in_drive-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -224,7 +183,7 @@
     'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
   })
 # ---
-# name: test_sesnor[sensor.testuser_domain_com_used_storage_in_drive-state]
+# name: test_sensor[sensor.testuser_domain_com_used_storage_in_drive-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'data_size',
@@ -236,10 +195,10 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '4.65661287307739e-08',
+    'state': '0.5',
   })
 # ---
-# name: test_sesnor[sensor.testuser_domain_com_used_storage_in_drive_trash-entry]
+# name: test_sensor[sensor.testuser_domain_com_used_storage_in_drive_trash-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -280,7 +239,7 @@
     'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
   })
 # ---
-# name: test_sesnor[sensor.testuser_domain_com_used_storage_in_drive_trash-state]
+# name: test_sensor[sensor.testuser_domain_com_used_storage_in_drive_trash-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'data_size',
@@ -292,6 +251,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '9.31322574615479e-09',
+    'state': '0.5',
   })
 # ---

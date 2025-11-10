@@ -3,7 +3,7 @@
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DOMAIN, DRIVE_FOLDER_URL_PREFIX
 from .coordinator import GoogleDriveDataUpdateCoordinator
 
 
@@ -20,6 +20,6 @@ class GoogleDriveEntity(CoordinatorEntity[GoogleDriveDataUpdateCoordinator]):
             name=self.coordinator.data.email_address,
             manufacturer="Google",
             model="Google Drive",
-            configuration_url=f"https://drive.google.com/drive/folders/{self.coordinator.backup_folder_id}",
+            configuration_url=f"{DRIVE_FOLDER_URL_PREFIX}{self.coordinator.backup_folder_id}",
             entry_type=DeviceEntryType.SERVICE,
         )

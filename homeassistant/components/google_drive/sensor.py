@@ -32,7 +32,7 @@ PARALLEL_UPDATES = 0
 class GoogleDriveSensorEntityDescription(SensorEntityDescription):
     """Describes GoogleDrive sensor entity."""
 
-    value_fn: Callable[[GoogleDriveCoordinatorData], datetime | StateType]
+    value_fn: Callable[[GoogleDriveCoordinatorData], StateType]
 
 
 SENSORS: tuple[GoogleDriveSensorEntityDescription, ...] = (

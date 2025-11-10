@@ -32,7 +32,7 @@ _LOGGER = logging.getLogger(__name__)
 class StorageQuotaData:
     """Class to represent storage quota data."""
 
-    limit: int
+    limit: int | None
     usage: int
     usage_in_drive: int
     usage_in_trash: int
@@ -111,8 +111,9 @@ class DriveClient:
         res = await self._api.get_user(params={"fields": "storageQuota"})
 
         storageQuota = res["storageQuota"]
+        limit = storageQuota.get("limit")
         return StorageQuotaData(
-            limit=int(storageQuota.get("limit", 0)),
+            limit=int(limit) if limit is not None else None,
             usage=int(storageQuota.get("usage", 0)),
             usage_in_drive=int(storageQuota.get("usageInDrive", 0)),
             usage_in_trash=int(storageQuota.get("usageInTrash", 0)),
