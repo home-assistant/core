@@ -4,7 +4,7 @@ rules:
   appropriate-polling:
     status: exempt
     comment: Integration does not poll.
-  brands: todo
+  brands: done
   common-modules:
     status: exempt
     comment: No common modules exist, only a single platform.
