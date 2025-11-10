@@ -139,7 +139,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '10.0',
+    'state': '5.0',
   })
 # ---
 # name: test_sensor[sensor.testuser_domain_com_used_storage_in_drive-entry]
@@ -195,7 +195,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.5',
+    'state': '2.0',
   })
 # ---
 # name: test_sensor[sensor.testuser_domain_com_used_storage_in_drive_trash-entry]
@@ -251,6 +251,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.5',
+    'state': '1.0',
   })
 # ---

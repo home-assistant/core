@@ -3,10 +3,12 @@
 from unittest.mock import AsyncMock, MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
+from google_drive_api.exceptions import GoogleDriveApiError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.google_drive.const import SCAN_INTERVAL
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -60,12 +62,9 @@ async def test_sensor(
     "entity_registry_enabled_by_default",
     "setup_integration",
 )
-async def test_sesnor_unavailable_when_unlimited_plan(
+async def test_sensor_unknown_when_unlimited_plan(
     hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    snapshot: SnapshotAssertion,
-    config_entry: MockConfigEntry,
     mock_api: MagicMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
@@ -90,3 +89,34 @@ async def test_sesnor_unavailable_when_unlimited_plan(
     )
     assert (state := hass.states.get(entity_entry.entity_id))
     assert state.state == "unknown"
+
+
+@pytest.mark.usefixtures(
+    "entity_registry_enabled_by_default",
+    "setup_integration",
+)
+async def test_sensor_availability(
+    hass: HomeAssistant,
+    mock_api: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the availability handling of the Google Drive sensors."""
+    mock_api.get_user.side_effect = GoogleDriveApiError("API error")
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (
+        state := hass.states.get("sensor.testuser_domain_com_total_available_storage")
+    )
+    assert state.state == STATE_UNAVAILABLE
+
+    mock_api.get_user.side_effect = None
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (
+        state := hass.states.get("sensor.testuser_domain_com_total_available_storage")
+    )
+    assert state.state != STATE_UNAVAILABLE

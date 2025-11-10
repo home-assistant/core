@@ -55,13 +55,13 @@ def mock_api() -> Generator[MagicMock]:
                         10, UnitOfInformation.GIBIBYTES, UnitOfInformation.BYTES
                     ),
                     "usage": InformationConverter.convert(
-                        10, UnitOfInformation.GIBIBYTES, UnitOfInformation.BYTES
+                        5, UnitOfInformation.GIBIBYTES, UnitOfInformation.BYTES
                     ),
                     "usageInDrive": InformationConverter.convert(
-                        512, UnitOfInformation.MEBIBYTES, UnitOfInformation.BYTES
+                        2, UnitOfInformation.GIBIBYTES, UnitOfInformation.BYTES
                     ),
                     "usageInTrash": InformationConverter.convert(
-                        512, UnitOfInformation.MEBIBYTES, UnitOfInformation.BYTES
+                        1, UnitOfInformation.GIBIBYTES, UnitOfInformation.BYTES
                     ),
                 }
             if not fields or "user(emailAddress)" in fields:

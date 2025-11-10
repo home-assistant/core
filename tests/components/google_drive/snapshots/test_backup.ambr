@@ -244,16 +244,6 @@
         }),
       }),
     ),
-    tuple(
-      'get_user',
-      tuple(
-      ),
-      dict({
-        'params': dict({
-          'fields': 'storageQuota',
-        }),
-      }),
-    ),
   ])
 # ---
 # name: test_agents_upload_create_folder_if_missing
@@ -344,16 +334,6 @@
           'sock_connect': None,
           'sock_read': None,
           'total': 43200,
-        }),
-      }),
-    ),
-    tuple(
-      'get_user',
-      tuple(
-      ),
-      dict({
-        'params': dict({
-          'fields': 'storageQuota',
         }),
       }),
     ),
