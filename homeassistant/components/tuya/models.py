@@ -261,21 +261,6 @@ class DPCodeIntegerWrapper(DPCodeTypeInformationWrapper[IntegerTypeData]):
         )
         return new_value
 
-    @classmethod
-    def find_dpcode(
-        cls,
-        device: CustomerDevice,
-        dpcodes: str | DPCode | tuple[DPCode, ...],
-        *,
-        prefer_function: bool = False,
-    ) -> Self | None:
-        """Find and return a DPCodeEnumWrapper for the given DP codes."""
-        if enum_type := find_dpcode(
-            device, dpcodes, dptype=DPType.ENUM, prefer_function=prefer_function
-        ):
-            return cls(dpcode=enum_type.dpcode, type_information=enum_type)
-        return None
-
 
 @overload
 def find_dpcode(
