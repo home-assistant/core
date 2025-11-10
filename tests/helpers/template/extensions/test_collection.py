@@ -296,7 +296,7 @@ def test_collection_error_handling(hass: HomeAssistant) -> None:
 
     # Test shuffle with no arguments
     with pytest.raises(TemplateError, match="shuffle expected at least 1 argument"):
-        template.Template("{{ shuffle() }}", hass).async_render()
+        render(hass, "{{ shuffle() }}")
 
 
 @pytest.mark.parametrize(
@@ -360,5 +360,5 @@ def test_natural_sort(
     hass: HomeAssistant, value_template: str, expected: list[Any]
 ) -> None:
     """Test natural sort filter and function."""
-    assert template.Template(value_template, hass).async_render() == expected
-        render(hass, "{{ shuffle() }}")
+    # assert template.Template(value_template, hass).async_render() == expected
+    assert render(hass, value_template) == expected
