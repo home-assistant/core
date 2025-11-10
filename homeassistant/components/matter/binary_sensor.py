@@ -424,8 +424,8 @@ DISCOVERY_SCHEMAS = [
             key="ValveConfigurationAndControlValveFault_GeneralFault",
             translation_key="valve_fault_general_fault",
             device_class=BinarySensorDeviceClass.PROBLEM,
-            # Test GeneralFault bit from ValveFault attribute
             entity_category=EntityCategory.DIAGNOSTIC,
+            # Test GeneralFault bit from ValveFault attribute
             device_to_ha=lambda x: bool(
                 x
                 & clusters.ValveConfigurationAndControl.Bitmaps.ValveFaultBitmap.kGeneralFault
