@@ -293,9 +293,8 @@ class SQLSensor(ManualTriggerSensorEntity):
             try:
                 rendered_query = check_and_render_sql_query(self.hass, self._query)
                 self._process(
-                    session.execute(
-                        generate_lambda_stmt(rendered_query), rendered_query
-                    )
+                    session.execute(generate_lambda_stmt(rendered_query)),
+                    rendered_query,
                 )
             except (TemplateError, InvalidSqlQuery) as err:
                 _LOGGER.error(
@@ -320,9 +319,8 @@ class SQLSensor(ManualTriggerSensorEntity):
                 try:
                     rendered_query = check_and_render_sql_query(self.hass, self._query)
                     self._process(
-                        await session.execute(
-                            generate_lambda_stmt(rendered_query), rendered_query
-                        )
+                        await session.execute(generate_lambda_stmt(rendered_query)),
+                        rendered_query,
                     )
                 except (TemplateError, InvalidSqlQuery) as err:
                     _LOGGER.error(
