@@ -327,3 +327,11 @@ class HomematicipGenericEntity(Entity):
             return self._channel
 
         return 1
+
+    def get_channel_or_raise(self) -> FunctionalChannel:
+        """Return the FunctionalChannel or raise an error if not found."""
+        if not self.functional_channel:
+            raise ValueError(
+                f"No functional channel found for device {getattr(self._device, 'id', 'unknown')}"
+            )
+        return self.functional_channel

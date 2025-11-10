@@ -245,9 +245,10 @@ class HomematicipMultiContactInterface(HomematicipGenericEntity, BinarySensorEnt
     @property
     def is_on(self) -> bool | None:
         """Return true if the contact interface is on/open."""
-        if self.functional_channel.windowState is None:
+        channel = self.get_channel_or_raise()
+        if channel.windowState is None:
             return None
-        return self.functional_channel.windowState != WindowState.CLOSED
+        return channel.windowState != WindowState.CLOSED
 
 
 class HomematicipContactInterface(HomematicipMultiContactInterface, BinarySensorEntity):
