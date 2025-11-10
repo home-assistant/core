@@ -1746,15 +1746,15 @@ class ConfigEntriesFlowManager(
         superset of match_context.
         """
 
-        return any(
+        return bool(
             self.async_get_matching_discovery_flows(handler, match_context, data)
         )
 
     @callback
     def async_get_matching_discovery_flows(
         self, handler: str, match_context: ConfigFlowContext, data: Any
-    ) -> Generator[str]:
-        """Get existing matching discovery flow IDs in progress.
+    ) -> list[str]:
+        """Get IDs of existing matching discovery flow in progress.
 
         A flow with the same handler, context, and data.
 
@@ -1762,11 +1762,14 @@ class ConfigEntriesFlowManager(
         superset of match_context.
         """
         if not (flows := self._handler_progress_index.get(handler)):
-            return
+            return []
         match_items = match_context.items()
-        for progress in flows:
-            if match_items <= progress.context.items() and progress.init_data == data:
-                yield progress.flow_id
+
+        return [
+            progress.flow_id
+            for progress in flows
+            if match_items <= progress.context.items() and progress.init_data == data
+        ]
 
     @callback
     def async_has_matching_flow(self, flow: ConfigFlow) -> bool:
