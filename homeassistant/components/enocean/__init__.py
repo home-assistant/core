@@ -17,7 +17,6 @@ from .const import (
     CONF_ENOCEAN_DEVICE_NAME,
     CONF_ENOCEAN_DEVICE_TYPE_ID,
     CONF_ENOCEAN_SENDER_ID,
-    DATA_ENOCEAN,
     DOMAIN,
     LOGGER,
     PLATFORMS,
@@ -133,11 +132,9 @@ async def async_reload_entry(hass: HomeAssistant, entry: EnOceanConfigEntry) -> 
 
 async def async_unload_entry(hass: HomeAssistant, entry: EnOceanConfigEntry) -> bool:
     """Unload EnOcean config entry."""
-    entry.runtime_data.gateway.stop()
-
     if unload_platforms := await hass.config_entries.async_unload_platforms(
         entry, PLATFORMS
     ):
-        hass.data.pop(DATA_ENOCEAN)
+        entry.runtime_data.gateway.stop()
 
     return unload_platforms
