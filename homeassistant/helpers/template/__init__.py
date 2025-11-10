@@ -1304,7 +1304,11 @@ def issues(hass: HomeAssistant) -> dict[tuple[str, str], dict[str, Any]]:
     """Return all open issues."""
     current_issues = ir.async_get(hass).issues
     # Use JSON for safe representation
-    return {k: v.to_json() for (k, v) in current_issues.items()}
+    return {
+        key: issue_entry.to_json()
+        for (key, issue_entry) in current_issues.items()
+        if issue_entry.active
+    }
 
 
 def issue(hass: HomeAssistant, domain: str, issue_id: str) -> dict[str, Any] | None:
