@@ -190,6 +190,7 @@ def test_run_json_flag_only() -> None:
     with (
         patch("builtins.print") as mock_print,
         patch.object(check_config, "check") as mock_check,
+        patch("sys.argv", ["", "--json"]),
     ):
         mock_check.return_value = {
             "except": {"domain1": ["error1", "error2"]},
@@ -200,7 +201,7 @@ def test_run_json_flag_only() -> None:
             "yaml_files": {},
         }
 
-        exit_code = check_config.run(["--json"])
+        exit_code = check_config.run(None)
 
         # Should exit with code 1 (1 domain with errors)
         assert exit_code == 1
@@ -233,7 +234,10 @@ def test_run_json_flag_only() -> None:
 def test_run_fail_on_warnings_flag_only() -> None:
     """Test that --fail-on-warnings flag works independently."""
     # Test with warnings only
-    with patch.object(check_config, "check") as mock_check:
+    with (
+        patch.object(check_config, "check") as mock_check,
+        patch("sys.argv", ["", "--fail-on-warnings"]),
+    ):
         mock_check.return_value = {
             "except": {},
             "warn": {"light": ["warning message"]},
@@ -243,7 +247,7 @@ def test_run_fail_on_warnings_flag_only() -> None:
             "yaml_files": {},
         }
 
-        exit_code = check_config.run(["--fail-on-warnings"])
+        exit_code = check_config.run(None)
         assert exit_code == 1  # Should exit non-zero due to warnings
 
     # Test with no warnings or errors
@@ -282,6 +286,7 @@ def test_run_json_output_structure() -> None:
     with (
         patch("builtins.print") as mock_print,
         patch.object(check_config, "check") as mock_check,
+        patch("sys.argv", ["", "--json", "--config", "/test/path"]),
     ):
         mock_check.return_value = {
             "except": {"domain1": ["error1", {"config": "bad"}]},
@@ -292,7 +297,7 @@ def test_run_json_output_structure() -> None:
             "yaml_files": {},
         }
 
-        exit_code = check_config.run(["--json", "--config", "/test/path"])
+        exit_code = check_config.run(None)
 
         json_output = mock_print.call_args[0][0]
         parsed_json = json.loads(json_output)
@@ -413,7 +418,11 @@ def test_run_exit_code_logic() -> None:
     ]
 
     for errors, warnings, flags, expected_exit in test_cases:
-        with patch("builtins.print"), patch.object(check_config, "check") as mock_check:
+        with (
+            patch("builtins.print"),
+            patch.object(check_config, "check") as mock_check,
+            patch("sys.argv", ["", *flags]),
+        ):
             mock_check.return_value = {
                 "except": errors,
                 "warn": warnings,
@@ -423,7 +432,7 @@ def test_run_exit_code_logic() -> None:
                 "yaml_files": {},
             }
 
-            exit_code = check_config.run(flags)
+            exit_code = check_config.run(None)
             assert exit_code == expected_exit, (
                 f"Failed for errors={errors}, warnings={warnings}, flags={flags}. "
                 f"Expected {expected_exit}, got {exit_code}"
@@ -447,7 +456,7 @@ def test_run_human_readable_still_works() -> None:
             "yaml_files": {},
         }
 
-        check_config.run([])
+        check_config.run(None)
 
         # Should print the "Testing configuration at" message
         printed_outputs = [
@@ -463,9 +472,11 @@ def test_run_human_readable_still_works() -> None:
 
 def test_run_with_config_path() -> None:
     """Test that config path is correctly included in JSON output."""
+    test_config_path = "/custom/config/path"
     with (
         patch("builtins.print") as mock_print,
         patch.object(check_config, "check") as mock_check,
+        patch("sys.argv", ["", "--json", "--config", test_config_path]),
     ):
         mock_check.return_value = {
             "except": {},
@@ -476,8 +487,7 @@ def test_run_with_config_path() -> None:
             "yaml_files": {},
         }
 
-        test_config_path = "/custom/config/path"
-        check_config.run(["--json", "--config", test_config_path])
+        check_config.run(None)
 
         json_output = mock_print.call_args[0][0]
         parsed_json = json.loads(json_output)
@@ -495,6 +505,7 @@ def test_unknown_arguments_with_json() -> None:
     with (
         patch("builtins.print") as mock_print,
         patch.object(check_config, "check") as mock_check,
+        patch("sys.argv", ["", "--json", "--unknown-flag", "value"]),
     ):
         mock_check.return_value = {
             "except": {},
@@ -505,7 +516,7 @@ def test_unknown_arguments_with_json() -> None:
             "yaml_files": {},
         }
 
-        check_config.run(["--json", "--unknown-flag", "value"])
+        check_config.run(None)
 
         # Should still print unknown argument warning AND JSON
         assert mock_print.call_count == 2
@@ -528,6 +539,7 @@ def test_info_flag_with_json() -> None:
     with (
         patch("builtins.print") as mock_print,
         patch.object(check_config, "check") as mock_check,
+        patch("sys.argv", ["", "--json", "--info", "light"]),
     ):
         mock_check.return_value = {
             "except": {},
@@ -539,7 +551,7 @@ def test_info_flag_with_json() -> None:
         }
 
         # Test --json with --info - JSON should take precedence
-        exit_code = check_config.run(["--json", "--info", "light"])
+        exit_code = check_config.run(None)
 
         assert exit_code == 0
         assert mock_print.call_count == 1
@@ -564,6 +576,7 @@ def test_config_flag_variations() -> None:
         with (
             patch("builtins.print") as mock_print,
             patch.object(check_config, "check") as mock_check,
+            patch("sys.argv", ["", *flags]),
         ):
             mock_check.return_value = {
                 "except": {},
@@ -574,7 +587,7 @@ def test_config_flag_variations() -> None:
                 "yaml_files": {},
             }
 
-            check_config.run(flags)
+            check_config.run(None)
 
             if "--json" in flags:
                 json_output = json.loads(mock_print.call_args[0][0])
@@ -587,6 +600,10 @@ def test_multiple_config_flags() -> None:
     with (
         patch("builtins.print") as mock_print,
         patch.object(check_config, "check") as mock_check,
+        patch(
+            "sys.argv",
+            ["", "--json", "--config", "/first/path", "--config", "/second/path"],
+        ),
     ):
         mock_check.return_value = {
             "except": {},
@@ -598,9 +615,7 @@ def test_multiple_config_flags() -> None:
         }
 
         # Last config flag should win
-        check_config.run(
-            ["--json", "--config", "/first/path", "--config", "/second/path"]
-        )
+        check_config.run(None)
 
         json_output = json.loads(mock_print.call_args[0][0])
         expected_path = os.path.join(os.getcwd(), "/second/path")
@@ -622,6 +637,7 @@ def test_fail_on_warnings_with_json_combinations() -> None:
         with (
             patch("builtins.print") as mock_print,
             patch.object(check_config, "check") as mock_check,
+            patch("sys.argv", ["", "--json", "--fail-on-warnings"]),
         ):
             mock_check.return_value = {
                 "except": errors,
@@ -632,7 +648,7 @@ def test_fail_on_warnings_with_json_combinations() -> None:
                 "yaml_files": {},
             }
 
-            exit_code = check_config.run(["--json", "--fail-on-warnings"])
+            exit_code = check_config.run(None)
             assert exit_code == expected_exit
 
             # Should still output valid JSON
