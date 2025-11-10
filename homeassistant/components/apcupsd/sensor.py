@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import logging
 
+from homeassistant.components.automation import automations_with_entity
+from homeassistant.components.script import scripts_with_entity
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -22,6 +24,7 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 import homeassistant.helpers.issue_registry as ir
 
@@ -541,30 +544,50 @@ class APCUPSdSensor(APCUPSdEntity, SensorEntity):
         if not self.enabled:
             return
 
-        if issue_key := DEPRECATED_SENSORS.get(self.entity_description.key):
-            placeholders = {
-                "entity_name": str(self.name or self.entity_id),
-                "entity_id": self.entity_id,
-            }
-            if via_attr := AVAILABLE_VIA_DEVICE_ATTR.get(self.entity_description.key):
-                placeholders["available_via_device_attr"] = via_attr
-            if device_entry := self.device_entry:
-                placeholders["device_id"] = device_entry.id
+        reason = DEPRECATED_SENSORS.get(self.entity_description.key)
+        if not reason:
+            return
 
-            ir.async_create_issue(
-                self.hass,
-                DOMAIN,
-                f"{issue_key}_{self.entity_id}",
-                breaks_in_ha_version="2026.4.0",
-                is_fixable=False,
-                severity=ir.IssueSeverity.WARNING,
-                translation_key=issue_key,
-                translation_placeholders=placeholders,
+        automations = automations_with_entity(self.hass, self.entity_id)
+        scripts = scripts_with_entity(self.hass, self.entity_id)
+        if not automations and not scripts:
+            return
+
+        entity_registry = er.async_get(self.hass)
+        items = [
+            f"- [{entry.name or entry.original_name or entity_id}]"
+            f"(/config/{integration}/edit/{entry.unique_id or entity_id.split('.', 1)[-1]})"
+            for integration, entities in (
+                ("automation", automations),
+                ("script", scripts),
             )
+            for entity_id in entities
+            if (entry := entity_registry.async_get(entity_id))
+        ]
+        placeholders = {
+            "entity_name": str(self.name or self.entity_id),
+            "entity_id": self.entity_id,
+            "items": "\n".join(items),
+        }
+        if via_attr := AVAILABLE_VIA_DEVICE_ATTR.get(self.entity_description.key):
+            placeholders["available_via_device_attr"] = via_attr
+        if device_entry := self.device_entry:
+            placeholders["device_id"] = device_entry.id
+
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            f"{reason}_{self.entity_id}",
+            breaks_in_ha_version="2026.6.0",
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=reason,
+            translation_placeholders=placeholders,
+        )
 
     async def async_will_remove_from_hass(self) -> None:
         """Handle when entity will be removed from Home Assistant."""
+        await super().async_will_remove_from_hass()
+
         if issue_key := DEPRECATED_SENSORS.get(self.entity_description.key):
             ir.async_delete_issue(self.hass, DOMAIN, f"{issue_key}_{self.entity_id}")
-
-        await super().async_will_remove_from_hass()

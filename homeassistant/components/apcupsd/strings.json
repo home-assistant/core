@@ -237,23 +237,23 @@
       }
     }
   },
-  "issues": {
-    "apc_deprecated": {
-      "title": "{entity_name} sensor is deprecated",
-      "description": "The {entity_name} sensor ({entity_id}) is deprecated as it is shows internal details of the APC network response and is not useful in Home Assistant.\n\nTo resolve this issue, disable this entity. You can do this by going to Settings > Devices & Services > APC UPS Daemon > {entity_name} and toggling the entity off."
-    },
-    "date_deprecated": {
-      "title": "{entity_name} sensor is deprecated",
-      "description": "The {entity_name} sensor ({entity_id}) is deprecated as it shows the date and time the APC network response was written, which can be obtained from last updated time of any entities of this integration.\n\nTo resolve this issue, disable this entity. You can do this by going to Settings > Devices & Services > APC UPS Daemon > {entity_name} and toggling the entity off."
-    },
-    "available_via_device_info": {
-      "title": "{entity_name} sensor is deprecated",
-      "description": "The {entity_name} sensor ({entity_id}) is deprecated as this information is now available via device information (`device_attr(\"{device_id}\", \"{available_via_device_attr}\")`).\n\nTo resolve this issue, disable this entity. You can do this by going to Settings > Devices & Services > APC UPS Daemon > {entity_name} and toggling the entity off."
-    }
-  },
   "exceptions": {
     "cannot_connect": {
       "message": "Cannot connect to APC UPS Daemon."
+    }
+  },
+  "issues": {
+    "apc_deprecated": {
+      "description": "The {entity_name} sensor ({entity_id}) is deprecated because it exposes internal details of the APC UPS Daemon response.\n\nIt is still referenced in the following automations or scripts:\n{items}\n\nUpdate those automations or scripts to use supported APC UPS entities instead.",
+      "title": "{entity_name} sensor is deprecated"
+    },
+    "available_via_device_info": {
+      "description": "The {entity_name} sensor ({entity_id}) is deprecated because the same value is available from the device registry via `device_attr(\"{device_id}\", \"{available_via_device_attr}\")`.\n\nIt is still referenced in the following automations or scripts:\n{items}\n\nUpdate those automations or scripts to use the `device_attr` helper instead of this sensor.",
+      "title": "{entity_name} sensor is deprecated"
+    },
+    "date_deprecated": {
+      "description": "The {entity_name} sensor ({entity_id}) is deprecated because the timestamp is already available from other APC UPS sensors via their last updated time.\n\nIt is still referenced in the following automations or scripts:\n{items}\n\nUpdate those automations or scripts to reference any entity's `last_updated` attribute instead (for example, `states.binary_sensor.apcups_online_status.last_updated`).",
+      "title": "{entity_name} sensor is deprecated"
     }
   }
 }
