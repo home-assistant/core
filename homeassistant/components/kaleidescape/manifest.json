@@ -8,8 +8,8 @@
   "requirements": ["pykaleidescape==1.0.1"],
   "ssdp": [
     {
-      "manufacturer": "Kaleidescape, Inc.",
-      "deviceType": "schemas-upnp-org:device:Basic:1"
+      "deviceType": "schemas-upnp-org:device:Basic:1",
+      "manufacturer": "Kaleidescape, Inc."
     }
   ]
 }
