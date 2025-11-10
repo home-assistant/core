@@ -354,9 +354,7 @@ class USBDiscovery:
         for matcher in matched:
             if service_info is None:
                 service_info = _UsbServiceInfo(
-                    device=await self.hass.async_add_executor_job(
-                        get_serial_by_id, device.device
-                    ),
+                    device=device.device,
                     vid=device.vid,
                     pid=device.pid,
                     serial_number=device.serial_number,
