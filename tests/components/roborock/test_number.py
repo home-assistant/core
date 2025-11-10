@@ -8,8 +8,9 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
+from .conftest import FakeDevice
+
 from tests.common import MockConfigEntry
-from tests.components.roborock.test_vacuum import FakeDevice
 
 
 @pytest.fixture
