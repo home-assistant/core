@@ -38,13 +38,13 @@ async def test_platform_setup_and_discovery(
     "mock_device_code",
     ["sd_lr33znaodtyarrrz"],
 )
-async def test_close_valve(
+async def test_button_press(
     hass: HomeAssistant,
     mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
 ) -> None:
-    """Test closing a valve."""
+    """Test pressing a button."""
     entity_id = "button.v20_reset_duster_cloth"
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
