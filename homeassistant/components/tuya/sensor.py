@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from typing import Any
 
 from tuya_sharing import CustomerDevice, Manager
-from tuya_sharing.device import DeviceStatusRange
 
 from homeassistant.components.sensor import (
     DEVICE_CLASS_UNITS as SENSOR_DEVICE_CLASS_UNITS,
@@ -40,10 +39,16 @@ from .const import (
     DeviceCategory,
     DPCode,
     DPType,
-    UnitOfMeasurement,
 )
 from .entity import TuyaEntity
-from .models import ComplexValue, ElectricityValue, EnumTypeData, IntegerTypeData
+from .models import (
+    ComplexValue,
+    ElectricityValue,
+    EnumTypeData,
+    IntegerTypeData,
+    find_dpcode,
+)
+from .util import get_dptype
 
 _WIND_DIRECTIONS = {
     "north": 0.0,
@@ -759,6 +764,15 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.WEIGHT,
             state_class=SensorStateClass.MEASUREMENT,
         ),
+        TuyaSensorEntityDescription(
+            key=DPCode.EXCRETION_TIME_DAY,
+            translation_key="excretion_time_day",
+            device_class=SensorDeviceClass.DURATION,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.EXCRETION_TIMES_DAY,
+            translation_key="excretion_times_day",
+        ),
     ),
     DeviceCategory.MZJ: (
         TuyaSensorEntityDescription(
@@ -959,6 +973,30 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.WIND_DIRECTION,
             state_class=SensorStateClass.MEASUREMENT,
             state_conversion=lambda state: _WIND_DIRECTIONS.get(str(state)),
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.DEW_POINT_TEMP,
+            translation_key="dew_point_temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.FEELLIKE_TEMP,
+            translation_key="feels_like_temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.HEAT_INDEX,
+            translation_key="heat_index_temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.WINDCHILL_INDEX,
+            translation_key="wind_chill_index_temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
         *BATTERY_SENSORS,
     ),
@@ -1636,10 +1674,8 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
 
     entity_description: TuyaSensorEntityDescription
 
-    _status_range: DeviceStatusRange | None = None
     _type: DPType | None = None
     _type_data: IntegerTypeData | EnumTypeData | None = None
-    _uom: UnitOfMeasurement | None = None
 
     def __init__(
         self,
@@ -1654,25 +1690,30 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             f"{super().unique_id}{description.key}{description.subkey or ''}"
         )
 
-        if int_type := self.find_dpcode(description.key, dptype=DPType.INTEGER):
+        if int_type := find_dpcode(self.device, description.key, dptype=DPType.INTEGER):
             self._type_data = int_type
             self._type = DPType.INTEGER
             if description.native_unit_of_measurement is None:
                 self._attr_native_unit_of_measurement = int_type.unit
-        elif enum_type := self.find_dpcode(
-            description.key, dptype=DPType.ENUM, prefer_function=True
+        elif enum_type := find_dpcode(
+            self.device, description.key, dptype=DPType.ENUM, prefer_function=True
         ):
             self._type_data = enum_type
             self._type = DPType.ENUM
         else:
-            self._type = self.get_dptype(DPCode(description.key))
+            self._type = get_dptype(self.device, DPCode(description.key))
+
+        self._validate_device_class_unit()
+
+    def _validate_device_class_unit(self) -> None:
+        """Validate device class unit compatibility."""
 
         # Logic to ensure the set device class and API received Unit Of Measurement
         # match Home Assistants requirements.
         if (
             self.device_class is not None
             and not self.device_class.startswith(DOMAIN)
-            and description.native_unit_of_measurement is None
+            and self.entity_description.native_unit_of_measurement is None
             # we do not need to check mappings if the API UOM is allowed
             and self.native_unit_of_measurement
             not in SENSOR_DEVICE_CLASS_UNITS[self.device_class]

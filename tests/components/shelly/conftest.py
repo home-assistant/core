@@ -127,7 +127,11 @@ MOCK_BLOCKS = [
         ),
     ),
     Mock(
-        sensor_ids={"mode": "color", "effect": 0},
+        sensor_ids={
+            "output": mock_light_set_state()["ison"],
+            "mode": "color",
+            "effect": 0,
+        },
         channel="0",
         output=mock_light_set_state()["ison"],
         colorTemp=mock_light_set_state()["temp"],
@@ -613,6 +617,13 @@ async def mock_rpc_device():
                 {}, RpcUpdateType.INITIALIZED
             )
 
+        current_pos = iter(range(50, -1, -10))  # from 50 to 0 in steps of 10
+
+        async def update_cover_status(cover_id: int):
+            device.status[f"cover:{cover_id}"]["current_pos"] = next(
+                current_pos, device.status[f"cover:{cover_id}"]["current_pos"]
+            )
+
         device = _mock_rpc_device()
         rpc_device_mock.return_value = device
         rpc_device_mock.return_value.mock_disconnected = Mock(side_effect=disconnected)
@@ -620,6 +631,9 @@ async def mock_rpc_device():
         rpc_device_mock.return_value.mock_event = Mock(side_effect=event)
         rpc_device_mock.return_value.mock_online = Mock(side_effect=online)
         rpc_device_mock.return_value.mock_initialized = Mock(side_effect=initialized)
+        rpc_device_mock.return_value.update_cover_status = AsyncMock(
+            side_effect=update_cover_status
+        )
 
         yield rpc_device_mock.return_value
 

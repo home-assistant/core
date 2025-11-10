@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from asyncio.exceptions import TimeoutError
 from collections.abc import Mapping
+import re
 from typing import Any
 
 from aiocomelit import (
@@ -27,33 +28,24 @@ from .utils import async_client_session
 DEFAULT_HOST = "192.168.1.252"
 DEFAULT_PIN = "111111"
 
-
-pin_regex = r"^[0-9]{4,10}$"
-
 USER_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST, default=DEFAULT_HOST): cv.string,
         vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_PIN, default=DEFAULT_PIN): cv.matches_regex(pin_regex),
+        vol.Optional(CONF_PIN, default=DEFAULT_PIN): cv.string,
         vol.Required(CONF_TYPE, default=BRIDGE): vol.In(DEVICE_TYPE_LIST),
     }
 )
-STEP_REAUTH_DATA_SCHEMA = vol.Schema(
-    {vol.Required(CONF_PIN): cv.matches_regex(pin_regex)}
-)
-STEP_RECONFIGURE = vol.Schema(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PORT): cv.port,
-        vol.Optional(CONF_PIN, default=DEFAULT_PIN): cv.matches_regex(pin_regex),
-    }
-)
+STEP_REAUTH_DATA_SCHEMA = vol.Schema({vol.Required(CONF_PIN): cv.string})
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, str]:
     """Validate the user input allows us to connect."""
 
     api: ComelitCommonApi
+
+    if not re.fullmatch(r"[0-9]{4,10}", data[CONF_PIN]):
+        raise InvalidPin
 
     session = await async_client_session(hass)
     if data.get(CONF_TYPE, BRIDGE) == BRIDGE:
@@ -105,6 +97,8 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         except InvalidAuth:
             errors["base"] = "invalid_auth"
+        except InvalidPin:
+            errors["base"] = "invalid_pin"
         except Exception:  # noqa: BLE001
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
@@ -146,6 +140,8 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
+            except InvalidPin:
+                errors["base"] = "invalid_pin"
             except Exception:  # noqa: BLE001
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -172,34 +168,55 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle reconfiguration of the device."""
         reconfigure_entry = self._get_reconfigure_entry()
-        if not user_input:
-            return self.async_show_form(
-                step_id="reconfigure", data_schema=STEP_RECONFIGURE
-            )
-
-        updated_host = user_input[CONF_HOST]
-
-        self._async_abort_entries_match({CONF_HOST: updated_host})
-
         errors: dict[str, str] = {}
 
-        try:
-            await validate_input(self.hass, user_input)
-        except CannotConnect:
-            errors["base"] = "cannot_connect"
-        except InvalidAuth:
-            errors["base"] = "invalid_auth"
-        except Exception:  # noqa: BLE001
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
-        else:
-            return self.async_update_reload_and_abort(
-                reconfigure_entry, data_updates={CONF_HOST: updated_host}
-            )
+        if user_input is not None:
+            updated_host = user_input[CONF_HOST]
+
+            self._async_abort_entries_match({CONF_HOST: updated_host})
+
+            try:
+                data_to_validate = {
+                    CONF_HOST: updated_host,
+                    CONF_PORT: user_input[CONF_PORT],
+                    CONF_PIN: user_input[CONF_PIN],
+                    CONF_TYPE: reconfigure_entry.data.get(CONF_TYPE, BRIDGE),
+                }
+                await validate_input(self.hass, data_to_validate)
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except InvalidPin:
+                errors["base"] = "invalid_pin"
+            except Exception:  # noqa: BLE001
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                data_updates = {
+                    CONF_HOST: updated_host,
+                    CONF_PORT: user_input[CONF_PORT],
+                    CONF_PIN: user_input[CONF_PIN],
+                }
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry, data_updates=data_updates
+                )
+
+        schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_HOST, default=reconfigure_entry.data[CONF_HOST]
+                ): cv.string,
+                vol.Required(
+                    CONF_PORT, default=reconfigure_entry.data[CONF_PORT]
+                ): cv.port,
+                vol.Optional(CONF_PIN): cv.string,
+            }
+        )
 
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=STEP_RECONFIGURE,
+            data_schema=schema,
             errors=errors,
         )
 
@@ -210,3 +227,7 @@ class CannotConnect(HomeAssistantError):
 
 class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""
+
+
+class InvalidPin(HomeAssistantError):
+    """Error to indicate an invalid pin."""
