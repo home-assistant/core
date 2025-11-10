@@ -69,7 +69,7 @@ async def test_pending_update_stored_when_entity_disabled(
 
     # Verify the pending update is stored
     unique_store_key = f"{webhook_id}_battery_state"
-    pending_updates = hass.data[DOMAIN]["pending_updates"]
+    pending_updates = hass.data[DOMAIN]["sensor"]["pending_updates"]
     assert unique_store_key in pending_updates
     assert pending_updates[unique_store_key]["state"] == 75
 
@@ -132,7 +132,7 @@ async def test_pending_update_applied_when_entity_enabled(
 
     # Verify pending update exists
     unique_store_key = f"{webhook_id}_battery_state"
-    pending_updates = hass.data[DOMAIN]["pending_updates"]
+    pending_updates = hass.data[DOMAIN]["sensor"]["pending_updates"]
     assert unique_store_key in pending_updates
 
     # Re-enable the entity
@@ -149,7 +149,7 @@ async def test_pending_update_applied_when_entity_enabled(
     assert entity.state == "50"
 
     # Verify pending update was removed
-    pending_updates = hass.data[DOMAIN]["pending_updates"]
+    pending_updates = hass.data[DOMAIN]["sensor"]["pending_updates"]
     assert unique_store_key not in pending_updates
 
 
@@ -355,7 +355,7 @@ async def test_pending_update_not_stored_on_enabled_entities(
 
     # Verify NO pending update was stored
     unique_store_key = f"{webhook_id}_battery_state"
-    pending_updates = hass.data[DOMAIN]["pending_updates"]
+    pending_updates = hass.data[DOMAIN]["sensor"]["pending_updates"]
     assert unique_store_key not in pending_updates
 
 
@@ -487,7 +487,7 @@ async def test_multiple_pending_updates_for_different_sensors(
     await hass.async_block_till_done()
 
     # Verify both pending updates exist
-    pending_updates = hass.data[DOMAIN]["pending_updates"]
+    pending_updates = hass.data[DOMAIN]["sensor"]["pending_updates"]
     assert f"{webhook_id}_battery_state" in pending_updates
     assert f"{webhook_id}_battery_temp" in pending_updates
 
@@ -510,7 +510,7 @@ async def test_multiple_pending_updates_for_different_sensors(
     assert battery_temp.state == "30"
 
     # Verify both pending updates were removed
-    pending_updates = hass.data[DOMAIN]["pending_updates"]
+    pending_updates = hass.data[DOMAIN]["sensor"]["pending_updates"]
     assert f"{webhook_id}_battery_state" not in pending_updates
     assert f"{webhook_id}_battery_temp" not in pending_updates
 
@@ -573,7 +573,7 @@ async def test_update_sensor_states_with_pending_updates(
 
     # Verify the pending update is stored
     unique_store_key = f"{webhook_id}_battery_state"
-    pending_updates = hass.data[DOMAIN]["pending_updates"]
+    pending_updates = hass.data[DOMAIN]["sensor"]["pending_updates"]
     assert unique_store_key in pending_updates
     assert pending_updates[unique_store_key]["state"] == 75
 
@@ -591,7 +591,7 @@ async def test_update_sensor_states_with_pending_updates(
     assert entity.state == "75"
 
     # Verify pending update was removed
-    pending_updates = hass.data[DOMAIN]["pending_updates"]
+    pending_updates = hass.data[DOMAIN]["sensor"]["pending_updates"]
     assert unique_store_key not in pending_updates
 
 
@@ -650,7 +650,7 @@ async def test_update_sensor_states_always_stores_pending(
 
     # Pending update should be cleaned up after successful signal handling
     unique_store_key = f"{webhook_id}_battery_state"
-    pending_updates = hass.data[DOMAIN]["pending_updates"]
+    pending_updates = hass.data[DOMAIN]["sensor"]["pending_updates"]
     # The pending update is removed by the entity's _handle_update method
     assert unique_store_key not in pending_updates
 
@@ -712,7 +712,7 @@ async def test_binary_sensor_pending_update(
 
     # Verify pending update exists
     unique_store_key = f"{webhook_id}_motion_sensor"
-    pending_updates = hass.data[DOMAIN]["pending_updates"]
+    pending_updates = hass.data[DOMAIN]["binary_sensor"]["pending_updates"]
     assert unique_store_key in pending_updates
 
     # Re-enable the entity
@@ -731,7 +731,7 @@ async def test_binary_sensor_pending_update(
     assert entity.state == "on"
 
     # Verify pending update was removed
-    pending_updates = hass.data[DOMAIN]["pending_updates"]
+    pending_updates = hass.data[DOMAIN]["binary_sensor"]["pending_updates"]
     assert unique_store_key not in pending_updates
 
 
@@ -789,6 +789,6 @@ async def test_register_sensor_always_stores_pending(
 
     # Pending update should be cleaned up after successful signal handling
     unique_store_key = f"{webhook_id}_battery_state"
-    pending_updates = hass.data[DOMAIN]["pending_updates"]
+    pending_updates = hass.data[DOMAIN]["sensor"]["pending_updates"]
     # The pending update is removed by the entity's _handle_update method
     assert unique_store_key not in pending_updates

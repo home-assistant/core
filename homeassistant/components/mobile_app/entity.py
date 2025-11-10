@@ -24,6 +24,7 @@ from .const import (
     ATTR_SENSOR_ICON,
     ATTR_SENSOR_STATE,
     ATTR_SENSOR_STATE_CLASS,
+    ATTR_SENSOR_TYPE,
     DATA_PENDING_UPDATES,
     DOMAIN,
     SIGNAL_SENSOR_UPDATE,
@@ -66,7 +67,7 @@ class MobileAppEntity(RestoreEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{SIGNAL_SENSOR_UPDATE}-{self._attr_unique_id}",
+                f"{SIGNAL_SENSOR_UPDATE}-{self._config[ATTR_SENSOR_TYPE]}-{self._attr_unique_id}",
                 self._handle_update,
             )
         )
@@ -107,7 +108,10 @@ class MobileAppEntity(RestoreEntity):
 
     def _apply_pending_update(self) -> None:
         """Restore any pending update for this entity."""
-        pending_updates = self.hass.data[DOMAIN].get(DATA_PENDING_UPDATES, {})
+        entity_type = self._config[ATTR_SENSOR_TYPE]
+        pending_updates = self.hass.data[DOMAIN][entity_type].get(
+            DATA_PENDING_UPDATES, {}
+        )
         if self._attr_unique_id in pending_updates:
             _LOGGER.debug(
                 "Applying pending update for %s: %s",
