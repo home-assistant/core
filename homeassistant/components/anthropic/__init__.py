@@ -25,7 +25,7 @@ from .const import (
     RECOMMENDED_CHAT_MODEL,
 )
 
-PLATFORMS = (Platform.CONVERSATION,)
+PLATFORMS = (Platform.AI_TASK, Platform.CONVERSATION)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 type AnthropicConfigEntry = ConfigEntry[anthropic.AsyncClient]

@@ -1,8 +1,20 @@
 """Tests helpers."""
 
-from collections.abc import AsyncGenerator
-from unittest.mock import patch
+from collections.abc import AsyncGenerator, Generator, Iterable
+from unittest.mock import AsyncMock, patch
 
+from anthropic.types import (
+    Message,
+    MessageDeltaUsage,
+    RawContentBlockStartEvent,
+    RawMessageDeltaEvent,
+    RawMessageStartEvent,
+    RawMessageStopEvent,
+    RawMessageStreamEvent,
+    ToolUseBlock,
+    Usage,
+)
+from anthropic.types.raw_message_delta_event import Delta
 import pytest
 
 from homeassistant.components.anthropic import CONF_CHAT_MODEL
@@ -14,6 +26,7 @@ from homeassistant.components.anthropic.const import (
     CONF_WEB_SEARCH_REGION,
     CONF_WEB_SEARCH_TIMEZONE,
     CONF_WEB_SEARCH_USER_LOCATION,
+    DEFAULT_AI_TASK_NAME,
     DEFAULT_CONVERSATION_NAME,
 )
 from homeassistant.const import CONF_LLM_HASS_API
@@ -40,7 +53,13 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
                 "subentry_type": "conversation",
                 "title": DEFAULT_CONVERSATION_NAME,
                 "unique_id": None,
-            }
+            },
+            {
+                "data": {},
+                "subentry_type": "ai_task_data",
+                "title": DEFAULT_AI_TASK_NAME,
+                "unique_id": None,
+            },
         ],
     )
     entry.add_to_hass(hass)
@@ -114,3 +133,61 @@ async def mock_init_component(
 async def setup_ha(hass: HomeAssistant) -> None:
     """Set up Home Assistant."""
     assert await async_setup_component(hass, "homeassistant", {})
+
+
+@pytest.fixture
+def mock_create_stream() -> Generator[AsyncMock]:
+    """Mock stream response."""
+
+    async def mock_generator(events: Iterable[RawMessageStreamEvent], **kwargs):
+        """Create a stream of messages with the specified content blocks."""
+        stop_reason = "end_turn"
+        refusal_magic_string = "ANTHROPIC_MAGIC_STRING_TRIGGER_REFUSAL_1FAEFB6177B4672DEE07F9D3AFC62588CCD2631EDCF22E8CCC1FB35B501C9C86"
+        for message in kwargs.get("messages"):
+            if message["role"] != "user":
+                continue
+            if isinstance(message["content"], str):
+                if refusal_magic_string in message["content"]:
+                    stop_reason = "refusal"
+                    break
+            else:
+                for content in message["content"]:
+                    if content.get(
+                        "type"
+                    ) == "text" and refusal_magic_string in content.get("text", ""):
+                        stop_reason = "refusal"
+                        break
+
+        yield RawMessageStartEvent(
+            message=Message(
+                type="message",
+                id="msg_1234567890ABCDEFGHIJKLMN",
+                content=[],
+                role="assistant",
+                model="claude-3-5-sonnet-20240620",
+                usage=Usage(input_tokens=0, output_tokens=0),
+            ),
+            type="message_start",
+        )
+        for event in events:
+            if isinstance(event, RawContentBlockStartEvent) and isinstance(
+                event.content_block, ToolUseBlock
+            ):
+                stop_reason = "tool_use"
+            yield event
+        yield RawMessageDeltaEvent(
+            type="message_delta",
+            delta=Delta(stop_reason=stop_reason, stop_sequence=""),
+            usage=MessageDeltaUsage(output_tokens=0),
+        )
+        yield RawMessageStopEvent(type="message_stop")
+
+    with patch(
+        "anthropic.resources.messages.AsyncMessages.create",
+        new_callable=AsyncMock,
+    ) as mock_create:
+        mock_create.side_effect = lambda **kwargs: mock_generator(
+            mock_create.return_value.pop(0), **kwargs
+        )
+
+        yield mock_create
