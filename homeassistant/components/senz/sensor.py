@@ -57,7 +57,7 @@ async def async_setup_entry(
     )
 
 
-class SENZSensor(CoordinatorEntity, SensorEntity):
+class SENZSensor(CoordinatorEntity[SENZDataUpdateCoordinator], SensorEntity):
     """Representation of a SENZ sensor entity."""
 
     entity_description: SenzSensorDescription
@@ -73,9 +73,7 @@ class SENZSensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self.entity_description = description
         self._thermostat = thermostat
-        self._attr_unique_id = (
-            f"{thermostat.serial_number}_{self.entity_description.key}"
-        )
+        self._attr_unique_id = f"{thermostat.serial_number}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, thermostat.serial_number)},
             manufacturer="nVent Raychem",

@@ -31,7 +31,9 @@ def load_device_file() -> str:
 
 
 @pytest.fixture
-async def device_fixture(hass: HomeAssistant, load_device_file: str) -> Thermostat:
+async def device_fixture(
+    hass: HomeAssistant, load_device_file: str
+) -> list[Thermostat]:
     """Fixture for device."""
     return await async_load_json_array_fixture(hass, load_device_file, DOMAIN)
 
