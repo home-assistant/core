@@ -338,16 +338,6 @@ def find_dpcode(
     dpcodes: str | DPCode | tuple[DPCode, ...] | None,
     *,
     prefer_function: bool = False,
-    dptype: Literal[DPType.BOOLEAN],
-) -> TypeInformation | None: ...
-
-
-@overload
-def find_dpcode(
-    device: CustomerDevice,
-    dpcodes: str | DPCode | tuple[DPCode, ...] | None,
-    *,
-    prefer_function: bool = False,
     dptype: Literal[DPType.ENUM],
 ) -> EnumTypeData | None: ...
 
