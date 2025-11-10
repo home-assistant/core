@@ -15328,7 +15328,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_power',
-    'unique_id': 'tuya.3phkffywh5nnlj5vbdnztotal_power',
+    'unique_id': 'tuya.3phkffywh5nnlj5vbdnztotal_powerpower',
     'unit_of_measurement': 'W',
   })
 # ---
