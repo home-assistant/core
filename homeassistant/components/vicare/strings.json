@@ -215,15 +215,15 @@
       "compressor_phase": {
         "name": "Compressor phase",
         "state": {
-          "preparing": "Preparing",
-          "heating": "[%key:component::climate::entity_component::_::hvac_action::state::heating%]",
-          "cooling": "[%key:component::climate::entity_component::_::hvac_action::state::cooling%]",
-          "preparing-defrost": "Preparing defrost",
-          "defrost": "[%key:component::climate::entity_component::_::hvac_action::state::defrosting%]",
+          "cooling": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::cooling%]",
+          "defrost": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::defrosting%]",
+          "heating": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::heating%]",
+          "off": "[%key:common::state::off%]",
           "passive-defrost": "Passive defrosting",
-          "ready": "[%key:common::state::idle%]",
           "pause": "[%key:common::state::idle%]",
-          "off": "[%key:common::state::off%]"
+          "preparing": "Preparing",
+          "preparing-defrost": "Preparing defrost",
+          "ready": "[%key:common::state::idle%]"
         }
       },
       "compressor_starts": {
