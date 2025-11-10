@@ -22,6 +22,19 @@ BUTTONS: dict[DeviceCategory, tuple[ButtonEntityDescription, ...]] = {
             translation_key="snooze",
         ),
     ),
+    DeviceCategory.MSP: (
+        ButtonEntityDescription(
+            key=DPCode.FACTORY_RESET,
+            translation_key="factory_reset",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+        ),
+        ButtonEntityDescription(
+            key=DPCode.MANUAL_CLEAN,
+            translation_key="manual_clean",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     DeviceCategory.SD: (
         ButtonEntityDescription(
             key=DPCode.RESET_DUSTER_CLOTH,
