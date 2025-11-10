@@ -1,4 +1,4 @@
-"""Test Roborock Binary Sensor."""
+"""Test Satel Integra Binary Sensor."""
 
 from collections.abc import AsyncGenerator
 from unittest.mock import AsyncMock, patch
