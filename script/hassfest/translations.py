@@ -177,7 +177,6 @@ def gen_data_entry_schema(
     subentry_flow: bool = False,
 ) -> vol.All:
     """Generate a data entry schema."""
-    key_classifier = vol.Required if subentry_flow else vol.Optional
     step_title_class = vol.Required if require_step_title else vol.Optional
     schema = {
         vol.Optional("flow_title"): translation_value_validator,
@@ -208,13 +207,13 @@ def gen_data_entry_schema(
         vol.Optional("abort"): {str: translation_value_validator},
         vol.Optional("progress"): {str: translation_value_validator},
         vol.Optional("create_entry"): {str: translation_value_validator},
-        key_classifier("initiate_flow"): {
-            vol.Required("user"): translation_value_validator,
-            str: translation_value_validator,
-        },
     }
     if subentry_flow:
         schema[vol.Required("entry_type")] = translation_value_validator
+        schema[vol.Required("initiate_flow")] = {
+            vol.Required("user"): translation_value_validator,
+            str: translation_value_validator,
+        }
     if flow_title == REQUIRED:
         schema[vol.Required("title")] = translation_value_validator
     elif flow_title == REMOVED:
