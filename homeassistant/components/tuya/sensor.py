@@ -37,6 +37,7 @@ from .const import (
     TUYA_DISCOVERY_NEW,
     DeviceCategory,
     DPCode,
+    DPType,
 )
 from .entity import TuyaEntity
 from .models import (
@@ -46,11 +47,14 @@ from .models import (
     DPCodeJsonWrapper,
     DPCodeTypeInformationWrapper,
     DPCodeWrapper,
+    EnumTypeData,
 )
 
 
-class _WindDirectionWrapper(DPCodeEnumWrapper):
+class _WindDirectionWrapper(DPCodeTypeInformationWrapper[EnumTypeData]):
     """Custom DPCode Wrapper for converting enum to wind direction."""
+
+    DPTYPE = DPType.ENUM
 
     _WIND_DIRECTIONS = {
         "north": 0.0,
@@ -71,11 +75,13 @@ class _WindDirectionWrapper(DPCodeEnumWrapper):
         "north_north_west": 337.5,
     }
 
-    def read_device_status(self, device: CustomerDevice) -> float | None:  # type: ignore[override]
+    def read_device_status(self, device: CustomerDevice) -> float | None:
         """Read the device value for the dpcode."""
-        if (enum_value := super().read_device_status(device)) is None:
-            return None
-        return self._WIND_DIRECTIONS.get(enum_value)
+        if (
+            raw_value := self._read_device_status_raw(device)
+        ) in self.type_information.range:
+            return self._WIND_DIRECTIONS.get(raw_value)
+        return None
 
 
 class _JsonElectricityCurrentWrapper(DPCodeJsonWrapper):
