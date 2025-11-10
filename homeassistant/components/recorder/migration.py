@@ -13,7 +13,15 @@ from typing import TYPE_CHECKING, Any, TypedDict, cast, final
 from uuid import UUID
 
 import sqlalchemy
-from sqlalchemy import ForeignKeyConstraint, MetaData, Table, func, text, update
+from sqlalchemy import (
+    ForeignKeyConstraint,
+    MetaData,
+    Table,
+    cast as cast_,
+    func,
+    text,
+    update,
+)
 from sqlalchemy.engine import CursorResult, Engine
 from sqlalchemy.exc import (
     DatabaseError,
@@ -26,8 +34,9 @@ from sqlalchemy.exc import (
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm.session import Session
 from sqlalchemy.schema import AddConstraint, CreateTable, DropConstraint
-from sqlalchemy.sql.expression import true
+from sqlalchemy.sql.expression import and_, true
 from sqlalchemy.sql.lambdas import StatementLambdaElement
+from sqlalchemy.types import BINARY
 
 from homeassistant.core import HomeAssistant
 from homeassistant.util.enum import try_parse_enum
@@ -2044,15 +2053,64 @@ class _SchemaVersion50Migrator(_SchemaVersionMigrator, target_version=50):
 class _SchemaVersion51Migrator(_SchemaVersionMigrator, target_version=51):
     def _apply_update(self) -> None:
         """Version specific update method."""
+        # Replaced with version 52 which corrects issues with MySQL string comparisons.
+
+
+class _SchemaVersion52Migrator(_SchemaVersionMigrator, target_version=52):
+    def _apply_update(self) -> None:
+        """Version specific update method."""
+        if self.old_version <= 50:
+            self._update_from_version_50()
+        else:
+            self._update_from_version_51()
+
+    def _update_from_version_50(self) -> None:
+        """Version specific update method from version 50 or earlier."""
         # Add unit class column to StatisticsMeta
         _add_columns(self.session_maker, "statistics_meta", ["unit_class VARCHAR(255)"])
         with session_scope(session=self.session_maker()) as session:
             connection = session.connection()
             for conv in _PRIMARY_UNIT_CONVERTERS:
+                if self.engine.dialect.name == SupportedDialect.MYSQL:
+                    units = {u.encode("utf-8") if u else u for u in conv.VALID_UNITS}
+                    connection.execute(
+                        update(StatisticsMeta)
+                        .where(
+                            cast_(StatisticsMeta.unit_of_measurement, BINARY).in_(units)
+                        )
+                        .values(unit_class=conv.UNIT_CLASS)
+                    )
+                else:
+                    connection.execute(
+                        update(StatisticsMeta)
+                        .where(StatisticsMeta.unit_of_measurement.in_(conv.VALID_UNITS))
+                        .values(unit_class=conv.UNIT_CLASS)
+                    )
+
+    def _update_from_version_51(self) -> None:
+        """Version specific update method from version 51."""
+        if self.engine.dialect.name != SupportedDialect.MYSQL:
+            return
+        # Fix bad unit_class assignments due to case insensitive
+        # string comparisons in MySQL
+        with session_scope(session=self.session_maker()) as session:
+            connection = session.connection()
+            for conv in _PRIMARY_UNIT_CONVERTERS:
+                units = {u.encode("utf-8") if u else u for u in conv.VALID_UNITS}
+                # Reset unit_class to None for entries that do not match
+                # the valid units (case sensitive) but matched before due to
+                # case insensitive comparisons.
                 connection.execute(
                     update(StatisticsMeta)
-                    .where(StatisticsMeta.unit_of_measurement.in_(conv.VALID_UNITS))
-                    .values(unit_class=conv.UNIT_CLASS)
+                    .where(
+                        and_(
+                            StatisticsMeta.unit_of_measurement.in_(conv.VALID_UNITS),
+                            cast_(StatisticsMeta.unit_of_measurement, BINARY).not_in(
+                                units
+                            ),
+                        )
+                    )
+                    .values(unit_class=None)
                 )
 
 
