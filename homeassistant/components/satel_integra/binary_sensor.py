@@ -109,7 +109,6 @@ class SatelIntegraBinarySensor(BinarySensorEntity):
         """Initialize the binary_sensor."""
         self._device_number = device_number
         self._attr_unique_id = f"{config_entry_id}_{sensor_type}_{device_number}"
-        self._state: int = 0
         self._react_to_signal = react_to_signal
         self._satel = controller
 
@@ -121,11 +120,9 @@ class SatelIntegraBinarySensor(BinarySensorEntity):
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         if self._react_to_signal == SIGNAL_OUTPUTS_UPDATED:
-            self._state = (
-                1 if self._device_number in self._satel.violated_outputs else 0
-            )
+            self._attr_is_on = self._device_number in self._satel.violated_outputs
         else:
-            self._state = 1 if self._device_number in self._satel.violated_zones else 0
+            self._attr_is_on = self._device_number in self._satel.violated_zones
 
         self.async_on_remove(
             async_dispatcher_connect(
@@ -133,14 +130,11 @@ class SatelIntegraBinarySensor(BinarySensorEntity):
             )
         )
 
-    @property
-    def is_on(self) -> bool | None:
-        """Return true if sensor is on."""
-        return self._state == 1
-
     @callback
     def _devices_updated(self, zones: dict[int, int]):
         """Update the zone's state, if needed."""
-        if self._device_number in zones and self._state != zones[self._device_number]:
-            self._state = zones[self._device_number]
-            self.async_write_ha_state()
+        if self._device_number in zones:
+            new_state = zones[self._device_number] == 1
+            if new_state != self._attr_is_on:
+                self._attr_is_on = new_state
+                self.async_write_ha_state()
