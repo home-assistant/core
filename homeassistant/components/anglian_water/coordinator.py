@@ -16,7 +16,7 @@ from .const import DOMAIN
 type AnglianWaterConfigEntry = ConfigEntry[AnglianWaterUpdateCoordinator]
 
 _LOGGER = logging.getLogger(__name__)
-UPDATE_INTERVAL = timedelta(minutes=30)
+UPDATE_INTERVAL = timedelta(minutes=60)
 
 
 class AnglianWaterUpdateCoordinator(DataUpdateCoordinator[None]):
@@ -44,5 +44,5 @@ class AnglianWaterUpdateCoordinator(DataUpdateCoordinator[None]):
         """Update data from Anglian Water's API."""
         try:
             return await self.api.update()
-        except Exception as err:
+        except Exception:
             pass  # TODO

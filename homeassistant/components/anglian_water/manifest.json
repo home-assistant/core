@@ -1,14 +1,10 @@
 {
   "domain": "anglian_water",
   "name": "Anglian Water",
-  "codeowners": [
-    "@pantherale0"
-  ],
+  "codeowners": ["@pantherale0"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/anglian_water",
   "iot_class": "cloud_polling",
   "quality_scale": "bronze",
-  "requirements": [
-    "pyanglianwater==2025.6.0"
-  ]
+  "requirements": ["pyanglianwater==2.0.0"]
 }

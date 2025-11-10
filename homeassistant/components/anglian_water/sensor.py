@@ -6,7 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
 
-from pyanglianwater import SmartMeter
+from pyanglianwater.meter import SmartMeter
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,

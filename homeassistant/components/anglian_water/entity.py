@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from pyanglianwater import SmartMeter
+from pyanglianwater.meter import SmartMeter
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
