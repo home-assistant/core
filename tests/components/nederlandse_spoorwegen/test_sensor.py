@@ -87,7 +87,7 @@ async def test_single_trip_sensor(
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test sensor initialization."""
+    """Test sensor with single trip (no next trip available)."""
     await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
