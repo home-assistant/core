@@ -10,11 +10,7 @@ from typing import TYPE_CHECKING, Any
 
 from aiohasupervisor import SupervisorError, SupervisorNotFoundError
 from aiohasupervisor.models import StoreInfo
-from aiohasupervisor.models.mounts import (
-    CIFSMountResponse,
-    MountsInfo,
-    NFSMountResponse,
-)
+from aiohasupervisor.models.mounts import CIFSMountResponse, NFSMountResponse
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_MANUFACTURER, ATTR_NAME
@@ -50,7 +46,6 @@ from .const import (
     DATA_KEY_OS,
     DATA_KEY_SUPERVISOR,
     DATA_KEY_SUPERVISOR_ISSUES,
-    DATA_MOUNTS_INFO,
     DATA_NETWORK_INFO,
     DATA_OS_INFO,
     DATA_STORE,
@@ -179,16 +174,6 @@ def get_core_info(hass: HomeAssistant) -> dict[str, Any] | None:
     Async friendly.
     """
     return hass.data.get(DATA_CORE_INFO)
-
-
-@callback
-@bind_hass
-def get_mounts_info(hass: HomeAssistant) -> MountsInfo | None:
-    """Return Home Assistant mounts information from Supervisor.
-
-    Async friendly.
-    """
-    return hass.data.get(DATA_MOUNTS_INFO)
 
 
 @callback
@@ -364,6 +349,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         addons_info = get_addons_info(self.hass) or {}
         addons_stats = get_addons_stats(self.hass)
         store_data = get_store(self.hass)
+        mounts_info = await self.supervisor_client.mounts.info()
 
         if store_data:
             repositories = {
@@ -398,10 +384,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
             **get_supervisor_stats(self.hass),
         }
         new_data[DATA_KEY_HOST] = get_host_info(self.hass) or {}
-        new_data[DATA_KEY_MOUNTS] = {
-            mount.name: mount
-            for mount in getattr(get_mounts_info(self.hass), "mounts", [])
-        }
+        new_data[DATA_KEY_MOUNTS] = {mount.name: mount for mount in mounts_info.mounts}
 
         # If this is the initial refresh, register all addons and return the dict
         if is_first_update:
@@ -485,7 +468,6 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
             DATA_CORE_INFO: hassio.get_core_info(),
             DATA_SUPERVISOR_INFO: hassio.get_supervisor_info(),
             DATA_OS_INFO: hassio.get_os_info(),
-            DATA_MOUNTS_INFO: self.supervisor_client.mounts.info(),
         }
         if CONTAINER_STATS in container_updates[CORE_CONTAINER]:
             updates[DATA_CORE_STATS] = hassio.get_core_stats()

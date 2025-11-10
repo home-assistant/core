@@ -40,7 +40,7 @@ async def setup_credentials(hass: HomeAssistant) -> None:
 def mock_oauth2_implementation() -> Generator[AsyncMock]:
     """Mock config entry oauth2 implementation."""
     with patch(
-        "homeassistant.components.xbox.coordinator.config_entry_oauth2_flow.async_get_config_entry_implementation",
+        "homeassistant.components.xbox.coordinator.async_get_config_entry_implementation",
         return_value=AsyncMock(),
     ) as mock_client:
         client = mock_client.return_value
@@ -86,25 +86,8 @@ def mock_authentication_manager() -> Generator[AsyncMock]:
         yield client
 
 
-@pytest.fixture(name="signed_session")
-def mock_signed_session() -> Generator[AsyncMock]:
-    """Mock xbox-webapi SignedSession."""
-
-    with (
-        patch(
-            "homeassistant.components.xbox.coordinator.SignedSession", autospec=True
-        ) as mock_client,
-        patch(
-            "homeassistant.components.xbox.config_flow.SignedSession", new=mock_client
-        ),
-    ):
-        client = mock_client.return_value
-
-        yield client
-
-
 @pytest.fixture(name="xbox_live_client")
-def mock_xbox_live_client(signed_session) -> Generator[AsyncMock]:
+def mock_xbox_live_client() -> Generator[AsyncMock]:
     """Mock xbox-webapi XboxLiveClient."""
 
     with (

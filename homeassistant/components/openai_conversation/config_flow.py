@@ -55,6 +55,7 @@ from .const import (
     CONF_WEB_SEARCH_CITY,
     CONF_WEB_SEARCH_CONTEXT_SIZE,
     CONF_WEB_SEARCH_COUNTRY,
+    CONF_WEB_SEARCH_INLINE_CITATIONS,
     CONF_WEB_SEARCH_REGION,
     CONF_WEB_SEARCH_TIMEZONE,
     CONF_WEB_SEARCH_USER_LOCATION,
@@ -73,6 +74,7 @@ from .const import (
     RECOMMENDED_VERBOSITY,
     RECOMMENDED_WEB_SEARCH,
     RECOMMENDED_WEB_SEARCH_CONTEXT_SIZE,
+    RECOMMENDED_WEB_SEARCH_INLINE_CITATIONS,
     RECOMMENDED_WEB_SEARCH_USER_LOCATION,
     UNSUPPORTED_IMAGE_MODELS,
     UNSUPPORTED_MODELS,
@@ -396,6 +398,10 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                         CONF_WEB_SEARCH_USER_LOCATION,
                         default=RECOMMENDED_WEB_SEARCH_USER_LOCATION,
                     ): bool,
+                    vol.Optional(
+                        CONF_WEB_SEARCH_INLINE_CITATIONS,
+                        default=RECOMMENDED_WEB_SEARCH_INLINE_CITATIONS,
+                    ): bool,
                 }
             )
         elif CONF_WEB_SEARCH in options:
@@ -411,6 +417,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                     CONF_WEB_SEARCH_REGION,
                     CONF_WEB_SEARCH_COUNTRY,
                     CONF_WEB_SEARCH_TIMEZONE,
+                    CONF_WEB_SEARCH_INLINE_CITATIONS,
                 )
             }
 

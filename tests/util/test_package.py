@@ -400,6 +400,11 @@ def test_get_is_installed() -> None:
     assert package.is_installed(f"{installed_package}<={installed_version}")
     assert not package.is_installed(f"{installed_package}<{installed_version}")
 
+    # URL-based requirements should always return False, as no version check is possible
+    assert not package.is_installed(
+        "homeassistant@git+https://github.com/home-assistant/core.git@dev"
+    )
+
 
 def test_check_package_previous_failed_install() -> None:
     """Test for when a previously install package failed and left cruft behind."""

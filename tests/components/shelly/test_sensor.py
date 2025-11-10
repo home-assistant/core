@@ -1744,17 +1744,38 @@ async def test_rpc_shelly_ev_sensors(
         "meta": {"ui": {"unit": "min", "view": "label"}},
         "role": "time_charge",
     }
+    config["object:200"] = {"role": "phase_info"}
     monkeypatch.setattr(mock_rpc_device, "config", config)
 
     status = deepcopy(mock_rpc_device.status)
     status["enum:200"] = {"value": "charger_charging"}
     status["number:201"] = {"value": 5.0}
     status["number:202"] = {"value": 60}
+    status["object:200"] = {
+        "value": {
+            "phase_a": {"voltage": 231.7, "current": 8.7, "power": 2.015},
+            "phase_b": {"voltage": 8.9, "current": 1.2, "power": 2.02},
+            "phase_c": {"voltage": 5.5, "current": 1.1, "power": 3.03},
+        }
+    }
     monkeypatch.setattr(mock_rpc_device, "status", status)
 
     await init_integration(hass, 3)
 
-    for entity in ("charger_state", "session_energy", "session_duration"):
+    for entity in (
+        "charger_state",
+        "session_energy",
+        "session_duration",
+        "phase_a_current",
+        "phase_b_current",
+        "phase_c_current",
+        "phase_a_power",
+        "phase_b_power",
+        "phase_c_power",
+        "phase_a_voltage",
+        "phase_b_voltage",
+        "phase_c_voltage",
+    ):
         entity_id = f"{SENSOR_DOMAIN}.test_name_{entity}"
 
         state = hass.states.get(entity_id)
@@ -2025,7 +2046,7 @@ async def test_shelly_irrigation_weather_sensors(
 
     config_entry = await init_integration(hass, gen=3)
 
-    for entity in ("average_temperature", "rainfall_last_24h"):
+    for entity in ("average_temperature", "rainfall"):
         entity_id = f"{SENSOR_DOMAIN}.test_name_{entity}"
 
         state = hass.states.get(entity_id)
@@ -2039,6 +2060,6 @@ async def test_shelly_irrigation_weather_sensors(
     await hass.config_entries.async_reload(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    for entity in ("average_temperature", "rainfall_last_24h"):
+    for entity in ("average_temperature", "rainfall"):
         entity_id = f"{SENSOR_DOMAIN}.test_name_{entity}"
         assert hass.states.get(entity_id) is None

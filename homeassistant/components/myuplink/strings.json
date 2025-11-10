@@ -56,6 +56,9 @@
     "config_entry_not_ready": {
       "message": "Error while loading the integration."
     },
+    "implementation_unavailable": {
+      "message": "OAuth2 implementation is not available, will retry."
+    },
     "incorrect_oauth2_scope": {
       "message": "Stored permissions are invalid. Please login again to update permissions."
     },
