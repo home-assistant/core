@@ -29,6 +29,7 @@ from homeassistant.util.enum import try_parse_enum
 from .const import (
     BANG_OLUFSEN_WEBSOCKET_EVENT,
     CONNECTION_STATUS,
+    DOMAIN,
     EVENT_TRANSLATION_MAP,
     BangOlufsenModel,
     WebsocketNotification,
@@ -92,7 +93,7 @@ class BangOlufsenWebsocket(BangOlufsenBase):
         """Update all entities of the connection status."""
         async_dispatcher_send(
             self.hass,
-            f"{self._unique_id}_{CONNECTION_STATUS}",
+            f"{DOMAIN}_{self._unique_id}_{CONNECTION_STATUS}",
             self._client.websocket_connected,
         )
 
@@ -110,7 +111,7 @@ class BangOlufsenWebsocket(BangOlufsenBase):
         """Send active_listening_mode dispatch."""
         async_dispatcher_send(
             self.hass,
-            f"{self._unique_id}_{WebsocketNotification.ACTIVE_LISTENING_MODE}",
+            f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.ACTIVE_LISTENING_MODE}",
             notification,
         )
 
@@ -122,7 +123,7 @@ class BangOlufsenWebsocket(BangOlufsenBase):
         # Send to event entity
         async_dispatcher_send(
             self.hass,
-            f"{self._unique_id}_{WebsocketNotification.BEO_REMOTE_BUTTON}_{notification.key}",
+            f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.BEO_REMOTE_BUTTON}_{notification.key}",
             EVENT_TRANSLATION_MAP[notification.type],
         )
 
@@ -135,7 +136,7 @@ class BangOlufsenWebsocket(BangOlufsenBase):
         # Send to event entity
         async_dispatcher_send(
             self.hass,
-            f"{self._unique_id}_{WebsocketNotification.BUTTON}_{notification.button}",
+            f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.BUTTON}_{notification.button}",
             EVENT_TRANSLATION_MAP[notification.state],
         )
 
@@ -153,17 +154,17 @@ class BangOlufsenWebsocket(BangOlufsenBase):
         ):
             async_dispatcher_send(
                 self.hass,
-                f"{self._unique_id}_{WebsocketNotification.BEOLINK}",
+                f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.BEOLINK}",
             )
         elif notification_type is WebsocketNotification.CONFIGURATION:
             async_dispatcher_send(
                 self.hass,
-                f"{self._unique_id}_{WebsocketNotification.CONFIGURATION}",
+                f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.CONFIGURATION}",
             )
         elif notification_type is WebsocketNotification.REMOTE_MENU_CHANGED:
             async_dispatcher_send(
                 self.hass,
-                f"{self._unique_id}_{WebsocketNotification.REMOTE_MENU_CHANGED}",
+                f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.REMOTE_MENU_CHANGED}",
             )
 
         # This notification is triggered by a remote pairing, unpairing and connecting to a device
@@ -197,7 +198,7 @@ class BangOlufsenWebsocket(BangOlufsenBase):
         """Send playback_error dispatch."""
         async_dispatcher_send(
             self.hass,
-            f"{self._unique_id}_{WebsocketNotification.PLAYBACK_ERROR}",
+            f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.PLAYBACK_ERROR}",
             notification,
         )
 
@@ -207,7 +208,7 @@ class BangOlufsenWebsocket(BangOlufsenBase):
         """Send playback_metadata dispatch."""
         async_dispatcher_send(
             self.hass,
-            f"{self._unique_id}_{WebsocketNotification.PLAYBACK_METADATA}",
+            f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.PLAYBACK_METADATA}",
             notification,
         )
 
@@ -215,7 +216,7 @@ class BangOlufsenWebsocket(BangOlufsenBase):
         """Send playback_progress dispatch."""
         async_dispatcher_send(
             self.hass,
-            f"{self._unique_id}_{WebsocketNotification.PLAYBACK_PROGRESS}",
+            f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.PLAYBACK_PROGRESS}",
             notification,
         )
 
@@ -223,7 +224,7 @@ class BangOlufsenWebsocket(BangOlufsenBase):
         """Send playback_state dispatch."""
         async_dispatcher_send(
             self.hass,
-            f"{self._unique_id}_{WebsocketNotification.PLAYBACK_STATE}",
+            f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.PLAYBACK_STATE}",
             notification,
         )
 
@@ -231,7 +232,7 @@ class BangOlufsenWebsocket(BangOlufsenBase):
         """Send playback_source dispatch."""
         async_dispatcher_send(
             self.hass,
-            f"{self._unique_id}_{WebsocketNotification.PLAYBACK_SOURCE}",
+            f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.PLAYBACK_SOURCE}",
             notification,
         )
 
@@ -239,7 +240,7 @@ class BangOlufsenWebsocket(BangOlufsenBase):
         """Send source_change dispatch."""
         async_dispatcher_send(
             self.hass,
-            f"{self._unique_id}_{WebsocketNotification.SOURCE_CHANGE}",
+            f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.SOURCE_CHANGE}",
             notification,
         )
 
@@ -247,7 +248,7 @@ class BangOlufsenWebsocket(BangOlufsenBase):
         """Send volume dispatch."""
         async_dispatcher_send(
             self.hass,
-            f"{self._unique_id}_{WebsocketNotification.VOLUME}",
+            f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.VOLUME}",
             notification,
         )
 

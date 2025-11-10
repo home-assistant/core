@@ -52,7 +52,7 @@ async def test_connection(
 
     async_dispatcher_connect(
         hass,
-        f"{mock_config_entry.unique_id}_{CONNECTION_STATUS}",
+        f"{DOMAIN}_{mock_config_entry.unique_id}_{CONNECTION_STATUS}",
         mock_connection_callback,
     )
 
@@ -78,7 +78,7 @@ async def test_connection_lost(
 
     async_dispatcher_connect(
         hass,
-        f"{mock_config_entry.unique_id}_{CONNECTION_STATUS}",
+        f"{DOMAIN}_{mock_config_entry.unique_id}_{CONNECTION_STATUS}",
         mock_connection_lost_callback,
     )
 

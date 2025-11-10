@@ -250,7 +250,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
             self.async_on_remove(
                 async_dispatcher_connect(
                     self.hass,
-                    f"{self._unique_id}_{signal}",
+                    f"{DOMAIN}_{self._unique_id}_{signal}",
                     signal_handler,
                 )
             )

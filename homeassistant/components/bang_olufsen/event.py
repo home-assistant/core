@@ -138,14 +138,14 @@ class BangOlufsenButtonEvent(BangOlufsenEvent):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._unique_id}_{CONNECTION_STATUS}",
+                f"{DOMAIN}_{self._unique_id}_{CONNECTION_STATUS}",
                 self._async_update_connection_state,
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._unique_id}_{WebsocketNotification.BUTTON}_{self._button_type}",
+                f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.BUTTON}_{self._button_type}",
                 self._async_handle_event,
             )
         )
@@ -191,14 +191,14 @@ class BangOlufsenRemoteKeyEvent(BangOlufsenEvent):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._unique_id}_{CONNECTION_STATUS}",
+                f"{DOMAIN}_{self._unique_id}_{CONNECTION_STATUS}",
                 self._async_update_connection_state,
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._unique_id}_{WebsocketNotification.BEO_REMOTE_BUTTON}_{self._key_type}",
+                f"{DOMAIN}_{self._unique_id}_{WebsocketNotification.BEO_REMOTE_BUTTON}_{self._key_type}",
                 self._async_handle_event,
             )
         )
