@@ -24,6 +24,11 @@ from homeassistant.helpers.typing import StateType
 from .coordinator import XboxConfigEntry
 from .entity import XboxBaseEntity, XboxBaseEntityDescription, check_deprecated_entity
 
+MAP_JOIN_RESTRICTIONS = {
+    "local": "invite_only",
+    "followed": "joinable",
+}
+
 
 class XboxSensor(StrEnum):
     """Xbox sensor."""
@@ -38,6 +43,7 @@ class XboxSensor(StrEnum):
     NOW_PLAYING = "now_playing"
     FRIENDS = "friends"
     IN_PARTY = "in_party"
+    JOIN_RESTRICTIONS = "join_restrictions"
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -96,19 +102,16 @@ def now_playing_attributes(_: Person, title: Title | None) -> dict[str, Any]:
     return attributes
 
 
-def in_party_attributes(person: Person, _: Title | None = None) -> dict[str, Any]:
-    """In party attributes."""
-    MAP = {
-        "local": "invite_only",
-        "followed": "joinable",
-    }
-    return {
-        "join_restrictions": MAP.get(
+def join_restrictions(person: Person, _: Title | None = None) -> str | None:
+    """Join restrictions for current party the user is in."""
+
+    return (
+        MAP_JOIN_RESTRICTIONS.get(
             person.multiplayer_summary.party_details[0].join_restriction
         )
         if person.multiplayer_summary and person.multiplayer_summary.party_details
         else None
-    }
+    )
 
 
 def title_logo(_: Person, title: Title | None) -> str | None:
@@ -183,7 +186,13 @@ SENSOR_DESCRIPTIONS: tuple[XboxSensorEntityDescription, ...] = (
             if x.multiplayer_summary
             else None
         ),
-        attributes_fn=in_party_attributes,
+    ),
+    XboxSensorEntityDescription(
+        key=XboxSensor.JOIN_RESTRICTIONS,
+        translation_key=XboxSensor.JOIN_RESTRICTIONS,
+        value_fn=join_restrictions,
+        device_class=SensorDeviceClass.ENUM,
+        options=list(MAP_JOIN_RESTRICTIONS.values()),
     ),
 )
 

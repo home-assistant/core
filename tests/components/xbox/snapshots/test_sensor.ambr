@@ -234,7 +234,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'erics273 In party',
-      'join_restrictions': None,
       'unit_of_measurement': 'people',
     }),
     'context': <ANY>,
@@ -345,6 +344,64 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.erics273_now_playing',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.erics273_party_join_restrictions-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'invite_only',
+        'joinable',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.erics273_party_join_restrictions',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Party join restrictions',
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <XboxSensor.JOIN_RESTRICTIONS: 'join_restrictions'>,
+    'unique_id': '2533274913657542_join_restrictions',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.erics273_party_join_restrictions-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'erics273 Party join restrictions',
+      'options': list([
+        'invite_only',
+        'joinable',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.erics273_party_join_restrictions',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -634,7 +691,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'GSR Ae In party',
-      'join_restrictions': 'joinable',
       'unit_of_measurement': 'people',
     }),
     'context': <ANY>,
@@ -750,6 +806,64 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Blue Dragon',
+  })
+# ---
+# name: test_sensors[sensor.gsr_ae_party_join_restrictions-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'invite_only',
+        'joinable',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.gsr_ae_party_join_restrictions',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Party join restrictions',
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <XboxSensor.JOIN_RESTRICTIONS: 'join_restrictions'>,
+    'unique_id': '271958441785640_join_restrictions',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.gsr_ae_party_join_restrictions-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'GSR Ae Party join restrictions',
+      'options': list([
+        'invite_only',
+        'joinable',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gsr_ae_party_join_restrictions',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'joinable',
   })
 # ---
 # name: test_sensors[sensor.gsr_ae_status-entry]
@@ -1035,7 +1149,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Ikken Hissatsuu In party',
-      'join_restrictions': 'joinable',
       'unit_of_measurement': 'people',
     }),
     'context': <ANY>,
@@ -1150,6 +1263,64 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.ikken_hissatsuu_party_join_restrictions-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'invite_only',
+        'joinable',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ikken_hissatsuu_party_join_restrictions',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Party join restrictions',
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <XboxSensor.JOIN_RESTRICTIONS: 'join_restrictions'>,
+    'unique_id': '2533274838782903_join_restrictions',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.ikken_hissatsuu_party_join_restrictions-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Ikken Hissatsuu Party join restrictions',
+      'options': list([
+        'invite_only',
+        'joinable',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ikken_hissatsuu_party_join_restrictions',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'joinable',
   })
 # ---
 # name: test_sensors[sensor.ikken_hissatsuu_status-entry]
