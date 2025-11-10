@@ -782,14 +782,6 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
                 assert sample_width is not None
                 assert sample_channels is not None
 
-                audio_chunk = AudioChunk(
-                    rate=sample_rate,
-                    width=sample_width,
-                    channels=sample_channels,
-                    audio=data_chunk,
-                    timestamp=timestamp,
-                )
-
                 data_chunk_idx = 0
                 while data_chunk_idx < len(data_chunk):
                     audio_chunk = AudioChunk(
