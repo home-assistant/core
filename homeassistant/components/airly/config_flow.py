@@ -18,6 +18,10 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_USE_NEAREST, DOMAIN, NO_AIRLY_SENSORS
 
+DESCRIPTION_PLACEHOLDERS = {
+    "developer_registration_url": "https://developer.airly.eu/register",
+}
+
 
 class AirlyFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow for Airly."""
@@ -85,6 +89,7 @@ class AirlyFlowHandler(ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
+            description_placeholders=DESCRIPTION_PLACEHOLDERS,
         )
 
 

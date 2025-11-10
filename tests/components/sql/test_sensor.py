@@ -24,7 +24,7 @@ from homeassistant.components.sql.const import (
     CONF_QUERY,
     DOMAIN,
 )
-from homeassistant.components.sql.sensor import _generate_lambda_stmt
+from homeassistant.components.sql.util import generate_lambda_stmt
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
@@ -39,7 +39,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
-from homeassistant.helpers.entity_platform import async_get_platforms
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -109,6 +108,33 @@ async def test_query_value_template(
     }
 
 
+async def test_template_query(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the SQL sensor with a query template."""
+    options = {
+        CONF_QUERY: "SELECT {% if states('sensor.input1')=='on' %} 5 {% else %} 6 {% endif %} as value",
+        CONF_COLUMN_NAME: "value",
+        CONF_ADVANCED_OPTIONS: {
+            CONF_VALUE_TEMPLATE: "{{ value | int }}",
+        },
+    }
+    await init_integration(hass, title="count_tables", options=options)
+
+    state = hass.states.get("sensor.count_tables")
+    assert state.state == "6"
+
+    hass.states.async_set("sensor.input1", "on")
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("sensor.count_tables")
+    assert state.state == "5"
+
+
 async def test_query_value_template_invalid(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
@@ -122,6 +148,59 @@ async def test_query_value_template_invalid(
 
     state = hass.states.get("sensor.count_tables")
     assert state.state == "5.01"
+
+
+async def test_broken_template_query(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the SQL sensor with a query template which is broken."""
+    options = {
+        CONF_QUERY: "SELECT {{ 5 as value",
+        CONF_COLUMN_NAME: "value",
+        CONF_ADVANCED_OPTIONS: {
+            CONF_VALUE_TEMPLATE: "{{ value | int }}",
+        },
+    }
+    await init_integration(hass, title="count_tables", options=options)
+
+    state = hass.states.get("sensor.count_tables")
+    assert not state
+
+
+async def test_broken_template_query_2(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the SQL sensor with a query template."""
+    hass.states.async_set("sensor.input1", "5")
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    options = {
+        CONF_QUERY: "SELECT {{ states.sensor.input1.state | int / 1000}} as value",
+        CONF_COLUMN_NAME: "value",
+    }
+    await init_integration(hass, title="count_tables", options=options)
+
+    state = hass.states.get("sensor.count_tables")
+    assert state.state == "0.005"
+
+    hass.states.async_set("sensor.input1", "on")
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("sensor.count_tables")
+    assert state.state == "0.005"
+    assert (
+        "Error rendering query SELECT {{ states.sensor.input1.state | int / 1000}} as value"
+        " LIMIT 1;: ValueError: Template error: int got invalid input 'on' when rendering"
+        " template 'SELECT {{ states.sensor.input1.state | int / 1000}} as value LIMIT 1;'"
+        " but no default was specified" in caplog.text
+    )
 
 
 async def test_query_limit(recorder_mock: Recorder, hass: HomeAssistant) -> None:
@@ -229,7 +308,7 @@ async def test_invalid_url_setup(
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.sql.sensor.sqlalchemy.create_engine",
+        "homeassistant.components.sql.util.sqlalchemy.create_engine",
         side_effect=SQLAlchemyError(url),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -260,7 +339,7 @@ async def test_invalid_url_on_update(
             raise SQLAlchemyError("sqlite://homeassistant:hunter2@homeassistant.local")
 
     with patch(
-        "homeassistant.components.sql.sensor.scoped_session",
+        "homeassistant.components.sql.util.scoped_session",
         return_value=MockSession,
     ):
         await init_integration(hass, title="count_tables", options=options)
@@ -345,7 +424,7 @@ async def test_templates_with_yaml(
 
 
 async def test_config_from_old_yaml(
-    recorder_mock: Recorder, hass: HomeAssistant
+    recorder_mock: Recorder, hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
     """Test the SQL sensor from old yaml config does not create any entity."""
     config = {
@@ -366,6 +445,9 @@ async def test_config_from_old_yaml(
 
     state = hass.states.get("sensor.count_tables")
     assert not state
+    issue = issue_registry.async_get_issue(DOMAIN, "sensor_platform_yaml_not_supported")
+    assert issue is not None
+    assert issue.severity == ir.IssueSeverity.WARNING
 
 
 @pytest.mark.parametrize(
@@ -402,7 +484,7 @@ async def test_invalid_url_setup_from_yaml(
     }
 
     with patch(
-        "homeassistant.components.sql.sensor.sqlalchemy.create_engine",
+        "homeassistant.components.sql.util.sqlalchemy.create_engine",
         side_effect=SQLAlchemyError(url),
     ):
         assert await async_setup_component(hass, DOMAIN, config)
@@ -638,17 +720,14 @@ async def test_query_recover_from_rollback(
         CONF_UNIQUE_ID: "very_unique_id",
     }
     await init_integration(hass, title="Select value SQL query", options=options)
-    platforms = async_get_platforms(hass, "sql")
-    sql_entity = platforms[0].entities["sensor.select_value_sql_query"]
 
     state = hass.states.get("sensor.select_value_sql_query")
     assert state.state == "5"
     assert state.attributes["value"] == 5
 
-    with patch.object(
-        sql_entity,
-        "_lambda_stmt",
-        _generate_lambda_stmt("Faulty syntax create operational issue"),
+    with patch(
+        "homeassistant.components.sql.sensor.generate_lambda_stmt",
+        return_value=generate_lambda_stmt("Faulty syntax create operational issue"),
     ):
         freezer.tick(timedelta(minutes=1))
         async_fire_time_changed(hass)

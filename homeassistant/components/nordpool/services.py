@@ -157,7 +157,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
             ) from error
         except NordPoolEmptyResponseError:
             return {area: [] for area in areas}
-        except NordPoolError as error:
+        except (NordPoolError, TimeoutError) as error:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="connection_error",

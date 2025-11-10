@@ -328,65 +328,64 @@
           'firmware': '3.31',
           'full-name': 'Airzone [1] System',
           'id': 1,
-          'master-system-zone': '1:1',
-          'master-zone': 1,
-          'mode': 3,
-          'model': 'C6',
-          'modes': list([
+          'masters': list([
             1,
-            4,
-            2,
-            3,
-            5,
           ]),
+          'masters-slaves': dict({
+            '1': list([
+              2,
+              3,
+              4,
+              5,
+            ]),
+          }),
+          'model': 'C6',
           'problems': False,
           'q-adapt': 0,
+          'slaves': list([
+            2,
+            3,
+            4,
+            5,
+          ]),
         }),
         '2': dict({
           'available': True,
           'full-name': 'Airzone [2] System',
           'id': 2,
-          'master-system-zone': '2:1',
-          'master-zone': 1,
-          'mode': 7,
-          'modes': list([
-            7,
+          'masters': list([
             1,
           ]),
+          'masters-slaves': dict({
+            '1': list([
+            ]),
+          }),
           'problems': False,
         }),
         '3': dict({
           'available': True,
           'full-name': 'Airzone [3] System',
           'id': 3,
-          'master-system-zone': '3:1',
-          'master-zone': 1,
-          'mode': 7,
-          'modes': list([
-            4,
-            2,
-            3,
-            5,
-            7,
+          'masters': list([
             1,
           ]),
+          'masters-slaves': dict({
+            '1': list([
+            ]),
+          }),
           'problems': False,
         }),
         '4': dict({
           'available': True,
           'full-name': 'Airzone [4] System',
           'id': 4,
-          'master-system-zone': '4:1',
-          'master-zone': 1,
-          'mode': 6,
-          'modes': list([
+          'masters': list([
             1,
-            2,
-            3,
-            4,
-            5,
-            6,
           ]),
+          'masters-slaves': dict({
+            '1': list([
+            ]),
+          }),
           'problems': False,
         }),
       }),

@@ -19,9 +19,9 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
-from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
+from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, DPType
 from .entity import TuyaEntity
-from .models import EnumTypeData
+from .models import EnumTypeData, find_dpcode
 from .util import get_dpcode
 
 
@@ -57,12 +57,8 @@ STATE_MAPPING: dict[str, AlarmControlPanelState] = {
 }
 
 
-# All descriptions can be found here:
-# https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
-ALARM: dict[str, tuple[TuyaAlarmControlPanelEntityDescription, ...]] = {
-    # Alarm Host
-    # https://developer.tuya.com/en/docs/iot/categorymal?id=Kaiuz33clqxaf
-    "mal": (
+ALARM: dict[DeviceCategory, tuple[TuyaAlarmControlPanelEntityDescription, ...]] = {
+    DeviceCategory.MAL: (
         TuyaAlarmControlPanelEntityDescription(
             key=DPCode.MASTER_MODE,
             master_state=DPCode.MASTER_STATE,
@@ -79,23 +75,23 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tuya alarm dynamically through Tuya discovery."""
-    hass_data = entry.runtime_data
+    manager = entry.runtime_data.manager
 
     @callback
     def async_discover_device(device_ids: list[str]) -> None:
         """Discover and add a discovered Tuya siren."""
         entities: list[TuyaAlarmEntity] = []
         for device_id in device_ids:
-            device = hass_data.manager.device_map[device_id]
+            device = manager.device_map[device_id]
             if descriptions := ALARM.get(device.category):
                 entities.extend(
-                    TuyaAlarmEntity(device, hass_data.manager, description)
+                    TuyaAlarmEntity(device, manager, description)
                     for description in descriptions
                     if description.key in device.status
                 )
         async_add_entities(entities)
 
-    async_discover_device([*hass_data.manager.device_map])
+    async_discover_device([*manager.device_map])
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, TUYA_DISCOVERY_NEW, async_discover_device)
@@ -122,8 +118,8 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
         self._attr_unique_id = f"{super().unique_id}{description.key}"
 
         # Determine supported  modes
-        if supported_modes := self.find_dpcode(
-            description.key, dptype=DPType.ENUM, prefer_function=True
+        if supported_modes := find_dpcode(
+            self.device, description.key, dptype=DPType.ENUM, prefer_function=True
         ):
             if Mode.HOME in supported_modes.range:
                 self._attr_supported_features |= AlarmControlPanelEntityFeature.ARM_HOME
@@ -135,8 +131,11 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
                 self._attr_supported_features |= AlarmControlPanelEntityFeature.TRIGGER
 
         # Determine master state
-        if enum_type := self.find_dpcode(
-            description.master_state, dptype=DPType.ENUM, prefer_function=True
+        if enum_type := find_dpcode(
+            self.device,
+            description.master_state,
+            dptype=DPType.ENUM,
+            prefer_function=True,
         ):
             self._master_state = enum_type
 
@@ -149,8 +148,14 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
         """Return the state of the device."""
         # When the alarm is triggered, only its 'state' is changing. From 'normal' to 'alarm'.
         # The 'mode' doesn't change, and stays as 'arm' or 'home'.
-        if self._master_state is not None:
-            if self.device.status.get(self._master_state.dpcode) == State.ALARM:
+        if (
+            self._master_state is not None
+            and self.device.status.get(self._master_state.dpcode) == State.ALARM
+        ):
+            # Only report as triggered if NOT a battery warning
+            if (
+                changed_by := self.changed_by
+            ) is None or "Sensor Low Battery" not in changed_by:
                 return AlarmControlPanelState.TRIGGERED
 
         if not (status := self.device.status.get(self.entity_description.key)):
@@ -160,11 +165,13 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
     @property
     def changed_by(self) -> str | None:
         """Last change triggered by."""
-        if self._master_state is not None and self._alarm_msg_dpcode is not None:
-            if self.device.status.get(self._master_state.dpcode) == State.ALARM:
-                encoded_msg = self.device.status.get(self._alarm_msg_dpcode)
-                if encoded_msg:
-                    return b64decode(encoded_msg).decode("utf-16be")
+        if (
+            self._master_state is not None
+            and self._alarm_msg_dpcode is not None
+            and self.device.status.get(self._master_state.dpcode) == State.ALARM
+            and (encoded_msg := self.device.status.get(self._alarm_msg_dpcode))
+        ):
+            return b64decode(encoded_msg).decode("utf-16be")
         return None
 
     def alarm_disarm(self, code: str | None = None) -> None:

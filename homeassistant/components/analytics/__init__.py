@@ -18,6 +18,7 @@ from .analytics import (
     AnalyticsModifications,
     DeviceAnalyticsModifications,
     EntityAnalyticsModifications,
+    async_devices_payload,
 )
 from .const import ATTR_ONBOARDED, ATTR_PREFERENCES, DOMAIN, INTERVAL, PREFERENCE_SCHEMA
 from .http import AnalyticsDevicesView
@@ -27,6 +28,7 @@ __all__ = [
     "AnalyticsModifications",
     "DeviceAnalyticsModifications",
     "EntityAnalyticsModifications",
+    "async_devices_payload",
 ]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
