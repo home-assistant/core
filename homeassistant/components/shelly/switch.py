@@ -165,6 +165,7 @@ RPC_SWITCHES = {
     "boolean_zone0": RpcSwitchDescription(
         key="boolean",
         sub_key="value",
+        entity_registry_enabled_default=False,
         is_on=lambda status: bool(status["value"]),
         method_on="boolean_set",
         method_off="boolean_set",
@@ -175,6 +176,7 @@ RPC_SWITCHES = {
     "boolean_zone1": RpcSwitchDescription(
         key="boolean",
         sub_key="value",
+        entity_registry_enabled_default=False,
         is_on=lambda status: bool(status["value"]),
         method_on="boolean_set",
         method_off="boolean_set",
@@ -185,6 +187,7 @@ RPC_SWITCHES = {
     "boolean_zone2": RpcSwitchDescription(
         key="boolean",
         sub_key="value",
+        entity_registry_enabled_default=False,
         is_on=lambda status: bool(status["value"]),
         method_on="boolean_set",
         method_off="boolean_set",
@@ -195,6 +198,7 @@ RPC_SWITCHES = {
     "boolean_zone3": RpcSwitchDescription(
         key="boolean",
         sub_key="value",
+        entity_registry_enabled_default=False,
         is_on=lambda status: bool(status["value"]),
         method_on="boolean_set",
         method_off="boolean_set",
@@ -205,6 +209,7 @@ RPC_SWITCHES = {
     "boolean_zone4": RpcSwitchDescription(
         key="boolean",
         sub_key="value",
+        entity_registry_enabled_default=False,
         is_on=lambda status: bool(status["value"]),
         method_on="boolean_set",
         method_off="boolean_set",
@@ -215,6 +220,7 @@ RPC_SWITCHES = {
     "boolean_zone5": RpcSwitchDescription(
         key="boolean",
         sub_key="value",
+        entity_registry_enabled_default=False,
         is_on=lambda status: bool(status["value"]),
         method_on="boolean_set",
         method_off="boolean_set",
@@ -283,6 +289,16 @@ RPC_SWITCHES = {
         entity_registry_enabled_default=True,
         available=lambda status: (right := status["right"]) is not None
         and right.get("vial", {}).get("level", -1) != -1,
+    ),
+    "cury_away_mode": RpcSwitchDescription(
+        key="cury",
+        sub_key="away_mode",
+        name="Away mode",
+        translation_key="cury_away_mode",
+        is_on=lambda status: status["away_mode"],
+        method_on="cury_set_away_mode",
+        method_off="cury_set_away_mode",
+        method_params_fn=lambda id, value: (id, value),
     ),
 }
 

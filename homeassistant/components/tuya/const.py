@@ -616,6 +616,7 @@ class DPCode(StrEnum):
     ARM_DOWN_PERCENT = "arm_down_percent"
     ARM_UP_PERCENT = "arm_up_percent"
     ATMOSPHERIC_PRESSTURE = "atmospheric_pressture"  # Typo is in Tuya API
+    AUTO_CLEAN = "auto_clean"
     BACKUP_RESERVE = "backup_reserve"
     BASIC_ANTI_FLICKER = "basic_anti_flicker"
     BASIC_DEVICE_VOLUME = "basic_device_volume"
@@ -714,6 +715,8 @@ class DPCode(StrEnum):
     ECO2 = "eco2"
     EDGE_BRUSH = "edge_brush"
     ELECTRICITY_LEFT = "electricity_left"
+    EXCRETION_TIME_DAY = "excretion_time_day"
+    EXCRETION_TIMES_DAY = "excretion_times_day"
     FAN_BEEP = "fan_beep"  # Sound
     FAN_COOL = "fan_cool"  # Cool wind
     FAN_DIRECTION = "fan_direction"  # Fan direction

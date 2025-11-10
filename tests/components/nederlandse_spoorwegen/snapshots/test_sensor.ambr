@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_no_trips_sensor[sensor.to_home_arrival_platform_actual-entry]
+# name: test_no_trips_sensor[sensor.to_home_actual_arrival_platform-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,7 +12,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.to_home_arrival_platform_actual',
+    'entity_id': 'sensor.to_home_actual_arrival_platform',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -24,7 +24,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Arrival platform actual',
+    'original_name': 'Actual arrival platform',
     'platform': 'nederlandse_spoorwegen',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -34,21 +34,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_no_trips_sensor[sensor.to_home_arrival_platform_actual-state]
+# name: test_no_trips_sensor[sensor.to_home_actual_arrival_platform-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by NS',
-      'friendly_name': 'To home Arrival platform actual',
+      'friendly_name': 'To home Actual arrival platform',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.to_home_arrival_platform_actual',
+    'entity_id': 'sensor.to_home_actual_arrival_platform',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_no_trips_sensor[sensor.to_home_arrival_platform_planned-entry]
+# name: test_no_trips_sensor[sensor.to_home_actual_arrival_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -61,7 +61,57 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.to_home_arrival_platform_planned',
+    'entity_id': 'sensor.to_home_actual_arrival_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Actual arrival time',
+    'platform': 'nederlandse_spoorwegen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'arrival_time_actual',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY9-arrival_time_actual',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_no_trips_sensor[sensor.to_home_actual_arrival_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by NS',
+      'device_class': 'timestamp',
+      'friendly_name': 'To home Actual arrival time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.to_home_actual_arrival_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_no_trips_sensor[sensor.to_home_actual_departure_platform-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.to_home_actual_departure_platform',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -73,31 +123,31 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Arrival platform planned',
+    'original_name': 'Actual departure platform',
     'platform': 'nederlandse_spoorwegen',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'arrival_platform_planned',
-    'unique_id': '01K721DZPMEN39R5DK0ATBMSY9-arrival_platform_planned',
+    'translation_key': 'departure_platform_actual',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY9-departure_platform_actual',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_no_trips_sensor[sensor.to_home_arrival_platform_planned-state]
+# name: test_no_trips_sensor[sensor.to_home_actual_departure_platform-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by NS',
-      'friendly_name': 'To home Arrival platform planned',
+      'friendly_name': 'To home Actual departure platform',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.to_home_arrival_platform_planned',
+    'entity_id': 'sensor.to_home_actual_departure_platform',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_no_trips_sensor[sensor.to_home_arrival_time_actual-entry]
+# name: test_no_trips_sensor[sensor.to_home_actual_departure_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -110,7 +160,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.to_home_arrival_time_actual',
+    'entity_id': 'sensor.to_home_actual_departure_time',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -122,75 +172,25 @@
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
-    'original_name': 'Arrival time actual',
+    'original_name': 'Actual departure time',
     'platform': 'nederlandse_spoorwegen',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'arrival_time_actual',
-    'unique_id': '01K721DZPMEN39R5DK0ATBMSY9-arrival_time_actual',
+    'translation_key': 'departure_time_actual',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY9-departure_time_actual',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_no_trips_sensor[sensor.to_home_arrival_time_actual-state]
+# name: test_no_trips_sensor[sensor.to_home_actual_departure_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by NS',
       'device_class': 'timestamp',
-      'friendly_name': 'To home Arrival time actual',
+      'friendly_name': 'To home Actual departure time',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.to_home_arrival_time_actual',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_no_trips_sensor[sensor.to_home_arrival_time_planned-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.to_home_arrival_time_planned',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': None,
-    'original_name': 'Arrival time planned',
-    'platform': 'nederlandse_spoorwegen',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'arrival_time_planned',
-    'unique_id': '01K721DZPMEN39R5DK0ATBMSY9-arrival_time_planned',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_no_trips_sensor[sensor.to_home_arrival_time_planned-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'device_class': 'timestamp',
-      'friendly_name': 'To home Arrival time planned',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.to_home_arrival_time_planned',
+    'entity_id': 'sensor.to_home_actual_departure_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -247,204 +247,6 @@
     'state': 'unknown',
   })
 # ---
-# name: test_no_trips_sensor[sensor.to_home_departure_platform_actual-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.to_home_departure_platform_actual',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Departure platform actual',
-    'platform': 'nederlandse_spoorwegen',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'departure_platform_actual',
-    'unique_id': '01K721DZPMEN39R5DK0ATBMSY9-departure_platform_actual',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_no_trips_sensor[sensor.to_home_departure_platform_actual-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'friendly_name': 'To home Departure platform actual',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.to_home_departure_platform_actual',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_no_trips_sensor[sensor.to_home_departure_platform_planned-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.to_home_departure_platform_planned',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Departure platform planned',
-    'platform': 'nederlandse_spoorwegen',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'departure_platform_planned',
-    'unique_id': '01K721DZPMEN39R5DK0ATBMSY9-departure_platform_planned',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_no_trips_sensor[sensor.to_home_departure_platform_planned-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'friendly_name': 'To home Departure platform planned',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.to_home_departure_platform_planned',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_no_trips_sensor[sensor.to_home_departure_time_actual-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.to_home_departure_time_actual',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': None,
-    'original_name': 'Departure time actual',
-    'platform': 'nederlandse_spoorwegen',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'departure_time_actual',
-    'unique_id': '01K721DZPMEN39R5DK0ATBMSY9-departure_time_actual',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_no_trips_sensor[sensor.to_home_departure_time_actual-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'device_class': 'timestamp',
-      'friendly_name': 'To home Departure time actual',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.to_home_departure_time_actual',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_no_trips_sensor[sensor.to_home_departure_time_planned-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.to_home_departure_time_planned',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': None,
-    'original_name': 'Departure time planned',
-    'platform': 'nederlandse_spoorwegen',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'departure_time_planned',
-    'unique_id': '01K721DZPMEN39R5DK0ATBMSY9-departure_time_planned',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_no_trips_sensor[sensor.to_home_departure_time_planned-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'device_class': 'timestamp',
-      'friendly_name': 'To home Departure time planned',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.to_home_departure_time_planned',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
 # name: test_no_trips_sensor[sensor.to_home_next_departure-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -489,6 +291,204 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.to_home_next_departure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_no_trips_sensor[sensor.to_home_planned_arrival_platform-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.to_home_planned_arrival_platform',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Planned arrival platform',
+    'platform': 'nederlandse_spoorwegen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'arrival_platform_planned',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY9-arrival_platform_planned',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_no_trips_sensor[sensor.to_home_planned_arrival_platform-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by NS',
+      'friendly_name': 'To home Planned arrival platform',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.to_home_planned_arrival_platform',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_no_trips_sensor[sensor.to_home_planned_arrival_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.to_home_planned_arrival_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Planned arrival time',
+    'platform': 'nederlandse_spoorwegen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'arrival_time_planned',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY9-arrival_time_planned',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_no_trips_sensor[sensor.to_home_planned_arrival_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by NS',
+      'device_class': 'timestamp',
+      'friendly_name': 'To home Planned arrival time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.to_home_planned_arrival_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_no_trips_sensor[sensor.to_home_planned_departure_platform-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.to_home_planned_departure_platform',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Planned departure platform',
+    'platform': 'nederlandse_spoorwegen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'departure_platform_planned',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY9-departure_platform_planned',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_no_trips_sensor[sensor.to_home_planned_departure_platform-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by NS',
+      'friendly_name': 'To home Planned departure platform',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.to_home_planned_departure_platform',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_no_trips_sensor[sensor.to_home_planned_departure_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.to_home_planned_departure_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Planned departure time',
+    'platform': 'nederlandse_spoorwegen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'departure_time_planned',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY9-departure_time_planned',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_no_trips_sensor[sensor.to_home_planned_departure_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by NS',
+      'device_class': 'timestamp',
+      'friendly_name': 'To home Planned departure time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.to_home_planned_departure_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -643,7 +643,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_no_trips_sensor[sensor.to_work_arrival_platform_actual-entry]
+# name: test_no_trips_sensor[sensor.to_work_actual_arrival_platform-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -656,7 +656,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.to_work_arrival_platform_actual',
+    'entity_id': 'sensor.to_work_actual_arrival_platform',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -668,7 +668,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Arrival platform actual',
+    'original_name': 'Actual arrival platform',
     'platform': 'nederlandse_spoorwegen',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -678,21 +678,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_no_trips_sensor[sensor.to_work_arrival_platform_actual-state]
+# name: test_no_trips_sensor[sensor.to_work_actual_arrival_platform-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by NS',
-      'friendly_name': 'To work Arrival platform actual',
+      'friendly_name': 'To work Actual arrival platform',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.to_work_arrival_platform_actual',
+    'entity_id': 'sensor.to_work_actual_arrival_platform',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_no_trips_sensor[sensor.to_work_arrival_platform_planned-entry]
+# name: test_no_trips_sensor[sensor.to_work_actual_arrival_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -705,7 +705,57 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.to_work_arrival_platform_planned',
+    'entity_id': 'sensor.to_work_actual_arrival_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Actual arrival time',
+    'platform': 'nederlandse_spoorwegen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'arrival_time_actual',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-arrival_time_actual',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_no_trips_sensor[sensor.to_work_actual_arrival_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by NS',
+      'device_class': 'timestamp',
+      'friendly_name': 'To work Actual arrival time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.to_work_actual_arrival_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_no_trips_sensor[sensor.to_work_actual_departure_platform-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.to_work_actual_departure_platform',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -717,31 +767,31 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Arrival platform planned',
+    'original_name': 'Actual departure platform',
     'platform': 'nederlandse_spoorwegen',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'arrival_platform_planned',
-    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-arrival_platform_planned',
+    'translation_key': 'departure_platform_actual',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-departure_platform_actual',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_no_trips_sensor[sensor.to_work_arrival_platform_planned-state]
+# name: test_no_trips_sensor[sensor.to_work_actual_departure_platform-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by NS',
-      'friendly_name': 'To work Arrival platform planned',
+      'friendly_name': 'To work Actual departure platform',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.to_work_arrival_platform_planned',
+    'entity_id': 'sensor.to_work_actual_departure_platform',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_no_trips_sensor[sensor.to_work_arrival_time_actual-entry]
+# name: test_no_trips_sensor[sensor.to_work_actual_departure_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -754,7 +804,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.to_work_arrival_time_actual',
+    'entity_id': 'sensor.to_work_actual_departure_time',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -766,75 +816,25 @@
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
-    'original_name': 'Arrival time actual',
+    'original_name': 'Actual departure time',
     'platform': 'nederlandse_spoorwegen',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'arrival_time_actual',
-    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-arrival_time_actual',
+    'translation_key': 'departure_time_actual',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-departure_time_actual',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_no_trips_sensor[sensor.to_work_arrival_time_actual-state]
+# name: test_no_trips_sensor[sensor.to_work_actual_departure_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by NS',
       'device_class': 'timestamp',
-      'friendly_name': 'To work Arrival time actual',
+      'friendly_name': 'To work Actual departure time',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.to_work_arrival_time_actual',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_no_trips_sensor[sensor.to_work_arrival_time_planned-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.to_work_arrival_time_planned',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': None,
-    'original_name': 'Arrival time planned',
-    'platform': 'nederlandse_spoorwegen',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'arrival_time_planned',
-    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-arrival_time_planned',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_no_trips_sensor[sensor.to_work_arrival_time_planned-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'device_class': 'timestamp',
-      'friendly_name': 'To work Arrival time planned',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.to_work_arrival_time_planned',
+    'entity_id': 'sensor.to_work_actual_departure_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -891,204 +891,6 @@
     'state': 'unknown',
   })
 # ---
-# name: test_no_trips_sensor[sensor.to_work_departure_platform_actual-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.to_work_departure_platform_actual',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Departure platform actual',
-    'platform': 'nederlandse_spoorwegen',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'departure_platform_actual',
-    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-departure_platform_actual',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_no_trips_sensor[sensor.to_work_departure_platform_actual-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'friendly_name': 'To work Departure platform actual',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.to_work_departure_platform_actual',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_no_trips_sensor[sensor.to_work_departure_platform_planned-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.to_work_departure_platform_planned',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Departure platform planned',
-    'platform': 'nederlandse_spoorwegen',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'departure_platform_planned',
-    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-departure_platform_planned',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_no_trips_sensor[sensor.to_work_departure_platform_planned-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'friendly_name': 'To work Departure platform planned',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.to_work_departure_platform_planned',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_no_trips_sensor[sensor.to_work_departure_time_actual-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.to_work_departure_time_actual',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': None,
-    'original_name': 'Departure time actual',
-    'platform': 'nederlandse_spoorwegen',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'departure_time_actual',
-    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-departure_time_actual',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_no_trips_sensor[sensor.to_work_departure_time_actual-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'device_class': 'timestamp',
-      'friendly_name': 'To work Departure time actual',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.to_work_departure_time_actual',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_no_trips_sensor[sensor.to_work_departure_time_planned-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.to_work_departure_time_planned',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': None,
-    'original_name': 'Departure time planned',
-    'platform': 'nederlandse_spoorwegen',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'departure_time_planned',
-    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-departure_time_planned',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_no_trips_sensor[sensor.to_work_departure_time_planned-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'device_class': 'timestamp',
-      'friendly_name': 'To work Departure time planned',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.to_work_departure_time_planned',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
 # name: test_no_trips_sensor[sensor.to_work_next_departure-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1133,6 +935,204 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.to_work_next_departure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_no_trips_sensor[sensor.to_work_planned_arrival_platform-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.to_work_planned_arrival_platform',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Planned arrival platform',
+    'platform': 'nederlandse_spoorwegen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'arrival_platform_planned',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-arrival_platform_planned',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_no_trips_sensor[sensor.to_work_planned_arrival_platform-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by NS',
+      'friendly_name': 'To work Planned arrival platform',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.to_work_planned_arrival_platform',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_no_trips_sensor[sensor.to_work_planned_arrival_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.to_work_planned_arrival_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Planned arrival time',
+    'platform': 'nederlandse_spoorwegen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'arrival_time_planned',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-arrival_time_planned',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_no_trips_sensor[sensor.to_work_planned_arrival_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by NS',
+      'device_class': 'timestamp',
+      'friendly_name': 'To work Planned arrival time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.to_work_planned_arrival_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_no_trips_sensor[sensor.to_work_planned_departure_platform-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.to_work_planned_departure_platform',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Planned departure platform',
+    'platform': 'nederlandse_spoorwegen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'departure_platform_planned',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-departure_platform_planned',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_no_trips_sensor[sensor.to_work_planned_departure_platform-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by NS',
+      'friendly_name': 'To work Planned departure platform',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.to_work_planned_departure_platform',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_no_trips_sensor[sensor.to_work_planned_departure_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.to_work_planned_departure_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Planned departure time',
+    'platform': 'nederlandse_spoorwegen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'departure_time_planned',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-departure_time_planned',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_no_trips_sensor[sensor.to_work_planned_departure_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by NS',
+      'device_class': 'timestamp',
+      'friendly_name': 'To work Planned departure time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.to_work_planned_departure_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1287,7 +1287,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_sensor[sensor.to_home_arrival_platform_actual-entry]
+# name: test_sensor[sensor.to_home_actual_arrival_platform-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1300,7 +1300,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.to_home_arrival_platform_actual',
+    'entity_id': 'sensor.to_home_actual_arrival_platform',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1312,7 +1312,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Arrival platform actual',
+    'original_name': 'Actual arrival platform',
     'platform': 'nederlandse_spoorwegen',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1322,21 +1322,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.to_home_arrival_platform_actual-state]
+# name: test_sensor[sensor.to_home_actual_arrival_platform-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by NS',
-      'friendly_name': 'To home Arrival platform actual',
+      'friendly_name': 'To home Actual arrival platform',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.to_home_arrival_platform_actual',
+    'entity_id': 'sensor.to_home_actual_arrival_platform',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '12',
   })
 # ---
-# name: test_sensor[sensor.to_home_arrival_platform_planned-entry]
+# name: test_sensor[sensor.to_home_actual_arrival_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1349,7 +1349,57 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.to_home_arrival_platform_planned',
+    'entity_id': 'sensor.to_home_actual_arrival_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Actual arrival time',
+    'platform': 'nederlandse_spoorwegen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'arrival_time_actual',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY9-arrival_time_actual',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.to_home_actual_arrival_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by NS',
+      'device_class': 'timestamp',
+      'friendly_name': 'To home Actual arrival time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.to_home_actual_arrival_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-09-15T16:37:00+00:00',
+  })
+# ---
+# name: test_sensor[sensor.to_home_actual_departure_platform-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.to_home_actual_departure_platform',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1361,31 +1411,31 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Arrival platform planned',
+    'original_name': 'Actual departure platform',
     'platform': 'nederlandse_spoorwegen',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'arrival_platform_planned',
-    'unique_id': '01K721DZPMEN39R5DK0ATBMSY9-arrival_platform_planned',
+    'translation_key': 'departure_platform_actual',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY9-departure_platform_actual',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.to_home_arrival_platform_planned-state]
+# name: test_sensor[sensor.to_home_actual_departure_platform-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by NS',
-      'friendly_name': 'To home Arrival platform planned',
+      'friendly_name': 'To home Actual departure platform',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.to_home_arrival_platform_planned',
+    'entity_id': 'sensor.to_home_actual_departure_platform',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '12',
+    'state': '4',
   })
 # ---
-# name: test_sensor[sensor.to_home_arrival_time_actual-entry]
+# name: test_sensor[sensor.to_home_actual_departure_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1398,7 +1448,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.to_home_arrival_time_actual',
+    'entity_id': 'sensor.to_home_actual_departure_time',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1410,79 +1460,29 @@
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
-    'original_name': 'Arrival time actual',
+    'original_name': 'Actual departure time',
     'platform': 'nederlandse_spoorwegen',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'arrival_time_actual',
-    'unique_id': '01K721DZPMEN39R5DK0ATBMSY9-arrival_time_actual',
+    'translation_key': 'departure_time_actual',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY9-departure_time_actual',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.to_home_arrival_time_actual-state]
+# name: test_sensor[sensor.to_home_actual_departure_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by NS',
       'device_class': 'timestamp',
-      'friendly_name': 'To home Arrival time actual',
+      'friendly_name': 'To home Actual departure time',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.to_home_arrival_time_actual',
+    'entity_id': 'sensor.to_home_actual_departure_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2025-09-15T16:37:00+00:00',
-  })
-# ---
-# name: test_sensor[sensor.to_home_arrival_time_planned-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.to_home_arrival_time_planned',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': None,
-    'original_name': 'Arrival time planned',
-    'platform': 'nederlandse_spoorwegen',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'arrival_time_planned',
-    'unique_id': '01K721DZPMEN39R5DK0ATBMSY9-arrival_time_planned',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[sensor.to_home_arrival_time_planned-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'device_class': 'timestamp',
-      'friendly_name': 'To home Arrival time planned',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.to_home_arrival_time_planned',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2025-09-15T16:37:00+00:00',
+    'state': '2025-09-15T14:35:00+00:00',
   })
 # ---
 # name: test_sensor[sensor.to_home_departure-entry]
@@ -1556,204 +1556,6 @@
     'state': '2025-09-15T14:35:00+00:00',
   })
 # ---
-# name: test_sensor[sensor.to_home_departure_platform_actual-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.to_home_departure_platform_actual',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Departure platform actual',
-    'platform': 'nederlandse_spoorwegen',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'departure_platform_actual',
-    'unique_id': '01K721DZPMEN39R5DK0ATBMSY9-departure_platform_actual',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[sensor.to_home_departure_platform_actual-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'friendly_name': 'To home Departure platform actual',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.to_home_departure_platform_actual',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '4',
-  })
-# ---
-# name: test_sensor[sensor.to_home_departure_platform_planned-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.to_home_departure_platform_planned',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Departure platform planned',
-    'platform': 'nederlandse_spoorwegen',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'departure_platform_planned',
-    'unique_id': '01K721DZPMEN39R5DK0ATBMSY9-departure_platform_planned',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[sensor.to_home_departure_platform_planned-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'friendly_name': 'To home Departure platform planned',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.to_home_departure_platform_planned',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '4',
-  })
-# ---
-# name: test_sensor[sensor.to_home_departure_time_actual-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.to_home_departure_time_actual',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': None,
-    'original_name': 'Departure time actual',
-    'platform': 'nederlandse_spoorwegen',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'departure_time_actual',
-    'unique_id': '01K721DZPMEN39R5DK0ATBMSY9-departure_time_actual',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[sensor.to_home_departure_time_actual-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'device_class': 'timestamp',
-      'friendly_name': 'To home Departure time actual',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.to_home_departure_time_actual',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2025-09-15T14:35:00+00:00',
-  })
-# ---
-# name: test_sensor[sensor.to_home_departure_time_planned-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.to_home_departure_time_planned',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': None,
-    'original_name': 'Departure time planned',
-    'platform': 'nederlandse_spoorwegen',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'departure_time_planned',
-    'unique_id': '01K721DZPMEN39R5DK0ATBMSY9-departure_time_planned',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[sensor.to_home_departure_time_planned-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'device_class': 'timestamp',
-      'friendly_name': 'To home Departure time planned',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.to_home_departure_time_planned',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2025-09-15T14:34:00+00:00',
-  })
-# ---
 # name: test_sensor[sensor.to_home_next_departure-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1802,6 +1604,204 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2025-09-15T14:46:00+00:00',
+  })
+# ---
+# name: test_sensor[sensor.to_home_planned_arrival_platform-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.to_home_planned_arrival_platform',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Planned arrival platform',
+    'platform': 'nederlandse_spoorwegen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'arrival_platform_planned',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY9-arrival_platform_planned',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.to_home_planned_arrival_platform-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by NS',
+      'friendly_name': 'To home Planned arrival platform',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.to_home_planned_arrival_platform',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '12',
+  })
+# ---
+# name: test_sensor[sensor.to_home_planned_arrival_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.to_home_planned_arrival_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Planned arrival time',
+    'platform': 'nederlandse_spoorwegen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'arrival_time_planned',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY9-arrival_time_planned',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.to_home_planned_arrival_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by NS',
+      'device_class': 'timestamp',
+      'friendly_name': 'To home Planned arrival time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.to_home_planned_arrival_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-09-15T16:37:00+00:00',
+  })
+# ---
+# name: test_sensor[sensor.to_home_planned_departure_platform-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.to_home_planned_departure_platform',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Planned departure platform',
+    'platform': 'nederlandse_spoorwegen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'departure_platform_planned',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY9-departure_platform_planned',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.to_home_planned_departure_platform-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by NS',
+      'friendly_name': 'To home Planned departure platform',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.to_home_planned_departure_platform',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4',
+  })
+# ---
+# name: test_sensor[sensor.to_home_planned_departure_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.to_home_planned_departure_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Planned departure time',
+    'platform': 'nederlandse_spoorwegen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'departure_time_planned',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY9-departure_time_planned',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.to_home_planned_departure_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by NS',
+      'device_class': 'timestamp',
+      'friendly_name': 'To home Planned departure time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.to_home_planned_departure_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-09-15T14:34:00+00:00',
   })
 # ---
 # name: test_sensor[sensor.to_home_route-entry]
@@ -1952,7 +1952,7 @@
     'state': '2',
   })
 # ---
-# name: test_sensor[sensor.to_work_arrival_platform_actual-entry]
+# name: test_sensor[sensor.to_work_actual_arrival_platform-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1965,7 +1965,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.to_work_arrival_platform_actual',
+    'entity_id': 'sensor.to_work_actual_arrival_platform',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1977,7 +1977,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Arrival platform actual',
+    'original_name': 'Actual arrival platform',
     'platform': 'nederlandse_spoorwegen',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1987,21 +1987,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.to_work_arrival_platform_actual-state]
+# name: test_sensor[sensor.to_work_actual_arrival_platform-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by NS',
-      'friendly_name': 'To work Arrival platform actual',
+      'friendly_name': 'To work Actual arrival platform',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.to_work_arrival_platform_actual',
+    'entity_id': 'sensor.to_work_actual_arrival_platform',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '12',
   })
 # ---
-# name: test_sensor[sensor.to_work_arrival_platform_planned-entry]
+# name: test_sensor[sensor.to_work_actual_arrival_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2014,7 +2014,57 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.to_work_arrival_platform_planned',
+    'entity_id': 'sensor.to_work_actual_arrival_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Actual arrival time',
+    'platform': 'nederlandse_spoorwegen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'arrival_time_actual',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-arrival_time_actual',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.to_work_actual_arrival_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by NS',
+      'device_class': 'timestamp',
+      'friendly_name': 'To work Actual arrival time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.to_work_actual_arrival_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-09-15T16:37:00+00:00',
+  })
+# ---
+# name: test_sensor[sensor.to_work_actual_departure_platform-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.to_work_actual_departure_platform',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2026,31 +2076,31 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Arrival platform planned',
+    'original_name': 'Actual departure platform',
     'platform': 'nederlandse_spoorwegen',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'arrival_platform_planned',
-    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-arrival_platform_planned',
+    'translation_key': 'departure_platform_actual',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-departure_platform_actual',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.to_work_arrival_platform_planned-state]
+# name: test_sensor[sensor.to_work_actual_departure_platform-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by NS',
-      'friendly_name': 'To work Arrival platform planned',
+      'friendly_name': 'To work Actual departure platform',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.to_work_arrival_platform_planned',
+    'entity_id': 'sensor.to_work_actual_departure_platform',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '12',
+    'state': '4',
   })
 # ---
-# name: test_sensor[sensor.to_work_arrival_time_actual-entry]
+# name: test_sensor[sensor.to_work_actual_departure_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2063,7 +2113,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.to_work_arrival_time_actual',
+    'entity_id': 'sensor.to_work_actual_departure_time',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2075,79 +2125,29 @@
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
-    'original_name': 'Arrival time actual',
+    'original_name': 'Actual departure time',
     'platform': 'nederlandse_spoorwegen',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'arrival_time_actual',
-    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-arrival_time_actual',
+    'translation_key': 'departure_time_actual',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-departure_time_actual',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.to_work_arrival_time_actual-state]
+# name: test_sensor[sensor.to_work_actual_departure_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by NS',
       'device_class': 'timestamp',
-      'friendly_name': 'To work Arrival time actual',
+      'friendly_name': 'To work Actual departure time',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.to_work_arrival_time_actual',
+    'entity_id': 'sensor.to_work_actual_departure_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2025-09-15T16:37:00+00:00',
-  })
-# ---
-# name: test_sensor[sensor.to_work_arrival_time_planned-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.to_work_arrival_time_planned',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': None,
-    'original_name': 'Arrival time planned',
-    'platform': 'nederlandse_spoorwegen',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'arrival_time_planned',
-    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-arrival_time_planned',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[sensor.to_work_arrival_time_planned-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'device_class': 'timestamp',
-      'friendly_name': 'To work Arrival time planned',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.to_work_arrival_time_planned',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2025-09-15T16:37:00+00:00',
+    'state': '2025-09-15T14:35:00+00:00',
   })
 # ---
 # name: test_sensor[sensor.to_work_departure-entry]
@@ -2221,204 +2221,6 @@
     'state': '2025-09-15T14:35:00+00:00',
   })
 # ---
-# name: test_sensor[sensor.to_work_departure_platform_actual-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.to_work_departure_platform_actual',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Departure platform actual',
-    'platform': 'nederlandse_spoorwegen',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'departure_platform_actual',
-    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-departure_platform_actual',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[sensor.to_work_departure_platform_actual-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'friendly_name': 'To work Departure platform actual',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.to_work_departure_platform_actual',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '4',
-  })
-# ---
-# name: test_sensor[sensor.to_work_departure_platform_planned-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.to_work_departure_platform_planned',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Departure platform planned',
-    'platform': 'nederlandse_spoorwegen',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'departure_platform_planned',
-    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-departure_platform_planned',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[sensor.to_work_departure_platform_planned-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'friendly_name': 'To work Departure platform planned',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.to_work_departure_platform_planned',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '4',
-  })
-# ---
-# name: test_sensor[sensor.to_work_departure_time_actual-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.to_work_departure_time_actual',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': None,
-    'original_name': 'Departure time actual',
-    'platform': 'nederlandse_spoorwegen',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'departure_time_actual',
-    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-departure_time_actual',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[sensor.to_work_departure_time_actual-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'device_class': 'timestamp',
-      'friendly_name': 'To work Departure time actual',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.to_work_departure_time_actual',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2025-09-15T14:35:00+00:00',
-  })
-# ---
-# name: test_sensor[sensor.to_work_departure_time_planned-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.to_work_departure_time_planned',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': None,
-    'original_name': 'Departure time planned',
-    'platform': 'nederlandse_spoorwegen',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'departure_time_planned',
-    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-departure_time_planned',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[sensor.to_work_departure_time_planned-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'device_class': 'timestamp',
-      'friendly_name': 'To work Departure time planned',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.to_work_departure_time_planned',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2025-09-15T14:34:00+00:00',
-  })
-# ---
 # name: test_sensor[sensor.to_work_next_departure-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -2467,6 +2269,204 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2025-09-15T14:46:00+00:00',
+  })
+# ---
+# name: test_sensor[sensor.to_work_planned_arrival_platform-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.to_work_planned_arrival_platform',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Planned arrival platform',
+    'platform': 'nederlandse_spoorwegen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'arrival_platform_planned',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-arrival_platform_planned',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.to_work_planned_arrival_platform-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by NS',
+      'friendly_name': 'To work Planned arrival platform',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.to_work_planned_arrival_platform',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '12',
+  })
+# ---
+# name: test_sensor[sensor.to_work_planned_arrival_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.to_work_planned_arrival_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Planned arrival time',
+    'platform': 'nederlandse_spoorwegen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'arrival_time_planned',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-arrival_time_planned',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.to_work_planned_arrival_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by NS',
+      'device_class': 'timestamp',
+      'friendly_name': 'To work Planned arrival time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.to_work_planned_arrival_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-09-15T16:37:00+00:00',
+  })
+# ---
+# name: test_sensor[sensor.to_work_planned_departure_platform-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.to_work_planned_departure_platform',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Planned departure platform',
+    'platform': 'nederlandse_spoorwegen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'departure_platform_planned',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-departure_platform_planned',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.to_work_planned_departure_platform-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by NS',
+      'friendly_name': 'To work Planned departure platform',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.to_work_planned_departure_platform',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4',
+  })
+# ---
+# name: test_sensor[sensor.to_work_planned_departure_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.to_work_planned_departure_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Planned departure time',
+    'platform': 'nederlandse_spoorwegen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'departure_time_planned',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-departure_time_planned',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.to_work_planned_departure_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by NS',
+      'device_class': 'timestamp',
+      'friendly_name': 'To work Planned departure time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.to_work_planned_departure_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-09-15T14:34:00+00:00',
   })
 # ---
 # name: test_sensor[sensor.to_work_route-entry]
@@ -2617,7 +2617,7 @@
     'state': '2',
   })
 # ---
-# name: test_single_trip_sensor[sensor.to_home_arrival_platform_actual-entry]
+# name: test_single_trip_sensor[sensor.to_home_actual_arrival_platform-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2630,7 +2630,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.to_home_arrival_platform_actual',
+    'entity_id': 'sensor.to_home_actual_arrival_platform',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2642,7 +2642,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Arrival platform actual',
+    'original_name': 'Actual arrival platform',
     'platform': 'nederlandse_spoorwegen',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2652,21 +2652,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_single_trip_sensor[sensor.to_home_arrival_platform_actual-state]
+# name: test_single_trip_sensor[sensor.to_home_actual_arrival_platform-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by NS',
-      'friendly_name': 'To home Arrival platform actual',
+      'friendly_name': 'To home Actual arrival platform',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.to_home_arrival_platform_actual',
+    'entity_id': 'sensor.to_home_actual_arrival_platform',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '13',
   })
 # ---
-# name: test_single_trip_sensor[sensor.to_home_arrival_platform_planned-entry]
+# name: test_single_trip_sensor[sensor.to_home_actual_arrival_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2679,7 +2679,57 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.to_home_arrival_platform_planned',
+    'entity_id': 'sensor.to_home_actual_arrival_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Actual arrival time',
+    'platform': 'nederlandse_spoorwegen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'arrival_time_actual',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY9-arrival_time_actual',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_single_trip_sensor[sensor.to_home_actual_arrival_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by NS',
+      'device_class': 'timestamp',
+      'friendly_name': 'To home Actual arrival time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.to_home_actual_arrival_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-09-15T16:45:00+00:00',
+  })
+# ---
+# name: test_single_trip_sensor[sensor.to_home_actual_departure_platform-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.to_home_actual_departure_platform',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2691,31 +2741,31 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Arrival platform planned',
+    'original_name': 'Actual departure platform',
     'platform': 'nederlandse_spoorwegen',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'arrival_platform_planned',
-    'unique_id': '01K721DZPMEN39R5DK0ATBMSY9-arrival_platform_planned',
+    'translation_key': 'departure_platform_actual',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY9-departure_platform_actual',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_single_trip_sensor[sensor.to_home_arrival_platform_planned-state]
+# name: test_single_trip_sensor[sensor.to_home_actual_departure_platform-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by NS',
-      'friendly_name': 'To home Arrival platform planned',
+      'friendly_name': 'To home Actual departure platform',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.to_home_arrival_platform_planned',
+    'entity_id': 'sensor.to_home_actual_departure_platform',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '13',
+    'state': '4',
   })
 # ---
-# name: test_single_trip_sensor[sensor.to_home_arrival_time_actual-entry]
+# name: test_single_trip_sensor[sensor.to_home_actual_departure_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2728,7 +2778,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.to_home_arrival_time_actual',
+    'entity_id': 'sensor.to_home_actual_departure_time',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2740,79 +2790,29 @@
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
-    'original_name': 'Arrival time actual',
+    'original_name': 'Actual departure time',
     'platform': 'nederlandse_spoorwegen',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'arrival_time_actual',
-    'unique_id': '01K721DZPMEN39R5DK0ATBMSY9-arrival_time_actual',
+    'translation_key': 'departure_time_actual',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY9-departure_time_actual',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_single_trip_sensor[sensor.to_home_arrival_time_actual-state]
+# name: test_single_trip_sensor[sensor.to_home_actual_departure_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by NS',
       'device_class': 'timestamp',
-      'friendly_name': 'To home Arrival time actual',
+      'friendly_name': 'To home Actual departure time',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.to_home_arrival_time_actual',
+    'entity_id': 'sensor.to_home_actual_departure_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2025-09-15T16:45:00+00:00',
-  })
-# ---
-# name: test_single_trip_sensor[sensor.to_home_arrival_time_planned-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.to_home_arrival_time_planned',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': None,
-    'original_name': 'Arrival time planned',
-    'platform': 'nederlandse_spoorwegen',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'arrival_time_planned',
-    'unique_id': '01K721DZPMEN39R5DK0ATBMSY9-arrival_time_planned',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_single_trip_sensor[sensor.to_home_arrival_time_planned-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'device_class': 'timestamp',
-      'friendly_name': 'To home Arrival time planned',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.to_home_arrival_time_planned',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2025-09-15T16:45:00+00:00',
+    'state': '2025-09-15T14:35:00+00:00',
   })
 # ---
 # name: test_single_trip_sensor[sensor.to_home_departure-entry]
@@ -2886,204 +2886,6 @@
     'state': '2025-09-15T14:35:00+00:00',
   })
 # ---
-# name: test_single_trip_sensor[sensor.to_home_departure_platform_actual-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.to_home_departure_platform_actual',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Departure platform actual',
-    'platform': 'nederlandse_spoorwegen',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'departure_platform_actual',
-    'unique_id': '01K721DZPMEN39R5DK0ATBMSY9-departure_platform_actual',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_single_trip_sensor[sensor.to_home_departure_platform_actual-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'friendly_name': 'To home Departure platform actual',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.to_home_departure_platform_actual',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '4',
-  })
-# ---
-# name: test_single_trip_sensor[sensor.to_home_departure_platform_planned-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.to_home_departure_platform_planned',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Departure platform planned',
-    'platform': 'nederlandse_spoorwegen',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'departure_platform_planned',
-    'unique_id': '01K721DZPMEN39R5DK0ATBMSY9-departure_platform_planned',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_single_trip_sensor[sensor.to_home_departure_platform_planned-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'friendly_name': 'To home Departure platform planned',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.to_home_departure_platform_planned',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '4',
-  })
-# ---
-# name: test_single_trip_sensor[sensor.to_home_departure_time_actual-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.to_home_departure_time_actual',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': None,
-    'original_name': 'Departure time actual',
-    'platform': 'nederlandse_spoorwegen',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'departure_time_actual',
-    'unique_id': '01K721DZPMEN39R5DK0ATBMSY9-departure_time_actual',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_single_trip_sensor[sensor.to_home_departure_time_actual-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'device_class': 'timestamp',
-      'friendly_name': 'To home Departure time actual',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.to_home_departure_time_actual',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2025-09-15T14:35:00+00:00',
-  })
-# ---
-# name: test_single_trip_sensor[sensor.to_home_departure_time_planned-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.to_home_departure_time_planned',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': None,
-    'original_name': 'Departure time planned',
-    'platform': 'nederlandse_spoorwegen',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'departure_time_planned',
-    'unique_id': '01K721DZPMEN39R5DK0ATBMSY9-departure_time_planned',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_single_trip_sensor[sensor.to_home_departure_time_planned-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'device_class': 'timestamp',
-      'friendly_name': 'To home Departure time planned',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.to_home_departure_time_planned',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2025-09-15T14:34:00+00:00',
-  })
-# ---
 # name: test_single_trip_sensor[sensor.to_home_next_departure-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -3132,6 +2934,204 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
+  })
+# ---
+# name: test_single_trip_sensor[sensor.to_home_planned_arrival_platform-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.to_home_planned_arrival_platform',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Planned arrival platform',
+    'platform': 'nederlandse_spoorwegen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'arrival_platform_planned',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY9-arrival_platform_planned',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_single_trip_sensor[sensor.to_home_planned_arrival_platform-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by NS',
+      'friendly_name': 'To home Planned arrival platform',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.to_home_planned_arrival_platform',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '13',
+  })
+# ---
+# name: test_single_trip_sensor[sensor.to_home_planned_arrival_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.to_home_planned_arrival_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Planned arrival time',
+    'platform': 'nederlandse_spoorwegen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'arrival_time_planned',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY9-arrival_time_planned',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_single_trip_sensor[sensor.to_home_planned_arrival_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by NS',
+      'device_class': 'timestamp',
+      'friendly_name': 'To home Planned arrival time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.to_home_planned_arrival_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-09-15T16:45:00+00:00',
+  })
+# ---
+# name: test_single_trip_sensor[sensor.to_home_planned_departure_platform-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.to_home_planned_departure_platform',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Planned departure platform',
+    'platform': 'nederlandse_spoorwegen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'departure_platform_planned',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY9-departure_platform_planned',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_single_trip_sensor[sensor.to_home_planned_departure_platform-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by NS',
+      'friendly_name': 'To home Planned departure platform',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.to_home_planned_departure_platform',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4',
+  })
+# ---
+# name: test_single_trip_sensor[sensor.to_home_planned_departure_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.to_home_planned_departure_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Planned departure time',
+    'platform': 'nederlandse_spoorwegen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'departure_time_planned',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY9-departure_time_planned',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_single_trip_sensor[sensor.to_home_planned_departure_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by NS',
+      'device_class': 'timestamp',
+      'friendly_name': 'To home Planned departure time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.to_home_planned_departure_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-09-15T14:34:00+00:00',
   })
 # ---
 # name: test_single_trip_sensor[sensor.to_home_route-entry]
@@ -3282,7 +3282,7 @@
     'state': '2',
   })
 # ---
-# name: test_single_trip_sensor[sensor.to_work_arrival_platform_actual-entry]
+# name: test_single_trip_sensor[sensor.to_work_actual_arrival_platform-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3295,7 +3295,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.to_work_arrival_platform_actual',
+    'entity_id': 'sensor.to_work_actual_arrival_platform',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3307,7 +3307,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Arrival platform actual',
+    'original_name': 'Actual arrival platform',
     'platform': 'nederlandse_spoorwegen',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -3317,21 +3317,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_single_trip_sensor[sensor.to_work_arrival_platform_actual-state]
+# name: test_single_trip_sensor[sensor.to_work_actual_arrival_platform-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by NS',
-      'friendly_name': 'To work Arrival platform actual',
+      'friendly_name': 'To work Actual arrival platform',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.to_work_arrival_platform_actual',
+    'entity_id': 'sensor.to_work_actual_arrival_platform',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '13',
   })
 # ---
-# name: test_single_trip_sensor[sensor.to_work_arrival_platform_planned-entry]
+# name: test_single_trip_sensor[sensor.to_work_actual_arrival_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3344,7 +3344,57 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.to_work_arrival_platform_planned',
+    'entity_id': 'sensor.to_work_actual_arrival_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Actual arrival time',
+    'platform': 'nederlandse_spoorwegen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'arrival_time_actual',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-arrival_time_actual',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_single_trip_sensor[sensor.to_work_actual_arrival_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by NS',
+      'device_class': 'timestamp',
+      'friendly_name': 'To work Actual arrival time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.to_work_actual_arrival_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-09-15T16:45:00+00:00',
+  })
+# ---
+# name: test_single_trip_sensor[sensor.to_work_actual_departure_platform-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.to_work_actual_departure_platform',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3356,31 +3406,31 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Arrival platform planned',
+    'original_name': 'Actual departure platform',
     'platform': 'nederlandse_spoorwegen',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'arrival_platform_planned',
-    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-arrival_platform_planned',
+    'translation_key': 'departure_platform_actual',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-departure_platform_actual',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_single_trip_sensor[sensor.to_work_arrival_platform_planned-state]
+# name: test_single_trip_sensor[sensor.to_work_actual_departure_platform-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by NS',
-      'friendly_name': 'To work Arrival platform planned',
+      'friendly_name': 'To work Actual departure platform',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.to_work_arrival_platform_planned',
+    'entity_id': 'sensor.to_work_actual_departure_platform',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '13',
+    'state': '4',
   })
 # ---
-# name: test_single_trip_sensor[sensor.to_work_arrival_time_actual-entry]
+# name: test_single_trip_sensor[sensor.to_work_actual_departure_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3393,7 +3443,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.to_work_arrival_time_actual',
+    'entity_id': 'sensor.to_work_actual_departure_time',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3405,79 +3455,29 @@
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
-    'original_name': 'Arrival time actual',
+    'original_name': 'Actual departure time',
     'platform': 'nederlandse_spoorwegen',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'arrival_time_actual',
-    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-arrival_time_actual',
+    'translation_key': 'departure_time_actual',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-departure_time_actual',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_single_trip_sensor[sensor.to_work_arrival_time_actual-state]
+# name: test_single_trip_sensor[sensor.to_work_actual_departure_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by NS',
       'device_class': 'timestamp',
-      'friendly_name': 'To work Arrival time actual',
+      'friendly_name': 'To work Actual departure time',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.to_work_arrival_time_actual',
+    'entity_id': 'sensor.to_work_actual_departure_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2025-09-15T16:45:00+00:00',
-  })
-# ---
-# name: test_single_trip_sensor[sensor.to_work_arrival_time_planned-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.to_work_arrival_time_planned',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': None,
-    'original_name': 'Arrival time planned',
-    'platform': 'nederlandse_spoorwegen',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'arrival_time_planned',
-    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-arrival_time_planned',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_single_trip_sensor[sensor.to_work_arrival_time_planned-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'device_class': 'timestamp',
-      'friendly_name': 'To work Arrival time planned',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.to_work_arrival_time_planned',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2025-09-15T16:45:00+00:00',
+    'state': '2025-09-15T14:35:00+00:00',
   })
 # ---
 # name: test_single_trip_sensor[sensor.to_work_departure-entry]
@@ -3551,204 +3551,6 @@
     'state': '2025-09-15T14:35:00+00:00',
   })
 # ---
-# name: test_single_trip_sensor[sensor.to_work_departure_platform_actual-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.to_work_departure_platform_actual',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Departure platform actual',
-    'platform': 'nederlandse_spoorwegen',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'departure_platform_actual',
-    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-departure_platform_actual',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_single_trip_sensor[sensor.to_work_departure_platform_actual-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'friendly_name': 'To work Departure platform actual',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.to_work_departure_platform_actual',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '4',
-  })
-# ---
-# name: test_single_trip_sensor[sensor.to_work_departure_platform_planned-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.to_work_departure_platform_planned',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Departure platform planned',
-    'platform': 'nederlandse_spoorwegen',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'departure_platform_planned',
-    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-departure_platform_planned',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_single_trip_sensor[sensor.to_work_departure_platform_planned-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'friendly_name': 'To work Departure platform planned',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.to_work_departure_platform_planned',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '4',
-  })
-# ---
-# name: test_single_trip_sensor[sensor.to_work_departure_time_actual-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.to_work_departure_time_actual',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': None,
-    'original_name': 'Departure time actual',
-    'platform': 'nederlandse_spoorwegen',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'departure_time_actual',
-    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-departure_time_actual',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_single_trip_sensor[sensor.to_work_departure_time_actual-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'device_class': 'timestamp',
-      'friendly_name': 'To work Departure time actual',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.to_work_departure_time_actual',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2025-09-15T14:35:00+00:00',
-  })
-# ---
-# name: test_single_trip_sensor[sensor.to_work_departure_time_planned-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.to_work_departure_time_planned',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': None,
-    'original_name': 'Departure time planned',
-    'platform': 'nederlandse_spoorwegen',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'departure_time_planned',
-    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-departure_time_planned',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_single_trip_sensor[sensor.to_work_departure_time_planned-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'device_class': 'timestamp',
-      'friendly_name': 'To work Departure time planned',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.to_work_departure_time_planned',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2025-09-15T14:34:00+00:00',
-  })
-# ---
 # name: test_single_trip_sensor[sensor.to_work_next_departure-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -3797,6 +3599,204 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
+  })
+# ---
+# name: test_single_trip_sensor[sensor.to_work_planned_arrival_platform-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.to_work_planned_arrival_platform',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Planned arrival platform',
+    'platform': 'nederlandse_spoorwegen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'arrival_platform_planned',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-arrival_platform_planned',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_single_trip_sensor[sensor.to_work_planned_arrival_platform-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by NS',
+      'friendly_name': 'To work Planned arrival platform',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.to_work_planned_arrival_platform',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '13',
+  })
+# ---
+# name: test_single_trip_sensor[sensor.to_work_planned_arrival_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.to_work_planned_arrival_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Planned arrival time',
+    'platform': 'nederlandse_spoorwegen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'arrival_time_planned',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-arrival_time_planned',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_single_trip_sensor[sensor.to_work_planned_arrival_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by NS',
+      'device_class': 'timestamp',
+      'friendly_name': 'To work Planned arrival time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.to_work_planned_arrival_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-09-15T16:45:00+00:00',
+  })
+# ---
+# name: test_single_trip_sensor[sensor.to_work_planned_departure_platform-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.to_work_planned_departure_platform',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Planned departure platform',
+    'platform': 'nederlandse_spoorwegen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'departure_platform_planned',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-departure_platform_planned',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_single_trip_sensor[sensor.to_work_planned_departure_platform-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by NS',
+      'friendly_name': 'To work Planned departure platform',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.to_work_planned_departure_platform',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4',
+  })
+# ---
+# name: test_single_trip_sensor[sensor.to_work_planned_departure_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.to_work_planned_departure_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Planned departure time',
+    'platform': 'nederlandse_spoorwegen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'departure_time_planned',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-departure_time_planned',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_single_trip_sensor[sensor.to_work_planned_departure_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by NS',
+      'device_class': 'timestamp',
+      'friendly_name': 'To work Planned departure time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.to_work_planned_departure_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-09-15T14:34:00+00:00',
   })
 # ---
 # name: test_single_trip_sensor[sensor.to_work_route-entry]
