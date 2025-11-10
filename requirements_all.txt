@@ -315,7 +315,7 @@ aiolookin==1.0.0
 aiolyric==2.0.2
 
 # homeassistant.components.mealie
-aiomealie==1.0.1
+aiomealie==1.1.0
 
 # homeassistant.components.modern_forms
 aiomodernforms==0.1.8
@@ -354,7 +354,7 @@ aiopulse==0.4.6
 aiopurpleair==2025.08.1
 
 # homeassistant.components.hunterdouglas_powerview
-aiopvapi==3.2.1
+aiopvapi==3.3.0
 
 # homeassistant.components.pvpc_hourly_pricing
 aiopvpc==4.2.2
@@ -1190,7 +1190,7 @@ home-assistant-frontend==20251105.0
 home-assistant-intents==2025.11.7
 
 # homeassistant.components.homematicip_cloud
-homematicip==2.3.1
+homematicip==2.4.0
 
 # homeassistant.components.horizon
 horimote==0.4.1
@@ -1719,7 +1719,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.9.0
+plugwise==1.10.0
 
 # homeassistant.components.serial_pm
 pmsensor==0.4
@@ -2259,7 +2259,7 @@ pyotp==2.9.0
 pyoverkiz==1.19.0
 
 # homeassistant.components.palazzetti
-pypalazzetti==0.1.19
+pypalazzetti==0.1.20
 
 # homeassistant.components.paperless_ngx
 pypaperless==4.1.1
@@ -2380,7 +2380,7 @@ pysmappee==0.2.29
 pysmarlaapi==0.9.2
 
 # homeassistant.components.smartthings
-pysmartthings==3.3.1
+pysmartthings==3.3.2
 
 # homeassistant.components.smarty
 pysmarty2==0.10.3
