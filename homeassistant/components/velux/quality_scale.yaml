@@ -20,8 +20,8 @@ rules:
     comment: subscribe is ok, unsubscribe needs to be added
   entity-unique-id: done
   has-entity-name:
-    status: todo
-    comment: light name needs to be fixed, see https://github.com/home-assistant/core/pull/155850
+    status: done
+    comment: light name fixed in https://github.com/home-assistant/core/pull/155850, rest ok already
   runtime-data:
     status: done
     comment: addressed in https://github.com/home-assistant/core/pull/155207
