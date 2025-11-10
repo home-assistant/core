@@ -1235,8 +1235,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/proxmoxve/ @jhollowe @Corbeno
 /homeassistant/components/ps4/ @ktnrg45
 /tests/components/ps4/ @ktnrg45
-/homeassistant/components/ptdevices/ @ParemTech-Inc
-/tests/components/ptdevices/ @ParemTech-Inc
+/homeassistant/components/ptdevices/ @ParemTech-Inc @frogman85978
+/tests/components/ptdevices/ @ParemTech-Inc @frogman85978
 /homeassistant/components/pterodactyl/ @elmurato
 /tests/components/pterodactyl/ @elmurato
 /homeassistant/components/pure_energie/ @klaasnicolaas
