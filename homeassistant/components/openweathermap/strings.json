@@ -103,6 +103,16 @@
       }
     }
   },
+  "selector": {
+    "api_mode": {
+      "options": {
+        "air_pollution": "Air Pollution API",
+        "current": "Current Weather API",
+        "forecast": "Hourly Forecast Weather API",
+        "v3.0": "One Call API"
+      }
+    }
+  },
   "services": {
     "get_minute_forecast": {
       "description": "Retrieves a minute-by-minute weather forecast for one hour.",
