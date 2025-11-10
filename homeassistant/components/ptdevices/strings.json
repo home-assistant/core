@@ -1,130 +1,106 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "data": {
-          "device_id": "Device ID",
-          "api_token": "[%key:common::config_flow::data::api_token%]"
-        },
-        "data_description": {
-          "device_id": "Device ID or MAC address from your PTDevice.",
-          "api_token": "API Token for your PTDevices account."
-        },
-        "description": "Enter the Device ID or MAC address of the device to connect to and your token API key from ParemTech"
-      },
-      "reauth_confirm": {
-        "title": "PTDevices reauth",
-        "description": "Your API key seem to be expired. Enter your new token API key from ParemTech to reconfigure your device",
-        "data": {
-          "api_token": "[%key:common::config_flow::data::api_token%]"
-        },
-        "data_description": {
-          "api_token": "API Token for your PTDevices account."
-        }
-      }
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "malformed_response": "A malformed response was received from PTDevices.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_token": "[%key:common::config_flow::data::api_token%]"
+        },
+        "data_description": {
+          "api_token": "API Token for your PTDevices account."
+        },
+        "description": "Your API key seem to be expired. Enter your new token API key from ParemTech to reconfigure your device",
+        "title": "PTDevices reauth"
+      },
+      "user": {
+        "data": {
+          "api_token": "[%key:common::config_flow::data::api_token%]",
+          "device_id": "Device ID"
+        },
+        "data_description": {
+          "api_token": "API Token for your PTDevices account.",
+          "device_id": "Device ID or MAC address from your PTDevice."
+        },
+        "description": "Enter the Device ID or MAC address of the device to connect to and your token API key from ParemTech"
+      }
     }
   },
   "entity": {
     "sensor": {
-      "device_id": {
-        "name": "ID"
-      },
-      "device_mac": {
-        "name": "MAC Address"
-      },
-      "device_share_id": {
-        "name": "Share ID"
-      },
-      "device_created": {
-        "name": "Creation Date"
-      },
-      "user_id": {
-        "name": "User ID"
-      },
-      "device_type": {
-        "name": "Type"
-      },
-      "device_title": {
-        "name": "Title"
-      },
-      "device_version": {
-        "name": "Receiver Firmware Version"
-      },
-      "device_loc": {
-        "name": "Location"
-      },
-      "device_addr": {
-        "name": "Installation Address"
-      },
-      "device_status": {
-        "name": "Status"
-      },
-      "device_delivery_notes": {
-        "name": "Delivery Notes"
-      },
-      "device_units": {
-        "name": "Units"
-      },
-      "device_reported": {
-        "name": "Last RX Report"
-      },
-      "tx_reported": {
-        "name": "Last TX Report"
-      },
-      "rx_updated_on": {
-        "name": "Last RX Firmware Updated"
-      },
-      "device_wifi_signal": {
-        "name": "WiFi Signal Strength"
-      },
-      "device_tx_signal": {
-        "name": "LoRa Siganl Strength"
-      },
-      "level_percent": {
-        "name": "Level Percent"
+      "battery_status": {
+        "name": "Battery Status"
       },
       "battery_voltage": {
         "name": "Battery Voltage"
       },
-      "battery_status": {
-        "name": "Battery Status"
+      "device_addr": {
+        "name": "Installation Address"
       },
-      "level_volume": {
-        "name": "Level Volume"
+      "device_created": {
+        "name": "Creation Date"
       },
-      "level_depth": {
-        "name": "Level Depth"
+      "device_delivery_notes": {
+        "name": "Delivery Notes"
+      },
+      "device_id": {
+        "name": "ID"
+      },
+      "device_loc": {
+        "name": "Location"
+      },
+      "device_mac": {
+        "name": "MAC Address"
+      },
+      "device_reported": {
+        "name": "Last RX Report"
+      },
+      "device_share_id": {
+        "name": "Share ID"
+      },
+      "device_status": {
+        "name": "Status"
+      },
+      "device_title": {
+        "name": "Title"
+      },
+      "device_tx_signal": {
+        "name": "LoRa Signal Strength"
+      },
+      "device_type": {
+        "name": "Type"
+      },
+      "device_units": {
+        "name": "Units"
+      },
+      "device_version": {
+        "name": "Receiver Firmware Version"
+      },
+      "device_wifi_signal": {
+        "name": "WiFi Signal Strength"
       },
       "enclosure_temp": {
         "name": "Device Temperature"
       },
-      "tank_depth": {
-        "name": "Tank Depth"
+      "level_depth": {
+        "name": "Level Depth"
       },
-      "tank_shape": {
-        "name": "Tank Shape"
+      "level_percent": {
+        "name": "Level Percent"
       },
-      "tank_diameter": {
-        "name": "Tank Diameter"
-      },
-      "tank_width": {
-        "name": "Tank Width"
-      },
-      "tank_length": {
-        "name": "Tank Length"
+      "level_volume": {
+        "name": "Level Volume"
       },
       "power_x": {
         "name": "Sleep Time"
@@ -135,26 +111,50 @@
       "power_z": {
         "name": "Max Sleep Count"
       },
+      "rx_updated_on": {
+        "name": "Last RX Firmware Updated"
+      },
+      "tank_depth": {
+        "name": "Tank Depth"
+      },
+      "tank_diameter": {
+        "name": "Tank Diameter"
+      },
+      "tank_length": {
+        "name": "Tank Length"
+      },
+      "tank_shape": {
+        "name": "Tank Shape"
+      },
+      "tank_width": {
+        "name": "Tank Width"
+      },
       "temp_units": {
         "name": "Temperature Units"
       },
       "temperature_probe": {
         "name": "Probe Temperature"
+      },
+      "tx_reported": {
+        "name": "Last TX Report"
+      },
+      "user_id": {
+        "name": "User ID"
       }
     }
   },
   "exceptions": {
-    "malformed_response_missing_key": {
-      "message": "The response from PTDevices was missing the key(s) `{missing_keys}`"
-    },
     "cannot_connect": {
       "message": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "invalid_access_token": {
+      "message": "[%key:common::config_flow::error::invalid_access_token%]"
     },
     "invalid_auth": {
       "message": "[%key:common::config_flow::error::invalid_auth%]"
     },
-    "invalid_access_token": {
-      "message": "[%key:common::config_flow::error::invalid_access_token%]"
+    "malformed_response_missing_key": {
+      "message": "The response from PTDevices was missing the key(s) `{missing_keys}`"
     }
   }
 }
