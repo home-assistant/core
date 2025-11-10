@@ -29,12 +29,8 @@ async def test_button_and_key_event_creation(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test button and remote key event entities are created."""
-    entity_ids: list[str] = []
-    # Add Button Event entity ids
-    entity_ids.extend(get_button_entity_ids())
-
-    # Add remote key Event entity ids
-    entity_ids.extend(get_remote_entity_ids())
+    # Add Button and remote key Event entity ids
+    entity_ids: list[str] = [*get_button_entity_ids(), *get_remote_entity_ids()]
 
     # Check that the entities are available
     for entity_id in entity_ids:
