@@ -15,7 +15,6 @@ from victron_mqtt import (
     CannotConnectError,
     DeviceType,
     Hub as VictronVenusHub,
-    OperationMode,
 )
 import voluptuous as vol
 
@@ -47,7 +46,6 @@ from .const import (
     CONF_EXCLUDED_DEVICES,
     CONF_INSTALLATION_ID,
     CONF_MODEL,
-    CONF_OPERATION_MODE,
     CONF_ROOT_TOPIC_PREFIX,
     CONF_SERIAL,
     CONF_SIMPLE_NAMING,
@@ -72,13 +70,6 @@ def _get_user_schema(defaults: MappingProxyType[str, Any] | None = None) -> vol.
     """Get the user data schema with optional defaults."""
     if defaults is None:
         defaults = MappingProxyType({})
-    # Ensure operation_mode default is a string value (not an Enum instance)
-    op_mode_default = defaults.get(CONF_OPERATION_MODE, OperationMode.FULL.value)
-    op_default = (
-        op_mode_default.value
-        if isinstance(op_mode_default, OperationMode)
-        else op_mode_default
-    )
 
     return vol.Schema(
         {
@@ -94,24 +85,6 @@ def _get_user_schema(defaults: MappingProxyType[str, Any] | None = None) -> vol.
                 description={"suggested_value": f"{defaults.get(CONF_PASSWORD, '')}"},
             ): str,
             vol.Required(CONF_SSL, default=defaults.get(CONF_SSL, False)): bool,
-            vol.Required(CONF_OPERATION_MODE, default=op_default): SelectSelector(
-                SelectSelectorConfig(
-                    options=[
-                        SelectOptionDict(
-                            value=OperationMode.READ_ONLY.value,
-                            label="Read-only (sensors & binary sensors only)",
-                        ),
-                        SelectOptionDict(
-                            value=OperationMode.FULL.value,
-                            label="Full (sensors + controllable entities)",
-                        ),
-                        SelectOptionDict(
-                            value=OperationMode.EXPERIMENTAL.value,
-                            label="Experimental (may be unstable)",
-                        ),
-                    ]
-                )
-            ),
             vol.Optional(
                 CONF_SIMPLE_NAMING,
                 default=defaults.get(CONF_SIMPLE_NAMING, DEFAULT_SIMPLE_NAMING),

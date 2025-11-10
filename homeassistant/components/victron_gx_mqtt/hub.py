@@ -10,7 +10,6 @@ from victron_mqtt import (
     Metric as VictronVenusMetric,
     MetricKind,
     OperationMode,
-    WritableMetric as VictronVenusWritableMetric,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -28,13 +27,11 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .binary_sensor import VictronBinarySensor
-from .button import VictronButton
 from .const import (
     CONF_ELEVATED_TRACING,
     CONF_EXCLUDED_DEVICES,
     CONF_INSTALLATION_ID,
     CONF_MODEL,
-    CONF_OPERATION_MODE,
     CONF_ROOT_TOPIC_PREFIX,
     CONF_SERIAL,
     CONF_SIMPLE_NAMING,
@@ -43,11 +40,7 @@ from .const import (
     DOMAIN,
 )
 from .entity import VictronBaseEntity
-from .number import VictronNumber
-from .select import VictronSelect
 from .sensor import VictronSensor
-from .switch import VictronSwitch
-from .time import VictronTime
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,10 +63,6 @@ class Hub:
         self.id = entry.unique_id
 
         config = entry.data
-        op = config.get(CONF_OPERATION_MODE, OperationMode.FULL.value)
-        operation_mode: OperationMode = (
-            OperationMode(op) if not isinstance(op, OperationMode) else op
-        )
         self.simple_naming = config.get(CONF_SIMPLE_NAMING, False)
 
         # Convert string device type exclusions to DeviceType instances
@@ -102,7 +91,7 @@ class Hub:
             serial=config.get(CONF_SERIAL, "noserial"),
             topic_prefix=config.get(CONF_ROOT_TOPIC_PREFIX) or None,
             topic_log_info=config.get(CONF_ELEVATED_TRACING) or None,
-            operation_mode=operation_mode,
+            operation_mode=OperationMode.READ_ONLY,
             device_type_exclude_filter=excluded_device_types,
             update_frequency_seconds=config.get(
                 CONF_UPDATE_FREQUENCY_SECONDS, DEFAULT_UPDATE_FREQUENCY_SECONDS
@@ -186,29 +175,6 @@ class Hub:
             )
         if metric.metric_kind == MetricKind.BINARY_SENSOR:
             return VictronBinarySensor(
-                device, metric, info, self.simple_naming, installation_id
-            )
-        assert isinstance(metric, VictronVenusWritableMetric), (
-            f"Expected metric to be a VictronVenusWritableMetric. Got {type(metric)}"
-        )
-        if metric.metric_kind == MetricKind.SWITCH:
-            return VictronSwitch(
-                device, metric, info, self.simple_naming, installation_id
-            )
-        if metric.metric_kind == MetricKind.NUMBER:
-            return VictronNumber(
-                device, metric, info, self.simple_naming, installation_id
-            )
-        if metric.metric_kind == MetricKind.SELECT:
-            return VictronSelect(
-                device, metric, info, self.simple_naming, installation_id
-            )
-        if metric.metric_kind == MetricKind.BUTTON:
-            return VictronButton(
-                device, metric, info, self.simple_naming, installation_id
-            )
-        if metric.metric_kind == MetricKind.TIME:
-            return VictronTime(
                 device, metric, info, self.simple_naming, installation_id
             )
         raise ValueError(f"Unsupported metric kind: {metric.metric_kind}")
