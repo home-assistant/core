@@ -135,7 +135,7 @@ class StateTriggerBase(Trigger):
         )
 
 
-class StateOnTrigger(StateTriggerBase):
+class TurnsOnTrigger(StateTriggerBase):
     """Trigger for when a light turns on."""
 
     def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
@@ -143,7 +143,7 @@ class StateOnTrigger(StateTriggerBase):
         super().__init__(hass, config, STATE_ON)
 
 
-class StateOffTrigger(StateTriggerBase):
+class TurnsOffTrigger(StateTriggerBase):
     """Trigger for when a light turns off."""
 
     def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
@@ -152,8 +152,8 @@ class StateOffTrigger(StateTriggerBase):
 
 
 TRIGGERS: dict[str, type[Trigger]] = {
-    "state_off": StateOffTrigger,
-    "state_on": StateOnTrigger,
+    "turns_off": TurnsOffTrigger,
+    "turns_on": TurnsOnTrigger,
 }
 
 

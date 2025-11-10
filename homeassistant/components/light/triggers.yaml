@@ -1,4 +1,4 @@
-state_on:
+turns_on:
   target:
     entity:
       domain: light
@@ -14,7 +14,7 @@ state_on:
             - any
           translation_key: behavior
 
-state_off:
+turns_off:
   target:
     entity:
       domain: light

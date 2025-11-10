@@ -477,7 +477,7 @@
   },
   "title": "Light",
   "triggers": {
-    "state_off": {
+    "turns_off": {
       "description": "Triggers when a light turns off.",
       "description_configured": "Triggers when a light turns off",
       "fields": {
@@ -488,7 +488,7 @@
       },
       "name": "When a light turns off"
     },
-    "state_on": {
+    "turns_on": {
       "description": "Triggers when a light turns on.",
       "description_configured": "Triggers when a light turns on",
       "fields": {
