@@ -11,7 +11,6 @@ from anthropic import (
     InternalServerError,
     types,
 )
-from anthropic.pagination import AsyncPage
 from httpx import URL, Request, Response
 import pytest
 
@@ -249,13 +248,8 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
     assert result2["errors"] == {"base": error}
 
 
-@patch(
-    "anthropic.resources.models.AsyncModels.list",
-    new_callable=AsyncMock,
-    return_value=AsyncPage(data=[]),
-)
 async def test_subentry_web_search_user_location(
-    mock_model_list, hass: HomeAssistant, mock_config_entry, mock_init_component
+    hass: HomeAssistant, mock_config_entry, mock_init_component
 ) -> None:
     """Test fetching user location."""
     subentry = next(iter(mock_config_entry.subentries.values()))
@@ -343,6 +337,65 @@ async def test_subentry_web_search_user_location(
         "web_search": True,
         "web_search_max_uses": 5,
     }
+
+
+async def test_model_list(
+    hass: HomeAssistant, mock_config_entry, mock_init_component
+) -> None:
+    """Test fetching and processing the list of models."""
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    options_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+
+    # Configure initial step
+    options = await hass.config_entries.subentries.async_configure(
+        options_flow["flow_id"],
+        {
+            "prompt": "You are a helpful assistant",
+            "recommended": False,
+        },
+    )
+    assert options["type"] == FlowResultType.FORM
+    assert options["step_id"] == "advanced"
+    assert options["data_schema"].schema["chat_model"].config["options"] == [
+        {
+            "label": "Claude Haiku 4.5",
+            "value": "claude-haiku-4-5",
+        },
+        {
+            "label": "Claude Sonnet 4.5",
+            "value": "claude-sonnet-4-5",
+        },
+        {
+            "label": "Claude Opus 4.1",
+            "value": "claude-opus-4-1",
+        },
+        {
+            "label": "Claude Opus 4",
+            "value": "claude-opus-4-0",
+        },
+        {
+            "label": "Claude Sonnet 4",
+            "value": "claude-sonnet-4-0",
+        },
+        {
+            "label": "Claude Sonnet 3.7",
+            "value": "claude-3-7-sonnet",
+        },
+        {
+            "label": "Claude Haiku 3.5",
+            "value": "claude-3-5-haiku",
+        },
+        {
+            "label": "Claude Haiku 3",
+            "value": "claude-3-haiku-20240307",
+        },
+        {
+            "label": "Claude Opus 3",
+            "value": "claude-3-opus-20240229",
+        },
+    ]
 
 
 @pytest.mark.parametrize(
@@ -524,13 +577,7 @@ async def test_subentry_web_search_user_location(
         ),
     ],
 )
-@patch(
-    "anthropic.resources.models.AsyncModels.list",
-    new_callable=AsyncMock,
-    return_value=AsyncPage(data=[]),
-)
 async def test_subentry_options_switching(
-    mock_model_list,
     hass: HomeAssistant,
     mock_config_entry,
     mock_init_component,
@@ -636,13 +683,7 @@ async def test_ai_task_subentry_not_loaded(
     assert result.get("reason") == "entry_not_loaded"
 
 
-@patch(
-    "anthropic.resources.models.AsyncModels.list",
-    new_callable=AsyncMock,
-    return_value=AsyncPage(data=[]),
-)
 async def test_creating_ai_task_subentry_advanced(
-    mock_model_list,
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_init_component,
