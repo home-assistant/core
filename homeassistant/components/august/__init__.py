@@ -14,10 +14,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import (
-    config_entry_oauth2_flow,
-    device_registry as dr,
-    issue_registry as ir,
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
+    OAuth2Session,
+    async_get_config_entry_implementation,
 )
 
 from .const import DEFAULT_AUGUST_BRAND, DOMAIN, PLATFORMS
@@ -37,14 +38,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: AugustConfigEntry) -> bo
 
     session = async_create_august_clientsession(hass)
     try:
-        implementation = (
-            await config_entry_oauth2_flow.async_get_config_entry_implementation(
-                hass, entry
-            )
-        )
-    except ValueError as err:
+        implementation = await async_get_config_entry_implementation(hass, entry)
+    except ImplementationUnavailableError as err:
         raise ConfigEntryNotReady("OAuth implementation not available") from err
-    oauth_session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
+    oauth_session = OAuth2Session(hass, entry, implementation)
     august_gateway = AugustGateway(Path(hass.config.config_dir), session, oauth_session)
     try:
         await async_setup_august(hass, entry, august_gateway)

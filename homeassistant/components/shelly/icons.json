@@ -1,13 +1,13 @@
 {
   "entity": {
     "button": {
-      "mute": {
+      "mute_alarm": {
         "default": "mdi:volume-mute"
       },
       "self_test": {
         "default": "mdi:progress-wrench"
       },
-      "unmute": {
+      "unmute_alarm": {
         "default": "mdi:volume-high"
       }
     },
@@ -70,6 +70,13 @@
       }
     },
     "switch": {
+      "cury_away_mode": {
+        "default": "mdi:home-outline",
+        "state": {
+          "off": "mdi:home-import-outline",
+          "on": "mdi:home-export-outline"
+        }
+      },
       "left_slot": {
         "default": "mdi:scent",
         "state": {
