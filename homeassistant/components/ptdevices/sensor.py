@@ -35,16 +35,22 @@ RESOURCES: dict[str, SensorEntityDescription] = {
         key="percent_level",
         translation_key="level_percent",
         native_unit_of_measurement=PERCENTAGE,
+        # state_class=SensorStateClass.MEASUREMENT,
     ),
     "volume_level": SensorEntityDescription(
         key="volume_level",
         translation_key="level_volume",
-        device_class=SensorDeviceClass.WATER,
+        native_unit_of_measurement=UnitOfVolume.LITERS,
+        suggested_unit_of_measurement=UnitOfVolume.LITERS,
+        device_class=SensorDeviceClass.VOLUME,
+        # state_class=SensorStateClass.MEASUREMENT,
     ),
     "inch_level": SensorEntityDescription(
         key="inch_level",
         translation_key="level_depth",
         native_unit_of_measurement=UnitOfLength.INCHES,
+        device_class=SensorDeviceClass.DISTANCE,
+        # state_class=SensorStateClass.MEASUREMENT,
     ),
     "probe_temperature": SensorEntityDescription(
         key="probe_temperature",
@@ -76,24 +82,24 @@ RESOURCES: dict[str, SensorEntityDescription] = {
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "created": SensorEntityDescription(
-        key="created",
-        translation_key="device_created",
-        entity_registry_enabled_default=False,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
+    # "created": SensorEntityDescription(
+    #     key="created",
+    #     translation_key="device_created",
+    #     entity_registry_enabled_default=False,
+    #     entity_category=EntityCategory.DIAGNOSTIC,
+    # ),
     "user_id": SensorEntityDescription(
         key="user_id",
         translation_key="user_id",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "device_type": SensorEntityDescription(
-        key="device_type",
-        translation_key="device_type",
-        entity_registry_enabled_default=False,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
+    # "device_type": SensorEntityDescription(
+    #     key="device_type",
+    #     translation_key="device_type",
+    #     entity_registry_enabled_default=False,
+    #     entity_category=EntityCategory.DIAGNOSTIC,
+    # ),
     "version": SensorEntityDescription(
         key="version",
         translation_key="device_version",
@@ -110,18 +116,12 @@ RESOURCES: dict[str, SensorEntityDescription] = {
         key="status",
         translation_key="device_status",
     ),
-    "delivery_notes": SensorEntityDescription(
-        key="delivery_notes",
-        translation_key="device_delivery_notes",
-        entity_registry_enabled_default=False,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    "units": SensorEntityDescription(
-        key="units",
-        translation_key="device_units",
-        entity_registry_enabled_default=False,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
+    # "delivery_notes": SensorEntityDescription(
+    #     key="delivery_notes",
+    #     translation_key="device_delivery_notes",
+    #     entity_registry_enabled_default=False,
+    #     entity_category=EntityCategory.DIAGNOSTIC,
+    # ),
     "reported": SensorEntityDescription(
         key="reported",
         translation_key="device_reported",
@@ -169,7 +169,8 @@ def _format_dict(input: dict[str, Any]) -> dict[str, Any]:
                 recurse(value)
 
             else:
-                if key not in RESOURCES:
+                # Discard any keys that aren't in the RESOURCES list or aren't a unit key
+                if key not in RESOURCES and key not in ("units", "temperature_units"):
                     continue
 
                 result[key] = value
@@ -196,8 +197,12 @@ async def async_setup_entry(
     # Get the dict and flatten it
     body: dict[str, Any] = _format_dict(coordinator.data["body"])
 
-    # Collect all available resources
-    entities = [PTDevicesSensor(coordinator, RESOURCES[resource]) for resource in body]
+    # Collect all available resources that are in the RESOURCES list
+    entities = [
+        PTDevicesSensor(coordinator, RESOURCES[resource])
+        for resource in body
+        if resource in RESOURCES
+    ]
 
     async_add_entities(entities)
 
@@ -254,7 +259,7 @@ class PTDevicesSensor(SensorEntity, CoordinatorEntity[PTDevicesCoordinator]):
 
         value = data.get(key)
 
-        if self.device_class is SensorDeviceClass.WATER:
+        if self.device_class is SensorDeviceClass.VOLUME:
             if data.get("units") == "Metric":
                 self._attr_native_unit_of_measurement = UnitOfVolume.LITERS
             elif (
@@ -262,6 +267,11 @@ class PTDevicesSensor(SensorEntity, CoordinatorEntity[PTDevicesCoordinator]):
                 or data.get("units") == "US Imperial"
             ):
                 self._attr_native_unit_of_measurement = UnitOfVolume.GALLONS
+        elif self.device_class is SensorDeviceClass.TEMPERATURE:
+            if data.get("temperature_units") == "C":
+                self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
+            elif data.get("temperature_units") == "F":
+                self._attr_native_unit_of_measurement = UnitOfTemperature.FAHRENHEIT
 
         if self.native_unit_of_measurement is not None and isinstance(value, str):
             self._attr_native_value = float(value.strip(ascii_letters + "%"))
