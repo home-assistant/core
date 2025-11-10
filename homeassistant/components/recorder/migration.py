@@ -1361,7 +1361,7 @@ class _SchemaVersion20Migrator(_SchemaVersionMigrator, target_version=20):
 class _SchemaVersion21Migrator(_SchemaVersionMigrator, target_version=21):
     def _apply_update(self) -> None:
         """Version specific update method."""
-        # Try to change the character set of events, states and statistic_meta tables
+        # Try to change the character set of events, states and statistics_meta tables
         if self.engine.dialect.name == SupportedDialect.MYSQL:
             for table in ("events", "states", "statistics_meta"):
                 _correct_table_character_set_and_collation(table, self.session_maker)
@@ -2128,7 +2128,7 @@ class _SchemaVersion52Migrator(_SchemaVersionMigrator, target_version=52):
 class _SchemaVersion53Migrator(_SchemaVersionMigrator, target_version=53):
     def _apply_update(self) -> None:
         """Version specific update method."""
-        # Try to change the character set of events, states and statistic_meta tables
+        # Try to change the character set of events, states and statistics_meta tables
         if self.engine.dialect.name == SupportedDialect.MYSQL:
             for table in ("events", "states", "statistics_meta"):
                 _correct_table_character_set_and_collation(table, self.session_maker)
