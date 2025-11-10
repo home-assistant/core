@@ -48,11 +48,7 @@ class HausbusEntity(Entity):
                 f"{self._device_id}-{self._type}-{self._objectId.getInstanceId()}"
             )
 
-        if alternativeType is not None:
-            self._type = alternativeType
-
         self._attr_device_info = device_info
-
         self._attr_translation_key = self._type
         self._attr_extra_state_attributes = {}
         self._configuration: Any = None
