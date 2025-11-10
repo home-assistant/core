@@ -139,8 +139,28 @@ class DPCodeWrapper:
         return device.status.get(self.dpcode)
 
     def read_device_status(self, device: CustomerDevice) -> Any | None:
-        """Read the device value for the dpcode."""
+        """Read the device value for the dpcode.
+
+        The raw device status is converted to a Home Assistant value.
+        """
         raise NotImplementedError("read_device_status must be implemented")
+
+    def _convert_value_back(self, device: CustomerDevice, value: Any) -> Any:
+        """Get the update command value for the dpcode.
+
+        Private helper method for `get_update_command`.
+        """
+        raise NotImplementedError("convert_value_back must be implemented")
+
+    def get_update_command(self, device: CustomerDevice, value: Any) -> dict[str, Any]:
+        """Get the update command for the dpcode.
+
+        The Home Assistant value is converted back to a raw device value.
+        """
+        return {
+            "code": self.dpcode,
+            "value": self._convert_value_back(device, value),
+        }
 
 
 class DPCodeBooleanWrapper(DPCodeWrapper):
@@ -154,6 +174,13 @@ class DPCodeBooleanWrapper(DPCodeWrapper):
         if (raw_value := self._read_device_status_raw(device)) in (True, False):
             return raw_value
         return None
+
+    def _convert_value_back(self, device: CustomerDevice, value: Any) -> Any | None:
+        """Get the update command value for the dpcode."""
+        # Currently only called with boolean values
+        # Safety net in case of future changes
+        assert value in (True, False), "Invalid boolean value"
+        return value
 
 
 class DPCodeTypeInformationWrapper[T: TypeInformation](DPCodeWrapper):
@@ -202,6 +229,13 @@ class DPCodeEnumWrapper(DPCodeTypeInformationWrapper[EnumTypeData]):
             return raw_value
         return None
 
+    def _convert_value_back(self, device: CustomerDevice, value: Any) -> Any:
+        """Get the update command value for the dpcode."""
+        # Guarded by select option validation
+        # Safety net in case of future changes
+        assert value in self.type_information.range, "Enum value out of range"
+        return value
+
 
 class DPCodeIntegerWrapper(DPCodeTypeInformationWrapper[IntegerTypeData]):
     """Simple wrapper for IntegerTypeData values."""
@@ -216,6 +250,31 @@ class DPCodeIntegerWrapper(DPCodeTypeInformationWrapper[IntegerTypeData]):
         if (raw_value := self._read_device_status_raw(device)) is None:
             return None
         return raw_value / (10**self.type_information.scale)
+
+    def _convert_value_back(self, device: CustomerDevice, value: Any) -> Any:
+        """Get the update command value for the dpcode."""
+        new_value = round(value * (10**self.type_information.scale))
+        # Guarded by number option validation
+        # Safety net in case of future changes
+        assert self.type_information.min <= new_value <= self.type_information.max, (
+            "Integer value out of range"
+        )
+        return new_value
+
+    @classmethod
+    def find_dpcode(
+        cls,
+        device: CustomerDevice,
+        dpcodes: str | DPCode | tuple[DPCode, ...],
+        *,
+        prefer_function: bool = False,
+    ) -> Self | None:
+        """Find and return a DPCodeEnumWrapper for the given DP codes."""
+        if enum_type := find_dpcode(
+            device, dpcodes, dptype=DPType.ENUM, prefer_function=prefer_function
+        ):
+            return cls(dpcode=enum_type.dpcode, type_information=enum_type)
+        return None
 
 
 @overload
