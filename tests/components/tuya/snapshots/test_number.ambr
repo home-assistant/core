@@ -1638,7 +1638,7 @@
     'state': '-2.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.kattenbak_none-entry]
+# name: test_platform_setup_and_discovery[number.kattenbak_delay_clean_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1656,7 +1656,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.kattenbak_none',
+    'entity_id': 'number.kattenbak_delay_clean_time',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1668,7 +1668,7 @@
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Delay clean time',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1678,11 +1678,11 @@
     'unit_of_measurement': 's',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.kattenbak_none-state]
+# name: test_platform_setup_and_discovery[number.kattenbak_delay_clean_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'Kattenbak None',
+      'friendly_name': 'Kattenbak Delay clean time',
       'max': 600.0,
       'min': 0.0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -1690,7 +1690,7 @@
       'unit_of_measurement': 's',
     }),
     'context': <ANY>,
-    'entity_id': 'number.kattenbak_none',
+    'entity_id': 'number.kattenbak_delay_clean_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1932,7 +1932,7 @@
     'state': '3.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.poopy_nano_2_none-entry]
+# name: test_platform_setup_and_discovery[number.poopy_nano_2_delay_clean_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1950,7 +1950,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.poopy_nano_2_none',
+    'entity_id': 'number.poopy_nano_2_delay_clean_time',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1962,7 +1962,7 @@
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Delay clean time',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1972,11 +1972,11 @@
     'unit_of_measurement': 's',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.poopy_nano_2_none-state]
+# name: test_platform_setup_and_discovery[number.poopy_nano_2_delay_clean_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'Poopy Nano 2 None',
+      'friendly_name': 'Poopy Nano 2 Delay clean time',
       'max': 600.0,
       'min': 1.0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -1984,7 +1984,7 @@
       'unit_of_measurement': 's',
     }),
     'context': <ANY>,
-    'entity_id': 'number.poopy_nano_2_none',
+    'entity_id': 'number.poopy_nano_2_delay_clean_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
