@@ -5704,7 +5704,7 @@
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.kattenbak_none-entry]
+# name: test_platform_setup_and_discovery[switch.kattenbak_auto_clean-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5717,7 +5717,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.kattenbak_none',
+    'entity_id': 'switch.kattenbak_auto_clean',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -5729,7 +5729,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Auto clean',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -5739,13 +5739,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.kattenbak_none-state]
+# name: test_platform_setup_and_discovery[switch.kattenbak_auto_clean-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kattenbak None',
+      'friendly_name': 'Kattenbak Auto clean',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.kattenbak_none',
+    'entity_id': 'switch.kattenbak_auto_clean',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -7253,7 +7253,7 @@
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.poopy_nano_2_none-entry]
+# name: test_platform_setup_and_discovery[switch.poopy_nano_2_auto_clean-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7266,7 +7266,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.poopy_nano_2_none',
+    'entity_id': 'switch.poopy_nano_2_auto_clean',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -7278,7 +7278,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Auto clean',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -7288,13 +7288,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[switch.poopy_nano_2_none-state]
+# name: test_platform_setup_and_discovery[switch.poopy_nano_2_auto_clean-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Poopy Nano 2 None',
+      'friendly_name': 'Poopy Nano 2 Auto clean',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.poopy_nano_2_none',
+    'entity_id': 'switch.poopy_nano_2_auto_clean',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
