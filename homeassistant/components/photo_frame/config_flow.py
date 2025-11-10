@@ -7,6 +7,8 @@ from typing import Any
 
 import voluptuous as vol
 
+from homeassistant.components.media_player import MediaClass
+from homeassistant.components.media_source import async_browse_media
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers.selector import MediaSelector
@@ -34,8 +36,23 @@ class PhotoFrameConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
+            if user_media := user_input.get(CONF_MEDIA):
+                browse = await async_browse_media(
+                    self.hass, user_media.get("media_content_id")
+                )
+                if browse.children and any(
+                    item.media_class == MediaClass.IMAGE for item in browse.children
+                ):
+                    return self.async_create_entry(
+                        title=user_input[CONF_NAME], data=user_input
+                    )
+
+            errors["media"] = "invalid_media_selected"
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, user_input
+            ),
+            errors=errors,
         )

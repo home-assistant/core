@@ -30,7 +30,9 @@ rules:
   test-before-configure:
     status: exempt
     comment: Integration does not connect to anything.
-  test-before-setup: todo
+  test-before-setup:
+    status: exempt
+    comment: Integration does not connect to anything.
   unique-config-entry:
     status: exempt
     comment: Integration does not connect to any physical object or service.
