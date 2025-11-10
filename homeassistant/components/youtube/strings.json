@@ -41,6 +41,11 @@
       "views": { "name": "Views" }
     }
   },
+  "exceptions": {
+    "oauth2_implementation_unavailable": {
+      "message": "OAuth2 implementation unavailable, will retry"
+    }
+  },
   "options": {
     "step": {
       "init": {
