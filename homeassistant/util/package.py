@@ -90,7 +90,9 @@ def is_installed(requirement_str: str) -> bool:
             # If hash matches the installed vcs commit id
             # then it is the latest version
             # Branch and tag returns False
-            if (origin := Distribution.from_name(req.name).origin) is None:
+            if (origin := Distribution.from_name(req.name).origin) is None or getattr(
+                origin, "vcs_info", None
+            ) is None:
                 return False
 
             return origin.vcs_info.commit_id[:7] in req.url
