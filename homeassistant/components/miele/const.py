@@ -756,101 +756,53 @@ class CoffeeSystemProgramId(MieleEnum, missing_to_none=True):
     barista_assistant = 24407
     # machine settings menu
     appliance_settings = (
-        16016,
-        16018,
-        16019,
-        16020,
-        16021,
-        16027,
-        16033,
-        16035,
-        16037,
-        24500,
-        24502,
-        24503,
-        24504,
-        24506,
-        24513,
-        24516,
-        24537,
-        24542,
-        24549,
-        24550,
-        24551,
-        24552,
-        24553,
-        24554,
-        24555,
-        24556,
-        24557,
-        24558,
-        24560,
-        24562,
-        24563,
-        24564,
-        24565,
-        24566,
-        24567,
-        24568,
-        24569,
-        24571,
-        24572,
-        24573,
-        24574,
-        24575,
-        24576,
-        24800,
-        24801,
-        24813,
+        16016,  # display brightness
+        16018,  # volume
+        16019,  # buttons volume
+        16020,  # child lock
+        16021,  # water hardness
+        16027,  # welcome sound
+        16033,  # connection status
+        16035,  # remote control
+        16037,  # remote update
+        24500,  # total dispensed
+        24502,  # lights appliance on
+        24503,  # lights appliance off
+        24504,  # turn off lights after
+        24506,  # altitude
+        24513,  # performance mode
+        24516,  # turn off after
+        24537,  # advanced mode
+        24542,  # tea timer
+        24549,  # total coffee dispensed
+        24550,  # total tea dispensed
+        24551,  # total ristretto
+        24552,  # total cappuccino
+        24553,  # total espresso
+        24554,  # total coffee
+        24555,  # total long coffee
+        24556,  # total italian cappuccino
+        24557,  # total latte macchiato
+        24558,  # total caffe latte
+        24560,  # total espresso macchiato
+        24562,  # total flat white
+        24563,  # total coffee with milk
+        24564,  # total black tea
+        24565,  # total herbal tea
+        24566,  # total fruit tea
+        24567,  # total green tea
+        24568,  # total white tea
+        24569,  # total japanese tea
+        24571,  # total milk foam
+        24572,  # total hot milk
+        24573,  # total hot water
+        24574,  # total very hot water
+        24575,  # counter to descaling
+        24576,  # counter to brewing unit degreasing
+        24800,  # maintenance
+        24801,  # profiles settings menu
+        24813,  # add profile
     )
-    # display brightness
-    # volume
-    # buttons volume
-    # child lock
-    # water hardness
-    # welcome sound
-    # connection status
-    # remote control
-    # remote update
-    # total dispensed
-    # lights appliance on
-    # lights appliance off
-    # turn off lights after
-    # altitude
-    # performance mode
-    # turn off after
-    # advanced mode
-    # tea timer
-    # total coffee dispensed
-    # total tea dispensed
-    # total ristretto
-    # total cappuccino
-    # total espresso
-    # total coffee
-    # total long coffee
-    # total italian cappuccino
-    # total latte macchiato
-    # total caffe latte
-    # total espresso macchiato
-    # total flat white
-    # total coffee with milk
-    # total black tea
-    # total herbal tea
-    # total fruit tea
-    # total green tea
-    # total white tea
-    # total japanese tea
-    # total milk foam
-    # total hot milk
-    # total hot water
-    # total very hot water
-    # counter to descaling
-    # counter to brewing unit degreasing
-    # maintenance
-    # profiles settings menu
-    # add profile
-    # ask profile settings
-    # modify profile name
     appliance_rinse = 24750, 24759, 24773, 24787, 24788
     descaling = 24751
     brewing_unit_degrease = 24753
@@ -1108,7 +1060,8 @@ class SteamOvenMicroProgramId(MieleEnum, missing_to_none=True):
     pumpkin_soup = 2429
     meat_with_rice = 2430
     beef_casserole = 2431
-    risotto = 2450, 2451
+    pumpkin_risotto = 2450
+    risotto = 2451
     rice_pudding_steam_cooking = 2453
     rice_pudding_rapid_steam_cooking = 2454
     amaranth = 2461
