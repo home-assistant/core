@@ -44,7 +44,7 @@ from .utils import (
     usb_device_from_path,  # noqa: F401
     usb_device_from_port,  # noqa: F401
     usb_device_matches_matcher,
-    usb_service_info_from_device,  # noqa: F401
+    usb_service_info_from_device,
     usb_unique_id_from_service_info,  # noqa: F401
 )
 
@@ -349,19 +349,9 @@ class USBDiscovery:
         if not matched:
             return
 
-        service_info: _UsbServiceInfo | None = None
+        service_info = usb_service_info_from_device(device)
 
         for matcher in matched:
-            if service_info is None:
-                service_info = _UsbServiceInfo(
-                    device=device.device,
-                    vid=device.vid,
-                    pid=device.pid,
-                    serial_number=device.serial_number,
-                    manufacturer=device.manufacturer,
-                    description=device.description,
-                )
-
             discovery_flow.async_create_flow(
                 self.hass,
                 matcher["domain"],
