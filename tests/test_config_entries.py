@@ -11,7 +11,6 @@ import re
 from typing import Any, Self
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
-from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -1271,7 +1270,7 @@ async def test_saving_and_loading(
     assert hass_storage["core.config_entries"] == expected_stored_data | {}
 
 
-@freeze_time("2024-02-14 12:00:00")
+@pytest.mark.freeze_time("2024-02-14 12:00:00")
 async def test_as_dict(snapshot: SnapshotAssertion) -> None:
     """Test ConfigEntry.as_dict."""
 
