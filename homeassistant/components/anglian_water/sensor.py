@@ -28,45 +28,51 @@ class AnglianWaterSensor(StrEnum):
     YESTERDAY_CONSUMPTION = "yesterday_consumption"
     LATEST_READING = "latest_reading"
 
+
 @dataclass(frozen=True, kw_only=True)
 class AnglianWaterSensorEntityDescription(SensorEntityDescription):
     """Describes AnglianWater sensor entity."""
 
     key: str
-    value_fn: Callable[[SmartMeter],
-                       float] | None = None
-    name_fn: Callable[[SmartMeter], str] | None = None
+    value_fn: Callable[[SmartMeter], float]
 
-ENTITY_DESCRIPTIONS: dict[str, AnglianWaterSensorEntityDescription] = (
+
+ENTITY_DESCRIPTIONS: tuple[AnglianWaterSensorEntityDescription, ...] = (
     AnglianWaterSensorEntityDescription(
         key=AnglianWaterSensor.YESTERDAY_CONSUMPTION,
         native_unit_of_measurement=UnitOfVolume.LITERS,
         device_class=SensorDeviceClass.WATER,
         value_fn=lambda entity: entity.get_yesterday_consumption,
-        state_class=SensorStateClass.TOTAL
+        state_class=SensorStateClass.TOTAL,
     ),
     AnglianWaterSensorEntityDescription(
         key=AnglianWaterSensor.LATEST_READING,
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         device_class=SensorDeviceClass.WATER,
         value_fn=lambda entity: entity.latest_read,
-        state_class=SensorStateClass.TOTAL_INCREASING
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
 )
 
-async def async_setup_entry(hass: HomeAssistant, entry: AnglianWaterConfigEntry, async_add_devices: AddConfigEntryEntitiesCallback) -> None:
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: AnglianWaterConfigEntry,
+    async_add_devices: AddConfigEntryEntitiesCallback,
+) -> None:
     """Set up the sensor platform."""
     async_add_devices(
-        AnglianWaterSensor(
+        AnglianWaterSensorEntity(
             coordinator=entry.runtime_data,
             description=entity_description,
-            smart_meter=smart_meter
+            smart_meter=smart_meter,
         )
         for entity_description in ENTITY_DESCRIPTIONS
         for smart_meter in entry.runtime_data.api.meters.values()
     )
 
-class AnglianWaterSensor(AnglianWaterEntity, SensorEntity):
+
+class AnglianWaterSensorEntity(AnglianWaterEntity, SensorEntity):
     """Defines a Anglian Water sensor."""
 
     entity_description: AnglianWaterSensorEntityDescription

@@ -24,9 +24,11 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_USERNAME: USERNAME,
             CONF_PASSWORD: PASSWORD,
             CONF_ACCOUNT_NUMBER: ACCOUNT_NUMBER,
-            CONF_ACCESS_TOKEN: ACCESS_TOKEN
-        }
+            CONF_ACCESS_TOKEN: ACCESS_TOKEN,
+        },
+        unique_id=ACCOUNT_NUMBER,
     )
+
 
 @pytest.fixture
 def mock_smart_meter() -> SmartMeter:
@@ -36,51 +38,55 @@ def mock_smart_meter() -> SmartMeter:
     mock.get_yesterday_consumption = 50
     mock.latest_consumption = 50
     mock.latest_read = 50
+    return mock
+
 
 @pytest.fixture
 def mock_anglian_water_authenticator() -> Generator[MagicMock]:
     """Mock a Anglian Water authenticator."""
     with (
         patch(
-            "homeassistant.components.anglian_water.MSOB2CAuth",
-            autospec=True
+            "homeassistant.components.anglian_water.MSOB2CAuth", autospec=True
         ) as mock_auth_class,
         patch(
             "homeassistant.components.anglian_water.config_flow.MSOB2CAuth",
-            new=mock_auth_class
-        )
+            new=mock_auth_class,
+        ),
     ):
-        mock_auth_class.account_number = ACCOUNT_NUMBER
-        mock_auth_class.access_token = ACCESS_TOKEN
-        mock_auth_class.refresh_token = ACCESS_TOKEN
-        mock_auth_class.send_login_request = AsyncMock()
-        mock_auth_class.send_login_request.return_value = None
-        mock_auth_class.send_refresh_request = AsyncMock()
-        mock_auth_class.send_refresh_request.return_value = None
-        yield mock_auth_class
+        mock_instance = mock_auth_class.return_value
+        mock_instance.account_number = ACCOUNT_NUMBER
+        mock_instance.access_token = ACCESS_TOKEN
+        mock_instance.refresh_token = ACCESS_TOKEN
+        mock_instance.send_login_request = AsyncMock()
+        mock_instance.send_login_request.return_value = None
+        mock_instance.send_refresh_request = AsyncMock()
+        mock_instance.send_refresh_request.return_value = None
+        yield mock_instance
+
 
 @pytest.fixture
 def mock_anglian_water_client(
-    mock_smart_meter: SmartMeter,
-    mock_anglian_water_authenticator: MagicMock
+    mock_smart_meter: SmartMeter, mock_anglian_water_authenticator: MagicMock
 ) -> Generator[AsyncMock]:
     """Mock a Anglian Water client."""
+    # Create a mock instance with our meters and config first.
+    mock_client = AsyncMock(spec=AnglianWater)
+    mock_client.meters = {mock_smart_meter.serial_number: mock_smart_meter}
+    mock_client.account_config = {"meter_type": "SmartMeter"}
+    mock_client.updated_data_callbacks = []
     with (
         patch(
-            "homeassistant.components.anglian_water.AnglianWater",
-            autospec=True
+            "homeassistant.components.anglian_water.AnglianWater", autospec=True
         ) as mock_client_class,
         patch(
-            "homeassistant.components.anglian_water.coordinator.AnglianWater",
-            new=mock_client_class
-        )
+            "homeassistant.components.anglian_water.config_flow.AnglianWater",
+            new=mock_client_class,
+        ),
     ):
-        mock_client = AsyncMock(spec=AnglianWater, autospec=True)
-        mock_client.meters = [mock_smart_meter]
-        mock_client.create_from_authenticator = AsyncMock()
-        type(mock_client).create_from_authenticator = mock_client.create_from_authenticator
-        mock_client_class.create_from_authenticator.return_value = mock_client
+        mock_client_class.return_value = mock_client
+        mock_client.validate_smart_meter.return_value = None
         yield mock_client
+
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:

@@ -1,6 +1,8 @@
 """Test the Anglian Water config flow."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
+
+from pyanglianwater.exceptions import SelfAssertedError, SmartMeterUnavailableError
 
 from homeassistant import config_entries
 from homeassistant.components.anglian_water.const import CONF_ACCOUNT_NUMBER, DOMAIN
@@ -17,8 +19,8 @@ async def test_full_flow(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_anglian_water_authenticator: AsyncMock,
-    mock_anglian_water_client: AsyncMock
-):
+    mock_anglian_water_client: AsyncMock,
+) -> None:
     """Test a full and successful config flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -28,10 +30,166 @@ async def test_full_flow(
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={
+        result["flow_id"],
+        user_input={
             CONF_USERNAME: USERNAME,
             CONF_PASSWORD: PASSWORD,
-        }
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == ACCOUNT_NUMBER
+    assert result["data"][CONF_USERNAME] == USERNAME
+    assert result["data"][CONF_PASSWORD] == PASSWORD
+    assert result["data"][CONF_ACCESS_TOKEN] == ACCESS_TOKEN
+    assert result["data"][CONF_ACCOUNT_NUMBER] == ACCOUNT_NUMBER
+    assert result["result"].unique_id == ACCOUNT_NUMBER
+
+
+async def test_already_configured(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_anglian_water_authenticator: AsyncMock,
+    mock_anglian_water_client: AsyncMock,
+) -> None:
+    """Test that the flow aborts when the entry is already added."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result is not None
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_abort_no_smart_meter(
+    hass: HomeAssistant,
+    mock_anglian_water_authenticator: AsyncMock,
+    mock_anglian_water_client: AsyncMock,
+) -> None:
+    """Test that the flow aborts when the account does not have a smart meter."""
+
+    mock_anglian_water_client.validate_smart_meter.side_effect = (
+        SmartMeterUnavailableError
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result is not None
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "smart_meter_unavailable"
+
+
+async def test_recover_bad_credentials(
+    hass: HomeAssistant,
+    mock_anglian_water_authenticator: AsyncMock,
+    mock_anglian_water_client: AsyncMock,
+) -> None:
+    """Test that the flow can recover from bad credentials."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result is not None
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    mock_anglian_water_authenticator.send_login_request.side_effect = SelfAssertedError
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "invalid_auth"}
+
+    # Now test we can recover
+
+    mock_anglian_water_authenticator.send_login_request.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == ACCOUNT_NUMBER
+    assert result["data"][CONF_USERNAME] == USERNAME
+    assert result["data"][CONF_PASSWORD] == PASSWORD
+    assert result["data"][CONF_ACCESS_TOKEN] == ACCESS_TOKEN
+    assert result["data"][CONF_ACCOUNT_NUMBER] == ACCOUNT_NUMBER
+    assert result["result"].unique_id == ACCOUNT_NUMBER
+
+
+async def test_general_exception(
+    hass: HomeAssistant,
+    mock_anglian_water_authenticator: AsyncMock,
+    mock_anglian_water_client: AsyncMock,
+) -> None:
+    """Test that the flow can recover from a general exception."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result is not None
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    mock_anglian_water_authenticator.send_login_request.side_effect = ValueError
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "unknown"}
+
+    # Now test we can recover
+
+    mock_anglian_water_authenticator.send_login_request.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
+        },
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY

@@ -6,13 +6,14 @@ import logging
 
 from pyanglianwater import SmartMeter
 
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import AnglianWaterUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
+
 
 class AnglianWaterEntity(CoordinatorEntity[AnglianWaterUpdateCoordinator]):
     """Defines a Anglian Water entity."""
@@ -40,5 +41,8 @@ class AnglianWaterEntity(CoordinatorEntity[AnglianWaterUpdateCoordinator]):
 
     async def async_will_remove_from_hass(self) -> None:
         """When will be removed from HASS."""
-        self.coordinator.api.updated_data_callbacks.pop(self.async_write_ha_state, None)
+        if self.async_write_ha_state in self.coordinator.api.updated_data_callbacks:
+            self.coordinator.api.updated_data_callbacks.remove(
+                self.async_write_ha_state
+            )
         await super().async_will_remove_from_hass()
