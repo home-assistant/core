@@ -63,7 +63,7 @@ async def _handle_webhook(
     base_result: dict[str, Any] = {"platform": "webhook", "webhook_id": webhook_id}
 
     if "json" in request.headers.get(hdrs.CONTENT_TYPE, ""):
-        # Only attempt to parse if theres an actual body
+        # Only attempt to parse if there's an actual body
         if request.can_read_body:
             text = await request.text()
             if text.strip():
