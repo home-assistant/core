@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any
 
 from chip.clusters import Objects as clusters
@@ -18,7 +19,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .entity import MatterEntity
+from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
@@ -44,6 +45,11 @@ async def async_setup_entry(
     """Set up Matter switches from Config Entry."""
     matter = get_matter(hass)
     matter.register_platform_handler(Platform.EVENT, async_add_entities)
+
+
+@dataclass(frozen=True, kw_only=True)
+class MatterEventEntityDescription(EventEntityDescription, MatterEntityDescription):
+    """Describe Matter Event entities."""
 
 
 class MatterEventEntity(MatterEntity, EventEntity):
@@ -132,7 +138,7 @@ class MatterEventEntity(MatterEntity, EventEntity):
 DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.EVENT,
-        entity_description=EventEntityDescription(
+        entity_description=MatterEventEntityDescription(
             key="GenericSwitch",
             device_class=EventDeviceClass.BUTTON,
             translation_key="button",
