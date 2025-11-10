@@ -58,9 +58,8 @@ from . import (
     selector,
     target as target_helpers,
     template,
-    translation,
 )
-from .deprecation import deprecated_class, deprecated_function
+from .deprecation import deprecated_class, deprecated_function, deprecated_hass_argument
 from .selector import TargetSelector
 from .typing import ConfigType, TemplateVarsType, VolDictType, VolSchemaType
 
@@ -379,22 +378,21 @@ def async_prepare_call_from_config(
     }
 
 
-@bind_hass
+@deprecated_hass_argument(breaks_in_ha_version="2026.10")
 def extract_entity_ids(
-    hass: HomeAssistant, service_call: ServiceCall, expand_group: bool = True
+    service_call: ServiceCall, expand_group: bool = True
 ) -> set[str]:
     """Extract a list of entity ids from a service call.
 
     Will convert group entity ids to the entity ids it represents.
     """
     return asyncio.run_coroutine_threadsafe(
-        async_extract_entity_ids(hass, service_call, expand_group), hass.loop
+        async_extract_entity_ids(service_call, expand_group), service_call.hass.loop
     ).result()
 
 
-@bind_hass
+@deprecated_hass_argument(breaks_in_ha_version="2026.10")
 async def async_extract_entities[_EntityT: Entity](
-    hass: HomeAssistant,
     entities: Iterable[_EntityT],
     service_call: ServiceCall,
     expand_group: bool = True,
@@ -410,7 +408,7 @@ async def async_extract_entities[_EntityT: Entity](
 
     selector_data = target_helpers.TargetSelectorData(service_call.data)
     referenced = target_helpers.async_extract_referenced_entity_ids(
-        hass, selector_data, expand_group
+        service_call.hass, selector_data, expand_group
     )
     combined = referenced.referenced | referenced.indirectly_referenced
 
@@ -432,9 +430,9 @@ async def async_extract_entities[_EntityT: Entity](
     return found
 
 
-@bind_hass
+@deprecated_hass_argument(breaks_in_ha_version="2026.10")
 async def async_extract_entity_ids(
-    hass: HomeAssistant, service_call: ServiceCall, expand_group: bool = True
+    service_call: ServiceCall, expand_group: bool = True
 ) -> set[str]:
     """Extract a set of entity ids from a service call.
 
@@ -442,7 +440,7 @@ async def async_extract_entity_ids(
     """
     selector_data = target_helpers.TargetSelectorData(service_call.data)
     referenced = target_helpers.async_extract_referenced_entity_ids(
-        hass, selector_data, expand_group
+        service_call.hass, selector_data, expand_group
     )
     return referenced.referenced | referenced.indirectly_referenced
 
@@ -463,17 +461,17 @@ def async_extract_referenced_entity_ids(
     return SelectedEntities(**dataclasses.asdict(selected))
 
 
-@bind_hass
+@deprecated_hass_argument(breaks_in_ha_version="2026.10")
 async def async_extract_config_entry_ids(
-    hass: HomeAssistant, service_call: ServiceCall, expand_group: bool = True
+    service_call: ServiceCall, expand_group: bool = True
 ) -> set[str]:
     """Extract referenced config entry ids from a service call."""
     selector_data = target_helpers.TargetSelectorData(service_call.data)
     referenced = target_helpers.async_extract_referenced_entity_ids(
-        hass, selector_data, expand_group
+        service_call.hass, selector_data, expand_group
     )
-    ent_reg = entity_registry.async_get(hass)
-    dev_reg = device_registry.async_get(hass)
+    ent_reg = entity_registry.async_get(service_call.hass)
+    dev_reg = device_registry.async_get(service_call.hass)
     config_entry_ids: set[str] = set()
 
     # Some devices may have no entities
@@ -492,7 +490,7 @@ async def async_extract_config_entry_ids(
     return config_entry_ids
 
 
-def _load_services_file(hass: HomeAssistant, integration: Integration) -> JSON_TYPE:
+def _load_services_file(integration: Integration) -> JSON_TYPE:
     """Load services file for an integration."""
     try:
         return cast(
@@ -515,12 +513,10 @@ def _load_services_file(hass: HomeAssistant, integration: Integration) -> JSON_T
         return {}
 
 
-def _load_services_files(
-    hass: HomeAssistant, integrations: Iterable[Integration]
-) -> dict[str, JSON_TYPE]:
+def _load_services_files(integrations: Iterable[Integration]) -> dict[str, JSON_TYPE]:
     """Load service files for multiple integrations."""
     return {
-        integration.domain: _load_services_file(hass, integration)
+        integration.domain: _load_services_file(integration)
         for integration in integrations
     }
 
@@ -586,13 +582,8 @@ async def async_get_all_descriptions(
 
         if integrations:
             loaded = await hass.async_add_executor_job(
-                _load_services_files, hass, integrations
+                _load_services_files, integrations
             )
-
-    # Load translations for all service domains
-    translations = await translation.async_get_translations(
-        hass, "en", "services", services
-    )
 
     # Build response
     descriptions: dict[str, dict[str, Any]] = {}
@@ -620,40 +611,11 @@ async def async_get_all_descriptions(
 
             # Don't warn for missing services, because it triggers false
             # positives for things like scripts, that register as a service
-            #
-            # When name & description are in the translations use those;
-            # otherwise fallback to backwards compatible behavior from
-            # the time when we didn't have translations for descriptions yet.
-            # This mimics the behavior of the frontend.
-            description = {
-                "name": translations.get(
-                    f"component.{domain}.services.{service_name}.name",
-                    yaml_description.get("name", ""),
-                ),
-                "description": translations.get(
-                    f"component.{domain}.services.{service_name}.description",
-                    yaml_description.get("description", ""),
-                ),
-                "fields": dict(yaml_description.get("fields", {})),
-            }
+            description = {"fields": yaml_description.get("fields", {})}
 
-            # Translate fields names & descriptions as well
-            for field_name, field_schema in description["fields"].items():
-                if name := translations.get(
-                    f"component.{domain}.services.{service_name}.fields.{field_name}.name"
-                ):
-                    field_schema["name"] = name
-                if desc := translations.get(
-                    f"component.{domain}.services.{service_name}.fields.{field_name}.description"
-                ):
-                    field_schema["description"] = desc
-                if example := translations.get(
-                    f"component.{domain}.services.{service_name}.fields.{field_name}.example"
-                ):
-                    field_schema["example"] = example
-
-            if "target" in yaml_description:
-                description["target"] = yaml_description["target"]
+            for item in ("description", "name", "target"):
+                if item in yaml_description:
+                    description[item] = yaml_description[item]
 
             response = service.supports_response
             if response is not SupportsResponse.NONE:
@@ -764,6 +726,8 @@ async def entity_service_call(
     func: str | HassJob,
     call: ServiceCall,
     required_features: Iterable[int] | None = None,
+    *,
+    entity_device_classes: Iterable[str | None] | None = None,
 ) -> EntityServiceResponse | None:
     """Handle an entity service call.
 
@@ -824,6 +788,17 @@ async def entity_service_call(
     entities: list[Entity] = []
     for entity in entity_candidates:
         if not entity.available:
+            continue
+
+        # Skip entities that don't have the required device class.
+        if (
+            entity_device_classes is not None
+            and entity.device_class not in entity_device_classes
+        ):
+            # If entity explicitly referenced, raise an error
+            if referenced is not None and entity.entity_id in referenced.referenced:
+                raise ServiceNotSupported(call.domain, call.service, entity.entity_id)
+
             continue
 
         # Skip entities that don't have the required feature.
@@ -995,10 +970,10 @@ def async_register_admin_service(
     )
 
 
-@bind_hass
+@deprecated_hass_argument(breaks_in_ha_version="2026.10")
 @callback
 def verify_domain_control(
-    hass: HomeAssistant, domain: str
+    domain: str,
 ) -> Callable[[Callable[[ServiceCall], Any]], Callable[[ServiceCall], Any]]:
     """Ensure permission to access any entity under domain in service call."""
 
@@ -1014,6 +989,7 @@ def verify_domain_control(
             if not call.context.user_id:
                 return await service_handler(call)
 
+            hass = call.hass
             user = await hass.auth.async_get_user(call.context.user_id)
 
             if user is None:
@@ -1136,6 +1112,7 @@ def async_register_entity_service(
     domain: str,
     name: str,
     *,
+    entity_device_classes: Iterable[str | None] | None = None,
     entities: dict[str, Entity],
     func: str | Callable[..., Any],
     job_type: HassJobType | None,
@@ -1162,6 +1139,7 @@ def async_register_entity_service(
             hass,
             entities,
             service_func,
+            entity_device_classes=entity_device_classes,
             required_features=required_features,
         ),
         schema,
@@ -1176,6 +1154,7 @@ def async_register_platform_entity_service(
     service_domain: str,
     service_name: str,
     *,
+    entity_device_classes: Iterable[str | None] | None = None,
     entity_domain: str,
     func: str | Callable[..., Any],
     required_features: Iterable[int] | None = None,
@@ -1206,6 +1185,7 @@ def async_register_platform_entity_service(
             hass,
             get_entities,
             service_func,
+            entity_device_classes=entity_device_classes,
             required_features=required_features,
         ),
         schema,

@@ -337,7 +337,14 @@ class HKDevice:
             # We need to explicitly poll characteristics to get fresh sensor readings
             # before processing the entity map and creating devices.
             # Use poll_all=True since entities haven't registered their characteristics yet.
-            await self.async_update(poll_all=True)
+            try:
+                await self.async_update(poll_all=True)
+            except ValueError as exc:
+                _LOGGER.debug(
+                    "Accessory %s responded with unparsable response, first update was skipped: %s",
+                    self.unique_id,
+                    exc,
+                )
 
         await self.async_process_entity_map()
 
