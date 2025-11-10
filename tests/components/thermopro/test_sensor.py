@@ -175,6 +175,10 @@ class CoordinatorStub:
         if self._saw_sensor_entity_description and self._restore_cb:
             self._restore_cb([])
 
+    def set_restore_callback(self, callback: MagicMock) -> None:
+        """Set the callback used to restore entities during the test."""
+        self._restore_cb = callback
+
 
 async def test_thermopro_restores_entities_on_restart_behavior(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
@@ -216,6 +220,8 @@ async def test_thermopro_restores_entities_on_restart_behavior(
         "homeassistant.components.thermopro.__init__.PassiveBluetoothProcessorCoordinator",
         CoordinatorStub,
     )
+    # Ensure a clean slate for stub instance tracking
+    CoordinatorStub.instances.clear()
 
     # First setup using real config entry setup to populate hass.data
     entry1 = MockConfigEntry(domain=DOMAIN, unique_id="00:11:22:33:44:55")
@@ -242,7 +248,7 @@ async def test_thermopro_restores_entities_on_restart_behavior(
 
     assert add_entities_callbacks, "No add_entities callback was registered"
     coord2 = CoordinatorStub.instances[1]
-    coord2._restore_cb = add_entities_callbacks[-1]
+    coord2.set_restore_callback(add_entities_callbacks[-1])
 
     coord2.trigger_restore_from_test()
     await hass.async_block_till_done()
