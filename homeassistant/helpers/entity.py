@@ -263,8 +263,6 @@ class CalculatedState:
     state: str
     # The union of all attributes, after overriding with entity registry settings
     attributes: dict[str, Any]
-    # Capability attributes returned by the capability_attributes property
-    capability_attributes: Mapping[str, Any] | None
 
 
 class CachedProperties(type):
@@ -1061,8 +1059,8 @@ class Entity(
     @callback
     def _async_calculate_state(self) -> CalculatedState:
         """Calculate state string and attribute mapping."""
-        state, attr, capabilities, _, _ = self.__async_calculate_state()
-        return CalculatedState(state, attr, capabilities)
+        state, attr, _, _, _ = self.__async_calculate_state()
+        return CalculatedState(state, attr)
 
     def __async_calculate_state(
         self,
