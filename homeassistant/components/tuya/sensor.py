@@ -152,6 +152,11 @@ class _RawElectricityVoltageWrapper(DPCodeBase64Wrapper):
         return struct.unpack(">H", raw_value[0:2])[0] / 10.0
 
 
+CURRENT_WRAPPER = (_RawElectricityCurrentWrapper, _JsonElectricityCurrentWrapper)
+POWER_WRAPPER = (_RawElectricityPowerWrapper, _JsonElectricityPowerWrapper)
+VOLTAGE_WRAPPER = (_RawElectricityVoltageWrapper, _JsonElectricityVoltageWrapper)
+
+
 @dataclass(frozen=True)
 class TuyaSensorEntityDescription(SensorEntityDescription):
     """Describes Tuya sensor entity."""
@@ -480,10 +485,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="phase_a_current",
             device_class=SensorDeviceClass.CURRENT,
             state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=(
-                _RawElectricityCurrentWrapper,
-                _JsonElectricityCurrentWrapper,
-            ),
+            wrapper_class=CURRENT_WRAPPER,
         ),
         TuyaSensorEntityDescription(
             key=f"{DPCode.PHASE_A}power",
@@ -491,7 +493,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="phase_a_power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=(_RawElectricityPowerWrapper, _JsonElectricityPowerWrapper),
+            wrapper_class=POWER_WRAPPER,
         ),
         TuyaSensorEntityDescription(
             key=f"{DPCode.PHASE_A}voltage",
@@ -499,10 +501,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="phase_a_voltage",
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=(
-                _RawElectricityVoltageWrapper,
-                _JsonElectricityVoltageWrapper,
-            ),
+            wrapper_class=VOLTAGE_WRAPPER,
         ),
         TuyaSensorEntityDescription(
             key=f"{DPCode.PHASE_B}electriccurrent",
@@ -510,10 +509,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="phase_b_current",
             device_class=SensorDeviceClass.CURRENT,
             state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=(
-                _RawElectricityCurrentWrapper,
-                _JsonElectricityCurrentWrapper,
-            ),
+            wrapper_class=CURRENT_WRAPPER,
         ),
         TuyaSensorEntityDescription(
             key=f"{DPCode.PHASE_B}power",
@@ -521,7 +517,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="phase_b_power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=(_RawElectricityPowerWrapper, _JsonElectricityPowerWrapper),
+            wrapper_class=POWER_WRAPPER,
         ),
         TuyaSensorEntityDescription(
             key=f"{DPCode.PHASE_B}voltage",
@@ -529,10 +525,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="phase_b_voltage",
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=(
-                _RawElectricityVoltageWrapper,
-                _JsonElectricityVoltageWrapper,
-            ),
+            wrapper_class=VOLTAGE_WRAPPER,
         ),
         TuyaSensorEntityDescription(
             key=f"{DPCode.PHASE_C}electriccurrent",
@@ -540,10 +533,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="phase_c_current",
             device_class=SensorDeviceClass.CURRENT,
             state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=(
-                _RawElectricityCurrentWrapper,
-                _JsonElectricityCurrentWrapper,
-            ),
+            wrapper_class=CURRENT_WRAPPER,
         ),
         TuyaSensorEntityDescription(
             key=f"{DPCode.PHASE_C}power",
@@ -551,7 +541,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="phase_c_power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=(_RawElectricityPowerWrapper, _JsonElectricityPowerWrapper),
+            wrapper_class=POWER_WRAPPER,
         ),
         TuyaSensorEntityDescription(
             key=f"{DPCode.PHASE_C}voltage",
@@ -559,10 +549,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="phase_c_voltage",
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=(
-                _RawElectricityVoltageWrapper,
-                _JsonElectricityVoltageWrapper,
-            ),
+            wrapper_class=VOLTAGE_WRAPPER,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CUR_CURRENT,
@@ -1593,10 +1580,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="phase_a_current",
             device_class=SensorDeviceClass.CURRENT,
             state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=(
-                _RawElectricityCurrentWrapper,
-                _JsonElectricityCurrentWrapper,
-            ),
+            wrapper_class=CURRENT_WRAPPER,
         ),
         TuyaSensorEntityDescription(
             key=f"{DPCode.PHASE_A}power",
@@ -1604,7 +1588,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="phase_a_power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=(_RawElectricityPowerWrapper, _JsonElectricityPowerWrapper),
+            wrapper_class=POWER_WRAPPER,
         ),
         TuyaSensorEntityDescription(
             key=f"{DPCode.PHASE_A}voltage",
@@ -1612,10 +1596,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="phase_a_voltage",
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=(
-                _RawElectricityVoltageWrapper,
-                _JsonElectricityVoltageWrapper,
-            ),
+            wrapper_class=VOLTAGE_WRAPPER,
         ),
         TuyaSensorEntityDescription(
             key=f"{DPCode.PHASE_B}electriccurrent",
@@ -1623,10 +1604,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="phase_b_current",
             device_class=SensorDeviceClass.CURRENT,
             state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=(
-                _RawElectricityCurrentWrapper,
-                _JsonElectricityCurrentWrapper,
-            ),
+            wrapper_class=CURRENT_WRAPPER,
         ),
         TuyaSensorEntityDescription(
             key=f"{DPCode.PHASE_B}power",
@@ -1634,7 +1612,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="phase_b_power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=(_RawElectricityPowerWrapper, _JsonElectricityPowerWrapper),
+            wrapper_class=POWER_WRAPPER,
         ),
         TuyaSensorEntityDescription(
             key=f"{DPCode.PHASE_B}voltage",
@@ -1642,10 +1620,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="phase_b_voltage",
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=(
-                _RawElectricityVoltageWrapper,
-                _JsonElectricityVoltageWrapper,
-            ),
+            wrapper_class=VOLTAGE_WRAPPER,
         ),
         TuyaSensorEntityDescription(
             key=f"{DPCode.PHASE_C}electriccurrent",
@@ -1653,10 +1628,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="phase_c_current",
             device_class=SensorDeviceClass.CURRENT,
             state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=(
-                _RawElectricityCurrentWrapper,
-                _JsonElectricityCurrentWrapper,
-            ),
+            wrapper_class=CURRENT_WRAPPER,
         ),
         TuyaSensorEntityDescription(
             key=f"{DPCode.PHASE_C}power",
@@ -1664,7 +1636,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="phase_c_power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=(_RawElectricityPowerWrapper, _JsonElectricityPowerWrapper),
+            wrapper_class=POWER_WRAPPER,
         ),
         TuyaSensorEntityDescription(
             key=f"{DPCode.PHASE_C}voltage",
@@ -1672,10 +1644,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="phase_c_voltage",
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=(
-                _RawElectricityVoltageWrapper,
-                _JsonElectricityVoltageWrapper,
-            ),
+            wrapper_class=VOLTAGE_WRAPPER,
         ),
     ),
     DeviceCategory.ZNNBQ: (
