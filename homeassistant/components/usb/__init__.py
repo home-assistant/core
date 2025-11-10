@@ -35,7 +35,7 @@ from homeassistant.helpers.deprecation import (
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.service_info.usb import UsbServiceInfo as _UsbServiceInfo
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import USBMatcher, async_get_usb
+from homeassistant.loader import USBMatcher, async_get_integration, async_get_usb
 
 from .const import DOMAIN
 from .models import USBDevice
@@ -369,10 +369,17 @@ class USBDiscovery:
         service_info = usb_service_info_from_device(device)
 
         for matcher in matched:
+            domain = matcher["domain"]
+            integration = await async_get_integration(self.hass, domain)
+
+            if not integration.usb_abort_discovery_on_unplug:
+                _LOGGER.debug("Domain %s has opted out of USB abort on unplug", domain)
+                continue
+
             for (
                 flow_id
             ) in self.hass.config_entries.flow.async_get_matching_discovery_flows(
-                matcher["domain"], {"source": config_entries.SOURCE_USB}, service_info
+                domain, {"source": config_entries.SOURCE_USB}, service_info
             ):
                 _LOGGER.debug("Aborting existing flow %s", flow_id)
                 self.hass.config_entries.flow.async_abort(flow_id)

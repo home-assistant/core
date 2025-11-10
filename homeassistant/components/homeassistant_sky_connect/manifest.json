@@ -19,5 +19,6 @@
       "pid": "EA60",
       "vid": "10C4"
     }
-  ]
+  ],
+  "usb_abort_discovery_on_unplug": true
 }

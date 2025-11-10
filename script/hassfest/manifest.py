@@ -269,6 +269,7 @@ INTEGRATION_MANIFEST_SCHEMA = vol.Schema(
                 }
             )
         ],
+        vol.Optional("usb_abort_discovery_on_unplug"): bool,
         vol.Required("documentation"): vol.All(vol.Url(), core_documentation_url),
         vol.Optional("quality_scale"): vol.In(SUPPORTED_QUALITY_SCALES),
         vol.Optional("requirements"): [str],
@@ -376,6 +377,15 @@ def validate_manifest(integration: Integration, core_components_dir: Path) -> No
 
     if not integration.core:
         validate_version(integration)
+
+    if (
+        integration.manifest.get("usb", [])
+        and "usb_abort_discovery_on_unplug" not in integration.manifest
+    ):
+        integration.add_warning(
+            "manifest",
+            "'usb_abort_discovery_on_unplug' is not set",
+        )
 
 
 def sort_manifest(integration: Integration, config: Config) -> bool:

@@ -258,6 +258,7 @@ class Manifest(TypedDict, total=False):
     zeroconf: list[str | dict[str, str]]
     dhcp: list[dict[str, bool | str]]
     usb: list[dict[str, str]]
+    usb_abort_discovery_on_unplug: bool
     homekit: dict[str, list[str]]
     is_built_in: bool
     overwrites_built_in: bool
@@ -672,6 +673,10 @@ class Integration:
                 )
                 continue
 
+            # This key will be required in 2026.10 if an integration uses USB discovery
+            if manifest.get("usb") and "usb_abort_discovery_on_unplug" not in manifest:
+                manifest["usb_abort_discovery_on_unplug"] = False
+
             file_path = manifest_path.parent
             # Avoid the listdir for virtual integrations
             # as they cannot have any platforms
@@ -909,6 +914,11 @@ class Integration:
     def usb(self) -> list[dict[str, str]] | None:
         """Return Integration usb entries."""
         return self.manifest.get("usb")
+
+    @property
+    def usb_abort_discovery_on_unplug(self) -> bool:
+        """Return if usb discovery should be aborted on unplug."""
+        return self.manifest.get("usb_abort_discovery_on_unplug", False)
 
     @property
     def homekit(self) -> dict[str, list[str]] | None:
