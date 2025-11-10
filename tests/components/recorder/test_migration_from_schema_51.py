@@ -102,24 +102,24 @@ def db_schema_51():
                 # MariaDB/MySQL should correct unit class of sensor.test4 + sensor.test5
                 "mysql": {
                     "sensor.test1": "energy",
-                    "sensor.test2": None,
-                    "sensor.test3": None,
+                    "sensor.test2": "power",
+                    "sensor.test3": "unitless",
                     "sensor.test4": None,
                     "sensor.test5": None,
                 },
                 # PostgreSQL is not modified by the migration
                 "postgresql": {
                     "sensor.test1": "energy",
-                    "sensor.test2": None,
-                    "sensor.test3": None,
+                    "sensor.test2": "power",
+                    "sensor.test3": "unitless",
                     "sensor.test4": "volume_flow_rate",
                     "sensor.test5": "area",
                 },
                 # SQLite is not modified by the migration
                 "sqlite": {
                     "sensor.test1": "energy",
-                    "sensor.test2": None,
-                    "sensor.test3": None,
+                    "sensor.test2": "power",
+                    "sensor.test3": "unitless",
                     "sensor.test4": "volume_flow_rate",
                     "sensor.test5": "area",
                 },
@@ -151,6 +151,7 @@ async def test_migrate_statistics_meta(
                         mean_type=StatisticMeanType.NONE,
                         unit_class="energy",
                     ),
+                    # Unexpected, but will not be changed by migration
                     old_db_schema.StatisticsMeta(
                         statistic_id="sensor.test2",
                         source="recorder",
@@ -159,9 +160,9 @@ async def test_migrate_statistics_meta(
                         has_sum=True,
                         name="Test 2",
                         mean_type=StatisticMeanType.NONE,
-                        unit_class=None,
+                        unit_class="power",
                     ),
-                    # Unexpected, but should not be altered by the migration
+                    # This will be updated to "unitless" when migration runs again
                     old_db_schema.StatisticsMeta(
                         statistic_id="sensor.test3",
                         source="recorder",

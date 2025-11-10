@@ -2059,40 +2059,14 @@ class _SchemaVersion51Migrator(_SchemaVersionMigrator, target_version=51):
 class _SchemaVersion52Migrator(_SchemaVersionMigrator, target_version=52):
     def _apply_update(self) -> None:
         """Version specific update method."""
-        if self.old_version <= 50:
-            self._update_from_version_50()
+        if self.engine.dialect.name == SupportedDialect.MYSQL:
+            self._apply_update_mysql()
         else:
-            self._update_from_version_51()
+            self._apply_update_postgresql_sqlite()
 
-    def _update_from_version_50(self) -> None:
-        """Version specific update method from version 50 or earlier."""
-        # Add unit class column to StatisticsMeta
+    def _apply_update_mysql(self) -> None:
+        """Version specific update method for mysql."""
         _add_columns(self.session_maker, "statistics_meta", ["unit_class VARCHAR(255)"])
-        with session_scope(session=self.session_maker()) as session:
-            connection = session.connection()
-            for conv in _PRIMARY_UNIT_CONVERTERS:
-                if self.engine.dialect.name == SupportedDialect.MYSQL:
-                    units = {u.encode("utf-8") if u else u for u in conv.VALID_UNITS}
-                    connection.execute(
-                        update(StatisticsMeta)
-                        .where(
-                            cast_(StatisticsMeta.unit_of_measurement, BINARY).in_(units)
-                        )
-                        .values(unit_class=conv.UNIT_CLASS)
-                    )
-                else:
-                    connection.execute(
-                        update(StatisticsMeta)
-                        .where(StatisticsMeta.unit_of_measurement.in_(conv.VALID_UNITS))
-                        .values(unit_class=conv.UNIT_CLASS)
-                    )
-
-    def _update_from_version_51(self) -> None:
-        """Version specific update method from version 51."""
-        if self.engine.dialect.name != SupportedDialect.MYSQL:
-            return
-        # Fix bad unit_class assignments due to case insensitive
-        # string comparisons in MySQL
         with session_scope(session=self.session_maker()) as session:
             connection = session.connection()
             for conv in _PRIMARY_UNIT_CONVERTERS:
@@ -2111,6 +2085,35 @@ class _SchemaVersion52Migrator(_SchemaVersionMigrator, target_version=52):
                         )
                     )
                     .values(unit_class=None)
+                )
+                connection.execute(
+                    update(StatisticsMeta)
+                    .where(
+                        and_(
+                            cast_(StatisticsMeta.unit_of_measurement, BINARY).in_(
+                                units
+                            ),
+                            StatisticsMeta.unit_class.is_(None),
+                        )
+                    )
+                    .values(unit_class=conv.UNIT_CLASS)
+                )
+
+    def _apply_update_postgresql_sqlite(self) -> None:
+        """Version specific update method for postgresql and sqlite."""
+        _add_columns(self.session_maker, "statistics_meta", ["unit_class VARCHAR(255)"])
+        with session_scope(session=self.session_maker()) as session:
+            connection = session.connection()
+            for conv in _PRIMARY_UNIT_CONVERTERS:
+                connection.execute(
+                    update(StatisticsMeta)
+                    .where(
+                        and_(
+                            StatisticsMeta.unit_of_measurement.in_(conv.VALID_UNITS),
+                            StatisticsMeta.unit_class.is_(None),
+                        )
+                    )
+                    .values(unit_class=conv.UNIT_CLASS)
                 )
 
 
