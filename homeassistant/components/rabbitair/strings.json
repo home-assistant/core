@@ -20,14 +20,5 @@
         }
       }
     }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]"
-        }
-      }
-    }
   }
 }
