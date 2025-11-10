@@ -105,7 +105,6 @@ class IntegerTypeData(TypeInformation):
 class BitmapTypeInformation(TypeInformation):
     """Bitmap type information."""
 
-    dpcode: DPCode
     label: list[str]
 
     @classmethod
@@ -331,6 +330,16 @@ def find_dpcode(
     prefer_function: bool = False,
     dptype: Literal[DPType.BITMAP],
 ) -> BitmapTypeInformation | None: ...
+
+
+@overload
+def find_dpcode(
+    device: CustomerDevice,
+    dpcodes: str | DPCode | tuple[DPCode, ...] | None,
+    *,
+    prefer_function: bool = False,
+    dptype: Literal[DPType.BOOLEAN],
+) -> TypeInformation | None: ...
 
 
 @overload
