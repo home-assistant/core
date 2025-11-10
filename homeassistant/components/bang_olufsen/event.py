@@ -168,9 +168,7 @@ class BangOlufsenRemoteKeyEvent(BangOlufsenEvent):
         if TYPE_CHECKING:
             assert remote.serial_number
 
-        self._attr_unique_id = (
-            f"{remote.serial_number}_{self._unique_id}_{key_type}"
-        )
+        self._attr_unique_id = f"{remote.serial_number}_{self._unique_id}_{key_type}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{remote.serial_number}_{self._unique_id}")},
             name=f"{BangOlufsenModel.BEOREMOTE_ONE}-{remote.serial_number}-{self._unique_id}",

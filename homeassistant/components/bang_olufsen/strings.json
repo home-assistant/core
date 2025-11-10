@@ -195,94 +195,6 @@
           }
         }
       },
-      "control_func2": {
-        "name": "Control - Function 2",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "[%key:component::bang_olufsen::common::key_press%]",
-              "key_release": "[%key:component::bang_olufsen::common::key_release%]"
-            }
-          }
-        }
-      },
-      "control_func3": {
-        "name": "Control - Function 3",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "[%key:component::bang_olufsen::common::key_press%]",
-              "key_release": "[%key:component::bang_olufsen::common::key_release%]"
-            }
-          }
-        }
-      },
-      "control_func4": {
-        "name": "Control - Function 4",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "[%key:component::bang_olufsen::common::key_press%]",
-              "key_release": "[%key:component::bang_olufsen::common::key_release%]"
-            }
-          }
-        }
-      },
-      "control_func5": {
-        "name": "Control - Function 5",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "[%key:component::bang_olufsen::common::key_press%]",
-              "key_release": "[%key:component::bang_olufsen::common::key_release%]"
-            }
-          }
-        }
-      },
-      "control_func6": {
-        "name": "Control - Function 6",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "[%key:component::bang_olufsen::common::key_press%]",
-              "key_release": "[%key:component::bang_olufsen::common::key_release%]"
-            }
-          }
-        }
-      },
-      "control_func7": {
-        "name": "Control - Function 7",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "[%key:component::bang_olufsen::common::key_press%]",
-              "key_release": "[%key:component::bang_olufsen::common::key_release%]"
-            }
-          }
-        }
-      },
-      "control_func8": {
-        "name": "Control - Function 8",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "[%key:component::bang_olufsen::common::key_press%]",
-              "key_release": "[%key:component::bang_olufsen::common::key_release%]"
-            }
-          }
-        }
-      },
-      "control_func9": {
-        "name": "Control - Function 9",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "[%key:component::bang_olufsen::common::key_press%]",
-              "key_release": "[%key:component::bang_olufsen::common::key_release%]"
-            }
-          }
-        }
-      },
       "control_func10": {
         "name": "Control - Function 10",
         "state_attributes": {
@@ -393,6 +305,17 @@
           }
         }
       },
+      "control_func2": {
+        "name": "Control - Function 2",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "key_press": "[%key:component::bang_olufsen::common::key_press%]",
+              "key_release": "[%key:component::bang_olufsen::common::key_release%]"
+            }
+          }
+        }
+      },
       "control_func20": {
         "name": "Control - Function 20",
         "state_attributes": {
@@ -472,6 +395,83 @@
       },
       "control_func27": {
         "name": "Control - Function 27",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "key_press": "[%key:component::bang_olufsen::common::key_press%]",
+              "key_release": "[%key:component::bang_olufsen::common::key_release%]"
+            }
+          }
+        }
+      },
+      "control_func3": {
+        "name": "Control - Function 3",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "key_press": "[%key:component::bang_olufsen::common::key_press%]",
+              "key_release": "[%key:component::bang_olufsen::common::key_release%]"
+            }
+          }
+        }
+      },
+      "control_func4": {
+        "name": "Control - Function 4",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "key_press": "[%key:component::bang_olufsen::common::key_press%]",
+              "key_release": "[%key:component::bang_olufsen::common::key_release%]"
+            }
+          }
+        }
+      },
+      "control_func5": {
+        "name": "Control - Function 5",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "key_press": "[%key:component::bang_olufsen::common::key_press%]",
+              "key_release": "[%key:component::bang_olufsen::common::key_release%]"
+            }
+          }
+        }
+      },
+      "control_func6": {
+        "name": "Control - Function 6",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "key_press": "[%key:component::bang_olufsen::common::key_press%]",
+              "key_release": "[%key:component::bang_olufsen::common::key_release%]"
+            }
+          }
+        }
+      },
+      "control_func7": {
+        "name": "Control - Function 7",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "key_press": "[%key:component::bang_olufsen::common::key_press%]",
+              "key_release": "[%key:component::bang_olufsen::common::key_release%]"
+            }
+          }
+        }
+      },
+      "control_func8": {
+        "name": "Control - Function 8",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "key_press": "[%key:component::bang_olufsen::common::key_press%]",
+              "key_release": "[%key:component::bang_olufsen::common::key_release%]"
+            }
+          }
+        }
+      },
+      "control_func9": {
+        "name": "Control - Function 9",
         "state_attributes": {
           "event_type": {
             "state": {
@@ -745,94 +745,6 @@
           }
         }
       },
-      "light_func2": {
-        "name": "Light - Function 2",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "[%key:component::bang_olufsen::common::key_press%]",
-              "key_release": "[%key:component::bang_olufsen::common::key_release%]"
-            }
-          }
-        }
-      },
-      "light_func3": {
-        "name": "Light - Function 3",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "[%key:component::bang_olufsen::common::key_press%]",
-              "key_release": "[%key:component::bang_olufsen::common::key_release%]"
-            }
-          }
-        }
-      },
-      "light_func4": {
-        "name": "Light - Function 4",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "[%key:component::bang_olufsen::common::key_press%]",
-              "key_release": "[%key:component::bang_olufsen::common::key_release%]"
-            }
-          }
-        }
-      },
-      "light_func5": {
-        "name": "Light - Function 5",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "[%key:component::bang_olufsen::common::key_press%]",
-              "key_release": "[%key:component::bang_olufsen::common::key_release%]"
-            }
-          }
-        }
-      },
-      "light_func6": {
-        "name": "Light - Function 6",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "[%key:component::bang_olufsen::common::key_press%]",
-              "key_release": "[%key:component::bang_olufsen::common::key_release%]"
-            }
-          }
-        }
-      },
-      "light_func7": {
-        "name": "Light - Function 7",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "[%key:component::bang_olufsen::common::key_press%]",
-              "key_release": "[%key:component::bang_olufsen::common::key_release%]"
-            }
-          }
-        }
-      },
-      "light_func8": {
-        "name": "Light - Function 8",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "[%key:component::bang_olufsen::common::key_press%]",
-              "key_release": "[%key:component::bang_olufsen::common::key_release%]"
-            }
-          }
-        }
-      },
-      "light_func9": {
-        "name": "Light - Function 9",
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "key_press": "[%key:component::bang_olufsen::common::key_press%]",
-              "key_release": "[%key:component::bang_olufsen::common::key_release%]"
-            }
-          }
-        }
-      },
       "light_func10": {
         "name": "Light - Function 10",
         "state_attributes": {
@@ -912,6 +824,94 @@
       },
       "light_func17": {
         "name": "Light- Function 17",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "key_press": "[%key:component::bang_olufsen::common::key_press%]",
+              "key_release": "[%key:component::bang_olufsen::common::key_release%]"
+            }
+          }
+        }
+      },
+      "light_func2": {
+        "name": "Light - Function 2",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "key_press": "[%key:component::bang_olufsen::common::key_press%]",
+              "key_release": "[%key:component::bang_olufsen::common::key_release%]"
+            }
+          }
+        }
+      },
+      "light_func3": {
+        "name": "Light - Function 3",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "key_press": "[%key:component::bang_olufsen::common::key_press%]",
+              "key_release": "[%key:component::bang_olufsen::common::key_release%]"
+            }
+          }
+        }
+      },
+      "light_func4": {
+        "name": "Light - Function 4",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "key_press": "[%key:component::bang_olufsen::common::key_press%]",
+              "key_release": "[%key:component::bang_olufsen::common::key_release%]"
+            }
+          }
+        }
+      },
+      "light_func5": {
+        "name": "Light - Function 5",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "key_press": "[%key:component::bang_olufsen::common::key_press%]",
+              "key_release": "[%key:component::bang_olufsen::common::key_release%]"
+            }
+          }
+        }
+      },
+      "light_func6": {
+        "name": "Light - Function 6",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "key_press": "[%key:component::bang_olufsen::common::key_press%]",
+              "key_release": "[%key:component::bang_olufsen::common::key_release%]"
+            }
+          }
+        }
+      },
+      "light_func7": {
+        "name": "Light - Function 7",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "key_press": "[%key:component::bang_olufsen::common::key_press%]",
+              "key_release": "[%key:component::bang_olufsen::common::key_release%]"
+            }
+          }
+        }
+      },
+      "light_func8": {
+        "name": "Light - Function 8",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "key_press": "[%key:component::bang_olufsen::common::key_press%]",
+              "key_release": "[%key:component::bang_olufsen::common::key_release%]"
+            }
+          }
+        }
+      },
+      "light_func9": {
+        "name": "Light - Function 9",
         "state_attributes": {
           "event_type": {
             "state": {
