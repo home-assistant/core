@@ -54,7 +54,7 @@ _PING_TIMEOUT: Final = 5
 _PING_SEND_DELAY: Final = 2
 _PIPELINE_FINISH_TIMEOUT: Final = 1
 _TTS_SAMPLE_RATE: Final = 22050
-_ANNOUNCE_CHUNK_BYTES: Final = 2048  # 1024 samples
+_AUDIO_CHUNK_BYTES: Final = 2048  # 1024 samples
 _TTS_TIMEOUT_EXTRA: Final = 1.0
 
 # Wyoming stage -> Assist stage
@@ -360,7 +360,7 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
             )
             assert proc.stdout is not None
             while True:
-                chunk_bytes = await proc.stdout.read(_ANNOUNCE_CHUNK_BYTES)
+                chunk_bytes = await proc.stdout.read(_AUDIO_CHUNK_BYTES)
                 if not chunk_bytes:
                     break
 
@@ -782,17 +782,22 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
                 assert sample_width is not None
                 assert sample_channels is not None
 
-                audio_chunk = AudioChunk(
-                    rate=sample_rate,
-                    width=sample_width,
-                    channels=sample_channels,
-                    audio=data_chunk,
-                    timestamp=timestamp,
-                )
+                data_chunk_idx = 0
+                while data_chunk_idx < len(data_chunk):
+                    audio_chunk = AudioChunk(
+                        rate=sample_rate,
+                        width=sample_width,
+                        channels=sample_channels,
+                        audio=data_chunk[
+                            data_chunk_idx : data_chunk_idx + _AUDIO_CHUNK_BYTES
+                        ],
+                        timestamp=timestamp,
+                    )
 
-                await self._client.write_event(audio_chunk.event())
-                timestamp += audio_chunk.milliseconds
-                total_seconds += audio_chunk.seconds
+                    await self._client.write_event(audio_chunk.event())
+                    timestamp += audio_chunk.milliseconds
+                    total_seconds += audio_chunk.seconds
+                    data_chunk_idx += _AUDIO_CHUNK_BYTES
 
             await self._client.write_event(AudioStop(timestamp=timestamp).event())
             _LOGGER.debug("TTS streaming complete")

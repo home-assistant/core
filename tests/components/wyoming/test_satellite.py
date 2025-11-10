@@ -59,7 +59,7 @@ async def setup_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     return entry
 
 
-def get_test_wav() -> bytes:
+def get_test_wav(chunk_copies: int = 1) -> bytes:
     """Get bytes for test WAV file."""
     with io.BytesIO() as wav_io:
         with wave.open(wav_io, "wb") as wav_file:
@@ -68,7 +68,7 @@ def get_test_wav() -> bytes:
             wav_file.setnchannels(1)
 
             # Single frame
-            wav_file.writeframes(b"1234")
+            wav_file.writeframes(b"1234" * chunk_copies)
 
         return wav_io.getvalue()
 
@@ -111,6 +111,7 @@ class SatelliteAsyncTcpClient(MockAsyncTcpClient):
         self.tts_audio_chunk_event = asyncio.Event()
         self.tts_audio_stop_event = asyncio.Event()
         self.tts_audio_chunk: AudioChunk | None = None
+        self.tts_audio_chunks: list[AudioChunk] = []
 
         self.error_event = asyncio.Event()
         self.error: Error | None = None
@@ -169,6 +170,7 @@ class SatelliteAsyncTcpClient(MockAsyncTcpClient):
             self.tts_audio_start_event.set()
         elif AudioChunk.is_type(event.type):
             self.tts_audio_chunk = AudioChunk.from_event(event)
+            self.tts_audio_chunks.append(self.tts_audio_chunk)
             self.tts_audio_chunk_event.set()
         elif AudioStop.is_type(event.type):
             self.tts_audio_stop_event.set()
@@ -1537,7 +1539,7 @@ async def test_satellite_tts_streaming(hass: HomeAssistant) -> None:
         assert pipeline_kwargs.get("device_id") == device.device_id
 
         # Send TTS info early
-        mock_tts_result_stream = MockResultStream(hass, "wav", get_test_wav())
+        mock_tts_result_stream = MockResultStream(hass, "wav", get_test_wav(1000))
         pipeline_event_callback(
             assist_pipeline.PipelineEvent(
                 assist_pipeline.PipelineEventType.RUN_START,
@@ -1604,12 +1606,14 @@ async def test_satellite_tts_streaming(hass: HomeAssistant) -> None:
             await mock_client.tts_audio_chunk_event.wait()
             await mock_client.tts_audio_stop_event.wait()
 
-        # Verify audio chunk from test WAV
-        assert mock_client.tts_audio_chunk is not None
-        assert mock_client.tts_audio_chunk.rate == 22050
-        assert mock_client.tts_audio_chunk.width == 2
-        assert mock_client.tts_audio_chunk.channels == 1
-        assert mock_client.tts_audio_chunk.audio == b"1234"
+        # Verify audio chunks from test WAV
+        assert len(mock_client.tts_audio_chunks) == 2
+        chunk_sizes = (2048, 1952)  # 1024 samples per chunk
+        for i, audio_chunk in enumerate(mock_client.tts_audio_chunks):
+            assert audio_chunk.rate == 22050
+            assert audio_chunk.width == 2
+            assert audio_chunk.channels == 1
+            assert len(audio_chunk.audio) == chunk_sizes[i]
 
         # Text-to-speech text
         pipeline_event_callback(
