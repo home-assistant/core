@@ -121,9 +121,7 @@ def patch_august_setup():
     with (
         patch("yalexs.manager.gateway.ApiAsync") as api_mock,
         patch.object(_RateLimitChecker, "register_wakeup") as authenticate_mock,
-        patch(
-            "homeassistant.components.august.config_entry_oauth2_flow.async_get_config_entry_implementation"
-        ),
+        patch("homeassistant.components.august.async_get_config_entry_implementation"),
     ):
         yield api_mock, authenticate_mock
 
