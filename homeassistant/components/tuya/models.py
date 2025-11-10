@@ -264,7 +264,7 @@ class DPCodeB64DecodeWrapper(DPCodeWrapper):
     Returns a dictionary with the dpcode as event_type and decoded value in attributes.
     """
 
-    def read_device_status(self, device: CustomerDevice) -> dict[str, Any] | None:
+    def read_device_status(self, device: CustomerDevice) -> str | None:
         """Read the device value for the dpcode and return decoded value."""
         raw_value = self._read_device_status_raw(device)
         if raw_value is None:
@@ -274,7 +274,6 @@ class DPCodeB64DecodeWrapper(DPCodeWrapper):
         try:
             return base64.b64decode(raw_value).decode("utf-8")
         except (ValueError, UnicodeDecodeError):
-            # If decoding fails, use raw value
             return None
 
     @classmethod
