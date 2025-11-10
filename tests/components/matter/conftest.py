@@ -79,6 +79,7 @@ async def integration_fixture(
         "aqara_door_window_p2",
         "aqara_motion_p2",
         "aqara_presence_fp300",
+        "aqara_sensor_w100",
         "aqara_thermostat_w500",
         "aqara_u200",
         "battery_storage",
