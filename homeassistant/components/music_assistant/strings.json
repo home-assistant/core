@@ -24,8 +24,6 @@
         "data_description": {
           "url": "URL of the Music Assistant server"
         },
-        "description": "URL of the Music Assistant server",
-        "title": "Connect to a Music Assistant server"
       }
     }
   },
