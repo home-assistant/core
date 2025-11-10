@@ -91,7 +91,7 @@ async def async_setup_entry(
     for device in devices:
         if (
             device.model == BangOlufsenModel.BEOREMOTE_ONE
-            and device.serial_number not in [remote.serial_number for remote in remotes]
+            and device.serial_number not in {remote.serial_number for remote in remotes}
         ):
             device_registry.async_update_device(
                 device.id, remove_config_entry_id=config_entry.entry_id
@@ -169,11 +169,11 @@ class BangOlufsenRemoteKeyEvent(BangOlufsenEvent):
             assert remote.serial_number
 
         self._attr_unique_id = (
-            f"{remote.serial_number}_{config_entry.unique_id}_{key_type}"
+            f"{remote.serial_number}_{self._unique_id}_{key_type}"
         )
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{remote.serial_number}_{config_entry.unique_id}")},
-            name=f"{BangOlufsenModel.BEOREMOTE_ONE}-{remote.serial_number}-{config_entry.unique_id}",
+            identifiers={(DOMAIN, f"{remote.serial_number}_{self._unique_id}")},
+            name=f"{BangOlufsenModel.BEOREMOTE_ONE}-{remote.serial_number}-{self._unique_id}",
             model=BangOlufsenModel.BEOREMOTE_ONE,
             serial_number=remote.serial_number,
             sw_version=remote.app_version,
