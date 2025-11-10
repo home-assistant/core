@@ -1575,12 +1575,10 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
-            key=f"{DPCode.TOTAL_POWER}power",
-            dpcode=DPCode.TOTAL_POWER,
+            key=DPCode.TOTAL_POWER,
             translation_key="total_power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=(_RawElectricityPowerWrapper, _JsonElectricityPowerWrapper),
         ),
         TuyaSensorEntityDescription(
             key=DPCode.SUPPLY_FREQUENCY,
