@@ -1091,8 +1091,8 @@ class Entity(
         available = self.available  # only call self.available once per update cycle
         state = self._stringify_state(available)
         if available:
-            if self._included_entities:
-                attr[ATTR_ENTITY_ID] = self._included_entities.copy()
+            if hasattr(self, "_attr_included_entities"):
+                attr[ATTR_ENTITY_ID] = self._attr_included_entities.copy()
             if state_attributes := self.state_attributes:
                 attr |= state_attributes
             if extra_state_attributes := self.extra_state_attributes:
@@ -1669,8 +1669,8 @@ class Entity(
                 and entry.unique_id in self.included_unique_ids
             ) or (
                 event.data["action"] == "remove"
-                and self._included_entities is not None
-                and event.data["entity_id"] in self._included_entities
+                and hasattr(self, "_attr_included_entities")
+                and event.data["entity_id"] in self._attr_included_entities
             ):
                 _update_group_entity_ids()
                 self.async_write_ha_state()
@@ -1694,16 +1694,6 @@ class Entity(
         if hasattr(self, "_attr_included_unique_ids"):
             return self._attr_included_unique_ids
         return []
-
-    @property
-    def _included_entities(self) -> list[str] | None:
-        """Return a list of entity IDs if the entity represents a group.
-
-        Included entities will be shown as members in the UI.
-        """
-        if hasattr(self, "_attr_included_entities"):
-            return self._attr_included_entities
-        return None
 
 
 class ToggleEntityDescription(EntityDescription, frozen_or_thawed=True):
