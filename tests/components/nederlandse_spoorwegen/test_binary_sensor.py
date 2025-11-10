@@ -15,6 +15,7 @@ from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.freeze_time("2025-09-15 14:30:00+00:00")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_binary_sensor(
     hass: HomeAssistant,
     mock_nsapi,
@@ -30,6 +31,7 @@ async def test_binary_sensor(
 
 
 @pytest.mark.freeze_time("2025-09-15 14:30:00+00:00")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_single_trip_binary_sensor(
     hass: HomeAssistant,
     mock_single_trip_nsapi: AsyncMock,
@@ -45,6 +47,7 @@ async def test_single_trip_binary_sensor(
 
 
 @pytest.mark.freeze_time("2025-09-15 14:30:00+00:00")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_no_trips_binary_sensor(
     hass: HomeAssistant,
     mock_no_trips_nsapi: AsyncMock,

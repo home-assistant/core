@@ -76,6 +76,7 @@ BINARY_SENSOR_DESCRIPTIONS = [
             getattr(trip, "departure_time_planned", None),
             getattr(trip, "departure_time_actual", None),
         ),
+        entity_registry_enabled_default=False,
     ),
     NSSensorEntityDescription(
         key="is_arrival_delayed",
@@ -84,11 +85,13 @@ BINARY_SENSOR_DESCRIPTIONS = [
             getattr(trip, "arrival_time_planned", None),
             getattr(trip, "arrival_time_actual", None),
         ),
+        entity_registry_enabled_default=False,
     ),
     NSSensorEntityDescription(
         key="is_going",
         translation_key="is_going",
         value_fn=lambda trip: getattr(trip, "going", None),
+        entity_registry_enabled_default=False,
     ),
 ]
 
