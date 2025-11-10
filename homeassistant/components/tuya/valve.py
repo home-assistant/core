@@ -140,12 +140,8 @@ class TuyaValveEntity(TuyaEntity, ValveEntity):
 
     async def async_open_valve(self) -> None:
         """Open the valve."""
-        await self.hass.async_add_executor_job(
-            self._send_command, [{"code": self._dpcode_wrapper.dpcode, "value": True}]
-        )
+        await self._async_send_dpcode_update(self._dpcode_wrapper, True)
 
     async def async_close_valve(self) -> None:
         """Close the valve."""
-        await self.hass.async_add_executor_job(
-            self._send_command, [{"code": self._dpcode_wrapper.dpcode, "value": False}]
-        )
+        await self._async_send_dpcode_update(self._dpcode_wrapper, False)
