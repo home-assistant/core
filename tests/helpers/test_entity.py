@@ -2962,9 +2962,7 @@ async def test_included_entities(
         "very_unique_moon",
         "very_unique_oceans",
     ]
-    mock_entity.async_set_included_entities()
-
-    mock_entity.async_schedule_update_ha_state(True)
+    mock_entity.async_write_ha_state()
     await hass.async_block_till_done()
 
     state = hass.states.get(mock_entity.entity_id)
@@ -2977,9 +2975,8 @@ async def test_included_entities(
 
     # Remove an entity from the group of included entities
     mock_entity._attr_included_unique_ids = ["very_unique_moon", "very_unique_oceans"]
-    mock_entity.async_set_included_entities()
 
-    mock_entity.async_schedule_update_ha_state(True)
+    mock_entity.async_write_ha_state()
     await hass.async_block_till_done()
 
     state = hass.states.get(mock_entity.entity_id)
@@ -2989,7 +2986,6 @@ async def test_included_entities(
     entity_registry.async_update_entity(
         entity_id="hello.moon", new_entity_id="hello.moon_light"
     )
-
     await hass.async_block_till_done()
 
     state = hass.states.get(mock_entity.entity_id)

@@ -1027,6 +1027,7 @@ class Entity(
             self._async_verify_state_writable()
         if self.hass.loop_thread_id != threading.get_ident():
             report_non_thread_safe_operation("async_write_ha_state")
+        self._async_set_included_entities()
         self._async_write_ha_state()
 
     def _stringify_state(self, available: bool) -> str:
@@ -1384,7 +1385,6 @@ class Entity(
         """Finish adding an entity to a platform."""
         await self.async_internal_added_to_hass()
         await self.async_added_to_hass()
-        self.async_set_included_entities()
         self._platform_state = EntityPlatformState.ADDED
         self.async_write_ha_state()
 
@@ -1643,13 +1643,21 @@ class Entity(
         )
 
     @callback
-    def async_set_included_entities(self) -> None:
+    def _async_set_included_entities(self) -> None:
         """Set the list of included entities identified by their unique IDs.
 
-        Integrations need to call this when the list of included unique IDs changes.
+        This is called just before the entity state has changed.
         """
-        if not self.included_unique_ids:
+        if (
+            self.__init_track_included_entities
+            and self._attr_included_unique_ids == self.included_unique_ids
+        ):
             return
+
+        # Clear cached property if exists
+        if hasattr(self, "included_unique_ids"):
+            del self.included_unique_ids
+
         entity_registry = er.async_get(self.hass)
         assert self.entity_id is not None
 
@@ -1685,7 +1693,7 @@ class Entity(
             self.__init_track_included_entities = True
         _update_group_entity_ids()
 
-    @property
+    @cached_property
     def included_unique_ids(self) -> list[str]:
         """Return the list of unique IDs if the entity represents a group.
 
