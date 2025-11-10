@@ -494,7 +494,7 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
         self._attr_native_min_value = dpcode_wrapper.type_information.min_scaled
         self._attr_native_step = dpcode_wrapper.type_information.step_scaled
         if description.native_unit_of_measurement is None:
-            self._attr_native_unit_of_measurement = dpcode_wrapper.type_information.unit
+            self._attr_native_unit_of_measurement = dpcode_wrapper.native_unit
 
         # Logic to ensure the set device class and API received Unit Of Measurement
         # match Home Assistants requirements.
