@@ -86,11 +86,6 @@ MASTER_THERMOSTATS: Final[list[str]] = [
 ]
 
 # Select constants
-AVAILABLE_SCHEDULES: Final = "available_schedules"
-DHW_MODES: Final = "dhw_modes"
-GATEWAY_MODES: Final = "gateway_modes"
-REGULATION_MODES: Final = "regulation_modes"
-ZONE_PROFILES: Final = "zone_profiles"
 SELECT_DHW_MODE: Final = "select_dhw_mode"
 SELECT_GATEWAY_MODE: Final = "select_gateway_mode"
 SELECT_REGULATION_MODE: Final = "select_regulation_mode"
