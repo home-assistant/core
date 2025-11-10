@@ -6,10 +6,11 @@ from datetime import timedelta
 import logging
 
 from pyanglianwater import AnglianWater
+from pyanglianwater.exceptions import ExpiredAccessTokenError, UnknownEndpointError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
 
@@ -44,5 +45,5 @@ class AnglianWaterUpdateCoordinator(DataUpdateCoordinator[None]):
         """Update data from Anglian Water's API."""
         try:
             return await self.api.update()
-        except Exception:
-            pass  # TODO
+        except (ExpiredAccessTokenError, UnknownEndpointError) as err:
+            raise UpdateFailed from err
