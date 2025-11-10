@@ -1,4 +1,4 @@
-"""Test for migration from DB schema version 50."""
+"""Test for migration from DB schema version 51."""
 
 import importlib
 import sys
@@ -29,7 +29,7 @@ from tests.common import async_test_home_assistant
 from tests.typing import RecorderInstanceContextManager
 
 CREATE_ENGINE_TARGET = "homeassistant.components.recorder.core.create_engine"
-SCHEMA_MODULE_50 = "tests.components.recorder.db_schema_50"
+SCHEMA_MODULE_51 = "tests.components.recorder.db_schema_51"
 
 
 @pytest.fixture
@@ -50,8 +50,8 @@ def _create_engine_test(*args, **kwargs):
 
     This simulates an existing db with the old schema.
     """
-    importlib.import_module(SCHEMA_MODULE_50)
-    old_db_schema = sys.modules[SCHEMA_MODULE_50]
+    importlib.import_module(SCHEMA_MODULE_51)
+    old_db_schema = sys.modules[SCHEMA_MODULE_51]
     engine = create_engine(*args, **kwargs)
     old_db_schema.Base.metadata.create_all(engine)
     with Session(engine) as session:
@@ -68,10 +68,10 @@ def _create_engine_test(*args, **kwargs):
 
 
 @pytest.fixture
-def db_schema_50():
+def db_schema_51():
     """Fixture to initialize the db with the old schema."""
-    importlib.import_module(SCHEMA_MODULE_50)
-    old_db_schema = sys.modules[SCHEMA_MODULE_50]
+    importlib.import_module(SCHEMA_MODULE_51)
+    old_db_schema = sys.modules[SCHEMA_MODULE_51]
 
     with (
         patch.object(recorder, "db_schema", old_db_schema),
@@ -93,15 +93,49 @@ def db_schema_50():
         yield
 
 
-@pytest.mark.parametrize("persistent_database", [True])
+@pytest.mark.parametrize(
+    ("persistent_database", "expected_unit_class"),
+    [
+        (
+            True,
+            {
+                # MariaDB/MySQL should correct unit class of sensor.test4 + sensor.test5
+                "mysql": {
+                    "sensor.test1": "energy",
+                    "sensor.test2": "power",
+                    "sensor.test3": "unitless",
+                    "sensor.test4": None,
+                    "sensor.test5": None,
+                },
+                # PostgreSQL is not modified by the migration
+                "postgresql": {
+                    "sensor.test1": "energy",
+                    "sensor.test2": "power",
+                    "sensor.test3": "unitless",
+                    "sensor.test4": "volume_flow_rate",
+                    "sensor.test5": "area",
+                },
+                # SQLite is not modified by the migration
+                "sqlite": {
+                    "sensor.test1": "energy",
+                    "sensor.test2": "power",
+                    "sensor.test3": "unitless",
+                    "sensor.test4": "volume_flow_rate",
+                    "sensor.test5": "area",
+                },
+            },
+        ),
+    ],
+)
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_migrate_statistics_meta(
     async_test_recorder: RecorderInstanceContextManager,
     caplog: pytest.LogCaptureFixture,
+    expected_unit_class: dict[str, dict[str, str | None]],
 ) -> None:
-    """Test migration of metadata adding unit_class."""
-    importlib.import_module(SCHEMA_MODULE_50)
-    old_db_schema = sys.modules[SCHEMA_MODULE_50]
+    """Test we can fix bad migration to version 51."""
+    importlib.import_module(SCHEMA_MODULE_51)
+    old_db_schema = sys.modules[SCHEMA_MODULE_51]
 
     def _insert_metadata():
         with session_scope(hass=hass) as session:
@@ -115,7 +149,9 @@ async def test_migrate_statistics_meta(
                         has_sum=True,
                         name="Test 1",
                         mean_type=StatisticMeanType.NONE,
+                        unit_class="energy",
                     ),
+                    # Unexpected, but will not be changed by migration
                     old_db_schema.StatisticsMeta(
                         statistic_id="sensor.test2",
                         source="recorder",
@@ -124,7 +160,9 @@ async def test_migrate_statistics_meta(
                         has_sum=True,
                         name="Test 2",
                         mean_type=StatisticMeanType.NONE,
+                        unit_class="power",
                     ),
+                    # This will be updated to "unitless" when migration runs again
                     old_db_schema.StatisticsMeta(
                         statistic_id="sensor.test3",
                         source="recorder",
@@ -133,6 +171,7 @@ async def test_migrate_statistics_meta(
                         has_sum=True,
                         name="Test 3",
                         mean_type=StatisticMeanType.NONE,
+                        unit_class=None,
                     ),
                     # Wrong case
                     old_db_schema.StatisticsMeta(
@@ -143,6 +182,7 @@ async def test_migrate_statistics_meta(
                         has_sum=True,
                         name="Test 4",
                         mean_type=StatisticMeanType.NONE,
+                        unit_class="volume_flow_rate",
                     ),
                     # Wrong encoding
                     old_db_schema.StatisticsMeta(
@@ -153,6 +193,7 @@ async def test_migrate_statistics_meta(
                         has_sum=True,
                         name="Test 5",
                         mean_type=StatisticMeanType.NONE,
+                        unit_class="area",
                     ),
                 )
             )
@@ -202,6 +243,8 @@ async def test_migrate_statistics_meta(
             async with async_test_recorder(
                 hass, wait_recorder=False, wait_recorder_setup=False
             ) as instance:
+                engine_name = instance.engine.dialect.name
+
                 # Wait for migration to reach migration of unit class
                 await hass.async_add_executor_job(
                     instrumented_migration.apply_update_stalled.wait
@@ -304,7 +347,7 @@ async def test_migrate_statistics_meta(
             "name": "Test 1",
             "source": "recorder",
             "statistic_id": "sensor.test1",
-            "unit_class": "energy",
+            "unit_class": expected_unit_class[engine_name]["sensor.test1"],
             "unit_of_measurement": "kWh",
         },
         "sensor.test2": {
@@ -315,7 +358,7 @@ async def test_migrate_statistics_meta(
             "name": "Test 2",
             "source": "recorder",
             "statistic_id": "sensor.test2",
-            "unit_class": None,
+            "unit_class": expected_unit_class[engine_name]["sensor.test2"],
             "unit_of_measurement": "cats",
         },
         "sensor.test3": {
@@ -326,7 +369,7 @@ async def test_migrate_statistics_meta(
             "name": "Test 3",
             "source": "recorder",
             "statistic_id": "sensor.test3",
-            "unit_class": "unitless",
+            "unit_class": expected_unit_class[engine_name]["sensor.test3"],
             "unit_of_measurement": "ppm",
         },
         "sensor.test4": {
@@ -337,7 +380,7 @@ async def test_migrate_statistics_meta(
             "name": "Test 4",
             "source": "recorder",
             "statistic_id": "sensor.test4",
-            "unit_class": None,
+            "unit_class": expected_unit_class[engine_name]["sensor.test4"],
             "unit_of_measurement": "l/min",
         },
         "sensor.test5": {
@@ -348,8 +391,66 @@ async def test_migrate_statistics_meta(
             "name": "Test 5",
             "source": "recorder",
             "statistic_id": "sensor.test5",
-            "unit_class": None,
+            "unit_class": expected_unit_class[engine_name]["sensor.test5"],
             "unit_of_measurement": "㎡",
         },
     }
-    assert post_migration_metadata_api == unordered(pre_migration_metadata_api)
+    assert post_migration_metadata_api == unordered(
+        [
+            {
+                "display_unit_of_measurement": "kWh",
+                "has_mean": False,
+                "has_sum": True,
+                "mean_type": StatisticMeanType.NONE,
+                "name": "Test 1",
+                "source": "recorder",
+                "statistic_id": "sensor.test1",
+                "statistics_unit_of_measurement": "kWh",
+                "unit_class": expected_unit_class[engine_name]["sensor.test1"],
+            },
+            {
+                "display_unit_of_measurement": "cats",
+                "has_mean": False,
+                "has_sum": True,
+                "mean_type": StatisticMeanType.NONE,
+                "name": "Test 2",
+                "source": "recorder",
+                "statistic_id": "sensor.test2",
+                "statistics_unit_of_measurement": "cats",
+                "unit_class": expected_unit_class[engine_name]["sensor.test2"],
+            },
+            {
+                "display_unit_of_measurement": "ppm",
+                "has_mean": False,
+                "has_sum": True,
+                "mean_type": StatisticMeanType.NONE,
+                "name": "Test 3",
+                "source": "recorder",
+                "statistic_id": "sensor.test3",
+                "statistics_unit_of_measurement": "ppm",
+                "unit_class": expected_unit_class[engine_name]["sensor.test3"],
+            },
+            {
+                "display_unit_of_measurement": "l/min",
+                "has_mean": False,
+                "has_sum": True,
+                "mean_type": StatisticMeanType.NONE,
+                "name": "Test 4",
+                "source": "recorder",
+                "statistic_id": "sensor.test4",
+                "statistics_unit_of_measurement": "l/min",
+                "unit_class": expected_unit_class[engine_name]["sensor.test4"],
+            },
+            {
+                "display_unit_of_measurement": "㎡",
+                "has_mean": False,
+                "has_sum": True,
+                "mean_type": StatisticMeanType.NONE,
+                "name": "Test 5",
+                "source": "recorder",
+                "statistic_id": "sensor.test5",
+                "statistics_unit_of_measurement": "㎡",
+                "unit_class": expected_unit_class[engine_name]["sensor.test5"],
+            },
+        ]
+    )
