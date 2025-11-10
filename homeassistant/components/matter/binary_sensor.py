@@ -424,8 +424,9 @@ DISCOVERY_SCHEMAS = [
             key="ValveConfigurationAndControlValveFault_GeneralFault",
             translation_key="valve_fault_general_fault",
             device_class=BinarySensorDeviceClass.PROBLEM,
+            # Test GeneralFault bit from ValveFault attribute
             entity_category=EntityCategory.DIAGNOSTIC,
-            device_to_ha=lambda x: (
+            device_to_ha=lambda x: bool(
                 x
                 == clusters.ValveConfigurationAndControl.Bitmaps.ValveFaultBitmap.kGeneralFault
             ),
@@ -443,7 +444,8 @@ DISCOVERY_SCHEMAS = [
             translation_key="valve_fault_blocked",
             device_class=BinarySensorDeviceClass.PROBLEM,
             entity_category=EntityCategory.DIAGNOSTIC,
-            device_to_ha=lambda x: (
+            # Test Blocked bit from ValveFault attribute
+            device_to_ha=lambda x: bool(
                 x
                 == clusters.ValveConfigurationAndControl.Bitmaps.ValveFaultBitmap.kBlocked
             ),
@@ -461,7 +463,8 @@ DISCOVERY_SCHEMAS = [
             translation_key="valve_fault_leaking",
             device_class=BinarySensorDeviceClass.PROBLEM,
             entity_category=EntityCategory.DIAGNOSTIC,
-            device_to_ha=lambda x: (
+            # Test Leaking bit from ValveFault attribute
+            device_to_ha=lambda x: bool(
                 x
                 == clusters.ValveConfigurationAndControl.Bitmaps.ValveFaultBitmap.kLeaking
             ),
