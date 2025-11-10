@@ -2070,7 +2070,9 @@ class _SchemaVersion52Migrator(_SchemaVersionMigrator, target_version=52):
         with session_scope(session=self.session_maker()) as session:
             connection = session.connection()
             for conv in _PRIMARY_UNIT_CONVERTERS:
-                units = {u.encode("utf-8") if u else u for u in conv.VALID_UNITS}
+                case_sensitive_units = {
+                    u.encode("utf-8") if u else u for u in conv.VALID_UNITS
+                }
                 # Reset unit_class to None for entries that do not match
                 # the valid units (case sensitive) but matched before due to
                 # case insensitive comparisons.
@@ -2080,7 +2082,7 @@ class _SchemaVersion52Migrator(_SchemaVersionMigrator, target_version=52):
                         and_(
                             StatisticsMeta.unit_of_measurement.in_(conv.VALID_UNITS),
                             cast_(StatisticsMeta.unit_of_measurement, BINARY).not_in(
-                                units
+                                case_sensitive_units
                             ),
                         )
                     )
@@ -2091,7 +2093,7 @@ class _SchemaVersion52Migrator(_SchemaVersionMigrator, target_version=52):
                     .where(
                         and_(
                             cast_(StatisticsMeta.unit_of_measurement, BINARY).in_(
-                                units
+                                case_sensitive_units
                             ),
                             StatisticsMeta.unit_class.is_(None),
                         )
