@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_SENSOR_TYPE,
+    STATE_ON,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -782,12 +783,12 @@ async def test_climate_panel_sensor(hass: HomeAssistant) -> None:
 
     light_sensor = hass.states.get("binary_sensor.test_name_light")
     light_sensor_attrs = light_sensor.attributes
-    assert light_sensor.state == "off"
+    assert light_sensor.state == STATE_ON
     assert light_sensor_attrs[ATTR_FRIENDLY_NAME] == "test-name Light"
 
     motion_sensor = hass.states.get("binary_sensor.test_name_motion")
     motion_sensor_attrs = motion_sensor.attributes
-    assert motion_sensor.state == "on"
+    assert motion_sensor.state == STATE_ON
     assert motion_sensor_attrs[ATTR_FRIENDLY_NAME] == "test-name Motion"
 
     assert await hass.config_entries.async_unload(entry.entry_id)
