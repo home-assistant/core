@@ -7,8 +7,13 @@
       "user": {
         "data": {
           "media": "Media",
-          "name": "Photo frame name"
+          "name": "[%key:common::config_flow::data::name%]"
         },
+        "data_description": {
+          "media": "The media directory where images will be retrieved from.",
+          "name": "Name for the image entity."
+        },
+        "description": "The Photo Frame integration creates a single image entity, by selecting an image from the selected media folder.",
         "submit": "Create"
       }
     }
