@@ -6,7 +6,7 @@ import base64
 from dataclasses import dataclass
 import json
 import struct
-from typing import Any, ClassVar, Literal, Self, overload
+from typing import Any, Literal, Self, overload
 
 from tuya_sharing import CustomerDevice
 
@@ -120,7 +120,6 @@ _TYPE_INFORMATION_MAPPINGS: dict[DPType, type[TypeInformation]] = {
 }
 
 
-@dataclass
 class DPCodeWrapper:
     """Base DPCode wrapper.
 
@@ -128,7 +127,9 @@ class DPCodeWrapper:
     access read conversion routines.
     """
 
-    dpcode: str
+    def __init__(self, dpcode: str) -> None:
+        """Init DPCodeWrapper."""
+        self.dpcode = dpcode
 
     def _read_device_status_raw(self, device: CustomerDevice) -> Any | None:
         """Read the raw device status for the DPCode.
@@ -142,7 +143,6 @@ class DPCodeWrapper:
         raise NotImplementedError("read_device_status must be implemented")
 
 
-@dataclass
 class DPCodeBooleanWrapper(DPCodeWrapper):
     """Simple wrapper for boolean values.
 
@@ -156,12 +156,16 @@ class DPCodeBooleanWrapper(DPCodeWrapper):
         return None
 
 
-@dataclass(kw_only=True)
 class DPCodeTypeInformationWrapper[T: TypeInformation](DPCodeWrapper):
     """Base DPCode wrapper with Type Information."""
 
-    dptype: ClassVar[DPType]
+    DPTYPE: DPType
     type_information: T
+
+    def __init__(self, dpcode: str, type_information: T) -> None:
+        """Init DPCodeWrapper."""
+        super().__init__(dpcode)
+        self.type_information = type_information
 
     @classmethod
     def find_dpcode(
@@ -173,7 +177,7 @@ class DPCodeTypeInformationWrapper[T: TypeInformation](DPCodeWrapper):
     ) -> Self | None:
         """Find and return a DPCodeTypeInformationWrapper for the given DP codes."""
         if type_information := find_dpcode(  # type: ignore[call-overload]
-            device, dpcodes, dptype=cls.dptype, prefer_function=prefer_function
+            device, dpcodes, dptype=cls.DPTYPE, prefer_function=prefer_function
         ):
             return cls(
                 dpcode=type_information.dpcode, type_information=type_information
@@ -181,11 +185,10 @@ class DPCodeTypeInformationWrapper[T: TypeInformation](DPCodeWrapper):
         return None
 
 
-@dataclass(kw_only=True)
 class DPCodeEnumWrapper(DPCodeTypeInformationWrapper[EnumTypeData]):
     """Simple wrapper for EnumTypeData values."""
 
-    dptype = DPType.ENUM
+    DPTYPE = DPType.ENUM
 
     def read_device_status(self, device: CustomerDevice) -> str | None:
         """Read the device value for the dpcode.
@@ -200,11 +203,10 @@ class DPCodeEnumWrapper(DPCodeTypeInformationWrapper[EnumTypeData]):
         return None
 
 
-@dataclass(kw_only=True)
 class DPCodeIntegerWrapper(DPCodeTypeInformationWrapper[IntegerTypeData]):
     """Simple wrapper for IntegerTypeData values."""
 
-    dptype = DPType.INTEGER
+    DPTYPE = DPType.INTEGER
 
     def read_device_status(self, device: CustomerDevice) -> float | None:
         """Read the device value for the dpcode.
