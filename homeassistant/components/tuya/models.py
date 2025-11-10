@@ -6,7 +6,7 @@ import base64
 from dataclasses import dataclass
 import json
 import struct
-from typing import Any, Literal, Self, overload
+from typing import Any, ClassVar, Literal, Self, overload
 
 from tuya_sharing import CustomerDevice
 
@@ -160,7 +160,7 @@ class DPCodeBooleanWrapper(DPCodeWrapper):
 class DPCodeTypeInformationWrapper[T: TypeInformation](DPCodeWrapper):
     """Base DPCode wrapper with Type Information."""
 
-    dptype: DPType = None  # type: ignore[assignment]
+    dptype: ClassVar[DPType]
     type_information: T
 
     @classmethod
