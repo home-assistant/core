@@ -1646,7 +1646,7 @@ class Entity(
     def _async_set_included_entities(self) -> None:
         """Set the list of included entities identified by their unique IDs.
 
-        This is called just before the entity state has changed.
+        This is called just before the entity state is written.
         """
         if (
             self.__init_track_included_entities
