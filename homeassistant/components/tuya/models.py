@@ -22,17 +22,18 @@ class TypeInformation:
     As provided by the SDK, from `device.function` / `device.status_range`.
     """
 
+    dpcode: DPCode
+
     @classmethod
     def from_json(cls, dpcode: DPCode, data: str) -> Self | None:
         """Load JSON string and return a TypeInformation object."""
-        raise NotImplementedError("from_json is not implemented for this type")
+        return cls(dpcode)
 
 
 @dataclass
 class IntegerTypeData(TypeInformation):
     """Integer Type Data."""
 
-    dpcode: DPCode
     min: int
     max: int
     scale: float
@@ -104,7 +105,6 @@ class IntegerTypeData(TypeInformation):
 class EnumTypeData(TypeInformation):
     """Enum Type Data."""
 
-    dpcode: DPCode
     range: list[str]
 
     @classmethod
@@ -116,6 +116,7 @@ class EnumTypeData(TypeInformation):
 
 
 _TYPE_INFORMATION_MAPPINGS: dict[DPType, type[TypeInformation]] = {
+    DPType.BOOLEAN: TypeInformation,
     DPType.ENUM: EnumTypeData,
     DPType.INTEGER: IntegerTypeData,
 }
@@ -165,29 +166,6 @@ class DPCodeWrapper(ABC):
         }
 
 
-class DPCodeBooleanWrapper(DPCodeWrapper):
-    """Simple wrapper for boolean values.
-
-    Supports True/False only.
-    """
-
-    def read_device_status(self, device: CustomerDevice) -> bool | None:
-        """Read the device value for the dpcode."""
-        if (raw_value := self._read_device_status_raw(device)) in (True, False):
-            return raw_value
-        return None
-
-    def _convert_value_to_raw_value(
-        self, device: CustomerDevice, value: Any
-    ) -> Any | None:
-        """Convert a Home Assistant value back to a raw device value."""
-        if value in (True, False):
-            return value
-        # Currently only called with boolean values
-        # Safety net in case of future changes
-        raise ValueError(f"Invalid boolean value `{value}`")
-
-
 class DPCodeTypeInformationWrapper[T: TypeInformation](DPCodeWrapper):
     """Base DPCode wrapper with Type Information."""
 
@@ -215,6 +193,31 @@ class DPCodeTypeInformationWrapper[T: TypeInformation](DPCodeWrapper):
                 dpcode=type_information.dpcode, type_information=type_information
             )
         return None
+
+
+class DPCodeBooleanWrapper(DPCodeTypeInformationWrapper[TypeInformation]):
+    """Simple wrapper for boolean values.
+
+    Supports True/False only.
+    """
+
+    DPTYPE = DPType.BOOLEAN
+
+    def read_device_status(self, device: CustomerDevice) -> bool | None:
+        """Read the device value for the dpcode."""
+        if (raw_value := self._read_device_status_raw(device)) in (True, False):
+            return raw_value
+        return None
+
+    def _convert_value_to_raw_value(
+        self, device: CustomerDevice, value: Any
+    ) -> Any | None:
+        """Convert a Home Assistant value back to a raw device value."""
+        if value in (True, False):
+            return value
+        # Currently only called with boolean values
+        # Safety net in case of future changes
+        raise ValueError(f"Invalid boolean value `{value}`")
 
 
 class DPCodeEnumWrapper(DPCodeTypeInformationWrapper[EnumTypeData]):
