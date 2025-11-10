@@ -8,6 +8,7 @@ from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothDataProcessor,
 )
 from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorEntityDescription
+import homeassistant.components.thermopro as thermopro_integration
 from homeassistant.components.thermopro import sensor as thermopro_sensor
 from homeassistant.components.thermopro.const import DOMAIN
 from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT
@@ -137,6 +138,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
 
 class CoordinatorStub:
     """Coordinator stub for testing entity restoration behavior."""
+
     instances: list["CoordinatorStub"] = []
 
     def __init__(
@@ -213,12 +215,9 @@ async def test_thermopro_restores_entities_on_restart_behavior(
         second_called["v"] = True
 
     # Patch the integration to avoid platform forwarding and use the coordinator stub
+    monkeypatch.setattr(thermopro_integration, "PLATFORMS", [])
     monkeypatch.setattr(
-        "homeassistant.components.thermopro.__init__.PLATFORMS", [],
-    )
-    monkeypatch.setattr(
-        "homeassistant.components.thermopro.__init__.PassiveBluetoothProcessorCoordinator",
-        CoordinatorStub,
+        thermopro_integration, "PassiveBluetoothProcessorCoordinator", CoordinatorStub
     )
     # Ensure a clean slate for stub instance tracking
     CoordinatorStub.instances.clear()
