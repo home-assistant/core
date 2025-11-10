@@ -3,9 +3,11 @@
 from unittest.mock import AsyncMock
 
 from pyanglianwater.exceptions import SelfAssertedError, SmartMeterUnavailableError
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.anglian_water.const import CONF_ACCOUNT_NUMBER, DOMAIN
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -105,12 +107,18 @@ async def test_abort_no_smart_meter(
     assert result["reason"] == "smart_meter_unavailable"
 
 
-async def test_recover_bad_credentials(
+@pytest.mark.parametrize(
+    ("exception_type", "expected_error"),
+    [(SelfAssertedError, "invalid_auth"), (ValueError, "unknown")],
+)
+async def test_recover_exception(
     hass: HomeAssistant,
     mock_anglian_water_authenticator: AsyncMock,
     mock_anglian_water_client: AsyncMock,
+    exception_type,
+    expected_error,
 ) -> None:
-    """Test that the flow can recover from bad credentials."""
+    """Test that the flow can recover from an exception."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -118,7 +126,7 @@ async def test_recover_bad_credentials(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    mock_anglian_water_authenticator.send_login_request.side_effect = SelfAssertedError
+    mock_anglian_water_authenticator.send_login_request.side_effect = exception_type
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -130,55 +138,7 @@ async def test_recover_bad_credentials(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "invalid_auth"}
-
-    # Now test we can recover
-
-    mock_anglian_water_authenticator.send_login_request.side_effect = None
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_USERNAME: USERNAME,
-            CONF_PASSWORD: PASSWORD,
-        },
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == ACCOUNT_NUMBER
-    assert result["data"][CONF_USERNAME] == USERNAME
-    assert result["data"][CONF_PASSWORD] == PASSWORD
-    assert result["data"][CONF_ACCESS_TOKEN] == ACCESS_TOKEN
-    assert result["data"][CONF_ACCOUNT_NUMBER] == ACCOUNT_NUMBER
-    assert result["result"].unique_id == ACCOUNT_NUMBER
-
-
-async def test_general_exception(
-    hass: HomeAssistant,
-    mock_anglian_water_authenticator: AsyncMock,
-    mock_anglian_water_client: AsyncMock,
-) -> None:
-    """Test that the flow can recover from a general exception."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result is not None
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-    mock_anglian_water_authenticator.send_login_request.side_effect = ValueError
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_USERNAME: USERNAME,
-            CONF_PASSWORD: PASSWORD,
-        },
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "unknown"}
+    assert result["errors"] == {"base": expected_error}
 
     # Now test we can recover
 

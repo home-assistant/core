@@ -3,7 +3,6 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pyanglianwater import AnglianWater
 from pyanglianwater.meter import SmartMeter
 import pytest
 
@@ -57,9 +56,7 @@ def mock_anglian_water_authenticator() -> Generator[MagicMock]:
         mock_instance.account_number = ACCOUNT_NUMBER
         mock_instance.access_token = ACCESS_TOKEN
         mock_instance.refresh_token = ACCESS_TOKEN
-        mock_instance.send_login_request = AsyncMock()
         mock_instance.send_login_request.return_value = None
-        mock_instance.send_refresh_request = AsyncMock()
         mock_instance.send_refresh_request.return_value = None
         yield mock_instance
 
@@ -70,10 +67,6 @@ def mock_anglian_water_client(
 ) -> Generator[AsyncMock]:
     """Mock a Anglian Water client."""
     # Create a mock instance with our meters and config first.
-    mock_client = AsyncMock(spec=AnglianWater)
-    mock_client.meters = {mock_smart_meter.serial_number: mock_smart_meter}
-    mock_client.account_config = {"meter_type": "SmartMeter"}
-    mock_client.updated_data_callbacks = []
     with (
         patch(
             "homeassistant.components.anglian_water.AnglianWater", autospec=True
@@ -83,7 +76,10 @@ def mock_anglian_water_client(
             new=mock_client_class,
         ),
     ):
-        mock_client_class.return_value = mock_client
+        mock_client = mock_client_class.return_value
+        mock_client.meters = {mock_smart_meter.serial_number: mock_smart_meter}
+        mock_client.account_config = {"meter_type": "SmartMeter"}
+        mock_client.updated_data_callbacks = []
         mock_client.validate_smart_meter.return_value = None
         yield mock_client
 

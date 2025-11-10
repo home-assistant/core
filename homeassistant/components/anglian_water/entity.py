@@ -26,7 +26,6 @@ class AnglianWaterEntity(CoordinatorEntity[AnglianWaterUpdateCoordinator]):
         """Initialize Anglian Water entity."""
         super().__init__(coordinator)
         self.smart_meter = smart_meter
-        self._attr_unique_id = smart_meter.serial_number
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, smart_meter.serial_number)},
             name="Smart Water Meter",
@@ -36,13 +35,10 @@ class AnglianWaterEntity(CoordinatorEntity[AnglianWaterUpdateCoordinator]):
 
     async def async_added_to_hass(self) -> None:
         """When entity is loaded."""
+        self.coordinator.api.updated_data_callbacks.append(self.async_write_ha_state)
         await super().async_added_to_hass()
-        self.coordinator.api.register_callback(self.async_write_ha_state)
 
     async def async_will_remove_from_hass(self) -> None:
         """When will be removed from HASS."""
-        if self.async_write_ha_state in self.coordinator.api.updated_data_callbacks:
-            self.coordinator.api.updated_data_callbacks.remove(
-                self.async_write_ha_state
-            )
+        self.coordinator.api.updated_data_callbacks.remove(self.async_write_ha_state)
         await super().async_will_remove_from_hass()

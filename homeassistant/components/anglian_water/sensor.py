@@ -21,6 +21,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .coordinator import AnglianWaterConfigEntry, AnglianWaterUpdateCoordinator
 from .entity import AnglianWaterEntity
 
+PARALLEL_UPDATES = 0
+
 
 class AnglianWaterSensor(StrEnum):
     """Store keys for Anglian Water sensors."""
@@ -33,7 +35,6 @@ class AnglianWaterSensor(StrEnum):
 class AnglianWaterSensorEntityDescription(SensorEntityDescription):
     """Describes AnglianWater sensor entity."""
 
-    key: str
     value_fn: Callable[[SmartMeter], float]
 
 

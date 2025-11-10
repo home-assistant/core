@@ -10,17 +10,6 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
-      "reauth_confirm": {
-        "data": {
-          "password": "[%key:common::config_flow::data::password%]",
-          "username": "[%key:common::config_flow::data::username%]"
-        },
-        "data_description": {
-          "password": "Your password",
-          "username": "Username or email used to login to the Anglian Water website."
-        },
-        "description": "Your Anglian Water account credentials need to be re-authenticated to continue receiving data."
-      },
       "user": {
         "data": {
           "account_number": "Billing Account Number",
