@@ -76,8 +76,14 @@ class ZBT2FirmwareMixin(ConfigEntryBaseFlow, FirmwareInstallFlowProtocol):
     """Mixin for Home Assistant Connect ZBT-2 firmware methods."""
 
     context: ConfigFlowContext
-    BOOTLOADER_RESET_METHODS = [ResetTarget.RTS_DTR]
+
     ZIGBEE_BAUDRATE = 460800
+    BOOTLOADER_RESET_METHODS = [ResetTarget.RTS_DTR]
+    APPLICATION_PROBE_METHODS = [
+        (ApplicationType.GECKO_BOOTLOADER, 115200),
+        (ApplicationType.EZSP, ZIGBEE_BAUDRATE),
+        (ApplicationType.SPINEL, 460800),
+    ]
 
     async def async_step_install_zigbee_firmware(
         self, user_input: dict[str, Any] | None = None
