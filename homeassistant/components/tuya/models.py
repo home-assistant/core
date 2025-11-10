@@ -146,9 +146,12 @@ class DPCodeWrapper:
         raise NotImplementedError("read_device_status must be implemented")
 
     def _convert_value_back(self, device: CustomerDevice, value: Any) -> Any:
-        """Get the update command value for the dpcode.
+        """Convert a Home Assistant value back to a raw device value.
 
         Private helper method for `get_update_command`.
+
+        Checks should be added to ensure that the Home Assistant value is valid
+        for the corresponding type information (if applicable).
         """
         raise NotImplementedError("convert_value_back must be implemented")
 
