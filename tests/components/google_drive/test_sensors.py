@@ -44,7 +44,6 @@ async def test_sensor(
     config_entry: MockConfigEntry,
 ) -> None:
     """Test the creation and values of the Google Drive sensors."""
-
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
     assert (
