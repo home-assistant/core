@@ -792,10 +792,11 @@ async def test_config_flow_thread(
         assert pick_result["type"] is FlowResultType.SHOW_PROGRESS
         assert pick_result["progress_action"] == "install_firmware"
         assert pick_result["step_id"] == "install_thread_firmware"
-        description_placeholders = pick_result["description_placeholders"]
-        assert description_placeholders is not None
-        assert description_placeholders["firmware_type"] == "ezsp"
-        assert description_placeholders["model"] == TEST_HARDWARE_NAME
+        assert pick_result["description_placeholders"] == {
+            "firmware_type": "ezsp",
+            "model": TEST_HARDWARE_NAME,
+            "firmware_name": "Thread",
+        }
 
         await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -919,10 +920,11 @@ async def test_options_flow_zigbee_to_thread(
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
         assert result["type"] is FlowResultType.MENU
         assert result["step_id"] == "pick_firmware"
-        description_placeholders = result["description_placeholders"]
-        assert description_placeholders is not None
-        assert description_placeholders["firmware_type"] == "ezsp"
-        assert description_placeholders["model"] == TEST_HARDWARE_NAME
+        assert result["description_placeholders"] == {
+            "firmware_type": "ezsp",
+            "model": TEST_HARDWARE_NAME,
+            "firmware_name": "unknown",
+        }
 
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
@@ -995,10 +997,11 @@ async def test_options_flow_thread_to_zigbee(hass: HomeAssistant) -> None:
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "pick_firmware"
-    description_placeholders = result["description_placeholders"]
-    assert description_placeholders is not None
-    assert description_placeholders["firmware_type"] == "spinel"
-    assert description_placeholders["model"] == TEST_HARDWARE_NAME
+    assert result["description_placeholders"] == {
+        "firmware_type": "spinel",
+        "model": TEST_HARDWARE_NAME,
+        "firmware_name": "unknown",
+    }
 
     with mock_firmware_info(
         probe_app_type=ApplicationType.SPINEL,
