@@ -132,11 +132,11 @@ class MieleLight(MieleEntity, LightEntity):
                 self._device_id, {self.entity_description.light_type: mode}
             )
         except ClientResponseError as err:
+            _LOGGER.debug("Error setting light state for %s: %s", self.entity_id, err)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="set_state_error",
                 translation_placeholders={
                     "entity": self.entity_id,
-                    "err_status": str(err.status),
                 },
             ) from err

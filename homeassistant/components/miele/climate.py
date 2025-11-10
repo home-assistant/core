@@ -251,12 +251,12 @@ class MieleClimate(MieleEntity, ClimateEntity):
                 self.entity_description.zone,
             )
         except ClientResponseError as err:
+            _LOGGER.debug("Error setting climate state for %s: %s", self.entity_id, err)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="set_state_error",
                 translation_placeholders={
                     "entity": self.entity_id,
-                    "err_status": str(err.status),
                 },
             ) from err
         await self.coordinator.async_request_refresh()

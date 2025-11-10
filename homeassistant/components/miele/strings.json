@@ -1098,7 +1098,7 @@
       "message": "'Set program on oven' action failed: {status} / {message}"
     },
     "set_state_error": {
-      "message": "Failed to set state for {entity} - code: {err_status}."
+      "message": "Failed to set state for {entity}."
     }
   },
   "services": {

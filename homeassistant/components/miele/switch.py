@@ -166,12 +166,12 @@ class MieleSwitch(MieleEntity, SwitchEntity):
         try:
             await self.api.send_action(self._device_id, mode)
         except ClientResponseError as err:
+            _LOGGER.debug("Error setting switch state for %s: %s", self.entity_id, err)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="set_state_error",
                 translation_placeholders={
                     "entity": self.entity_id,
-                    "err_status": str(err.status),
                 },
             ) from err
 
@@ -199,12 +199,12 @@ class MielePowerSwitch(MieleSwitch):
         try:
             await self.api.send_action(self._device_id, mode)
         except ClientResponseError as err:
+            _LOGGER.debug("Error setting switch state for %s: %s", self.entity_id, err)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="set_state_error",
                 translation_placeholders={
                     "entity": self.entity_id,
-                    "err_status": str(err.status),
                 },
             ) from err
         self.action.power_on_enabled = cast(bool, mode)
