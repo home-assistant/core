@@ -10243,7 +10243,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.kattenbak_excretion_time_day-entry]
+# name: test_platform_setup_and_discovery[sensor.kattenbak_excretion_duration-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -10258,7 +10258,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.kattenbak_excretion_time_day',
+    'entity_id': 'sensor.kattenbak_excretion_duration',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -10273,7 +10273,7 @@
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'Excretion time (day)',
+    'original_name': 'Excretion duration',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -10283,16 +10283,16 @@
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.kattenbak_excretion_time_day-state]
+# name: test_platform_setup_and_discovery[sensor.kattenbak_excretion_duration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'Kattenbak Excretion time (day)',
+      'friendly_name': 'Kattenbak Excretion duration',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.kattenbak_excretion_time_day',
+    'entity_id': 'sensor.kattenbak_excretion_duration',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -10348,7 +10348,7 @@
     'state': '1.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.kattenbak_none-entry]
+# name: test_platform_setup_and_discovery[sensor.kattenbak_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -10361,7 +10361,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.kattenbak_none',
+    'entity_id': 'sensor.kattenbak_status',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -10373,7 +10373,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Status',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -10383,13 +10383,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.kattenbak_none-state]
+# name: test_platform_setup_and_discovery[sensor.kattenbak_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kattenbak None',
+      'friendly_name': 'Kattenbak Status',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.kattenbak_none',
+    'entity_id': 'sensor.kattenbak_status',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -14989,7 +14989,7 @@
     'state': '3.6',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.poopy_nano_2_excretion_time_day-entry]
+# name: test_platform_setup_and_discovery[sensor.poopy_nano_2_excretion_duration-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -15004,7 +15004,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.poopy_nano_2_excretion_time_day',
+    'entity_id': 'sensor.poopy_nano_2_excretion_duration',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -15019,7 +15019,7 @@
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'Excretion time (day)',
+    'original_name': 'Excretion duration',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -15029,16 +15029,16 @@
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.poopy_nano_2_excretion_time_day-state]
+# name: test_platform_setup_and_discovery[sensor.poopy_nano_2_excretion_duration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'Poopy Nano 2 Excretion time (day)',
+      'friendly_name': 'Poopy Nano 2 Excretion duration',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.poopy_nano_2_excretion_time_day',
+    'entity_id': 'sensor.poopy_nano_2_excretion_duration',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -15094,7 +15094,7 @@
     'state': '4.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.poopy_nano_2_none-entry]
+# name: test_platform_setup_and_discovery[sensor.poopy_nano_2_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -15107,7 +15107,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.poopy_nano_2_none',
+    'entity_id': 'sensor.poopy_nano_2_status',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -15119,7 +15119,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Status',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -15129,13 +15129,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.poopy_nano_2_none-state]
+# name: test_platform_setup_and_discovery[sensor.poopy_nano_2_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Poopy Nano 2 None',
+      'friendly_name': 'Poopy Nano 2 Status',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.poopy_nano_2_none',
+    'entity_id': 'sensor.poopy_nano_2_status',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
