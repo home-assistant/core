@@ -133,9 +133,6 @@
     "invalid_config_entry": {
       "message": "Config entry not found or not loaded!"
     },
-    "oauth2_implementation_unavailable": {
-      "message": "OAuth2 implementation temporarily unavailable, will retry"
-    },
     "valve_inoperable_currently": {
       "message": "The Valve cannot be operated currently."
     }

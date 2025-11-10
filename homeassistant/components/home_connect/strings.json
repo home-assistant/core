@@ -1236,9 +1236,6 @@
     "fetch_api_error": {
       "message": "Error obtaining data from the API: {error}"
     },
-    "oauth2_implementation_unavailable": {
-      "message": "OAuth2 implementation temporarily unavailable, will retry"
-    },
     "pause_program": {
       "message": "Error pausing program: {error}"
     },
