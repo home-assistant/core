@@ -11,11 +11,7 @@ from typing import Any
 from urllib.parse import urlparse
 
 # Third-party imports
-from victron_mqtt import (
-    CannotConnectError,
-    DeviceType,
-    Hub as VictronVenusHub,
-)
+from victron_mqtt import CannotConnectError, DeviceType, Hub as VictronVenusHub
 import voluptuous as vol
 
 # Home Assistant imports
