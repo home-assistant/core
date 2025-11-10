@@ -26,6 +26,7 @@ BUTTONS: dict[DeviceCategory, tuple[ButtonEntityDescription, ...]] = {
             key=DPCode.FACTORY_RESET,
             translation_key="factory_reset",
             entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
         ),
         ButtonEntityDescription(
             key=DPCode.MANUAL_CLEAN,

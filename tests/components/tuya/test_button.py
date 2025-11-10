@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 from tuya_sharing import CustomerDevice, Manager
 
@@ -17,6 +18,7 @@ from tests.common import MockConfigEntry, snapshot_platform
 
 
 @patch("homeassistant.components.tuya.PLATFORMS", [Platform.BUTTON])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_platform_setup_and_discovery(
     hass: HomeAssistant,
     mock_manager: Manager,
