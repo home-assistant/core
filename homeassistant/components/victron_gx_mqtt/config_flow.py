@@ -42,7 +42,6 @@ from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
 # Local application imports
 from .const import (
-    CONF_ELEVATED_TRACING,
     CONF_EXCLUDED_DEVICES,
     CONF_INSTALLATION_ID,
     CONF_MODEL,
@@ -110,12 +109,6 @@ def _get_user_schema(defaults: MappingProxyType[str, Any] | None = None) -> vol.
                     mode=SelectSelectorMode.DROPDOWN,
                 )
             ),
-            vol.Optional(
-                CONF_ELEVATED_TRACING,
-                description={
-                    "suggested_value": f"{defaults.get(CONF_ELEVATED_TRACING, '')}"
-                },
-            ): str,
         }
     )
 
@@ -142,7 +135,6 @@ async def validate_input(data: dict[str, Any]) -> str:
         installation_id=data.get(CONF_INSTALLATION_ID) or None,
         serial=data.get(CONF_SERIAL, "noserial"),
         topic_prefix=data.get(CONF_ROOT_TOPIC_PREFIX) or None,
-        topic_log_info=data.get(CONF_ELEVATED_TRACING) or None,
     )
 
     await hub.connect()

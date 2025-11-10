@@ -28,7 +28,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .binary_sensor import VictronBinarySensor
 from .const import (
-    CONF_ELEVATED_TRACING,
     CONF_EXCLUDED_DEVICES,
     CONF_INSTALLATION_ID,
     CONF_MODEL,
@@ -90,7 +89,6 @@ class Hub:
             model_name=config.get(CONF_MODEL) or None,
             serial=config.get(CONF_SERIAL, "noserial"),
             topic_prefix=config.get(CONF_ROOT_TOPIC_PREFIX) or None,
-            topic_log_info=config.get(CONF_ELEVATED_TRACING) or None,
             operation_mode=OperationMode.READ_ONLY,
             device_type_exclude_filter=excluded_device_types,
             update_frequency_seconds=config.get(
