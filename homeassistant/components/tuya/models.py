@@ -120,7 +120,6 @@ _TYPE_INFORMATION_MAPPINGS: dict[DPType, type[TypeInformation]] = {
 }
 
 
-@dataclass
 class DPCodeWrapper:
     """Base DPCode wrapper.
 
@@ -128,7 +127,9 @@ class DPCodeWrapper:
     access read conversion routines.
     """
 
-    dpcode: str
+    def __init__(self, dpcode: str) -> None:
+        """Init DPCodeWrapper."""
+        self.dpcode = dpcode
 
     def _read_device_status_raw(self, device: CustomerDevice) -> Any | None:
         """Read the raw device status for the DPCode.
@@ -139,10 +140,9 @@ class DPCodeWrapper:
 
     def read_device_status(self, device: CustomerDevice) -> Any | None:
         """Read the device value for the dpcode."""
-        raise NotImplementedError("read_device_value must be implemented")
+        raise NotImplementedError("read_device_status must be implemented")
 
 
-@dataclass
 class DPCodeBooleanWrapper(DPCodeWrapper):
     """Simple wrapper for boolean values.
 
@@ -156,11 +156,39 @@ class DPCodeBooleanWrapper(DPCodeWrapper):
         return None
 
 
-@dataclass(kw_only=True)
-class DPCodeEnumWrapper(DPCodeWrapper):
+class DPCodeTypeInformationWrapper[T: TypeInformation](DPCodeWrapper):
+    """Base DPCode wrapper with Type Information."""
+
+    DPTYPE: DPType
+    type_information: T
+
+    def __init__(self, dpcode: str, type_information: T) -> None:
+        """Init DPCodeWrapper."""
+        super().__init__(dpcode)
+        self.type_information = type_information
+
+    @classmethod
+    def find_dpcode(
+        cls,
+        device: CustomerDevice,
+        dpcodes: str | DPCode | tuple[DPCode, ...],
+        *,
+        prefer_function: bool = False,
+    ) -> Self | None:
+        """Find and return a DPCodeTypeInformationWrapper for the given DP codes."""
+        if type_information := find_dpcode(  # type: ignore[call-overload]
+            device, dpcodes, dptype=cls.DPTYPE, prefer_function=prefer_function
+        ):
+            return cls(
+                dpcode=type_information.dpcode, type_information=type_information
+            )
+        return None
+
+
+class DPCodeEnumWrapper(DPCodeTypeInformationWrapper[EnumTypeData]):
     """Simple wrapper for EnumTypeData values."""
 
-    type_information: EnumTypeData
+    DPTYPE = DPType.ENUM
 
     def read_device_status(self, device: CustomerDevice) -> str | None:
         """Read the device value for the dpcode.
@@ -174,20 +202,20 @@ class DPCodeEnumWrapper(DPCodeWrapper):
             return raw_value
         return None
 
-    @classmethod
-    def find_dpcode(
-        cls,
-        device: CustomerDevice,
-        dpcodes: str | DPCode | tuple[DPCode, ...],
-        *,
-        prefer_function: bool = False,
-    ) -> Self | None:
-        """Find and return a DPCodeEnumWrapper for the given DP codes."""
-        if enum_type := find_dpcode(
-            device, dpcodes, dptype=DPType.ENUM, prefer_function=prefer_function
-        ):
-            return cls(dpcode=enum_type.dpcode, type_information=enum_type)
-        return None
+
+class DPCodeIntegerWrapper(DPCodeTypeInformationWrapper[IntegerTypeData]):
+    """Simple wrapper for IntegerTypeData values."""
+
+    DPTYPE = DPType.INTEGER
+
+    def read_device_status(self, device: CustomerDevice) -> float | None:
+        """Read the device value for the dpcode.
+
+        Value will be scaled based on the Integer type information.
+        """
+        if (raw_value := self._read_device_status_raw(device)) is None:
+            return None
+        return raw_value / (10**self.type_information.scale)
 
 
 @overload
