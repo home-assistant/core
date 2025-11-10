@@ -11,9 +11,10 @@ from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import ObjectClassType
 from .coordinator import ComelitConfigEntry, ComelitSerialBridge
 from .entity import ComelitBridgeBaseEntity
-from .utils import DeviceType, bridge_api_call, new_device_listener
+from .utils import bridge_api_call, new_device_listener
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -28,7 +29,7 @@ async def async_setup_entry(
 
     coordinator = cast(ComelitSerialBridge, config_entry.runtime_data)
 
-    def _add_new_entities(new_devices: list[DeviceType], dev_type: str) -> None:
+    def _add_new_entities(new_devices: list[ObjectClassType], dev_type: str) -> None:
         """Add entities for new monitors."""
         entities = [
             ComelitSwitchEntity(coordinator, device, config_entry.entry_id)
