@@ -252,5 +252,7 @@ class NSDepartureSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity
                 attributes["next"] = next_trip.departure_time_actual.strftime("%H:%M")
             elif next_trip.departure_time_planned is not None:
                 attributes["next"] = next_trip.departure_time_planned.strftime("%H:%M")
+        else:
+            attributes["next"] = None
 
         return attributes
