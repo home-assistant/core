@@ -359,6 +359,24 @@ class USBDiscovery:
                 service_info,
             )
 
+    async def _async_process_removed_usb_device(self, device: USBDevice) -> None:
+        """Process a USB removal."""
+        _LOGGER.debug("Removed USB Device: %s", device)
+        matched = self.async_get_usb_matchers_for_device(device)
+        if not matched:
+            return
+
+        service_info = usb_service_info_from_device(device)
+
+        for matcher in matched:
+            for (
+                flow_id
+            ) in self.hass.config_entries.flow.async_get_matching_discovery_flows(
+                matcher["domain"], {"source": config_entries.SOURCE_USB}, service_info
+            ):
+                _LOGGER.debug("Aborting existing flow %s", flow_id)
+                self.hass.config_entries.flow.async_abort(flow_id)
+
     async def _async_process_ports(self, usb_devices: Sequence[USBDevice]) -> None:
         """Process each discovered port."""
         _LOGGER.debug("USB devices: %r", usb_devices)
@@ -398,6 +416,9 @@ class USBDiscovery:
                     callback(added_devices, removed_devices)
                 except Exception:
                     _LOGGER.exception("Error in USB port event callback")
+
+        for usb_device in removed_devices:
+            await self._async_process_removed_usb_device(usb_device)
 
         for usb_device in added_devices:
             await self._async_process_discovered_usb_device(usb_device)
