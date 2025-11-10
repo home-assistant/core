@@ -43,28 +43,16 @@ async def test_platform_setup_and_discovery(
 
 @patch("homeassistant.components.tuya.PLATFORMS", [Platform.ALARM_CONTROL_PANEL])
 @pytest.mark.parametrize(
-    ("mock_device_code", "service", "command"),
+    "mock_device_code",
+    ["mal_gyitctrjj1kefxp2"],
+)
+@pytest.mark.parametrize(
+    ("service", "command"),
     [
-        (
-            "mal_gyitctrjj1kefxp2",
-            SERVICE_ALARM_ARM_AWAY,
-            {"code": "master_mode", "value": "arm"},
-        ),
-        (
-            "mal_gyitctrjj1kefxp2",
-            SERVICE_ALARM_ARM_HOME,
-            {"code": "master_mode", "value": "home"},
-        ),
-        (
-            "mal_gyitctrjj1kefxp2",
-            SERVICE_ALARM_DISARM,
-            {"code": "master_mode", "value": "disarmed"},
-        ),
-        (
-            "mal_gyitctrjj1kefxp2",
-            SERVICE_ALARM_TRIGGER,
-            {"code": "master_mode", "value": "sos"},
-        ),
+        (SERVICE_ALARM_ARM_AWAY, {"code": "master_mode", "value": "arm"}),
+        (SERVICE_ALARM_ARM_HOME, {"code": "master_mode", "value": "home"}),
+        (SERVICE_ALARM_DISARM, {"code": "master_mode", "value": "disarmed"}),
+        (SERVICE_ALARM_TRIGGER, {"code": "master_mode", "value": "sos"}),
     ],
 )
 async def test_service(
