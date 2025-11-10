@@ -2088,6 +2088,9 @@ class _SchemaVersion52Migrator(_SchemaVersionMigrator, target_version=52):
                     )
                     .values(unit_class=None)
                 )
+                # Do an explicitly case sensitive match (actually binary) to set the
+                # correct unit_class. This is needed because we use the case sensitive
+                # utf8mb4_unicode_ci collation.
                 connection.execute(
                     update(StatisticsMeta)
                     .where(
@@ -2107,6 +2110,9 @@ class _SchemaVersion52Migrator(_SchemaVersionMigrator, target_version=52):
         with session_scope(session=self.session_maker()) as session:
             connection = session.connection()
             for conv in _PRIMARY_UNIT_CONVERTERS:
+                # Set the correct unit_class. Unlike MySQL, Postgres and SQLite
+                # have case sensitive string comparisons by default, so we
+                # can directly match on the valid units.
                 connection.execute(
                     update(StatisticsMeta)
                     .where(
