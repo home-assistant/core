@@ -297,7 +297,8 @@ RPC_NUMBERS: Final = {
         mode=NumberMode.SLIDER,
         native_unit_of_measurement=PERCENTAGE,
         method="blu_trv_set_valve_position",
-        removal_condition=lambda config, _, key: config[key].get("enable", True) is True,
+        removal_condition=lambda config, _, key: config[key].get("enable", True)
+        is True,
         entity_class=RpcBluTrvNumber,
     ),
     "left_slot_intensity": RpcNumberDescription(
