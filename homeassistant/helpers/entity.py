@@ -1646,7 +1646,7 @@ class Entity(
     def async_set_included_entities(self) -> None:
         """Set the list of included entities identified by their unique IDs.
 
-        Integrations need to call this when the list of included unique IDs.
+        Integrations need to call this when the list of included unique IDs changes.
         """
         if not self.included_unique_ids:
             return
