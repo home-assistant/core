@@ -64,6 +64,19 @@
       }
     }
   },
+  "entity": {
+    "binary_sensor": {
+      "is_arrival_delayed": {
+        "name": "Arrival delayed"
+      },
+      "is_departure_delayed": {
+        "name": "Departure delayed"
+      },
+      "is_going": {
+        "name": "Going"
+      }
+    }
+  },
   "issues": {
     "deprecated_yaml_import_issue_cannot_connect": {
       "description": "Configuring Nederlandse Spoorwegen using YAML sensor platform is deprecated.\n\nWhile importing your configuration, Home Assistant could not connect to the NS API. Please check your internet connection and the status of the NS API, then restart Home Assistant to try again, or remove the existing YAML configuration and set the integration up via the UI.",
