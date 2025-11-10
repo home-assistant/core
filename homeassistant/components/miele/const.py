@@ -512,7 +512,7 @@ class TumbleDryerProgramId(MieleEnum, missing_to_none=True):
     """Program Id codes for tumble dryers."""
 
     no_program = 0, -1
-    automatic_plus = 1, 10
+    automatic_plus = 1
     cottons = 2, 20, 90
     minimum_iron = 3, 30
     woollens_handcare = 4, 40
@@ -533,7 +533,7 @@ class TumbleDryerProgramId(MieleEnum, missing_to_none=True):
     smoothing = 24, 240
     bed_linen = 31, 99002
     eco = 66
-    gentle_smoothing = 100
+    gentle_smoothing = 10, 100
     gentle_denim = 131
     steam_smoothing = 99001
     large_pillows = 99005
