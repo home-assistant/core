@@ -171,10 +171,6 @@ async def async_setup_entry(
 
     await coordinator.async_refresh()
 
-    if coordinator.data is None or coordinator.data["body"] is None:
-        _LOGGER.error("No data available")
-        return
-
     # Get the dict and flatten it
     body: dict[str, Any] = _format_dict(coordinator.data["body"])
 
