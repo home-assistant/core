@@ -23,7 +23,7 @@
         },
         "data_description": {
           "url": "URL of the Music Assistant server"
-        },
+        }
       }
     }
   },
