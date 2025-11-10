@@ -1,11 +1,4 @@
 {
-  "services": {
-    "beolink_allstandby": { "service": "mdi:close-circle-multiple-outline" },
-    "beolink_expand": { "service": "mdi:location-enter" },
-    "beolink_join": { "service": "mdi:location-enter" },
-    "beolink_leave": { "service": "mdi:close-circle-outline" },
-    "beolink_unexpand": { "service": "mdi:location-exit" }
-  },
   "entity": {
     "event": {
       "control_blue": {
@@ -279,5 +272,12 @@
         "default": "mdi:remote"
       }
     }
+  },
+  "services": {
+    "beolink_allstandby": { "service": "mdi:close-circle-multiple-outline" },
+    "beolink_expand": { "service": "mdi:location-enter" },
+    "beolink_join": { "service": "mdi:location-enter" },
+    "beolink_leave": { "service": "mdi:close-circle-outline" },
+    "beolink_unexpand": { "service": "mdi:location-exit" }
   }
 }
