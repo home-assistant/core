@@ -27,8 +27,11 @@
     }
   },
   "triggers": {
-    "state": {
-      "trigger": "mdi:state-machine"
+    "state_off": {
+      "trigger": "mdi:lightbulb-off"
+    },
+    "state_on": {
+      "trigger": "mdi:lightbulb-on"
     }
   }
 }
