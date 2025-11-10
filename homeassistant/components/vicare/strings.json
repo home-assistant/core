@@ -219,10 +219,10 @@
           "defrost": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::defrosting%]",
           "heating": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::heating%]",
           "off": "[%key:common::state::off%]",
-          "passive-defrost": "Passive defrosting",
+          "passive_defrost": "Passive defrosting",
           "pause": "[%key:common::state::idle%]",
           "preparing": "Preparing",
-          "preparing-defrost": "Preparing defrost",
+          "preparing_defrost": "Preparing defrost",
           "ready": "[%key:common::state::idle%]"
         }
       },
