@@ -353,17 +353,13 @@ DISCOVERY_SCHEMAS = [
             device_class=BinarySensorDeviceClass.PROBLEM,
             entity_category=EntityCategory.DIAGNOSTIC,
             # DeviceFault or SupplyFault bit enabled
-            device_to_ha={
-                clusters.PumpConfigurationAndControl.Bitmaps.PumpStatusBitmap.kDeviceFault: True,
-                clusters.PumpConfigurationAndControl.Bitmaps.PumpStatusBitmap.kSupplyFault: True,
-                clusters.PumpConfigurationAndControl.Bitmaps.PumpStatusBitmap.kSpeedLow: False,
-                clusters.PumpConfigurationAndControl.Bitmaps.PumpStatusBitmap.kSpeedHigh: False,
-                clusters.PumpConfigurationAndControl.Bitmaps.PumpStatusBitmap.kLocalOverride: False,
-                clusters.PumpConfigurationAndControl.Bitmaps.PumpStatusBitmap.kRunning: False,
-                clusters.PumpConfigurationAndControl.Bitmaps.PumpStatusBitmap.kRemotePressure: False,
-                clusters.PumpConfigurationAndControl.Bitmaps.PumpStatusBitmap.kRemoteFlow: False,
-                clusters.PumpConfigurationAndControl.Bitmaps.PumpStatusBitmap.kRemoteTemperature: False,
-            }.get,
+            device_to_ha=lambda x: bool(
+                x
+                & (
+                    clusters.PumpConfigurationAndControl.Bitmaps.PumpStatusBitmap.kDeviceFault
+                    | clusters.PumpConfigurationAndControl.Bitmaps.PumpStatusBitmap.kSupplyFault
+                )
+            ),
         ),
         entity_class=MatterBinarySensor,
         required_attributes=(
@@ -377,9 +373,9 @@ DISCOVERY_SCHEMAS = [
             key="PumpStatusRunning",
             translation_key="pump_running",
             device_class=BinarySensorDeviceClass.RUNNING,
-            device_to_ha=lambda x: (
+            device_to_ha=lambda x: bool(
                 x
-                == clusters.PumpConfigurationAndControl.Bitmaps.PumpStatusBitmap.kRunning
+                & clusters.PumpConfigurationAndControl.Bitmaps.PumpStatusBitmap.kRunning
             ),
         ),
         entity_class=MatterBinarySensor,
@@ -395,8 +391,8 @@ DISCOVERY_SCHEMAS = [
             translation_key="dishwasher_alarm_inflow",
             device_class=BinarySensorDeviceClass.PROBLEM,
             entity_category=EntityCategory.DIAGNOSTIC,
-            device_to_ha=lambda x: (
-                x == clusters.DishwasherAlarm.Bitmaps.AlarmBitmap.kInflowError
+            device_to_ha=lambda x: bool(
+                x & clusters.DishwasherAlarm.Bitmaps.AlarmBitmap.kInflowError
             ),
         ),
         entity_class=MatterBinarySensor,
@@ -410,8 +406,8 @@ DISCOVERY_SCHEMAS = [
             translation_key="alarm_door",
             device_class=BinarySensorDeviceClass.PROBLEM,
             entity_category=EntityCategory.DIAGNOSTIC,
-            device_to_ha=lambda x: (
-                x == clusters.DishwasherAlarm.Bitmaps.AlarmBitmap.kDoorError
+            device_to_ha=lambda x: bool(
+                x & clusters.DishwasherAlarm.Bitmaps.AlarmBitmap.kDoorError
             ),
         ),
         entity_class=MatterBinarySensor,
@@ -481,8 +477,8 @@ DISCOVERY_SCHEMAS = [
             translation_key="alarm_door",
             device_class=BinarySensorDeviceClass.PROBLEM,
             entity_category=EntityCategory.DIAGNOSTIC,
-            device_to_ha=lambda x: (
-                x == clusters.RefrigeratorAlarm.Bitmaps.AlarmBitmap.kDoorOpen
+            device_to_ha=lambda x: bool(
+                x & clusters.RefrigeratorAlarm.Bitmaps.AlarmBitmap.kDoorOpen
             ),
         ),
         entity_class=MatterBinarySensor,
