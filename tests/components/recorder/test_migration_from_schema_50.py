@@ -1,4 +1,4 @@
-"""The tests for the recorder filter matching the EntityFilter component."""
+"""Test for migration from DB schema version 50."""
 
 import importlib
 import sys
