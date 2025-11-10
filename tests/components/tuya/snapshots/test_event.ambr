@@ -185,7 +185,7 @@
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
-        <DPCode.ALARM_MESSAGE: 'alarm_message'>,
+        'dpcode_update',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -223,7 +223,7 @@
       'device_class': 'doorbell',
       'event_type': None,
       'event_types': list([
-        <DPCode.ALARM_MESSAGE: 'alarm_message'>,
+        'dpcode_update',
       ]),
       'friendly_name': 'Bürocam Alarm message',
     }),
@@ -242,7 +242,7 @@
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
-        <DPCode.ALARM_MESSAGE: 'alarm_message'>,
+        'dpcode_update',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -280,7 +280,7 @@
       'device_class': 'doorbell',
       'event_type': None,
       'event_types': list([
-        <DPCode.ALARM_MESSAGE: 'alarm_message'>,
+        'dpcode_update',
       ]),
       'friendly_name': 'C9 Alarm message',
     }),
@@ -299,7 +299,7 @@
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
-        <DPCode.DOORBELL_PIC: 'doorbell_pic'>,
+        'dpcode_update',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -335,18 +335,19 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'doorbell',
-      'event_type': None,
+      'event_type': 'dpcode_update',
       'event_types': list([
-        <DPCode.DOORBELL_PIC: 'doorbell_pic'>,
+        'dpcode_update',
       ]),
       'friendly_name': 'C9 Doorbell picture',
+      'value': '',
     }),
     'context': <ANY>,
     'entity_id': 'event.c9_doorbell_picture',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2023-11-01T12:14:15.000+00:00',
   })
 # ---
 # name: test_platform_setup_and_discovery[event.garage_camera_alarm_message-entry]
@@ -356,7 +357,7 @@
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
-        <DPCode.ALARM_MESSAGE: 'alarm_message'>,
+        'dpcode_update',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -394,7 +395,7 @@
       'device_class': 'doorbell',
       'event_type': None,
       'event_types': list([
-        <DPCode.ALARM_MESSAGE: 'alarm_message'>,
+        'dpcode_update',
       ]),
       'friendly_name': 'Garage Camera Alarm message',
     }),
@@ -413,7 +414,7 @@
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
-        <DPCode.ALARM_MESSAGE: 'alarm_message'>,
+        'dpcode_update',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -449,18 +450,19 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'doorbell',
-      'event_type': None,
+      'event_type': 'dpcode_update',
       'event_types': list([
-        <DPCode.ALARM_MESSAGE: 'alarm_message'>,
+        'dpcode_update',
       ]),
       'friendly_name': 'Intercom Alarm message',
+      'value': '{"v":"5.0","files":[{"data":"a18b434bbfd654c77e35761de082e768fc3bfbd658ed020b0dbaf46915a10cccd29b51e65b0d62b3016eed54b55155f15790596d76c80aae9e78447d0c1e9cf6b31de7fb9d29e8ea088ec018baa4a5c3f0e01fa8b94b4d3aed498db0952975ed986693e6c5432af7a197aba07ea7b2ddcfd4c3467d9d002bd0789d49635b5792","keyId":"default","iv":"c7bb1962751df98aedb3ec0e72981ef0"}],"cmd":"ipc_doorbell","type":"image"}',
     }),
     'context': <ANY>,
     'entity_id': 'event.intercom_alarm_message',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2023-11-01T12:14:15.000+00:00',
   })
 # ---
 # name: test_platform_setup_and_discovery[event.intercom_doorbell_picture-entry]
@@ -470,7 +472,7 @@
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
-        <DPCode.DOORBELL_PIC: 'doorbell_pic'>,
+        'dpcode_update',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -506,18 +508,19 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'doorbell',
-      'event_type': None,
+      'event_type': 'dpcode_update',
       'event_types': list([
-        <DPCode.DOORBELL_PIC: 'doorbell_pic'>,
+        'dpcode_update',
       ]),
       'friendly_name': 'Intercom Doorbell picture',
+      'value': 'https://ty-eu-storage30-pic.s3.eu-central-1.amazonaws.com/e48603-22566618-szjsb54d16db4e47901a/detect/1762199221.jpeg?X-Amz-Security-Token=FwoGZXIvYXdzEK3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaDCRbbd3VZWNFklYIbCKCAvBd%2Bq0ca3EDdg7N52jP8fYB7YSRKHnH3gEvCF8z8zLIOvnFktmTAaKVWR6Ll09L12zoOpGjmzL0Db2GSQHmnJbMetaJogZTPxb8xgLm4pVHbu92fwbooTUYe1L2rhM%2Bv%2BAmToCMWpXOl58WP5pd00JgHXiAS5FZxguTyQcIrlExnIyn0c80kEQ29UkwvU8LEZCyKpLYHF2ea1%2F%2FOiI6oXkuQwMM%2FBXs%2BX1eXagg%2FimhEEa%2BCTD85%2F%2FeHujfmJE%2Br2xDdvh0IBOLS0ag5foDo%2F6iDzW0sJdMmN7O5Xb2s0Fs81LpXnpMwJDTqmI%2BEH5rc9qOCGzf5IFjnvY0awN65nUl1iiyjaTIBjIpeeokhmSQzZPU%2FtDsDyFaBQEqV692ziFuYnXz3vyjtys9NIXmZ%2FwXQi8%3D&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIAUTPMUJJJQNUEPJ3H%2F20251103%2Feu-central-1%2Fs3%2Faws4_request&X-Amz-Date=20251103T194704Z&X-Amz-Expires=60&X-Amz-SignedHeaders=host&bucket=ty-eu-storage30-pic&v=1.0&X-Amz-Signature=9a1ee625ee0c96d975b2868d18ce907c54a116824c3f90c27a9f53cb3a7a4204',
     }),
     'context': <ANY>,
     'entity_id': 'event.intercom_doorbell_picture',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2023-11-01T12:14:15.000+00:00',
   })
 # ---
 # name: test_platform_setup_and_discovery[event.mirilla_puerta_alarm_message-entry]
@@ -527,7 +530,7 @@
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
-        <DPCode.ALARM_MESSAGE: 'alarm_message'>,
+        'dpcode_update',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -565,7 +568,7 @@
       'device_class': 'doorbell',
       'event_type': None,
       'event_types': list([
-        <DPCode.ALARM_MESSAGE: 'alarm_message'>,
+        'dpcode_update',
       ]),
       'friendly_name': 'Mirilla puerta Alarm message',
     }),
@@ -584,7 +587,7 @@
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
-        <DPCode.DOORBELL_PIC: 'doorbell_pic'>,
+        'dpcode_update',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -620,17 +623,18 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'doorbell',
-      'event_type': None,
+      'event_type': 'dpcode_update',
       'event_types': list([
-        <DPCode.DOORBELL_PIC: 'doorbell_pic'>,
+        'dpcode_update',
       ]),
       'friendly_name': 'Mirilla puerta Doorbell picture',
+      'value': '',
     }),
     'context': <ANY>,
     'entity_id': 'event.mirilla_puerta_doorbell_picture',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2023-11-01T12:14:15.000+00:00',
   })
 # ---

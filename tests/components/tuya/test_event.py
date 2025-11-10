@@ -68,7 +68,7 @@ async def test_alarm_message_event(
 
     # Verify event was triggered with correct type and decoded message
     state = hass.states.get(entity_id)
-    assert state.attributes["event_type"] == "alarm_message"
+    assert state.attributes["event_type"] == "dpcode_update"
     assert "ipc_doorbell" in state.attributes["value"]
 
 
@@ -100,5 +100,5 @@ async def test_doorbell_picture_event(
 
     # Verify event was triggered with correct type and decoded URL
     state = hass.states.get(entity_id)
-    assert state.attributes["event_type"] == "doorbell_pic"
+    assert state.attributes["event_type"] == "dpcode_update"
     assert ".jpeg" in state.attributes["value"]

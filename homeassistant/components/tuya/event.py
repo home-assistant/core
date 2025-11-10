@@ -166,13 +166,10 @@ class TuyaEventEntity(TuyaEntity, EventEntity):
         self._attr_unique_id = f"{super().unique_id}{description.key}"
         self._dpcode_wrapper = dpcode_wrapper
 
-        # Set event types based on wrapper type
+        self._attr_event_types = ["dpcode_update"]
         if isinstance(dpcode_wrapper, DPCodeEnumWrapper):
             # Enum types have a range of valid values
             self._attr_event_types = dpcode_wrapper.type_information.range
-        else:
-            # String/Raw types use the dpcode as the event type
-            self._attr_event_types = [dpcode_wrapper.dpcode]
 
     async def _handle_state_update(
         self,
@@ -182,20 +179,16 @@ class TuyaEventEntity(TuyaEntity, EventEntity):
         if (
             updated_status_properties is None
             or self._dpcode_wrapper.dpcode not in updated_status_properties
+            or (value := self._dpcode_wrapper.read_device_status(self.device)) is None
         ):
             return
 
-        value = self._dpcode_wrapper.read_device_status(self.device)
-        if value is None:
-            return
-
-        # For B64Decode wrapper, value is a dict with event_type and event_attributes
-        if isinstance(self._dpcode_wrapper, DPCodeB64DecodeWrapper):
-            event_type = value["event_type"]
-            event_attributes = value["event_attributes"]
-        else:
+        event_type = "dpcode_update"
+        event_attributes = {}
+        if isinstance(self._dpcode_wrapper, DPCodeEnumWrapper):
             event_type = value
-            event_attributes = {}
+        else:
+            event_attributes = {"value": value}
 
         self._trigger_event(event_type, event_attributes)
         self.async_write_ha_state()

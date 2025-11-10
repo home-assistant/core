@@ -16,146 +16,6 @@ from .util import remap_value
 
 
 @dataclass
-class DPCodeWrapper:
-    """Base DPCode wrapper.
-
-    Used as a common interface for referring to a DPCode, and
-    access read conversion routines.
-    """
-
-    dpcode: str
-
-    def _read_device_status_raw(self, device: CustomerDevice) -> Any | None:
-        """Read the raw device status for the DPCode.
-
-        Private helper method for `read_device_status`.
-        """
-        return device.status.get(self.dpcode)
-
-    def read_device_status(self, device: CustomerDevice) -> Any | None:
-        """Read the device value for the dpcode."""
-        raise NotImplementedError("read_device_value must be implemented")
-
-
-@dataclass
-class DPCodeBooleanWrapper(DPCodeWrapper):
-    """Simple wrapper for boolean values.
-
-    Supports True/False only.
-    """
-
-    def read_device_status(self, device: CustomerDevice) -> bool | None:
-        """Read the device value for the dpcode."""
-        if (raw_value := self._read_device_status_raw(device)) in (True, False):
-            return raw_value
-        return None
-
-    def _convert_value_to_raw_value(
-        self, device: CustomerDevice, value: Any
-    ) -> Any | None:
-        """Convert a Home Assistant value back to a raw device value."""
-        if value in (True, False):
-            return value
-        # Currently only called with boolean values
-        # Safety net in case of future changes
-        raise ValueError(f"Invalid boolean value `{value}`")
-
-
-class DPCodeEnumWrapper(DPCodeTypeInformationWrapper[EnumTypeData]):
-    """Simple wrapper for EnumTypeData values."""
-
-    enum_type_information: EnumTypeData
-
-    def read_device_status(self, device: CustomerDevice) -> str | None:
-        """Read the device value for the dpcode.
-
-        Values outside of the list defined by the Enum type information will
-        return None.
-        """
-        if (
-            raw_value := self._read_device_status_raw(device)
-        ) in self.enum_type_information.range:
-            return raw_value
-        return None
-
-    @classmethod
-    def find_dpcode(
-        cls,
-        device: CustomerDevice,
-        dpcodes: str | DPCode | tuple[DPCode, ...],
-        *,
-        prefer_function: bool = False,
-    ) -> Self | None:
-        """Find and return a DPCodeEnumWrapper for the given DP codes."""
-        if enum_type := find_dpcode(
-            device, dpcodes, dptype=DPType.ENUM, prefer_function=prefer_function
-        ):
-            return cls(dpcode=enum_type.dpcode, enum_type_information=enum_type)
-        return None
-
-
-@overload
-def find_dpcode(
-    device: CustomerDevice,
-    dpcodes: str | DPCode | tuple[DPCode, ...] | None,
-    *,
-    prefer_function: bool = False,
-    dptype: Literal[DPType.ENUM],
-) -> EnumTypeData | None: ...
-
-
-@overload
-def find_dpcode(
-    device: CustomerDevice,
-    dpcodes: str | DPCode | tuple[DPCode, ...] | None,
-    *,
-    prefer_function: bool = False,
-    dptype: Literal[DPType.INTEGER],
-) -> IntegerTypeData | None: ...
-
-
-def find_dpcode(
-    device: CustomerDevice,
-    dpcodes: str | DPCode | tuple[DPCode, ...] | None,
-    *,
-    prefer_function: bool = False,
-    dptype: DPType,
-) -> TypeInformation | None:
-    """Find type information for a matching DP code available for this device."""
-    if not (type_information_cls := _TYPE_INFORMATION_MAPPINGS.get(dptype)):
-        raise NotImplementedError(f"find_dpcode not supported for {dptype}")
-
-    if dpcodes is None:
-        return None
-
-    if isinstance(dpcodes, str):
-        dpcodes = (DPCode(dpcodes),)
-    elif not isinstance(dpcodes, tuple):
-        dpcodes = (dpcodes,)
-
-    lookup_tuple = (
-        (device.function, device.status_range)
-        if prefer_function
-        else (device.status_range, device.function)
-    )
-
-    for dpcode in dpcodes:
-        for device_specs in lookup_tuple:
-            if (
-                (current_definition := device_specs.get(dpcode))
-                and current_definition.type == dptype
-                and (
-                    type_information := type_information_cls.from_json(
-                        dpcode, current_definition.values
-                    )
-                )
-            ):
-                return type_information
-
-    return None
-
-
-@dataclass
 class TypeInformation:
     """Type information.
 
@@ -267,6 +127,7 @@ class EnumTypeData(TypeInformation):
         if not (parsed := json.loads(data)):
             return None
         return cls(dpcode, **parsed)
+
 
 @dataclass
 class StringTypeData(TypeInformation):
@@ -395,7 +256,7 @@ class DPCodeBooleanWrapper(DPCodeTypeInformationWrapper[TypeInformation]):
         # Safety net in case of future changes
         raise ValueError(f"Invalid boolean value `{value}`")
 
-@dataclass
+
 class DPCodeB64DecodeWrapper(DPCodeWrapper):
     """Wrapper for base64 encoded string/raw values.
 
@@ -404,20 +265,17 @@ class DPCodeB64DecodeWrapper(DPCodeWrapper):
     """
 
     def read_device_status(self, device: CustomerDevice) -> dict[str, Any] | None:
-        """Read the device value for the dpcode and return as event structure."""
+        """Read the device value for the dpcode and return decoded value."""
         raw_value = self._read_device_status_raw(device)
         if raw_value is None:
             return None
 
         # Decode base64 value to UTF-8 string
         try:
-            decoded_value = base64.b64decode(raw_value).decode("utf-8")
+            return base64.b64decode(raw_value).decode("utf-8")
         except (ValueError, UnicodeDecodeError):
             # If decoding fails, use raw value
-            decoded_value = raw_value
-
-        # Return structure suitable for events: dpcode as type, decoded value in attributes
-        return {"event_type": self.dpcode, "event_attributes": {"value": decoded_value}}
+            return None
 
     @classmethod
     def find_dpcode(
