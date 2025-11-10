@@ -57,12 +57,14 @@ type SelectType = Literal[
     "select_gateway_mode",
     "select_regulation_mode",
     "select_schedule",
+    "select_zone_profile",
 ]
 type SelectOptionsType = Literal[
+    "available_schedules",
     "dhw_modes",
     "gateway_modes",
     "regulation_modes",
-    "available_schedules",
+    "zone_profiles",
 ]
 
 # Default directives
@@ -82,3 +84,15 @@ MASTER_THERMOSTATS: Final[list[str]] = [
     "zone_thermometer",
     "zone_thermostat",
 ]
+
+# Select constants
+AVAILABLE_SCHEDULES: Final = "available_schedules"
+DHW_MODES: Final = "dhw_modes"
+GATEWAY_MODES: Final = "gateway_modes"
+REGULATION_MODES: Final = "regulation_modes"
+ZONE_PROFILES: Final = "zone_profiles"
+SELECT_DHW_MODE: Final = "select_dhw_mode"
+SELECT_GATEWAY_MODE: Final = "select_gateway_mode"
+SELECT_REGULATION_MODE: Final = "select_regulation_mode"
+SELECT_SCHEDULE: Final = "select_schedule"
+SELECT_ZONE_PROFILE: Final = "select_zone_profile"
