@@ -21,11 +21,13 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.trigger_template_entity import ValueTemplate
 from homeassistant.util.json import JsonValueType
 
 from .const import CONF_QUERY, DOMAIN
 from .util import (
     async_create_sessionmaker,
+    check_and_render_sql_query,
     convert_value,
     generate_lambda_stmt,
     redact_credentials,
@@ -39,7 +41,9 @@ _LOGGER = logging.getLogger(__name__)
 SERVICE_QUERY = "query"
 SERVICE_QUERY_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_QUERY): vol.All(cv.string, validate_sql_select),
+        vol.Required(CONF_QUERY): vol.All(
+            cv.template, ValueTemplate.from_template, validate_sql_select
+        ),
         vol.Optional(CONF_DB_URL): cv.string,
     }
 )
@@ -86,11 +90,12 @@ async def _async_query_service(
             assert isinstance(sessmaker, scoped_session)
         with sessmaker() as session:
             try:
-                return _process(session.execute(generate_lambda_stmt(query_str)))
+                rendered_query = check_and_render_sql_query(call.hass, query_str)
+                return _process(session.execute(generate_lambda_stmt(rendered_query)))
             except SQLAlchemyError as err:
                 _LOGGER.debug(
                     "Error executing query %s: %s",
-                    query_str,
+                    rendered_query,
                     redact_credentials(str(err)),
                 )
                 session.rollback()
@@ -100,13 +105,14 @@ async def _async_query_service(
         if isinstance(sessmaker, async_scoped_session):
             async with sessmaker() as session:
                 try:
+                    rendered_query = check_and_render_sql_query(call.hass, query_str)
                     result = _process(
-                        await session.execute(generate_lambda_stmt(query_str))
+                        await session.execute(generate_lambda_stmt(rendered_query))
                     )
                 except SQLAlchemyError as err:
                     _LOGGER.debug(
                         "Error executing query %s: %s",
-                        query_str,
+                        rendered_query,
                         redact_credentials(str(err)),
                     )
                     await session.rollback()

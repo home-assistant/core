@@ -65,6 +65,10 @@
         "name": "Following",
         "unit_of_measurement": "people"
       },
+      "friends": {
+        "name": "Friends",
+        "unit_of_measurement": "[%key:component::xbox::entity::sensor::following::unit_of_measurement%]"
+      },
       "gamer_score": {
         "name": "Gamerscore",
         "unit_of_measurement": "points"
@@ -94,6 +98,9 @@
     }
   },
   "exceptions": {
+    "oauth2_implementation_unavailable": {
+      "message": "OAuth2 implementation temporarily unavailable, will retry"
+    },
     "request_exception": {
       "message": "Failed to connect to Xbox Network"
     },

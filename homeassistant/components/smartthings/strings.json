@@ -653,9 +653,17 @@
       "sanitize": {
         "name": "Sanitize"
       },
+      "sound_effect": {
+        "name": "Sound effect"
+      },
       "wrinkle_prevent": {
         "name": "Wrinkle prevent"
       }
+    }
+  },
+  "exceptions": {
+    "oauth2_implementation_unavailable": {
+      "message": "OAuth2 implementation unavailable, will retry"
     }
   },
   "issues": {
