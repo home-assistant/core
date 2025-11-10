@@ -360,7 +360,9 @@ async def async_setup_entry(
             device = manager.device_map[device_id]
             if descriptions := SELECTS.get(device.category):
                 entities.extend(
-                    TuyaSelectEntity(device, manager, description, dpcode_wrapper)
+                    TuyaSelectEntity(
+                        device, manager, description, dpcode_wrapper=dpcode_wrapper
+                    )
                     for description in descriptions
                     if (
                         dpcode_wrapper := DPCodeEnumWrapper.find_dpcode(
