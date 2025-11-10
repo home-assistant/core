@@ -101,7 +101,6 @@
       "filter_life": {
         "name": "Filter lifetime"
       }
-      }
     },
     "switch": {
       "child_lock": {
