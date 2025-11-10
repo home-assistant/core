@@ -133,51 +133,60 @@ SENSOR_DESCRIPTIONS: tuple[NSSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TIMESTAMP,
         is_next=True,
         value_fn=get_departure_time,
+        entity_registry_enabled_default=False,
     ),
     # Platform information
     NSSensorEntityDescription(
         key="departure_platform_planned",
         translation_key="departure_platform_planned",
         value_fn=lambda trip: getattr(trip, "departure_platform_planned", None),
+        entity_registry_enabled_default=False,
     ),
     NSSensorEntityDescription(
         key="departure_platform_actual",
         translation_key="departure_platform_actual",
         value_fn=lambda trip: getattr(trip, "departure_platform_actual", None),
+        entity_registry_enabled_default=False,
     ),
     NSSensorEntityDescription(
         key="arrival_platform_planned",
         translation_key="arrival_platform_planned",
         value_fn=lambda trip: getattr(trip, "arrival_platform_planned", None),
+        entity_registry_enabled_default=False,
     ),
     NSSensorEntityDescription(
         key="arrival_platform_actual",
         translation_key="arrival_platform_actual",
         value_fn=lambda trip: getattr(trip, "arrival_platform_actual", None),
+        entity_registry_enabled_default=False,
     ),
     NSSensorEntityDescription(
         key="departure_time_planned",
         translation_key="departure_time_planned",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda trip: getattr(trip, "departure_time_planned", None),
+        entity_registry_enabled_default=False,
     ),
     NSSensorEntityDescription(
         key="departure_time_actual",
         translation_key="departure_time_actual",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda trip: getattr(trip, "departure_time_actual", None),
+        entity_registry_enabled_default=False,
     ),
     NSSensorEntityDescription(
         key="arrival_time_planned",
         translation_key="arrival_time_planned",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda trip: getattr(trip, "arrival_time_planned", None),
+        entity_registry_enabled_default=False,
     ),
     NSSensorEntityDescription(
         key="arrival_time_actual",
         translation_key="arrival_time_actual",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda trip: getattr(trip, "arrival_time_actual", None),
+        entity_registry_enabled_default=False,
     ),
     # Trip information
     NSSensorEntityDescription(
@@ -186,17 +195,20 @@ SENSOR_DESCRIPTIONS: tuple[NSSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         convert_fn=TripStatus,
         value_fn=lambda trip: getattr(trip, "status", None),
+        entity_registry_enabled_default=False,
     ),
     NSSensorEntityDescription(
         key="transfers",
         translation_key="transfers",
         value_fn=lambda trip: getattr(trip, "nr_transfers", 0),
+        entity_registry_enabled_default=False,
     ),
     # Route info sensors
     NSSensorEntityDescription(
         key="route",
         translation_key="route",
         value_fn=lambda trip: ", ".join(_get_route(trip)),
+        entity_registry_enabled_default=False,
     ),
 )
 

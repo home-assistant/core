@@ -67,6 +67,7 @@ async def test_config_import(
 
 
 @pytest.mark.freeze_time("2025-09-15 14:30:00+00:00")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor(
     hass: HomeAssistant,
     mock_nsapi: AsyncMock,
@@ -82,6 +83,7 @@ async def test_sensor(
 
 
 @pytest.mark.freeze_time("2025-09-15 14:30:00+00:00")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_single_trip_sensor(
     hass: HomeAssistant,
     mock_single_trip_nsapi: AsyncMock,
@@ -97,6 +99,7 @@ async def test_single_trip_sensor(
 
 
 @pytest.mark.freeze_time("2025-09-15 14:30:00+00:00")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_no_trips_sensor(
     hass: HomeAssistant,
     mock_no_trips_nsapi: AsyncMock,
@@ -137,6 +140,7 @@ async def test_sensor_with_api_connection_error(
         ("08:30:45", "Early commute", "Time with seconds - should truncate seconds"),
     ],
 )
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_with_custom_time_parsing(
     hass: HomeAssistant,
     mock_nsapi: AsyncMock,
