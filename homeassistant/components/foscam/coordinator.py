@@ -71,7 +71,6 @@ class FoscamCoordinator(DataUpdateCoordinator[FoscamDeviceInfo]):
 
     def gather_all_configs(self) -> FoscamDeviceInfo:
         """Get all Foscam configurations."""
-
         ret_dev_info, dev_info = self.session.get_dev_info()
         dev_info = dev_info if ret_dev_info == 0 else {}
 
@@ -87,6 +86,7 @@ class FoscamCoordinator(DataUpdateCoordinator[FoscamDeviceInfo]):
 
         ret_sleep, sleep_setting = self.session.is_asleep()
         is_asleep = {"supported": ret_sleep == 0, "status": bool(int(sleep_setting))}
+
         ret_wl, is_open_white_light = self.session.getWhiteLightBrightness()
         is_open_white_light_val = (
             is_open_white_light["enable"] == "1" if ret_wl == 0 else False
@@ -112,6 +112,7 @@ class FoscamCoordinator(DataUpdateCoordinator[FoscamDeviceInfo]):
         is_turn_off_light_val = not (
             ret_les == 0 and is_turn_off_light["isEnable"] == "0"
         )
+
         is_open_wdr = None
         is_open_hdr = None
         reserve3 = product_info.get("reserve4")
