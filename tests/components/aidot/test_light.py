@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.aidot.coordinator import UPDATE_DEVICE_LIST_INTERVAL
 from homeassistant.components.light import (
