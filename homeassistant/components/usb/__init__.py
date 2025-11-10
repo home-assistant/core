@@ -59,7 +59,6 @@ ADD_REMOVE_SCAN_COOLDOWN = 5  # 5 second cooldown to give devices a chance to re
 
 __all__ = [
     "USBCallbackMatcher",
-    "async_is_plugged_in",
     "async_register_port_event_callback",
     "async_register_scan_request_callback",
 ]
@@ -99,51 +98,6 @@ def async_register_port_event_callback(
     """Register to receive a callback when a USB device is connected or disconnected."""
     discovery: USBDiscovery = hass.data[DOMAIN]
     return discovery.async_register_port_event_callback(callback)
-
-
-@hass_callback
-def async_is_plugged_in(hass: HomeAssistant, matcher: USBCallbackMatcher) -> bool:
-    """Return True is a USB device is present."""
-
-    vid = matcher.get("vid", "")
-    pid = matcher.get("pid", "")
-    serial_number = matcher.get("serial_number", "")
-    manufacturer = matcher.get("manufacturer", "")
-    description = matcher.get("description", "")
-
-    if (
-        vid != vid.upper()
-        or pid != pid.upper()
-        or serial_number != serial_number.lower()
-        or manufacturer != manufacturer.lower()
-        or description != description.lower()
-    ):
-        raise ValueError(
-            f"vid and pid must be uppercase, the rest lowercase in matcher {matcher!r}"
-        )
-
-    usb_discovery: USBDiscovery = hass.data[DOMAIN]
-    return any(
-        usb_device_matches_matcher(
-            USBDevice(
-                device=device,
-                vid=vid,
-                pid=pid,
-                serial_number=serial_number,
-                manufacturer=manufacturer,
-                description=description,
-            ),
-            matcher,
-        )
-        for (
-            device,
-            vid,
-            pid,
-            serial_number,
-            manufacturer,
-            description,
-        ) in usb_discovery.seen
-    )
 
 
 @hass_callback
