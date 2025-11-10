@@ -110,7 +110,7 @@ class BitmapTypeInformation(TypeInformation):
 
     @classmethod
     def from_json(cls, dpcode: DPCode, data: str) -> Self | None:
-        """Load JSON string and return a BitmapTypeData object."""
+        """Load JSON string and return a BitmapTypeInformation object."""
         if not (parsed := json.loads(data)):
             return None
         return cls(dpcode, **parsed)
