@@ -77,6 +77,12 @@
       }
     },
     "button": {
+      "factory_reset": {
+        "name": "Factory reset"
+      },
+      "manual_clean": {
+        "name": "Manual clean"
+      },
       "reset_duster_cloth": {
         "name": "Reset duster cloth"
       },
@@ -885,6 +891,9 @@
       },
       "arm_beep": {
         "name": "Arm beep"
+      },
+      "auto_clean": {
+        "name": "Auto clean"
       },
       "battery_lock": {
         "name": "Battery lock"
