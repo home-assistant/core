@@ -311,8 +311,7 @@
     "condition_behavior": {
       "options": {
         "all": "All",
-        "any": "Any",
-        "one": "One"
+        "any": "Any"
       }
     },
     "flash": {

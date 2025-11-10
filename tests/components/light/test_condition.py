@@ -171,7 +171,6 @@ async def test_light_state_condition_behavior_all(
     hass.states.async_set("switch.label_switch_1", STATE_OFF)
     hass.states.async_set("switch.label_switch_2", STATE_ON)
 
-    reverse_state = STATE_OFF if state == STATE_ON else STATE_ON
     for entity_id in label_entities:
         hass.states.async_set(entity_id, reverse_state)
 
