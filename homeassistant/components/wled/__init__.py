@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
@@ -10,7 +9,11 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN
-from .coordinator import WLEDDataUpdateCoordinator, WLEDReleasesDataUpdateCoordinator
+from .coordinator import (
+    WLEDConfigEntry,
+    WLEDDataUpdateCoordinator,
+    WLEDReleasesDataUpdateCoordinator,
+)
 
 PLATFORMS = (
     Platform.BUTTON,
@@ -21,8 +24,6 @@ PLATFORMS = (
     Platform.SWITCH,
     Platform.UPDATE,
 )
-
-type WLEDConfigEntry = ConfigEntry[WLEDDataUpdateCoordinator]
 
 WLED_KEY: HassKey[WLEDReleasesDataUpdateCoordinator] = HassKey(DOMAIN)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)

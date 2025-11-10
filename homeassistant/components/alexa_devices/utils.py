@@ -4,7 +4,7 @@ from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
 from typing import Any, Concatenate
 
-from aioamazondevices.const import SPEAKER_GROUP_FAMILY
+from aioamazondevices.const.devices import SPEAKER_GROUP_FAMILY
 from aioamazondevices.exceptions import CannotConnect, CannotRetrieveData
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
