@@ -169,7 +169,7 @@ class TuyaEventEntity(TuyaEntity, EventEntity):
         # Set event types based on wrapper type
         if isinstance(dpcode_wrapper, DPCodeEnumWrapper):
             # Enum types have a range of valid values
-            self._attr_event_types = dpcode_wrapper.enum_type_information.range
+            self._attr_event_types = dpcode_wrapper.type_information.range
         else:
             # String/Raw types use the dpcode as the event type
             self._attr_event_types = [dpcode_wrapper.dpcode]
