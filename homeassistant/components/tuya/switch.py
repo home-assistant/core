@@ -946,14 +946,13 @@ async def async_setup_entry(
             device = manager.device_map[device_id]
             if descriptions := SWITCHES.get(device.category):
                 entities.extend(
-                    TuyaSwitchEntity(
-                        device,
-                        manager,
-                        description,
-                        DPCodeBooleanWrapper(description.key),
-                    )
+                    TuyaSwitchEntity(device, manager, description, dpcode_wrapper)
                     for description in descriptions
-                    if description.key in device.status
+                    if (
+                        dpcode_wrapper := DPCodeBooleanWrapper.find_dpcode(
+                            device, description.key, prefer_function=True
+                        )
+                    )
                     and _check_deprecation(
                         hass,
                         device,
