@@ -19,7 +19,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the scenes for Velux platform."""
-    pyvlx = config_entry.runtime_data.pyvlx
+    pyvlx = config_entry.runtime_data
 
     entities = [VeluxScene(scene) for scene in pyvlx.scenes]
     async_add_entities(entities)

@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from homeassistant.components.velux import build_gateway_identifier
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
@@ -101,5 +102,5 @@ async def test_rain_sensor_device_association(
     via_device_entry = device_registry.async_get(device_entry.via_device_id)
     assert via_device_entry is not None
     assert via_device_entry.identifiers == {
-        mock_config_entry.runtime_data.gateway_device_id
+        build_gateway_identifier(mock_config_entry.entry_id)
     }

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 from pyvlx import PyVLX, PyVLXException
 
 from homeassistant.config_entries import ConfigEntry
@@ -13,16 +11,12 @@ from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN, LOGGER, PLATFORMS
 
-
-@dataclass
-class VeluxData:
-    """Runtime data for Velux integration."""
-
-    pyvlx: PyVLX
-    gateway_device_id: tuple[str, str]
+type VeluxConfigEntry = ConfigEntry[PyVLX]
 
 
-type VeluxConfigEntry = ConfigEntry[VeluxData]
+def build_gateway_identifier(entry_id: str) -> tuple[str, str]:
+    """Build a unique identifier for the gateway device."""
+    return (DOMAIN, f"gateway_{entry_id}")
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: VeluxConfigEntry) -> bool:
@@ -39,8 +33,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: VeluxConfigEntry) -> boo
         LOGGER.exception("Can't connect to velux interface: %s", ex)
         return False
 
-    device_identifier = (DOMAIN, f"gateway_{entry.entry_id}")
-    entry.runtime_data = VeluxData(pyvlx=pyvlx, gateway_device_id=device_identifier)
+    device_identifier = build_gateway_identifier(entry.entry_id)
+    entry.runtime_data = pyvlx
 
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(

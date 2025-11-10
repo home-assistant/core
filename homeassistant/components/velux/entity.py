@@ -6,7 +6,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
-from . import VeluxConfigEntry
+from . import VeluxConfigEntry, build_gateway_identifier
 from .const import DOMAIN
 
 
@@ -35,7 +35,7 @@ class VeluxEntity(Entity):
             },
             name=node.name if node.name else f"#{node.node_id}",
             serial_number=node.serial_number,
-            via_device=config_entry.runtime_data.gateway_device_id,
+            via_device=build_gateway_identifier(config_entry.entry_id),
         )
 
     @callback
