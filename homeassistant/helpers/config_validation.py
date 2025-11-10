@@ -1438,18 +1438,6 @@ def _raise_on_templated_service(
             _raise_on_templated_service(domain, _service, val, [*_path, "Any", pos])
     if isinstance(schema, (vol.Schema)):
         _raise_on_templated_service(domain, _service, schema.schema, _path)
-    if _path[-5:] == ["All", 0, "entity_id", "Any", 1]:
-        return
-    if _path[-7:] == ["All", 0, "entity_id", "Any", 2, "All", 1]:
-        return
-    if _path[-10:] == ["All", 0, "device_id", "Any", 1, "All", 1, 0, "Any", 0]:
-        return
-    if _path[-10:] == ["All", 0, "area_id", "Any", 1, "All", 1, 0, "Any", 0]:
-        return
-    if _path[-10:] == ["All", 0, "floor_id", "Any", 1, "All", 1, 0, "Any", 0]:
-        return
-    if _path[-10:] == ["All", 0, "label_id", "Any", 1, "All", 1, 0, "Any", 0]:
-        return
     if domain == "camera" and _service in ("record", "snapshot"):
         return
     if domain == "unifiprotect" and _service == "set_chime_paired_doorbells":
