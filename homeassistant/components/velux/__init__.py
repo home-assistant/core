@@ -49,12 +49,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: VeluxConfigEntry) -> boo
         name="KLF 200 Gateway",
         manufacturer="Velux",
         model="KLF 200",
-        hw_version=str(pyvlx.klf200.version.hardwareversion)
-        if pyvlx.klf200.version
-        else None,
-        sw_version=str(pyvlx.klf200.version.softwareversion)
-        if pyvlx.klf200.version
-        else None,
+        hw_version=(
+            str(pyvlx.klf200.version.hardwareversion) if pyvlx.klf200.version else None
+        ),
+        sw_version=(
+            str(pyvlx.klf200.version.softwareversion) if pyvlx.klf200.version else None
+        ),
     )
 
     async def on_hass_stop(event):
