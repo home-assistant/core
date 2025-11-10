@@ -273,12 +273,12 @@ async def async_setup_entry(
     coordinator.async_add_listener(add_entities)
     add_entities()
 
-    consoles = config_entry.runtime_data.consoles
+    consoles_coordinator = config_entry.runtime_data.consoles
 
     async_add_entities(
         [
             XboxStorageDeviceSensorEntity(
-                console, storage_device, consoles, description
+                console, storage_device, consoles_coordinator, description
             )
             for description in STORAGE_SENSOR_DESCRIPTIONS
             for console in coordinator.consoles.result
@@ -345,7 +345,7 @@ class XboxStorageDeviceSensorEntity(
         return next(
             (
                 d
-                for d in console.storage_devices or []
+                for d in console.storage_devices
                 if d.storage_device_id == self._storage_device.storage_device_id
             ),
             None,
