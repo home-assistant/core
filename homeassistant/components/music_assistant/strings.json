@@ -22,7 +22,7 @@
           "url": "[%key:common::config_flow::data::url%]"
         },
         "data_description": {
-          "url": "Enter the base URL of your Music Assistant server including the http prefix"
+          "url": "URL of the Music Assistant server"
         },
         "description": "URL of the Music Assistant server",
         "title": "Connect to a Music Assistant server"
