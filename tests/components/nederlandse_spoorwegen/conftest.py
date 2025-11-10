@@ -82,7 +82,7 @@ def mock_single_trip_nsapi() -> Generator[AsyncMock]:
 
 @pytest.fixture
 def mock_no_trips_nsapi() -> Generator[AsyncMock]:
-    """Override async_setup_entry."""
+    """Mock NSAPI client returning no trips."""
     with (
         patch(
             "homeassistant.components.nederlandse_spoorwegen.config_flow.NSAPI",
