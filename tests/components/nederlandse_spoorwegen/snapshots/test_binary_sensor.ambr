@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_binary_sensor[binary_sensor.to_home_none-entry]
+# name: test_binary_sensor[binary_sensor.to_home_arrival_delayed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,7 +12,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.to_home_none',
+    'entity_id': 'binary_sensor.to_home_arrival_delayed',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -24,56 +24,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
-    'platform': 'nederlandse_spoorwegen',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'is_departure_delayed',
-    'unique_id': '01K721DZPMEN39R5DK0ATBMSY9-is_departure_delayed',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_binary_sensor[binary_sensor.to_home_none-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'friendly_name': 'To home None',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.to_home_none',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_binary_sensor[binary_sensor.to_home_none_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.to_home_none_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
+    'original_name': 'Arrival delayed',
     'platform': 'nederlandse_spoorwegen',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -83,21 +34,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[binary_sensor.to_home_none_2-state]
+# name: test_binary_sensor[binary_sensor.to_home_arrival_delayed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by NS',
-      'friendly_name': 'To home None',
+      'friendly_name': 'To home Arrival delayed',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.to_home_none_2',
+    'entity_id': 'binary_sensor.to_home_arrival_delayed',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[binary_sensor.to_home_none_3-entry]
+# name: test_binary_sensor[binary_sensor.to_home_departure_delayed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -110,7 +61,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.to_home_none_3',
+    'entity_id': 'binary_sensor.to_home_departure_delayed',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -122,203 +73,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
-    'platform': 'nederlandse_spoorwegen',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'is_going',
-    'unique_id': '01K721DZPMEN39R5DK0ATBMSY9-is_going',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_binary_sensor[binary_sensor.to_home_none_3-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'friendly_name': 'To home None',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.to_home_none_3',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_binary_sensor[binary_sensor.to_work_none-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.to_work_none',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'nederlandse_spoorwegen',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'is_departure_delayed',
-    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-is_departure_delayed',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_binary_sensor[binary_sensor.to_work_none-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'friendly_name': 'To work None',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.to_work_none',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_binary_sensor[binary_sensor.to_work_none_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.to_work_none_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'nederlandse_spoorwegen',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'is_arrival_delayed',
-    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-is_arrival_delayed',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_binary_sensor[binary_sensor.to_work_none_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'friendly_name': 'To work None',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.to_work_none_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_binary_sensor[binary_sensor.to_work_none_3-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.to_work_none_3',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'nederlandse_spoorwegen',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'is_going',
-    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-is_going',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_binary_sensor[binary_sensor.to_work_none_3-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'friendly_name': 'To work None',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.to_work_none_3',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_no_trips_binary_sensor[binary_sensor.to_home_none-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.to_home_none',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
+    'original_name': 'Departure delayed',
     'platform': 'nederlandse_spoorwegen',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -328,21 +83,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_no_trips_binary_sensor[binary_sensor.to_home_none-state]
+# name: test_binary_sensor[binary_sensor.to_home_departure_delayed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by NS',
-      'friendly_name': 'To home None',
+      'friendly_name': 'To home Departure delayed',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.to_home_none',
+    'entity_id': 'binary_sensor.to_home_departure_delayed',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'on',
   })
 # ---
-# name: test_no_trips_binary_sensor[binary_sensor.to_home_none_2-entry]
+# name: test_binary_sensor[binary_sensor.to_home_going-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -355,7 +110,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.to_home_none_2',
+    'entity_id': 'binary_sensor.to_home_going',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -367,56 +122,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
-    'platform': 'nederlandse_spoorwegen',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'is_arrival_delayed',
-    'unique_id': '01K721DZPMEN39R5DK0ATBMSY9-is_arrival_delayed',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_no_trips_binary_sensor[binary_sensor.to_home_none_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'friendly_name': 'To home None',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.to_home_none_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_no_trips_binary_sensor[binary_sensor.to_home_none_3-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.to_home_none_3',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
+    'original_name': 'Going',
     'platform': 'nederlandse_spoorwegen',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -426,21 +132,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_no_trips_binary_sensor[binary_sensor.to_home_none_3-state]
+# name: test_binary_sensor[binary_sensor.to_home_going-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by NS',
-      'friendly_name': 'To home None',
+      'friendly_name': 'To home Going',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.to_home_none_3',
+    'entity_id': 'binary_sensor.to_home_going',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'on',
   })
 # ---
-# name: test_no_trips_binary_sensor[binary_sensor.to_work_none-entry]
+# name: test_binary_sensor[binary_sensor.to_work_arrival_delayed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -453,7 +159,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.to_work_none',
+    'entity_id': 'binary_sensor.to_work_arrival_delayed',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -465,56 +171,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
-    'platform': 'nederlandse_spoorwegen',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'is_departure_delayed',
-    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-is_departure_delayed',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_no_trips_binary_sensor[binary_sensor.to_work_none-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'friendly_name': 'To work None',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.to_work_none',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_no_trips_binary_sensor[binary_sensor.to_work_none_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.to_work_none_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
+    'original_name': 'Arrival delayed',
     'platform': 'nederlandse_spoorwegen',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -524,21 +181,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_no_trips_binary_sensor[binary_sensor.to_work_none_2-state]
+# name: test_binary_sensor[binary_sensor.to_work_arrival_delayed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by NS',
-      'friendly_name': 'To work None',
+      'friendly_name': 'To work Arrival delayed',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.to_work_none_2',
+    'entity_id': 'binary_sensor.to_work_arrival_delayed',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'off',
   })
 # ---
-# name: test_no_trips_binary_sensor[binary_sensor.to_work_none_3-entry]
+# name: test_binary_sensor[binary_sensor.to_work_departure_delayed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -551,7 +208,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.to_work_none_3',
+    'entity_id': 'binary_sensor.to_work_departure_delayed',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -563,7 +220,56 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Departure delayed',
+    'platform': 'nederlandse_spoorwegen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'is_departure_delayed',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-is_departure_delayed',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.to_work_departure_delayed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by NS',
+      'friendly_name': 'To work Departure delayed',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.to_work_departure_delayed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensor[binary_sensor.to_work_going-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.to_work_going',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Going',
     'platform': 'nederlandse_spoorwegen',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -573,21 +279,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_no_trips_binary_sensor[binary_sensor.to_work_none_3-state]
+# name: test_binary_sensor[binary_sensor.to_work_going-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by NS',
-      'friendly_name': 'To work None',
+      'friendly_name': 'To work Going',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.to_work_none_3',
+    'entity_id': 'binary_sensor.to_work_going',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'on',
   })
 # ---
-# name: test_single_trip_binary_sensor[binary_sensor.to_home_none-entry]
+# name: test_no_trips_binary_sensor[binary_sensor.to_home_arrival_delayed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -600,7 +306,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.to_home_none',
+    'entity_id': 'binary_sensor.to_home_arrival_delayed',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -612,7 +318,56 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Arrival delayed',
+    'platform': 'nederlandse_spoorwegen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'is_arrival_delayed',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY9-is_arrival_delayed',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_no_trips_binary_sensor[binary_sensor.to_home_arrival_delayed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by NS',
+      'friendly_name': 'To home Arrival delayed',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.to_home_arrival_delayed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_no_trips_binary_sensor[binary_sensor.to_home_departure_delayed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.to_home_departure_delayed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Departure delayed',
     'platform': 'nederlandse_spoorwegen',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -622,21 +377,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_single_trip_binary_sensor[binary_sensor.to_home_none-state]
+# name: test_no_trips_binary_sensor[binary_sensor.to_home_departure_delayed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by NS',
-      'friendly_name': 'To home None',
+      'friendly_name': 'To home Departure delayed',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.to_home_none',
+    'entity_id': 'binary_sensor.to_home_departure_delayed',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'on',
+    'state': 'unknown',
   })
 # ---
-# name: test_single_trip_binary_sensor[binary_sensor.to_home_none_2-entry]
+# name: test_no_trips_binary_sensor[binary_sensor.to_home_going-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -649,7 +404,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.to_home_none_2',
+    'entity_id': 'binary_sensor.to_home_going',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -661,56 +416,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
-    'platform': 'nederlandse_spoorwegen',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'is_arrival_delayed',
-    'unique_id': '01K721DZPMEN39R5DK0ATBMSY9-is_arrival_delayed',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_single_trip_binary_sensor[binary_sensor.to_home_none_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'friendly_name': 'To home None',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.to_home_none_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_single_trip_binary_sensor[binary_sensor.to_home_none_3-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.to_home_none_3',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
+    'original_name': 'Going',
     'platform': 'nederlandse_spoorwegen',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -720,21 +426,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_single_trip_binary_sensor[binary_sensor.to_home_none_3-state]
+# name: test_no_trips_binary_sensor[binary_sensor.to_home_going-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by NS',
-      'friendly_name': 'To home None',
+      'friendly_name': 'To home Going',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.to_home_none_3',
+    'entity_id': 'binary_sensor.to_home_going',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'on',
+    'state': 'unknown',
   })
 # ---
-# name: test_single_trip_binary_sensor[binary_sensor.to_work_none-entry]
+# name: test_no_trips_binary_sensor[binary_sensor.to_work_arrival_delayed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -747,7 +453,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.to_work_none',
+    'entity_id': 'binary_sensor.to_work_arrival_delayed',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -759,56 +465,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
-    'platform': 'nederlandse_spoorwegen',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'is_departure_delayed',
-    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-is_departure_delayed',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_single_trip_binary_sensor[binary_sensor.to_work_none-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by NS',
-      'friendly_name': 'To work None',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.to_work_none',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_single_trip_binary_sensor[binary_sensor.to_work_none_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.to_work_none_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
+    'original_name': 'Arrival delayed',
     'platform': 'nederlandse_spoorwegen',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -818,21 +475,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_single_trip_binary_sensor[binary_sensor.to_work_none_2-state]
+# name: test_no_trips_binary_sensor[binary_sensor.to_work_arrival_delayed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by NS',
-      'friendly_name': 'To work None',
+      'friendly_name': 'To work Arrival delayed',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.to_work_none_2',
+    'entity_id': 'binary_sensor.to_work_arrival_delayed',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'unknown',
   })
 # ---
-# name: test_single_trip_binary_sensor[binary_sensor.to_work_none_3-entry]
+# name: test_no_trips_binary_sensor[binary_sensor.to_work_departure_delayed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -845,7 +502,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.to_work_none_3',
+    'entity_id': 'binary_sensor.to_work_departure_delayed',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -857,7 +514,56 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Departure delayed',
+    'platform': 'nederlandse_spoorwegen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'is_departure_delayed',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-is_departure_delayed',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_no_trips_binary_sensor[binary_sensor.to_work_departure_delayed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by NS',
+      'friendly_name': 'To work Departure delayed',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.to_work_departure_delayed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_no_trips_binary_sensor[binary_sensor.to_work_going-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.to_work_going',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Going',
     'platform': 'nederlandse_spoorwegen',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -867,14 +573,308 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_single_trip_binary_sensor[binary_sensor.to_work_none_3-state]
+# name: test_no_trips_binary_sensor[binary_sensor.to_work_going-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by NS',
-      'friendly_name': 'To work None',
+      'friendly_name': 'To work Going',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.to_work_none_3',
+    'entity_id': 'binary_sensor.to_work_going',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_single_trip_binary_sensor[binary_sensor.to_home_arrival_delayed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.to_home_arrival_delayed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Arrival delayed',
+    'platform': 'nederlandse_spoorwegen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'is_arrival_delayed',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY9-is_arrival_delayed',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_single_trip_binary_sensor[binary_sensor.to_home_arrival_delayed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by NS',
+      'friendly_name': 'To home Arrival delayed',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.to_home_arrival_delayed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_single_trip_binary_sensor[binary_sensor.to_home_departure_delayed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.to_home_departure_delayed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Departure delayed',
+    'platform': 'nederlandse_spoorwegen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'is_departure_delayed',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY9-is_departure_delayed',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_single_trip_binary_sensor[binary_sensor.to_home_departure_delayed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by NS',
+      'friendly_name': 'To home Departure delayed',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.to_home_departure_delayed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_single_trip_binary_sensor[binary_sensor.to_home_going-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.to_home_going',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Going',
+    'platform': 'nederlandse_spoorwegen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'is_going',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY9-is_going',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_single_trip_binary_sensor[binary_sensor.to_home_going-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by NS',
+      'friendly_name': 'To home Going',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.to_home_going',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_single_trip_binary_sensor[binary_sensor.to_work_arrival_delayed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.to_work_arrival_delayed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Arrival delayed',
+    'platform': 'nederlandse_spoorwegen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'is_arrival_delayed',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-is_arrival_delayed',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_single_trip_binary_sensor[binary_sensor.to_work_arrival_delayed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by NS',
+      'friendly_name': 'To work Arrival delayed',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.to_work_arrival_delayed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_single_trip_binary_sensor[binary_sensor.to_work_departure_delayed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.to_work_departure_delayed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Departure delayed',
+    'platform': 'nederlandse_spoorwegen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'is_departure_delayed',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-is_departure_delayed',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_single_trip_binary_sensor[binary_sensor.to_work_departure_delayed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by NS',
+      'friendly_name': 'To work Departure delayed',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.to_work_departure_delayed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_single_trip_binary_sensor[binary_sensor.to_work_going-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.to_work_going',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Going',
+    'platform': 'nederlandse_spoorwegen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'is_going',
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-is_going',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_single_trip_binary_sensor[binary_sensor.to_work_going-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by NS',
+      'friendly_name': 'To work Going',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.to_work_going',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
