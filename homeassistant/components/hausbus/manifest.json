@@ -18,6 +18,5 @@
   "reload": true,
   "loggers": ["pyhausbus"],
   "quality_scale": "bronze",
-  "requirements": ["pyhausbus==1.0.32"], 
-  "version": "1.0.2"
+  "requirements": ["pyhausbus==1.0.32"]
 }
