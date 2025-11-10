@@ -1,5 +1,5 @@
 """Config flow for Haus-Bus integration."""
-
+ 
 from __future__ import annotations
 
 import asyncio

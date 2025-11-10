@@ -58,6 +58,7 @@ class HausbusGateway(IBusDataListener):
 
         await discovery_callback()
 
+
     def newDeviceDetected(self, device_id:int, model_type: str, module_id: ModuleId, configuration: Configuration, channels: list[ABusFeature]):
       """Handle new discovered Haus-Bus device."""
       LOGGER.debug("newDeviceDetected: device_id %s model_type %s module_id %s configuration %s", device_id, model_type, module_id, configuration)

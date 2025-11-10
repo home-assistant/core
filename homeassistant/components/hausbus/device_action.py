@@ -1,5 +1,5 @@
 """Defines device_actions of the haus-bus integration."""
-
+ 
 import logging
 from typing import Any
 
