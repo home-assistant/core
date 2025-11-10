@@ -5,16 +5,16 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Coroutine
 import logging
-import time
 from typing import Any
 
 from pyhausbus.ABusFeature import ABusFeature
 from pyhausbus.BusDataMessage import BusDataMessage
-from pyhausbus.de.hausbus.homeassistant.proxy.controller.data.Configuration import Configuration
+from pyhausbus.de.hausbus.homeassistant.proxy.controller.data.Configuration import (
+    Configuration,
+)
 from pyhausbus.de.hausbus.homeassistant.proxy.controller.data.ModuleId import ModuleId
 from pyhausbus.HomeServer import HomeServer
 from pyhausbus.IBusDataListener import IBusDataListener
-from pyhausbus.IBusDeviceListener import IBusDeviceListener
 from pyhausbus.ObjectId import ObjectId
 
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
@@ -58,33 +58,48 @@ class HausbusGateway(IBusDataListener):
 
         await discovery_callback()
 
-
-    def newDeviceDetected(self, device_id:int, model_type: str, module_id: ModuleId, configuration: Configuration, channels: list[ABusFeature]):
-      """Handle new discovered Haus-Bus device."""
-      LOGGER.debug("newDeviceDetected: device_id %s model_type %s module_id %s configuration %s", device_id, model_type, module_id, configuration)
-
-      device_info = DeviceInfo(
-        identifiers={(DOMAIN, str(device_id))},
-        manufacturer="HausBus",
-        model=model_type,
-        name=f"{model_type} {device_id}",
-        sw_version=module_id.getFirmwareId().getTemplateId() + " " + str(module_id.getMajorRelease()) + " " + str(module_id.getMinorRelease()),
-        hw_version=module_id.getName()
-      )
-
-      # register device
-      asyncio.run_coroutine_threadsafe(
-        self.async_create_device_registry(device_id, device_info), self.hass.loop
-      ).result()
-
-      for channel in channels:
+    def newDeviceDetected(
+        self,
+        device_id: int,
+        model_type: str,
+        module_id: ModuleId,
+        configuration: Configuration,
+        channels: list[ABusFeature],
+    ):
+        """Handle new discovered Haus-Bus device."""
         LOGGER.debug(
-          "device %s reported channel %s",
-          device_id,
-          channel.getName(),
+            "newDeviceDetected: device_id %s model_type %s module_id %s configuration %s",
+            device_id,
+            model_type,
+            module_id,
+            configuration,
         )
-        self.add_channel(channel, device_info)
 
+        device_info = DeviceInfo(
+            identifiers={(DOMAIN, str(device_id))},
+            manufacturer="HausBus",
+            model=model_type,
+            name=f"{model_type} {device_id}",
+            sw_version=module_id.getFirmwareId().getTemplateId()
+            + " "
+            + str(module_id.getMajorRelease())
+            + " "
+            + str(module_id.getMinorRelease()),
+            hw_version=module_id.getName(),
+        )
+
+        # register device
+        asyncio.run_coroutine_threadsafe(
+            self.async_create_device_registry(device_id, device_info), self.hass.loop
+        ).result()
+
+        for channel in channels:
+            LOGGER.debug(
+                "device %s reported channel %s",
+                device_id,
+                channel.getName(),
+            )
+            self.add_channel(channel, device_info)
 
     def add_channel(self, instance: ABusFeature, device_info: DeviceInfo) -> None:
         """Create HA entity for provided device channel."""
@@ -111,7 +126,6 @@ class HausbusGateway(IBusDataListener):
             else:
                 LOGGER.debug("no entity created for %s", instance)
 
-
     def busDataReceived(self, busDataMessage: BusDataMessage) -> None:
         """Handle Haus-Bus messages."""
 
@@ -127,13 +141,12 @@ class HausbusGateway(IBusDataListener):
 
         # pass events to corresponding channel
         channel = self.channels.get(object_id.getValue())
-        
+
         if isinstance(channel, HausbusEntity):
             LOGGER.debug("handle_event %s %s", channel, data)
             channel.handle_event(data)
         else:
             LOGGER.debug("no corresponding channel")
-            
 
     def register_platform_add_channel_callback(
         self,
@@ -143,8 +156,9 @@ class HausbusGateway(IBusDataListener):
         """Register add channel callbacks."""
         self._new_channel_listeners[platform] = add_channel_callback
 
-
-    async def async_create_device_registry(self, device_id: int, device_info: DeviceInfo):
+    async def async_create_device_registry(
+        self, device_id: int, device_info: DeviceInfo
+    ):
         """Creates a device in the hass registry."""
 
         device_registry = dr.async_get(self.hass)
@@ -156,7 +170,7 @@ class HausbusGateway(IBusDataListener):
             model=device_info.get("model"),
             name=device_info.get("name"),
         )
-        
+
         LOGGER.debug(
             "hassEntryId = %s, device_id = %s, manufacturer = %s, model = %s, name = %s",
             device_entry.id,

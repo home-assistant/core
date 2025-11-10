@@ -1703,7 +1703,7 @@ pyfttt==0.3
 pygti==0.9.4
 
 # homeassistant.components.hausbus
-pyhausbus==1.0.15
+pyhausbus==1.0.32
 
 # homeassistant.components.version
 pyhaversion==22.8.0
