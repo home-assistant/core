@@ -181,38 +181,6 @@ class DPCodeWrapper(ABC):
         }
 
 
-class _DPCodeBitmapWrapper(DPCodeWrapper):
-    """Simple wrapper for a specific bit in bitmap values."""
-
-    def __init__(self, dpcode: str, mask: int) -> None:
-        """Init DPCodeBitmapWrapper."""
-        super().__init__(dpcode)
-        self._mask = mask
-
-    def read_device_status(self, device: CustomerDevice) -> bool | None:
-        """Read the device value for the dpcode."""
-        if (raw_value := self._read_device_status_raw(device)) is None:
-            return None
-        return (raw_value & (1 << self._mask)) != 0
-
-    @classmethod
-    def find_dpcode(
-        cls,
-        device: CustomerDevice,
-        dpcodes: str | DPCode | tuple[DPCode, ...],
-        *,
-        bitmap_key: str,
-    ) -> Self | None:
-        """Find and return a _DPCodeBitmapWrapper for the given DP codes."""
-        if (
-            type_information := find_dpcode(device, dpcodes, dptype=DPType.BITMAP)
-        ) and bitmap_key in type_information.label:
-            return cls(
-                type_information.dpcode, type_information.label.index(bitmap_key)
-            )
-        return None
-
-
 class DPCodeTypeInformationWrapper[T: TypeInformation](DPCodeWrapper):
     """Base DPCode wrapper with Type Information."""
 
