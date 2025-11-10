@@ -232,3 +232,10 @@ async def test_deprecated_sensor_issue(
     # Redact the device ID in the placeholder for consistency.
     issue.translation_placeholders["device_id"] = "<ANY>"
     assert issue == snapshot
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Assert the issue is no longer present.
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert len(issue_registry.issues) == 0
