@@ -29,8 +29,8 @@ def get_serial_number_from_jid(jid: str) -> str:
 
 
 async def get_remotes(client: MozartClient) -> list[PairedRemote]:
-    """Get remote status easier."""
-    # Get if a remote control is paired and the remote
+    """Get paired remotes."""
+
     bluetooth_remote_list = await client.get_bluetooth_remotes()
 
     return [
