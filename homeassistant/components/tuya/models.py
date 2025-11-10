@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 import base64
 from dataclasses import dataclass
 import json
@@ -120,7 +121,7 @@ _TYPE_INFORMATION_MAPPINGS: dict[DPType, type[TypeInformation]] = {
 }
 
 
-class DPCodeWrapper:
+class DPCodeWrapper(ABC):
     """Base DPCode wrapper.
 
     Used as a common interface for referring to a DPCode, and
@@ -138,9 +139,30 @@ class DPCodeWrapper:
         """
         return device.status.get(self.dpcode)
 
+    @abstractmethod
     def read_device_status(self, device: CustomerDevice) -> Any | None:
-        """Read the device value for the dpcode."""
-        raise NotImplementedError("read_device_status must be implemented")
+        """Read the device value for the dpcode.
+
+        The raw device status is converted to a Home Assistant value.
+        """
+
+    @abstractmethod
+    def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
+        """Convert a Home Assistant value back to a raw device value.
+
+        This is called by `get_update_command` to prepare the value for sending
+        back to the device, and should be implemented in concrete classes.
+        """
+
+    def get_update_command(self, device: CustomerDevice, value: Any) -> dict[str, Any]:
+        """Get the update command for the dpcode.
+
+        The Home Assistant value is converted back to a raw device value.
+        """
+        return {
+            "code": self.dpcode,
+            "value": self._convert_value_to_raw_value(device, value),
+        }
 
 
 class DPCodeBooleanWrapper(DPCodeWrapper):
@@ -154,6 +176,16 @@ class DPCodeBooleanWrapper(DPCodeWrapper):
         if (raw_value := self._read_device_status_raw(device)) in (True, False):
             return raw_value
         return None
+
+    def _convert_value_to_raw_value(
+        self, device: CustomerDevice, value: Any
+    ) -> Any | None:
+        """Convert a Home Assistant value back to a raw device value."""
+        if value in (True, False):
+            return value
+        # Currently only called with boolean values
+        # Safety net in case of future changes
+        raise ValueError(f"Invalid boolean value `{value}`")
 
 
 class DPCodeTypeInformationWrapper[T: TypeInformation](DPCodeWrapper):
@@ -202,6 +234,16 @@ class DPCodeEnumWrapper(DPCodeTypeInformationWrapper[EnumTypeData]):
             return raw_value
         return None
 
+    def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
+        """Convert a Home Assistant value back to a raw device value."""
+        if value in self.type_information.range:
+            return value
+        # Guarded by select option validation
+        # Safety net in case of future changes
+        raise ValueError(
+            f"Enum value `{value}` out of range: {self.type_information.range}"
+        )
+
 
 class DPCodeIntegerWrapper(DPCodeTypeInformationWrapper[IntegerTypeData]):
     """Simple wrapper for IntegerTypeData values."""
@@ -216,6 +258,18 @@ class DPCodeIntegerWrapper(DPCodeTypeInformationWrapper[IntegerTypeData]):
         if (raw_value := self._read_device_status_raw(device)) is None:
             return None
         return raw_value / (10**self.type_information.scale)
+
+    def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
+        """Convert a Home Assistant value back to a raw device value."""
+        new_value = round(value * (10**self.type_information.scale))
+        if self.type_information.min <= new_value <= self.type_information.max:
+            return new_value
+        # Guarded by number validation
+        # Safety net in case of future changes
+        raise ValueError(
+            f"Value `{new_value}` (converted from `{value}`) out of range:"
+            f" ({self.type_information.min}-{self.type_information.max})"
+        )
 
 
 @overload
