@@ -177,11 +177,11 @@ class DPCodeBooleanWrapper(DPCodeWrapper):
 
     def _convert_value_back(self, device: CustomerDevice, value: Any) -> Any | None:
         """Get the update command value for the dpcode."""
-        if value not in (True, False):
-            # Currently only called with boolean values
-            # Safety net in case of future changes
-            raise ValueError(f"Invalid boolean value `{value}`")
-        return value
+        if value in (True, False):
+            return value
+        # Currently only called with boolean values
+        # Safety net in case of future changes
+        raise ValueError(f"Invalid boolean value `{value}`")
 
 
 class DPCodeTypeInformationWrapper[T: TypeInformation](DPCodeWrapper):
@@ -232,13 +232,13 @@ class DPCodeEnumWrapper(DPCodeTypeInformationWrapper[EnumTypeData]):
 
     def _convert_value_back(self, device: CustomerDevice, value: Any) -> Any:
         """Get the update command value for the dpcode."""
-        if value not in self.type_information.range:
-            # Guarded by select option validation
-            # Safety net in case of future changes
-            raise ValueError(
-                f"Enum value `{value}` out of range: {self.type_information.range}"
-            )
-        return value
+        if value in self.type_information.range:
+            return value
+        # Guarded by select option validation
+        # Safety net in case of future changes
+        raise ValueError(
+            f"Enum value `{value}` out of range: {self.type_information.range}"
+        )
 
 
 class DPCodeIntegerWrapper(DPCodeTypeInformationWrapper[IntegerTypeData]):
@@ -259,13 +259,13 @@ class DPCodeIntegerWrapper(DPCodeTypeInformationWrapper[IntegerTypeData]):
         """Get the update command value for the dpcode."""
         new_value = round(value * (10**self.type_information.scale))
         if self.type_information.min <= new_value <= self.type_information.max:
-            # Guarded by number validation
-            # Safety net in case of future changes
-            raise ValueError(
-                f"Value `{new_value}` (converted from `{value}`) out of range:"
-                f" ({self.type_information.min}-{self.type_information.max})"
-            )
-        return new_value
+            return new_value
+        # Guarded by number validation
+        # Safety net in case of future changes
+        raise ValueError(
+            f"Value `{new_value}` (converted from `{value}`) out of range:"
+            f" ({self.type_information.min}-{self.type_information.max})"
+        )
 
 
 @overload
