@@ -5,13 +5,7 @@ from typing import TYPE_CHECKING, Any, Final, override
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_OPTIONS,
-    CONF_STATE,
-    CONF_TARGET,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import CONF_OPTIONS, CONF_TARGET, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.helpers import config_validation as cv, target
 from homeassistant.helpers.condition import (
@@ -28,11 +22,9 @@ ATTR_BEHAVIOR: Final = "behavior"
 BEHAVIOR_ANY: Final = "any"
 BEHAVIOR_ALL: Final = "all"
 
-STATE_CONDITION_TYPE: Final = "state"
 
 STATE_CONDITION_VALID_STATES: Final = [STATE_ON, STATE_OFF]
 STATE_CONDITION_OPTIONS_SCHEMA: dict[vol.Marker, Any] = {
-    vol.Required(CONF_STATE): vol.In(STATE_CONDITION_VALID_STATES),
     vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
         [BEHAVIOR_ANY, BEHAVIOR_ALL]
     ),
@@ -45,7 +37,7 @@ STATE_CONDITION_SCHEMA = vol.Schema(
 )
 
 
-class StateCondition(Condition):
+class StateConditionBase(Condition):
     """State condition."""
 
     @override
@@ -56,15 +48,17 @@ class StateCondition(Condition):
         """Validate config."""
         return STATE_CONDITION_SCHEMA(config)  # type: ignore[no-any-return]
 
-    def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config: ConditionConfig, state: str
+    ) -> None:
         """Initialize condition."""
         self._hass = hass
         if TYPE_CHECKING:
             assert config.target
             assert config.options
         self._target = config.target
-        self._state = config.options[CONF_STATE]
         self._behavior = config.options[ATTR_BEHAVIOR]
+        self._state = state
 
     @override
     async def async_get_checker(self) -> ConditionCheckerType:
@@ -110,8 +104,25 @@ class StateCondition(Condition):
         return test_state
 
 
+class StateOnCondition(StateConditionBase):
+    """State ON condition."""
+
+    def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
+        """Initialize condition."""
+        super().__init__(hass, config, STATE_ON)
+
+
+class StateOffCondition(StateConditionBase):
+    """State OFF condition."""
+
+    def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
+        """Initialize condition."""
+        super().__init__(hass, config, STATE_OFF)
+
+
 CONDITIONS: dict[str, type[Condition]] = {
-    STATE_CONDITION_TYPE: StateCondition,
+    "state_off": StateOffCondition,
+    "state_on": StateOnCondition,
 }
 
 

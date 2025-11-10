@@ -1,17 +1,8 @@
-state:
+state_off:
   target:
     entity:
       domain: light
   fields:
-    state:
-      required: true
-      default: "on"
-      selector:
-        select:
-          options:
-            - "off"
-            - "on"
-          translation_key: state
     behavior:
       required: true
       default: any
@@ -19,6 +10,19 @@ state:
         select:
           translation_key: condition_behavior
           options:
-            - one
+            - all
+            - any
+state_on:
+  target:
+    entity:
+      domain: light
+  fields:
+    behavior:
+      required: true
+      default: any
+      selector:
+        select:
+          translation_key: condition_behavior
+          options:
             - all
             - any

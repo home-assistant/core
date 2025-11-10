@@ -1,7 +1,10 @@
 {
   "conditions": {
-    "state": {
-      "condition": "mdi:state-machine"
+    "state_off": {
+      "condition": "mdi:lightbulb-off"
+    },
+    "state_on": {
+      "condition": "mdi:lightbulb-on"
     }
   },
   "entity_component": {

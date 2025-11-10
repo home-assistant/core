@@ -7,7 +7,6 @@ from homeassistant.const import (
     ATTR_LABEL_ID,
     CONF_CONDITION,
     CONF_OPTIONS,
-    CONF_STATE,
     CONF_TARGET,
     STATE_OFF,
     STATE_ON,
@@ -67,9 +66,9 @@ async def label_entities(hass: HomeAssistant) -> list[str]:
 async def setup_automation_with_light_condition(
     hass: HomeAssistant,
     *,
+    condition: str,
     target: dict,
     behavior: str,
-    condition_state: str,
 ) -> None:
     """Set up automation with light state condition."""
     await async_setup_component(
@@ -79,9 +78,9 @@ async def setup_automation_with_light_condition(
             automation.DOMAIN: {
                 "trigger": {"platform": "event", "event_type": "test_event"},
                 "condition": {
-                    CONF_CONDITION: "light.state",
+                    CONF_CONDITION: condition,
                     CONF_TARGET: target,
-                    CONF_OPTIONS: {"behavior": behavior, CONF_STATE: condition_state},
+                    CONF_OPTIONS: {"behavior": behavior},
                 },
                 "action": {
                     "service": "test.automation",
@@ -102,25 +101,29 @@ async def has_calls_after_trigger(
     return has_calls
 
 
-@pytest.mark.parametrize("condition_state", [STATE_ON, STATE_OFF])
+@pytest.mark.parametrize(
+    ("condition", "state", "reverse_state"),
+    [("light.state_on", STATE_ON, STATE_OFF), ("light.state_off", STATE_OFF, STATE_ON)],
+)
 async def test_light_state_condition_behavior_any(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
     label_entities: list[str],
-    condition_state: str,
+    condition: str,
+    state: str,
+    reverse_state: str,
 ) -> None:
     """Test the light state condition with the 'any' behavior."""
     await async_setup_component(hass, "light", {})
 
-    reverse_state = STATE_OFF if condition_state == STATE_ON else STATE_ON
     for entity_id in label_entities:
         hass.states.async_set(entity_id, reverse_state)
 
     await setup_automation_with_light_condition(
         hass,
+        condition=condition,
         target={ATTR_LABEL_ID: "test_label", "entity_id": "light.nonexistent"},
         behavior="any",
-        condition_state=condition_state,
     )
 
     # Set state for two switches to ensure that they don't impact the condition
@@ -131,12 +134,12 @@ async def test_light_state_condition_behavior_any(
     assert not await has_calls_after_trigger(hass, service_calls)
 
     # Set one light to the condition state -> condition pass
-    hass.states.async_set(label_entities[0], condition_state)
+    hass.states.async_set(label_entities[0], state)
     assert await has_calls_after_trigger(hass, service_calls)
 
     # Set all lights to the condition state -> condition pass
     for entity_id in label_entities:
-        hass.states.async_set(entity_id, condition_state)
+        hass.states.async_set(entity_id, state)
     assert await has_calls_after_trigger(hass, service_calls)
 
     # Set one light to unavailable -> condition pass
@@ -149,12 +152,17 @@ async def test_light_state_condition_behavior_any(
     assert not await has_calls_after_trigger(hass, service_calls)
 
 
-@pytest.mark.parametrize("condition_state", [STATE_ON, STATE_OFF])
+@pytest.mark.parametrize(
+    ("condition", "state", "reverse_state"),
+    [("light.state_on", STATE_ON, STATE_OFF), ("light.state_off", STATE_OFF, STATE_ON)],
+)
 async def test_light_state_condition_behavior_all(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
     label_entities: list[str],
-    condition_state: str,
+    condition: str,
+    state: str,
+    reverse_state: str,
 ) -> None:
     """Test the light state condition with the 'all' behavior."""
     await async_setup_component(hass, "light", {})
@@ -163,27 +171,27 @@ async def test_light_state_condition_behavior_all(
     hass.states.async_set("switch.label_switch_1", STATE_OFF)
     hass.states.async_set("switch.label_switch_2", STATE_ON)
 
-    reverse_state = STATE_OFF if condition_state == STATE_ON else STATE_ON
+    reverse_state = STATE_OFF if state == STATE_ON else STATE_ON
     for entity_id in label_entities:
         hass.states.async_set(entity_id, reverse_state)
 
     await setup_automation_with_light_condition(
         hass,
+        condition=condition,
         target={ATTR_LABEL_ID: "test_label", "entity_id": "light.nonexistent"},
         behavior="all",
-        condition_state=condition_state,
     )
 
     # No lights on the condition state
     assert not await has_calls_after_trigger(hass, service_calls)
 
     # Set one light to the condition state -> condition fail
-    hass.states.async_set(label_entities[0], condition_state)
+    hass.states.async_set(label_entities[0], state)
     assert not await has_calls_after_trigger(hass, service_calls)
 
     # Set all lights to the condition state -> condition pass
     for entity_id in label_entities:
-        hass.states.async_set(entity_id, condition_state)
+        hass.states.async_set(entity_id, state)
     assert await has_calls_after_trigger(hass, service_calls)
 
     # Set one light to unavailable -> condition still pass
