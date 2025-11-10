@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from asyncio import timeout
+from collections.abc import Mapping
 from typing import Any
 
 from accuweather import AccuWeather, ApiError, InvalidApiKeyError, RequestsExceededError
@@ -22,6 +23,8 @@ class AccuWeatherFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow for AccuWeather."""
 
     VERSION = 1
+    _latitude: float | None = None
+    _longitude: float | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -72,5 +75,48 @@ class AccuWeatherFlowHandler(ConfigFlow, domain=DOMAIN):
                     ): str,
                 }
             ),
+            errors=errors,
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle configuration by re-auth."""
+        self._latitude = entry_data[CONF_LATITUDE]
+        self._longitude = entry_data[CONF_LONGITUDE]
+
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Dialog that informs the user that reauth is required."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            websession = async_get_clientsession(self.hass)
+            try:
+                async with timeout(10):
+                    accuweather = AccuWeather(
+                        user_input[CONF_API_KEY],
+                        websession,
+                        latitude=self._latitude,
+                        longitude=self._longitude,
+                    )
+                    await accuweather.async_get_location()
+            except (ApiError, ClientConnectorError, TimeoutError, ClientError):
+                errors["base"] = "cannot_connect"
+            except InvalidApiKeyError:
+                errors["base"] = "invalid_api_key"
+            except RequestsExceededError:
+                errors["base"] = "requests_exceeded"
+            else:
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(), data_updates=user_input
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
             errors=errors,
         )

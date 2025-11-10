@@ -49,11 +49,13 @@ from aioesphomeapi import (
 from aioesphomeapi.model import ButtonInfo
 from bleak_esphome.backend.device import ESPHomeBluetoothDevice
 
+from homeassistant import config_entries
 from homeassistant.components.assist_satellite import AssistSatelliteConfiguration
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import discovery_flow, entity_registry as er
+from homeassistant.helpers.service_info.esphome import ESPHomeServiceInfo
 from homeassistant.helpers.storage import Store
 
 from .const import DOMAIN
@@ -440,14 +442,6 @@ class RuntimeEntryData:
             # save delay has passed.
             await self.store.async_save(self._pending_storage())
 
-    async def async_update_listener(
-        self, hass: HomeAssistant, entry: ESPHomeConfigEntry
-    ) -> None:
-        """Handle options update."""
-        if self.original_options == entry.options:
-            return
-        hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
-
     @callback
     def async_on_disconnect(self) -> None:
         """Call when the entry has been disconnected.
@@ -468,7 +462,7 @@ class RuntimeEntryData:
 
     @callback
     def async_on_connect(
-        self, device_info: DeviceInfo, api_version: APIVersion
+        self, hass: HomeAssistant, device_info: DeviceInfo, api_version: APIVersion
     ) -> None:
         """Call when the entry has been connected."""
         self.available = True
@@ -483,6 +477,46 @@ class RuntimeEntryData:
         # We use this to determine if a deep sleep device should
         # be marked as unavailable or not.
         self.expected_disconnect = True
+
+        if not device_info.zwave_proxy_feature_flags:
+            return
+
+        assert self.client.connected_address
+
+        # If the device does not have a zwave_home_id, it means
+        # either the Z-Wave controller has never been connected
+        # to the ESPHome device, or the Z-Wave controller has
+        # never been provisioned with a home ID (brand new).
+        # Since we cannot tell the difference, and it could
+        # just be the cable is unplugged we only
+        # automatically start the flow if we have a home ID.
+        if not device_info.zwave_home_id:
+            return
+
+        self.async_create_zwave_js_flow(hass, device_info, device_info.zwave_home_id)
+
+    def async_create_zwave_js_flow(
+        self, hass: HomeAssistant, device_info: DeviceInfo, zwave_home_id: int
+    ) -> None:
+        """Create a zwave_js config flow for a Z-Wave JS Proxy device."""
+        assert self.client.connected_address is not None
+        discovery_flow.async_create_flow(
+            hass,
+            "zwave_js",
+            {"source": config_entries.SOURCE_ESPHOME},
+            ESPHomeServiceInfo(
+                name=device_info.name,
+                zwave_home_id=zwave_home_id,
+                ip_address=self.client.connected_address,
+                port=self.client.port,
+                noise_psk=self.client.noise_psk,
+            ),
+            discovery_key=discovery_flow.DiscoveryKey(
+                domain=DOMAIN,
+                key=device_info.mac_address,
+                version=1,
+            ),
+        )
 
     @callback
     def async_register_assist_satellite_config_updated_callback(

@@ -12,14 +12,14 @@
       "resume": {
         "default": "mdi:play-pause"
       },
+      "self_test_request": {
+        "default": "mdi:refresh-auto"
+      },
       "start": {
         "default": "mdi:play"
       },
       "stop": {
         "default": "mdi:stop"
-      },
-      "self_test_request": {
-        "default": "mdi:refresh-auto"
       }
     },
     "fan": {
@@ -28,15 +28,20 @@
           "preset_mode": {
             "default": "mdi:fan",
             "state": {
+              "auto": "mdi:fan-auto",
+              "high": "mdi:fan-speed-3",
               "low": "mdi:fan-speed-1",
               "medium": "mdi:fan-speed-2",
-              "high": "mdi:fan-speed-3",
-              "auto": "mdi:fan-auto",
               "natural_wind": "mdi:tailwind",
               "sleep_wind": "mdi:sleep"
             }
           }
         }
+      }
+    },
+    "number": {
+      "cook_time": {
+        "default": "mdi:microwave"
       }
     },
     "select": {
@@ -51,50 +56,14 @@
       }
     },
     "sensor": {
-      "contamination_state": {
-        "default": "mdi:air-filter"
-      },
-      "current_phase": {
-        "default": "mdi:state-machine"
-      },
-      "eve_weather_trend": {
-        "default": "mdi:weather",
-        "state": {
-          "sunny": "mdi:weather-sunny",
-          "cloudy": "mdi:weather-cloudy",
-          "rainy": "mdi:weather-rainy",
-          "stormy": "mdi:weather-windy"
-        }
+      "activated_carbon_filter_condition": {
+        "default": "mdi:filter-check"
       },
       "air_quality": {
         "default": "mdi:air-filter"
       },
       "bat_replacement_description": {
         "default": "mdi:battery-sync"
-      },
-      "battery_voltage": {
-        "default": "mdi:current-dc"
-      },
-      "flow": {
-        "default": "mdi:pipe"
-      },
-      "hepa_filter_condition": {
-        "default": "mdi:filter-check"
-      },
-      "activated_carbon_filter_condition": {
-        "default": "mdi:filter-check"
-      },
-      "operational_state": {
-        "default": "mdi:play-pause"
-      },
-      "tank_volume": {
-        "default": "mdi:water-boiler"
-      },
-      "tank_percentage": {
-        "default": "mdi:water-boiler"
-      },
-      "valve_position": {
-        "default": "mdi:valve"
       },
       "battery_charge_state": {
         "default": "mdi:battery-charging"
@@ -108,11 +77,32 @@
       "battery_time_to_full_charge": {
         "default": "mdi:battery-clock"
       },
+      "battery_voltage": {
+        "default": "mdi:current-dc"
+      },
+      "contamination_state": {
+        "default": "mdi:air-filter"
+      },
+      "current_phase": {
+        "default": "mdi:state-machine"
+      },
       "esa_opt_out_state": {
         "default": "mdi:home-lightning-bolt"
       },
       "esa_state": {
         "default": "mdi:home-lightning-bolt"
+      },
+      "eve_weather_trend": {
+        "default": "mdi:weather",
+        "state": {
+          "cloudy": "mdi:weather-cloudy",
+          "rainy": "mdi:weather-rainy",
+          "stormy": "mdi:weather-windy",
+          "sunny": "mdi:weather-sunny"
+        }
+      },
+      "evse_fault_state": {
+        "default": "mdi:ev-station"
       },
       "evse_state": {
         "default": "mdi:ev-station"
@@ -120,8 +110,17 @@
       "evse_supply_state": {
         "default": "mdi:ev-station"
       },
-      "evse_fault_state": {
-        "default": "mdi:ev-station"
+      "flow": {
+        "default": "mdi:pipe"
+      },
+      "hepa_filter_condition": {
+        "default": "mdi:filter-check"
+      },
+      "operational_error": {
+        "default": "mdi:alert-circle"
+      },
+      "operational_state": {
+        "default": "mdi:play-pause"
       },
       "pump_control_mode": {
         "default": "mdi:pipe-wrench"
@@ -131,24 +130,43 @@
       },
       "pump_status": {
         "default": "mdi:pump"
-      }
-    },
-    "number": {
-      "cook_time": {
-        "default": "mdi:microwave"
+      },
+      "tank_percentage": {
+        "default": "mdi:water-boiler"
+      },
+      "tank_volume": {
+        "default": "mdi:water-boiler"
+      },
+      "valve_position": {
+        "default": "mdi:valve"
       }
     },
     "switch": {
       "child_lock": {
         "default": "mdi:lock",
         "state": {
-          "on": "mdi:lock",
-          "off": "mdi:lock-off"
+          "off": "mdi:lock-off",
+          "on": "mdi:lock"
         }
       },
       "evse_charging_switch": {
         "default": "mdi:ev-station"
+      },
+      "privacy_mode_button": {
+        "default": "mdi:shield-lock"
+      },
+      "speaker_mute": {
+        "default": "mdi:volume-high",
+        "state": {
+          "off": "mdi:volume-high",
+          "on": "mdi:volume-mute"
+        }
       }
+    }
+  },
+  "services": {
+    "water_heater_boost": {
+      "service": "mdi:water-boiler"
     }
   }
 }

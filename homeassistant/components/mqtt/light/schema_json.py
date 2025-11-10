@@ -91,8 +91,6 @@ from .schema_basic import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "mqtt_json"
-
 DEFAULT_NAME = "MQTT JSON Light"
 
 DEFAULT_FLASH = True
