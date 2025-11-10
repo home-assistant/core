@@ -137,6 +137,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
 
 class CoordinatorStub:
     """Coordinator stub for testing entity restoration behavior."""
+    instances: list["CoordinatorStub"] = []
 
     def __init__(
         self,
@@ -148,6 +149,8 @@ class CoordinatorStub:
         update_method: MagicMock | None = None,
     ) -> None:
         """Initialize coordinator stub with signature matching real coordinator."""
+        # Track created instances to avoid direct hass.data access in tests
+        CoordinatorStub.instances.append(self)
         self.calls: list[tuple[MagicMock, type | None]] = []
         self._saw_sensor_entity_description = False
         self._restore_cb: MagicMock | None = None
@@ -224,7 +227,7 @@ async def test_thermopro_restores_entities_on_restart_behavior(
     await thermopro_sensor.async_setup_entry(hass, entry1, add_entities_first)
     await hass.async_block_till_done()
 
-    coord = hass.data[DOMAIN][entry1.entry_id]
+    coord = CoordinatorStub.instances[0]
     assert coord.calls, "Processor was not registered on first setup"
     assert not first_called["v"]
 
@@ -238,7 +241,7 @@ async def test_thermopro_restores_entities_on_restart_behavior(
     await hass.async_block_till_done()
 
     assert add_entities_callbacks, "No add_entities callback was registered"
-    coord2 = hass.data[DOMAIN][entry2.entry_id]
+    coord2 = CoordinatorStub.instances[1]
     coord2._restore_cb = add_entities_callbacks[-1]
 
     coord2.trigger_restore_from_test()
