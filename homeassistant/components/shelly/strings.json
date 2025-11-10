@@ -163,17 +163,23 @@
       }
     },
     "number": {
+      "current_limit": {
+        "name": "Current limit"
+      },
       "external_temperature": {
         "name": "External temperature"
       },
       "left_slot_intensity": {
         "name": "Left slot intensity"
       },
-      "position": {
-        "name": "Position"
-      },
       "right_slot_intensity": {
         "name": "Right slot intensity"
+      },
+      "target_humidity": {
+        "name": "Target humidity"
+      },
+      "target_temperature": {
+        "name": "Target temperature"
       },
       "valve_position": {
         "name": "Valve position"

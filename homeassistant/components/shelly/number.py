@@ -216,7 +216,7 @@ RPC_NUMBERS: Final = {
     "number_generic": RpcNumberDescription(
         key="number",
         sub_key="value",
-        removal_condition=lambda config, _status, key: not is_view_for_platform(
+        removal_condition=lambda config, _, key: not is_view_for_platform(
             config, key, NUMBER_PLATFORM
         ),
         max_fn=lambda config: config["max"],
@@ -232,10 +232,11 @@ RPC_NUMBERS: Final = {
     "number_current_limit": RpcNumberDescription(
         key="number",
         sub_key="value",
+        translation_key="current_limit",
         device_class=NumberDeviceClass.CURRENT,
         max_fn=lambda config: config["max"],
         min_fn=lambda config: config["min"],
-        mode_fn=lambda config: NumberMode.SLIDER,
+        mode_fn=lambda _: NumberMode.SLIDER,
         step_fn=lambda config: config["meta"]["ui"].get("step"),
         unit=get_virtual_component_unit,
         method="number_set",
@@ -245,11 +246,11 @@ RPC_NUMBERS: Final = {
     "number_position": RpcNumberDescription(
         key="number",
         sub_key="value",
-        translation_key="position",
+        translation_key="valve_position",
         entity_registry_enabled_default=False,
         max_fn=lambda config: config["max"],
         min_fn=lambda config: config["min"],
-        mode_fn=lambda config: NumberMode.SLIDER,
+        mode_fn=lambda _: NumberMode.SLIDER,
         step_fn=lambda config: config["meta"]["ui"].get("step"),
         unit=get_virtual_component_unit,
         method="number_set",
@@ -259,11 +260,12 @@ RPC_NUMBERS: Final = {
     "number_target_humidity": RpcNumberDescription(
         key="number",
         sub_key="value",
+        translation_key="target_humidity",
         device_class=NumberDeviceClass.HUMIDITY,
         entity_registry_enabled_default=False,
         max_fn=lambda config: config["max"],
         min_fn=lambda config: config["min"],
-        mode_fn=lambda config: NumberMode.SLIDER,
+        mode_fn=lambda _: NumberMode.SLIDER,
         step_fn=lambda config: config["meta"]["ui"].get("step"),
         unit=get_virtual_component_unit,
         method="number_set",
@@ -273,11 +275,12 @@ RPC_NUMBERS: Final = {
     "number_target_temperature": RpcNumberDescription(
         key="number",
         sub_key="value",
+        translation_key="target_temperature",
         device_class=NumberDeviceClass.TEMPERATURE,
         entity_registry_enabled_default=False,
         max_fn=lambda config: config["max"],
         min_fn=lambda config: config["min"],
-        mode_fn=lambda config: NumberMode.SLIDER,
+        mode_fn=lambda _: NumberMode.SLIDER,
         step_fn=lambda config: config["meta"]["ui"].get("step"),
         unit=get_virtual_component_unit,
         method="number_set",
@@ -294,8 +297,7 @@ RPC_NUMBERS: Final = {
         mode=NumberMode.SLIDER,
         native_unit_of_measurement=PERCENTAGE,
         method="blu_trv_set_valve_position",
-        removal_condition=lambda config, _status, key: config[key].get("enable", True)
-        is True,
+        removal_condition=lambda config, _, key: config[key].get("enable", True) is True,
         entity_class=RpcBluTrvNumber,
     ),
     "left_slot_intensity": RpcNumberDescription(
