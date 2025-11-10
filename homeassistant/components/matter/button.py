@@ -65,7 +65,10 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterCommandButton,
         required_attributes=(clusters.Identify.Attributes.IdentifyType,),
         value_is_not=clusters.Identify.Enums.IdentifyTypeEnum.kNone,
-        allow_multi=True,
+        # Only create a single Identify button per device, not one per endpoint.
+        # The Identify cluster can appear on multiple endpoints; once_per_device=True
+        # ensures only one button is created for the entire device.
+        once_per_device=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.BUTTON,

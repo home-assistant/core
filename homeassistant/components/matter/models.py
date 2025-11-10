@@ -152,3 +152,7 @@ class MatterDiscoverySchema:
     # [optional] the secondary (required) attribute value must NOT have this value
     # for example to filter out empty lists in list sensor values
     secondary_value_is_not: Any = UNSET
+
+    # [optional] bool to specify if this entity should only be created once per device
+    # instead of once per endpoint (useful for device-level entities like identify button)
+    once_per_device: bool = False

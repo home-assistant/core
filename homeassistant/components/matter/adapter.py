@@ -234,12 +234,22 @@ class MatterAdapter:
         self._create_device_registry(endpoint)
         # run platform discovery from device type instances
         for entity_info in async_discover_entities(endpoint):
-            discovery_key = (
-                f"{entity_info.platform}_{endpoint.node.node_id}_{endpoint.endpoint_id}_"
-                f"{entity_info.primary_attribute.cluster_id}_"
-                f"{entity_info.primary_attribute.attribute_id}_"
-                f"{entity_info.entity_description.key}"
-            )
+            # For entities that should only exist once per device (not per endpoint),
+            # exclude endpoint_id from the discovery key
+            if entity_info.discovery_schema.once_per_device:
+                discovery_key = (
+                    f"{entity_info.platform}_{endpoint.node.node_id}_"
+                    f"{entity_info.primary_attribute.cluster_id}_"
+                    f"{entity_info.primary_attribute.attribute_id}_"
+                    f"{entity_info.entity_description.key}"
+                )
+            else:
+                discovery_key = (
+                    f"{entity_info.platform}_{endpoint.node.node_id}_{endpoint.endpoint_id}_"
+                    f"{entity_info.primary_attribute.cluster_id}_"
+                    f"{entity_info.primary_attribute.attribute_id}_"
+                    f"{entity_info.entity_description.key}"
+                )
             if discovery_key in self.discovered_entities:
                 continue
             LOGGER.debug(
