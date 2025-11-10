@@ -62,7 +62,7 @@ def mock_setup_integration(hass: HomeAssistant) -> None:
 
 @pytest.fixture(autouse=True)
 async def set_time_zone(hass: HomeAssistant) -> None:
-    """Set the time zone for the tests that keesp UTC-6 all year round."""
+    """Set the time zone for the tests that keeps UTC-6 all year round."""
     await hass.config.async_set_time_zone("America/Regina")
 
 
