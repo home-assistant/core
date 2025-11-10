@@ -65,10 +65,10 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'bleeding_hot',
         'bleeding_cold',
-        'off',
         'heating',
+        'off',
+        'bleeding_hot',
         'cooling',
       ]),
     }),
@@ -106,10 +106,10 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Adam Regulation mode',
       'options': list([
-        'bleeding_hot',
         'bleeding_cold',
-        'off',
         'heating',
+        'off',
+        'bleeding_hot',
         'cooling',
       ]),
     }),
@@ -129,9 +129,9 @@
     'capabilities': dict({
       'options': list([
         'Badkamer',
-        'Test',
         'Vakantie',
         'Weekschema',
+        'Test',
         'off',
       ]),
     }),
@@ -170,9 +170,9 @@
       'friendly_name': 'Bathroom Thermostat schedule',
       'options': list([
         'Badkamer',
-        'Test',
         'Vakantie',
         'Weekschema',
+        'Test',
         'off',
       ]),
     }),
@@ -181,7 +181,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'Badkamer',
+    'state': 'off',
   })
 # ---
 # name: test_adam_2_select_entities[platforms0-True-m_adam_cooling][select.living_room_thermostat_schedule-entry]
@@ -192,9 +192,9 @@
     'capabilities': dict({
       'options': list([
         'Badkamer',
-        'Test',
         'Vakantie',
         'Weekschema',
+        'Test',
         'off',
       ]),
     }),
@@ -233,9 +233,9 @@
       'friendly_name': 'Living room Thermostat schedule',
       'options': list([
         'Badkamer',
-        'Test',
         'Vakantie',
         'Weekschema',
+        'Test',
         'off',
       ]),
     }),
