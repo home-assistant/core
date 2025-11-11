@@ -2,14 +2,22 @@
 
 from __future__ import annotations
 
+import logging
+
 from airtouch5py.airtouch5_simple_client import Airtouch5SimpleClient
+from airtouch5py.discovery import AirtouchDevice, AirtouchDiscovery
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import entity_registry as er
+
+# device_registry as dr, Maybe needed in migration. If not can be removed later.
 
 PLATFORMS: list[Platform] = [Platform.CLIMATE, Platform.COVER]
+
+_LOGGER = logging.getLogger(__name__)
 
 type Airtouch5ConfigEntry = ConfigEntry[Airtouch5SimpleClient]
 
@@ -19,7 +27,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: Airtouch5ConfigEntry) ->
 
     # Create API instance
     host = entry.data[CONF_HOST]
+
+    # bootstrapping device from the stored config entry data
+    device = AirtouchDevice(
+        host,
+        entry.data["console_id"],
+        entry.data["model"],
+        entry.data["system_id"],
+        entry.data["name"],
+    )
+
     client = Airtouch5SimpleClient(host)
+    client.device = device
 
     # Connect to the API
     try:
@@ -44,5 +63,70 @@ async def async_unload_entry(hass: HomeAssistant, entry: Airtouch5ConfigEntry) -
         client.connection_state_callbacks.clear()
         client.data_packet_callbacks.clear()
         client.zone_status_callbacks.clear()
-
     return unload_ok
+
+
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+    _LOGGER.info(
+        "Migrating configuration from version %s.%s",
+        config_entry.version,
+        config_entry.minor_version,
+    )
+    if config_entry.version > 1:
+        # This means the user has downgraded from a future version
+        return False
+    host = config_entry.data[CONF_HOST]
+
+    airtouchDiscovery_instance = AirtouchDiscovery()
+    await airtouchDiscovery_instance.establish_server()
+    airtouch_devices = await airtouchDiscovery_instance.discover(host)
+
+    if airtouch_devices is not None:
+        airtouch_device = airtouch_devices[0]
+        new_unique_id = str(airtouch_device.system_id)
+
+        hass.config_entries.async_update_entry(
+            config_entry,
+            unique_id=new_unique_id,
+        )
+        # Migrate entity unique IDs
+
+        ent_reg = er.async_get(hass)
+        for entity_id, entity in list(ent_reg.entities.items()):
+            if entity.config_entry_id != config_entry.entry_id:
+                continue
+            _LOGGER.debug("Migrating entity_id: %s", entity_id)
+
+            old_unique_id = entity.unique_id
+
+            # Example transformation:
+            # old_unique_id: "device_ABC_sensor_temp"
+            # new_unique_id: "ABC_temp"
+            if old_unique_id.startswith("ac_"):
+                new_unique_id = f"ac_{airtouch_device.system_id}"
+                ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
+
+            elif old_unique_id.startswith("zone_"):
+                new_unique_id = old_unique_id + f"_{airtouch_device.system_id}"
+                ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
+            else:
+                _LOGGER.warning(
+                    "Unknown unique_id format during migration: %s", old_unique_id
+                )
+                return False
+        # Migrate device info
+        new_data = config_entry.data.copy()
+        new_data["device_id"] = str(airtouch_device.system_id)
+        new_data["name"] = airtouch_device.name
+
+        hass.config_entries.async_update_entry(
+            config_entry, data=new_data, minor_version=3, version=1
+        )
+
+    _LOGGER.info(
+        "Migration to configuration version %s.%s successful",
+        config_entry.version,
+        config_entry.minor_version,
+    )
+    return True
