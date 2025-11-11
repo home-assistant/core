@@ -21,3 +21,8 @@ playing:
           multiple: true
           custom_value: true
           options: []
+
+paused:
+  target:
+    entity:
+      domain: media_player

@@ -389,6 +389,11 @@
         }
       },
       "name": "When a media player starts playing"
+    },
+    "paused": {
+      "description": "Triggers when a media player pauses.",
+      "description_configured": "Triggers when a media player pauses",
+      "name": "When a media player pauses"
     }
   }
 }

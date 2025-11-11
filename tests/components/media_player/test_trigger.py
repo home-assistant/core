@@ -208,3 +208,46 @@ async def test_playing_trigger_with_media_content_type_filter(
     )
     await hass.async_block_till_done()
     assert len(service_calls) == 0
+
+
+async def test_paused_trigger(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test that the paused trigger fires when a media player pauses."""
+    entity_id = "media_player.test"
+    await async_setup_component(hass, "media_player", {})
+
+    # Set initial state to playing
+    hass.states.async_set(entity_id, STATE_PLAYING)
+    await hass.async_block_till_done()
+
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "triggers": {
+                    "trigger": "media_player.paused",
+                    "target": {CONF_ENTITY_ID: entity_id},
+                },
+                "actions": {
+                    "action": "test.automation",
+                    "data": {
+                        CONF_ENTITY_ID: "{{ trigger.entity_id }}",
+                    },
+                },
+            }
+        },
+    )
+
+    # Pause - should trigger
+    hass.states.async_set(entity_id, STATE_PAUSED)
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+    assert service_calls[0].data[CONF_ENTITY_ID] == entity_id
+    service_calls.clear()
+
+    # Already paused - should not trigger
+    hass.states.async_set(entity_id, STATE_PAUSED)
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
