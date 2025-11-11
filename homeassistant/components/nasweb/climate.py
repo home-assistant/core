@@ -143,8 +143,8 @@ class Thermostat(ClimateEntity, BaseCoordinatorEntity):
         if (
             self._thermostat.temp_target_min is not None
             and self._thermostat.temp_target_max is not None
-            and self._thermostat.current_temp > self._thermostat.temp_target_min
-            and self._thermostat.current_temp < self._thermostat.temp_target_max
+            and self._thermostat.current_temp >= self._thermostat.temp_target_min
+            and self._thermostat.current_temp <= self._thermostat.temp_target_max
             and self._thermostat.enabled_inrange_output
         ):
             return HVACAction.FAN
