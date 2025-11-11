@@ -502,7 +502,11 @@ async def test_probe_silabs_firmware_info(
         "homeassistant.components.homeassistant_hardware.util.Flasher",
         return_value=mock_flasher,
     ):
-        result = await probe_silabs_firmware_info("/dev/ttyUSB0")
+        result = await probe_silabs_firmware_info(
+            "/dev/ttyUSB0",
+            bootloader_reset_methods=(),
+            application_probe_methods=(),
+        )
         assert result == expected_fw_info
 
 
@@ -531,7 +535,11 @@ async def test_probe_silabs_firmware_type(
         autospec=True,
         return_value=probe_result,
     ):
-        result = await probe_silabs_firmware_type("/dev/ttyUSB0")
+        result = await probe_silabs_firmware_type(
+            "/dev/ttyUSB0",
+            bootloader_reset_methods=(),
+            application_probe_methods=(),
+        )
         assert result == expected
 
 
@@ -597,6 +605,7 @@ async def test_async_flash_silabs_firmware(hass: HomeAssistant) -> None:
             fw_data=b"firmware contents",
             expected_installed_firmware_type=ApplicationType.SPINEL,
             bootloader_reset_methods=(),
+            application_probe_methods=(),
             progress_callback=progress_callback,
         )
 
@@ -660,6 +669,7 @@ async def test_async_flash_silabs_firmware_flash_failure(hass: HomeAssistant) ->
             fw_data=b"firmware contents",
             expected_installed_firmware_type=ApplicationType.SPINEL,
             bootloader_reset_methods=(),
+            application_probe_methods=(),
         )
 
     # Both owning integrations/addons are stopped and restarted
@@ -720,6 +730,7 @@ async def test_async_flash_silabs_firmware_probe_failure(hass: HomeAssistant) ->
             fw_data=b"firmware contents",
             expected_installed_firmware_type=ApplicationType.SPINEL,
             bootloader_reset_methods=(),
+            application_probe_methods=(),
         )
 
     # Both owning integrations/addons are stopped and restarted

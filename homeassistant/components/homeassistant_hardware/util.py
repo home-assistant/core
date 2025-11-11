@@ -311,8 +311,8 @@ async def guess_firmware_info(hass: HomeAssistant, device_path: str) -> Firmware
 async def probe_silabs_firmware_info(
     device: str,
     *,
-    bootloader_reset_methods: Sequence[ResetTarget] = (),
-    application_probe_methods: Sequence[tuple[ApplicationType, int]] = (),
+    bootloader_reset_methods: Sequence[ResetTarget],
+    application_probe_methods: Sequence[tuple[ApplicationType, int]],
 ) -> FirmwareInfo | None:
     """Probe the running firmware on a SiLabs device."""
     flasher = Flasher(
@@ -350,8 +350,8 @@ async def probe_silabs_firmware_info(
 async def probe_silabs_firmware_type(
     device: str,
     *,
-    bootloader_reset_methods: Sequence[ResetTarget] = (),
-    application_probe_methods: Sequence[tuple[ApplicationType, int]] = (),
+    bootloader_reset_methods: Sequence[ResetTarget],
+    application_probe_methods: Sequence[tuple[ApplicationType, int]],
 ) -> ApplicationType | None:
     """Probe the running firmware type on a SiLabs device."""
 
@@ -371,8 +371,8 @@ async def async_flash_silabs_firmware(
     device: str,
     fw_data: bytes,
     expected_installed_firmware_type: ApplicationType,
-    bootloader_reset_methods: Sequence[ResetTarget] = (),
-    application_probe_methods: Sequence[tuple[ApplicationType, int]] = (),
+    bootloader_reset_methods: Sequence[ResetTarget],
+    application_probe_methods: Sequence[tuple[ApplicationType, int]],
     progress_callback: Callable[[int, int], None] | None = None,
     *,
     domain: str = DOMAIN,

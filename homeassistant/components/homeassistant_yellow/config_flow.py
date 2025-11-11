@@ -157,7 +157,11 @@ class HomeAssistantYellowConfigFlow(
         assert self._device is not None
 
         # We do not actually use any portion of `BaseFirmwareConfigFlow` beyond this
-        self._probed_firmware_info = await probe_silabs_firmware_info(self._device)
+        self._probed_firmware_info = await probe_silabs_firmware_info(
+            self._device,
+            bootloader_reset_methods=self.BOOTLOADER_RESET_METHODS,
+            application_probe_methods=self.APPLICATION_PROBE_METHODS,
+        )
 
         # Kick off ZHA hardware discovery automatically if Zigbee firmware is running
         if (
