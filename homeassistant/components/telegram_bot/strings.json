@@ -735,6 +735,10 @@
           "description": "Disables link previews for links in the message.",
           "name": "Disable web page preview"
         },
+        "entity_id": {
+          "description": "Notification targets.",
+          "name": "Notify target"
+        },
         "inline_keyboard": {
           "description": "List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with associated callback data.",
           "name": "Inline keyboard"
@@ -754,10 +758,6 @@
         "message_thread_id": {
           "description": "Unique identifier for the target message thread (topic) of the forum; for forum supergroups only.",
           "name": "Message thread ID"
-        },
-        "notify_target": {
-          "description": "Notification targets.",
-          "name": "Notify target"
         },
         "parse_mode": {
           "description": "Parser for the message text.",
@@ -780,7 +780,12 @@
           "name": "Title"
         }
       },
-      "name": "Send message"
+      "name": "Send message",
+      "sections": {
+        "custom_targets": {
+          "name": "Custom targets"
+        }
+      }
     },
     "send_photo": {
       "description": "Sends a photo.",

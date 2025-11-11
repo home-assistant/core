@@ -2,7 +2,7 @@
 
 send_message:
   fields:
-    notify_target:
+    entity_id:
       selector:
         entity:
           filter:
@@ -10,15 +10,18 @@ send_message:
             integration: telegram_bot
           multiple: true
           reorder: true
-    config_entry_id:
-      selector:
-        config_entry:
-          integration: telegram_bot
-    target:
-      example: "[12345, 67890] or 12345"
-      selector:
-        text:
-          multiple: true
+    custom_targets:
+      collapsed: true
+      fields:
+        config_entry_id:
+          selector:
+            config_entry:
+              integration: telegram_bot
+        target:
+          example: "[12345, 67890] or 12345"
+          selector:
+            text:
+              multiple: true
     title:
       example: "Your Garage Door Friend"
       selector:

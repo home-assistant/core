@@ -34,7 +34,7 @@ from homeassistant.exceptions import (
     HomeAssistantError,
     ServiceValidationError,
 )
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.typing import ConfigType
 
 from . import broadcast, polling, webhooks
@@ -48,6 +48,7 @@ from .const import (
     ATTR_CHAT_ID,
     ATTR_DISABLE_NOTIF,
     ATTR_DISABLE_WEB_PREV,
+    ATTR_ENTITY_ID,
     ATTR_FILE,
     ATTR_IS_ANONYMOUS,
     ATTR_IS_BIG,
@@ -58,7 +59,6 @@ from .const import (
     ATTR_MESSAGE_TAG,
     ATTR_MESSAGE_THREAD_ID,
     ATTR_MESSAGEID,
-    ATTR_NOTIFY_TARGET,
     ATTR_ONE_TIME_KEYBOARD,
     ATTR_OPEN_PERIOD,
     ATTR_OPTIONS,
@@ -150,7 +150,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 BASE_SERVICE_SCHEMA = vol.Schema(
     {
-        vol.Optional(ATTR_NOTIFY_TARGET): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(ATTR_ENTITY_ID): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
         vol.Optional(ATTR_TARGET): vol.All(cv.ensure_list, [vol.Coerce(int)]),
         vol.Optional(ATTR_PARSER): cv.string,
@@ -398,6 +398,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def async_send_telegram_message(service: ServiceCall) -> ServiceResponse:
         """Handle sending Telegram Bot message service calls."""
 
+        if ATTR_ENTITY_ID in service.data:
+            notify_entities: list[str] = service.data[ATTR_ENTITY_ID]
+
+            for notify_entity in notify_entities:
+                _parse_notify_entity(hass, notify_entity)
+
+                # invoke service
+
         msgtype = service.service
         kwargs = dict(service.data)
         _LOGGER.debug("New telegram message %s: %s", msgtype, kwargs)
@@ -529,6 +537,46 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
 
     return True
+
+
+def _parse_notify_entity(
+    hass: HomeAssistant, notify_entity_id: str
+) -> tuple[TelegramBotConfigEntry, int]:
+    """Parse notify entity ID to get config entry and chat ID."""
+
+    entity_registry = er.async_get(hass)
+    registry_entry = entity_registry.async_get(notify_entity_id)
+
+    if not registry_entry:
+        raise ServiceValidationError(
+            f"Notify entity not found: {notify_entity_id}",
+            translation_domain=DOMAIN,
+            translation_key="action_failed",
+        )
+
+    if not registry_entry.config_entry_id:
+        raise ServiceValidationError(
+            f"Notify entity has no associated config entry: {notify_entity_id}",
+            translation_domain=DOMAIN,
+            translation_key="action_failed",
+        )
+
+    notify_config_entry = hass.config_entries.async_get_known_entry(
+        registry_entry.config_entry_id
+    )
+    if not registry_entry.config_subentry_id:
+        raise ServiceValidationError(
+            f"Notify entity has no associated config subentry: {notify_entity_id}",
+            translation_domain=DOMAIN,
+            translation_key="action_failed",
+        )
+
+    notify_config_subentry = notify_config_entry.subentries[
+        registry_entry.config_subentry_id
+    ]
+    chat_id: int = notify_config_subentry.data[ATTR_CHAT_ID]
+
+    return (notify_config_entry, chat_id)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) -> bool:
