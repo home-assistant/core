@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections import OrderedDict
 import logging
 
 from satel_integra.satel_integra import AlarmState, AsyncSatel
@@ -26,6 +25,18 @@ from .const import (
     SUBENTRY_TYPE_PARTITION,
     SatelConfigEntry,
 )
+
+ALARM_STATE_MAP = {
+    AlarmState.TRIGGERED: AlarmControlPanelState.TRIGGERED,
+    AlarmState.TRIGGERED_FIRE: AlarmControlPanelState.TRIGGERED,
+    AlarmState.ENTRY_TIME: AlarmControlPanelState.PENDING,
+    AlarmState.ARMED_MODE3: AlarmControlPanelState.ARMED_HOME,
+    AlarmState.ARMED_MODE2: AlarmControlPanelState.ARMED_HOME,
+    AlarmState.ARMED_MODE1: AlarmControlPanelState.ARMED_HOME,
+    AlarmState.ARMED_MODE0: AlarmControlPanelState.ARMED_AWAY,
+    AlarmState.EXIT_COUNTDOWN_OVER_10: AlarmControlPanelState.PENDING,
+    AlarmState.EXIT_COUNTDOWN_UNDER_10: AlarmControlPanelState.PENDING,
+}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -118,28 +129,9 @@ class SatelIntegraAlarmPanel(AlarmControlPanelEntity):
         if not self._satel.connected:
             return None
 
-        state_map = OrderedDict(
-            [
-                (AlarmState.TRIGGERED, AlarmControlPanelState.TRIGGERED),
-                (AlarmState.TRIGGERED_FIRE, AlarmControlPanelState.TRIGGERED),
-                (AlarmState.ENTRY_TIME, AlarmControlPanelState.PENDING),
-                (AlarmState.ARMED_MODE3, AlarmControlPanelState.ARMED_HOME),
-                (AlarmState.ARMED_MODE2, AlarmControlPanelState.ARMED_HOME),
-                (AlarmState.ARMED_MODE1, AlarmControlPanelState.ARMED_HOME),
-                (AlarmState.ARMED_MODE0, AlarmControlPanelState.ARMED_AWAY),
-                (
-                    AlarmState.EXIT_COUNTDOWN_OVER_10,
-                    AlarmControlPanelState.PENDING,
-                ),
-                (
-                    AlarmState.EXIT_COUNTDOWN_UNDER_10,
-                    AlarmControlPanelState.PENDING,
-                ),
-            ]
-        )
         _LOGGER.debug("State map of Satel: %s", self._satel.partition_states)
 
-        for satel_state, ha_state in state_map.items():
+        for satel_state, ha_state in ALARM_STATE_MAP.items():
             if (
                 satel_state in self._satel.partition_states
                 and self._partition_id in self._satel.partition_states[satel_state]
