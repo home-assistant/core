@@ -109,7 +109,8 @@ class SatelIntegraAlarmPanel(AlarmControlPanelEntity):
 
     async def async_added_to_hass(self) -> None:
         """Update alarm status and register callbacks for future updates."""
-        self._update_alarm_status()
+        self._attr_alarm_state = self._read_alarm_state()
+
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass, SIGNAL_PANEL_MESSAGE, self._update_alarm_status
@@ -124,16 +125,13 @@ class SatelIntegraAlarmPanel(AlarmControlPanelEntity):
         if state != self._attr_alarm_state:
             self._attr_alarm_state = state
             self.async_write_ha_state()
-        else:
-            _LOGGER.debug("Ignoring alarm status message, same state")
 
     def _read_alarm_state(self):
         """Read current status of the alarm and translate it into HA status."""
-
-        # Default - disarmed:
-        hass_alarm_status = AlarmControlPanelState.DISARMED
+        hass_alarm_status: AlarmControlPanelState = AlarmControlPanelState.DISARMED
 
         if not self._satel.connected:
+            _LOGGER.debug("Alarm panel not connected")
             return None
 
         for satel_state, ha_state in ALARM_STATE_MAP.items():
