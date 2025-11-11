@@ -10,6 +10,7 @@ import voluptuous as vol
 from homeassistant.components import conversation
 from homeassistant.components.conversation import (
     ConversationInput,
+    IntentSource,
     async_get_agent,
     async_handle_intents,
     async_handle_sentence_triggers,
@@ -357,3 +358,91 @@ async def test_async_handle_intents(hass: HomeAssistant) -> None:
         ),
     )
     assert result is None
+
+
+@pytest.mark.parametrize("source", list(IntentSource))
+async def test_async_get_intents(hass: HomeAssistant, source: IntentSource) -> None:
+    """Test getting available intents."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(
+        hass,
+        "conversation",
+        {"conversation": {"intents": {"StealthMode": ["engage stealth mode"]}}},
+    )
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "trigger": {
+                    "platform": "conversation",
+                    "command": ["my trigger"],
+                },
+                "action": {
+                    "set_conversation_response": "my response",
+                },
+            }
+        },
+    )
+
+    # All sources
+    intents = await conversation.async_get_intents(hass, "en", source=source)
+
+    expected_intents: set[str] = set()
+    unexpected_intents: set[str] = set()
+
+    if source & IntentSource.BUILTIN_SENTENCES:
+        expected_intents.add("HassTurnOn")
+    else:
+        unexpected_intents.add("HassTurnOn")
+
+    if source & IntentSource.CUSTOM_SENTENCES:
+        expected_intents.add("OrderBeer")
+    else:
+        unexpected_intents.add("OrderBeer")
+
+    if source & IntentSource.CONVERSATION_CONFIG:
+        expected_intents.add("StealthMode")
+    else:
+        unexpected_intents.add("StealthMode")
+
+    if source & IntentSource.SENTENCE_TRIGGERS:
+        expected_intents.add(conversation.SENTENCE_TRIGGER_INTENT_NAME)
+    else:
+        unexpected_intents.add(conversation.SENTENCE_TRIGGER_INTENT_NAME)
+
+    # Verify expected intents exist and have sentences
+    for intent_name in expected_intents:
+        assert intent_name in intents.intents
+        assert (
+            sum(
+                len(intent_data.sentences)
+                for intent_data in intents.intents[intent_name].data
+            )
+            > 0
+        )
+
+    # Verify unexpected intents don't exist
+    for intent_name in unexpected_intents:
+        assert intent_name not in intents.intents
+
+
+async def test_async_get_intents_bad_language(hass: HomeAssistant) -> None:
+    """Test getting available intents with a non-existent language."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "conversation", {})
+
+    intents = await conversation.async_get_intents(hass, "does-not-exist")
+    assert not intents.intents
+
+
+async def test_async_get_intents_language_region(hass: HomeAssistant) -> None:
+    """Test getting available intents with a regtional language code."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "conversation", {})
+
+    intents = await conversation.async_get_intents(hass, "en-US")
+
+    # built-in and custom sentences for "en" are included
+    for intent_name in ("HassTurnOn", "OrderBeer"):
+        assert intent_name in intents.intents

@@ -4,10 +4,15 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import logging
+from pathlib import Path
 from typing import Any, Literal
 
+from hassil.intents import Intents, WildcardSlotList
 from hassil.recognize import RecognizeResult
+from hassil.util import merge_dict
+from home_assistant_intents import get_intents, get_languages
 import voluptuous as vol
+import yaml
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import MATCH_ALL
@@ -24,6 +29,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
+from homeassistant.util import language as language_util
 
 from .agent_manager import (
     AgentInfo,
@@ -50,16 +56,19 @@ from .const import (
     ATTR_CONVERSATION_ID,
     ATTR_LANGUAGE,
     ATTR_TEXT,
+    CUSTOM_SENTENCES_DIR_NAME,
     DATA_COMPONENT,
     DOMAIN,
     HOME_ASSISTANT_AGENT,
     METADATA_CUSTOM_FILE,
     METADATA_CUSTOM_SENTENCE,
+    SENTENCE_TRIGGER_INTENT_NAME,
     SERVICE_PROCESS,
     SERVICE_RELOAD,
     ConversationEntityFeature,
+    IntentSource,
 )
-from .default_agent import async_setup_default_agent
+from .default_agent import async_setup_default_agent, collect_list_references
 from .entity import ConversationEntity
 from .http import async_setup as async_setup_conversation_http
 from .models import AbstractConversationAgent, ConversationInput, ConversationResult
@@ -262,6 +271,89 @@ async def async_handle_intents(
     assert agent is not None
 
     return await agent.async_handle_intents(user_input, intent_filter=intent_filter)
+
+
+async def async_get_intents(
+    hass: HomeAssistant, language: str, source: IntentSource = IntentSource.ALL
+) -> Intents:
+    """Load intents for a language."""
+    intents_dict: dict[str, Any] = {"intents": {}}
+
+    agent = get_agent_manager(hass).default_agent
+    assert agent is not None
+
+    if source & IntentSource.BUILTIN_SENTENCES:
+        # From home-assistant-intents package
+        supported_langs = set(get_languages())
+        lang_matches = language_util.matches(language, supported_langs)
+        if lang_matches and (lang_intents := get_intents(lang_matches[0])):
+            intents_dict = lang_intents
+
+    if source & IntentSource.CUSTOM_SENTENCES:
+        # From config/custom_sentences
+
+        def load_custom_sentences():
+            """Merge custom sentences for matching language only."""
+            base_dir = Path(hass.config.path(CUSTOM_SENTENCES_DIR_NAME))
+            supported_langs = {d.name for d in base_dir.iterdir() if d.is_dir()}
+            lang_matches = language_util.matches(language, supported_langs)
+            if not lang_matches:
+                return
+
+            sentences_dir = base_dir / lang_matches[0]
+            for sentences_path in sentences_dir.rglob("*.yaml"):
+                with open(sentences_path, encoding="utf-8") as sentences_file:
+                    merge_dict(intents_dict, yaml.safe_load(sentences_file))
+
+        # Do I/O in executor
+        await hass.async_add_executor_job(load_custom_sentences)
+
+    if (source & IntentSource.CONVERSATION_CONFIG) and agent.config_intents:
+        # From conversation YAML config
+        merge_dict(
+            intents_dict,
+            {
+                "intents": {
+                    intent_name: {"data": [{"sentences": sentences}]}
+                    for intent_name, sentences in agent.config_intents.items()
+                }
+            },
+        )
+
+    if (source & IntentSource.SENTENCE_TRIGGERS) and agent.trigger_details:
+        # From automations
+        merge_dict(
+            intents_dict,
+            {
+                "intents": {
+                    SENTENCE_TRIGGER_INTENT_NAME: {
+                        "data": [
+                            {"sentences": trigger_details.sentences}
+                            for trigger_details in agent.trigger_details
+                        ]
+                    }
+                }
+            },
+        )
+
+    # Parse and post-process
+    intents_dict["language"] = language
+    intents = Intents.from_dict(intents_dict)
+
+    if SENTENCE_TRIGGER_INTENT_NAME in intents.intents:
+        # Unknown lists in sentence triggers are wildcards
+        wildcard_names: set[str] = set()
+        for intent_data in intents.intents[SENTENCE_TRIGGER_INTENT_NAME].data:
+            for sentence in intent_data.sentences:
+                collect_list_references(sentence.expression, wildcard_names)
+
+        for wildcard_name in wildcard_names:
+            if wildcard_name in intents.slot_lists:
+                continue
+
+            intents.slot_lists[wildcard_name] = WildcardSlotList(wildcard_name)
+
+    return intents
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

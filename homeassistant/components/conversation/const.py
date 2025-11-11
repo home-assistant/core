@@ -34,3 +34,23 @@ class ConversationEntityFeature(IntFlag):
 
 METADATA_CUSTOM_SENTENCE = "hass_custom_sentence"
 METADATA_CUSTOM_FILE = "hass_custom_file"
+SENTENCE_TRIGGER_INTENT_NAME = "HassSentenceTrigger"
+CUSTOM_SENTENCES_DIR_NAME = "custom_sentences"
+
+
+class IntentSource(IntFlag):
+    """Source of intents and sentence templates."""
+
+    SENTENCE_TRIGGERS = 1
+    """Sentence triggers in automations."""
+
+    CONVERSATION_CONFIG = 2
+    """YAML configuration for conversation component."""
+
+    CUSTOM_SENTENCES = 4
+    """YAML files in config/custom_sentences."""
+
+    BUILTIN_SENTENCES = 8
+    """Sentences from home-assistant-intents package."""
+
+    ALL = SENTENCE_TRIGGERS | CONVERSATION_CONFIG | CUSTOM_SENTENCES | BUILTIN_SENTENCES
