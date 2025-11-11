@@ -1,0 +1,4 @@
+listening:
+  target:
+    entity:
+      domain: assist_satellite

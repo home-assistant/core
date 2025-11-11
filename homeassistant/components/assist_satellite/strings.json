@@ -98,5 +98,12 @@
       "name": "Start conversation"
     }
   },
-  "title": "Assist satellite"
+  "title": "Assist satellite",
+  "triggers": {
+    "listening": {
+      "description": "Triggers when a satellite starts listening for a command.",
+      "description_configured": "Triggers when a satellite starts listening for a command",
+      "name": "When a satellite starts listening"
+    }
+  }
 }
