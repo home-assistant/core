@@ -54,15 +54,14 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     API_VERSION_2,
+    BATCH_BUFFER_SIZE,
+    BATCH_TIMEOUT,
     CATCHING_UP_MESSAGE,
     CLIENT_ERROR_V1,
     CLIENT_ERROR_V2,
     CODE_INVALID_INPUTS,
-    COMPONENT_CONFIG_SCHEMA_BATCH,
     COMPONENT_CONFIG_SCHEMA_CONNECTION,
     CONF_API_VERSION,
-    CONF_BATCH_BUFFER_SIZE,
-    CONF_BATCH_TIMEOUT,
     CONF_BUCKET,
     CONF_COMPONENT_CONFIG,
     CONF_COMPONENT_CONFIG_DOMAIN,
@@ -194,12 +193,7 @@ _INFLUX_BASE_SCHEMA = INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
 )
 
 INFLUX_SCHEMA = vol.All(
-    _INFLUX_BASE_SCHEMA.extend(
-        {
-            **COMPONENT_CONFIG_SCHEMA_CONNECTION,
-            **COMPONENT_CONFIG_SCHEMA_BATCH,
-        }
-    ),
+    _INFLUX_BASE_SCHEMA.extend(COMPONENT_CONFIG_SCHEMA_CONNECTION),
     validate_version_specific_config,
     create_influx_url,
 )
@@ -502,9 +496,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     event_to_json = _generate_event_to_json(conf)
     max_tries = conf.get(CONF_RETRY_COUNT)
-    instance = hass.data[DOMAIN] = InfluxThread(
-        hass, influx, event_to_json, max_tries, conf
-    )
+    instance = hass.data[DOMAIN] = InfluxThread(hass, influx, event_to_json, max_tries)
     instance.start()
 
     def shutdown(event):
@@ -521,7 +513,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class InfluxThread(threading.Thread):
     """A threaded event handler class."""
 
-    def __init__(self, hass, influx, event_to_json, max_tries, config):
+    def __init__(self, hass, influx, event_to_json, max_tries):
         """Initialize the listener."""
         threading.Thread.__init__(self, name=DOMAIN)
         self.queue: queue.SimpleQueue[threading.Event | tuple[float, Event] | None] = (
@@ -532,8 +524,6 @@ class InfluxThread(threading.Thread):
         self.max_tries = max_tries
         self.write_errors = 0
         self.shutdown = False
-        self._batch_timeout = config[CONF_BATCH_TIMEOUT]
-        self.batch_buffer_size = config[CONF_BATCH_BUFFER_SIZE]
         hass.bus.listen(EVENT_STATE_CHANGED, self._event_listener)
 
     @callback
@@ -542,31 +532,23 @@ class InfluxThread(threading.Thread):
         item = (time.monotonic(), event)
         self.queue.put(item)
 
-    @property
-    def batch_timeout(self):
+    @staticmethod
+    def batch_timeout():
         """Return number of seconds to wait for more events."""
-        return self._batch_timeout
+        return BATCH_TIMEOUT
 
     def get_events_json(self):
         """Return a batch of events formatted for writing."""
         queue_seconds = QUEUE_BACKLOG_SECONDS + self.max_tries * RETRY_DELAY
-        start_time = time.monotonic()
-        batch_timeout = self.batch_timeout()
 
         count = 0
         json = []
+
         dropped = 0
 
         with suppress(queue.Empty):
-            while len(json) < self.batch_buffer_size and not self.shutdown:
-                if count > 0 and time.monotonic() - start_time >= batch_timeout:
-                    break
-
-                timeout = (
-                    None
-                    if count == 0
-                    else batch_timeout - (time.monotonic() - start_time)
-                )
+            while len(json) < BATCH_BUFFER_SIZE and not self.shutdown:
+                timeout = None if count == 0 else self.batch_timeout()
                 item = self.queue.get(timeout=timeout)
                 count += 1
 
