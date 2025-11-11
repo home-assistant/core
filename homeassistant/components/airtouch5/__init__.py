@@ -82,12 +82,8 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 
         if airtouch_devices is not None:
             airtouch_device = airtouch_devices[0]
-            new_unique_id = str(airtouch_device.system_id)
+            new_unique_device_id = str(airtouch_device.system_id)
 
-            hass.config_entries.async_update_entry(
-                config_entry,
-                unique_id=new_unique_id,
-            )
             # Migrate entity unique IDs
 
             ent_reg = er.async_get(hass)
@@ -132,7 +128,11 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             new_data["host"] = airtouch_device.ip
 
             hass.config_entries.async_update_entry(
-                config_entry, data=new_data, minor_version=0, version=2
+                config_entry,
+                data=new_data,
+                minor_version=0,
+                version=2,
+                unique_id=new_unique_device_id,
             )
 
     _LOGGER.info(
