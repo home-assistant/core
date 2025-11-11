@@ -24,7 +24,7 @@ from homeassistant.util import dt as dt_util
 
 from . import HABITICA_KEY
 from .const import ASSETS_URL
-from .coordinator import HabiticaConfigEntry
+from .coordinator import HabiticaConfigEntry, HabiticaDataUpdateCoordinator
 from .entity import HabiticaBase, HabiticaPartyBase, HabiticaPartyMemberBase
 from .util import (
     collected_quest_items,
@@ -300,6 +300,25 @@ SENSOR_DESCRIPTIONS: tuple[HabiticaSensorEntityDescription, ...] = (
         translation_key=HabiticaSensorEntity.PENDING_QUEST_ITEMS,
         value_fn=pending_quest_items,
     ),
+    HabiticaSensorEntityDescription(
+        key=HabiticaSensorEntity.HABITS,
+        translation_key=HabiticaSensorEntity.HABITS,
+        value_fn=lambda user, _: len([h for h in user.tasksOrder.habits if h]),
+        entity_picture=ha.HABIT,
+        attributes_fn=lambda user, _: {
+            "habit_tasks": [
+                {
+                    "id": str(habit.id),
+                    "text": habit.text,
+                    "value": habit.value,
+                    "counter_up": habit.counterUp,
+                    "counter_down": habit.counterDown,
+                }
+                for habit in user.tasks.habits.values()
+                if habit and habit.id
+            ][:10]  # Limit to 10 habits for performance
+        },
+    ),
 )
 
 
@@ -397,6 +416,14 @@ async def async_setup_entry(
         for description in SENSOR_DESCRIPTIONS + SENSOR_DESCRIPTIONS_COMMON
     )
 
+    # Add individual habit sensors
+    if coordinator.data and coordinator.data.habits:
+        habit_sensors = []
+        for habit in coordinator.data.habits:
+            if habit and habit.id:
+                habit_sensors.append(HabiticaHabitSensor(coordinator, habit))
+        async_add_entities(habit_sensors)
+
     if party := coordinator.data.user.party.id:
         party_coordinator = hass.data[HABITICA_KEY][party]
         async_add_entities(
@@ -474,6 +501,52 @@ class HabiticaSensor(HabiticaBase, SensorEntity):
             )
 
         return None
+
+
+class HabiticaHabitSensor(HabiticaBase, SensorEntity):
+    """Sensor for individual Habitica habits."""
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: HabiticaDataUpdateCoordinator,
+        habit: TaskData,
+    ) -> None:
+        """Initialize the habit sensor."""
+        super().__init__(coordinator)
+        self.habit = habit
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_habit_{habit.id}"
+        self._attr_name = habit.text
+        self._attr_entity_picture = f"{ASSETS_URL}{ha.HABIT}"
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the habit value."""
+        # Find the current habit data from coordinator
+        if self.coordinator.data and self.coordinator.data.habits:
+            for current_habit in self.coordinator.data.habits:
+                if current_habit and current_habit.id == self.habit.id:
+                    return round(current_habit.value, 2) if current_habit.value else 0
+        return 0
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return habit specific attributes."""
+        if self.coordinator.data and self.coordinator.data.habits:
+            for current_habit in self.coordinator.data.habits:
+                if current_habit and current_habit.id == self.habit.id:
+                    return {
+                        "habit_id": str(current_habit.id),
+                        "text": current_habit.text,
+                        "notes": current_habit.notes or "",
+                        "counter_up": current_habit.counterUp or 0,
+                        "counter_down": current_habit.counterDown or 0,
+                        "frequency": current_habit.frequency.value if current_habit.frequency else "daily",
+                        "up": current_habit.up if hasattr(current_habit, 'up') else True,
+                        "down": current_habit.down if hasattr(current_habit, 'down') else True,
+                    }
+        return {}
 
 
 class HabiticaPartyMemberSensor(HabiticaSensor, HabiticaPartyMemberBase):

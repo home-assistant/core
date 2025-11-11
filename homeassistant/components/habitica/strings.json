@@ -414,6 +414,14 @@
         "name": "Health",
         "unit_of_measurement": "[%key:component::habitica::common::unit_health_points%]"
       },
+      "habits": {
+        "name": "Habits",
+        "state_attributes": {
+          "habit_tasks": {
+            "name": "Habit tasks"
+          }
+        }
+      },
       "intelligence": {
         "name": "Intelligence",
         "state_attributes": {

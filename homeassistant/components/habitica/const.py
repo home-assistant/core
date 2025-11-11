@@ -82,3 +82,6 @@ SECTION_REAUTH_API_KEY = "reauth_api_key"
 SECTION_DANGER_ZONE = "danger_zone"
 
 WEEK_DAYS = ["m", "t", "w", "th", "f", "s", "su"]
+
+# We'll use this attribute to link entities to their Habitica task ID
+ATTR_TASK_ID = "task_id"

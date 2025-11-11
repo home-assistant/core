@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+
 from abc import abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -11,6 +12,7 @@ import logging
 from typing import Any
 from uuid import UUID
 
+import habitipy  # Make sure this is imported
 from aiohttp import ClientError
 from habiticalib import (
     Avatar,
@@ -47,6 +49,7 @@ class HabiticaData:
 
     user: UserData
     tasks: list[TaskData]
+    habits: list[TaskData]  # Add habits specifically for sensor platform
 
 
 @dataclass
@@ -158,8 +161,11 @@ class HabiticaDataUpdateCoordinator(HabiticaBaseCoordinator[HabiticaData]):
         completed_todos = (
             await self.habitica.get_tasks(TaskFilter.COMPLETED_TODOS)
         ).data
+        
+        # Fetch habit tasks specifically (fulfills ADR2)
+        habits = (await self.habitica.get_tasks(TaskFilter.HABITS)).data
 
-        return HabiticaData(user=user, tasks=tasks + completed_todos)
+        return HabiticaData(user=user, tasks=tasks + completed_todos, habits=habits)
 
     async def execute(self, func: Callable[[Habitica], Any]) -> None:
         """Execute an API call."""

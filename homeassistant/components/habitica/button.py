@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
 
-from habiticalib import Habitica, HabiticaClass, Skill, TaskType
+from habiticalib import Direction, Habitica, HabiticaClass, Skill, TaskType, ha
 
 from homeassistant.components.button import (
     DOMAIN as BUTTON_DOMAIN,
@@ -289,6 +289,17 @@ async def async_setup_entry(
         HabiticaButton(coordinator, description) for description in BUTTON_DESCRIPTIONS
     )
 
+    # Add individual habit buttons
+    if coordinator.data and coordinator.data.habits:
+        habit_buttons = []
+        for habit in coordinator.data.habits:
+            if habit and habit.id:
+                # Create positive button
+                habit_buttons.append(HabiticaHabitButton(coordinator, habit, "up"))
+                # Create negative button  
+                habit_buttons.append(HabiticaHabitButton(coordinator, habit, "down"))
+        async_add_entities(habit_buttons)
+
 
 class HabiticaButton(HabiticaBase, ButtonEntity):
     """Representation of a Habitica button."""
@@ -315,3 +326,47 @@ class HabiticaButton(HabiticaBase, ButtonEntity):
         if entity_picture := self.entity_description.entity_picture:
             return f"{ASSETS_URL}{entity_picture}"
         return None
+
+
+class HabiticaHabitButton(HabiticaBase, ButtonEntity):
+    """Button for scoring Habitica habits."""
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: HabiticaConfigEntry,
+        habit: Any,
+        direction: str,
+    ) -> None:
+        """Initialize the habit button."""
+        super().__init__(coordinator)
+        self.habit = habit
+        self.direction = direction
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_habit_{habit.id}_{direction}"
+        self._attr_name = f"{habit.text} ({direction})"
+        self._attr_icon = "mdi:plus" if direction == "up" else "mdi:minus"
+        self._attr_entity_picture = f"{ASSETS_URL}{ha.HABIT}"
+
+    async def async_press(self) -> None:
+        """Handle button press to score habit."""
+        direction_value = Direction.UP if self.direction == "up" else Direction.DOWN
+        
+        await self.coordinator.execute(
+            lambda habitica: habitica.update_score(self.habit.id, direction_value)
+        )
+
+    @property
+    def available(self) -> bool:
+        """Return if button is available."""
+        if not super().available or not self.coordinator.data:
+            return False
+        
+        # Check if habit still exists and allows this direction
+        for current_habit in self.coordinator.data.habits:
+            if current_habit and current_habit.id == self.habit.id:
+                if self.direction == "up":
+                    return getattr(current_habit, 'up', True)
+                else:
+                    return getattr(current_habit, 'down', True)
+        return False
