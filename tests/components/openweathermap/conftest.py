@@ -60,6 +60,7 @@ def mock_config_entry(mode: str) -> MockConfigEntry:
         },
         entry_id="test",
         version=5,
+        minor_version=2,
         unique_id=f"{LATITUDE}-{LONGITUDE}",
         title=DEFAULT_NAME,
     )
