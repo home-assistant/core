@@ -608,7 +608,7 @@
           "level": "Leveling",
           "sleep": "Sleeping",
           "standby": "[%key:common::state::standby%]",
-          "standly": "[%key:component::tuya::entity::sensor::cat_litter_box_status::state::standby%]",
+          "standly": "[%key:common::state::standby%]",
           "uv": "Sanitizing"
         }
       },
