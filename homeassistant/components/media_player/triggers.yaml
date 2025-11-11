@@ -7,3 +7,17 @@ turns_off:
   target:
     entity:
       domain: media_player
+
+playing:
+  target:
+    entity:
+      domain: media_player
+  fields:
+    media_content_type:
+      required: false
+      default: []
+      selector:
+        select:
+          multiple: true
+          custom_value: true
+          options: []

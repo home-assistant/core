@@ -226,3 +226,89 @@ async def test_fires_with_multiple_entities(
     hass.states.async_set("cover.test2", "opening")
     await hass.async_block_till_done()
     assert len(service_calls) == 2
+
+
+async def test_closes_trigger_fires_on_closing(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test that closes trigger fires when cover starts closing."""
+    hass.states.async_set("cover.test", "open")
+    context = Context()
+
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    CONF_PLATFORM: "cover.closes",
+                    CONF_TARGET: {CONF_ENTITY_ID: "cover.test"},
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    hass.states.async_set("cover.test", "closing", context=context)
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+    assert service_calls[0].context.parent_id == context.id
+
+
+async def test_closes_trigger_fires_on_closed(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test that closes trigger fires when cover becomes closed."""
+    hass.states.async_set("cover.test", "open")
+    context = Context()
+
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    CONF_PLATFORM: "cover.closes",
+                    CONF_TARGET: {CONF_ENTITY_ID: "cover.test"},
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    hass.states.async_set("cover.test", "closed", context=context)
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+    assert service_calls[0].context.parent_id == context.id
+
+
+async def test_closes_trigger_fully_closed_option(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test that closes trigger with fully_closed only fires at position 0."""
+    hass.states.async_set("cover.test", "open", {ATTR_CURRENT_POSITION: 100})
+
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    CONF_PLATFORM: "cover.closes",
+                    CONF_TARGET: {CONF_ENTITY_ID: "cover.test"},
+                    "fully_closed": True,
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    # Should not trigger at position 50
+    hass.states.async_set("cover.test", "closing", {ATTR_CURRENT_POSITION: 50})
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+    # Should trigger at position 0
+    hass.states.async_set("cover.test", "closed", {ATTR_CURRENT_POSITION: 0})
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1

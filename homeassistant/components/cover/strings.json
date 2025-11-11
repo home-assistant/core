@@ -152,6 +152,21 @@
         }
       },
       "name": "When a cover opens"
+    },
+    "closes": {
+      "description": "Triggers when a cover closes.",
+      "description_configured": "Triggers when a cover closes",
+      "fields": {
+        "fully_closed": {
+          "description": "Only trigger when the cover is fully closed (position at 0%).",
+          "name": "Fully closed"
+        },
+        "device_class": {
+          "description": "The device classes to trigger on. If empty, triggers on all device classes.",
+          "name": "Device classes"
+        }
+      },
+      "name": "When a cover closes"
     }
   }
 }

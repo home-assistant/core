@@ -378,6 +378,17 @@
       "description": "Triggers when a media player turns off.",
       "description_configured": "Triggers when a media player turns off",
       "name": "When a media player turns off"
+    },
+    "playing": {
+      "description": "Triggers when a media player starts playing.",
+      "description_configured": "Triggers when a media player starts playing",
+      "fields": {
+        "media_content_type": {
+          "description": "The media content types to trigger on. If empty, triggers on all content types.",
+          "name": "Media content types"
+        }
+      },
+      "name": "When a media player starts playing"
     }
   }
 }
