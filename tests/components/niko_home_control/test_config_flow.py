@@ -36,7 +36,39 @@ async def test_full_flow(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_cannot_connect(hass: HomeAssistant) -> None:
+async def test_timeout_connect(hass: HomeAssistant) -> None:
+    """Test the cannot connect error."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.niko_home_control.config_flow.NHCController.connect",
+        side_effect=TimeoutError,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "192.168.0.123"},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "timeout_connect"}
+
+    with patch(
+        "homeassistant.components.niko_home_control.config_flow.NHCController.connect",
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "192.168.0.123"},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_unknown(hass: HomeAssistant) -> None:
     """Test the cannot connect error."""
 
     result = await hass.config_entries.flow.async_init(
@@ -48,6 +80,38 @@ async def test_cannot_connect(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.niko_home_control.config_flow.NHCController.connect",
         side_effect=Exception,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "192.168.0.123"},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}
+
+    with patch(
+        "homeassistant.components.niko_home_control.config_flow.NHCController.connect",
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "192.168.0.123"},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_cannot_connect(hass: HomeAssistant) -> None:
+    """Test the cannot connect error."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.niko_home_control.config_flow.NHCController.connect",
+        side_effect=OSError,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -136,7 +200,7 @@ async def test_reconfigure(
     assert result["reason"] == "reconfigure_successful"
 
 
-async def test_reconfigure_cannot_connect(
+async def test_reconfigure_unknown(
     hass: HomeAssistant,
     mock_niko_home_control_connection: AsyncMock,
     mock_config_entry: MockConfigEntry,
@@ -144,7 +208,7 @@ async def test_reconfigure_cannot_connect(
     """Test reconfiguration with connection error."""
     mock_config_entry.add_to_hass(hass)
 
-    mock_niko_home_control_connection.connect.side_effect = Exception("cannot_connect")
+    mock_niko_home_control_connection.connect.side_effect = Exception("unknown")
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
 
@@ -157,7 +221,7 @@ async def test_reconfigure_cannot_connect(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": "unknown"}
 
     mock_niko_home_control_connection.connect.side_effect = None
 
