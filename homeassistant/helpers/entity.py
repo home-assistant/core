@@ -1687,7 +1687,6 @@ class Entity(
             self.__init_track_included_entities = True
         _update_group_entity_ids()
 
-    @final
     @cached_property
     def included_unique_ids(self) -> list[str]:
         """Return the list of unique IDs if the entity represents a group.
