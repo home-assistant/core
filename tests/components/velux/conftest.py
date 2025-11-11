@@ -107,6 +107,7 @@ def mock_pyvlx(mock_window: MagicMock, mock_light: MagicMock) -> Generator[Magic
 def mock_config_entry() -> MockConfigEntry:
     """Return a mock config entry."""
     return MockConfigEntry(
+        entry_id="test_entry_id",
         domain=DOMAIN,
         data={
             CONF_HOST: "testhost",
