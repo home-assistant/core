@@ -18,7 +18,7 @@ rules:
   docs-installation-instructions: todo
   docs-removal-instructions: done
   entity-event-setup: todo
-  entity-unique-id: todo
+  entity-unique-id: done
   has-entity-name: todo
   runtime-data: done
   test-before-configure: done
