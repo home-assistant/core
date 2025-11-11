@@ -136,8 +136,6 @@ RESOURCES: dict[str, SensorEntityDescription] = {
     ),
 }
 
-SENSORS_UNITS: dict[str, SensorEntityDescription] = {}
-
 
 def _format_dict(input: dict[str, Any]) -> dict[str, Any]:
     result: dict[str, Any] = {}
