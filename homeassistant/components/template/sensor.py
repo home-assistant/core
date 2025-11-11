@@ -21,7 +21,9 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.components.sensor.helpers import async_parse_date_datetime
+from homeassistant.components.sensor.helpers import (  # pylint: disable=hass-component-root-import
+    async_parse_date_datetime,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
