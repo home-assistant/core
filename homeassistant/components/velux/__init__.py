@@ -28,13 +28,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: VeluxConfigEntry) -> boo
         LOGGER.exception("Can't connect to velux interface: %s", ex)
         return False
 
-    device_identifier = (DOMAIN, f"gateway_{entry.entry_id}")
     entry.runtime_data = pyvlx
 
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={device_identifier},
+        identifiers={(DOMAIN, f"gateway_{entry.entry_id}")},
         name="KLF 200 Gateway",
         manufacturer="Velux",
         model="KLF 200",
