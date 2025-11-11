@@ -413,11 +413,12 @@ async def async_flash_silabs_firmware(
             probed_firmware_info = await probe_silabs_firmware_info(
                 device,
                 bootloader_reset_methods=bootloader_reset_methods,
-                application_probe_methods=tuple(
-                    (m.as_flasher_application_type(), baudrate)
-                    for m, baudrate in application_probe_methods
-                    if m == expected_installed_firmware_type
-                ),
+                # Only probe for the expected installed firmware type
+                application_probe_methods=[
+                    (method, baudrate)
+                    for method, baudrate in application_probe_methods
+                    if method == expected_installed_firmware_type
+                ],
             )
 
         if probed_firmware_info is None:

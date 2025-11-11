@@ -23,6 +23,7 @@ from homeassistant.components.homeassistant_hardware.util import (
     FirmwareInfo,
     OwningAddon,
     OwningIntegration,
+    ResetTarget,
     async_flash_silabs_firmware,
     get_otbr_addon_firmware_info,
     guess_firmware_info,
@@ -504,8 +505,11 @@ async def test_probe_silabs_firmware_info(
     ):
         result = await probe_silabs_firmware_info(
             "/dev/ttyUSB0",
-            bootloader_reset_methods=(),
-            application_probe_methods=(),
+            bootloader_reset_methods=[ResetTarget.RTS_DTR],
+            application_probe_methods=[
+                (ApplicationType.EZSP, 460800),
+                (ApplicationType.SPINEL, 460800),
+            ],
         )
         assert result == expected_fw_info
 
@@ -537,8 +541,11 @@ async def test_probe_silabs_firmware_type(
     ):
         result = await probe_silabs_firmware_type(
             "/dev/ttyUSB0",
-            bootloader_reset_methods=(),
-            application_probe_methods=(),
+            bootloader_reset_methods=[ResetTarget.RTS_DTR],
+            application_probe_methods=[
+                (ApplicationType.EZSP, 460800),
+                (ApplicationType.SPINEL, 460800),
+            ],
         )
         assert result == expected
 
@@ -604,8 +611,11 @@ async def test_async_flash_silabs_firmware(hass: HomeAssistant) -> None:
             device="/dev/ttyUSB0",
             fw_data=b"firmware contents",
             expected_installed_firmware_type=ApplicationType.SPINEL,
-            bootloader_reset_methods=(),
-            application_probe_methods=(),
+            bootloader_reset_methods=[ResetTarget.RTS_DTR],
+            application_probe_methods=[
+                (ApplicationType.EZSP, 460800),
+                (ApplicationType.SPINEL, 460800),
+            ],
             progress_callback=progress_callback,
         )
 
@@ -614,7 +624,9 @@ async def test_async_flash_silabs_firmware(hass: HomeAssistant) -> None:
 
     # Verify Flasher was called with correct bootloader_reset parameter
     assert flasher_mock.call_count == 1
-    assert flasher_mock.mock_calls[0].kwargs["bootloader_reset"] == ()
+    assert flasher_mock.mock_calls[0].kwargs["bootloader_reset"] == (
+        ResetTarget.RTS_DTR,
+    )
 
     # Both owning integrations/addons are stopped and restarted
     assert owner1.temporarily_stop.mock_calls == [
@@ -668,8 +680,11 @@ async def test_async_flash_silabs_firmware_flash_failure(hass: HomeAssistant) ->
             device="/dev/ttyUSB0",
             fw_data=b"firmware contents",
             expected_installed_firmware_type=ApplicationType.SPINEL,
-            bootloader_reset_methods=(),
-            application_probe_methods=(),
+            bootloader_reset_methods=[ResetTarget.RTS_DTR],
+            application_probe_methods=[
+                (ApplicationType.EZSP, 460800),
+                (ApplicationType.SPINEL, 460800),
+            ],
         )
 
     # Both owning integrations/addons are stopped and restarted
@@ -729,8 +744,11 @@ async def test_async_flash_silabs_firmware_probe_failure(hass: HomeAssistant) ->
             device="/dev/ttyUSB0",
             fw_data=b"firmware contents",
             expected_installed_firmware_type=ApplicationType.SPINEL,
-            bootloader_reset_methods=(),
-            application_probe_methods=(),
+            bootloader_reset_methods=[ResetTarget.RTS_DTR],
+            application_probe_methods=[
+                (ApplicationType.EZSP, 460800),
+                (ApplicationType.SPINEL, 460800),
+            ],
         )
 
     # Both owning integrations/addons are stopped and restarted
