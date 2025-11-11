@@ -34,15 +34,19 @@ ATTR_STANDARD_VALUES_SLOTS = "standard_values_slots"
 SERVICE_SET_HOT_WATER_SCHEDULE = "set_hot_water_schedule"
 
 
-def _convert_time_slots_to_string(slots: list[dict[str, time]] | None) -> str:
+def _convert_time_slots_to_string(slots: list[dict[str, time]] | None) -> str | None:
     """Convert list of time slot dicts to BSB-LAN format string.
 
     Example: [{"start_time": "06:00", "end_time": "08:00"}, {"start_time": "17:00", "end_time": "21:00"}]
     becomes: "06:00-08:00 17:00-21:00"
 
-    Empty list or None returns empty string.
+    None returns None (don't modify this day).
+    Empty list returns empty string (clear this day).
     """
-    if slots is None or not slots:
+    if slots is None:
+        return None
+
+    if not slots:
         return ""
 
     time_periods = []
