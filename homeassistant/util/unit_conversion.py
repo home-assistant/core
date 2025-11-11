@@ -334,6 +334,7 @@ class EnergyConverter(BaseUnitConverter):
         UnitOfEnergy.KILO_JOULE: _WH_TO_J,
         UnitOfEnergy.MEGA_JOULE: _WH_TO_J / 1e3,
         UnitOfEnergy.GIGA_JOULE: _WH_TO_J / 1e6,
+        UnitOfEnergy.WATT_SECOND: 3.6e6,
         UnitOfEnergy.MILLIWATT_HOUR: 1e6,
         UnitOfEnergy.WATT_HOUR: 1e3,
         UnitOfEnergy.KILO_WATT_HOUR: 1,
