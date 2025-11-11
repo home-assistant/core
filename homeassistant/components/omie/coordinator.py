@@ -22,10 +22,12 @@ from .util import CET
 _LOGGER = logging.getLogger(__name__)
 
 _SCHEDULE_MAX_DELAY = dt.timedelta(seconds=10)
-"""To avoid thundering herd, we will fetch from OMIE up to this much time after the OMIE data becomes available."""
+"""To avoid thundering herd, we will fetch from OMIE up to this much time after the OMIE
+ data becomes available."""
 
 _UPDATE_INTERVAL_PADDING = timedelta(seconds=1)
-"""Padding to add to the update interval to work around early scheduling by DataUpdateCoordinator."""
+"""Padding to add to the update interval to work around early refresh scheduling by
+ DataUpdateCoordinator."""
 
 type OMIEConfigEntry = ConfigEntry[OMIECoordinator]
 
