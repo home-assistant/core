@@ -7,3 +7,37 @@ turns_off:
   target:
     entity:
       domain: light
+
+brightness_changed:
+  target:
+    entity:
+      domain: light
+  fields:
+    lower:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 255
+          mode: box
+    upper:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 255
+          mode: box
+    above:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 255
+          mode: box
+    below:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 255
+          mode: box
