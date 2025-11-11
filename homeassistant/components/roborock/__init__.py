@@ -30,8 +30,8 @@ from .coordinator import (
     RoborockCoordinators,
     RoborockDataUpdateCoordinator,
     RoborockDataUpdateCoordinatorA01,
-    RoborockDyadUpdateCoordinator,
-    RoborockZeoUpdateCoordinator,
+    RoborockWashingMachineUpdateCoordinator,
+    RoborockWetDryVacUpdateCoordinator,
 )
 from .roborock_storage import CacheStore, async_remove_map_storage
 
@@ -208,11 +208,11 @@ def build_setup_functions(
             )
         elif device.dyad is not None:
             coordinators.append(
-                RoborockDyadUpdateCoordinator(hass, entry, device, device.dyad)
+                RoborockWetDryVacUpdateCoordinator(hass, entry, device, device.dyad)
             )
         elif device.zeo is not None:
             coordinators.append(
-                RoborockZeoUpdateCoordinator(hass, entry, device, device.zeo)
+                RoborockWashingMachineUpdateCoordinator(hass, entry, device, device.zeo)
             )
         else:
             _LOGGER.warning(

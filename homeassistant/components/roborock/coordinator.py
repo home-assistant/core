@@ -367,7 +367,7 @@ class RoborockDataUpdateCoordinatorA01(DataUpdateCoordinator[dict[_V, StateType]
         return self._device
 
 
-class RoborockZeoUpdateCoordinator(
+class RoborockWashingMachineUpdateCoordinator(
     RoborockDataUpdateCoordinatorA01[RoborockZeoProtocol]
 ):
     """Coordinator for Zeo devices."""
@@ -397,7 +397,7 @@ class RoborockZeoUpdateCoordinator(
         return await self.api.query_values(self.request_protocols)
 
 
-class RoborockDyadUpdateCoordinator(
+class RoborockWetDryVacUpdateCoordinator(
     RoborockDataUpdateCoordinatorA01[RoborockDyadDataProtocol]
 ):
     """Coordinator for Dyad devices."""

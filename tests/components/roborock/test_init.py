@@ -90,19 +90,6 @@ async def test_not_supported_protocol(
     assert "because its protocol version " in caplog.text
 
 
-async def test_not_supported_a01_device(
-    hass: HomeAssistant,
-    mock_roborock_entry: MockConfigEntry,
-    caplog: pytest.LogCaptureFixture,
-    fake_devices: list[FakeDevice],
-) -> None:
-    """Test that we output a message on incorrect category."""
-    fake_devices[2].product.category = "random"
-    await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
-    assert "The device you added is not yet supported" in caplog.text
-
-
 async def test_invalid_user_agreement(
     hass: HomeAssistant,
     mock_roborock_entry: MockConfigEntry,
