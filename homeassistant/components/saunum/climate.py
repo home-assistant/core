@@ -87,8 +87,6 @@ class LeilSaunaClimate(LeilSaunaEntity, ClimateEntity):
         except SaunumException as err:
             raise HomeAssistantError(f"Failed to set HVAC mode to {hvac_mode}") from err
 
-        await self.coordinator.async_request_refresh()
-
         # The device takes 1-2 seconds to turn heater elements on/off and
         # update heater_elements_active. Wait and refresh again to ensure
         # the HVAC action state reflects the actual heater status.
