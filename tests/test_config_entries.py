@@ -9727,3 +9727,73 @@ async def test_config_flow_create_entry_with_next_flow(hass: HomeAssistant) -> N
     assert result["next_flow"][0] == config_entries.FlowType.CONFIG_FLOW
     # Verify the target flow exists
     hass.config_entries.flow.async_get(result["next_flow"][1])
+
+
+async def test_async_get_matching_discovery_flows(
+    hass: HomeAssistant, manager: config_entries.ConfigEntries
+) -> None:
+    """Test async_get_matching_discovery_flows finds flows by handler, context, and data."""
+    mock_integration(hass, MockModule("test1"))
+    mock_platform(hass, "test1.config_flow", None)
+
+    mock_integration(hass, MockModule("test2"))
+    mock_platform(hass, "test2.config_flow", None)
+
+    class Test1Flow(config_entries.ConfigFlow):
+        VERSION = 1
+
+        async def async_step_usb(self, discovery_info=None):
+            return self.async_show_form(step_id="user")
+
+    class Test2Flow(config_entries.ConfigFlow):
+        VERSION = 1
+
+        async def async_step_usb(self, discovery_info=None):
+            return self.async_show_form(step_id="user")
+
+    service_info = {
+        "device": "/dev/serial/by-id/unique-device-1",
+        "vid": "1234",
+        "pid": "5678",
+        "serial_number": "ABC123",
+        "manufacturer": "Test Manufacturer",
+        "description": "Test Description",
+    }
+
+    with mock_config_flow("test1", Test1Flow), mock_config_flow("test2", Test2Flow):
+        # Create flow with exact same data
+        flow1 = await manager.flow.async_init(
+            "test1",
+            context={"source": config_entries.SOURCE_USB},
+            data=service_info,
+        )
+
+        # Create flow with different data
+        _flow2 = await manager.flow.async_init(
+            "test1",
+            context={"source": config_entries.SOURCE_USB},
+            data={
+                **service_info,
+                "device": "/dev/serial/by-id/unique-device-2",
+            },
+        )
+
+        # Create flow with same data for different domain
+        _flow3 = await manager.flow.async_init(
+            "test2",
+            context={"source": config_entries.SOURCE_USB},
+            data=service_info,
+        )
+
+    # Only flow 1 should match, flow 2 has a different `device` and flow 3 has a
+    # different domain
+    flow_ids = manager.flow.async_get_matching_discovery_flows(
+        "test1", {"source": config_entries.SOURCE_USB}, service_info
+    )
+    assert flow_ids == [flow1["flow_id"]]
+
+    # Search for non-existent handler - should return empty list
+    flow_ids = manager.flow.async_get_matching_discovery_flows(
+        "nonexistent", {"source": config_entries.SOURCE_USB}, service_info
+    )
+    assert flow_ids == []
