@@ -39,7 +39,9 @@ rules:
   log-when-unavailable: todo
   parallel-updates: done
   reauthentication-flow: todo
-  test-coverage: todo
+  test-coverage:
+    status: todo
+    comment: cleanup mock_config_entry vs mock_user_config_entry, cleanup mock_pyvlx vs mock_velux_client, remove unused freezer in test_cover_closed, add tests where missing
 
   # Gold
   devices: done
