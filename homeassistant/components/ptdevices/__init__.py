@@ -4,15 +4,11 @@ from __future__ import annotations
 
 from homeassistant.const import CONF_API_TOKEN, CONF_DEVICE_ID, Platform
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN
 from .coordinator import PTDevicesConfigEntry, PTDevicesCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
-
-
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_setup_entry(
