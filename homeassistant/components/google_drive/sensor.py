@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -17,11 +16,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import slugify
 
-from .coordinator import (
-    GoogleDriveConfigEntry,
-    GoogleDriveCoordinatorData,
-    GoogleDriveDataUpdateCoordinator,
-)
+from .api import StorageQuotaData
+from .coordinator import GoogleDriveConfigEntry, GoogleDriveDataUpdateCoordinator
 from .entity import GoogleDriveEntity
 
 # Coordinator is used to centralize the data updates
@@ -32,7 +28,8 @@ PARALLEL_UPDATES = 0
 class GoogleDriveSensorEntityDescription(SensorEntityDescription):
     """Describes GoogleDrive sensor entity."""
 
-    value_fn: Callable[[GoogleDriveCoordinatorData], StateType]
+    exists_fn: Callable[[StorageQuotaData], bool] = lambda _: True
+    value_fn: Callable[[StorageQuotaData], StateType]
 
 
 SENSORS: tuple[GoogleDriveSensorEntityDescription, ...] = (
@@ -44,7 +41,7 @@ SENSORS: tuple[GoogleDriveSensorEntityDescription, ...] = (
         suggested_display_precision=0,
         device_class=SensorDeviceClass.DATA_SIZE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda data: data.storage_quota.limit,
+        value_fn=lambda data: data.limit,
     ),
     GoogleDriveSensorEntityDescription(
         key="storage_used",
@@ -54,7 +51,7 @@ SENSORS: tuple[GoogleDriveSensorEntityDescription, ...] = (
         suggested_display_precision=0,
         device_class=SensorDeviceClass.DATA_SIZE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda data: data.storage_quota.usage,
+        value_fn=lambda data: data.usage,
     ),
     GoogleDriveSensorEntityDescription(
         key="storage_used_in_drive",
@@ -64,7 +61,7 @@ SENSORS: tuple[GoogleDriveSensorEntityDescription, ...] = (
         suggested_display_precision=0,
         device_class=SensorDeviceClass.DATA_SIZE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda data: data.storage_quota.usage_in_drive,
+        value_fn=lambda data: data.usage_in_drive,
         entity_registry_enabled_default=False,
     ),
     GoogleDriveSensorEntityDescription(
@@ -75,7 +72,7 @@ SENSORS: tuple[GoogleDriveSensorEntityDescription, ...] = (
         suggested_display_precision=0,
         device_class=SensorDeviceClass.DATA_SIZE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda data: data.storage_quota.usage_in_trash,
+        value_fn=lambda data: data.usage_in_trash,
         entity_registry_enabled_default=False,
     ),
 )
@@ -89,7 +86,9 @@ async def async_setup_entry(
     """Set up GoogleDrive sensor based on a config entry."""
     coordinator = entry.runtime_data
     async_add_entities(
-        GoogleDriveSensorEntity(coordinator, description) for description in SENSORS
+        GoogleDriveSensorEntity(coordinator, description)
+        for description in SENSORS
+        if description.exists_fn(coordinator.data)
     )
 
 
@@ -111,6 +110,6 @@ class GoogleDriveSensorEntity(GoogleDriveEntity, SensorEntity):
         )
 
     @property
-    def native_value(self) -> datetime | StateType:
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

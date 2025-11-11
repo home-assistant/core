@@ -17,7 +17,7 @@ class GoogleDriveEntity(CoordinatorEntity[GoogleDriveDataUpdateCoordinator]):
         """Return device information about this Google Drive device."""
         return DeviceInfo(
             identifiers={(DOMAIN, str(self.coordinator.config_entry.unique_id))},
-            name=self.coordinator.data.email_address,
+            name=self.coordinator.email_address,
             manufacturer="Google",
             model="Google Drive",
             configuration_url=f"{DRIVE_FOLDER_URL_PREFIX}{self.coordinator.backup_folder_id}",

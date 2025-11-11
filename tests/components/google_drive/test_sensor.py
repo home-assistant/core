@@ -19,7 +19,6 @@ pytestmark = [
 ]
 
 
-@pytest.fixture
 async def setup_integration(
     hass: HomeAssistant, config_entry: MockConfigEntry, mock_api: MagicMock
 ) -> None:
@@ -32,18 +31,18 @@ async def setup_integration(
     await hass.async_block_till_done()
 
 
-@pytest.mark.usefixtures(
-    "entity_registry_enabled_by_default",
-    "setup_integration",
-)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
     config_entry: MockConfigEntry,
+    mock_api: MagicMock,
 ) -> None:
     """Test the creation and values of the Google Drive sensors."""
+    await setup_integration(hass, config_entry, mock_api)
+
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
     assert (
@@ -57,13 +56,11 @@ async def test_sensor(
     assert device_entry == snapshot
 
 
-@pytest.mark.usefixtures(
-    "entity_registry_enabled_by_default",
-    "setup_integration",
-)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_unknown_when_unlimited_plan(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    config_entry: MockConfigEntry,
     mock_api: MagicMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
@@ -78,28 +75,24 @@ async def test_sensor_unknown_when_unlimited_plan(
             }
         }
     )
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    assert (
-        entity_entry := entity_registry.async_get(
-            "sensor.testuser_domain_com_total_available_storage"
-        )
+
+    await setup_integration(hass, config_entry, mock_api)
+
+    assert not (
+        entity_registry.async_get("sensor.testuser_domain_com_total_available_storage")
     )
-    assert (state := hass.states.get(entity_entry.entity_id))
-    assert state.state == "unknown"
 
 
-@pytest.mark.usefixtures(
-    "entity_registry_enabled_by_default",
-    "setup_integration",
-)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_availability(
     hass: HomeAssistant,
     mock_api: MagicMock,
+    config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the availability handling of the Google Drive sensors."""
+    await setup_integration(hass, config_entry, mock_api)
+
     mock_api.get_user.side_effect = GoogleDriveApiError("API error")
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
