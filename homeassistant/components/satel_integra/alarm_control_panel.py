@@ -6,7 +6,7 @@ import asyncio
 from collections import OrderedDict
 import logging
 
-from satel_integra.satel_integra import AlarmState
+from satel_integra.satel_integra import AlarmState, AsyncSatel
 
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
@@ -45,9 +45,9 @@ async def async_setup_entry(
     )
 
     for subentry in partition_subentries:
-        partition_num = subentry.data[CONF_PARTITION_NUMBER]
-        zone_name = subentry.data[CONF_NAME]
-        arm_home_mode = subentry.data[CONF_ARM_HOME_MODE]
+        partition_num: int = subentry.data[CONF_PARTITION_NUMBER]
+        zone_name: str = subentry.data[CONF_NAME]
+        arm_home_mode: int = subentry.data[CONF_ARM_HOME_MODE]
 
         async_add_entities(
             [
@@ -74,7 +74,12 @@ class SatelIntegraAlarmPanel(AlarmControlPanelEntity):
     )
 
     def __init__(
-        self, controller, name, arm_home_mode, partition_id, config_entry_id
+        self,
+        controller: AsyncSatel,
+        name: str,
+        arm_home_mode: int,
+        partition_id: int,
+        config_entry_id: str,
     ) -> None:
         """Initialize the alarm panel."""
         self._attr_name = name
