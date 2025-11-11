@@ -24,3 +24,7 @@ disarmed:
   target:
     entity:
       domain: alarm_control_panel
+triggered:
+  target:
+    entity:
+      domain: alarm_control_panel

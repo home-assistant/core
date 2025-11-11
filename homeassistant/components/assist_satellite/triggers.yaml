@@ -2,3 +2,8 @@ listening:
   target:
     entity:
       domain: assist_satellite
+
+processing:
+  target:
+    entity:
+      domain: assist_satellite

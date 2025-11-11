@@ -160,6 +160,11 @@
       "description": "Triggers when an alarm is disarmed.",
       "description_configured": "Triggers when an alarm is disarmed",
       "name": "When an alarm is disarmed"
+    },
+    "triggered": {
+      "description": "Triggers when an alarm is triggered.",
+      "description_configured": "Triggers when an alarm is triggered",
+      "name": "When an alarm is triggered"
     }
   }
 }
