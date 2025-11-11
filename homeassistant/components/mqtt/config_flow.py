@@ -479,6 +479,8 @@ USER_DOCUMENTATION_URL = "https://www.home-assistant.io/"
 
 INTEGRATION_URL = f"{USER_DOCUMENTATION_URL}integrations/{DOMAIN}/"
 TEMPLATING_URL = f"{USER_DOCUMENTATION_URL}docs/configuration/templating/"
+COMMAND_TEMPLATING_URL = f"{TEMPLATING_URL}#using-command-templates-with-mqtt"
+VALUE_TEMPLATING_URL = f"{TEMPLATING_URL}#using-value-templates-with-mqtt"
 AVAILABLE_STATE_CLASSES_URL = (
     f"{DEVELOPER_DOCUMENTATION_URL}docs/core/entity/sensor/#available-state-classes"
 )
@@ -488,7 +490,8 @@ REGISTRY_PROPERTIES_URL = (
 )
 
 TRANSLATION_DESCRIPTION_PLACEHOLDERS = {
-    "templating_url": TEMPLATING_URL,
+    "command_templating_url": COMMAND_TEMPLATING_URL,
+    "value_templating_url": VALUE_TEMPLATING_URL,
     "available_state_classes_url": AVAILABLE_STATE_CLASSES_URL,
     "naming_entities_url": NAMING_ENTITIES_URL,
     "registry_properties_url": REGISTRY_PROPERTIES_URL,
@@ -3812,9 +3815,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 try_connection,
                 new_entry_data,
             ):
-                return self.async_update_reload_and_abort(
-                    reauth_entry, data=new_entry_data
-                )
+                return self.async_update_and_abort(reauth_entry, data=new_entry_data)
 
             errors["base"] = "invalid_auth"
 
@@ -3860,7 +3861,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
             if can_connect:
                 if is_reconfigure:
-                    return self.async_update_reload_and_abort(
+                    return self.async_update_and_abort(
                         reconfigure_entry,
                         data=validated_user_input,
                     )

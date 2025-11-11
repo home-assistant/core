@@ -296,7 +296,7 @@ class ImprovBLEConfigFlow(ConfigFlow, domain=DOMAIN):
     @asynccontextmanager
     async def _async_provision_context(
         self, ble_mac: str
-    ) -> AsyncIterator[asyncio.Future[str | None]]:
+    ) -> AsyncIterator[asyncio.Future[str]]:
         """Context manager to register and cleanup provisioning future."""
         future = self.hass.loop.create_future()
         provisioning_futures = async_get_provisioning_futures(self.hass)

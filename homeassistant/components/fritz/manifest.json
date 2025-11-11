@@ -5,6 +5,7 @@
   "config_flow": true,
   "dependencies": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/fritz",
+  "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["fritzconnection"],
   "requirements": ["fritzconnection[qr]==1.15.0", "xmltodict==0.13.0"],
