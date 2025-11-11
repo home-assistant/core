@@ -35,7 +35,7 @@ async def async_setup_entry(
     )
 
 
-class SENZClimate(CoordinatorEntity, ClimateEntity):
+class SENZClimate(CoordinatorEntity[SENZDataUpdateCoordinator], ClimateEntity):
     """Representation of a SENZ climate entity."""
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
