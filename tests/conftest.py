@@ -18,7 +18,7 @@ import sqlite3
 import ssl
 import sys
 import threading
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, Self, cast
 from unittest.mock import AsyncMock, MagicMock, Mock, _patch, patch
 
 from aiohttp import client
@@ -179,12 +179,12 @@ def pytest_configure(config: pytest.Config) -> None:
 class HASocketBlockedError(pytest_socket.SocketBlockedError):
     """SocketBlockedError variant which counts instances."""
 
-    instances = 0
+    instances: list[Self] = []
 
     def __init__(self, *_args, **_kwargs) -> None:
         """Initialize HASocketBlockedError and increment instance count."""
         super().__init__(*_args, **_kwargs)
-        self.__class__.instances += 1
+        self.__class__.instances.append(self)
 
 
 def pytest_runtest_setup() -> None:
@@ -426,9 +426,13 @@ def verify_cleanup(
     try:
         # Verify no socket connections were attempted
         assert not HASocketBlockedError.instances, "the test opens sockets"
+    except AssertionError:
+        for instance in HASocketBlockedError.instances:
+            _LOGGER.exception("Socket opened during test", exc_info=instance)
+        raise
     finally:
         # Reset socket connection instance count to not break subsequent tests
-        HASocketBlockedError.instances = 0
+        HASocketBlockedError.instances = []
 
 
 @pytest.fixture(autouse=True)
