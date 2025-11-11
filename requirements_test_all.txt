@@ -303,7 +303,7 @@ aiomealie==1.1.0
 aiomodernforms==0.1.8
 
 # homeassistant.components.yamaha_musiccast
-aiomusiccast==0.14.8
+aiomusiccast==0.15.0
 
 # homeassistant.components.nanoleaf
 aionanoleaf==0.2.1
@@ -1709,7 +1709,7 @@ pyhaversion==22.8.0
 pyheos==1.0.6
 
 # homeassistant.components.hive
-pyhive-integration==1.0.6
+pyhive-integration==1.0.7
 
 # homeassistant.components.homematic
 pyhomematic==0.1.77
