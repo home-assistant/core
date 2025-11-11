@@ -1395,7 +1395,7 @@ loqedAPI==2.1.10
 luftdaten==0.7.4
 
 # homeassistant.components.lunatone
-lunatone-rest-api-client==0.5.6
+lunatone-rest-api-client==0.5.7
 
 # homeassistant.components.lupusec
 lupupy==0.3.2
