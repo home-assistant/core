@@ -32,6 +32,12 @@
       },
       "yesterday_consumption": {
         "name": "Yesterday's usage"
+      },
+      "yesterday_sewerage_cost": {
+        "name": "Yesterday's sewerage cost"
+      },
+      "yesterday_water_cost": {
+        "name": "Yesterday's water cost"
       }
     }
   },

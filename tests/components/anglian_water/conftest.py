@@ -35,8 +35,9 @@ def mock_smart_meter() -> SmartMeter:
     mock = AsyncMock(spec=SmartMeter)
     mock.serial_number = "TESTSN"
     mock.get_yesterday_consumption = 50
-    mock.latest_consumption = 50
     mock.latest_read = 50
+    mock.yesterday_water_cost = 0.5
+    mock.yesterday_sewerage_cost = 0.5
     return mock
 
 

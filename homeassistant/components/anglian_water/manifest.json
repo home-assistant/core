@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/anglian_water",
   "iot_class": "cloud_polling",
   "quality_scale": "bronze",
-  "requirements": ["pyanglianwater==2.0.0"]
+  "requirements": ["pyanglianwater==2.0.1"]
 }
