@@ -1,9 +1,11 @@
 """The tests for the Photo Frame image platform."""
 
+from http import HTTPStatus
 from pathlib import Path
 from unittest.mock import patch
 
-from freezegun.api import FrozenDateTimeFactory
+from freezegun import freeze_time
+import pytest
 
 from homeassistant.components.media_player import BrowseMedia, MediaClass
 from homeassistant.components.media_source import BrowseMediaSource, PlayMedia
@@ -11,30 +13,106 @@ from homeassistant.components.photo_frame.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+from tests.typing import ClientSessionGenerator
 
 
 async def test_image(
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test for source entity device for Photo Frame."""
-    freezer.move_to("2025-11-08T12:00:00.000")
-
-    config_entry = MockConfigEntry(
-        data={
-            "name": "Random Image",
-            "media": {
-                "media_content_id": "media-source://mymedia",
-                "media_content_type": "",
+    with freeze_time("2025-11-08T12:00:00.000"):
+        config_entry = MockConfigEntry(
+            data={
+                "name": "Random Image",
+                "media": {
+                    "media_content_id": "media-source://mymedia",
+                    "media_content_type": "",
+                },
             },
-        },
-        domain=DOMAIN,
-        title="Random Image",
-    )
+            domain=DOMAIN,
+            title="Random Image",
+        )
 
-    with (
-        patch(
-            "homeassistant.components.media_source.async_browse_media",
+        with (
+            patch(
+                "homeassistant.components.photo_frame.image.async_browse_media",
+                return_value=BrowseMediaSource(
+                    domain=None,
+                    identifier=None,
+                    media_class="",
+                    media_content_type="",
+                    title="",
+                    can_play=False,
+                    can_expand=True,
+                    children=[
+                        BrowseMedia(
+                            media_class=MediaClass.MUSIC,
+                            media_content_id="media-source://mymedia/music",
+                            media_content_type="audio/mp3",
+                            title="a music track",
+                            can_play=True,
+                            can_expand=False,
+                        ),
+                        BrowseMedia(
+                            media_class=MediaClass.IMAGE,
+                            media_content_id="media-source://mymedia/photo",
+                            media_content_type="image/png",
+                            title="a picture",
+                            can_play=True,
+                            can_expand=False,
+                        ),
+                    ],
+                ),
+            ),
+            patch(
+                "homeassistant.components.photo_frame.image.async_resolve_media",
+                return_value=PlayMedia(
+                    url="fake",
+                    mime_type="png",
+                    path=Path(__file__).parent / "fake_image",
+                ),
+            ),
+        ):
+            config_entry.add_to_hass(hass)
+            assert await hass.config_entries.async_setup(config_entry.entry_id)
+            await hass.async_block_till_done()
+
+    state = hass.states.get("image.random_image")
+
+    assert state and state.state == "2025-11-08T12:00:00+00:00"
+
+    client = await hass_client()
+
+    resp = await client.get("/api/image_proxy/image.random_image")
+    assert resp.status == HTTPStatus.OK
+    image_path = Path(__file__).parent / "fake_image"
+    expected_data = await hass.async_add_executor_job(image_path.read_bytes)
+    body = await resp.read()
+    assert body == expected_data
+
+
+async def test_no_images(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test when there are no images in the media folder."""
+    with freeze_time("2025-11-08T12:00:00.000"):
+        config_entry = MockConfigEntry(
+            data={
+                "name": "Random No Image",
+                "media": {
+                    "media_content_id": "media-source://mymedia/nopictures",
+                    "media_content_type": "",
+                },
+            },
+            domain=DOMAIN,
+            title="Random No Image",
+        )
+
+        with patch(
+            "homeassistant.components.photo_frame.image.async_browse_media",
             return_value=BrowseMediaSource(
                 domain=None,
                 identifier=None,
@@ -43,37 +121,24 @@ async def test_image(
                 title="",
                 can_play=False,
                 can_expand=True,
-                children=[
-                    BrowseMedia(
-                        media_class=MediaClass.MUSIC,
-                        media_content_id="media-source://mymedia/music",
-                        media_content_type="audio/mp3",
-                        title="a music track",
-                        can_play=True,
-                        can_expand=False,
-                    ),
-                    BrowseMedia(
-                        media_class=MediaClass.IMAGE,
-                        media_content_id="media-source://mymedia/photo",
-                        media_content_type="image/png",
-                        title="a picture",
-                        can_play=True,
-                        can_expand=False,
-                    ),
-                ],
+                children=[],
             ),
-        ),
-        patch(
-            "homeassistant.components.media_source.async_resolve_media",
-            return_value=PlayMedia(
-                url="fake", mime_type="png", path=Path("/local/whatever")
-            ),
-        ),
-    ):
-        config_entry.add_to_hass(hass)
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+        ):
+            config_entry.add_to_hass(hass)
+            assert await hass.config_entries.async_setup(config_entry.entry_id)
+            await hass.async_block_till_done()
 
-    state = hass.states.get("image.random_image")
+    state = hass.states.get("image.random_no_image")
 
     assert state and state.state == "2025-11-08T12:00:00+00:00"
+
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (
+        "image.random_no_image: No valid images in media-source://mymedia/nopictures"
+        in caplog.text
+    )
+
+    client = await hass_client()
+    resp = await client.get("/api/image_proxy/image.random_no_image")
+    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
