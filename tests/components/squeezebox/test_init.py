@@ -26,6 +26,13 @@ def squeezebox_media_player_platform():
         yield
 
 
+@pytest.fixture(autouse=True)
+def mock_discovery():
+    """Mock discovery of squeezebox players."""
+    with patch("homeassistant.components.squeezebox.media_player.async_discover"):
+        yield
+
+
 async def test_init_api_fail(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
