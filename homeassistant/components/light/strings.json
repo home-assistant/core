@@ -36,6 +36,30 @@
     "field_xy_color_name": "XY-color",
     "section_advanced_fields_name": "Advanced options"
   },
+  "conditions": {
+    "is_off": {
+      "description": "Test if a light is off.",
+      "description_configured": "Test if a light is off",
+      "fields": {
+        "behavior": {
+          "description": "How the state should match on the targeted lights.",
+          "name": "Behavior"
+        }
+      },
+      "name": "If a light is off"
+    },
+    "is_on": {
+      "description": "Test if a light is on.",
+      "description_configured": "Test if a light is on",
+      "fields": {
+        "behavior": {
+          "description": "How the state should match on the targeted lights.",
+          "name": "Behavior"
+        }
+      },
+      "name": "If a light is on"
+    }
+  },
   "device_automation": {
     "action_type": {
       "brightness_decrease": "Decrease {entity_name} brightness",
@@ -132,13 +156,6 @@
     }
   },
   "selector": {
-    "behavior": {
-      "options": {
-        "any": "Any",
-        "first": "First",
-        "last": "Last"
-      }
-    },
     "color_name": {
       "options": {
         "aliceblue": "Alice blue",
@@ -291,6 +308,12 @@
         "yellowgreen": "Yellow green"
       }
     },
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    },
     "flash": {
       "options": {
         "long": "Long",
@@ -301,6 +324,13 @@
       "options": {
         "off": "[%key:common::state::off%]",
         "on": "[%key:common::state::on%]"
+      }
+    },
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
       }
     }
   },

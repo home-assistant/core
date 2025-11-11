@@ -1,4 +1,4 @@
-turned_on:
+is_off:
   target:
     entity:
       domain: light
@@ -8,13 +8,11 @@ turned_on:
       default: any
       selector:
         select:
+          translation_key: condition_behavior
           options:
-            - first
-            - last
+            - all
             - any
-          translation_key: behavior
-
-turned_off:
+is_on:
   target:
     entity:
       domain: light
@@ -24,8 +22,7 @@ turned_off:
       default: any
       selector:
         select:
-          translation_key: trigger_behavior
+          translation_key: condition_behavior
           options:
-            - first
-            - last
+            - all
             - any

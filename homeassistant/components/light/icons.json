@@ -1,4 +1,12 @@
 {
+  "conditions": {
+    "is_off": {
+      "condition": "mdi:lightbulb-off"
+    },
+    "is_on": {
+      "condition": "mdi:lightbulb-on"
+    }
+  },
   "entity_component": {
     "_": {
       "default": "mdi:lightbulb",
