@@ -166,7 +166,7 @@ async def async_setup_entry(
     """Set up PTDevices sensors from config entries."""
     coordinator: PTDevicesCoordinator = config_entry.runtime_data
 
-    await coordinator.async_refresh()
+    await coordinator.async_config_entry_first_refresh()
 
     # Get the dict and flatten it
     body: dict[str, Any] = _format_dict(coordinator.data["body"])
