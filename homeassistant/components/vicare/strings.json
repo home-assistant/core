@@ -213,7 +213,18 @@
         "name": "Compressor hours load class 5"
       },
       "compressor_phase": {
-        "name": "Compressor phase"
+        "name": "Compressor phase",
+        "state": {
+          "cooling": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::cooling%]",
+          "defrost": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::defrosting%]",
+          "heating": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::heating%]",
+          "off": "[%key:common::state::off%]",
+          "passive_defrost": "Passive defrosting",
+          "pause": "[%key:common::state::idle%]",
+          "preparing": "Preparing",
+          "preparing_defrost": "Preparing defrost",
+          "ready": "[%key:common::state::idle%]"
+        }
       },
       "compressor_starts": {
         "name": "Compressor starts"

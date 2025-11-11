@@ -58,6 +58,7 @@ from .utils import (
     get_compressors,
     get_device_serial,
     is_supported,
+    normalize_state,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -1086,7 +1087,7 @@ COMPRESSOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
     ViCareSensorEntityDescription(
         key="compressor_phase",
         translation_key="compressor_phase",
-        value_getter=lambda api: api.getPhase(),
+        value_getter=lambda api: normalize_state(api.getPhase()),
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
