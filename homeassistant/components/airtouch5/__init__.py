@@ -73,56 +73,67 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         config_entry.version,
         config_entry.minor_version,
     )
-    if config_entry.version > 1:
-        # This means the user has downgraded from a future version
-        return False
-    host = config_entry.data[CONF_HOST]
+    if config_entry.version == 1:
+        host = config_entry.data[CONF_HOST]
 
-    airtouchDiscovery_instance = AirtouchDiscovery()
-    await airtouchDiscovery_instance.establish_server()
-    airtouch_devices = await airtouchDiscovery_instance.discover(host)
+        airtouchDiscovery_instance = AirtouchDiscovery()
+        await airtouchDiscovery_instance.establish_server()
+        airtouch_devices = await airtouchDiscovery_instance.discover(host)
 
-    if airtouch_devices is not None:
-        airtouch_device = airtouch_devices[0]
-        new_unique_id = str(airtouch_device.system_id)
+        if airtouch_devices is not None:
+            airtouch_device = airtouch_devices[0]
+            new_unique_id = str(airtouch_device.system_id)
 
-        hass.config_entries.async_update_entry(
-            config_entry,
-            unique_id=new_unique_id,
-        )
-        # Migrate entity unique IDs
+            hass.config_entries.async_update_entry(
+                config_entry,
+                unique_id=new_unique_id,
+            )
+            # Migrate entity unique IDs
 
-        ent_reg = er.async_get(hass)
-        for entity_id, entity in list(ent_reg.entities.items()):
-            if entity.config_entry_id != config_entry.entry_id:
-                continue
-            _LOGGER.debug("Migrating entity_id: %s", entity_id)
+            ent_reg = er.async_get(hass)
+            for entity_id, entity in list(ent_reg.entities.items()):
+                if entity.config_entry_id != config_entry.entry_id:
+                    continue
+                _LOGGER.debug("Migrating entity_id: %s", entity_id)
 
-            old_unique_id = entity.unique_id
+                old_unique_id = entity.unique_id
 
-            # Example transformation:
-            # old_unique_id: "device_ABC_sensor_temp"
-            # new_unique_id: "ABC_temp"
-            if old_unique_id.startswith("ac_"):
-                new_unique_id = f"ac_{airtouch_device.system_id}"
-                ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
+                if old_unique_id.startswith("ac_"):
+                    new_unique_id = f"ac_{airtouch_device.system_id}"
+                    ent_reg.async_update_entity(
+                        entity_id,
+                        new_unique_id=new_unique_id,
+                        name=f"AC {airtouch_device.name}",
+                    )
 
-            elif old_unique_id.startswith("zone_"):
-                new_unique_id = old_unique_id + f"_{airtouch_device.system_id}"
-                ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
-            else:
-                _LOGGER.warning(
-                    "Unknown unique_id format during migration: %s", old_unique_id
-                )
-                return False
-        # Migrate device info
-        new_data = config_entry.data.copy()
-        new_data["device_id"] = str(airtouch_device.system_id)
-        new_data["name"] = airtouch_device.name
+                elif old_unique_id.startswith("zone_"):
+                    if old_unique_id.endswith("_open_percentage"):
+                        zone_number = old_unique_id.split("_")[1]
+                        new_unique_id = (
+                            f"{airtouch_device.system_id}_{zone_number}_open_percentage"
+                        )
+                    else:
+                        zone_number = old_unique_id.split("_")[1]
+                        new_unique_id = (
+                            f"zone_{airtouch_device.system_id}_{zone_number}"
+                        )
+                    ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
+                else:
+                    _LOGGER.warning(
+                        "Unknown unique_id format during migration: %s", old_unique_id
+                    )
+                    return False
+            # Migrate device info
+            new_data = config_entry.data.copy()
+            new_data["name"] = airtouch_device.name
+            new_data["model"] = airtouch_device.model
+            new_data["console_id"] = airtouch_device.console_id
+            new_data["system_id"] = airtouch_device.system_id
+            new_data["host"] = airtouch_device.ip
 
-        hass.config_entries.async_update_entry(
-            config_entry, data=new_data, minor_version=3, version=1
-        )
+            hass.config_entries.async_update_entry(
+                config_entry, data=new_data, minor_version=0, version=2
+            )
 
     _LOGGER.info(
         "Migration to configuration version %s.%s successful",
