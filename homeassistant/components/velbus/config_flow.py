@@ -223,8 +223,13 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
 
 
 def save_uploaded_vlp_file(hass: HomeAssistant, uploaded_file_id: str) -> str:
-    """Validate the uploaded file and move it to the storage directory."""
+    """Validate the uploaded file and move it to the storage directory.
+
+    Blocking function needs to be called in executor.
+    """
+
     with process_uploaded_file(hass, uploaded_file_id) as file:
         dest_path = Path(hass.config.path(STORAGE_PATH.format(key=uploaded_file_id)))
+        dest_path.parent.mkdir(parents=True, exist_ok=True)
         shutil.move(file, dest_path)
         return str(dest_path)
