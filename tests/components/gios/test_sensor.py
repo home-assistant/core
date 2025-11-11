@@ -64,9 +64,7 @@ async def test_availability_api_error(
     assert state
     assert state.state == "4"
 
-    mock_gios.create.return_value.async_update.side_effect = ApiError(
-        "Unexpected error"
-    )
+    mock_gios.async_update.side_effect = ApiError("Unexpected error")
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -83,8 +81,8 @@ async def test_availability_api_error(
     assert state
     assert state.state == STATE_UNAVAILABLE
 
-    mock_gios.create.return_value.async_update.side_effect = None
-    gios_sensors: GiosSensors = mock_gios.create.return_value.async_update.return_value
+    mock_gios.async_update.side_effect = None
+    gios_sensors: GiosSensors = mock_gios.async_update.return_value
     old_pm25 = gios_sensors.pm25
     old_aqi = gios_sensors.aqi
     gios_sensors.pm25 = None

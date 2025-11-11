@@ -44,9 +44,7 @@ async def test_form_with_api_error(hass: HomeAssistant, mock_gios: MagicMock) ->
 
 async def test_invalid_sensor_data(hass: HomeAssistant, mock_gios: MagicMock) -> None:
     """Test that errors are shown when sensor data is invalid."""
-    mock_gios.create.return_value.async_update.side_effect = InvalidSensorsDataError(
-        "Invalid data"
-    )
+    mock_gios.async_update.side_effect = InvalidSensorsDataError("Invalid data")
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -58,7 +56,7 @@ async def test_invalid_sensor_data(hass: HomeAssistant, mock_gios: MagicMock) ->
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {CONF_STATION_ID: "invalid_sensors_data"}
-    mock_gios.create.return_value.async_update.side_effect = None
+    mock_gios.async_update.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=CONFIG
     )
@@ -68,7 +66,7 @@ async def test_invalid_sensor_data(hass: HomeAssistant, mock_gios: MagicMock) ->
 
 async def test_cannot_connect(hass: HomeAssistant, mock_gios: MagicMock) -> None:
     """Test that errors are shown when cannot fetch sensors data from GIOS server."""
-    mock_gios.create.return_value.async_update.side_effect = ApiError("error")
+    mock_gios.async_update.side_effect = ApiError("error")
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -81,7 +79,7 @@ async def test_cannot_connect(hass: HomeAssistant, mock_gios: MagicMock) -> None
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
-    mock_gios.create.return_value.async_update.side_effect = None
+    mock_gios.async_update.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=CONFIG
     )
