@@ -257,6 +257,168 @@ async def test_end_time_before_start_time(
     assert exc_info.value.translation_key == "end_time_before_start_time"
 
 
+async def test_string_time_formats(
+    hass: HomeAssistant,
+    mock_bsblan: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test service with string time formats."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, "00:80:41:19:69:90")}
+    )
+    assert device_entry is not None
+
+    # Test with string time formats
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_HOT_WATER_SCHEDULE,
+        {
+            "device_id": device_entry.id,
+            "monday_slots": [
+                {"start_time": "06:00:00", "end_time": "08:00:00"},  # With seconds
+            ],
+            "tuesday_slots": [
+                {"start_time": "17:00", "end_time": "21:00"},  # Without seconds
+            ],
+        },
+        blocking=True,
+    )
+
+    # Verify the API was called
+    assert mock_bsblan.set_hot_water.called
+    call_args = mock_bsblan.set_hot_water.call_args
+    dhw_programs = call_args.kwargs["dhw_time_programs"]
+
+    # Should strip seconds from both formats
+    assert dhw_programs.monday == "06:00-08:00"
+    assert dhw_programs.tuesday == "17:00-21:00"
+
+
+async def test_invalid_time_format(
+    hass: HomeAssistant,
+    mock_bsblan: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test service with invalid time format in string."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, "00:80:41:19:69:90")}
+    )
+    assert device_entry is not None
+
+    # Test with invalid start_time string format
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_HOT_WATER_SCHEDULE,
+            {
+                "device_id": device_entry.id,
+                "monday_slots": [
+                    {"start_time": "invalid", "end_time": "08:00"},
+                ],
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "invalid_time_format"
+
+    # Test with invalid end_time string format
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_HOT_WATER_SCHEDULE,
+            {
+                "device_id": device_entry.id,
+                "tuesday_slots": [
+                    {"start_time": "06:00", "end_time": "not-a-time"},
+                ],
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "invalid_time_format"
+
+
+async def test_string_time_validation(
+    hass: HomeAssistant,
+    mock_bsblan: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that end time validation works with string times."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, "00:80:41:19:69:90")}
+    )
+    assert device_entry is not None
+
+    # Test with string format where end is before start
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_HOT_WATER_SCHEDULE,
+            {
+                "device_id": device_entry.id,
+                "wednesday_slots": [
+                    {"start_time": "13:00", "end_time": "11:00"},  # Invalid!
+                ],
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "end_time_before_start_time"
+
+
+async def test_non_standard_time_types(
+    hass: HomeAssistant,
+    mock_bsblan: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test service with non-standard time types (edge case for coverage)."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, "00:80:41:19:69:90")}
+    )
+    assert device_entry is not None
+
+    # Test with integer time values (shouldn't happen but need coverage)
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_HOT_WATER_SCHEDULE,
+        {
+            "device_id": device_entry.id,
+            "monday_slots": [
+                {"start_time": 600, "end_time": 800},  # Non-standard types
+            ],
+        },
+        blocking=True,
+    )
+
+    # Verify the API was called
+    assert mock_bsblan.set_hot_water.called
+    call_args = mock_bsblan.set_hot_water.call_args
+    dhw_programs = call_args.kwargs["dhw_time_programs"]
+
+    # Should convert to strings
+    assert dhw_programs.monday == "600-800"
+
+
 async def test_async_setup_services(hass: HomeAssistant) -> None:
     """Test service registration."""
     # Verify service doesn't exist initially
