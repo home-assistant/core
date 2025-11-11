@@ -418,6 +418,7 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
     "extra_state_attributes",
     "force_update",
     "icon",
+    "included_unique_ids",
     "name",
     "should_poll",
     "state",
@@ -1648,16 +1649,8 @@ class Entity(
 
         This is called just before the entity state is written.
         """
-        if (
-            self.__init_track_included_entities
-            and hasattr(self, "_attr_included_unique_ids")
-            and self._attr_included_unique_ids == self.included_unique_ids
-        ):
+        if not self.included_unique_ids:
             return
-
-        # Clear cached property if exists
-        if hasattr(self, "included_unique_ids"):
-            del self.included_unique_ids
 
         entity_registry = er.async_get(self.hass)
         assert self.entity_id is not None
