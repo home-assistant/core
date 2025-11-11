@@ -46,12 +46,6 @@ async def async_setup_entry(
         """Add Z-Wave event entity."""
         driver = client.driver
         assert driver is not None  # Driver is ready before platforms are loaded.
-
-        assert isinstance(info, NewZwaveDiscoveryInfo)
-        assert isinstance(
-            info.entity_description, ValueNotificationZWaveJSEntityDescription
-        )
-
         entities: list[ZWaveBaseEntity] = [
             info.entity_class(config_entry, driver, info)
         ]
