@@ -114,7 +114,6 @@
       "vid": "10C4"
     }
   ],
-  "usb_abort_discovery_on_unplug": true,
   "zeroconf": [
     {
       "name": "tube*",

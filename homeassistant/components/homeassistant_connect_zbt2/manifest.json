@@ -20,6 +20,5 @@
       "pid": "831A",
       "vid": "303A"
     }
-  ],
-  "usb_abort_discovery_on_unplug": true
+  ]
 }
