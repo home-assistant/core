@@ -136,5 +136,22 @@
       "name": "Toggle tilt"
     }
   },
-  "title": "Cover"
+  "title": "Cover",
+  "triggers": {
+    "opens": {
+      "description": "Triggers when a cover opens.",
+      "description_configured": "Triggers when a cover opens",
+      "fields": {
+        "fully_opened": {
+          "description": "Only trigger when the cover is fully opened (position at 100%).",
+          "name": "Fully opened"
+        },
+        "device_class": {
+          "description": "The device classes to trigger on. If empty, triggers on all device classes.",
+          "name": "Device classes"
+        }
+      },
+      "name": "When a cover opens"
+    }
+  }
 }

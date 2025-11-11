@@ -1,0 +1,20 @@
+opens:
+  target:
+    entity:
+      domain: cover
+  fields:
+    fully_opened:
+      required: false
+      default: false
+      selector:
+        boolean:
+    device_class:
+      required: false
+      default: []
+      selector:
+        select:
+          multiple: true
+          options:
+            - curtain
+            - shutter
+            - blind
