@@ -156,8 +156,10 @@ class HyperionCamera(Camera):
         """Update Hyperion components."""
         if not img:
             return
-        # Prefer KEY_DATA (>= 2.1.1); fall back to KEY_RESULT for backward compatibility
-        img_data = (img.get(KEY_DATA) or img.get(KEY_RESULT, {})).get(KEY_IMAGE)
+        # Prefer KEY_DATA (Hyperion server >= 2.1.1); fall back to KEY_RESULT for older server versions
+        img_data = img.get(KEY_DATA, {}).get(KEY_IMAGE) or img.get(KEY_RESULT, {}).get(
+            KEY_IMAGE
+        )
         if not img_data or not img_data.startswith(IMAGE_STREAM_JPG_SENTINEL):
             return
         async with self._image_cond:
