@@ -32,13 +32,13 @@ PARALLEL_UPDATES = 1
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config: VeluxConfigEntry,
+    config_entry: VeluxConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up cover(s) for Velux platform."""
-    pyvlx = config.runtime_data
+    pyvlx = config_entry.runtime_data
     async_add_entities(
-        VeluxCover(node, config.entry_id)
+        VeluxCover(node, config_entry.entry_id)
         for node in pyvlx.nodes
         if isinstance(node, OpeningDevice)
     )

@@ -6,6 +6,7 @@ DOMAIN = "anthropic"
 LOGGER = logging.getLogger(__package__)
 
 DEFAULT_CONVERSATION_NAME = "Claude conversation"
+DEFAULT_AI_TASK_NAME = "Claude AI Task"
 
 CONF_RECOMMENDED = "recommended"
 CONF_PROMPT = "prompt"
