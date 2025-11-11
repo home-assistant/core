@@ -50,3 +50,29 @@ def move_top_level_schema_fields_to_options(
             options[key] = config.pop(key)
 
     return config
+
+
+def move_options_fields_to_top_level(
+    config: ConfigType, base_schema: vol.Schema
+) -> ConfigType:
+    """Move options fields to top-level.
+
+    This function is used to provide backwards compatibility for new-style configs.
+    If options field does not exist or is not a dict, the config is returned as-is.
+    """
+    options = config.get(CONF_OPTIONS)
+
+    if not isinstance(options, dict):
+        return config
+
+    new_config: ConfigType = config.copy()
+    new_config.pop(CONF_OPTIONS)
+
+    try:
+        new_config = base_schema(new_config)
+    except vol.Invalid:
+        return config
+
+    new_config.update(options)
+
+    return new_config

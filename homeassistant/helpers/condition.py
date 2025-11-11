@@ -64,7 +64,11 @@ from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.yaml import load_yaml_dict
 
 from . import config_validation as cv, entity_registry as er, selector
-from .automation import get_absolute_description_key, get_relative_description_key
+from .automation import (
+    get_absolute_description_key,
+    get_relative_description_key,
+    move_options_fields_to_top_level,
+)
 from .integration_platform import async_process_integration_platforms
 from .selector import TargetSelector
 from .template import Template, render_complex
@@ -202,10 +206,8 @@ async def _register_condition_platform(
             _LOGGER.exception("Error while notifying condition platform listener")
 
 
-_CONDITION_SCHEMA = vol.Schema(
+_CONDITION_SCHEMA = cv.CONDITION_BASE_FULL_SCHEMA.extend(
     {
-        **cv.CONDITION_BASE_SCHEMA,
-        vol.Required(CONF_CONDITION): str,
         vol.Optional(CONF_OPTIONS): object,
         vol.Optional(CONF_TARGET): cv.TARGET_FIELDS,
     }
@@ -1043,6 +1045,8 @@ async def async_validate_condition_config(
         if not (condition_class := condition_descriptors.get(relative_condition_key)):
             raise vol.Invalid(f"Invalid condition '{condition_key}' specified")
         return await condition_class.async_validate_complete_config(hass, config)
+
+    config = move_options_fields_to_top_level(config, cv.CONDITION_BASE_FULL_SCHEMA)
 
     if condition_key in ("numeric_state", "state"):
         validator = cast(

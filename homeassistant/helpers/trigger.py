@@ -46,7 +46,11 @@ from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.yaml import load_yaml_dict
 
 from . import config_validation as cv, selector
-from .automation import get_absolute_description_key, get_relative_description_key
+from .automation import (
+    get_absolute_description_key,
+    get_relative_description_key,
+    move_options_fields_to_top_level,
+)
 from .integration_platform import async_process_integration_platforms
 from .selector import TargetSelector
 from .template import Template
@@ -497,8 +501,10 @@ async def async_validate_trigger_config(
                 raise vol.Invalid(f"Invalid trigger '{trigger_key}' specified")
             conf = await trigger.async_validate_complete_config(hass, conf)
         elif hasattr(platform, "async_validate_trigger_config"):
+            conf = move_options_fields_to_top_level(conf, cv.TRIGGER_BASE_SCHEMA)
             conf = await platform.async_validate_trigger_config(hass, conf)
         else:
+            conf = move_options_fields_to_top_level(conf, cv.TRIGGER_BASE_SCHEMA)
             conf = platform.TRIGGER_SCHEMA(conf)
         config.append(conf)
     return config

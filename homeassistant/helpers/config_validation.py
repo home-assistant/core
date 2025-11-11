@@ -1532,6 +1532,13 @@ CONDITION_BASE_SCHEMA: VolDictType = {
     vol.Optional(CONF_ENABLED): vol.Any(boolean, template),
 }
 
+CONDITION_BASE_FULL_SCHEMA = vol.Schema(
+    {
+        **CONDITION_BASE_SCHEMA,
+        vol.Required(CONF_CONDITION): str,
+    }
+)
+
 NUMERIC_STATE_CONDITION_SCHEMA = vol.All(
     vol.Schema(
         {

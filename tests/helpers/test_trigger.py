@@ -18,7 +18,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import trigger
+from homeassistant.helpers import config_validation as cv, trigger
 from homeassistant.helpers.automation import move_top_level_schema_fields_to_options
 from homeassistant.helpers.trigger import (
     DATA_PLUGGABLE_ACTIONS,
@@ -605,6 +605,35 @@ async def test_platform_migrate_trigger(hass: HomeAssistant) -> None:
     assert await async_validate_trigger_config(hass, config_2) == config_4
     assert await async_validate_trigger_config(hass, config_3) == config_3
     assert await async_validate_trigger_config(hass, config_4) == config_4
+
+
+async def test_platform_backwards_compatibility_for_new_style_configs(
+    hass: HomeAssistant,
+) -> None:
+    """Test backwards compatibility for old-style triggers with new-style configs."""
+
+    class MockTriggerPlatform:
+        """Mock trigger platform."""
+
+        TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
+            {
+                vol.Required("option_1"): str,
+                vol.Optional("option_2"): int,
+            }
+        )
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.trigger", MockTriggerPlatform())
+
+    config_old_style = [{"platform": "test", "option_1": "value_1", "option_2": 2}]
+    result = await async_validate_trigger_config(hass, config_old_style)
+    assert result == config_old_style
+
+    config_new_style = [
+        {"platform": "test", "options": {"option_1": "value_1", "option_2": 2}}
+    ]
+    result = await async_validate_trigger_config(hass, config_new_style)
+    assert result == config_old_style
 
 
 @pytest.mark.parametrize(
