@@ -98,14 +98,23 @@
     }
   },
   "exceptions": {
+    "account_not_configured": {
+      "message": "The Xbox account is not configured."
+    },
+    "media_not_found": {
+      "message": "The requested media could not be found."
+    },
     "oauth2_implementation_unavailable": {
-      "message": "OAuth2 implementation temporarily unavailable, will retry"
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     },
     "request_exception": {
       "message": "Failed to connect to Xbox Network"
     },
     "timeout_exception": {
       "message": "Failed to connect to Xbox Network due to a connection timeout"
+    },
+    "xbox_not_configured": {
+      "message": "The Xbox integration is not configured."
     }
   }
 }
