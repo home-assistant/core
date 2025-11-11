@@ -526,6 +526,9 @@ class Entity(
     __capabilities_updated_at_reported: bool = False
     __remove_future: asyncio.Future[None] | None = None
 
+    # A list of included entity IDs in case the entity represents a group
+    _included_entities: list[str] | None = None
+
     # Entity Properties
     _attr_assumed_state: bool = False
     _attr_attribution: str | None = None
@@ -541,7 +544,6 @@ class Entity(
     _attr_extra_state_attributes: dict[str, Any]
     _attr_force_update: bool
     _attr_icon: str | None
-    _attr_included_entities: list[str]
     _attr_included_unique_ids: list[str]
     _attr_name: str | None
     _attr_should_poll: bool = True
@@ -1025,7 +1027,7 @@ class Entity(
             self._async_verify_state_writable()
         if self.hass.loop_thread_id != threading.get_ident():
             report_non_thread_safe_operation("async_write_ha_state")
-        if self.included_unique_ids:
+        if self.included_unique_ids is not None:
             self._update_group_entity_ids()
         self._async_write_ha_state()
 
@@ -1091,8 +1093,8 @@ class Entity(
         available = self.available  # only call self.available once per update cycle
         state = self._stringify_state(available)
         if available:
-            if hasattr(self, "_attr_included_entities"):
-                attr[ATTR_ENTITY_ID] = self._attr_included_entities.copy()
+            if self._included_entities is not None:
+                attr[ATTR_ENTITY_ID] = self._included_entities.copy()
             if state_attributes := self.state_attributes:
                 attr |= state_attributes
             if extra_state_attributes := self.extra_state_attributes:
@@ -1382,13 +1384,19 @@ class Entity(
 
     def _update_group_entity_ids(self) -> None:
         """Update the grouped entity IDs after an update."""
+        if TYPE_CHECKING:
+            assert self.included_unique_ids is not None
         entity_registry = er.async_get(self.hass)
-        self._attr_included_entities = []
-        for included_id in self.included_unique_ids:
-            if entity_id := entity_registry.async_get_entity_id(
-                self.platform.domain, self.platform.platform_name, included_id
-            ):
-                self._attr_included_entities.append(entity_id)
+        self._included_entities = [
+            entity_id
+            for included_id in self.included_unique_ids
+            if (
+                entity_id := entity_registry.async_get_entity_id(
+                    self.platform.domain, self.platform.platform_name, included_id
+                )
+            )
+            is not None
+        ]
 
     async def add_to_platform_finish(self) -> None:
         """Finish adding an entity to a platform."""
@@ -1396,14 +1404,16 @@ class Entity(
 
         async def _handle_entity_registry_updated(event: Event[Any]) -> None:
             """Handle registry create or update event."""
+            if TYPE_CHECKING:
+                assert self.included_unique_ids is not None
             if (
                 event.data["action"] in {"create", "update"}
                 and (entry := entity_registry.async_get(event.data["entity_id"]))
                 and entry.unique_id in self.included_unique_ids
             ) or (
                 event.data["action"] == "remove"
-                and hasattr(self, "_attr_included_entities")
-                and event.data["entity_id"] in self._attr_included_entities
+                and self._included_entities is not None
+                and event.data["entity_id"] in self._included_entities
             ):
                 self._update_group_entity_ids()
                 self.async_write_ha_state()
@@ -1676,14 +1686,14 @@ class Entity(
         )
 
     @cached_property
-    def included_unique_ids(self) -> list[str]:
+    def included_unique_ids(self) -> list[str] | None:
         """Return the list of unique IDs if the entity represents a group.
 
         The corresponding entities will be shown as members in the UI.
         """
         if hasattr(self, "_attr_included_unique_ids"):
             return self._attr_included_unique_ids
-        return []
+        return None
 
 
 class ToggleEntityDescription(EntityDescription, frozen_or_thawed=True):
