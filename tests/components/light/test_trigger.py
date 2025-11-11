@@ -105,10 +105,10 @@ async def target_lights(hass: HomeAssistant) -> None:
     ],
 )
 @pytest.mark.parametrize(
-    ("trigger", "state", "reverse_state"),
+    ("trigger", "initial_state", "states"),
     [
-        ("light.turned_on", STATE_ON, STATE_OFF),
-        ("light.turned_off", STATE_OFF, STATE_ON),
+        ("light.turned_on", STATE_OFF, [(STATE_ON, 1), (STATE_OFF, 0), (STATE_ON, 1)]),
+        ("light.turned_off", STATE_ON, [(STATE_OFF, 1), (STATE_ON, 0), (STATE_OFF, 1)]),
     ],
 )
 async def test_light_state_trigger_behavior_any(
@@ -117,13 +117,14 @@ async def test_light_state_trigger_behavior_any(
     trigger_target_config: dict,
     entity_id: str,
     trigger: str,
-    state: str,
-    reverse_state: str,
+    initial_state: str,
+    states: list[tuple[str, int]],
 ) -> None:
     """Test that the light state trigger fires when any light state changes to a specific state."""
     await async_setup_component(hass, "light", {})
 
-    hass.states.async_set(entity_id, reverse_state)
+    hass.states.async_set(entity_id, initial_state)
+    await hass.async_block_till_done()
 
     await async_setup_component(
         hass,
@@ -137,21 +138,19 @@ async def test_light_state_trigger_behavior_any(
                 },
                 "action": {
                     "service": "test.automation",
-                    "data_template": {CONF_ENTITY_ID: f"{entity_id}"},
+                    "data_template": {CONF_ENTITY_ID: "{{ trigger.entity_id }}"},
                 },
             }
         },
     )
 
-    hass.states.async_set(entity_id, state)
-    await hass.async_block_till_done()
-    assert len(service_calls) == 1
-    assert service_calls[0].data[CONF_ENTITY_ID] == entity_id
-    service_calls.clear()
-
-    hass.states.async_set(entity_id, reverse_state)
-    await hass.async_block_till_done()
-    assert len(service_calls) == 0
+    for state, expected_calls in states:
+        hass.states.async_set(entity_id, state)
+        await hass.async_block_till_done()
+        assert len(service_calls) == expected_calls
+        for service_call in service_calls:
+            assert service_call.data[CONF_ENTITY_ID] == entity_id
+        service_calls.clear()
 
 
 @pytest.mark.parametrize(
@@ -168,10 +167,28 @@ async def test_light_state_trigger_behavior_any(
     ],
 )
 @pytest.mark.parametrize(
-    ("trigger", "state", "reverse_state"),
+    ("trigger", "initial_state", "states"),
     [
-        ("light.turned_on", STATE_ON, STATE_OFF),
-        ("light.turned_off", STATE_OFF, STATE_ON),
+        (
+            "light.turned_on",
+            STATE_OFF,
+            [
+                (STATE_ON, 1, [STATE_ON, STATE_OFF]),
+                (STATE_OFF, 0, []),
+                # Test we can trigger again
+                (STATE_ON, 1, [STATE_ON, STATE_OFF]),
+            ],
+        ),
+        (
+            "light.turned_off",
+            STATE_ON,
+            [
+                (STATE_OFF, 1, [STATE_OFF, STATE_ON]),
+                (STATE_ON, 0, []),
+                # Test we can trigger again
+                (STATE_OFF, 1, [STATE_OFF, STATE_ON]),
+            ],
+        ),
     ],
 )
 async def test_light_state_trigger_behavior_first(
@@ -181,14 +198,17 @@ async def test_light_state_trigger_behavior_first(
     trigger_target_config: dict,
     entity_id: str,
     trigger: str,
-    state: str,
-    reverse_state: str,
+    initial_state: str,
+    states: list[tuple[str, int, list[str]]],
 ) -> None:
     """Test that the light state trigger fires when the first light changes to a specific state."""
     await async_setup_component(hass, "light", {})
 
-    for other_entity_id in target_lights:
-        hass.states.async_set(other_entity_id, reverse_state)
+    other_entity_ids = set(target_lights) - {entity_id}
+
+    # Set all lights, including the tested light, to the initial state
+    for eid in target_lights:
+        hass.states.async_set(eid, initial_state)
         await hass.async_block_till_done()
 
     await async_setup_component(
@@ -203,30 +223,26 @@ async def test_light_state_trigger_behavior_first(
                 },
                 "action": {
                     "service": "test.automation",
-                    "data_template": {CONF_ENTITY_ID: f"{entity_id}"},
+                    "data_template": {CONF_ENTITY_ID: "{{ trigger.entity_id }}"},
                 },
             }
         },
     )
-    hass.states.async_set(entity_id, state)
-    await hass.async_block_till_done()
-    assert len(service_calls) == 1
-    assert service_calls[0].data[CONF_ENTITY_ID] == entity_id
-    service_calls.clear()
 
-    # Triggering other lights should not cause any service calls after the first one
-    for other_entity_id in target_lights:
-        hass.states.async_set(other_entity_id, state)
+    for state, expected_calls, other_lights_states in states:
+        hass.states.async_set(entity_id, state)
         await hass.async_block_till_done()
-    for other_entity_id in target_lights:
-        hass.states.async_set(other_entity_id, reverse_state)
-        await hass.async_block_till_done()
-    assert len(service_calls) == 0
+        assert len(service_calls) == expected_calls
+        for service_call in service_calls:
+            assert service_call.data[CONF_ENTITY_ID] == entity_id
+        service_calls.clear()
 
-    hass.states.async_set(entity_id, state)
-    await hass.async_block_till_done()
-    assert len(service_calls) == 1
-    assert service_calls[0].data[CONF_ENTITY_ID] == entity_id
+        # Triggering other lights should not cause the trigger to fire again
+        for other_light_state in other_lights_states:
+            for other_entity_id in other_entity_ids:
+                hass.states.async_set(other_entity_id, other_light_state)
+                await hass.async_block_till_done()
+        assert len(service_calls) == 0
 
 
 @pytest.mark.parametrize(
@@ -243,10 +259,10 @@ async def test_light_state_trigger_behavior_first(
     ],
 )
 @pytest.mark.parametrize(
-    ("trigger", "state", "reverse_state"),
+    ("trigger", "initial_state", "states"),
     [
-        ("light.turned_on", STATE_ON, STATE_OFF),
-        ("light.turned_off", STATE_OFF, STATE_ON),
+        ("light.turned_on", STATE_OFF, [(STATE_ON, 1), (STATE_OFF, 0), (STATE_ON, 1)]),
+        ("light.turned_off", STATE_ON, [(STATE_OFF, 1), (STATE_ON, 0), (STATE_OFF, 1)]),
     ],
 )
 async def test_light_state_trigger_behavior_last(
@@ -256,15 +272,18 @@ async def test_light_state_trigger_behavior_last(
     trigger_target_config: dict,
     entity_id: str,
     trigger: str,
-    state: str,
-    reverse_state: str,
+    initial_state: str,
+    states: list[tuple[str, int]],
 ) -> None:
     """Test that the light state trigger fires when the last light changes to a specific state."""
     await async_setup_component(hass, "light", {})
 
-    for other_entity_id in target_lights:
-        hass.states.async_set(other_entity_id, reverse_state)
-    await hass.async_block_till_done()
+    other_entity_ids = set(target_lights) - {entity_id}
+
+    # Set all lights, including the tested light, to the initial state
+    for eid in target_lights:
+        hass.states.async_set(eid, initial_state)
+        await hass.async_block_till_done()
 
     await async_setup_component(
         hass,
@@ -278,18 +297,21 @@ async def test_light_state_trigger_behavior_last(
                 },
                 "action": {
                     "service": "test.automation",
-                    "data_template": {CONF_ENTITY_ID: f"{entity_id}"},
+                    "data_template": {CONF_ENTITY_ID: "{{ trigger.entity_id }}"},
                 },
             }
         },
     )
 
-    target_lights.remove(entity_id)
-    for other_entity_id in target_lights:
-        hass.states.async_set(other_entity_id, state)
-    await hass.async_block_till_done()
-    assert len(service_calls) == 0
+    for state, expected_calls in states:
+        for other_entity_id in other_entity_ids:
+            hass.states.async_set(other_entity_id, state)
+            await hass.async_block_till_done()
+        assert len(service_calls) == 0
 
-    hass.states.async_set(entity_id, state)
-    await hass.async_block_till_done()
-    assert len(service_calls) == 1
+        hass.states.async_set(entity_id, state)
+        await hass.async_block_till_done()
+        assert len(service_calls) == expected_calls
+        for service_call in service_calls:
+            assert service_call.data[CONF_ENTITY_ID] == entity_id
+        service_calls.clear()
