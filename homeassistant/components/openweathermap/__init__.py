@@ -11,7 +11,13 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_LANGUAGE, CONF_MODE
 from homeassistant.core import HomeAssistant
 
-from .const import CONFIG_FLOW_VERSION, DEFAULT_OWM_MODE, OWM_MODES, PLATFORMS
+from .const import (
+    CONFIG_FLOW_MINOR_VERSION,
+    CONFIG_FLOW_VERSION,
+    DEFAULT_OWM_MODE,
+    OWM_MODES,
+    PLATFORMS,
+)
 from .coordinator import OWMUpdateCoordinator, get_owm_update_coordinator
 from .repairs import async_create_issue, async_delete_issue
 from .utils import build_data_and_options
@@ -64,8 +70,11 @@ async def async_migrate_entry(
     data = entry.data
     options = entry.options
     version = entry.version
+    minor_version = entry.minor_version
 
-    _LOGGER.debug("Migrating OpenWeatherMap entry from version %s", version)
+    _LOGGER.debug(
+        "Migrating OpenWeatherMap entry from version %s.%s", version, minor_version
+    )
 
     if version < 5:
         combined_data = {**data, **options, CONF_MODE: DEFAULT_OWM_MODE}
@@ -77,7 +86,20 @@ async def async_migrate_entry(
             version=CONFIG_FLOW_VERSION,
         )
 
-    _LOGGER.debug("Migration to version %s successful", CONFIG_FLOW_VERSION)
+    if version == 5 and minor_version < 2:
+        if options.get(CONF_MODE) == "v3.0":
+            config_entries.async_update_entry(
+                entry,
+                options={**options, CONF_MODE: DEFAULT_OWM_MODE},
+                version=CONFIG_FLOW_VERSION,
+                minor_version=CONFIG_FLOW_MINOR_VERSION,
+            )
+
+    _LOGGER.debug(
+        "Migration to version %s.%s successful",
+        CONFIG_FLOW_VERSION,
+        CONFIG_FLOW_MINOR_VERSION,
+    )
 
     return True
 

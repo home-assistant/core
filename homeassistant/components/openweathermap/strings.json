@@ -109,7 +109,7 @@
         "air_pollution": "Air Pollution API",
         "current": "Current Weather API",
         "forecast": "Hourly Forecast Weather API",
-        "v3.0": "One Call API"
+        "v30": "One Call API"
       }
     }
   },

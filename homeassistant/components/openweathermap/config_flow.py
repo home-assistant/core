@@ -29,6 +29,7 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import (
+    CONFIG_FLOW_MINOR_VERSION,
     CONFIG_FLOW_VERSION,
     DEFAULT_LANGUAGE,
     DEFAULT_NAME,
@@ -76,6 +77,7 @@ class OpenWeatherMapConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow for OpenWeatherMap."""
 
     VERSION = CONFIG_FLOW_VERSION
+    MINOR_VERSION = CONFIG_FLOW_MINOR_VERSION
 
     @staticmethod
     @callback

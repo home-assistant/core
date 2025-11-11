@@ -26,6 +26,7 @@ DEFAULT_LANGUAGE = "en"
 ATTRIBUTION = "Data provided by OpenWeatherMap"
 MANUFACTURER = "OpenWeather"
 CONFIG_FLOW_VERSION = 5
+CONFIG_FLOW_MINOR_VERSION = 2
 ATTR_API_PRECIPITATION = "precipitation"
 ATTR_API_PRECIPITATION_KIND = "precipitation_kind"
 ATTR_API_DATETIME = "datetime"
@@ -66,7 +67,7 @@ PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
 
 OWM_MODE_FREE_CURRENT = "current"
 OWM_MODE_FREE_FORECAST = "forecast"
-OWM_MODE_V30 = "v3.0"
+OWM_MODE_V30 = "v30"
 OWM_MODE_AIRPOLLUTION = "air_pollution"
 OWM_MODES = [
     OWM_MODE_V30,
