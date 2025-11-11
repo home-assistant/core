@@ -1,5 +1,6 @@
 """Tests for BSB-LAN services."""
 
+from datetime import time
 from typing import Any
 from unittest.mock import MagicMock
 
@@ -19,68 +20,72 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    ("schedule_data", "expected_calls"),
+    ("service_data", "expected_strings"),
     [
         (
             {
-                "monday": "06:00-08:00 17:00-21:00",
-                "tuesday": "06:00-08:00 17:00-21:00",
-                "wednesday": "06:00-08:00 17:00-21:00",
-                "thursday": "06:00-08:00 17:00-21:00",
-                "friday": "06:00-08:00 17:00-21:00",
-                "saturday": "08:00-22:00",
-                "sunday": "08:00-22:00",
+                "monday_slots": [
+                    {"start_time": time(6, 0), "end_time": time(8, 0)},
+                    {"start_time": time(17, 0), "end_time": time(21, 0)},
+                ],
+                "tuesday_slots": [
+                    {"start_time": time(6, 0), "end_time": time(8, 0)},
+                ],
             },
             {
                 "monday": "06:00-08:00 17:00-21:00",
-                "tuesday": "06:00-08:00 17:00-21:00",
+                "tuesday": "06:00-08:00",
+            },
+        ),
+        (
+            {
+                "friday_slots": [
+                    {"start_time": time(17, 0), "end_time": time(21, 0)},
+                ],
+                "saturday_slots": [
+                    {"start_time": time(8, 0), "end_time": time(22, 0)},
+                ],
+            },
+            {
+                "friday": "17:00-21:00",
                 "saturday": "08:00-22:00",
             },
         ),
         (
             {
-                "monday": "06:00-08:00",
-                "friday": "17:00-21:00",
+                "wednesday_slots": [
+                    {"start_time": time(6, 0), "end_time": time(8, 0)},
+                ],
             },
             {
-                "monday": "06:00-08:00",
-                "friday": "17:00-21:00",
+                "wednesday": "06:00-08:00",
             },
         ),
         (
             {
-                "monday": None,
-                "tuesday": None,
+                "standard_values_slots": [
+                    {"start_time": time(7, 0), "end_time": time(20, 0)},
+                ],
             },
             {
-                "monday": None,
-                "tuesday": None,
-            },
-        ),
-        (
-            {
-                "wednesday": "06:00-08:00",
-                "standard_values": True,
-            },
-            {
-                "wednesday": "06:00-08:00",
-                "standard_values": "True",  # Converted to string by service layer
+                "standard_values": "07:00-20:00",
             },
         ),
     ],
     ids=[
-        "full_week_schedule",
-        "partial_days",
-        "clear_days_with_none",
-        "with_standard_values",
+        "multiple_slots_per_day",
+        "weekend_schedule",
+        "single_day",
+        "standard_values",
     ],
 )
-async def test_service_set_hot_water_schedule(
+async def test_set_hot_water_schedule(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
     mock_bsblan: MagicMock,
-    schedule_data: dict[str, Any],
-    expected_calls: dict[str, Any],
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    service_data: dict[str, Any],
+    expected_strings: dict[str, str],
 ) -> None:
     """Test setting hot water schedule with various configurations."""
     mock_config_entry.add_to_hass(hass)
@@ -88,20 +93,19 @@ async def test_service_set_hot_water_schedule(
     await hass.async_block_till_done()
 
     # Get the device ID
-    device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_device(
         identifiers={(DOMAIN, "00:80:41:19:69:90")}
     )
     assert device_entry is not None
 
-    # Call the service
+    # Call the service with device_id and slot fields
+    service_call_data = {"device_id": device_entry.id}
+    service_call_data.update(service_data)
+
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_HOT_WATER_SCHEDULE,
-        {
-            "device": device_entry.id,
-            "schedule": schedule_data,
-        },
+        service_call_data,
         blocking=True,
     )
 
@@ -111,7 +115,7 @@ async def test_service_set_hot_water_schedule(
 
     # Verify expected values - all values are in the dhw_time_programs object
     dhw_programs = call_args.kwargs["dhw_time_programs"]
-    for key, value in expected_calls.items():
+    for key, value in expected_strings.items():
         assert getattr(dhw_programs, key) == value
 
 
@@ -200,8 +204,10 @@ async def test_service_error_scenarios(
             DOMAIN,
             SERVICE_SET_HOT_WATER_SCHEDULE,
             {
-                "device": device_id,
-                "schedule": {"monday": "06:00-08:00"},
+                "device_id": device_id,
+                "monday_slots": [
+                    {"start_time": time(6, 0), "end_time": time(8, 0)},
+                ],
             },
             blocking=True,
         )

@@ -1,20 +1,128 @@
 set_hot_water_schedule:
   fields:
-    device:
+    device_id:
       required: true
       example: "abc123device456"
       selector:
         device:
           integration: bsblan
-    schedule:
-      required: true
-      example:
-        monday: "06:00-08:00 17:00-21:00"
-        tuesday: "06:00-08:00 17:00-21:00"
-        wednesday: "06:00-08:00 17:00-21:00"
-        thursday: "06:00-08:00 17:00-21:00"
-        friday: "06:00-08:00 17:00-21:00"
-        saturday: "08:00-22:00"
-        sunday: "08:00-22:00"
+    monday_slots:
       selector:
         object:
+          multiple: true
+          label_field: start_time
+          description_field: end_time
+          fields:
+            start_time:
+              required: true
+              selector:
+                time:
+            end_time:
+              required: true
+              selector:
+                time:
+    tuesday_slots:
+      selector:
+        object:
+          multiple: true
+          label_field: start_time
+          description_field: end_time
+          fields:
+            start_time:
+              required: true
+              selector:
+                time:
+            end_time:
+              required: true
+              selector:
+                time:
+    wednesday_slots:
+      selector:
+        object:
+          multiple: true
+          label_field: start_time
+          description_field: end_time
+          fields:
+            start_time:
+              required: true
+              selector:
+                time:
+            end_time:
+              required: true
+              selector:
+                time:
+    thursday_slots:
+      selector:
+        object:
+          multiple: true
+          label_field: start_time
+          description_field: end_time
+          fields:
+            start_time:
+              required: true
+              selector:
+                time:
+            end_time:
+              required: true
+              selector:
+                time:
+    friday_slots:
+      selector:
+        object:
+          multiple: true
+          label_field: start_time
+          description_field: end_time
+          fields:
+            start_time:
+              required: true
+              selector:
+                time:
+            end_time:
+              required: true
+              selector:
+                time:
+    saturday_slots:
+      selector:
+        object:
+          multiple: true
+          label_field: start_time
+          description_field: end_time
+          fields:
+            start_time:
+              required: true
+              selector:
+                time:
+            end_time:
+              required: true
+              selector:
+                time:
+    sunday_slots:
+      selector:
+        object:
+          multiple: true
+          label_field: start_time
+          description_field: end_time
+          fields:
+            start_time:
+              required: true
+              selector:
+                time:
+            end_time:
+              required: true
+              selector:
+                time:
+    standard_values_slots:
+      selector:
+        object:
+          multiple: true
+          label_field: start_time
+          description_field: end_time
+          fields:
+            start_time:
+              required: true
+              selector:
+                time:
+            end_time:
+              required: true
+              selector:
+                time:
