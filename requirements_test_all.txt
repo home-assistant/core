@@ -80,7 +80,7 @@ PyRMVtransport==0.3.3
 PySrDaliGateway==0.13.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.72.1
+PySwitchbot==0.73.0
 
 # homeassistant.components.syncthru
 PySyncThru==0.8.0
@@ -297,13 +297,13 @@ aiolookin==1.0.0
 aiolyric==2.0.2
 
 # homeassistant.components.mealie
-aiomealie==1.0.1
+aiomealie==1.1.0
 
 # homeassistant.components.modern_forms
 aiomodernforms==0.1.8
 
 # homeassistant.components.yamaha_musiccast
-aiomusiccast==0.14.8
+aiomusiccast==0.15.0
 
 # homeassistant.components.nanoleaf
 aionanoleaf==0.2.1
@@ -336,7 +336,7 @@ aiopulse==0.4.6
 aiopurpleair==2025.08.1
 
 # homeassistant.components.hunterdouglas_powerview
-aiopvapi==3.2.1
+aiopvapi==3.3.0
 
 # homeassistant.components.pvpc_hourly_pricing
 aiopvpc==4.2.2
@@ -1039,7 +1039,7 @@ home-assistant-frontend==20251105.0
 home-assistant-intents==2025.11.7
 
 # homeassistant.components.homematicip_cloud
-homematicip==2.3.1
+homematicip==2.4.0
 
 # homeassistant.components.remember_the_milk
 httplib2==0.20.4
@@ -1456,7 +1456,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.9.0
+plugwise==1.10.0
 
 # homeassistant.components.poolsense
 poolsense==0.0.8
@@ -1885,7 +1885,7 @@ pyotp==2.9.0
 pyoverkiz==1.19.0
 
 # homeassistant.components.palazzetti
-pypalazzetti==0.1.19
+pypalazzetti==0.1.20
 
 # homeassistant.components.paperless_ngx
 pypaperless==4.1.1
@@ -1982,7 +1982,7 @@ pysmappee==0.2.29
 pysmarlaapi==0.9.2
 
 # homeassistant.components.smartthings
-pysmartthings==3.3.1
+pysmartthings==3.3.2
 
 # homeassistant.components.smarty
 pysmarty2==0.10.3
@@ -2543,7 +2543,7 @@ vegehub==0.1.26
 vehicle==2.2.2
 
 # homeassistant.components.velbus
-velbus-aio==2025.8.0
+velbus-aio==2025.11.0
 
 # homeassistant.components.venstar
 venstarcolortouch==0.21

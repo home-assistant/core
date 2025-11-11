@@ -35,6 +35,7 @@ class VeluxLight(VeluxEntity, LightEntity):
 
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
     _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_name = None
 
     node: LighteningDevice
 
