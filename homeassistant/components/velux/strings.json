@@ -34,11 +34,6 @@
       "rain_sensor": {
         "name": "Rain sensor"
       }
-    },
-    "button": {
-      "reboot_gateway": {
-        "name": "Reboot gateway"
-      }
     }
   },
   "exceptions": {

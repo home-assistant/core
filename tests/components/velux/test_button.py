@@ -36,8 +36,8 @@ async def test_button_setup(
     assert len(entity_entries) == 1
 
     entry = entity_entries[0]
-    assert entry.translation_key == "reboot_gateway"
-    assert entry.unique_id == f"{mock_config_entry.entry_id}_reboot_gateway"
+    assert entry.translation_key is None
+    assert entry.unique_id == f"{mock_config_entry.entry_id}_reboot-gateway"
 
     # Check device association
     assert entry.device_id is not None
@@ -61,7 +61,7 @@ async def test_button_press_success(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.klf_200_gateway_reboot_gateway"},
+        {ATTR_ENTITY_ID: "button.klf_200_gateway_restart"},
         blocking=True,
     )
 
@@ -87,7 +87,7 @@ async def test_button_press_failure(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.klf_200_gateway_reboot_gateway"},
+            {ATTR_ENTITY_ID: "button.klf_200_gateway_restart"},
             blocking=True,
         )
 
