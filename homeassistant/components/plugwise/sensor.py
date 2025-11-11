@@ -89,6 +89,7 @@ SENSORS: tuple[PlugwiseSensorEntityDescription, ...] = (
         translation_key="outdoor_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     PlugwiseSensorEntityDescription(
@@ -346,6 +347,7 @@ SENSORS: tuple[PlugwiseSensorEntityDescription, ...] = (
         key="illuminance",
         native_unit_of_measurement=LIGHT_LUX,
         device_class=SensorDeviceClass.ILLUMINANCE,
+        entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     PlugwiseSensorEntityDescription(
@@ -373,6 +375,7 @@ SENSORS: tuple[PlugwiseSensorEntityDescription, ...] = (
         key="humidity",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
+        entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     PlugwiseSensorEntityDescription(
