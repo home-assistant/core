@@ -13,16 +13,21 @@ from homeassistant.helpers.selector import selector
 
 from .api import MinecraftServer, MinecraftServerAddressError, MinecraftServerType
 from .const import DOMAIN
+from .server_locator import LocalServerLocator
 
 DEFAULT_ADDRESS = "localhost:25565"
 
 _LOGGER = logging.getLogger(__name__)
+
+SERVER_LOCATOR = LocalServerLocator()
 
 
 class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Minecraft Server."""
 
     VERSION = 3
+
+    SUGGESTED_SERVERS: list[str] = SERVER_LOCATOR.find_servers()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -74,44 +79,27 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             user_input = {}
 
-        suggested_addresses: list[str] = self._get_local_addresses()
-
         schema_entries: dict[vol.Marker, Any] = {}
 
-        if len(suggested_addresses) > 0:
-            schema_entries[
-                vol.Required(
-                    CONF_ADDRESS,
-                    default=user_input.get(CONF_ADDRESS, DEFAULT_ADDRESS),
-                )
-            ] = selector(
-                {
-                    "select": {
-                        "options": suggested_addresses,
-                        "custom_value": True,
-                    }
-                }
+        servers = ["No local servers found when searching."]
+        if len(self.SUGGESTED_SERVERS) > 0:
+            servers = self.SUGGESTED_SERVERS
+        schema_entries[
+            vol.Required(
+                CONF_ADDRESS,
+                default=user_input.get(CONF_ADDRESS, DEFAULT_ADDRESS),
             )
-        else:
-            schema_entries[
-                vol.Required(
-                    CONF_ADDRESS,
-                    default=user_input.get(CONF_ADDRESS, DEFAULT_ADDRESS),
-                )
-            ] = vol.All(str, vol.Lower)
+        ] = selector(
+            {
+                "select": {
+                    "options": servers,
+                    "custom_value": True,
+                }
+            }
+        )
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(schema_entries),
             errors=errors,
         )
-
-    def _get_local_addresses(self) -> list[str]:
-        """Get a list of suggested minecraft server addresses for the user."""
-        # template values for now
-        return [
-            "localhost:4090",
-            "123.456.78.90:25565",
-            "play.example.com:19132",
-            "minecraft.example.com:25565",
-        ]
