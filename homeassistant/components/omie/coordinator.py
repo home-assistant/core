@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import datetime as dt
+from datetime import timedelta
 import logging
+from logging import DEBUG
 
 import pyomie.main as pyomie
 from pyomie.model import OMIEResults, SpotData
@@ -21,6 +23,9 @@ _LOGGER = logging.getLogger(__name__)
 
 _SCHEDULE_MAX_DELAY = dt.timedelta(seconds=10)
 """To avoid thundering herd, we will fetch from OMIE up to this much time after the OMIE data becomes available."""
+
+_UPDATE_INTERVAL_PADDING = timedelta(seconds=1)
+"""Padding to add to the update interval to work around early scheduling by DataUpdateCoordinator."""
 
 type OMIEConfigEntry = ConfigEntry[OMIECoordinator]
 
@@ -53,14 +58,21 @@ class OMIECoordinator(DataUpdateCoordinator[OMIEResults[SpotData]]):
     def _set_update_interval(self) -> None:
         """Schedules the next refresh at the start of the next quarter-hour."""
         now = util.dt.now()
-        now_quarter_minute = now.minute // 15 * 15
-        refresh_at = now.replace(
-            minute=now_quarter_minute, second=0, microsecond=0
-        ) + dt.timedelta(minutes=15)
-        self.update_interval = refresh_at - now
-
-        _LOGGER.debug("Next refresh at %s", refresh_at.astimezone())
+        self.update_interval = calc_update_interval(now)
+        if _LOGGER.isEnabledFor(DEBUG):
+            _LOGGER.debug(
+                "Next refresh at %s", (now + self.update_interval).isoformat()
+            )
 
     async def _spot_price(self, date: dt.date) -> OMIEResults[SpotData]:
         _LOGGER.debug("Fetching OMIE spot data for %s", date)
         return await pyomie.spot_price(self._client_session, date)
+
+
+def calc_update_interval(now: dt.datetime) -> dt.timedelta:
+    """Calculates the update_interval needed to trigger at the next 15-minute boundary."""
+    minutes_floored = now.minute // 15 * 15
+    previous_15m = now.replace(minute=minutes_floored, second=0, microsecond=0)
+
+    next_15m = previous_15m + dt.timedelta(minutes=15)
+    return next_15m - now + _UPDATE_INTERVAL_PADDING
