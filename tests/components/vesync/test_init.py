@@ -174,11 +174,13 @@ async def test_async_remove_config_entry_device_positive(
     device_registry: dr.DeviceRegistry,
     config_entry: ConfigEntry,
     manager: VeSync,
+    fan,
 ) -> None:
     """Test removing a config entry from a device when no match is found."""
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
+    manager._dev_list["fans"].append(fan)
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
