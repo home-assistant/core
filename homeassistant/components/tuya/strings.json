@@ -612,7 +612,6 @@
         "name": "[%key:component::tuya::entity::sensor::status::name%]",
         "state": {
           "clean": "Cleaning",
-          "clock": "Clock",
           "empty": "Emptying",
           "level": "Leveling",
           "sleep": "Sleeping",
