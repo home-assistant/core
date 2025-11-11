@@ -14,11 +14,6 @@ from .const import DOMAIN, LOGGER, PLATFORMS
 type VeluxConfigEntry = ConfigEntry[PyVLX]
 
 
-def build_gateway_identifier(entry_id: str) -> tuple[str, str]:
-    """Build a unique identifier for the gateway device."""
-    return (DOMAIN, f"gateway_{entry_id}")
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: VeluxConfigEntry) -> bool:
     """Set up the velux component."""
     host = entry.data[CONF_HOST]
@@ -33,7 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: VeluxConfigEntry) -> boo
         LOGGER.exception("Can't connect to velux interface: %s", ex)
         return False
 
-    device_identifier = build_gateway_identifier(entry.entry_id)
+    device_identifier = (DOMAIN, f"gateway_{entry.entry_id}")
     entry.runtime_data = pyvlx
 
     device_registry = dr.async_get(hass)
