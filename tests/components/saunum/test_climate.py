@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import replace
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
+from freezegun.api import FrozenDateTimeFactory
+from pysaunum import SaunumException
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -18,10 +20,9 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.components.saunum.climate import LeilSaunaClimate
-from homeassistant.components.saunum.const import DELAYED_REFRESH_SECONDS
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
@@ -163,57 +164,71 @@ async def test_climate_temperature_edge_cases(
 
 
 @pytest.mark.usefixtures("init_integration")
-async def test_delayed_refresh_after_hvac_mode_change(
+async def test_entity_unavailable_on_update_failure(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
     mock_saunum_client,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that a delayed refresh is scheduled after HVAC mode change."""
+    """Test that entity becomes unavailable when coordinator update fails."""
     entity_id = "climate.saunum_leil"
 
-    # Reset the call count after init_integration setup
-    mock_saunum_client.async_get_data.reset_mock()
+    # Verify entity is initially available
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state != "unavailable"
 
-    # Get the initial number of background tasks
-    initial_bg_tasks = len(mock_config_entry._background_tasks)
+    # Make the next update fail
+    mock_saunum_client.async_get_data.side_effect = SaunumException("Read error")
 
-    # Turn on the heater
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.HEAT},
-        blocking=True,
-    )
-
-    # Should have called once immediately
-    assert mock_saunum_client.async_get_data.call_count == 1
-
-    # Should have created a background task for the delayed refresh
-    assert len(mock_config_entry._background_tasks) == initial_bg_tasks + 1
-
-
-async def test_delayed_refresh_method(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_saunum_client,
-) -> None:
-    """Test the delayed refresh method directly for coverage."""
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    # Move time forward to trigger a coordinator update (60 seconds)
+    freezer.tick(60)
     await hass.async_block_till_done()
 
-    # Get the climate entity
+    # Entity should now be unavailable
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "unavailable"
+
+
+@pytest.mark.parametrize(
+    ("service", "service_data", "client_method", "error_match"),
+    [
+        (
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_HVAC_MODE: HVACMode.HEAT},
+            "async_start_session",
+            "Failed to set HVAC mode",
+        ),
+        (
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_TEMPERATURE: 85},
+            "async_set_target_temperature",
+            "Failed to set temperature",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_action_error_handling(
+    hass: HomeAssistant,
+    mock_saunum_client,
+    service: str,
+    service_data: dict,
+    client_method: str,
+    error_match: str,
+) -> None:
+    """Test error handling when climate actions fail."""
     entity_id = "climate.saunum_leil"
-    entity = hass.data["entity_components"]["climate"].get_entity(entity_id)
-    assert isinstance(entity, LeilSaunaClimate)
 
-    # Reset mock
-    mock_saunum_client.async_get_data.reset_mock()
+    # Make the client method raise an exception
+    getattr(mock_saunum_client, client_method).side_effect = SaunumException(
+        "Communication error"
+    )
 
-    # Call the delayed refresh method directly with mocked sleep
-    with patch("asyncio.sleep") as mock_sleep:
-        await entity._async_delayed_refresh()
-        mock_sleep.assert_called_once_with(DELAYED_REFRESH_SECONDS.total_seconds())
-
-    # Verify refresh was called
-    assert mock_saunum_client.async_get_data.call_count == 1
+    # Attempt to call service should raise HomeAssistantError
+    with pytest.raises(HomeAssistantError, match=error_match):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: entity_id, **service_data},
+            blocking=True,
+        )

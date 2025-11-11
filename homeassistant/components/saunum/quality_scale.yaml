@@ -26,9 +26,7 @@ rules:
   unique-config-entry: done
 
   # Silver tier
-  action-exceptions:
-    status: exempt
-    comment: Integration does not register custom actions.
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
@@ -47,9 +45,7 @@ rules:
   discovery:
     status: exempt
     comment: Device uses generic Espressif hardware with no unique identifying information (MAC OUI or hostname) that would distinguish it from other Espressif-based devices on the network.
-  discovery-update-info:
-    status: exempt
-    comment: Not applicable without discovery support.
+  discovery-update-info: todo
   docs-data-update: done
   docs-examples: todo
   docs-known-limitations: done
@@ -68,7 +64,9 @@ rules:
   icon-translations: todo
   reconfiguration-flow: todo
   repair-issues: todo
-  stale-devices: todo
+  stale-devices:
+    status: exempt
+    comment: Integration controls a single device; no dynamic device discovery needed.
 
   # Platinum
   async-dependency: todo

@@ -1,6 +1,6 @@
 """Test Saunum Leil integration setup and teardown."""
 
-from pysaunum import SaunumConnectionError, SaunumException
+from pysaunum import SaunumConnectionError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -40,28 +40,6 @@ async def test_async_setup_entry_connection_failed(
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_coordinator_update_failed(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_saunum_client,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test coordinator handles update failures."""
-    mock_config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Now trigger an update failure
-    mock_saunum_client.async_get_data.side_effect = SaunumException("Read error")
-
-    coordinator = mock_config_entry.runtime_data
-    await coordinator.async_refresh()
-
-    # Verify error was logged
-    assert "Communication error: Read error" in caplog.text
 
 
 @pytest.mark.usefixtures("init_integration")
