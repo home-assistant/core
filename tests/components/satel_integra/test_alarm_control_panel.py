@@ -7,14 +7,24 @@ import pytest
 from satel_integra.satel_integra import AlarmState
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.alarm_control_panel import AlarmControlPanelState
+from homeassistant.components.alarm_control_panel import (
+    DOMAIN as ALARM_DOMAIN,
+    AlarmControlPanelState,
+)
 from homeassistant.components.satel_integra.const import DOMAIN
-from homeassistant.const import Platform
+from homeassistant.const import (
+    ATTR_CODE,
+    ATTR_ENTITY_ID,
+    SERVICE_ALARM_ARM_AWAY,
+    SERVICE_ALARM_ARM_HOME,
+    SERVICE_ALARM_DISARM,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from . import MOCK_ENTRY_ID, setup_integration
+from . import MOCK_CODE, MOCK_ENTRY_ID, setup_integration
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -37,7 +47,7 @@ async def test_alarm_control_panel(
     entity_registry: EntityRegistry,
     device_registry: DeviceRegistry,
 ) -> None:
-    """Test switch correctly being set up."""
+    """Test alarm control panel correctly being set up."""
     await setup_integration(hass, mock_config_entry_with_subentries)
 
     await snapshot_platform(hass, entity_registry, snapshot, MOCK_ENTRY_ID)
@@ -49,12 +59,12 @@ async def test_alarm_control_panel(
     assert device_entry == snapshot(name="device")
 
 
-async def test_switch_initial_state_on(
+async def test_alarm_control_panel_initial_state_on(
     hass: HomeAssistant,
     mock_satel: AsyncMock,
     mock_config_entry_with_subentries: MockConfigEntry,
 ) -> None:
-    """Test switch has a correct initial state ON after initialization."""
+    """Test alarm control panel has a correct initial state after initialization."""
     mock_satel.partition_states = {AlarmState.ARMED_MODE0: [1]}
 
     await setup_integration(hass, mock_config_entry_with_subentries)
@@ -103,36 +113,54 @@ async def test_alarm_status_callback(
     assert hass.states.get("alarm_control_panel.home").state == resulting_state
 
 
-# async def test_switch_change_state(
-#     hass: HomeAssistant,
-#     mock_satel: AsyncMock,
-#     mock_config_entry_with_subentries: MockConfigEntry,
-# ) -> None:
-#     """Test switch correctly changes state after a callback from the panel."""
-#     await setup_integration(hass, mock_config_entry_with_subentries)
+async def test_alarm_control_panel_arming(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_config_entry_with_subentries: MockConfigEntry,
+) -> None:
+    """Test alarm control panel correctly sending arming commands to the panel."""
+    await setup_integration(hass, mock_config_entry_with_subentries)
 
-#     assert hass.states.get("switch.switchable_output").state == STATE_OFF
+    # Test Arm home
+    await hass.services.async_call(
+        ALARM_DOMAIN,
+        SERVICE_ALARM_ARM_HOME,
+        {ATTR_ENTITY_ID: "alarm_control_panel.home", ATTR_CODE: MOCK_CODE},
+        blocking=True,
+    )
 
-#     # Test turn on
-#     await hass.services.async_call(
-#         SWITCH_DOMAIN,
-#         SERVICE_TURN_ON,
-#         {ATTR_ENTITY_ID: "switch.switchable_output"},
-#         blocking=True,
-#     )
+    mock_satel.arm.assert_awaited_once_with(MOCK_CODE, [1], 1)
 
-#     assert hass.states.get("switch.switchable_output").state == STATE_ON
-#     mock_satel.set_output.assert_awaited_once_with(MOCK_CODE, 1, True)
+    mock_satel.arm.reset_mock()
 
-#     mock_satel.set_output.reset_mock()
+    # Test Arm away
+    await hass.services.async_call(
+        ALARM_DOMAIN,
+        SERVICE_ALARM_ARM_AWAY,
+        {ATTR_ENTITY_ID: "alarm_control_panel.home", ATTR_CODE: MOCK_CODE},
+        blocking=True,
+    )
 
-#     # Test turn off
-#     await hass.services.async_call(
-#         SWITCH_DOMAIN,
-#         SERVICE_TURN_OFF,
-#         {ATTR_ENTITY_ID: "switch.switchable_output"},
-#         blocking=True,
-#     )
+    mock_satel.arm.assert_awaited_once_with(MOCK_CODE, [1])
 
-#     assert hass.states.get("switch.switchable_output").state == STATE_OFF
-#     mock_satel.set_output.assert_awaited_once_with(MOCK_CODE, 1, False)
+
+async def test_alarm_control_panel_disarming(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_config_entry_with_subentries: MockConfigEntry,
+) -> None:
+    """Test alarm panel correctly disarms and dismisses alarm."""
+    mock_satel.partition_states = {AlarmState.TRIGGERED: [1]}
+
+    await setup_integration(hass, mock_config_entry_with_subentries)
+
+    await hass.services.async_call(
+        ALARM_DOMAIN,
+        SERVICE_ALARM_DISARM,
+        {ATTR_ENTITY_ID: "alarm_control_panel.home", ATTR_CODE: MOCK_CODE},
+        blocking=True,
+    )
+
+    mock_satel.disarm.assert_awaited_once_with(MOCK_CODE, [1])
+
+    mock_satel.clear_alarm.assert_awaited_once_with(MOCK_CODE, [1])
