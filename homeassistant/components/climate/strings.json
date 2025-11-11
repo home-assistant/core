@@ -285,5 +285,93 @@
       "name": "[%key:common::action::turn_on%]"
     }
   },
-  "title": "Climate"
+  "title": "Climate",
+  "triggers": {
+    "cooling": {
+      "description": "Triggers when a climate starts cooling.",
+      "name": "When a climate starts cooling"
+    },
+    "current_humidity_changed": {
+      "description": "Triggers when the current humidity of a climate changes.",
+      "fields": {
+        "above": {
+          "description": "Only trigger when the current humidity goes above this value.",
+          "name": "Above"
+        },
+        "below": {
+          "description": "Only trigger when the current humidity goes below this value.",
+          "name": "Below"
+        }
+      },
+      "name": "When current humidity changes"
+    },
+    "current_temperature_changed": {
+      "description": "Triggers when the current temperature of a climate changes.",
+      "fields": {
+        "above": {
+          "description": "Only trigger when the current temperature goes above this value.",
+          "name": "Above"
+        },
+        "below": {
+          "description": "Only trigger when the current temperature goes below this value.",
+          "name": "Below"
+        }
+      },
+      "name": "When current temperature changes"
+    },
+    "drying": {
+      "description": "Triggers when a climate starts drying.",
+      "name": "When a climate starts drying"
+    },
+    "heating": {
+      "description": "Triggers when a climate starts heating.",
+      "name": "When a climate starts heating"
+    },
+    "mode_changed": {
+      "description": "Triggers when the HVAC mode of a climate changes.",
+      "fields": {
+        "hvac_mode": {
+          "description": "The HVAC modes to trigger on. If empty, triggers on all mode changes.",
+          "name": "HVAC modes"
+        }
+      },
+      "name": "When HVAC mode changes"
+    },
+    "target_humidity_changed": {
+      "description": "Triggers when the target humidity of a climate changes.",
+      "fields": {
+        "above": {
+          "description": "Only trigger when the target humidity goes above this value.",
+          "name": "Above"
+        },
+        "below": {
+          "description": "Only trigger when the target humidity goes below this value.",
+          "name": "Below"
+        }
+      },
+      "name": "When target humidity changes"
+    },
+    "target_temperature_changed": {
+      "description": "Triggers when the target temperature of a climate changes.",
+      "fields": {
+        "above": {
+          "description": "Only trigger when the target temperature goes above this value.",
+          "name": "Above"
+        },
+        "below": {
+          "description": "Only trigger when the target temperature goes below this value.",
+          "name": "Below"
+        }
+      },
+      "name": "When target temperature changes"
+    },
+    "turns_off": {
+      "description": "Triggers when a climate turns off.",
+      "name": "When a climate turns off"
+    },
+    "turns_on": {
+      "description": "Triggers when a climate turns on.",
+      "name": "When a climate turns on"
+    }
+  }
 }

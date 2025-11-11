@@ -1,0 +1,128 @@
+turns_on:
+  target:
+    entity:
+      domain: climate
+
+turns_off:
+  target:
+    entity:
+      domain: climate
+
+mode_changed:
+  target:
+    entity:
+      domain: climate
+  fields:
+    hvac_mode:
+      required: false
+      default: []
+      selector:
+        select:
+          multiple: true
+          mode: dropdown
+          options:
+            - label: "Off"
+              value: "off"
+            - label: "Heat"
+              value: "heat"
+            - label: "Cool"
+              value: "cool"
+            - label: "Heat/Cool"
+              value: "heat_cool"
+            - label: "Auto"
+              value: "auto"
+            - label: "Dry"
+              value: "dry"
+            - label: "Fan only"
+              value: "fan_only"
+
+cooling:
+  target:
+    entity:
+      domain: climate
+
+heating:
+  target:
+    entity:
+      domain: climate
+
+drying:
+  target:
+    entity:
+      domain: climate
+
+target_temperature_changed:
+  target:
+    entity:
+      domain: climate
+  fields:
+    above:
+      required: false
+      selector:
+        number:
+          mode: box
+          step: 0.1
+    below:
+      required: false
+      selector:
+        number:
+          mode: box
+          step: 0.1
+
+current_temperature_changed:
+  target:
+    entity:
+      domain: climate
+  fields:
+    above:
+      required: false
+      selector:
+        number:
+          mode: box
+          step: 0.1
+    below:
+      required: false
+      selector:
+        number:
+          mode: box
+          step: 0.1
+
+target_humidity_changed:
+  target:
+    entity:
+      domain: climate
+  fields:
+    above:
+      required: false
+      selector:
+        number:
+          mode: box
+          min: 0
+          max: 100
+    below:
+      required: false
+      selector:
+        number:
+          mode: box
+          min: 0
+          max: 100
+
+current_humidity_changed:
+  target:
+    entity:
+      domain: climate
+  fields:
+    above:
+      required: false
+      selector:
+        number:
+          mode: box
+          min: 0
+          max: 100
+    below:
+      required: false
+      selector:
+        number:
+          mode: box
+          min: 0
+          max: 100
