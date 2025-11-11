@@ -24,11 +24,24 @@ from . import ATTR_CURRENT_POSITION, CoverDeviceClass, CoverState
 from .const import DOMAIN
 
 CONF_FULLY_OPENED = "fully_opened"
+CONF_FULLY_CLOSED = "fully_closed"
 
 OPENS_TRIGGER_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_OPTIONS, default={}): {
             vol.Optional(CONF_FULLY_OPENED, default=False): cv.boolean,
+            vol.Optional(CONF_DEVICE_CLASS, default=[]): vol.All(
+                cv.ensure_list, [vol.Coerce(CoverDeviceClass)]
+            ),
+        },
+        vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
+    }
+)
+
+CLOSES_TRIGGER_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_OPTIONS, default={}): {
+            vol.Optional(CONF_FULLY_CLOSED, default=False): cv.boolean,
             vol.Optional(CONF_DEVICE_CLASS, default=[]): vol.All(
                 cv.ensure_list, [vol.Coerce(CoverDeviceClass)]
             ),

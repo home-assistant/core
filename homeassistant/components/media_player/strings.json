@@ -373,6 +373,11 @@
       "description": "Triggers when a media player turns on.",
       "description_configured": "Triggers when a media player turns on",
       "name": "When a media player turns on"
+    },
+    "turns_off": {
+      "description": "Triggers when a media player turns off.",
+      "description_configured": "Triggers when a media player turns off",
+      "name": "When a media player turns off"
     }
   }
 }

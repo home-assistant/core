@@ -52,3 +52,46 @@ async def test_turns_on_trigger(
     hass.states.async_set(entity_id, STATE_PLAYING)
     await hass.async_block_till_done()
     assert len(service_calls) == 0
+
+
+async def test_turns_off_trigger(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test that the turns off trigger fires when a media player turns off."""
+    entity_id = "media_player.test"
+    await async_setup_component(hass, "media_player", {})
+
+    # Set initial state to playing
+    hass.states.async_set(entity_id, STATE_PLAYING)
+    await hass.async_block_till_done()
+
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "triggers": {
+                    "trigger": "media_player.turns_off",
+                    "target": {CONF_ENTITY_ID: entity_id},
+                },
+                "actions": {
+                    "action": "test.automation",
+                    "data": {
+                        CONF_ENTITY_ID: "{{ trigger.entity_id }}",
+                    },
+                },
+            }
+        },
+    )
+
+    # Turn off - should trigger
+    hass.states.async_set(entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+    assert service_calls[0].data[CONF_ENTITY_ID] == entity_id
+    service_calls.clear()
+
+    # Already off - should not trigger
+    hass.states.async_set(entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
