@@ -24,7 +24,7 @@ async def async_setup_entry(
     """Set up light(s) for Velux platform."""
     pyvlx = config_entry.runtime_data
     async_add_entities(
-        VeluxLight(node, config_entry)
+        VeluxLight(node, config_entry.entry_id)
         for node in pyvlx.nodes
         if isinstance(node, LighteningDevice)
     )

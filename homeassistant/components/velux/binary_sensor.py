@@ -31,7 +31,7 @@ async def async_setup_entry(
     pyvlx = config_entry.runtime_data
 
     async_add_entities(
-        VeluxRainSensor(node, config_entry)
+        VeluxRainSensor(node, config_entry.entry_id)
         for node in pyvlx.nodes
         if isinstance(node, Window) and node.rain_sensor
     )
@@ -46,9 +46,9 @@ class VeluxRainSensor(VeluxEntity, BinarySensorEntity):
     _attr_device_class = BinarySensorDeviceClass.MOISTURE
     _attr_translation_key = "rain_sensor"
 
-    def __init__(self, node: OpeningDevice, config_entry: VeluxConfigEntry) -> None:
+    def __init__(self, node: OpeningDevice, config_entry_id: str) -> None:
         """Initialize VeluxRainSensor."""
-        super().__init__(node, config_entry)
+        super().__init__(node, config_entry_id)
         self._attr_unique_id = f"{self._attr_unique_id}_rain_sensor"
 
     async def async_update(self) -> None:

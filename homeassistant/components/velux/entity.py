@@ -6,7 +6,6 @@ from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
-from . import VeluxConfigEntry
 from .const import DOMAIN
 
 
@@ -16,13 +15,13 @@ class VeluxEntity(Entity):
     _attr_should_poll = False
     _attr_has_entity_name = True
 
-    def __init__(self, node: Node, config_entry: VeluxConfigEntry) -> None:
+    def __init__(self, node: Node, config_entry_id: str) -> None:
         """Initialize the Velux device."""
         self.node = node
         unique_id = (
             node.serial_number
             if node.serial_number
-            else f"{config_entry.entry_id}_{node.node_id}"
+            else f"{config_entry_id}_{node.node_id}"
         )
         self._attr_unique_id = unique_id
 
@@ -35,7 +34,7 @@ class VeluxEntity(Entity):
             },
             name=node.name if node.name else f"#{node.node_id}",
             serial_number=node.serial_number,
-            via_device=(DOMAIN, f"gateway_{config_entry.entry_id}"),
+            via_device=(DOMAIN, f"gateway_{config_entry_id}"),
         )
 
     @callback

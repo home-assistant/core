@@ -38,7 +38,7 @@ async def async_setup_entry(
     """Set up cover(s) for Velux platform."""
     pyvlx = config_entry.runtime_data
     async_add_entities(
-        VeluxCover(node, config_entry)
+        VeluxCover(node, config_entry.entry_id)
         for node in pyvlx.nodes
         if isinstance(node, OpeningDevice)
     )
@@ -53,9 +53,9 @@ class VeluxCover(VeluxEntity, CoverEntity):
     # Do not name the "main" feature of the device (position control)
     _attr_name = None
 
-    def __init__(self, node: OpeningDevice, config_entry: VeluxConfigEntry) -> None:
+    def __init__(self, node: OpeningDevice, config_entry_id: str) -> None:
         """Initialize VeluxCover."""
-        super().__init__(node, config_entry)
+        super().__init__(node, config_entry_id)
         # Window is the default device class for covers
         self._attr_device_class = CoverDeviceClass.WINDOW
         if isinstance(node, Awning):
