@@ -123,7 +123,14 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState]):
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
         await self._verify_api()
-        await self.properties_api.status.refresh()
+        try:
+            await self.properties_api.status.refresh()
+        except RoborockException as err:
+            _LOGGER.debug("Failed to update data during setup: %s", err)
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_data_fail",
+            ) from err
 
         self._last_home_update_attempt = dt_util.utcnow()
 
@@ -180,10 +187,6 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState]):
                     translation_placeholders={"device_name": self._device.name},
                     learn_more_url="https://www.home-assistant.io/integrations/roborock/#the-integration-tells-me-it-cannot-reach-my-vacuum-and-is-using-the-cloud-api-and-that-this-is-not-supported-or-i-am-having-any-networking-issues",
                 )
-
-    async def async_shutdown(self) -> None:
-        """Shutdown the coordinator."""
-        await super().async_shutdown()
 
     async def _update_device_prop(self) -> None:
         """Update device properties."""

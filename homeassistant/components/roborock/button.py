@@ -71,7 +71,6 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Roborock button platform."""
-    _LOGGER.debug("Setting up Roborock button platform")
     routines_lists = await asyncio.gather(
         *[coordinator.get_routines() for coordinator in config_entry.runtime_data.v1],
     )
