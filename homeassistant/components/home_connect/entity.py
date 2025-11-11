@@ -64,8 +64,11 @@ class HomeConnectEntity(CoordinatorEntity[HomeConnectCoordinator]):
         self.update_native_value()
         available = self._attr_available = self.appliance.info.connected
         self.async_write_ha_state()
-        state = STATE_UNAVAILABLE if not available else self.state
-        _LOGGER.debug("Updated %s, new state: %s", self.entity_id, state)
+        _LOGGER.debug(
+            "Updated %s, new state: %s",
+            self.entity_id,
+            STATE_UNAVAILABLE if not available else self.state,
+        )
 
     @property
     def bsh_key(self) -> str:
@@ -87,16 +90,25 @@ class HomeConnectOptionEntity(HomeConnectEntity):
     """Class for entities that represents program options."""
 
     @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return super().available and self.bsh_key in self.appliance.options
-
-    @property
     def option_value(self) -> str | int | float | bool | None:
         """Return the state of the entity."""
         if event := self.appliance.events.get(EventKey(self.bsh_key)):
             return event.value
         return None
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self.update_native_value()
+        available = self._attr_available = (
+            self.appliance.info.connected and self.bsh_key in self.appliance.options
+        )
+        self.async_write_ha_state()
+        _LOGGER.debug(
+            "Updated %s, new state: %s",
+            self.entity_id,
+            STATE_UNAVAILABLE if not available else self.state,
+        )
 
     async def async_set_option(self, value: str | float | bool) -> None:
         """Set an option for the entity."""
