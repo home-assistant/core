@@ -7,6 +7,8 @@ from typing import cast
 
 from aiohomeconnect.model import EventKey
 
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import HomeConnectApplianceData, HomeConnectConfigEntry
@@ -14,11 +16,12 @@ from .entity import HomeConnectEntity, HomeConnectOptionEntity
 
 
 def _create_option_entities(
+    entity_registry: er.EntityRegistry,
     entry: HomeConnectConfigEntry,
     appliance: HomeConnectApplianceData,
     known_entity_unique_ids: dict[str, str],
     get_option_entities_for_appliance: Callable[
-        [HomeConnectConfigEntry, HomeConnectApplianceData],
+        [HomeConnectConfigEntry, HomeConnectApplianceData, er.EntityRegistry],
         list[HomeConnectOptionEntity],
     ],
     async_add_entities: AddConfigEntryEntitiesCallback,
@@ -26,7 +29,9 @@ def _create_option_entities(
     """Create the required option entities for the appliances."""
     option_entities_to_add = [
         entity
-        for entity in get_option_entities_for_appliance(entry, appliance)
+        for entity in get_option_entities_for_appliance(
+            entry, appliance, entity_registry
+        )
         if entity.unique_id not in known_entity_unique_ids
     ]
     known_entity_unique_ids.update(
@@ -39,13 +44,14 @@ def _create_option_entities(
 
 
 def _handle_paired_or_connected_appliance(
+    hass: HomeAssistant,
     entry: HomeConnectConfigEntry,
     known_entity_unique_ids: dict[str, str],
     get_entities_for_appliance: Callable[
         [HomeConnectConfigEntry, HomeConnectApplianceData], list[HomeConnectEntity]
     ],
     get_option_entities_for_appliance: Callable[
-        [HomeConnectConfigEntry, HomeConnectApplianceData],
+        [HomeConnectConfigEntry, HomeConnectApplianceData, er.EntityRegistry],
         list[HomeConnectOptionEntity],
     ]
     | None,
@@ -60,6 +66,7 @@ def _handle_paired_or_connected_appliance(
     already or it is the first time we see them when the appliance is connected.
     """
     entities: list[HomeConnectEntity] = []
+    entity_registry = er.async_get(hass)
     for appliance in entry.runtime_data.data.values():
         entities_to_add = [
             entity
@@ -69,7 +76,9 @@ def _handle_paired_or_connected_appliance(
         if get_option_entities_for_appliance:
             entities_to_add.extend(
                 entity
-                for entity in get_option_entities_for_appliance(entry, appliance)
+                for entity in get_option_entities_for_appliance(
+                    entry, appliance, entity_registry
+                )
                 if entity.unique_id not in known_entity_unique_ids
             )
             for event_key in (
@@ -80,6 +89,7 @@ def _handle_paired_or_connected_appliance(
                     entry.runtime_data.async_add_listener(
                         partial(
                             _create_option_entities,
+                            entity_registry,
                             entry,
                             appliance,
                             known_entity_unique_ids,
@@ -120,13 +130,14 @@ def _handle_depaired_appliance(
 
 
 def setup_home_connect_entry(
+    hass: HomeAssistant,
     entry: HomeConnectConfigEntry,
     get_entities_for_appliance: Callable[
         [HomeConnectConfigEntry, HomeConnectApplianceData], list[HomeConnectEntity]
     ],
     async_add_entities: AddConfigEntryEntitiesCallback,
     get_option_entities_for_appliance: Callable[
-        [HomeConnectConfigEntry, HomeConnectApplianceData],
+        [HomeConnectConfigEntry, HomeConnectApplianceData, er.EntityRegistry],
         list[HomeConnectOptionEntity],
     ]
     | None = None,
@@ -141,6 +152,7 @@ def setup_home_connect_entry(
         entry.runtime_data.async_add_special_listener(
             partial(
                 _handle_paired_or_connected_appliance,
+                hass,
                 entry,
                 known_entity_unique_ids,
                 get_entities_for_appliance,

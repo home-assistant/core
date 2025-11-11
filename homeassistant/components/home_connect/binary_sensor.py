@@ -164,6 +164,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Home Connect binary sensor."""
     setup_home_connect_entry(
+        hass,
         entry,
         _get_entities_for_appliance,
         async_add_entities,

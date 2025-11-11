@@ -11,8 +11,10 @@ from aiohomeconnect.model.error import HomeConnectError
 from aiohomeconnect.model.program import Execution
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .common import setup_home_connect_entry
@@ -337,12 +339,17 @@ def _get_entities_for_appliance(
 def _get_option_entities_for_appliance(
     entry: HomeConnectConfigEntry,
     appliance: HomeConnectApplianceData,
+    entity_registry: er.EntityRegistry,
 ) -> list[HomeConnectOptionEntity]:
     """Get a list of entities."""
     return [
         HomeConnectSelectOptionEntity(entry.runtime_data, appliance, desc)
         for desc in PROGRAM_SELECT_OPTION_ENTITY_DESCRIPTIONS
         if desc.key in appliance.options
+        # Restore it if once existed
+        or entity_registry.async_get_entity_id(
+            Platform.SELECT, DOMAIN, f"{appliance.info.ha_id}-{desc.key}"
+        )
     ]
 
 
@@ -353,6 +360,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Home Connect select entities."""
     setup_home_connect_entry(
+        hass,
         entry,
         _get_entities_for_appliance,
         async_add_entities,
