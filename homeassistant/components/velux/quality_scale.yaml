@@ -19,9 +19,7 @@ rules:
     status: todo
     comment: subscribe is ok, unsubscribe needs to be added
   entity-unique-id: done
-  has-entity-name:
-    status: todo
-    comment: scenes need fixing
+  has-entity-name: done
   runtime-data: done
   test-before-configure: done
   test-before-setup:
