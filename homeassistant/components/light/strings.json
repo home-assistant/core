@@ -468,6 +468,11 @@
       "description": "Triggers when a light turns on.",
       "description_configured": "Triggers when a light turns on",
       "name": "When a light turns on"
+    },
+    "turns_off": {
+      "description": "Triggers when a light turns off.",
+      "description_configured": "Triggers when a light turns off",
+      "name": "When a light turns off"
     }
   }
 }

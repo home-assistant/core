@@ -147,3 +147,98 @@ async def test_light_turns_on_multiple_lights(
     await hass.async_block_till_done()
     assert len(service_calls) == 1
     assert service_calls[0].data[CONF_ENTITY_ID] == entity_id_2
+
+
+async def test_light_turns_off_trigger(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test that the light turns off trigger fires when a light turns off."""
+    entity_id = "light.test_light"
+    await async_setup_component(hass, "light", {})
+
+    # Set initial state to on
+    hass.states.async_set(entity_id, STATE_ON)
+    await hass.async_block_till_done()
+
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "triggers": {
+                    "trigger": "light.turns_off",
+                    "target": {CONF_ENTITY_ID: entity_id},
+                },
+                "actions": {
+                    "action": "test.automation",
+                    "data": {
+                        CONF_ENTITY_ID: "{{ trigger.entity_id }}",
+                    },
+                },
+            }
+        },
+    )
+
+    # Turn light off - should trigger
+    hass.states.async_set(entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+    assert service_calls[0].data[CONF_ENTITY_ID] == entity_id
+    service_calls.clear()
+
+    # Turn light off again while already off - should not trigger
+    hass.states.async_set(entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+
+async def test_light_turns_off_trigger_ignores_unavailable(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test that the light turns off trigger ignores unavailable states."""
+    entity_id = "light.test_light"
+    await async_setup_component(hass, "light", {})
+
+    # Set initial state to on
+    hass.states.async_set(entity_id, STATE_ON)
+    await hass.async_block_till_done()
+
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "triggers": {
+                    "trigger": "light.turns_off",
+                    "target": {CONF_ENTITY_ID: entity_id},
+                },
+                "actions": {
+                    "action": "test.automation",
+                    "data": {
+                        CONF_ENTITY_ID: "{{ trigger.entity_id }}",
+                    },
+                },
+            }
+        },
+    )
+
+    # Set to unavailable - should not trigger
+    hass.states.async_set(entity_id, STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+    # Turn light off after unavailable - should not trigger (from unavailable)
+    hass.states.async_set(entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+    # Turn light on
+    hass.states.async_set(entity_id, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+    # Turn light off after being on - should trigger
+    hass.states.async_set(entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+    assert service_calls[0].data[CONF_ENTITY_ID] == entity_id

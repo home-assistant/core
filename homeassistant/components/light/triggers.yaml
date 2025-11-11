@@ -2,3 +2,8 @@ turns_on:
   target:
     entity:
       domain: light
+
+turns_off:
+  target:
+    entity:
+      domain: light

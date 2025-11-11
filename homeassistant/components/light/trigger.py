@@ -98,8 +98,72 @@ class LightTurnsOnTrigger(Trigger):
         )
 
 
+class LightTurnsOffTrigger(Trigger):
+    """Trigger for when a light turns off."""
+
+    @override
+    @classmethod
+    async def async_validate_config(
+        cls, hass: HomeAssistant, config: ConfigType
+    ) -> ConfigType:
+        """Validate config."""
+        return cast(ConfigType, TURNS_OFF_TRIGGER_SCHEMA(config))
+
+    def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
+        """Initialize the light turns off trigger."""
+        super().__init__(hass, config)
+        if TYPE_CHECKING:
+            assert config.target is not None
+        self._target = config.target
+
+    @override
+    async def async_attach_runner(
+        self, run_action: TriggerActionRunner
+    ) -> CALLBACK_TYPE:
+        """Attach the trigger to an action runner."""
+
+        @callback
+        def state_change_listener(
+            target_state_change_data: TargetStateChangedData,
+        ) -> None:
+            """Listen for state changes and call action."""
+            event = target_state_change_data.state_change_event
+            entity_id = event.data["entity_id"]
+            from_state = event.data["old_state"]
+            to_state = event.data["new_state"]
+
+            # Ignore unavailable states
+            if to_state is None or to_state.state == STATE_UNAVAILABLE:
+                return
+
+            # Trigger when light turns off (from on to off)
+            if from_state and from_state.state == STATE_ON and to_state.state == STATE_OFF:
+                run_action(
+                    {
+                        ATTR_ENTITY_ID: entity_id,
+                        "from_state": from_state,
+                        "to_state": to_state,
+                    },
+                    f"light turned off on {entity_id}",
+                    event.context,
+                )
+
+        def entity_filter(entities: set[str]) -> set[str]:
+            """Filter entities of this domain."""
+            return {
+                entity_id
+                for entity_id in entities
+                if split_entity_id(entity_id)[0] == DOMAIN
+            }
+
+        return async_track_target_selector_state_change_event(
+            self._hass, self._target, state_change_listener, entity_filter
+        )
+
+
 TRIGGERS: dict[str, type[Trigger]] = {
     "turns_on": LightTurnsOnTrigger,
+    "turns_off": LightTurnsOffTrigger,
 }
 
 
