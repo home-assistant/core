@@ -2,6 +2,7 @@
 
 from collections.abc import Generator
 import time
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 from aiosenz import Account, Thermostat
@@ -33,7 +34,7 @@ def load_device_file() -> str:
 @pytest.fixture
 async def device_fixture(
     hass: HomeAssistant, load_device_file: str
-) -> list[Thermostat]:
+) -> list[dict[str, Any]]:
     """Fixture for device."""
     return await async_load_json_array_fixture(hass, load_device_file, DOMAIN)
 
