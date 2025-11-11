@@ -1,5 +1,18 @@
 {
   "entity": {
+    "climate": {
+      "climate": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "manual": "mdi:hand-back-right",
+              "off": "mdi:hvac-off",
+              "schedule": "mdi:calendar-clock"
+            }
+          }
+        }
+      }
+    },
     "fan": {
       "air_purifier": {
         "default": "mdi:air-purifier",
@@ -125,19 +138,6 @@
           "high": "mdi:water-check",
           "low": "mdi:water-outline",
           "medium": "mdi:water"
-        }
-      }
-    },
-    "climate": {
-      "climate": {
-        "state_attributes": {
-          "preset_mode": {
-            "state": {
-              "schedule": "mdi:calendar-clock",
-              "manual": "mdi:hand-back-right",
-              "off": "mdi:hvac-off"
-            }
-          }
         }
       }
     }
