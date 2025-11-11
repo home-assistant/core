@@ -1089,7 +1089,7 @@
       "message": "Invalid device targeted."
     },
     "oauth2_implementation_unavailable": {
-      "message": "OAuth2 implementation unavailable, will retry"
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     },
     "set_program_error": {
       "message": "'Set program' action failed: {status} / {message}"
