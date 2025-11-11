@@ -10,6 +10,7 @@ from homeassistant.components.image import ImageEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import RoborockConfigEntry, RoborockDataUpdateCoordinator
@@ -100,5 +101,5 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
     async def async_image(self) -> bytes | None:
         """Get the cached image."""
         if (map_content := self._map_content) is None:
-            raise ValueError("Map flag not found in coordinator maps")
+            raise HomeAssistantError("Map flag not found in coordinator maps")
         return map_content.image_content
