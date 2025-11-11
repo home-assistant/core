@@ -17,7 +17,7 @@
         },
         "data_description": {
           "host": "IP address or hostname of the Vitrea device",
-          "port": "Port number"
+          "port": "Port number of the Vitrea device"
         },
         "description": "Enter the connection details for your Vitrea device.",
         "title": "Connect to Vitrea"
