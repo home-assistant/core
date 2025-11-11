@@ -143,5 +143,18 @@
       "name": "Trigger"
     }
   },
-  "title": "Alarm control panel"
+  "title": "Alarm control panel",
+  "triggers": {
+    "armed": {
+      "description": "Triggers when an alarm is armed.",
+      "description_configured": "Triggers when an alarm is armed",
+      "fields": {
+        "mode": {
+          "description": "The arm modes to trigger on. If empty, triggers on all arm modes.",
+          "name": "Arm modes"
+        }
+      },
+      "name": "When an alarm is armed"
+    }
+  }
 }

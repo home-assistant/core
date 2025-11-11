@@ -1,0 +1,22 @@
+armed:
+  target:
+    entity:
+      domain: alarm_control_panel
+  fields:
+    mode:
+      required: false
+      default: []
+      selector:
+        select:
+          multiple: true
+          options:
+            - value: armed_home
+              label: Home
+            - value: armed_away
+              label: Away
+            - value: armed_night
+              label: Night
+            - value: armed_vacation
+              label: Vacation
+            - value: armed_custom_bypass
+              label: Custom bypass
