@@ -4,13 +4,7 @@ from typing import TYPE_CHECKING, Final, cast, override
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_STATE,
-    CONF_TARGET,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import ATTR_ENTITY_ID, CONF_TARGET, STATE_OFF, STATE_ON
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback, split_entity_id
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import process_state_match
@@ -31,11 +25,9 @@ BEHAVIOR_FIRST: Final = "first"
 BEHAVIOR_LAST: Final = "last"
 BEHAVIOR_ANY: Final = "any"
 
-STATE_PLATFORM_TYPE: Final = "state"
 STATE_TRIGGER_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_OPTIONS): {
-            vol.Required(CONF_STATE): vol.In([STATE_ON, STATE_OFF]),
             vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
                 [BEHAVIOR_FIRST, BEHAVIOR_LAST, BEHAVIOR_ANY]
             ),
@@ -45,7 +37,7 @@ STATE_TRIGGER_SCHEMA = vol.Schema(
 )
 
 
-class StateTrigger(Trigger):
+class StateTriggerBase(Trigger):
     """Trigger for state changes."""
 
     @override
@@ -56,7 +48,7 @@ class StateTrigger(Trigger):
         """Validate config."""
         return cast(ConfigType, STATE_TRIGGER_SCHEMA(config))
 
-    def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
+    def __init__(self, hass: HomeAssistant, config: TriggerConfig, state: str) -> None:
         """Initialize the state trigger."""
         super().__init__(hass, config)
         if TYPE_CHECKING:
@@ -64,13 +56,14 @@ class StateTrigger(Trigger):
             assert config.target is not None
         self._options = config.options
         self._target = config.target
+        self._state = state
 
     @override
     async def async_attach_runner(
         self, run_action: TriggerActionRunner
     ) -> CALLBACK_TYPE:
         """Attach the trigger to an action runner."""
-        match_config_state = process_state_match(self._options.get(CONF_STATE))
+        match_config_state = process_state_match(self._state)
 
         def check_all_match(entity_ids: set[str]) -> bool:
             """Check if all entity states match."""
@@ -108,7 +101,7 @@ class StateTrigger(Trigger):
 
             # This check is required for "first" behavior, to check that it went from zero
             # entities matching the state to one. Otherwise, if previously there were two
-            # entities on CONF_STATE and one changed, this would trigger.
+            # entities on the desired state and one changed, this would trigger.
             # For "last" behavior it is not required, but serves as a quicker fail check.
             if not match_config_state(to_state.state):
                 return
@@ -142,8 +135,25 @@ class StateTrigger(Trigger):
         )
 
 
+class TurnedOnTrigger(StateTriggerBase):
+    """Trigger for when a light is turned on."""
+
+    def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
+        """Initialize the ON state trigger."""
+        super().__init__(hass, config, STATE_ON)
+
+
+class TurnedOffTrigger(StateTriggerBase):
+    """Trigger for when a light is turned off."""
+
+    def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
+        """Initialize the OFF state trigger."""
+        super().__init__(hass, config, STATE_OFF)
+
+
 TRIGGERS: dict[str, type[Trigger]] = {
-    STATE_PLATFORM_TYPE: StateTrigger,
+    "turned_off": TurnedOffTrigger,
+    "turned_on": TurnedOnTrigger,
 }
 
 

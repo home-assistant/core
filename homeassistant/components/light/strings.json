@@ -477,20 +477,27 @@
   },
   "title": "Light",
   "triggers": {
-    "state": {
-      "description": "When the state of a light changes, such as turning on or off.",
-      "description_configured": "When the state of a light changes",
+    "turned_off": {
+      "description": "Triggers when a light is turned off.",
+      "description_configured": "Triggers when a light is turned off",
       "fields": {
         "behavior": {
-          "description": "The behavior of the targeted entities to trigger on.",
+          "description": "The behavior of the targeted lights to trigger on.",
           "name": "Behavior"
-        },
-        "state": {
-          "description": "The state to trigger on.",
-          "name": "State"
         }
       },
-      "name": "State"
+      "name": "When a light is turned off"
+    },
+    "turned_on": {
+      "description": "Triggers when a light is turned on.",
+      "description_configured": "Triggers when a light is turned on",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::light::triggers::turned_off::fields::behavior::description%]",
+          "name": "[%key:component::light::triggers::turned_off::fields::behavior::name%]"
+        }
+      },
+      "name": "When a light is turned on"
     }
   }
 }

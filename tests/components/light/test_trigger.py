@@ -10,7 +10,6 @@ from homeassistant.const import (
     ATTR_LABEL_ID,
     CONF_ENTITY_ID,
     CONF_PLATFORM,
-    CONF_STATE,
     CONF_TARGET,
     STATE_OFF,
     STATE_ON,
@@ -108,13 +107,18 @@ async def target_lights(hass: HomeAssistant) -> None:
     ],
 )
 @pytest.mark.parametrize(
-    ("state", "reverse_state"), [(STATE_ON, STATE_OFF), (STATE_OFF, STATE_ON)]
+    ("trigger", "state", "reverse_state"),
+    [
+        ("light.turned_on", STATE_ON, STATE_OFF),
+        ("light.turned_off", STATE_OFF, STATE_ON),
+    ],
 )
 async def test_light_state_trigger_behavior_any(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
     trigger_target_config: dict,
     entity_id: str,
+    trigger: str,
     state: str,
     reverse_state: str,
 ) -> None:
@@ -129,9 +133,9 @@ async def test_light_state_trigger_behavior_any(
         {
             automation.DOMAIN: {
                 "trigger": {
-                    CONF_PLATFORM: "light.state",
+                    CONF_PLATFORM: trigger,
                     CONF_TARGET: {**trigger_target_config},
-                    CONF_OPTIONS: {CONF_STATE: state},
+                    CONF_OPTIONS: {},
                 },
                 "action": {
                     "service": "test.automation",
@@ -166,7 +170,11 @@ async def test_light_state_trigger_behavior_any(
     ],
 )
 @pytest.mark.parametrize(
-    ("state", "reverse_state"), [(STATE_ON, STATE_OFF), (STATE_OFF, STATE_ON)]
+    ("trigger", "state", "reverse_state"),
+    [
+        ("light.turned_on", STATE_ON, STATE_OFF),
+        ("light.turned_off", STATE_OFF, STATE_ON),
+    ],
 )
 async def test_light_state_trigger_behavior_first(
     hass: HomeAssistant,
@@ -174,6 +182,7 @@ async def test_light_state_trigger_behavior_first(
     target_lights: list[str],
     trigger_target_config: dict,
     entity_id: str,
+    trigger: str,
     state: str,
     reverse_state: str,
 ) -> None:
@@ -190,9 +199,9 @@ async def test_light_state_trigger_behavior_first(
         {
             automation.DOMAIN: {
                 "trigger": {
-                    CONF_PLATFORM: "light.state",
+                    CONF_PLATFORM: trigger,
                     CONF_TARGET: {**trigger_target_config},
-                    CONF_OPTIONS: {CONF_STATE: state, "behavior": "first"},
+                    CONF_OPTIONS: {"behavior": "first"},
                 },
                 "action": {
                     "service": "test.automation",
@@ -236,7 +245,11 @@ async def test_light_state_trigger_behavior_first(
     ],
 )
 @pytest.mark.parametrize(
-    ("state", "reverse_state"), [(STATE_ON, STATE_OFF), (STATE_OFF, STATE_ON)]
+    ("trigger", "state", "reverse_state"),
+    [
+        ("light.turned_on", STATE_ON, STATE_OFF),
+        ("light.turned_off", STATE_OFF, STATE_ON),
+    ],
 )
 async def test_light_state_trigger_behavior_last(
     hass: HomeAssistant,
@@ -244,6 +257,7 @@ async def test_light_state_trigger_behavior_last(
     target_lights: list[str],
     trigger_target_config: dict,
     entity_id: str,
+    trigger: str,
     state: str,
     reverse_state: str,
 ) -> None:
@@ -260,9 +274,9 @@ async def test_light_state_trigger_behavior_last(
         {
             automation.DOMAIN: {
                 "trigger": {
-                    CONF_PLATFORM: "light.state",
+                    CONF_PLATFORM: trigger,
                     CONF_TARGET: {**trigger_target_config},
-                    CONF_OPTIONS: {CONF_STATE: state, "behavior": "last"},
+                    CONF_OPTIONS: {"behavior": "last"},
                 },
                 "action": {
                     "service": "test.automation",
