@@ -57,7 +57,7 @@
       "message": "Error while loading the integration."
     },
     "implementation_unavailable": {
-      "message": "OAuth2 implementation is not available, will retry."
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     },
     "incorrect_oauth2_scope": {
       "message": "Stored permissions are invalid. Please login again to update permissions."
