@@ -101,7 +101,6 @@ class SatelIntegraAlarmPanel(AlarmControlPanelEntity):
 
     async def async_added_to_hass(self) -> None:
         """Update alarm status and register callbacks for future updates."""
-        _LOGGER.debug("Starts listening for panel messages")
         self._update_alarm_status()
         self.async_on_remove(
             async_dispatcher_connect(
@@ -113,7 +112,7 @@ class SatelIntegraAlarmPanel(AlarmControlPanelEntity):
     def _update_alarm_status(self):
         """Handle alarm status update."""
         state = self._read_alarm_state()
-        _LOGGER.debug("Got status update, current status: %s", state)
+
         if state != self._attr_alarm_state:
             self._attr_alarm_state = state
             self.async_write_ha_state()
@@ -128,8 +127,6 @@ class SatelIntegraAlarmPanel(AlarmControlPanelEntity):
 
         if not self._satel.connected:
             return None
-
-        _LOGGER.debug("State map of Satel: %s", self._satel.partition_states)
 
         for satel_state, ha_state in ALARM_STATE_MAP.items():
             if (
@@ -151,8 +148,6 @@ class SatelIntegraAlarmPanel(AlarmControlPanelEntity):
             self._attr_alarm_state == AlarmControlPanelState.TRIGGERED
         )
 
-        _LOGGER.debug("Disarming, self._attr_alarm_state: %s", self._attr_alarm_state)
-
         await self._satel.disarm(code, [self._partition_id])
 
         if clear_alarm_necessary:
@@ -162,14 +157,12 @@ class SatelIntegraAlarmPanel(AlarmControlPanelEntity):
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
-        _LOGGER.debug("Arming away")
 
         if code:
             await self._satel.arm(code, [self._partition_id])
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
-        _LOGGER.debug("Arming home")
 
         if code:
             await self._satel.arm(code, [self._partition_id], self._arm_home_mode)
