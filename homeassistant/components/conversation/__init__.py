@@ -14,6 +14,7 @@ from home_assistant_intents import get_intents, get_languages
 import voluptuous as vol
 import yaml
 
+from homeassistant.components.homeassistant.exposed_entities import async_should_expose
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import MATCH_ALL
 from homeassistant.core import (
@@ -24,7 +25,13 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, intent
+from homeassistant.helpers import (
+    area_registry as ar,
+    config_validation as cv,
+    entity_registry as er,
+    floor_registry as fr,
+    intent,
+)
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.typing import ConfigType
@@ -277,7 +284,7 @@ async def async_get_intents(
     hass: HomeAssistant, language: str, source: IntentSource = IntentSource.ALL
 ) -> Intents:
     """Load intents for a language."""
-    intents_dict: dict[str, Any] = {"intents": {}}
+    intents_dict: dict[str, Any] = {"intents": {}, "lists": {}}
 
     agent = get_agent_manager(hass).default_agent
     assert agent is not None
@@ -310,15 +317,7 @@ async def async_get_intents(
 
     if (source & IntentSource.CONVERSATION_CONFIG) and agent.config_intents:
         # From conversation YAML config
-        merge_dict(
-            intents_dict,
-            {
-                "intents": {
-                    intent_name: {"data": [{"sentences": sentences}]}
-                    for intent_name, sentences in agent.config_intents.items()
-                }
-            },
-        )
+        merge_dict(intents_dict, agent.config_intents)
 
     if (source & IntentSource.SENTENCE_TRIGGERS) and agent.trigger_details:
         # From automations
@@ -335,6 +334,46 @@ async def async_get_intents(
                 }
             },
         )
+
+    # Add exposed entities + areas/floors
+    entity_tuples = []
+    entity_registry = er.async_get(hass)
+    for state in hass.states.async_all():
+        if not async_should_expose(hass, DOMAIN, state.entity_id):
+            continue
+
+        context: dict[str, Any] = {"domain": state.domain}
+        entity_tuples.append((state.name, context))
+
+        if not (entity := entity_registry.async_get(state.entity_id)):
+            continue
+
+        entity_tuples.extend(
+            (alias, context)
+            for alias in filter(None, (a.strip() for a in entity.aliases))
+        )
+
+    intents_dict["lists"]["name"] = {
+        "values": [
+            {"in": name, "out": name, "context": context}
+            for name, context in entity_tuples
+        ]
+    }
+
+    # Areas/floors
+    area_registry = ar.async_get(hass)
+    floor_registry = fr.async_get(hass)
+    for list_name, entries in (
+        ("area", area_registry.async_list_areas()),
+        ("floor", floor_registry.async_list_floors()),
+    ):
+        entry_names = set()
+        for entry in entries:
+            entry_names.add(entry.name)
+            entry_names.update(filter(None, (a.strip() for a in entry.aliases)))
+
+        if entry_names:
+            intents_dict["lists"][list_name] = {"values": list(entry_names)}
 
     # Parse and post-process
     intents_dict["language"] = language

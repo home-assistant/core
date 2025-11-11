@@ -3,6 +3,8 @@
 from http import HTTPStatus
 from unittest.mock import patch
 
+from hassil.expression import TextChunk
+from hassil.intents import TextSlotList
 import pytest
 from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
@@ -17,10 +19,17 @@ from homeassistant.components.conversation import (
     default_agent,
 )
 from homeassistant.components.conversation.const import HOME_ASSISTANT_AGENT
+from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import intent
+from homeassistant.helpers import (
+    area_registry as ar,
+    entity_registry as er,
+    floor_registry as fr,
+    intent,
+)
 from homeassistant.setup import async_setup_component
 
 from . import MockAgent
@@ -437,7 +446,7 @@ async def test_async_get_intents_bad_language(hass: HomeAssistant) -> None:
 
 
 async def test_async_get_intents_language_region(hass: HomeAssistant) -> None:
-    """Test getting available intents with a regtional language code."""
+    """Test getting available intents with a regional language code."""
     assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "conversation", {})
 
@@ -446,3 +455,61 @@ async def test_async_get_intents_language_region(hass: HomeAssistant) -> None:
     # built-in and custom sentences for "en" are included
     for intent_name in ("HassTurnOn", "OrderBeer"):
         assert intent_name in intents.intents
+
+
+async def test_async_get_intents_lists(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    area_registry: ar.AreaRegistry,
+    floor_registry: fr.FloorRegistry,
+) -> None:
+    """Test that intents contain name/area/floor lists."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "conversation", {})
+
+    # Create a light in an area on a floor
+    floor_ground = floor_registry.async_create("ground")
+    area_kitchen = area_registry.async_get_or_create("kitchen_id")
+    area_kitchen = area_registry.async_update(
+        area_kitchen.id, name="kitchen", floor_id=floor_ground.floor_id
+    )
+    kitchen_light = entity_registry.async_get_or_create("light", "demo", "light1234")
+    kitchen_light = entity_registry.async_update_entity(
+        kitchen_light.entity_id, area_id=area_kitchen.id
+    )
+    hass.states.async_set(
+        kitchen_light.entity_id, "off", {ATTR_FRIENDLY_NAME: "demo light"}
+    )
+
+    # Add a second unexposed light
+    unexposed_light = entity_registry.async_get_or_create("light", "demo", "light5678")
+    unexposed_light = entity_registry.async_update_entity(
+        unexposed_light.entity_id, area_id=area_kitchen.id
+    )
+    hass.states.async_set(
+        unexposed_light.entity_id, "off", {ATTR_FRIENDLY_NAME: "unexposed light"}
+    )
+    async_expose_entity(hass, conversation.DOMAIN, unexposed_light.entity_id, False)
+
+    # name/area/floor lists should reflect state of registries
+    intents = await conversation.async_get_intents(hass, "en")
+
+    name_list = intents.slot_lists.get("name")
+    assert isinstance(name_list, TextSlotList)
+
+    # 1 exposed light
+    assert len(name_list.values) == 1
+    assert name_list.values[0].text_in == TextChunk("demo light")
+    assert name_list.values[0].context == {"domain": "light"}
+
+    # 1 area
+    area_list = intents.slot_lists.get("area")
+    assert isinstance(area_list, TextSlotList)
+    assert len(area_list.values) == 1
+    assert area_list.values[0].text_in == TextChunk("kitchen")
+
+    # 1 floor
+    floor_list = intents.slot_lists.get("floor")
+    assert isinstance(floor_list, TextSlotList)
+    assert len(floor_list.values) == 1
+    assert floor_list.values[0].text_in == TextChunk("ground")
