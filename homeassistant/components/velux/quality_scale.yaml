@@ -7,9 +7,7 @@ rules:
   brands: done
   common-modules: done
   config-flow-test-coverage: done
-  config-flow:
-    status: done
-    comment: remaining missing descriptions addressed in https://github.com/home-assistant/core/pull/155832 and https://github.com/home-assistant/core/pull/155854
+  config-flow: done
   dependency-transparency: done
   docs-actions: done
   docs-high-level-description: done
@@ -20,8 +18,8 @@ rules:
     comment: subscribe is ok, unsubscribe needs to be added
   entity-unique-id: done
   has-entity-name:
-    status: done
-    comment: light name fixed in https://github.com/home-assistant/core/pull/155850, rest ok already
+    status: todo
+    comment: scenes need fixing
   runtime-data:
     status: done
     comment: addressed in https://github.com/home-assistant/core/pull/155207
