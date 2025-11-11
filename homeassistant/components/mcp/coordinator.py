@@ -59,7 +59,11 @@ async def mcp_client(
                 yield session
         else:
             async with (
-                sse_client(url=url, headers=headers) as streams,
+                sse_client(
+                    url=url,
+                    headers=headers,
+                    timeout=TIMEOUT,
+                ) as streams,
                 ClientSession(*streams) as session,
             ):
                 await session.initialize()
@@ -141,7 +145,7 @@ class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
         )
         if self.transport not in (TRANSPORT_SSE, TRANSPORT_STREAMABLE_HTTP):
             _LOGGER.warning(
-                "Invalid transport value '%s' in config entry; falling back to '%s'.",
+                "Invalid transport value '%s' in config entry; falling back to '%s'",
                 self.transport,
                 TRANSPORT_SSE,
             )
