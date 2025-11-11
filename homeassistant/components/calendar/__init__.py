@@ -570,6 +570,10 @@ class CalendarEntity(Entity):
         the current or upcoming event.
         """
         super().async_write_ha_state()
+
+        # Notify websocket subscribers of event changes
+        self.async_update_event_listeners()
+
         if self._alarm_unsubs is None:
             self._alarm_unsubs = []
         _LOGGER.debug(
@@ -680,12 +684,6 @@ class CalendarEntity(Entity):
             for event in events
         ]
         listener(event_list)
-
-    @callback
-    def _async_write_ha_state(self) -> None:
-        """Notify event subscribers."""
-        super()._async_write_ha_state()
-        self.async_update_event_listeners()
 
     async def async_get_events(
         self,
