@@ -50,7 +50,7 @@
   "services": {
     "set_timer": {
       "name": "Set timer",
-      "description": "Set the timer value for a switch with timer functionality.",
+      "description": "Sets the timer value for a switch with timer functionality.",
       "fields": {
         "entity_id": {
           "description": "Timer switch entity to control.",
