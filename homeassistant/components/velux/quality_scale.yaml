@@ -44,7 +44,9 @@ rules:
     comment: cleanup mock_config_entry vs mock_user_config_entry, cleanup mock_pyvlx vs mock_velux_client, remove unused freezer in test_cover_closed, add tests where missing
 
   # Gold
-  devices: done
+  devices:
+    status: todo
+    comment: scenes need devices
   diagnostics: todo
   discovery-update-info: todo
   discovery: done
