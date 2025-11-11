@@ -41,7 +41,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         implementation = await async_get_config_entry_implementation(hass, entry)
     except ImplementationUnavailableError as err:
         raise ConfigEntryNotReady(
-            "OAuth2 implementation unavailable, will retry"
+            translation_domain=NEATO_DOMAIN,
+            translation_key="oauth2_implementation_unavailable",
         ) from err
 
     session = OAuth2Session(hass, entry, implementation)
