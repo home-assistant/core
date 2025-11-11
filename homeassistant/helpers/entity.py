@@ -1027,8 +1027,6 @@ class Entity(
             self._async_verify_state_writable()
         if self.hass.loop_thread_id != threading.get_ident():
             report_non_thread_safe_operation("async_write_ha_state")
-        if self.included_unique_ids is not None:
-            self._update_group_entity_ids()
         self._async_write_ha_state()
 
     def _stringify_state(self, available: bool) -> str:
@@ -1394,22 +1392,6 @@ class Entity(
         self.hass = None  # type: ignore[assignment]
         self.platform = None  # type: ignore[assignment]
         self.parallel_updates = None
-
-    def _update_group_entity_ids(self) -> None:
-        """Update the grouped entity IDs after an update."""
-        if TYPE_CHECKING:
-            assert self.included_unique_ids is not None
-        entity_registry = er.async_get(self.hass)
-        self._included_entities = [
-            entity_id
-            for included_id in self.included_unique_ids
-            if (
-                entity_id := entity_registry.async_get_entity_id(
-                    self.platform.domain, self.platform.platform_name, included_id
-                )
-            )
-            is not None
-        ]
 
     async def add_to_platform_finish(self) -> None:
         """Finish adding an entity to a platform."""
