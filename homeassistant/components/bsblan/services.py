@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .const import DOMAIN
@@ -112,13 +112,11 @@ async def set_hot_water_schedule(service_call: ServiceCall) -> None:
         # Call the BSB-Lan API to set the schedule
         await client.set_hot_water(dhw_time_programs=dhw_programs)
     except BSBLANError as err:
-        raise ServiceValidationError(
+        raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="set_schedule_failed",
             translation_placeholders={"error": str(err)},
         ) from err
-
-    LOGGER.info("Hot water schedule updated successfully")
 
     # Refresh the slow coordinator to get the updated schedule
     await entry.runtime_data.slow_coordinator.async_request_refresh()
