@@ -312,3 +312,90 @@ async def test_closes_trigger_fully_closed_option(
     hass.states.async_set("cover.test", "closed", {ATTR_CURRENT_POSITION: 0})
     await hass.async_block_till_done()
     assert len(service_calls) == 1
+
+
+async def test_stops_trigger_fires_from_opening_to_open(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test that stops trigger fires when cover stops from opening."""
+    hass.states.async_set("cover.test", "opening")
+    context = Context()
+
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    CONF_PLATFORM: "cover.stops",
+                    CONF_TARGET: {CONF_ENTITY_ID: "cover.test"},
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    hass.states.async_set("cover.test", "open", context=context)
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+    assert service_calls[0].context.parent_id == context.id
+
+
+async def test_stops_trigger_fires_from_closing_to_closed(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test that stops trigger fires when cover stops from closing."""
+    hass.states.async_set("cover.test", "closing")
+    context = Context()
+
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    CONF_PLATFORM: "cover.stops",
+                    CONF_TARGET: {CONF_ENTITY_ID: "cover.test"},
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    hass.states.async_set("cover.test", "closed", context=context)
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+    assert service_calls[0].context.parent_id == context.id
+
+
+async def test_stops_trigger_does_not_fire_on_other_changes(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test that stops trigger does not fire on other state changes."""
+    hass.states.async_set("cover.test", "closed")
+
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    CONF_PLATFORM: "cover.stops",
+                    CONF_TARGET: {CONF_ENTITY_ID: "cover.test"},
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    # Should not trigger when going from closed to opening
+    hass.states.async_set("cover.test", "opening")
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+    # Should not trigger when going from open to closing
+    hass.states.async_set("cover.test", "open")
+    await hass.async_block_till_done()
+    hass.states.async_set("cover.test", "closing")
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0

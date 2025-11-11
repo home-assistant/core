@@ -167,6 +167,17 @@
         }
       },
       "name": "When a cover closes"
+    },
+    "stops": {
+      "description": "Triggers when a cover stops moving.",
+      "description_configured": "Triggers when a cover stops moving",
+      "fields": {
+        "device_class": {
+          "description": "The device classes to trigger on. If empty, triggers on all device classes.",
+          "name": "Device classes"
+        }
+      },
+      "name": "When a cover stops moving"
     }
   }
 }

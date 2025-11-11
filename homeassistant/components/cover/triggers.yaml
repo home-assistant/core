@@ -39,3 +39,19 @@ closes:
             - curtain
             - shutter
             - blind
+
+stops:
+  target:
+    entity:
+      domain: cover
+  fields:
+    device_class:
+      required: false
+      default: []
+      selector:
+        select:
+          multiple: true
+          options:
+            - curtain
+            - shutter
+            - blind
