@@ -12,7 +12,7 @@ turned_on:
             - first
             - last
             - any
-          translation_key: behavior
+          translation_key: trigger_behavior
 
 turned_off:
   target:
