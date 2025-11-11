@@ -27,10 +27,10 @@
     }
   },
   "triggers": {
-    "turns_off": {
+    "turned_off": {
       "trigger": "mdi:lightbulb-off"
     },
-    "turns_on": {
+    "turned_on": {
       "trigger": "mdi:lightbulb-on"
     }
   }

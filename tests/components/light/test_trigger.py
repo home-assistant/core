@@ -108,7 +108,10 @@ async def target_lights(hass: HomeAssistant) -> None:
 )
 @pytest.mark.parametrize(
     ("trigger", "state", "reverse_state"),
-    [("light.turns_on", STATE_ON, STATE_OFF), ("light.turns_off", STATE_OFF, STATE_ON)],
+    [
+        ("light.turned_on", STATE_ON, STATE_OFF),
+        ("light.turned_off", STATE_OFF, STATE_ON),
+    ],
 )
 async def test_light_state_trigger_behavior_any(
     hass: HomeAssistant,
@@ -168,7 +171,10 @@ async def test_light_state_trigger_behavior_any(
 )
 @pytest.mark.parametrize(
     ("trigger", "state", "reverse_state"),
-    [("light.turns_on", STATE_ON, STATE_OFF), ("light.turns_off", STATE_OFF, STATE_ON)],
+    [
+        ("light.turned_on", STATE_ON, STATE_OFF),
+        ("light.turned_off", STATE_OFF, STATE_ON),
+    ],
 )
 async def test_light_state_trigger_behavior_first(
     hass: HomeAssistant,
@@ -240,7 +246,10 @@ async def test_light_state_trigger_behavior_first(
 )
 @pytest.mark.parametrize(
     ("trigger", "state", "reverse_state"),
-    [("light.turns_on", STATE_ON, STATE_OFF), ("light.turns_off", STATE_OFF, STATE_ON)],
+    [
+        ("light.turned_on", STATE_ON, STATE_OFF),
+        ("light.turned_off", STATE_OFF, STATE_ON),
+    ],
 )
 async def test_light_state_trigger_behavior_last(
     hass: HomeAssistant,
