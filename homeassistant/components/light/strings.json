@@ -462,5 +462,12 @@
       }
     }
   },
-  "title": "Light"
+  "title": "Light",
+  "triggers": {
+    "turns_on": {
+      "description": "Triggers when a light turns on.",
+      "description_configured": "Triggers when a light turns on",
+      "name": "When a light turns on"
+    }
+  }
 }

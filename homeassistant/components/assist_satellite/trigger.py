@@ -111,9 +111,18 @@ class ProcessingTrigger(StateTriggerBase):
         super().__init__(hass, config, "processing")
 
 
+class RespondingTrigger(StateTriggerBase):
+    """Trigger for when a satellite starts responding."""
+
+    def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
+        """Initialize the responding trigger."""
+        super().__init__(hass, config, "responding")
+
+
 TRIGGERS: dict[str, type[Trigger]] = {
     "listening": ListeningTrigger,
     "processing": ProcessingTrigger,
+    "responding": RespondingTrigger,
 }
 
 

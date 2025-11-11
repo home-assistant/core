@@ -7,3 +7,8 @@ processing:
   target:
     entity:
       domain: assist_satellite
+
+responding:
+  target:
+    entity:
+      domain: assist_satellite

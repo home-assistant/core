@@ -109,6 +109,11 @@
       "description": "Triggers when a satellite starts processing a command.",
       "description_configured": "Triggers when a satellite starts processing a command",
       "name": "When a satellite starts processing"
+    },
+    "responding": {
+      "description": "Triggers when a satellite starts responding to a command.",
+      "description_configured": "Triggers when a satellite starts responding to a command",
+      "name": "When a satellite starts responding"
     }
   }
 }
