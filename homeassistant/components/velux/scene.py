@@ -15,11 +15,11 @@ PARALLEL_UPDATES = 1
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config: VeluxConfigEntry,
+    config_entry: VeluxConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the scenes for Velux platform."""
-    pyvlx = config.runtime_data
+    pyvlx = config_entry.runtime_data
 
     entities = [VeluxScene(scene) for scene in pyvlx.scenes]
     async_add_entities(entities)
