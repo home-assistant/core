@@ -48,6 +48,23 @@ class Thermostat(ClimateEntity, BaseCoordinatorEntity):
     """Entity representing NASweb thermostat."""
 
     _attr_device_class = SensorDeviceClass.TEMPERATURE
+    _attr_has_entity_name = True
+    _attr_hvac_modes = [
+        HVACMode.OFF,
+        HVACMode.HEAT,
+        HVACMode.COOL,
+        HVACMode.HEAT_COOL,
+        HVACMode.FAN_ONLY,
+    ]
+    _attr_max_temp = 50
+    _attr_min_temp = -50
+    _attr_precision = 1.0
+    _attr_should_poll = False
+    _attr_supported_features = ClimateEntityFeature(
+        ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+    )
+    _attr_target_temperature_step = 1.0
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = CLIMATE_TRANSLATION_KEY
 
     def __init__(
@@ -58,25 +75,8 @@ class Thermostat(ClimateEntity, BaseCoordinatorEntity):
         """Initialize Thermostat."""
         super().__init__(coordinator)
         self._thermostat = nasweb_thermostat
-        self._attr_temperature_unit = UnitOfTemperature.CELSIUS
-        self._attr_precision = 1.0
-        self._attr_supported_features = ClimateEntityFeature(
-            ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
-        )
         self._attr_available = False
-        self._attr_hvac_modes = [
-            HVACMode.OFF,
-            HVACMode.HEAT,
-            HVACMode.COOL,
-            HVACMode.HEAT_COOL,
-            HVACMode.FAN_ONLY,
-        ]
         self._attr_name = nasweb_thermostat.name
-        self._attr_target_temperature_step = 1.0
-        self._attr_min_temp = -50
-        self._attr_max_temp = 50
-        self._attr_has_entity_name = True
-        self._attr_should_poll = False
         self._attr_unique_id = f"{DOMAIN}.{self._thermostat.webio_serial}.thermostat"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._thermostat.webio_serial)}
