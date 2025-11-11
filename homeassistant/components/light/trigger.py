@@ -4,7 +4,13 @@ from typing import TYPE_CHECKING, Final, cast, override
 
 import voluptuous as vol
 
-from homeassistant.const import ATTR_ENTITY_ID, CONF_TARGET, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_OPTIONS,
+    CONF_TARGET,
+    STATE_OFF,
+    STATE_ON,
+)
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback, split_entity_id
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import process_state_match
@@ -16,9 +22,6 @@ from homeassistant.helpers.trigger import Trigger, TriggerActionRunner, TriggerC
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
-
-# remove when #151314 is merged
-CONF_OPTIONS: Final = "options"
 
 ATTR_BEHAVIOR: Final = "behavior"
 BEHAVIOR_FIRST: Final = "first"
