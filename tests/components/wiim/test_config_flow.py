@@ -185,7 +185,7 @@ async def test_async_step_user_not_wiim_device(
     flow, mock_upnp_factory, mock_wiim_api_endpoint
 ) -> None:
     """Test the user step when discovered device is not a WiiM device."""
-    _flow, hass = flow
+    _flow, _ = flow
     mock_wiim_api_endpoint.json_request.side_effect = WiimRequestException(
         "Not a WiiM device"
     )
@@ -244,7 +244,7 @@ async def test_async_step_zeroconf_success(mock_hass: HomeAssistant) -> None:
 @pytest.mark.asyncio
 async def test_async_step_zeroconf_cannot_connect(flow, mock_upnp_factory) -> None:
     """Test zeroconf discovery when connection fails."""
-    _flow, hass = flow
+    _flow, _ = flow
     mock_upnp_factory.async_create_device.side_effect = UpnpConnectionError
 
     _flow.async_set_unique_id = AsyncMock()
@@ -265,7 +265,7 @@ async def test_async_step_discovery_confirm_create_entry(
     flow, mock_upnp_factory, mock_wiim_api_endpoint
 ) -> None:
     """Test discovery confirm step creates entry with user input."""
-    _flow, hass = flow
+    _flow, _ = flow
 
     _flow._discovered_info = {
         CONF_HOST: "192.168.1.100",
@@ -290,7 +290,7 @@ async def test_async_step_discovery_confirm_create_entry(
 @pytest.mark.asyncio
 async def test_async_step_discovery_confirm_show_form(flow) -> None:
     """Test discovery confirm step shows form when no user input."""
-    _flow, hass = flow
+    _flow, _ = flow
 
     result = await _flow.async_step_discovery_confirm()
 

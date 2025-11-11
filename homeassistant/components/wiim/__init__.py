@@ -202,6 +202,7 @@ class MinimalUpnpShell(UpnpDevice):
 
     def __init__(self, _udn, _host, _name, _requester):
         """Initialize the MinimalUpnpShell.
+        # pylint: disable=super-init-not-called
 
         Args:
             _udn (str): Unique Device Name (UDN).
@@ -221,9 +222,9 @@ class MinimalUpnpShell(UpnpDevice):
         self.client = None
         self.available = True
 
-    def service(self, service_id):
+    def service(self, service_type):
         """Return the UPnP service by service ID, if available."""
-        return self._services.get(service_id)
+        return self._services.get(service_type)
 
     def add_service(self, service):
         """Add a UPnP service to the internal service registry."""
