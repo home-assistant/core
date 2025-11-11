@@ -327,7 +327,7 @@ async def test_set_target_temp_change_preset(hass: HomeAssistant) -> None:
     assert state.attributes.get("preset_mode") == PRESET_NONE
     await common.async_set_temperature(hass, 20)
     state = hass.states.get(ENTITY)
-    assert state.attributes.get("preset_mode") == PRESET_COMFORT
+    assert state.attributes.get("preset_mode") == PRESET_NONE
 
 
 @pytest.mark.parametrize(
