@@ -11,11 +11,18 @@ from aiovodafone import (
 import pytest
 
 from homeassistant.components.device_tracker import CONF_CONSIDER_HOME
-from homeassistant.components.vodafone_station.const import DOMAIN
+from homeassistant.components.vodafone_station.const import (
+    CONF_DEVICE_DETAILS,
+    DEVICE_TYPE,
+    DEVICE_URL,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
+from .const import TEST_HOST, TEST_PASSWORD, TEST_TYPE, TEST_URL, TEST_USERNAME
 
 from tests.common import MockConfigEntry
 
@@ -35,16 +42,20 @@ async def test_user(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
-            CONF_HOST: "fake_host",
-            CONF_USERNAME: "fake_username",
-            CONF_PASSWORD: "fake_password",
+            CONF_HOST: TEST_HOST,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
-        CONF_HOST: "fake_host",
-        CONF_USERNAME: "fake_username",
-        CONF_PASSWORD: "fake_password",
+        CONF_HOST: TEST_HOST,
+        CONF_USERNAME: TEST_USERNAME,
+        CONF_PASSWORD: TEST_PASSWORD,
+        CONF_DEVICE_DETAILS: {
+            DEVICE_TYPE: TEST_TYPE,
+            DEVICE_URL: TEST_URL,
+        },
     }
     assert not result["result"].unique_id
 
@@ -81,9 +92,9 @@ async def test_exception_connection(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
-            CONF_HOST: "fake_host",
-            CONF_USERNAME: "fake_username",
-            CONF_PASSWORD: "fake_password",
+            CONF_HOST: TEST_HOST,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
         },
     )
 
@@ -96,18 +107,22 @@ async def test_exception_connection(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
-            CONF_HOST: "fake_host",
-            CONF_USERNAME: "fake_username",
-            CONF_PASSWORD: "fake_password",
+            CONF_HOST: TEST_HOST,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
         },
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "fake_host"
+    assert result["title"] == TEST_HOST
     assert result["data"] == {
-        "host": "fake_host",
-        "username": "fake_username",
-        "password": "fake_password",
+        CONF_HOST: TEST_HOST,
+        CONF_USERNAME: TEST_USERNAME,
+        CONF_PASSWORD: TEST_PASSWORD,
+        CONF_DEVICE_DETAILS: {
+            DEVICE_TYPE: TEST_TYPE,
+            DEVICE_URL: TEST_URL,
+        },
     }
 
 
@@ -127,9 +142,9 @@ async def test_duplicate_entry(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
-            CONF_HOST: "fake_host",
-            CONF_USERNAME: "fake_username",
-            CONF_PASSWORD: "fake_password",
+            CONF_HOST: TEST_HOST,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
         },
     )
     assert result["type"] is FlowResultType.ABORT
@@ -199,13 +214,13 @@ async def test_reauth_not_successful(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
-            CONF_PASSWORD: "fake_password",
+            CONF_PASSWORD: TEST_PASSWORD,
         },
     )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
-    assert mock_config_entry.data[CONF_PASSWORD] == "fake_password"
+    assert mock_config_entry.data[CONF_PASSWORD] == TEST_PASSWORD
 
 
 async def test_options_flow(
@@ -244,7 +259,7 @@ async def test_reconfigure_successful(
     assert result["step_id"] == "reconfigure"
 
     # original entry
-    assert mock_config_entry.data["host"] == "fake_host"
+    assert mock_config_entry.data[CONF_HOST] == TEST_HOST
 
     new_host = "192.168.100.60"
 
@@ -252,8 +267,8 @@ async def test_reconfigure_successful(
         result["flow_id"],
         user_input={
             CONF_HOST: new_host,
-            CONF_PASSWORD: "fake_password",
-            CONF_USERNAME: "fake_username",
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_USERNAME: TEST_USERNAME,
         },
     )
 
@@ -261,7 +276,7 @@ async def test_reconfigure_successful(
     assert reconfigure_result["reason"] == "reconfigure_successful"
 
     # changed entry
-    assert mock_config_entry.data["host"] == new_host
+    assert mock_config_entry.data[CONF_HOST] == new_host
 
 
 @pytest.mark.parametrize(
@@ -294,8 +309,8 @@ async def test_reconfigure_fails(
         result["flow_id"],
         user_input={
             CONF_HOST: "192.168.100.60",
-            CONF_PASSWORD: "fake_password",
-            CONF_USERNAME: "fake_username",
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_USERNAME: TEST_USERNAME,
         },
     )
 
@@ -309,8 +324,8 @@ async def test_reconfigure_fails(
         result["flow_id"],
         user_input={
             CONF_HOST: "192.168.100.61",
-            CONF_PASSWORD: "fake_password",
-            CONF_USERNAME: "fake_username",
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_USERNAME: TEST_USERNAME,
         },
     )
 
@@ -318,6 +333,10 @@ async def test_reconfigure_fails(
     assert reconfigure_result["reason"] == "reconfigure_successful"
     assert mock_config_entry.data == {
         CONF_HOST: "192.168.100.61",
-        CONF_PASSWORD: "fake_password",
-        CONF_USERNAME: "fake_username",
+        CONF_PASSWORD: TEST_PASSWORD,
+        CONF_USERNAME: TEST_USERNAME,
+        CONF_DEVICE_DETAILS: {
+            DEVICE_TYPE: TEST_TYPE,
+            DEVICE_URL: TEST_URL,
+        },
     }

@@ -347,7 +347,7 @@ async def test_shelly_pro_3em(
     config_entry = await init_integration(hass, gen=2, model=MODEL_PRO_EM3)
 
     # Main device
-    entity_id = "sensor.test_name_total_active_power"
+    entity_id = "sensor.test_name_power"
 
     state = hass.states.get(entity_id)
     assert state
@@ -360,7 +360,7 @@ async def test_shelly_pro_3em(
     assert device_entry.name == "Test name"
 
     # Phase A sub-device
-    entity_id = "sensor.test_name_phase_a_active_power"
+    entity_id = "sensor.test_name_phase_a_power"
 
     state = hass.states.get(entity_id)
     assert state
@@ -373,7 +373,7 @@ async def test_shelly_pro_3em(
     assert device_entry.name == "Test name Phase A"
 
     # Phase B sub-device
-    entity_id = "sensor.test_name_phase_b_active_power"
+    entity_id = "sensor.test_name_phase_b_power"
 
     state = hass.states.get(entity_id)
     assert state
@@ -386,7 +386,7 @@ async def test_shelly_pro_3em(
     assert device_entry.name == "Test name Phase B"
 
     # Phase C sub-device
-    entity_id = "sensor.test_name_phase_c_active_power"
+    entity_id = "sensor.test_name_phase_c_power"
 
     state = hass.states.get(entity_id)
     assert state
@@ -423,7 +423,7 @@ async def test_shelly_pro_3em_with_emeter_name(
     await init_integration(hass, gen=2, model=MODEL_PRO_EM3)
 
     # Main device
-    entity_id = "sensor.test_name_total_active_power"
+    entity_id = "sensor.test_name_power"
 
     state = hass.states.get(entity_id)
     assert state
@@ -436,7 +436,7 @@ async def test_shelly_pro_3em_with_emeter_name(
     assert device_entry.name == "Test name"
 
     # Phase A sub-device
-    entity_id = "sensor.test_name_phase_a_active_power"
+    entity_id = "sensor.test_name_phase_a_power"
 
     state = hass.states.get(entity_id)
     assert state
@@ -449,7 +449,7 @@ async def test_shelly_pro_3em_with_emeter_name(
     assert device_entry.name == "Test name Phase A"
 
     # Phase B sub-device
-    entity_id = "sensor.test_name_phase_b_active_power"
+    entity_id = "sensor.test_name_phase_b_power"
 
     state = hass.states.get(entity_id)
     assert state
@@ -462,7 +462,7 @@ async def test_shelly_pro_3em_with_emeter_name(
     assert device_entry.name == "Test name Phase B"
 
     # Phase C sub-device
-    entity_id = "sensor.test_name_phase_c_active_power"
+    entity_id = "sensor.test_name_phase_c_power"
 
     state = hass.states.get(entity_id)
     assert state

@@ -105,6 +105,6 @@ class OneWireSelectEntity(OneWireEntity, SelectEntity):
         """Return the selected entity option to represent the entity state."""
         return str(self._state)
 
-    def select_option(self, option: str) -> None:
+    async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        self._write_value(option.encode("ascii"))
+        await self._write_value(option.encode("ascii"))

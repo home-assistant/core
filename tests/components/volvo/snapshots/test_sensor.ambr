@@ -476,6 +476,58 @@
     'state': 'ac',
   })
 # ---
+# name: test_sensor[ex30_2024][sensor.volvo_ex30_direction-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_ex30_direction',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Direction',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'direction',
+    'unique_id': 'yv1abcdefg1234567_direction',
+    'unit_of_measurement': '°',
+  })
+# ---
+# name: test_sensor[ex30_2024][sensor.volvo_ex30_direction-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Volvo EX30 Direction',
+      'unit_of_measurement': '°',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_ex30_direction',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '90',
+  })
+# ---
 # name: test_sensor[ex30_2024][sensor.volvo_ex30_distance_to_empty_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1261,6 +1313,58 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'available',
+  })
+# ---
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_direction-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_s90_direction',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Direction',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'direction',
+    'unique_id': 'yv1abcdefg1234567_direction',
+    'unit_of_measurement': '°',
+  })
+# ---
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_direction-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Volvo S90 Direction',
+      'unit_of_measurement': '°',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_s90_direction',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '90',
   })
 # ---
 # name: test_sensor[s90_diesel_2018][sensor.volvo_s90_distance_to_empty_tank-entry]
@@ -2411,6 +2515,58 @@
     'state': 'ac',
   })
 # ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_direction-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc40_direction',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Direction',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'direction',
+    'unique_id': 'yv1abcdefg1234567_direction',
+    'unit_of_measurement': '°',
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_direction-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Volvo XC40 Direction',
+      'unit_of_measurement': '°',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc40_direction',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '90',
+  })
+# ---
 # name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_distance_to_empty_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -3377,6 +3533,58 @@
     'state': 'idle',
   })
 # ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_direction-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc60_direction',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Direction',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'direction',
+    'unique_id': 'yv1abcdefg1234567_direction',
+    'unit_of_measurement': '°',
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_direction-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Volvo XC60 Direction',
+      'unit_of_measurement': '°',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc60_direction',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '90',
+  })
+# ---
 # name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_distance_to_empty_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -4162,6 +4370,58 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'available',
+  })
+# ---
+# name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_direction-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc90_direction',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Direction',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'direction',
+    'unique_id': 'yv1abcdefg1234567_direction',
+    'unit_of_measurement': '°',
+  })
+# ---
+# name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_direction-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Volvo XC90 Direction',
+      'unit_of_measurement': '°',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc90_direction',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '90',
   })
 # ---
 # name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_distance_to_empty_tank-entry]
@@ -5198,6 +5458,58 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'none',
+  })
+# ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_direction-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc90_direction',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Direction',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'direction',
+    'unique_id': 'yv1abcdefg1234567_direction',
+    'unit_of_measurement': '°',
+  })
+# ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_direction-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Volvo XC90 Direction',
+      'unit_of_measurement': '°',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc90_direction',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '90',
   })
 # ---
 # name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_distance_to_empty_battery-entry]

@@ -34,7 +34,12 @@ from homeassistant.exceptions import (
     TemplateError,
     Unauthorized,
 )
-from homeassistant.helpers import config_validation as cv, entity, template
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity,
+    target as target_helpers,
+    template,
+)
 from homeassistant.helpers.condition import (
     async_get_all_descriptions as async_get_all_condition_descriptions,
     async_subscribe_platform_events as async_subscribe_condition_platform_events,
@@ -96,6 +101,7 @@ def async_register_commands(
     async_reg(hass, handle_call_service)
     async_reg(hass, handle_entity_source)
     async_reg(hass, handle_execute_script)
+    async_reg(hass, handle_extract_from_target)
     async_reg(hass, handle_fire_event)
     async_reg(hass, handle_get_config)
     async_reg(hass, handle_get_services)
@@ -473,6 +479,10 @@ def handle_subscribe_entities(
 
     serialized_states = []
     for state in states:
+        if entity_ids and state.entity_id not in entity_ids:
+            continue
+        if entity_filter and not entity_filter(state.entity_id):
+            continue
         try:
             serialized_states.append(state.as_compressed_state_json)
         except (ValueError, TypeError):
@@ -832,6 +842,39 @@ def handle_entity_source(
         }
 
     connection.send_result(msg["id"], _serialize_entity_sources(entity_sources))
+
+
+@callback
+@decorators.websocket_command(
+    {
+        vol.Required("type"): "extract_from_target",
+        vol.Required("target"): cv.TARGET_FIELDS,
+        vol.Optional("expand_group", default=False): bool,
+    }
+)
+def handle_extract_from_target(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle extract from target command."""
+
+    selector_data = target_helpers.TargetSelectorData(msg["target"])
+    extracted = target_helpers.async_extract_referenced_entity_ids(
+        hass, selector_data, expand_group=msg["expand_group"]
+    )
+
+    extracted_dict = {
+        "referenced_entities": extracted.referenced.union(
+            extracted.indirectly_referenced
+        ),
+        "referenced_devices": extracted.referenced_devices,
+        "referenced_areas": extracted.referenced_areas,
+        "missing_devices": extracted.missing_devices,
+        "missing_areas": extracted.missing_areas,
+        "missing_floors": extracted.missing_floors,
+        "missing_labels": extracted.missing_labels,
+    }
+
+    connection.send_result(msg["id"], extracted_dict)
 
 
 @decorators.websocket_command(

@@ -30,6 +30,7 @@ from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
 )
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.trigger_template_entity import (
     CONF_AVAILABILITY,
@@ -69,6 +70,15 @@ async def async_setup_platform(
 ) -> None:
     """Set up the SQL sensor from yaml."""
     if (conf := discovery_info) is None:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "sensor_platform_yaml_not_supported",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="platform_yaml_not_supported",
+            learn_more_url="https://www.home-assistant.io/integrations/sql/",
+        )
         return
 
     name: Template = conf[CONF_NAME]

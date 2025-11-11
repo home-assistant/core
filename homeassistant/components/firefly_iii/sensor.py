@@ -100,15 +100,6 @@ class FireflyAccountEntity(FireflyBaseEntity, SensorEntity):
         """Return the state of the sensor."""
         return self._account.attributes.current_balance
 
-    @property
-    def extra_state_attributes(self) -> dict[str, str] | None:
-        """Return extra state attributes for the account entity."""
-        return {
-            "account_role": self._account.attributes.account_role or "",
-            "account_type": self._account.attributes.type or "",
-            "current_balance": str(self._account.attributes.current_balance or ""),
-        }
-
 
 class FireflyCategoryEntity(FireflyBaseEntity, SensorEntity):
     """Entity for Firefly III category."""

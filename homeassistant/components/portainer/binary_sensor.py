@@ -131,15 +131,7 @@ class PortainerContainerSensor(PortainerContainerEntity, BinarySensorEntity):
         self.entity_description = entity_description
         super().__init__(device_info, coordinator, via_device)
 
-        # Container ID's are ephemeral, so use the container name for the unique ID
-        # The first one, should always be unique, it's fine if users have aliases
-        # According to Docker's API docs, the first name is unique
-        device_identifier = (
-            self._device_info.names[0].replace("/", " ").strip()
-            if self._device_info.names
-            else None
-        )
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{device_identifier}_{entity_description.key}"
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.device_name}_{entity_description.key}"
 
     @property
     def available(self) -> bool:

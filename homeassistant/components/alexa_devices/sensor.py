@@ -32,7 +32,9 @@ class AmazonSensorEntityDescription(SensorEntityDescription):
 
     native_unit_of_measurement_fn: Callable[[AmazonDevice, str], str] | None = None
     is_available_fn: Callable[[AmazonDevice, str], bool] = lambda device, key: (
-        device.online and device.sensors[key].error is False
+        device.online
+        and (sensor := device.sensors.get(key)) is not None
+        and sensor.error is False
     )
 
 
@@ -40,9 +42,9 @@ SENSORS: Final = (
     AmazonSensorEntityDescription(
         key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement_fn=lambda device, _key: (
+        native_unit_of_measurement_fn=lambda device, key: (
             UnitOfTemperature.CELSIUS
-            if device.sensors[_key].scale == "CELSIUS"
+            if key in device.sensors and device.sensors[key].scale == "CELSIUS"
             else UnitOfTemperature.FAHRENHEIT
         ),
         state_class=SensorStateClass.MEASUREMENT,

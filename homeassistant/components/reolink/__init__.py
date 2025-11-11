@@ -25,7 +25,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -497,16 +497,6 @@ def migrate_entity_ids(
     entity_reg = er.async_get(hass)
     entities = er.async_entries_for_config_entry(entity_reg, config_entry_id)
     for entity in entities:
-        # Can be removed in HA 2025.1.0
-        if entity.domain == "update" and entity.unique_id in [
-            host.unique_id,
-            format_mac(host.api.mac_address),
-        ]:
-            entity_reg.async_update_entity(
-                entity.entity_id, new_unique_id=f"{host.unique_id}_firmware"
-            )
-            continue
-
         if host.api.supported(None, "UID") and not entity.unique_id.startswith(
             host.unique_id
         ):

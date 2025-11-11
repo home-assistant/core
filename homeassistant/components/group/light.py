@@ -205,6 +205,8 @@ class LightGroup(GroupEntity, LightEntity):
     @callback
     def async_update_group_state(self) -> None:
         """Query all members and determine the light group state."""
+        self._update_assumed_state_from_members()
+
         states = [
             state
             for entity_id in self._entity_ids

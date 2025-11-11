@@ -45,6 +45,16 @@
       "status": {
         "name": "Status"
       }
+    },
+    "sensor": {
+      "image": {
+        "name": "Image"
+      }
+    },
+    "switch": {
+      "container": {
+        "name": "Container"
+      }
     }
   },
   "exceptions": {

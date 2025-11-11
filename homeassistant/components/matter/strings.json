@@ -514,6 +514,9 @@
       "power": {
         "name": "Power"
       },
+      "speaker_mute": {
+        "name": "Mute"
+      },
       "child_lock": {
         "name": "Child lock"
       },

@@ -97,6 +97,7 @@ def mock_smartthings() -> Generator[AsyncMock]:
 @pytest.fixture(
     params=[
         "aq_sensor_3_ikea",
+        "aeotec_ms6",
         "da_ac_airsensor_01001",
         "da_ac_rac_000001",
         "da_ac_rac_000003",
@@ -156,6 +157,7 @@ def mock_smartthings() -> Generator[AsyncMock]:
         "heatit_ztrm3_thermostat",
         "heatit_zpushwall",
         "generic_ef00_v1",
+        "gas_detector",
         "bosch_radiator_thermostat_ii",
         "im_speaker_ai_0001",
         "im_smarttag2_ble_uwb",
@@ -166,6 +168,7 @@ def mock_smartthings() -> Generator[AsyncMock]:
         "hw_q80r_soundbar",
         "gas_meter",
         "lumi",
+        "tesla_powerwall",
     ]
 )
 def device_fixture(

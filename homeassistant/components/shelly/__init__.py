@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from functools import partial
 from typing import Final
 
 from aioshelly.ble.const import BLE_SCRIPT_NAME
@@ -63,6 +64,7 @@ from .repairs import (
 )
 from .utils import (
     async_create_issue_unsupported_firmware,
+    async_migrate_rpc_virtual_components_unique_ids,
     get_coap_context,
     get_device_entry_gen,
     get_http_port,
@@ -322,6 +324,12 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
                 translation_key="auth_error",
                 translation_placeholders={"device": entry.title},
             ) from err
+
+        await er.async_migrate_entries(
+            hass,
+            entry.entry_id,
+            partial(async_migrate_rpc_virtual_components_unique_ids, device.config),
+        )
 
         runtime_data.rpc = ShellyRpcCoordinator(hass, entry, device)
         runtime_data.rpc.async_setup()

@@ -220,10 +220,10 @@ class OneWireSwitchEntity(OneWireEntity, SwitchEntity):
             return None
         return self._state == 1
 
-    def turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        self._write_value(b"1")
+        await self._write_value(b"1")
 
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        self._write_value(b"0")
+        await self._write_value(b"0")

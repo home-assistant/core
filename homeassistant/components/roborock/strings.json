@@ -220,6 +220,12 @@
       "sensor_time_left": {
         "name": "Sensor time left"
       },
+      "cleaning_brush_time_left": {
+        "name": "Maintenance brush time left"
+      },
+      "strainer_time_left": {
+        "name": "Strainer time left"
+      },
       "status": {
         "name": "Status",
         "state": {

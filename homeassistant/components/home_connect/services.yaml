@@ -202,6 +202,22 @@ set_program_and_options:
                 - consumer_products_cleaning_robot_enum_type_cleaning_modes_silent
                 - consumer_products_cleaning_robot_enum_type_cleaning_modes_standard
                 - consumer_products_cleaning_robot_enum_type_cleaning_modes_power
+                - consumer_products_cleaning_robot_enum_type_cleaning_mode_intelligent_mode
+                - consumer_products_cleaning_robot_enum_type_cleaning_mode_vacuum_only
+                - consumer_products_cleaning_robot_enum_type_cleaning_mode_mop_only
+                - consumer_products_cleaning_robot_enum_type_cleaning_mode_vacuum_and_mop
+                - consumer_products_cleaning_robot_enum_type_cleaning_mode_mop_after_vacuum
+        consumer_products_cleaning_robot_option_suction_power:
+          example: consumer_products_cleaning_robot_enum_type_suction_power_standard
+          required: false
+          selector:
+            select:
+              mode: dropdown
+              translation_key: suction_power
+              options:
+                - consumer_products_cleaning_robot_enum_type_suction_power_silent
+                - consumer_products_cleaning_robot_enum_type_suction_power_standard
+                - consumer_products_cleaning_robot_enum_type_suction_power_max
     coffee_maker_options:
       collapsed: true
       fields:

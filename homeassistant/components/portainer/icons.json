@@ -1,0 +1,17 @@
+{
+  "entity": {
+    "sensor": {
+      "image": {
+        "default": "mdi:docker"
+      }
+    },
+    "switch": {
+      "container": {
+        "default": "mdi:arrow-down-box",
+        "state": {
+          "on": "mdi:arrow-up-box"
+        }
+      }
+    }
+  }
+}

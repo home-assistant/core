@@ -456,6 +456,7 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
         """Initialize the agent."""
         self.entry = entry
         self.subentry = subentry
+        self.default_model = default_model
         self._attr_name = subentry.title
         self._genai_client = entry.runtime_data
         self._attr_unique_id = subentry.subentry_id
@@ -489,7 +490,7 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
             tools = tools or []
             tools.append(Tool(google_search=GoogleSearch()))
 
-        model_name = options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
+        model_name = options.get(CONF_CHAT_MODEL, self.default_model)
         # Avoid INVALID_ARGUMENT Developer instruction is not enabled for <model>
         supports_system_instruction = (
             "gemma" not in model_name
@@ -620,7 +621,7 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
     def create_generate_content_config(self) -> GenerateContentConfig:
         """Create the GenerateContentConfig for the LLM."""
         options = self.subentry.data
-        model = options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
+        model = options.get(CONF_CHAT_MODEL, self.default_model)
         thinking_config: ThinkingConfig | None = None
         if model.startswith("models/gemini-2.5") and not model.endswith(
             ("tts", "image", "image-preview")

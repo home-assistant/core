@@ -6,13 +6,16 @@ from json.decoder import JSONDecodeError
 from typing import Any, cast
 
 from aiohttp import ClientSession
-from aiovodafone import VodafoneStationDevice, VodafoneStationSercommApi, exceptions
+from aiovodafone import exceptions
+from aiovodafone.api import VodafoneStationDevice, init_api_class
+from yarl import URL
 
 from homeassistant.components.device_tracker import (
     DEFAULT_CONSIDER_HOME,
     DOMAIN as DEVICE_TRACKER_DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import entity_registry as er
@@ -20,7 +23,14 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import _LOGGER, DOMAIN, SCAN_INTERVAL
+from .const import (
+    _LOGGER,
+    CONF_DEVICE_DETAILS,
+    DEVICE_TYPE,
+    DEVICE_URL,
+    DOMAIN,
+    SCAN_INTERVAL,
+)
 from .helpers import cleanup_device_tracker
 
 CONSIDER_HOME_SECONDS = DEFAULT_CONSIDER_HOME.total_seconds()
@@ -53,16 +63,19 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
     def __init__(
         self,
         hass: HomeAssistant,
-        host: str,
-        username: str,
-        password: str,
         config_entry: VodafoneConfigEntry,
         session: ClientSession,
     ) -> None:
         """Initialize the scanner."""
 
-        self._host = host
-        self.api = VodafoneStationSercommApi(host, username, password, session)
+        data = config_entry.data
+
+        self.api = init_api_class(
+            URL(data[CONF_DEVICE_DETAILS][DEVICE_URL]),
+            data[CONF_DEVICE_DETAILS][DEVICE_TYPE],
+            data,
+            session,
+        )
 
         # Last resort as no MAC or S/N can be retrieved via API
         self._id = config_entry.unique_id
@@ -70,7 +83,7 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         super().__init__(
             hass=hass,
             logger=_LOGGER,
-            name=f"{DOMAIN}-{host}-coordinator",
+            name=f"{DOMAIN}-{data[CONF_HOST]}-coordinator",
             update_interval=timedelta(seconds=SCAN_INTERVAL),
             config_entry=config_entry,
         )
@@ -117,7 +130,7 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
 
     async def _async_update_data(self) -> UpdateCoordinatorDataType:
         """Update router data."""
-        _LOGGER.debug("Polling Vodafone Station host: %s", self._host)
+        _LOGGER.debug("Polling Vodafone Station host: %s", self.api.base_url.host)
 
         try:
             await self.api.login()
