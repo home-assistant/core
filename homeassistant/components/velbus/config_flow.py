@@ -176,29 +176,29 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Step when user wants to use the VLP file."""
         if user_input is not None:
-            try:
-                # handle the file upload
-                self._vlp_file = await self.hass.async_add_executor_job(
-                    save_uploaded_vlp_file, self.hass, user_input[CONF_VLP_FILE]
-                )
-                # validate it
-                await self._validate_vlp_file(self._vlp_file)
-            except InvalidVlpFile as e:
-                self._errors[CONF_VLP_FILE] = str(e)
+            if CONF_VLP_FILE not in user_input or user_input[CONF_VLP_FILE] == "":
+                # The VLP file is optional, so allow skipping it
+                self._vlp_file = ""
             else:
-                if self.source == SOURCE_RECONFIGURE:
-                    old_entry = self._get_reconfigure_entry()
-                    return self.async_update_reload_and_abort(
-                        old_entry,
-                        data={
-                            CONF_VLP_FILE: self._vlp_file,
-                            CONF_PORT: old_entry.data.get(CONF_PORT, None),
-                        },
+                try:
+                    # handle the file upload
+                    self._vlp_file = await self.hass.async_add_executor_job(
+                        save_uploaded_vlp_file, self.hass, user_input[CONF_VLP_FILE]
                     )
-                return self._create_device()
-        else:
-            user_input = {}
-            user_input[CONF_VLP_FILE] = ""
+                    # validate it
+                    await self._validate_vlp_file(self._vlp_file)
+                except InvalidVlpFile as e:
+                    self._errors[CONF_VLP_FILE] = str(e)
+            if self.source == SOURCE_RECONFIGURE:
+                old_entry = self._get_reconfigure_entry()
+                return self.async_update_reload_and_abort(
+                    old_entry,
+                    data={
+                        CONF_VLP_FILE: self._vlp_file,
+                        CONF_PORT: old_entry.data.get(CONF_PORT, None),
+                    },
+                )
+            return self._create_device()
 
         return self.async_show_form(
             step_id="vlp",
