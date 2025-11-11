@@ -58,14 +58,14 @@ class XboxData:
 class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
     """Store Xbox Console Status."""
 
-    config_entry: ConfigEntry
+    config_entry: XboxConfigEntry
     consoles: SmartglassConsoleList
     client: XboxLiveClient
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: XboxConfigEntry,
     ) -> None:
         """Initialize."""
         super().__init__(
