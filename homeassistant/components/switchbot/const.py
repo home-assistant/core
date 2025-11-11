@@ -58,6 +58,7 @@ class SupportedModels(StrEnum):
     K11_PLUS_VACUUM = "k11+_vacuum"
     GARAGE_DOOR_OPENER = "garage_door_opener"
     CLIMATE_PANEL = "climate_panel"
+    SMART_THERMOSTAT_RADIATOR = "smart_thermostat_radiator"
 
 
 CONNECTABLE_SUPPORTED_MODEL_TYPES = {
@@ -95,6 +96,7 @@ CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.K11_VACUUM: SupportedModels.K11_PLUS_VACUUM,
     SwitchbotModel.GARAGE_DOOR_OPENER: SupportedModels.GARAGE_DOOR_OPENER,
     SwitchbotModel.CLIMATE_PANEL: SupportedModels.CLIMATE_PANEL,
+    SwitchbotModel.SMART_THERMOSTAT_RADIATOR: SupportedModels.SMART_THERMOSTAT_RADIATOR,
 }
 
 NON_CONNECTABLE_SUPPORTED_MODEL_TYPES = {
@@ -132,6 +134,7 @@ ENCRYPTED_MODELS = {
     SwitchbotModel.PLUG_MINI_EU,
     SwitchbotModel.RELAY_SWITCH_2PM,
     SwitchbotModel.GARAGE_DOOR_OPENER,
+    SwitchbotModel.SMART_THERMOSTAT_RADIATOR,
 }
 
 ENCRYPTED_SWITCHBOT_MODEL_TO_CLASS: dict[
@@ -153,6 +156,7 @@ ENCRYPTED_SWITCHBOT_MODEL_TO_CLASS: dict[
     SwitchbotModel.PLUG_MINI_EU: switchbot.SwitchbotRelaySwitch,
     SwitchbotModel.RELAY_SWITCH_2PM: switchbot.SwitchbotRelaySwitch2PM,
     SwitchbotModel.GARAGE_DOOR_OPENER: switchbot.SwitchbotRelaySwitch,
+    SwitchbotModel.SMART_THERMOSTAT_RADIATOR: switchbot.SwitchbotSmartThermostatRadiator,
 }
 
 HASS_SENSOR_TYPE_TO_SWITCHBOT_MODEL = {
