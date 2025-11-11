@@ -215,25 +215,3 @@ async def test_async_setup_services(hass: HomeAssistant) -> None:
 
     # Verify service is now registered
     assert hass.services.has_service(DOMAIN, SERVICE_SET_HOT_WATER_SCHEDULE)
-
-
-async def test_async_unload_services_when_last_entry_removed(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_bsblan: MagicMock,
-) -> None:
-    """Test services are removed when the last config entry is unloaded."""
-    # Setup the config entry
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Verify service is registered
-    assert hass.services.has_service(DOMAIN, SERVICE_SET_HOT_WATER_SCHEDULE)
-
-    # Unload the config entry
-    await hass.config_entries.async_unload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Verify service is removed when last entry is unloaded
-    assert not hass.services.has_service(DOMAIN, SERVICE_SET_HOT_WATER_SCHEDULE)

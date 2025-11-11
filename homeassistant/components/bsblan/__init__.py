@@ -33,7 +33,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_PASSKEY, DOMAIN
 from .coordinator import BSBLanFastCoordinator, BSBLanSlowCoordinator
-from .services import SERVICE_SET_HOT_WATER_SCHEDULE, async_setup_services
+from .services import async_setup_services
 
 PLATFORMS = [Platform.CLIMATE, Platform.SENSOR, Platform.WATER_HEATER]
 
@@ -133,10 +133,4 @@ async def async_setup_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> bo
 
 async def async_unload_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> bool:
     """Unload BSBLAN config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    # Remove services only if this is the last loaded entry for this integration
-    if unload_ok and not hass.config_entries.async_loaded_entries(DOMAIN):
-        hass.services.async_remove(DOMAIN, SERVICE_SET_HOT_WATER_SCHEDULE)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
