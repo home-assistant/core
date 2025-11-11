@@ -671,7 +671,12 @@ class CalendarEntity(Entity):
                 for event in events
             ]
             listener(event_list)
-        except HomeAssistantError:
+        except HomeAssistantError as err:
+            _LOGGER.debug(
+                "Error fetching calendar events for %s: %s",
+                self.entity_id,
+                err,
+            )
             listener(None)
 
     @callback
