@@ -13,6 +13,7 @@ from pythonxbox.api.provider.catalog.const import SYSTEM_PFN_ID_MAP
 from pythonxbox.api.provider.catalog.models import AlternateIdType, Product
 from pythonxbox.api.provider.people.models import Person
 from pythonxbox.api.provider.smartglass.models import (
+    PowerState,
     SmartglassConsoleList,
     SmartglassConsoleStatus,
 )
@@ -36,6 +37,9 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 type XboxConfigEntry = ConfigEntry[XboxUpdateCoordinator]
+
+DEFAULT_UPDATE_INTERVAL = timedelta(seconds=30)
+FAST_UPDATE_INTERVAL = timedelta(seconds=10)
 
 
 @dataclass
@@ -73,7 +77,7 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
             _LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
-            update_interval=timedelta(seconds=10),
+            update_interval=DEFAULT_UPDATE_INTERVAL,
         )
         self.data = XboxData()
         self.current_friends: set[str] = set()
@@ -181,6 +185,14 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
             new_console_data[console.id] = ConsoleData(
                 status=status, app_details=app_details
             )
+
+        self.update_interval = (
+            FAST_UPDATE_INTERVAL
+            if any(
+                x.status.power_state is PowerState.On for x in new_console_data.values()
+            )
+            else DEFAULT_UPDATE_INTERVAL
+        )
 
         # Update user presence
         try:
