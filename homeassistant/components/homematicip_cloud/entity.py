@@ -82,10 +82,10 @@ class HomematicipGenericEntity(Entity):
         self,
         hap: HomematicipHAP,
         device,
-        post=None,
-        channel=None,
-        is_multi_channel=False,
-        channel_real_index=None,
+        post: str | None = None,
+        channel: int | None = None,
+        is_multi_channel: bool | None = False,
+        channel_real_index: int | None = None,
     ) -> None:
         """Initialize the generic entity."""
         self._hap = hap
@@ -114,8 +114,9 @@ class HomematicipGenericEntity(Entity):
         """Return device specific attributes."""
         # Only physical devices should be HA devices.
         if isinstance(self._device, Device):
-            device_id = getattr(self._device, "id", "unknown")
-            home_id = getattr(self._device, "homeId", "unknown")
+            device_id = str(self._device.id)
+            home_id = str(self._device.homeId)
+
             return DeviceInfo(
                 identifiers={
                     # Serial numbers of Homematic IP device

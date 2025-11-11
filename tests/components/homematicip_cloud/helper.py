@@ -68,8 +68,9 @@ async def async_manipulate_test_data(
     """Set new value on hmip device."""
     if channel == 1:
         setattr(hmip_device, attribute, new_value)
-    if hasattr(hmip_device, "functionalChannels"):
-        channels = getattr(hmip_device, "functionalChannels", [])
+
+    channels = getattr(hmip_device, "functionalChannels", None)
+    if channels:
         if channel_real_index is not None:
             functional_channel = next(
                 (ch for ch in channels if ch.index == channel_real_index),
