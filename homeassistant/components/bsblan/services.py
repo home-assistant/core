@@ -45,9 +45,6 @@ def _convert_time_slots_to_string(slots: list[dict[str, time]] | None) -> str:
     if slots is None or not slots:
         return ""
 
-    if not slots:  # Empty list (shouldn't happen, but handle it)
-        return ""
-
     time_periods = []
     for slot in slots:
         start = slot.get("start_time")
