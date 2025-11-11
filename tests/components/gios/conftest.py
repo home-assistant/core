@@ -79,8 +79,6 @@ async def init_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_gios: MagicMock,
-) -> MockConfigEntry:
+) -> None:
     """Set up the GIOS integration for testing."""
     await setup_integration(hass, mock_config_entry)
-
-    return mock_config_entry

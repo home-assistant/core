@@ -2,6 +2,8 @@
 
 from unittest.mock import MagicMock
 
+import pytest
+
 from homeassistant.components.air_quality import DOMAIN as AIR_QUALITY_PLATFORM
 from homeassistant.components.gios.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -14,9 +16,9 @@ from . import setup_integration
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_async_setup_entry(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
 ) -> None:
     """Test a successful setup entry."""
     state = hass.states.get("sensor.home_pm2_5")
@@ -26,7 +28,9 @@ async def test_async_setup_entry(
 
 
 async def test_config_not_ready(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_gios: MagicMock
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_gios: MagicMock,
 ) -> None:
     """Test for setup failure if connection to GIOS is missing."""
     mock_gios.create.side_effect = ConnectionError()
@@ -36,10 +40,10 @@ async def test_config_not_ready(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_unload_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    init_integration: MockConfigEntry,
 ) -> None:
     """Test successful unload of entry."""
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
@@ -77,7 +81,6 @@ async def test_migrate_device_and_config_entry(
 async def test_migrate_unique_id_to_str(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    device_registry: dr.DeviceRegistry,
     mock_gios: MagicMock,
 ) -> None:
     """Test device_info identifiers and config entry migration."""

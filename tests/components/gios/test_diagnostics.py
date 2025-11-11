@@ -1,5 +1,6 @@
 """Test GIOS diagnostics."""
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
@@ -10,12 +11,12 @@ from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_entry_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
-    init_integration: MockConfigEntry,
 ) -> None:
     """Test config entry diagnostics."""
     assert await get_diagnostics_for_config_entry(
