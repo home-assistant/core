@@ -1381,6 +1381,7 @@ class Entity(
         self.parallel_updates = None
 
     def _update_group_entity_ids(self) -> None:
+        """Update the grouped entity IDs after an update."""
         entity_registry = er.async_get(self.hass)
         self._attr_included_entities = []
         for included_id in self.included_unique_ids:
