@@ -56,7 +56,9 @@ from .utils import (
     get_burners,
     get_circuits,
     get_compressors,
+    get_condensors,
     get_device_serial,
+    get_evaporators,
     is_supported,
 )
 
@@ -1089,6 +1091,76 @@ COMPRESSOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         value_getter=lambda api: api.getPhase(),
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    ViCareSensorEntityDescription(
+        key="compressor_inlet_temperature",
+        translation_key="compressor_inlet_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_getter=lambda api: api.getCompressorInletTemperature(),
+        unit_getter=lambda api: api.getCompressorInletTemperatureUnit(),
+    ),
+    ViCareSensorEntityDescription(
+        key="compressor_outlet_temperature",
+        translation_key="compressor_outlet_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_getter=lambda api: api.getCompressorOutletTemperature(),
+        unit_getter=lambda api: api.getCompressorOutletTemperatureUnit(),
+    ),
+    ViCareSensorEntityDescription(
+        key="compressor_inlet_pressure",
+        translation_key="compressor_inlet_pressure",
+        device_class=SensorDeviceClass.PRESSURE,
+        native_unit_of_measurement=UnitOfPressure.BAR,
+        value_getter=lambda api: api.getCompressorInletPressure(),
+        unit_getter=lambda api: api.getCompressorInletPressureUnit(),
+    ),
+    ViCareSensorEntityDescription(
+        key="compressor_outlet_pressure",
+        translation_key="compressor_outlet_pressure",
+        device_class=SensorDeviceClass.PRESSURE,
+        native_unit_of_measurement=UnitOfPressure.BAR,
+        value_getter=lambda api: api.getCompressorOutletPressure(),
+        unit_getter=lambda api: api.getCompressorOutletPressureUnit(),
+    ),
+)
+
+CONDENSOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
+    ViCareSensorEntityDescription(
+        key="condensor_liquid_temperature",
+        translation_key="condensor_liquid_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_getter=lambda api: api.getCondensorLiquidTemperature(),
+        unit_getter=lambda api: api.getCondensorLiquidTemperatureUnit(),
+    ),
+    ViCareSensorEntityDescription(
+        key="condensor_subcooling_temperature",
+        translation_key="condensor_subcooling_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_getter=lambda api: api.getCondensorSubcoolingTemperature(),
+        unit_getter=lambda api: api.getCondensorSubcoolingTemperatureUnit(),
+    ),
+)
+
+EVAPORATOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
+    ViCareSensorEntityDescription(
+        key="evaporator_overheat_temperature",
+        translation_key="evaporator_overheat_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_getter=lambda api: api.getEvaporatorOverheatTemperature(),
+        unit_getter=lambda api: api.getEvaporatorOverheatTemperatureUnit(),
+    ),
+    ViCareSensorEntityDescription(
+        key="evaporator_liquid_temperature",
+        translation_key="evaporator_liquid_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_getter=lambda api: api.getEvaporatorLiquidTemperature(),
+        unit_getter=lambda api: api.getEvaporatorLiquidTemperatureUnit(),
+    ),
 )
 
 
@@ -1115,6 +1187,8 @@ def _build_entities(
             (get_circuits(device.api), CIRCUIT_SENSORS),
             (get_burners(device.api), BURNER_SENSORS),
             (get_compressors(device.api), COMPRESSOR_SENSORS),
+            (get_condensors(device.api), CONDENSOR_SENSORS),
+            (get_evaporators(device.api), EVAPORATOR_SENSORS),
         ):
             entities.extend(
                 ViCareSensor(

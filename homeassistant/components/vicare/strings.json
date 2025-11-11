@@ -212,11 +212,29 @@
       "compressor_hours_loadclass5": {
         "name": "Compressor hours load class 5"
       },
+      "compressor_inlet_pressure": {
+        "name": "Compressor inlet pressure"
+      },
+      "compressor_inlet_temperature": {
+        "name": "Compressor inlet temperature"
+      },
+      "compressor_outlet_pressure": {
+        "name": "Compressor outlet pressure"
+      },
+      "compressor_outlet_temperature": {
+        "name": "Compressor outlet temperature"
+      },
       "compressor_phase": {
         "name": "Compressor phase"
       },
       "compressor_starts": {
         "name": "Compressor starts"
+      },
+      "condensor_liquid_temperature": {
+        "name": "Condensor liquid temperature"
+      },
+      "condensor_subcooling_temperature": {
+        "name": "Condensor subcooling temperature"
       },
       "dhw_storage_bottom_temperature": {
         "name": "DHW storage bottom temperature"
@@ -291,6 +309,12 @@
           "discharge": "[%key:common::state::discharging%]",
           "standby": "[%key:common::state::standby%]"
         }
+      },
+      "evaporator_liquid_temperature": {
+        "name": "Evaporator liquid temperature"
+      },
+      "evaporator_overheat_temperature": {
+        "name": "Evaporator overheat temperature"
       },
       "fuel_need": {
         "name": "Fuel need"
