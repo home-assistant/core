@@ -64,6 +64,7 @@ class SwitchBotClimateEntity(SwitchbotEntity, ClimateEntity):
         | ClimateEntityFeature.TURN_OFF
         | ClimateEntityFeature.TURN_ON
     )
+    _attr_target_temperature_step = 0.5
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = "climate"
     _attr_name = None
@@ -119,11 +120,6 @@ class SwitchBotClimateEntity(SwitchbotEntity, ClimateEntity):
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self._device.target_temperature
-
-    @property
-    def target_temperature_step(self) -> float:
-        """Return the supported step of target temperature."""
-        return 0.5
 
     @exception_handler
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
