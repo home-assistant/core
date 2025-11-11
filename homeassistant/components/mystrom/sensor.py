@@ -34,7 +34,7 @@ from .models import MyStromConfigEntry
 class MyStromSwitchSensorEntityDescription(SensorEntityDescription):
     """Class describing mystrom switch sensor entities."""
 
-    value_fn: Callable[[MyStromSwitch], float | str | None] = lambda _: None
+    value_fn: Callable[[MyStromSwitch], float | None] = lambda _: None
 
 
 SENSOR_TYPES: tuple[MyStromSwitchSensorEntityDescription, ...] = (
@@ -70,13 +70,6 @@ SENSOR_TYPES: tuple[MyStromSwitchSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_fn=lambda device: device.temperature,
-    ),
-    MyStromSwitchSensorEntityDescription(
-        key="boot_id",
-        translation_key="boot_id",
-        icon="mdi:identifier",
-        value_fn=lambda device: device.boot_id,
-        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
 
@@ -139,7 +132,7 @@ class MyStromSwitchSensor(MyStromSensorBase):
         self.entity_description = description
 
     @property
-    def native_value(self) -> float | str | None:
+    def native_value(self) -> float | None:
         """Return the value of the sensor."""
         return self.entity_description.value_fn(self.device)
 

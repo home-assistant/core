@@ -23,9 +23,6 @@
       "avg_consumption": {
         "name": "Average consumption"
       },
-      "boot_id": {
-        "name": "Boot ID"
-      },
       "energy_since_boot": {
         "name": "Energy since boot"
       },
