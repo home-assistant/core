@@ -133,3 +133,8 @@ def get_compressors(device: PyViCareDevice) -> list[PyViCareHeatingDeviceCompone
 def filter_state(state: str) -> str | None:
     """Return the state if not 'nothing' or 'unknown'."""
     return None if state in ("nothing", "unknown") else state
+
+
+def normalize_state(state: str) -> str:
+    """Return the state with underscores instead of hyphens."""
+    return state.replace("-", "_")
