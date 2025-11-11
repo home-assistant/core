@@ -140,7 +140,6 @@ async def test_selected_map_name(
 
 async def test_selected_map_without_name(
     hass: HomeAssistant,
-    bypass_api_fixture_v1_only,
     mock_roborock_entry: MockConfigEntry,
     fake_vacuum: FakeDevice,
 ) -> None:

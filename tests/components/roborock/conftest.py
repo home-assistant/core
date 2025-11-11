@@ -92,10 +92,6 @@ def bypass_api_client_fixture() -> None:
 
     with (
         patch(
-            "roborock.devices.device_manager.RoborockApiClient.get_home_data_v3",
-            return_value=HOME_DATA,
-        ),
-        patch(
             "homeassistant.components.roborock.config_flow.RoborockApiClient.base_url",
             new_callable=PropertyMock,
             return_value=base_url_future,
@@ -291,31 +287,6 @@ def fake_create_device_manager_fixture(
     ) as mock_create_device_manager:
         mock_create_device_manager.return_value = FakeDeviceManager(fake_devices)
         yield mock_create_device_manager
-
-
-@pytest.fixture(name="bypass_device_manager", autouse=True)
-def bypass_device_manager_fixture() -> None:
-    """Bypass the device manager network connection."""
-    with (
-        patch("roborock.devices.device_manager.create_lazy_mqtt_session"),
-        patch(
-            "roborock.devices.device_manager.create_v1_channel"
-        ) as mock_create_v1_channel,
-    ):
-        mock_create_v1_channel.return_value = AsyncMock()
-        yield
-
-
-@pytest.fixture
-def bypass_api_fixture_v1_only() -> None:
-    """Bypass api for tests that require only having v1 devices."""
-    home_data_copy = deepcopy(HOME_DATA)
-    home_data_copy.received_devices = []
-    with patch(
-        "roborock.devices.device_manager.RoborockApiClient.get_home_data_v3",
-        return_value=home_data_copy,
-    ):
-        yield
 
 
 @pytest.fixture(name="config_entry_data")
