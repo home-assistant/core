@@ -60,7 +60,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: VeluxConfigEntry) -> boo
             issue_domain=DOMAIN,
             severity=ir.IssueSeverity.WARNING,
             translation_key="deprecated_reboot_service",
-            breaks_in_ha_version="2025.6.0",
+            breaks_in_ha_version="2026.6.0",
         )
 
         await pyvlx.reboot_gateway()
