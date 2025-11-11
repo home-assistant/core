@@ -169,21 +169,47 @@ async def test_migrate_config_entry(
     assert len(humidifer_entities) == 1
 
 
-async def test_async_remove_config_entry_device(
+async def test_async_remove_config_entry_device_positive(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     config_entry: ConfigEntry,
+    manager: VeSync,
 ) -> None:
-    """Test removing a config entry from a device."""
+    """Test removing a config entry from a device when no match is found."""
 
-    # Create a fake device entry tied to the config entry
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, "test_device")},
     )
 
+    result = await async_remove_config_entry_device(hass, config_entry, device_entry)
+
+    assert result is True
+
+
+async def test_async_remove_config_entry_device_negative(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    config_entry: ConfigEntry,
+    manager: VeSync,
+    fan,
+) -> None:
+    """Test removing a config entry from a device when a match is found."""
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    manager._dev_list["fans"].append(fan)
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "fan")},
+    )
+
     # Call the remove method
     result = await async_remove_config_entry_device(hass, config_entry, device_entry)
 
-    # Assert it returns True
-    assert result is True
+    # Assert it returns False (device matched)
+    assert result is False
