@@ -292,6 +292,15 @@
           "standby": "[%key:common::state::standby%]"
         }
       },
+      "filter_hours": {
+        "name": "Filter hours"
+      },
+      "filter_overdue_hours": {
+        "name": "Filter overdue hours"
+      },
+      "filter_remaining_hours": {
+        "name": "Filter remaining hours"
+      },
       "fuel_need": {
         "name": "Fuel need"
       },
