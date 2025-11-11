@@ -34,7 +34,7 @@ class VeluxGatewayRebootButton(ButtonEntity):
     def __init__(self, config_entry: VeluxConfigEntry) -> None:
         """Initialize the gateway reboot button."""
         self.pyvlx = config_entry.runtime_data
-        self._attr_unique_id = f"{config_entry.entry_id}_reboot_gateway"
+        self._attr_unique_id = f"{config_entry.entry_id}_reboot-gateway"
         self._attr_device_info = {
             "identifiers": {(DOMAIN, f"gateway_{config_entry.entry_id}")},
         }
