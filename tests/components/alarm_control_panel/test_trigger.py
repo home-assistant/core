@@ -270,3 +270,167 @@ async def test_alarm_armed_trigger_from_unknown_state(
     await hass.async_block_till_done()
     assert len(service_calls) == 1
     assert service_calls[0].data[CONF_ENTITY_ID] == entity_id
+
+
+async def test_alarm_disarmed_trigger(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test that the alarm disarmed trigger fires when an alarm is disarmed."""
+    entity_id = "alarm_control_panel.test_alarm"
+    await async_setup_component(hass, "alarm_control_panel", {})
+
+    # Set initial state
+    hass.states.async_set(entity_id, AlarmControlPanelState.ARMED_HOME)
+    await hass.async_block_till_done()
+
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "triggers": {
+                    "trigger": "alarm_control_panel.disarmed",
+                    "target": {CONF_ENTITY_ID: entity_id},
+                },
+                "actions": {
+                    "action": "test.automation",
+                    "data": {
+                        CONF_ENTITY_ID: "{{ trigger.entity_id }}",
+                    },
+                },
+            }
+        },
+    )
+
+    # Trigger disarmed
+    hass.states.async_set(entity_id, AlarmControlPanelState.DISARMED)
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+    assert service_calls[0].data[CONF_ENTITY_ID] == entity_id
+
+
+async def test_alarm_disarmed_trigger_ignores_unavailable(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test that the alarm disarmed trigger ignores unavailable states."""
+    entity_id = "alarm_control_panel.test_alarm"
+    await async_setup_component(hass, "alarm_control_panel", {})
+
+    # Set initial state
+    hass.states.async_set(entity_id, AlarmControlPanelState.ARMED_HOME)
+    await hass.async_block_till_done()
+
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "triggers": {
+                    "trigger": "alarm_control_panel.disarmed",
+                    "target": {
+                        CONF_ENTITY_ID: entity_id,
+                    },
+                },
+                "actions": {
+                    "action": "test.automation",
+                    "data": {
+                        CONF_ENTITY_ID: "{{ trigger.entity_id }}",
+                    },
+                },
+            }
+        },
+    )
+
+    # Set to unavailable - should not trigger
+    hass.states.async_set(entity_id, STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+    # Trigger disarmed after unavailable - should trigger
+    hass.states.async_set(entity_id, AlarmControlPanelState.DISARMED)
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+    assert service_calls[0].data[CONF_ENTITY_ID] == entity_id
+
+
+async def test_alarm_disarmed_trigger_ignores_non_disarmed_states(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test that the alarm disarmed trigger ignores non-disarmed states."""
+    entity_id = "alarm_control_panel.test_alarm"
+    await async_setup_component(hass, "alarm_control_panel", {})
+
+    # Set initial state
+    hass.states.async_set(entity_id, AlarmControlPanelState.DISARMED)
+    await hass.async_block_till_done()
+
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "triggers": {
+                    "trigger": "alarm_control_panel.disarmed",
+                    "target": {
+                        CONF_ENTITY_ID: entity_id,
+                    },
+                },
+                "actions": {
+                    "action": "test.automation",
+                    "data": {
+                        CONF_ENTITY_ID: "{{ trigger.entity_id }}",
+                    },
+                },
+            }
+        },
+    )
+
+    # Set to armed home - should not trigger
+    hass.states.async_set(entity_id, AlarmControlPanelState.ARMED_HOME)
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+    # Set to triggered - should not trigger
+    hass.states.async_set(entity_id, AlarmControlPanelState.TRIGGERED)
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+    # Set to arming - should not trigger
+    hass.states.async_set(entity_id, AlarmControlPanelState.ARMING)
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+
+async def test_alarm_disarmed_trigger_from_unknown_state(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test that the trigger fires when entity goes from unknown/None to disarmed state."""
+    entity_id = "alarm_control_panel.test_alarm"
+    await async_setup_component(hass, "alarm_control_panel", {})
+
+    # Do NOT set any initial state - entity starts with None state
+
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "triggers": {
+                    "trigger": "alarm_control_panel.disarmed",
+                    "target": {CONF_ENTITY_ID: entity_id},
+                },
+                "actions": {
+                    "action": "test.automation",
+                    "data": {
+                        CONF_ENTITY_ID: "{{ trigger.entity_id }}",
+                    },
+                },
+            }
+        },
+    )
+
+    # First disarmed state should trigger even though entity had no previous state
+    hass.states.async_set(entity_id, AlarmControlPanelState.DISARMED)
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+    assert service_calls[0].data[CONF_ENTITY_ID] == entity_id

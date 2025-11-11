@@ -155,6 +155,11 @@
         }
       },
       "name": "When an alarm is armed"
+    },
+    "disarmed": {
+      "description": "Triggers when an alarm is disarmed.",
+      "description_configured": "Triggers when an alarm is disarmed",
+      "name": "When an alarm is disarmed"
     }
   }
 }

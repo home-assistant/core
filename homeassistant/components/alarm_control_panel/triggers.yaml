@@ -20,3 +20,7 @@ armed:
               label: Vacation
             - value: armed_custom_bypass
               label: Custom bypass
+disarmed:
+  target:
+    entity:
+      domain: alarm_control_panel
