@@ -11,12 +11,20 @@
         "default": "mdi:account"
       }
     },
+    "media_player": {
+      "xbox": {
+        "default": "mdi:microsoft-xbox"
+      }
+    },
     "sensor": {
       "follower": {
         "default": "mdi:account-arrow-left"
       },
       "following": {
         "default": "mdi:account-arrow-right"
+      },
+      "friends": {
+        "default": "mdi:account-heart"
       },
       "gamer_score": {
         "default": "mdi:alpha-g-circle"

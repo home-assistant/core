@@ -210,6 +210,16 @@
         "name": "Honk & flash"
       }
     },
+    "device_tracker": {
+      "location": {
+        "name": "Location"
+      }
+    },
+    "lock": {
+      "lock": {
+        "name": "[%key:component::lock::title%]"
+      }
+    },
     "sensor": {
       "availability": {
         "name": "Car connection",
@@ -351,6 +361,9 @@
     },
     "no_vehicle": {
       "message": "Unable to retrieve vehicle details."
+    },
+    "oauth2_implementation_unavailable": {
+      "message": "OAuth2 implementation unavailable, will retry"
     },
     "unauthorized": {
       "message": "Authentication failed. {message}"

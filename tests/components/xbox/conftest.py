@@ -5,13 +5,13 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from xbox.webapi.api.provider.catalog.models import CatalogResponse
-from xbox.webapi.api.provider.people.models import PeopleResponse
-from xbox.webapi.api.provider.smartglass.models import (
+from pythonxbox.api.provider.catalog.models import CatalogResponse
+from pythonxbox.api.provider.people.models import PeopleResponse
+from pythonxbox.api.provider.smartglass.models import (
     SmartglassConsoleList,
     SmartglassConsoleStatus,
 )
-from xbox.webapi.api.provider.titlehub.models import TitleHubResponse
+from pythonxbox.api.provider.titlehub.models import TitleHubResponse
 
 from homeassistant.components.application_credentials import (
     ClientCredential,
@@ -40,7 +40,7 @@ async def setup_credentials(hass: HomeAssistant) -> None:
 def mock_oauth2_implementation() -> Generator[AsyncMock]:
     """Mock config entry oauth2 implementation."""
     with patch(
-        "homeassistant.components.xbox.coordinator.config_entry_oauth2_flow.async_get_config_entry_implementation",
+        "homeassistant.components.xbox.coordinator.async_get_config_entry_implementation",
         return_value=AsyncMock(),
     ) as mock_client:
         client = mock_client.return_value
@@ -67,6 +67,7 @@ def mock_config_entry() -> MockConfigEntry:
                 "user_id": "AAAAAAAAAAAAAAAAAAAAA",
             },
         },
+        unique_id="271958441785640",
     )
 
 
@@ -85,25 +86,8 @@ def mock_authentication_manager() -> Generator[AsyncMock]:
         yield client
 
 
-@pytest.fixture(name="signed_session")
-def mock_signed_session() -> Generator[AsyncMock]:
-    """Mock xbox-webapi SignedSession."""
-
-    with (
-        patch(
-            "homeassistant.components.xbox.coordinator.SignedSession", autospec=True
-        ) as mock_client,
-        patch(
-            "homeassistant.components.xbox.config_flow.SignedSession", new=mock_client
-        ),
-    ):
-        client = mock_client.return_value
-
-        yield client
-
-
 @pytest.fixture(name="xbox_live_client")
-def mock_xbox_live_client(signed_session) -> Generator[AsyncMock]:
+def mock_xbox_live_client() -> Generator[AsyncMock]:
     """Mock xbox-webapi XboxLiveClient."""
 
     with (
@@ -130,7 +114,7 @@ def mock_xbox_live_client(signed_session) -> Generator[AsyncMock]:
         )
 
         client.people = AsyncMock()
-        client.people.get_friends_own_batch.return_value = PeopleResponse(
+        client.people.get_friends_by_xuid.return_value = PeopleResponse(
             **load_json_object_fixture("people_batch.json", DOMAIN)
         )
         client.people.get_friends_own.return_value = PeopleResponse(

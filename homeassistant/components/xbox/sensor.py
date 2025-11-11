@@ -8,8 +8,8 @@ from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Any
 
-from xbox.webapi.api.provider.people.models import Person
-from xbox.webapi.api.provider.titlehub.models import Title
+from pythonxbox.api.provider.people.models import Person
+from pythonxbox.api.provider.titlehub.models import Title
 
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
@@ -36,6 +36,7 @@ class XboxSensor(StrEnum):
     FOLLOWING = "following"
     FOLLOWER = "follower"
     NOW_PLAYING = "now_playing"
+    FRIENDS = "friends"
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -152,6 +153,11 @@ SENSOR_DESCRIPTIONS: tuple[XboxSensorEntityDescription, ...] = (
         value_fn=lambda _, title: title.name if title else None,
         attributes_fn=now_playing_attributes,
         entity_picture_fn=title_logo,
+    ),
+    XboxSensorEntityDescription(
+        key=XboxSensor.FRIENDS,
+        translation_key=XboxSensor.FRIENDS,
+        value_fn=lambda x, _: x.detail.friend_count if x.detail else None,
     ),
 )
 

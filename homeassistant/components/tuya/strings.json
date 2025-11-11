@@ -27,11 +27,17 @@
   },
   "entity": {
     "binary_sensor": {
+      "bag_full": {
+        "name": "Bag full"
+      },
       "carbon_dioxide": {
         "name": "Carbon dioxide"
       },
       "carbon_monoxide": {
         "name": "Carbon monoxide"
+      },
+      "cover_off": {
+        "name": "Cover off"
       },
       "defrost": {
         "name": "Defrost"
@@ -71,6 +77,12 @@
       }
     },
     "button": {
+      "factory_reset": {
+        "name": "Factory reset"
+      },
+      "manual_clean": {
+        "name": "Manual clean"
+      },
       "reset_duster_cloth": {
         "name": "Reset duster cloth"
       },
@@ -159,6 +171,9 @@
       },
       "cook_time": {
         "name": "Cooking time"
+      },
+      "delay_clean_time": {
+        "name": "Delay clean time"
       },
       "down_delay": {
         "name": "Down delay"
@@ -620,6 +635,12 @@
       "duster_cloth_life": {
         "name": "Duster cloth lifetime"
       },
+      "excretion_time_day": {
+        "name": "Excretion time (day)"
+      },
+      "excretion_times_day": {
+        "name": "Excretion times (day)"
+      },
       "feels_like_temperature": {
         "name": "Feels like"
       },
@@ -873,6 +894,9 @@
       },
       "arm_beep": {
         "name": "Arm beep"
+      },
+      "auto_clean": {
+        "name": "Auto clean"
       },
       "battery_lock": {
         "name": "Battery lock"

@@ -23,6 +23,28 @@ PLATFORMS = [Platform.BINARY_SENSOR, Platform.DEVICE_TRACKER, Platform.SENSOR]
 DATA_PRIVILEGED_KEY: HassKey[bool | None] = HassKey(DOMAIN)
 
 
+async def async_migrate_entry(hass: HomeAssistant, entry: PingConfigEntry) -> bool:
+    """Migrate old config entries."""
+    if entry.version == 1 and entry.minor_version == 1:
+        _LOGGER.debug("Migrating to minor version 2")
+
+        # Migrate device registry identifiers from homeassistant domain to ping domain
+        registry = dr.async_get(hass)
+        if (
+            device := registry.async_get_device(
+                identifiers={(HOMEASSISTANT_DOMAIN, entry.entry_id)}
+            )
+        ) is not None and entry.entry_id in device.config_entries:
+            registry.async_update_device(
+                device_id=device.id,
+                new_identifiers={(DOMAIN, entry.entry_id)},
+            )
+
+        hass.config_entries.async_update_entry(entry, minor_version=2)
+
+    return True
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the ping integration."""
     hass.data[DATA_PRIVILEGED_KEY] = await _can_use_icmp_lib_with_privilege()
@@ -32,19 +54,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: PingConfigEntry) -> bool:
     """Set up Ping (ICMP) from a config entry."""
-
-    # Migrate device registry identifiers from homeassistant domain to ping domain
-    registry = dr.async_get(hass)
-    if (
-        device := registry.async_get_device(
-            identifiers={(HOMEASSISTANT_DOMAIN, entry.entry_id)}
-        )
-    ) is not None and entry.entry_id in device.config_entries:
-        registry.async_update_device(
-            device_id=device.id,
-            new_identifiers={(DOMAIN, entry.entry_id)},
-        )
-
     privileged = hass.data[DATA_PRIVILEGED_KEY]
 
     host: str = entry.options[CONF_HOST]
