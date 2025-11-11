@@ -2,16 +2,16 @@ rules:
   # Bronze
   action-setup:
     status: exempt
-    comment: has no actions
+    comment: has only entity actions
   appropriate-polling: done
   brands: done
   common-modules: done
-  config-flow-test-coverage: done
+  config-flow-test-coverage: todo
   config-flow: done
   dependency-transparency: done
   docs-actions:
     status: exempt
-    comment: has no actions
+    comment: has only entity actions
   docs-high-level-description: todo
   docs-installation-instructions: todo
   docs-removal-instructions: todo
@@ -24,9 +24,7 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: exempt
-    comment: has no actions
+  action-exceptions: todo
   config-entry-unloading: done
   docs-configuration-parameters: todo
   docs-installation-parameters: todo
