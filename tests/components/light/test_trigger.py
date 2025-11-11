@@ -9,6 +9,7 @@ from homeassistant.const import (
     ATTR_FLOOR_ID,
     ATTR_LABEL_ID,
     CONF_ENTITY_ID,
+    CONF_OPTIONS,
     CONF_PLATFORM,
     CONF_TARGET,
     STATE_OFF,
@@ -25,9 +26,6 @@ from homeassistant.helpers import (
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, mock_device_registry
-
-# remove when #151314 is merged
-CONF_OPTIONS = "options"
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
