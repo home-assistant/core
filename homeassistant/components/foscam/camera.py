@@ -6,6 +6,8 @@ import asyncio
 
 import voluptuous as vol
 
+from urllib.parse import quote
+
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -152,7 +154,9 @@ class HassFoscamCamera(FoscamEntity, Camera):
     async def stream_source(self) -> str | None:
         """Return the stream source."""
         if self._rtsp_port:
-            return f"rtsp://{self._username}:{self._password}@{self._foscam_session.host}:{self._rtsp_port}/video{self._stream}"
+            _username = quote(self._username)
+            _password = quote(self._password)
+            return f"rtsp://{_username}:{_password}@{self._foscam_session.host}:{self._rtsp_port}/video{self._stream}"
 
         return None
 
