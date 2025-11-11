@@ -15,7 +15,7 @@ from homeassistant.components.media_source import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
@@ -109,7 +109,7 @@ class PhotoFrameImageEntity(ImageEntity):
         async def get_next_image_on_start(_event) -> None:
             await self.get_next_image()
 
-        if not self.hass.is_running:
+        if self.hass.state != CoreState.running:
             self.hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_STARTED, get_next_image_on_start
             )
