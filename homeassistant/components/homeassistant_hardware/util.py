@@ -378,6 +378,15 @@ async def async_flash_silabs_firmware(
     domain: str = DOMAIN,
 ) -> FirmwareInfo:
     """Flash firmware to the SiLabs device."""
+    if not any(
+        method == expected_installed_firmware_type
+        for method, _ in application_probe_methods
+    ):
+        raise ValueError(
+            f"Expected installed firmware type {expected_installed_firmware_type!r}"
+            f" not in application probe methods {application_probe_methods!r}"
+        )
+
     async with async_firmware_update_context(hass, device, domain):
         firmware_info = await guess_firmware_info(hass, device)
         _LOGGER.debug("Identified firmware info: %s", firmware_info)

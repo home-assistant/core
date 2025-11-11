@@ -644,6 +644,28 @@ async def test_async_flash_silabs_firmware(hass: HomeAssistant) -> None:
     ]
 
 
+async def test_async_flash_silabs_firmware_expected_type_not_probed(
+    hass: HomeAssistant,
+) -> None:
+    """Test firmware flashing requires probing config to exist for firmware type."""
+    with pytest.raises(
+        ValueError,
+        match=(
+            r"Expected installed firmware type .*? not in application probe methods .*?"
+        ),
+    ):
+        await async_flash_silabs_firmware(
+            hass=hass,
+            device="/dev/ttyUSB0",
+            fw_data=b"firmware contents",
+            expected_installed_firmware_type=ApplicationType.SPINEL,
+            bootloader_reset_methods=[ResetTarget.RTS_DTR],
+            application_probe_methods=[
+                (ApplicationType.EZSP, 460800),
+            ],
+        )
+
+
 async def test_async_flash_silabs_firmware_flash_failure(hass: HomeAssistant) -> None:
     """Test async_flash_silabs_firmware flash failure."""
     await async_setup_component(hass, "homeassistant_hardware", {})
