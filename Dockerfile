@@ -21,8 +21,6 @@ ARG BUILD_ARCH
 RUN \
     case "${BUILD_ARCH}" in \
         "aarch64") go2rtc_suffix='arm64' ;; \
-        "armhf") go2rtc_suffix='armv6' ;; \
-        "armv7") go2rtc_suffix='arm' ;; \
         *) go2rtc_suffix=${BUILD_ARCH} ;; \
     esac \
     && curl -L https://github.com/AlexxIT/go2rtc/releases/download/v1.9.11/go2rtc_linux_${go2rtc_suffix} --output /bin/go2rtc \
