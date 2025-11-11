@@ -34,14 +34,19 @@ ATTR_STANDARD_VALUES_SLOTS = "standard_values_slots"
 SERVICE_SET_HOT_WATER_SCHEDULE = "set_hot_water_schedule"
 
 
-def _convert_time_slots_to_string(slots: list[dict[str, time]] | None) -> str | None:
+def _convert_time_slots_to_string(slots: list[dict[str, time]] | None) -> str:
     """Convert list of time slot dicts to BSB-LAN format string.
 
     Example: [{"start_time": "06:00", "end_time": "08:00"}, {"start_time": "17:00", "end_time": "21:00"}]
     becomes: "06:00-08:00 17:00-21:00"
+
+    Empty list or None returns empty string.
     """
-    if not slots:
-        return None
+    if slots is None or not slots:
+        return ""
+
+    if not slots:  # Empty list (shouldn't happen, but handle it)
+        return ""
 
     time_periods = []
     for slot in slots:
@@ -49,12 +54,62 @@ def _convert_time_slots_to_string(slots: list[dict[str, time]] | None) -> str | 
         end = slot.get("end_time")
 
         if start and end:
-            # Convert time objects to HH:MM format strings
-            start_str = start.strftime("%H:%M") if isinstance(start, time) else start
-            end_str = end.strftime("%H:%M") if isinstance(end, time) else end
-            time_periods.append(f"{start_str}-{end_str}")
+            # Convert time objects to HH:MM format (no seconds!)
+            if isinstance(start, time):
+                start_str = start.strftime("%H:%M")
+                start_time_obj = start
+            elif isinstance(start, str):
+                # If it's already a string, strip seconds if present
+                start_str = start[:5] if len(start) >= 5 else start
+                # Parse string to time object for validation
+                try:
+                    parts = start.split(":")
+                    start_time_obj = time(int(parts[0]), int(parts[1]))
+                except (ValueError, IndexError):
+                    raise ServiceValidationError(
+                        translation_domain=DOMAIN,
+                        translation_key="invalid_time_format",
+                    ) from None
+            else:
+                start_str = str(start)
+                start_time_obj = None
 
-    return " ".join(time_periods) if time_periods else None
+            if isinstance(end, time):
+                end_str = end.strftime("%H:%M")
+                end_time_obj = end
+            elif isinstance(end, str):
+                # If it's already a string, strip seconds if present
+                end_str = end[:5] if len(end) >= 5 else end
+                # Parse string to time object for validation
+                try:
+                    parts = end.split(":")
+                    end_time_obj = time(int(parts[0]), int(parts[1]))
+                except (ValueError, IndexError):
+                    raise ServiceValidationError(
+                        translation_domain=DOMAIN,
+                        translation_key="invalid_time_format",
+                    ) from None
+            else:
+                end_str = str(end)
+                end_time_obj = None
+
+            # Validate that end time is after start time
+            if start_time_obj and end_time_obj and end_time_obj <= start_time_obj:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="end_time_before_start_time",
+                    translation_placeholders={
+                        "start_time": start_str,
+                        "end_time": end_str,
+                    },
+                )
+
+            time_periods.append(f"{start_str}-{end_str}")
+            LOGGER.debug("Created time period: %s-%s", start_str, end_str)
+
+    result = " ".join(time_periods) if time_periods else ""
+    LOGGER.debug("Final converted string: %s", result)
+    return result
 
 
 async def set_hot_water_schedule(service_call: ServiceCall) -> None:
