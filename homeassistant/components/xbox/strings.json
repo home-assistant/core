@@ -73,6 +73,17 @@
         "name": "Gamerscore",
         "unit_of_measurement": "points"
       },
+      "in_party": {
+        "name": "In party",
+        "unit_of_measurement": "[%key:component::xbox::entity::sensor::following::unit_of_measurement%]"
+      },
+      "join_restrictions": {
+        "name": "Party join restrictions",
+        "state": {
+          "invite_only": "Invite-only",
+          "joinable": "Joinable"
+        }
+      },
       "last_online": {
         "name": "Last online"
       },
