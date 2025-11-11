@@ -2,16 +2,16 @@
 
 from __future__ import annotations
 
+from datetime import time
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from bsblan import BSBLANError, DHWTimeSwitchPrograms
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN
 
@@ -20,42 +20,46 @@ if TYPE_CHECKING:
 
 LOGGER = logging.getLogger(__name__)
 
-ATTR_DEVICE = "device"
-ATTR_SCHEDULE = "schedule"
+ATTR_DEVICE_ID = "device_id"
+ATTR_MONDAY_SLOTS = "monday_slots"
+ATTR_TUESDAY_SLOTS = "tuesday_slots"
+ATTR_WEDNESDAY_SLOTS = "wednesday_slots"
+ATTR_THURSDAY_SLOTS = "thursday_slots"
+ATTR_FRIDAY_SLOTS = "friday_slots"
+ATTR_SATURDAY_SLOTS = "saturday_slots"
+ATTR_SUNDAY_SLOTS = "sunday_slots"
+ATTR_STANDARD_VALUES_SLOTS = "standard_values_slots"
 
 # Service name
 SERVICE_SET_HOT_WATER_SCHEDULE = "set_hot_water_schedule"
 
-# Schema for the day schedule
-SERVICE_SCHEDULE_DAY_SCHEMA = vol.Schema(cv.string)
 
-# Schema for the complete schedule
-SERVICE_SCHEDULE_SCHEMA = vol.Schema(
-    {
-        vol.Optional("monday"): vol.Any(None, SERVICE_SCHEDULE_DAY_SCHEMA),
-        vol.Optional("tuesday"): vol.Any(None, SERVICE_SCHEDULE_DAY_SCHEMA),
-        vol.Optional("wednesday"): vol.Any(None, SERVICE_SCHEDULE_DAY_SCHEMA),
-        vol.Optional("thursday"): vol.Any(None, SERVICE_SCHEDULE_DAY_SCHEMA),
-        vol.Optional("friday"): vol.Any(None, SERVICE_SCHEDULE_DAY_SCHEMA),
-        vol.Optional("saturday"): vol.Any(None, SERVICE_SCHEDULE_DAY_SCHEMA),
-        vol.Optional("sunday"): vol.Any(None, SERVICE_SCHEDULE_DAY_SCHEMA),
-        vol.Optional("standard_values"): vol.Any(None, SERVICE_SCHEDULE_DAY_SCHEMA),
-    }
-)
+def _convert_time_slots_to_string(slots: list[dict[str, time]] | None) -> str | None:
+    """Convert list of time slot dicts to BSB-LAN format string.
 
-# Schema for the service call
-SERVICE_SET_HOT_WATER_SCHEDULE_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_DEVICE): cv.string,
-        vol.Required(ATTR_SCHEDULE): SERVICE_SCHEDULE_SCHEMA,
-    }
-)
+    Example: [{"start_time": "06:00", "end_time": "08:00"}, {"start_time": "17:00", "end_time": "21:00"}]
+    becomes: "06:00-08:00 17:00-21:00"
+    """
+    if not slots:
+        return None
+
+    time_periods = []
+    for slot in slots:
+        start = slot.get("start_time")
+        end = slot.get("end_time")
+
+        if start and end:
+            # Convert time objects to HH:MM format strings
+            start_str = start.strftime("%H:%M") if isinstance(start, time) else start
+            end_str = end.strftime("%H:%M") if isinstance(end, time) else end
+            time_periods.append(f"{start_str}-{end_str}")
+
+    return " ".join(time_periods) if time_periods else None
 
 
 async def set_hot_water_schedule(service_call: ServiceCall) -> None:
     """Set hot water heating schedule."""
-    schedule_data: dict[str, Any] = service_call.data[ATTR_SCHEDULE]
-    device_id = service_call.data[ATTR_DEVICE]
+    device_id = service_call.data[ATTR_DEVICE_ID]
 
     # Get the device and config entry
     device_registry = dr.async_get(service_call.hass)
@@ -94,19 +98,50 @@ async def set_hot_water_schedule(service_call: ServiceCall) -> None:
 
     client = entry.runtime_data.client
 
-    # Create the DHWTimeSwitchPrograms object
-    dhw_programs = DHWTimeSwitchPrograms(
-        monday=schedule_data.get("monday"),
-        tuesday=schedule_data.get("tuesday"),
-        wednesday=schedule_data.get("wednesday"),
-        thursday=schedule_data.get("thursday"),
-        friday=schedule_data.get("friday"),
-        saturday=schedule_data.get("saturday"),
-        sunday=schedule_data.get("sunday"),
-        standard_values=schedule_data.get("standard_values"),
+    # Convert time slots to BSB-LAN format strings
+    monday_str = _convert_time_slots_to_string(service_call.data.get(ATTR_MONDAY_SLOTS))
+    tuesday_str = _convert_time_slots_to_string(
+        service_call.data.get(ATTR_TUESDAY_SLOTS)
+    )
+    wednesday_str = _convert_time_slots_to_string(
+        service_call.data.get(ATTR_WEDNESDAY_SLOTS)
+    )
+    thursday_str = _convert_time_slots_to_string(
+        service_call.data.get(ATTR_THURSDAY_SLOTS)
+    )
+    friday_str = _convert_time_slots_to_string(service_call.data.get(ATTR_FRIDAY_SLOTS))
+    saturday_str = _convert_time_slots_to_string(
+        service_call.data.get(ATTR_SATURDAY_SLOTS)
+    )
+    sunday_str = _convert_time_slots_to_string(service_call.data.get(ATTR_SUNDAY_SLOTS))
+    standard_values_str = _convert_time_slots_to_string(
+        service_call.data.get(ATTR_STANDARD_VALUES_SLOTS)
     )
 
-    LOGGER.debug("Setting hot water schedule: %s", schedule_data)
+    # Create the DHWTimeSwitchPrograms object
+    dhw_programs = DHWTimeSwitchPrograms(
+        monday=monday_str,
+        tuesday=tuesday_str,
+        wednesday=wednesday_str,
+        thursday=thursday_str,
+        friday=friday_str,
+        saturday=saturday_str,
+        sunday=sunday_str,
+        standard_values=standard_values_str,
+    )
+
+    LOGGER.debug(
+        "Setting hot water schedule - Monday: %s, Tuesday: %s, Wednesday: %s, "
+        "Thursday: %s, Friday: %s, Saturday: %s, Sunday: %s, Standard: %s",
+        monday_str,
+        tuesday_str,
+        wednesday_str,
+        thursday_str,
+        friday_str,
+        saturday_str,
+        sunday_str,
+        standard_values_str,
+    )
 
     try:
         # Call the BSB-Lan API to set the schedule
@@ -129,5 +164,4 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_SET_HOT_WATER_SCHEDULE,
         set_hot_water_schedule,
-        schema=SERVICE_SET_HOT_WATER_SCHEDULE_SCHEMA,
     )

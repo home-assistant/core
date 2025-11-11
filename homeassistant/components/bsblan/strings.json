@@ -108,13 +108,41 @@
     "set_hot_water_schedule": {
       "description": "Set the hot water heating schedule for a BSB-LAN device.",
       "fields": {
-        "device": {
+        "device_id": {
           "description": "The BSB-LAN device to configure.",
           "name": "Device"
         },
-        "schedule": {
-          "description": "Schedule with day names (monday, tuesday, etc.) as keys. Time format: \"HH:MM-HH:MM\" (24-hour). Multiple periods per day separated by spaces: \"06:00-08:00 17:00-21:00\". Set a day to null to clear its schedule.",
-          "name": "Schedule"
+        "friday_slots": {
+          "description": "Time periods for Friday. Add multiple slots for different heating periods throughout the day.",
+          "name": "Friday time slots"
+        },
+        "monday_slots": {
+          "description": "Time periods for Monday. Add multiple slots for different heating periods throughout the day.",
+          "name": "Monday time slots"
+        },
+        "saturday_slots": {
+          "description": "Time periods for Saturday. Add multiple slots for different heating periods throughout the day.",
+          "name": "Saturday time slots"
+        },
+        "standard_values_slots": {
+          "description": "Default time periods that apply to days without specific slots configured.",
+          "name": "Default time slots"
+        },
+        "sunday_slots": {
+          "description": "Time periods for Sunday. Add multiple slots for different heating periods throughout the day.",
+          "name": "Sunday time slots"
+        },
+        "thursday_slots": {
+          "description": "Time periods for Thursday. Add multiple slots for different heating periods throughout the day.",
+          "name": "Thursday time slots"
+        },
+        "tuesday_slots": {
+          "description": "Time periods for Tuesday. Add multiple slots for different heating periods throughout the day.",
+          "name": "Tuesday time slots"
+        },
+        "wednesday_slots": {
+          "description": "Time periods for Wednesday. Add multiple slots for different heating periods throughout the day.",
+          "name": "Wednesday time slots"
         }
       },
       "name": "Set hot water schedule"
