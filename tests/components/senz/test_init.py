@@ -7,7 +7,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
-from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 
@@ -35,7 +34,6 @@ async def test_oauth_implementation_not_available(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test that an unavailable OAuth implementation raises ConfigEntryNotReady."""
-    assert await async_setup_component(hass, "cloud", {})
 
     with patch(
         "homeassistant.components.senz.async_get_config_entry_implementation",
