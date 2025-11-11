@@ -1093,7 +1093,20 @@ class Entity(
         available = self.available  # only call self.available once per update cycle
         state = self._stringify_state(available)
         if available:
-            if self._included_entities is not None:
+            if self.included_unique_ids is not None:
+                entity_registry = er.async_get(self.hass)
+                self._included_entities = [
+                    entity_id
+                    for included_id in self.included_unique_ids
+                    if (
+                        entity_id := entity_registry.async_get_entity_id(
+                            self.platform.domain,
+                            self.platform.platform_name,
+                            included_id,
+                        )
+                    )
+                    is not None
+                ]
                 attr[ATTR_ENTITY_ID] = self._included_entities.copy()
             if state_attributes := self.state_attributes:
                 attr |= state_attributes
@@ -1404,21 +1417,19 @@ class Entity(
 
         async def _handle_entity_registry_updated(event: Event[Any]) -> None:
             """Handle registry create or update event."""
-            if TYPE_CHECKING:
-                assert self.included_unique_ids is not None
             if (
                 event.data["action"] in {"create", "update"}
                 and (entry := entity_registry.async_get(event.data["entity_id"]))
+                and self.included_unique_ids is not None
                 and entry.unique_id in self.included_unique_ids
             ) or (
                 event.data["action"] == "remove"
                 and self._included_entities is not None
                 and event.data["entity_id"] in self._included_entities
             ):
-                self._update_group_entity_ids()
                 self.async_write_ha_state()
 
-        if self.included_unique_ids:
+        if self.included_unique_ids is not None:
             self.async_on_remove(
                 self.hass.bus.async_listen(
                     er.EVENT_ENTITY_REGISTRY_UPDATED,
