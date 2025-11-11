@@ -46,7 +46,9 @@ def load_account_file() -> str:
 
 
 @pytest.fixture
-async def account_fixture(hass: HomeAssistant, load_account_file: str) -> Account:
+async def account_fixture(
+    hass: HomeAssistant, load_account_file: str
+) -> dict[str, Any]:
     """Fixture for device."""
     return await async_load_json_object_fixture(hass, load_account_file, DOMAIN)
 
