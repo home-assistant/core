@@ -394,6 +394,36 @@
       "description": "Triggers when a media player pauses.",
       "description_configured": "Triggers when a media player pauses",
       "name": "When a media player pauses"
+    },
+    "stopped": {
+      "description": "Triggers when a media player stops playing.",
+      "description_configured": "Triggers when a media player stops playing",
+      "name": "When a media player stops playing"
+    },
+    "muted": {
+      "description": "Triggers when a media player gets muted.",
+      "description_configured": "Triggers when a media player gets muted",
+      "name": "When a media player gets muted"
+    },
+    "unmuted": {
+      "description": "Triggers when a media player gets unmuted.",
+      "description_configured": "Triggers when a media player gets unmuted",
+      "name": "When a media player gets unmuted"
+    },
+    "volume_changed": {
+      "description": "Triggers when a media player volume changes.",
+      "description_configured": "Triggers when a media player volume changes",
+      "fields": {
+        "above": {
+          "description": "Only trigger when volume is above this level (0.0-1.0).",
+          "name": "Above"
+        },
+        "below": {
+          "description": "Only trigger when volume is below this level (0.0-1.0).",
+          "name": "Below"
+        }
+      },
+      "name": "When a media player volume changes"
     }
   }
 }

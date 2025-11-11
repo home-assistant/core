@@ -26,3 +26,40 @@ paused:
   target:
     entity:
       domain: media_player
+
+stopped:
+  target:
+    entity:
+      domain: media_player
+
+muted:
+  target:
+    entity:
+      domain: media_player
+
+unmuted:
+  target:
+    entity:
+      domain: media_player
+
+volume_changed:
+  target:
+    entity:
+      domain: media_player
+  fields:
+    above:
+      required: false
+      selector:
+        number:
+          min: 0.0
+          max: 1.0
+          step: 0.01
+          mode: slider
+    below:
+      required: false
+      selector:
+        number:
+          min: 0.0
+          max: 1.0
+          step: 0.01
+          mode: slider
