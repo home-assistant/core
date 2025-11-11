@@ -482,7 +482,7 @@
       "description_configured": "Triggers when a light is turned off",
       "fields": {
         "behavior": {
-          "description": "The behavior of the targeted lights to trigger off.",
+          "description": "The behavior of the targeted lights to trigger on.",
           "name": "Behavior"
         }
       },
@@ -493,8 +493,8 @@
       "description_configured": "Triggers when a light is turned on",
       "fields": {
         "behavior": {
-          "description": "The behavior of the targeted lights to trigger on.",
-          "name": "Behavior"
+          "description": "[%key:component::light::triggers::turned_off::fields::behavior::description%]",
+          "name": "[%key:component::light::triggers::turned_off::fields::behavior::name%]"
         }
       },
       "name": "When a light is turned on"
