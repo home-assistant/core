@@ -269,8 +269,6 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
-                if transport == TRANSPORT_SSE:
-                    user_input.pop(CONF_TRANSPORT, None)
                 return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(
@@ -369,23 +367,12 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             **self.data,
             **data,
         }
-        transport = config_entry_data.get(CONF_TRANSPORT, TRANSPORT_SSE)
-        validation_data = {**config_entry_data}
-        if transport == TRANSPORT_SSE:
-            validation_data.pop(CONF_TRANSPORT, None)
-        else:
-            validation_data[CONF_TRANSPORT] = transport
-
-        if transport == TRANSPORT_SSE:
-            config_entry_data.pop(CONF_TRANSPORT, None)
-        else:
-            config_entry_data[CONF_TRANSPORT] = transport
 
         async def token_manager() -> str:
             return cast(str, data[CONF_TOKEN][CONF_ACCESS_TOKEN])
 
         try:
-            info = await validate_input(self.hass, validation_data, token_manager)
+            info = await validate_input(self.hass, config_entry_data, token_manager)
         except TimeoutConnectError:
             return self.async_abort(reason="timeout_connect")
         except CannotConnect:
