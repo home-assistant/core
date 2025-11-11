@@ -104,9 +104,11 @@ class RoborockSwitch(RoborockEntityV1, SwitchEntity):
         self.entity_description = entity_description
         super().__init__(
             unique_id,
-            coordinator.device_info
-            if not entity_description.is_dock_entity
-            else coordinator.dock_device_info,
+            (
+                coordinator.device_info
+                if not entity_description.is_dock_entity
+                else coordinator.dock_device_info
+            ),
             coordinator.properties_api.command,
         )
         self._trait = trait

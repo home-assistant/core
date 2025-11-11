@@ -51,9 +51,11 @@ SELECT_DESCRIPTIONS: list[RoborockSelectDescription] = [
         api_command=RoborockCommand.SET_WATER_BOX_CUSTOM_MODE,
         value_fn=lambda api: api.status.water_box_mode_name,
         entity_category=EntityCategory.CONFIG,
-        options_lambda=lambda api: api.status.water_box_mode.keys()
-        if api.status.water_box_mode is not None
-        else None,
+        options_lambda=lambda api: (
+            api.status.water_box_mode.keys()
+            if api.status.water_box_mode is not None
+            else None
+        ),
         parameter_lambda=lambda key, api: [api.status.get_mop_intensity_code(key)],
     ),
     RoborockSelectDescription(
@@ -62,9 +64,9 @@ SELECT_DESCRIPTIONS: list[RoborockSelectDescription] = [
         api_command=RoborockCommand.SET_MOP_MODE,
         value_fn=lambda api: api.status.mop_mode_name,
         entity_category=EntityCategory.CONFIG,
-        options_lambda=lambda api: api.status.mop_mode.keys()
-        if api.status.mop_mode is not None
-        else None,
+        options_lambda=lambda api: (
+            api.status.mop_mode.keys() if api.status.mop_mode is not None else None
+        ),
         parameter_lambda=lambda key, api: [api.status.get_mop_mode_code(key)],
     ),
     RoborockSelectDescription(
@@ -73,9 +75,11 @@ SELECT_DESCRIPTIONS: list[RoborockSelectDescription] = [
         api_command=RoborockCommand.SET_DUST_COLLECTION_MODE,
         value_fn=lambda api: api.dust_collection_mode.mode.name,  # type: ignore[union-attr]
         entity_category=EntityCategory.CONFIG,
-        options_lambda=lambda api: RoborockDockDustCollectionModeCode.keys()
-        if api.dust_collection_mode is not None
-        else None,
+        options_lambda=lambda api: (
+            RoborockDockDustCollectionModeCode.keys()
+            if api.dust_collection_mode is not None
+            else None
+        ),
         parameter_lambda=lambda key, _: [
             RoborockDockDustCollectionModeCode.as_dict().get(key)
         ],
@@ -95,8 +99,10 @@ async def async_setup_entry(
         RoborockSelectEntity(coordinator, description, options)
         for coordinator in config_entry.runtime_data.v1
         for description in SELECT_DESCRIPTIONS
-        if (options := description.options_lambda(coordinator.properties_api))
-        is not None
+        if (
+            (options := description.options_lambda(coordinator.properties_api))
+            is not None
+        )
     )
     async_add_entities(
         RoborockCurrentMapSelectEntity(
