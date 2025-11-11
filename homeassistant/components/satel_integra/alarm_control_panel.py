@@ -36,8 +36,8 @@ ALARM_STATE_MAP = {
     AlarmState.ARMED_MODE2: AlarmControlPanelState.ARMED_HOME,
     AlarmState.ARMED_MODE1: AlarmControlPanelState.ARMED_HOME,
     AlarmState.ARMED_MODE0: AlarmControlPanelState.ARMED_AWAY,
-    AlarmState.EXIT_COUNTDOWN_OVER_10: AlarmControlPanelState.PENDING,
-    AlarmState.EXIT_COUNTDOWN_UNDER_10: AlarmControlPanelState.PENDING,
+    AlarmState.EXIT_COUNTDOWN_OVER_10: AlarmControlPanelState.ARMING,
+    AlarmState.EXIT_COUNTDOWN_UNDER_10: AlarmControlPanelState.ARMING,
 }
 
 _LOGGER = logging.getLogger(__name__)
