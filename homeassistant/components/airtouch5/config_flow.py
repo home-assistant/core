@@ -31,13 +31,14 @@ class AirTouch5ConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         AirtouchDiscovery_instance = AirtouchDiscovery()
         await AirtouchDiscovery_instance.establish_server()
-        self.devices = await AirtouchDiscovery_instance.discover()
+        devices = await AirtouchDiscovery_instance.discover()
 
         options = {
-            f"{device.system_id:}": f"{device.name} - {device.ip}"
-            for device in self.devices
+            f"{device.system_id:}": f"{device.name} - {device.ip}" for device in devices
         }
         options["manual"] = "Manual Entry"  # Placeholder option
+
+        self.devices = devices
 
         schema = vol.Schema({vol.Required("Select Device"): vol.In(options)})
         return self.async_show_form(step_id="choose", data_schema=schema)

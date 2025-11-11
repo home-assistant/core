@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import logging
 
 from airtouch5py.airtouch5_simple_client import Airtouch5SimpleClient
@@ -28,15 +29,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: Airtouch5ConfigEntry) ->
     # Create API instance
     host = entry.data[CONF_HOST]
 
-    # bootstrapping device from the stored config entry data
+    short_hash = hashlib.sha1(host.encode("utf-8")).hexdigest()[:8]
+    # bootstrapping device from the stored config entry data, if there is none it means the device cannot be discovered. We proceed anyway and generate a hash from the host.
     device = AirtouchDevice(
         host,
-        entry.data["console_id"],
-        entry.data["model"],
-        entry.data["system_id"],
-        entry.data["name"],
+        entry.data.get("console_id", ""),
+        entry.data.get("model", "AirTouch5"),
+        entry.data.get("system_id", short_hash),
+        entry.data.get("name", "Unknown Device"),
     )
-
     client = Airtouch5SimpleClient(host)
     client.device = device
 
