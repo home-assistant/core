@@ -666,11 +666,6 @@ class CalendarEntity(Entity):
         """Fetch events and push to a single listener."""
         try:
             events = await self.async_get_events(self.hass, start_date, end_date)
-            event_list: list[JsonValueType] = [
-                dataclasses.asdict(event, dict_factory=_list_events_dict_factory)
-                for event in events
-            ]
-            listener(event_list)
         except HomeAssistantError as err:
             _LOGGER.debug(
                 "Error fetching calendar events for %s: %s",
@@ -678,6 +673,13 @@ class CalendarEntity(Entity):
                 err,
             )
             listener(None)
+            return
+
+        event_list: list[JsonValueType] = [
+            dataclasses.asdict(event, dict_factory=_list_events_dict_factory)
+            for event in events
+        ]
+        listener(event_list)
 
     @callback
     def _async_write_ha_state(self) -> None:
