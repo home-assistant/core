@@ -16,7 +16,7 @@ rules:
     comment: This integration does not provide any service actions.
   docs-high-level-description: todo
   docs-installation-instructions: todo
-  docs-removal-instructions: todo
+  docs-removal-instructions: done
   entity-event-setup: todo
   entity-unique-id: todo
   has-entity-name: todo
