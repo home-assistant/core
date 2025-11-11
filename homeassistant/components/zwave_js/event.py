@@ -29,7 +29,7 @@ PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
-class NewValueNotificationZWaveJSEntityDescription(EventEntityDescription):
+class ValueNotificationZWaveJSEntityDescription(EventEntityDescription):
     """Represent a Z-Wave JS event entity description."""
 
 
@@ -119,7 +119,7 @@ DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
         primary_value=ZWaveValueDiscoverySchema(
             stateful=False,
         ),
-        entity_description=NewValueNotificationZWaveJSEntityDescription(
+        entity_description=ValueNotificationZWaveJSEntityDescription(
             key="value_notification",
         ),
         entity_class=ZwaveEventEntity,
