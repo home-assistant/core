@@ -56,7 +56,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
             cache=cache,
             session=async_get_clientsession(hass),
         )
-        devices = await device_manager.get_devices()
     except RoborockInvalidCredentials as err:
         raise ConfigEntryAuthFailed(
             "Invalid credentials",
@@ -80,7 +79,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
             translation_domain=DOMAIN,
             translation_key="home_data_fail",
         ) from err
-
+    devices = await device_manager.get_devices()
     _LOGGER.debug("Device manager found %d devices", len(devices))
     for device in devices:
         entry.async_on_unload(device.close)
