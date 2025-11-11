@@ -19,7 +19,7 @@ from homeassistant.helpers.target import (
 from homeassistant.helpers.trigger import Trigger, TriggerActionRunner, TriggerConfig
 from homeassistant.helpers.typing import ConfigType
 
-from .const import ATTR_HVAC_MODE, DOMAIN, HVAC_MODES, HVACMode
+from .const import ATTR_HVAC_ACTION, ATTR_HVAC_MODE, DOMAIN, HVAC_MODES, HVACMode
 
 CLIMATE_TRIGGER_SCHEMA = vol.Schema(
     {
@@ -248,10 +248,79 @@ class ClimateModeChangedTrigger(Trigger):
         )
 
 
+class ClimateCoolingTrigger(Trigger):
+    """Trigger for when a climate starts cooling."""
+
+    @override
+    @classmethod
+    async def async_validate_config(
+        cls, hass: HomeAssistant, config: ConfigType
+    ) -> ConfigType:
+        """Validate config."""
+        return cast(ConfigType, CLIMATE_TRIGGER_SCHEMA(config))
+
+    def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
+        """Initialize the climate cooling trigger."""
+        super().__init__(hass, config)
+        if TYPE_CHECKING:
+            assert config.options is not None
+            assert config.target is not None
+        self._options = config.options
+        self._target = config.target
+
+    @override
+    async def async_attach_runner(
+        self, run_action: TriggerActionRunner
+    ) -> CALLBACK_TYPE:
+        """Attach the trigger to an action runner."""
+
+        @callback
+        def state_change_listener(
+            target_state_change_data: TargetStateChangedData,
+        ) -> None:
+            """Listen for state changes and call action."""
+            event = target_state_change_data.state_change_event
+            entity_id = event.data["entity_id"]
+            from_state = event.data["old_state"]
+            to_state = event.data["new_state"]
+
+            # Ignore unavailable states
+            if to_state is None or to_state.state == STATE_UNAVAILABLE:
+                return
+
+            # Check if climate started cooling
+            from_action = from_state.attributes.get(ATTR_HVAC_ACTION) if from_state else None
+            to_action = to_state.attributes.get(ATTR_HVAC_ACTION)
+
+            if from_action != "cooling" and to_action == "cooling":
+                run_action(
+                    {
+                        ATTR_ENTITY_ID: entity_id,
+                        "from_state": from_state,
+                        "to_state": to_state,
+                    },
+                    f"climate {entity_id} started cooling",
+                    event.context,
+                )
+
+        def entity_filter(entities: set[str]) -> set[str]:
+            """Filter entities of this domain."""
+            return {
+                entity_id
+                for entity_id in entities
+                if split_entity_id(entity_id)[0] == DOMAIN
+            }
+
+        return async_track_target_selector_state_change_event(
+            self._hass, self._target, state_change_listener, entity_filter
+        )
+
+
 TRIGGERS: dict[str, type[Trigger]] = {
     "turns_on": ClimateTurnsOnTrigger,
     "turns_off": ClimateTurnsOffTrigger,
     "mode_changed": ClimateModeChangedTrigger,
+    "cooling": ClimateCoolingTrigger,
 }
 
 
