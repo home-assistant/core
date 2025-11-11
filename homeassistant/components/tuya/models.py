@@ -10,6 +10,8 @@ from typing import Any, Literal, Self, overload
 
 from tuya_sharing import CustomerDevice
 
+from homeassistant.util.json import json_loads
+
 from .const import DPCode, DPType
 from .util import parse_dptype, remap_value
 
@@ -262,7 +264,7 @@ class DPCodeJsonWrapper(DPCodeTypeInformationWrapper[TypeInformation]):
         """Read the device value for the dpcode."""
         if (raw_value := self._read_device_status_raw(device)) is None:
             return None
-        return json.loads(raw_value)
+        return json_loads(raw_value)
 
 
 class DPCodeEnumWrapper(DPCodeTypeInformationWrapper[EnumTypeData]):
