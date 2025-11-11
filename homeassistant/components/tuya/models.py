@@ -196,7 +196,7 @@ class DPCodeTypeInformationWrapper[T: TypeInformation](DPCodeWrapper):
     def find_dpcode(
         cls,
         device: CustomerDevice,
-        dpcodes: str | DPCode | tuple[DPCode, ...],
+        dpcodes: str | DPCode | tuple[DPCode, ...] | None,
         *,
         prefer_function: bool = False,
     ) -> Self | None:
