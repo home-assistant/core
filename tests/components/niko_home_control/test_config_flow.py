@@ -37,7 +37,7 @@ async def test_full_flow(
 
 
 async def test_timeout_connect(hass: HomeAssistant) -> None:
-    """Test the cannot connect error."""
+    """Test the timeout error."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -69,7 +69,7 @@ async def test_timeout_connect(hass: HomeAssistant) -> None:
 
 
 async def test_unknown(hass: HomeAssistant) -> None:
-    """Test the cannot connect error."""
+    """Test the unknown error."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
