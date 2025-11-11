@@ -71,12 +71,21 @@ from tests.common import MockConfigEntry
                 "standard_values": "07:00-20:00",
             },
         ),
+        (
+            {
+                "monday_slots": [],  # Empty array (shouldn't happen in UI)
+            },
+            {
+                "monday": "",
+            },
+        ),
     ],
     ids=[
         "multiple_slots_per_day",
         "weekend_schedule",
         "single_day",
         "standard_values",
+        "clear_schedule_with_empty_array",
     ],
 )
 async def test_set_hot_water_schedule(
@@ -213,6 +222,39 @@ async def test_service_error_scenarios(
         )
 
     assert exc_info.value.translation_key == expected_translation_key
+
+
+async def test_end_time_before_start_time(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test validation error when end time is before start time."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, "00:80:41:19:69:90")}
+    )
+    assert device_entry is not None
+
+    # Try to create a time slot where end is before start
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_HOT_WATER_SCHEDULE,
+            {
+                "device_id": device_entry.id,
+                "monday_slots": [
+                    {"start_time": time(13, 0), "end_time": time(11, 0)},  # Invalid!
+                ],
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "end_time_before_start_time"
 
 
 async def test_async_setup_services(hass: HomeAssistant) -> None:
