@@ -21,6 +21,13 @@ from tests.common import AsyncMock, MockConfigEntry, async_load_json_object_fixt
 from tests.typing import MagicMock
 
 
+@pytest.fixture(autouse=True)
+async def setup_media_source(hass: HomeAssistant) -> None:
+    """Setup media source component."""
+
+    await async_setup_component(hass, "media_source", {})
+
+
 @pytest.mark.usefixtures("xbox_live_client")
 @pytest.mark.freeze_time("2025-11-06T17:12:27")
 async def test_browse_media(
@@ -29,8 +36,6 @@ async def test_browse_media(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test browsing media."""
-
-    await async_setup_component(hass, "media_source", {})
 
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -88,8 +93,6 @@ async def test_browse_media_accounts(
 ) -> None:
     """Test browsing media we get account view if more than 1 account is configured."""
 
-    await async_setup_component(hass, "media_source", {})
-
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -130,15 +133,6 @@ async def test_browse_media_accounts(
     assert (
         await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}")
     ).as_dict() == snapshot
-
-    # assert browse.domain == DOMAIN
-    # assert browse.identifier is None
-    # assert browse.title == "Xbox Game Media"
-    # assert browse.children
-    # assert [(child.identifier, child.title) for child in browse.children] == [
-    #     ("271958441785640", "GSR Ae"),
-    #     ("277923030577271", "Iqnavs"),
-    # ]
 
 
 @pytest.mark.parametrize(
@@ -183,8 +177,6 @@ async def test_browse_media_exceptions(
 ) -> None:
     """Test browsing media exceptions."""
 
-    await async_setup_component(hass, "media_source", {})
-
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -223,7 +215,6 @@ async def test_browse_media_not_configured_exception(
         disabled_by=ConfigEntryDisabler.USER,
         minor_version=2,
     )
-    await async_setup_component(hass, "media_source", {})
 
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -241,8 +232,6 @@ async def test_browse_media_account_not_configured_exception(
     config_entry: MockConfigEntry,
 ) -> None:
     """Test browsing media account not configured exception."""
-
-    await async_setup_component(hass, "media_source", {})
 
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -284,8 +273,6 @@ async def test_resolve_media(
     mime_type: str,
 ) -> None:
     """Test resolve media."""
-
-    await async_setup_component(hass, "media_source", {})
 
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -341,8 +328,6 @@ async def test_resolve_media_exceptions(
 ) -> None:
     """Test resolve media exceptions."""
 
-    await async_setup_component(hass, "media_source", {})
-
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -368,8 +353,6 @@ async def test_resolve_media_not_found_exceptions(
     media_type: str,
 ) -> None:
     """Test resolve media not found exceptions."""
-
-    await async_setup_component(hass, "media_source", {})
 
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -409,7 +392,6 @@ async def test_resolve_media_not_configured(
         unique_id="2533274838782903",
         disabled_by=ConfigEntryDisabler.USER,
     )
-    await async_setup_component(hass, "media_source", {})
 
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -431,8 +413,6 @@ async def test_resolve_media_account_not_configured(
     config_entry: MockConfigEntry,
 ) -> None:
     """Test resolve media account not configured exception."""
-
-    await async_setup_component(hass, "media_source", {})
 
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
