@@ -1,6 +1,7 @@
 """Tests for the zimi config flow."""
 
-from unittest.mock import MagicMock, patch
+from collections.abc import Generator
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from zcc import (
@@ -42,6 +43,15 @@ def discovery_mock():
     ) as mock:
         mock.return_value = mock
         yield mock
+
+
+@pytest.fixture(autouse=True)
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.zimi.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
 
 
 async def test_user_discovery_success(
