@@ -303,7 +303,8 @@ async def _refresh_traits(traits: list[Any]) -> None:
     """Refresh a list of traits serially.
 
     We refresh traits serially to avoid overloading the cloud servers or device
-    with requests.
+    with requests. If any single trait fails to refresh, we stop the whole
+    update process and raise UpdateFailed.
     """
     for trait in traits:
         try:
