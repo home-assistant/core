@@ -133,7 +133,7 @@ class Airtouch5AC(Airtouch5ClimateEntity):
         """Initialise the Climate Entity."""
         super().__init__(client)
         self._ability = ability
-        self._attr_unique_id = f"ac_{client.device.system_id}"
+        self._attr_unique_id = f"{client.device.system_id}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._attr_unique_id)},
             name=f"AC {client.device.name}",
