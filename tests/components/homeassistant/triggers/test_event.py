@@ -33,7 +33,10 @@ async def test_if_fires_on_event(
         automation.DOMAIN,
         {
             automation.DOMAIN: {
-                "trigger": {"platform": "event", "event_type": "test_event"},
+                "trigger": {
+                    "platform": "event",
+                    "event_type": "test_event",
+                },
                 "action": {
                     "service": "test.automation",
                     "data_template": {"id": "{{ trigger.id}}"},
@@ -73,7 +76,10 @@ async def test_if_fires_on_templated_event(
         {
             automation.DOMAIN: {
                 "trigger_variables": {"event_type": "test_event"},
-                "trigger": {"platform": "event", "event_type": "{{event_type}}"},
+                "trigger": {
+                    "platform": "event",
+                    "event_type": "{{event_type}}",
+                },
                 "action": {"service": "test.automation"},
             }
         },
@@ -135,7 +141,10 @@ async def test_if_fires_on_event_extra_data(
         automation.DOMAIN,
         {
             automation.DOMAIN: {
-                "trigger": {"platform": "event", "event_type": "test_event"},
+                "trigger": {
+                    "platform": "event",
+                    "event_type": "test_event",
+                },
                 "action": {"service": "test.automation"},
             }
         },
@@ -580,7 +589,10 @@ async def test_state_reported_event(
         automation.DOMAIN,
         {
             automation.DOMAIN: {
-                "trigger": {"platform": "event", "event_type": event_type},
+                "trigger": {
+                    "platform": "event",
+                    "event_type": event_type,
+                },
                 "action": {
                     "service": "test.automation",
                     "data_template": {"id": "{{ trigger.id}}"},
@@ -613,7 +625,10 @@ async def test_templated_state_reported_event(
         {
             automation.DOMAIN: {
                 "trigger_variables": {"event_type": "state_reported"},
-                "trigger": {"platform": "event", "event_type": "{{event_type}}"},
+                "trigger": {
+                    "platform": "event",
+                    "event_type": "{{event_type}}",
+                },
                 "action": {
                     "service": "test.automation",
                     "data_template": {"id": "{{ trigger.id}}"},

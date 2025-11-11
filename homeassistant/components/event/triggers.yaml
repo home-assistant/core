@@ -1,0 +1,13 @@
+detected:
+  target:
+    entity:
+      domain: event
+  fields:
+    event_type:
+      required: false
+      default: []
+      selector:
+        select:
+          multiple: true
+          custom_value: true
+          options: []

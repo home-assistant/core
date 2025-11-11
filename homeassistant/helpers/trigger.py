@@ -467,7 +467,10 @@ async def _async_get_trigger_platform(
 ) -> tuple[str, TriggerProtocol]:
     platform_and_sub_type = trigger_key.split(".")
     platform = platform_and_sub_type[0]
-    platform = _PLATFORM_ALIASES.get(platform, platform)
+    # Only apply aliases if there's no sub-type specified
+    # This allows "event" → "homeassistant" but "event.detected" → "event"
+    if len(platform_and_sub_type) == 1:
+        platform = _PLATFORM_ALIASES.get(platform, platform)
     try:
         integration = await async_get_integration(hass, platform)
     except IntegrationNotFound:
