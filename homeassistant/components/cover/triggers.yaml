@@ -55,3 +55,47 @@ stops:
             - curtain
             - shutter
             - blind
+
+position_changed:
+  target:
+    entity:
+      domain: cover
+  fields:
+    lower:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 100
+          mode: box
+    upper:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 100
+          mode: box
+    above:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 100
+          mode: box
+    below:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 100
+          mode: box
+    device_class:
+      required: false
+      default: []
+      selector:
+        select:
+          multiple: true
+          options:
+            - curtain
+            - shutter
+            - blind

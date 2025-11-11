@@ -399,3 +399,193 @@ async def test_stops_trigger_does_not_fire_on_other_changes(
     hass.states.async_set("cover.test", "closing")
     await hass.async_block_till_done()
     assert len(service_calls) == 0
+
+
+async def test_position_changed_trigger_fires(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test that position_changed trigger fires when position changes."""
+    hass.states.async_set("cover.test", "open", {ATTR_CURRENT_POSITION: 100})
+    context = Context()
+
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    CONF_PLATFORM: "cover.position_changed",
+                    CONF_TARGET: {CONF_ENTITY_ID: "cover.test"},
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    hass.states.async_set(
+        "cover.test", "open", {ATTR_CURRENT_POSITION: 75}, context=context
+    )
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+    assert service_calls[0].context.parent_id == context.id
+
+
+async def test_position_changed_trigger_with_lower_limit(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test position_changed trigger with lower limit."""
+    hass.states.async_set("cover.test", "open", {ATTR_CURRENT_POSITION: 100})
+
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    CONF_PLATFORM: "cover.position_changed",
+                    CONF_TARGET: {CONF_ENTITY_ID: "cover.test"},
+                    "lower": 50,
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    # Should trigger at position 75 (>= 50)
+    hass.states.async_set("cover.test", "open", {ATTR_CURRENT_POSITION: 75})
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+
+    # Should not trigger at position 25 (< 50)
+    hass.states.async_set("cover.test", "open", {ATTR_CURRENT_POSITION: 25})
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+
+
+async def test_position_changed_trigger_with_upper_limit(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test position_changed trigger with upper limit."""
+    hass.states.async_set("cover.test", "open", {ATTR_CURRENT_POSITION: 0})
+
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    CONF_PLATFORM: "cover.position_changed",
+                    CONF_TARGET: {CONF_ENTITY_ID: "cover.test"},
+                    "upper": 50,
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    # Should trigger at position 25 (<= 50)
+    hass.states.async_set("cover.test", "open", {ATTR_CURRENT_POSITION: 25})
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+
+    # Should not trigger at position 75 (> 50)
+    hass.states.async_set("cover.test", "open", {ATTR_CURRENT_POSITION: 75})
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+
+
+async def test_position_changed_trigger_with_above_limit(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test position_changed trigger with above limit."""
+    hass.states.async_set("cover.test", "open", {ATTR_CURRENT_POSITION: 0})
+
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    CONF_PLATFORM: "cover.position_changed",
+                    CONF_TARGET: {CONF_ENTITY_ID: "cover.test"},
+                    "above": 50,
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    # Should trigger at position 75 (> 50)
+    hass.states.async_set("cover.test", "open", {ATTR_CURRENT_POSITION: 75})
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+
+    # Should not trigger at position 50 (= 50)
+    hass.states.async_set("cover.test", "open", {ATTR_CURRENT_POSITION: 50})
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+
+
+async def test_position_changed_trigger_with_below_limit(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test position_changed trigger with below limit."""
+    hass.states.async_set("cover.test", "open", {ATTR_CURRENT_POSITION: 100})
+
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    CONF_PLATFORM: "cover.position_changed",
+                    CONF_TARGET: {CONF_ENTITY_ID: "cover.test"},
+                    "below": 50,
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    # Should trigger at position 25 (< 50)
+    hass.states.async_set("cover.test", "open", {ATTR_CURRENT_POSITION: 25})
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+
+    # Should not trigger at position 50 (= 50)
+    hass.states.async_set("cover.test", "open", {ATTR_CURRENT_POSITION: 50})
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+
+
+async def test_position_trigger_data_includes_positions(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test that position trigger data includes position values."""
+    hass.states.async_set("cover.test", "open", {ATTR_CURRENT_POSITION: 100})
+
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    CONF_PLATFORM: "cover.position_changed",
+                    CONF_TARGET: {CONF_ENTITY_ID: "cover.test"},
+                },
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {
+                        "from_position": "{{ trigger.from_position }}",
+                        "to_position": "{{ trigger.to_position }}",
+                    },
+                },
+            }
+        },
+    )
+
+    hass.states.async_set("cover.test", "open", {ATTR_CURRENT_POSITION: 75})
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+    assert service_calls[0].data["from_position"] == "100"
+    assert service_calls[0].data["to_position"] == "75"

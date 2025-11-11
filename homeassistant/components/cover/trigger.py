@@ -23,6 +23,10 @@ from homeassistant.helpers.typing import ConfigType
 from . import ATTR_CURRENT_POSITION, CoverDeviceClass, CoverState
 from .const import DOMAIN
 
+CONF_LOWER = "lower"
+CONF_UPPER = "upper"
+CONF_ABOVE = "above"
+CONF_BELOW = "below"
 CONF_FULLY_OPENED = "fully_opened"
 CONF_FULLY_CLOSED = "fully_closed"
 
@@ -53,6 +57,29 @@ CLOSES_TRIGGER_SCHEMA = vol.Schema(
 STOPS_TRIGGER_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_OPTIONS, default={}): {
+            vol.Optional(CONF_DEVICE_CLASS, default=[]): vol.All(
+                cv.ensure_list, [vol.Coerce(CoverDeviceClass)]
+            ),
+        },
+        vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
+    }
+)
+
+POSITION_CHANGED_TRIGGER_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_OPTIONS, default={}): {
+            vol.Exclusive(CONF_LOWER, "position_range"): vol.All(
+                vol.Coerce(int), vol.Range(min=0, max=100)
+            ),
+            vol.Exclusive(CONF_UPPER, "position_range"): vol.All(
+                vol.Coerce(int), vol.Range(min=0, max=100)
+            ),
+            vol.Exclusive(CONF_ABOVE, "position_range"): vol.All(
+                vol.Coerce(int), vol.Range(min=0, max=100)
+            ),
+            vol.Exclusive(CONF_BELOW, "position_range"): vol.All(
+                vol.Coerce(int), vol.Range(min=0, max=100)
+            ),
             vol.Optional(CONF_DEVICE_CLASS, default=[]): vol.All(
                 cv.ensure_list, [vol.Coerce(CoverDeviceClass)]
             ),
@@ -318,10 +345,106 @@ class CoverStopsTrigger(Trigger):
         )
 
 
+class CoverPositionChangedTrigger(Trigger):
+    """Trigger for when a cover's position changes."""
+
+    @override
+    @classmethod
+    async def async_validate_config(
+        cls, hass: HomeAssistant, config: ConfigType
+    ) -> ConfigType:
+        """Validate config."""
+        return cast(ConfigType, POSITION_CHANGED_TRIGGER_SCHEMA(config))
+
+    def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
+        """Initialize the cover position changed trigger."""
+        super().__init__(hass, config)
+        if TYPE_CHECKING:
+            assert config.target is not None
+        self._target = config.target
+        self._options = config.options or {}
+
+    @override
+    async def async_attach_runner(
+        self, run_action: TriggerActionRunner
+    ) -> CALLBACK_TYPE:
+        """Attach the trigger to an action runner."""
+        lower_limit = self._options.get(CONF_LOWER)
+        upper_limit = self._options.get(CONF_UPPER)
+        above_limit = self._options.get(CONF_ABOVE)
+        below_limit = self._options.get(CONF_BELOW)
+        device_classes_filter = self._options.get(CONF_DEVICE_CLASS, [])
+
+        @callback
+        def state_change_listener(
+            target_state_change_data: TargetStateChangedData,
+        ) -> None:
+            """Listen for state changes and call action."""
+            event = target_state_change_data.state_change_event
+            entity_id = event.data["entity_id"]
+            from_state = event.data["old_state"]
+            to_state = event.data["new_state"]
+
+            # Ignore unavailable states
+            if to_state is None or to_state.state == STATE_UNAVAILABLE:
+                return
+
+            # Filter by device class if specified
+            if device_classes_filter:
+                device_class = to_state.attributes.get(CONF_DEVICE_CLASS)
+                if device_class not in device_classes_filter:
+                    return
+
+            # Get position values
+            from_position = (
+                from_state.attributes.get(ATTR_CURRENT_POSITION) if from_state else None
+            )
+            to_position = to_state.attributes.get(ATTR_CURRENT_POSITION)
+
+            # Only trigger if position value exists and has changed
+            if to_position is None or from_position == to_position:
+                return
+
+            # Apply threshold filters if configured
+            if lower_limit is not None and to_position < lower_limit:
+                return
+            if upper_limit is not None and to_position > upper_limit:
+                return
+            if above_limit is not None and to_position <= above_limit:
+                return
+            if below_limit is not None and to_position >= below_limit:
+                return
+
+            run_action(
+                {
+                    ATTR_ENTITY_ID: entity_id,
+                    "from_state": from_state,
+                    "to_state": to_state,
+                    "from_position": from_position,
+                    "to_position": to_position,
+                },
+                f"position changed on {entity_id}",
+                event.context,
+            )
+
+        def entity_filter(entities: set[str]) -> set[str]:
+            """Filter entities of this domain."""
+            return {
+                entity_id
+                for entity_id in entities
+                if split_entity_id(entity_id)[0] == DOMAIN
+            }
+
+        return async_track_target_selector_state_change_event(
+            self._hass, self._target, state_change_listener, entity_filter
+        )
+
+
 TRIGGERS: dict[str, type[Trigger]] = {
     "opens": CoverOpensTrigger,
     "closes": CoverClosesTrigger,
     "stops": CoverStopsTrigger,
+    "position_changed": CoverPositionChangedTrigger,
 }
 
 

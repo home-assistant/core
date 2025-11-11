@@ -178,6 +178,33 @@
         }
       },
       "name": "When a cover stops moving"
+    },
+    "position_changed": {
+      "description": "Triggers when the position of a cover changes.",
+      "description_configured": "Triggers when the position of a cover changes",
+      "fields": {
+        "lower": {
+          "description": "The minimum position value to trigger on. Only triggers when position is at or above this value.",
+          "name": "Lower limit"
+        },
+        "upper": {
+          "description": "The maximum position value to trigger on. Only triggers when position is at or below this value.",
+          "name": "Upper limit"
+        },
+        "above": {
+          "description": "Only trigger when position is above this value.",
+          "name": "Above"
+        },
+        "below": {
+          "description": "Only trigger when position is below this value.",
+          "name": "Below"
+        },
+        "device_class": {
+          "description": "The device classes to trigger on. If empty, triggers on all device classes.",
+          "name": "Device classes"
+        }
+      },
+      "name": "When the position of a cover changes"
     }
   }
 }
