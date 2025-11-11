@@ -119,10 +119,19 @@ class RespondingTrigger(StateTriggerBase):
         super().__init__(hass, config, "responding")
 
 
+class IdleTrigger(StateTriggerBase):
+    """Trigger for when a satellite goes back to idle."""
+
+    def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
+        """Initialize the idle trigger."""
+        super().__init__(hass, config, "idle")
+
+
 TRIGGERS: dict[str, type[Trigger]] = {
     "listening": ListeningTrigger,
     "processing": ProcessingTrigger,
     "responding": RespondingTrigger,
+    "idle": IdleTrigger,
 }
 
 

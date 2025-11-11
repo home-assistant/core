@@ -28,6 +28,12 @@ TURNS_ON_TRIGGER_SCHEMA = vol.Schema(
     }
 )
 
+TURNS_OFF_TRIGGER_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
+    }
+)
+
 
 class LightTurnsOnTrigger(Trigger):
     """Trigger for when a light turns on."""

@@ -12,3 +12,8 @@ responding:
   target:
     entity:
       domain: assist_satellite
+
+idle:
+  target:
+    entity:
+      domain: assist_satellite

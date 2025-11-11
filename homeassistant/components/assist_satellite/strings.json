@@ -114,6 +114,11 @@
       "description": "Triggers when a satellite starts responding to a command.",
       "description_configured": "Triggers when a satellite starts responding to a command",
       "name": "When a satellite starts responding"
+    },
+    "idle": {
+      "description": "Triggers when a satellite goes back to idle.",
+      "description_configured": "Triggers when a satellite goes back to idle",
+      "name": "When a satellite goes back to idle"
     }
   }
 }
