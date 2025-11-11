@@ -73,6 +73,15 @@ class TuyaLightEntityDescription(LightEntityDescription):
 
 
 LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
+    # White noise machine
+    "bzyd": (
+        TuyaLightEntityDescription(
+            key=DPCode.SWITCH_LED,
+            name=None,
+            color_mode=DPCode.WORK_MODE,
+            color_data=DPCode.COLOUR_DATA,
+        ),
+    ),
     # Curtain Switch
     # https://developer.tuya.com/en/docs/iot/category-clkg?id=Kaiuz0gitil39
     "clkg": (
@@ -531,7 +540,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
 
         if (
             dpcode := get_dpcode(self.device, description.color_data)
-        ) and self.get_dptype(dpcode) == DPType.JSON:
+        ) and self.get_dptype(dpcode, prefer_function=True) == DPType.JSON:
             self._color_data_dpcode = dpcode
             color_modes.add(ColorMode.HS)
             if dpcode in self.device.function:

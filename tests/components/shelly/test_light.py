@@ -459,6 +459,7 @@ async def test_rpc_device_switch_type_lights_mode(
     monkeypatch.setitem(
         mock_rpc_device.config["sys"]["ui_data"], "consumption_types", ["lights"]
     )
+    monkeypatch.delitem(mock_rpc_device.status, "cover:0")
     await init_integration(hass, 2)
 
     await hass.services.async_call(

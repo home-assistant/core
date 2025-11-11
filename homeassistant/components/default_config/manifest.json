@@ -19,6 +19,7 @@
     "ssdp",
     "stream",
     "sun",
+    "usage_prediction",
     "usb",
     "webhook",
     "zeroconf"

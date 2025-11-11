@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS, CONF_TYPE
+from homeassistant.helpers.selector import selector
 
 from .api import MinecraftServer, MinecraftServerAddressError, MinecraftServerType
 from .const import DOMAIN
@@ -73,15 +74,44 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             user_input = {}
 
+        suggested_addresses: list[str] = self._get_local_addresses()
+
+        schema_entries: dict[vol.Marker, Any] = {}
+
+        if len(suggested_addresses) > 0:
+            schema_entries[
+                vol.Required(
+                    CONF_ADDRESS,
+                    default=user_input.get(CONF_ADDRESS, DEFAULT_ADDRESS),
+                )
+            ] = selector(
+                {
+                    "select": {
+                        "options": suggested_addresses,
+                        "custom_value": True,
+                    }
+                }
+            )
+        else:
+            schema_entries[
+                vol.Required(
+                    CONF_ADDRESS,
+                    default=user_input.get(CONF_ADDRESS, DEFAULT_ADDRESS),
+                )
+            ] = vol.All(str, vol.Lower)
+
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_ADDRESS,
-                        default=user_input.get(CONF_ADDRESS, DEFAULT_ADDRESS),
-                    ): vol.All(str, vol.Lower),
-                }
-            ),
+            data_schema=vol.Schema(schema_entries),
             errors=errors,
         )
+
+    def _get_local_addresses(self) -> list[str]:
+        """Get a list of suggested minecraft server addresses for the user."""
+        # template values for now
+        return [
+            "localhost:4090",
+            "123.456.78.90:25565",
+            "play.example.com:19132",
+            "minecraft.example.com:25565",
+        ]

@@ -50,7 +50,7 @@
           "protocol": "Protocol"
         },
         "data_description": {
-          "protocol": "Streaming protocol to use for the camera entities. RTSP supports 4K streams (h265 encoding) while RTMP and FLV do not. FLV is the least demanding on the camera."
+          "protocol": "Streaming protocol to use for the camera entities. RTSP supports 4K streams (H.265 encoding) while RTMP and FLV do not. FLV is the least demanding on the camera."
         }
       }
     }

@@ -3,6 +3,9 @@
     "send_message": {
       "service": "mdi:send"
     },
+    "send_chat_action": {
+      "service": "mdi:send"
+    },
     "send_photo": {
       "service": "mdi:camera"
     },

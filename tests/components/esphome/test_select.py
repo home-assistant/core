@@ -9,6 +9,7 @@ from homeassistant.components.assist_satellite import (
     AssistSatelliteConfiguration,
     AssistSatelliteWakeWord,
 )
+from homeassistant.components.esphome.const import NO_WAKE_WORD
 from homeassistant.components.select import (
     ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
@@ -33,6 +34,17 @@ async def test_pipeline_selector(
 
 
 @pytest.mark.usefixtures("mock_voice_assistant_v1_entry")
+async def test_secondary_pipeline_selector(
+    hass: HomeAssistant,
+) -> None:
+    """Test secondary assist pipeline selector."""
+
+    state = hass.states.get("select.test_assistant_2")
+    assert state is not None
+    assert state.state == "preferred"
+
+
+@pytest.mark.usefixtures("mock_voice_assistant_v1_entry")
 async def test_vad_sensitivity_select(
     hass: HomeAssistant,
 ) -> None:
@@ -52,6 +64,16 @@ async def test_wake_word_select(
 ) -> None:
     """Test that wake word select is unavailable initially."""
     state = hass.states.get("select.test_wake_word")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("mock_voice_assistant_v1_entry")
+async def test_secondary_wake_word_select(
+    hass: HomeAssistant,
+) -> None:
+    """Test that secondary wake word select is unavailable initially."""
+    state = hass.states.get("select.test_wake_word_2")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
@@ -117,10 +139,11 @@ async def test_wake_word_select_no_wake_words(
     assert satellite is not None
     assert not satellite.async_get_configuration().available_wake_words
 
-    # Select should be unavailable
-    state = hass.states.get("select.test_wake_word")
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
+    # Selects should be unavailable
+    for entity_id in ("select.test_wake_word", "select.test_wake_word_2"):
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == STATE_UNAVAILABLE
 
 
 async def test_wake_word_select_zero_max_wake_words(
@@ -151,10 +174,11 @@ async def test_wake_word_select_zero_max_wake_words(
     assert satellite is not None
     assert satellite.async_get_configuration().max_active_wake_words == 0
 
-    # Select should be unavailable
-    state = hass.states.get("select.test_wake_word")
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
+    # Selects should be unavailable
+    for entity_id in ("select.test_wake_word", "select.test_wake_word_2"):
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == STATE_UNAVAILABLE
 
 
 async def test_wake_word_select_no_active_wake_words(
@@ -186,7 +210,8 @@ async def test_wake_word_select_no_active_wake_words(
     assert satellite is not None
     assert not satellite.async_get_configuration().active_wake_words
 
-    # First available wake word should be selected
-    state = hass.states.get("select.test_wake_word")
-    assert state is not None
-    assert state.state == "Okay Nabu"
+    # No wake words should be selected
+    for entity_id in ("select.test_wake_word", "select.test_wake_word_2"):
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == NO_WAKE_WORD

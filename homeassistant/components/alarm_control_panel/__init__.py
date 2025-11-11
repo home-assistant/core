@@ -61,7 +61,7 @@ ALARM_SERVICE_SCHEMA: Final = make_entity_service_schema(
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Track states and offer events for sensors."""
+    """Set up the alarm control panel component."""
     component = hass.data[DATA_COMPONENT] = EntityComponent[AlarmControlPanelEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )

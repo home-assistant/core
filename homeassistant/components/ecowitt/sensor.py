@@ -152,24 +152,28 @@ ECOWITT_SENSORS_MAPPING: Final = {
         native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
         device_class=SensorDeviceClass.PRECIPITATION,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=1,
     ),
     EcoWittSensorTypes.RAIN_COUNT_INCHES: SensorEntityDescription(
         key="RAIN_COUNT_INCHES",
         native_unit_of_measurement=UnitOfPrecipitationDepth.INCHES,
         device_class=SensorDeviceClass.PRECIPITATION,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=2,
     ),
     EcoWittSensorTypes.RAIN_RATE_MM: SensorEntityDescription(
         key="RAIN_RATE_MM",
         native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
+        suggested_display_precision=1,
     ),
     EcoWittSensorTypes.RAIN_RATE_INCHES: SensorEntityDescription(
         key="RAIN_RATE_INCHES",
         native_unit_of_measurement=UnitOfVolumetricFlux.INCHES_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
+        suggested_display_precision=2,
     ),
     EcoWittSensorTypes.LIGHTNING_DISTANCE_KM: SensorEntityDescription(
         key="LIGHTNING_DISTANCE_KM",
@@ -213,9 +217,43 @@ ECOWITT_SENSORS_MAPPING: Final = {
         native_unit_of_measurement=UnitOfPressure.INHG,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    EcoWittSensorTypes.VPD_INHG: SensorEntityDescription(
+        key="VPD_INHG",
+        device_class=SensorDeviceClass.PRESSURE,
+        native_unit_of_measurement=UnitOfPressure.INHG,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
     EcoWittSensorTypes.PERCENTAGE: SensorEntityDescription(
         key="PERCENTAGE",
         native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    EcoWittSensorTypes.SOIL_MOISTURE: SensorEntityDescription(
+        key="SOIL_MOISTURE",
+        device_class=SensorDeviceClass.MOISTURE,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    EcoWittSensorTypes.DISTANCE_MM: SensorEntityDescription(
+        key="DISTANCE_MM",
+        device_class=SensorDeviceClass.DISTANCE,
+        native_unit_of_measurement=UnitOfLength.MILLIMETERS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    EcoWittSensorTypes.HEAT_COUNT: SensorEntityDescription(
+        key="HEAT_COUNT",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    EcoWittSensorTypes.PM1: SensorEntityDescription(
+        key="PM1",
+        device_class=SensorDeviceClass.PM1,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    EcoWittSensorTypes.PM4: SensorEntityDescription(
+        key="PM4",
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
 }

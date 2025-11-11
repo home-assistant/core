@@ -55,7 +55,9 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import callback
+from homeassistant.exceptions import ServiceValidationError
 
+from .const import DOMAIN
 from .entity import (
     EsphomeEntity,
     convert_api_error_ha_error,
@@ -161,11 +163,9 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
         self._attr_max_temp = static_info.visual_max_temperature
         self._attr_min_humidity = round(static_info.visual_min_humidity)
         self._attr_max_humidity = round(static_info.visual_max_humidity)
-        features = ClimateEntityFeature(0)
+        features = ClimateEntityFeature.TARGET_TEMPERATURE
         if static_info.supports_two_point_target_temperature:
             features |= ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
-        else:
-            features |= ClimateEntityFeature.TARGET_TEMPERATURE
         if static_info.supports_target_humidity:
             features |= ClimateEntityFeature.TARGET_HUMIDITY
         if self.preset_modes:
@@ -253,18 +253,31 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
     @esphome_float_state_property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        return self._state.target_temperature
+        if (
+            not self._static_info.supports_two_point_target_temperature
+            and self.hvac_mode != HVACMode.AUTO
+        ):
+            return self._state.target_temperature
+        if self.hvac_mode == HVACMode.HEAT:
+            return self._state.target_temperature_low
+        if self.hvac_mode == HVACMode.COOL:
+            return self._state.target_temperature_high
+        return None
 
     @property
     @esphome_float_state_property
     def target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
+        if self.hvac_mode == HVACMode.AUTO:
+            return None
         return self._state.target_temperature_low
 
     @property
     @esphome_float_state_property
     def target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
+        if self.hvac_mode == HVACMode.AUTO:
+            return None
         return self._state.target_temperature_high
 
     @property
@@ -282,7 +295,27 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
                 cast(HVACMode, kwargs[ATTR_HVAC_MODE])
             )
         if ATTR_TEMPERATURE in kwargs:
-            data["target_temperature"] = kwargs[ATTR_TEMPERATURE]
+            if not self._static_info.supports_two_point_target_temperature:
+                data["target_temperature"] = kwargs[ATTR_TEMPERATURE]
+            else:
+                hvac_mode = kwargs.get(ATTR_HVAC_MODE) or self.hvac_mode
+                if hvac_mode == HVACMode.HEAT:
+                    data["target_temperature_low"] = kwargs[ATTR_TEMPERATURE]
+                elif hvac_mode == HVACMode.COOL:
+                    data["target_temperature_high"] = kwargs[ATTR_TEMPERATURE]
+                else:
+                    raise ServiceValidationError(
+                        translation_domain=DOMAIN,
+                        translation_key="action_call_failed",
+                        translation_placeholders={
+                            "call_name": "climate.set_temperature",
+                            "device_name": self._static_info.name,
+                            "error": (
+                                f"Setting target_temperature is only supported in "
+                                f"{HVACMode.HEAT} or {HVACMode.COOL} modes"
+                            ),
+                        },
+                    )
         if ATTR_TARGET_TEMP_LOW in kwargs:
             data["target_temperature_low"] = kwargs[ATTR_TARGET_TEMP_LOW]
         if ATTR_TARGET_TEMP_HIGH in kwargs:

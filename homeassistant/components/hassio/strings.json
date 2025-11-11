@@ -37,20 +37,24 @@
     },
     "issue_addon_detached_addon_missing": {
       "title": "Missing repository for an installed add-on",
-      "description": "Repository for add-on {addon} is missing. This means it will not get updates, and backups may not be restored correctly as the supervisor may not be able to build/download the resources required.\n\nPlease check the [add-on's documentation]({addon_url}) for installation instructions and add the repository to the store."
+      "description": "Repository for add-on {addon} is missing. This means it will not get updates, and backups may not be restored correctly as the Home Assistant Supervisor may not be able to build/download the resources required.\n\nPlease check the [add-on's documentation]({addon_url}) for installation instructions and add the repository to the store."
     },
     "issue_addon_detached_addon_removed": {
       "title": "Installed add-on has been removed from repository",
       "fix_flow": {
         "step": {
           "addon_execute_remove": {
-            "description": "Add-on {addon} has been removed from the repository it was installed from. This means it will not get updates, and backups may not be restored correctly as the supervisor may not be able to build/download the resources required.\n\nSelecting **Submit** will uninstall this deprecated add-on. Alternatively, you can check [Home Assistant help]({help_url}) and the [community forum]({community_url}) for alternatives to migrate to."
+            "description": "Add-on {addon} has been removed from the repository it was installed from. This means it will not get updates, and backups may not be restored correctly as the Home Assistant Supervisor may not be able to build/download the resources required.\n\nSelecting **Submit** will uninstall this deprecated add-on. Alternatively, you can check [Home Assistant help]({help_url}) and the [community forum]({community_url}) for alternatives to migrate to."
           }
         },
         "abort": {
           "apply_suggestion_fail": "Could not uninstall the add-on. Check the Supervisor logs for more details."
         }
       }
+    },
+    "issue_addon_pwned": {
+      "title": "Insecure secrets detected in add-on configuration",
+      "description": "Add-on {addon} uses secrets/passwords in its configuration which are detected as not secure. See [pwned passwords and secrets]({more_info_pwned}) for more information on this issue."
     },
     "issue_mount_mount_failed": {
       "title": "Network storage device failed",
@@ -119,6 +123,10 @@
       "title": "Disk lifetime exceeding 90%",
       "description": "The data disk has exceeded 90% of its expected lifespan. The disk may soon malfunction which can lead to data loss. You should replace it soon and migrate your data."
     },
+    "issue_system_free_space": {
+      "title": "Data disk is running low on free space",
+      "description": "The data disk has only {free_space}GB free space left. This may cause issues with system stability and interfere with functionality such as backups and updates. See [clear up storage]({more_info_free_space}) for tips on how to free up space."
+    },
     "unhealthy": {
       "title": "Unhealthy system - {reason}",
       "description": "System is currently unhealthy due to {reason}. For troubleshooting information, select Learn more."
@@ -185,7 +193,7 @@
     },
     "unsupported_docker_version": {
       "title": "Unsupported system - Docker version",
-      "description": "System is unsupported because the wrong version of Docker is in use. Use the link to learn the correct version and how to fix this."
+      "description": "System is unsupported because the Docker version is out of date. For information about the required version and how to fix this, select Learn more."
     },
     "unsupported_job_conditions": {
       "title": "Unsupported system - Protections disabled",
@@ -201,7 +209,7 @@
     },
     "unsupported_os": {
       "title": "Unsupported system - Operating System",
-      "description": "System is unsupported because the operating system in use is not tested or maintained for use with Supervisor. Use the link to which operating systems are supported and how to fix this."
+      "description": "System is unsupported because the operating system in use is not tested or maintained for use with Supervisor. For information about supported operating systems and how to fix this, select Learn more."
     },
     "unsupported_os_agent": {
       "title": "Unsupported system - OS-Agent issues",

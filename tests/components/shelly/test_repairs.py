@@ -2,6 +2,7 @@
 
 from unittest.mock import Mock
 
+from aioshelly.const import MODEL_WALL_DISPLAY
 from aioshelly.exceptions import DeviceConnectionError, RpcCallError
 import pytest
 
@@ -10,6 +11,7 @@ from homeassistant.components.shelly.const import (
     CONF_BLE_SCANNER_MODE,
     DOMAIN,
     OUTBOUND_WEBSOCKET_INCORRECTLY_ENABLED_ISSUE_ID,
+    WALL_DISPLAY_FIRMWARE_UNSUPPORTED_ISSUE_ID,
     BLEScannerMode,
 )
 from homeassistant.core import HomeAssistant
@@ -211,3 +213,35 @@ async def test_outbound_websocket_incorrectly_enabled_issue_exc(
 
     assert issue_registry.async_get_issue(DOMAIN, issue_id)
     assert len(issue_registry.issues) == 1
+
+
+async def test_wall_display_unsupported_firmware_issue(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_rpc_device: Mock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test repair issues handling for Wall Display with unsupported firmware."""
+    issue_id = WALL_DISPLAY_FIRMWARE_UNSUPPORTED_ISSUE_ID.format(unique=MOCK_MAC)
+    assert await async_setup_component(hass, "repairs", {})
+    await hass.async_block_till_done()
+    await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
+
+    # The default fw version in tests is 1.0.0, the repair issue should be created.
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert len(issue_registry.issues) == 1
+
+    await async_process_repairs_platforms(hass)
+    client = await hass_client()
+    result = await start_repair_fix_flow(client, DOMAIN, issue_id)
+
+    flow_id = result["flow_id"]
+    assert result["step_id"] == "confirm"
+
+    result = await process_repair_fix_flow(client, flow_id)
+    assert result["type"] == "create_entry"
+    assert mock_rpc_device.trigger_ota_update.call_count == 1
+
+    # Assert the issue is no longer present
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert len(issue_registry.issues) == 0

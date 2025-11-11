@@ -68,15 +68,11 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow:
-    status: todo
-    comment: handle API key change/update
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: no known use cases for repair issues or flows, yet
-  stale-devices:
-    status: todo
-    comment: We should remove the config entry from the device rather than remove the device
+  stale-devices: done
 
   # Platinum
   async-dependency: done

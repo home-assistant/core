@@ -2,6 +2,7 @@
 
 from whirlpool.appliance import Appliance
 
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
@@ -38,3 +39,12 @@ class WhirlpoolEntity(Entity):
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._appliance.get_online()
+
+    @staticmethod
+    def _check_service_request(result: bool) -> None:
+        """Check result of a request and raise HomeAssistantError if it failed."""
+        if not result:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="request_failed",
+            )

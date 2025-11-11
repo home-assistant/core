@@ -1,6 +1,7 @@
 """Tests for ZHA integration init."""
 
 import asyncio
+from collections.abc import Callable
 import typing
 from unittest.mock import AsyncMock, Mock, patch
 import zoneinfo
@@ -8,6 +9,7 @@ import zoneinfo
 import pytest
 from zigpy.application import ControllerApplication
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
+from zigpy.device import Device
 from zigpy.exceptions import TransientConnectionError
 
 from homeassistant.components.zha.const import (
@@ -193,9 +195,9 @@ async def test_setup_with_v3_cleaning_uri(
 async def test_migration_baudrate_and_flow_control(
     radio_type: str,
     old_baudrate: int,
-    old_flow_control: typing.Literal["hardware", "software", None],
+    old_flow_control: typing.Literal["hardware", "software"] | None,
     new_baudrate: int,
-    new_flow_control: typing.Literal["hardware", "software", None],
+    new_flow_control: typing.Literal["hardware", "software"] | None,
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
 ) -> None:
@@ -231,7 +233,7 @@ async def test_migration_baudrate_and_flow_control(
 async def test_zha_retry_unique_ids(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    zigpy_device_mock,
+    zigpy_device_mock: Callable[..., Device],
     mock_zigpy_connect: ControllerApplication,
     caplog: pytest.LogCaptureFixture,
 ) -> None:

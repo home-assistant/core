@@ -126,7 +126,7 @@ class TuyaEntity(Entity):
         return None
 
     def get_dptype(
-        self, dpcode: DPCode | None, prefer_function: bool = False
+        self, dpcode: DPCode | None, *, prefer_function: bool = False
     ) -> DPType | None:
         """Find a matching DPCode data type available on for this device."""
         if dpcode is None:
@@ -158,7 +158,9 @@ class TuyaEntity(Entity):
         )
 
     async def _handle_state_update(
-        self, updated_status_properties: list[str] | None
+        self,
+        updated_status_properties: list[str] | None,
+        dp_timestamps: dict | None = None,
     ) -> None:
         self.async_write_ha_state()
 

@@ -17,8 +17,8 @@
           "address": "The IP address or domain or serial port if connecting via serial.",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "prefix": "A unique prefix (leave blank if you only have one ElkM1).",
-          "temperature_unit": "The temperature unit ElkM1 uses."
+          "prefix": "A unique prefix (leave blank if you only have one Elk-M1).",
+          "temperature_unit": "The temperature unit Elk-M1 uses."
         }
       },
       "discovered_connection": {
@@ -29,6 +29,16 @@
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
           "temperature_unit": "[%key:component::elkm1::config::step::manual_connection::data::temperature_unit%]"
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure Elk-M1 Control",
+        "description": "[%key:component::elkm1::config::step::manual_connection::description%]",
+        "data": {
+          "protocol": "[%key:component::elkm1::config::step::manual_connection::data::protocol%]",
+          "address": "[%key:component::elkm1::config::step::manual_connection::data::address%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
         }
       }
     },
@@ -42,8 +52,10 @@
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "already_configured": "An ElkM1 with this prefix is already configured",
-      "address_already_configured": "An ElkM1 with this address is already configured"
+      "already_configured": "An Elk-M1 with this prefix is already configured",
+      "address_already_configured": "An Elk-M1 with this address is already configured",
+      "reconfigure_successful": "Successfully reconfigured Elk-M1 integration",
+      "unique_id_mismatch": "Reconfigure should be used for the same device not a new one"
     }
   },
   "services": {
@@ -69,7 +81,7 @@
     },
     "alarm_arm_home_instant": {
       "name": "Alarm arm home instant",
-      "description": "Arms the ElkM1 in home instant mode.",
+      "description": "Arms the Elk-M1 in home instant mode.",
       "fields": {
         "code": {
           "name": "Code",
@@ -79,7 +91,7 @@
     },
     "alarm_arm_night_instant": {
       "name": "Alarm arm night instant",
-      "description": "Arms the ElkM1 in night instant mode.",
+      "description": "Arms the Elk-M1 in night instant mode.",
       "fields": {
         "code": {
           "name": "Code",
@@ -89,7 +101,7 @@
     },
     "alarm_arm_vacation": {
       "name": "Alarm arm vacation",
-      "description": "Arms the ElkM1 in vacation mode.",
+      "description": "Arms the Elk-M1 in vacation mode.",
       "fields": {
         "code": {
           "name": "Code",
@@ -99,7 +111,7 @@
     },
     "alarm_display_message": {
       "name": "Alarm display message",
-      "description": "Displays a message on all of the ElkM1 keypads for an area.",
+      "description": "Displays a message on all of the Elk-M1 keypads for an area.",
       "fields": {
         "clear": {
           "name": "Clear",
@@ -135,7 +147,7 @@
     },
     "speak_phrase": {
       "name": "Speak phrase",
-      "description": "Speaks a phrase. See list of phrases in ElkM1 ASCII Protocol documentation.",
+      "description": "Speaks a phrase. See list of phrases in Elk-M1 ASCII Protocol documentation.",
       "fields": {
         "number": {
           "name": "Phrase number",
@@ -149,7 +161,7 @@
     },
     "speak_word": {
       "name": "Speak word",
-      "description": "Speaks a word. See list of words in ElkM1 ASCII Protocol documentation.",
+      "description": "Speaks a word. See list of words in Elk-M1 ASCII Protocol documentation.",
       "fields": {
         "number": {
           "name": "Word number",

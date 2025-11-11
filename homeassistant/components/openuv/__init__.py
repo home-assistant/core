@@ -30,7 +30,7 @@ from .const import (
     DOMAIN,
     LOGGER,
 )
-from .coordinator import OpenUvCoordinator
+from .coordinator import OpenUvCoordinator, OpenUvProtectionWindowCoordinator
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
@@ -54,7 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return await client.uv_protection_window(low=low, high=high)
 
     coordinators: dict[str, OpenUvCoordinator] = {
-        coordinator_name: OpenUvCoordinator(
+        coordinator_name: coordinator_cls(
             hass,
             entry=entry,
             name=coordinator_name,
@@ -62,9 +62,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             longitude=client.longitude,
             update_method=update_method,
         )
-        for coordinator_name, update_method in (
-            (DATA_UV, client.uv_index),
-            (DATA_PROTECTION_WINDOW, async_update_protection_data),
+        for coordinator_cls, coordinator_name, update_method in (
+            (OpenUvCoordinator, DATA_UV, client.uv_index),
+            (
+                OpenUvProtectionWindowCoordinator,
+                DATA_PROTECTION_WINDOW,
+                async_update_protection_data,
+            ),
         )
     }
 

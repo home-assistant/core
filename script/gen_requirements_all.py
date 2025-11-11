@@ -155,7 +155,7 @@ multidict>=6.0.2
 backoff>=2.0
 
 # ensure pydantic version does not float since it might have breaking changes
-pydantic==2.11.7
+pydantic==2.11.9
 
 # Required for Python 3.12.4 compatibility (#119223).
 mashumaro>=3.13.1
@@ -245,14 +245,13 @@ num2words==0.5.14
 # pymodbus does not follow SemVer, and it keeps getting
 # downgraded or upgraded by custom components
 # This ensures all use the same version
-pymodbus==3.11.1
+pymodbus==3.11.2
 
 # Some packages don't support gql 4.0.0 yet
 gql<4.0.0
 
-# pytest-rerunfailures 16.0 breaks pytest, pin 15.1 until resolved
-# https://github.com/pytest-dev/pytest-rerunfailures/issues/302
-pytest-rerunfailures==15.1
+# Pin pytest-rerunfailures to prevent accidental breaks
+pytest-rerunfailures==16.0.1
 """
 
 GENERATED_MESSAGE = (

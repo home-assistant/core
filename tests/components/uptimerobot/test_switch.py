@@ -33,8 +33,7 @@ async def test_presentation(hass: HomeAssistant) -> None:
     """Test the presentation of UptimeRobot switches."""
     await setup_uptimerobot_integration(hass)
 
-    entity = hass.states.get(UPTIMEROBOT_SWITCH_TEST_ENTITY)
-
+    assert (entity := hass.states.get(UPTIMEROBOT_SWITCH_TEST_ENTITY)) is not None
     assert entity.state == STATE_ON
     assert entity.attributes["target"] == MOCK_UPTIMEROBOT_MONITOR["url"]
 
@@ -67,7 +66,7 @@ async def test_switch_off(hass: HomeAssistant) -> None:
             blocking=True,
         )
 
-    entity = hass.states.get(UPTIMEROBOT_SWITCH_TEST_ENTITY)
+    assert (entity := hass.states.get(UPTIMEROBOT_SWITCH_TEST_ENTITY)) is not None
     assert entity.state == STATE_OFF
 
 
@@ -97,7 +96,7 @@ async def test_switch_on(hass: HomeAssistant) -> None:
             blocking=True,
         )
 
-        entity = hass.states.get(UPTIMEROBOT_SWITCH_TEST_ENTITY)
+        assert (entity := hass.states.get(UPTIMEROBOT_SWITCH_TEST_ENTITY)) is not None
         assert entity.state == STATE_ON
 
 
@@ -107,7 +106,7 @@ async def test_authentication_error(
     """Test authentication error turning switch on/off."""
     await setup_uptimerobot_integration(hass)
 
-    entity = hass.states.get(UPTIMEROBOT_SWITCH_TEST_ENTITY)
+    assert (entity := hass.states.get(UPTIMEROBOT_SWITCH_TEST_ENTITY)) is not None
     assert entity.state == STATE_ON
 
     with (
@@ -133,7 +132,7 @@ async def test_action_execution_failure(hass: HomeAssistant) -> None:
     """Test turning switch on/off failure."""
     await setup_uptimerobot_integration(hass)
 
-    entity = hass.states.get(UPTIMEROBOT_SWITCH_TEST_ENTITY)
+    assert (entity := hass.states.get(UPTIMEROBOT_SWITCH_TEST_ENTITY)) is not None
     assert entity.state == STATE_ON
 
     with (
@@ -161,7 +160,7 @@ async def test_switch_api_failure(hass: HomeAssistant) -> None:
     """Test general exception turning switch on/off."""
     await setup_uptimerobot_integration(hass)
 
-    entity = hass.states.get(UPTIMEROBOT_SWITCH_TEST_ENTITY)
+    assert (entity := hass.states.get(UPTIMEROBOT_SWITCH_TEST_ENTITY)) is not None
     assert entity.state == STATE_ON
 
     with patch(

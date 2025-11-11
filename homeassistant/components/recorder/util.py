@@ -27,6 +27,7 @@ from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 import voluptuous as vol
 
+from homeassistant.const import WEEKDAYS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.recorder import (  # noqa: F401
@@ -802,6 +803,7 @@ PERIOD_SCHEMA = vol.Schema(
             {
                 vol.Required("period"): vol.Any("hour", "day", "week", "month", "year"),
                 vol.Optional("offset"): int,
+                vol.Optional("first_weekday"): vol.Any(*WEEKDAYS),
             }
         ),
         vol.Exclusive("fixed_period", "period"): vol.Schema(
@@ -840,7 +842,12 @@ def resolve_period(
             start_time += timedelta(days=cal_offset)
             end_time = start_time + timedelta(days=1)
         elif calendar_period == "week":
-            start_time = start_of_day - timedelta(days=start_of_day.weekday())
+            first_weekday = WEEKDAYS.index(
+                period_def["calendar"].get("first_weekday", WEEKDAYS[0])
+            )
+            start_time = start_of_day - timedelta(
+                days=(start_of_day.weekday() - first_weekday) % 7
+            )
             start_time += timedelta(days=cal_offset * 7)
             end_time = start_time + timedelta(weeks=1)
         elif calendar_period == "month":

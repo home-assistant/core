@@ -231,6 +231,29 @@ async def test_conversation_agent(hass: HomeAssistant) -> None:
     )
 
 
+@pytest.mark.usefixtures("init_components")
+async def test_punctuation(hass: HomeAssistant) -> None:
+    """Test punctuation is handled properly."""
+    hass.states.async_set(
+        "light.test_light",
+        "off",
+        attributes={ATTR_FRIENDLY_NAME: "Test light"},
+    )
+    expose_entity(hass, "light.test_light", True)
+
+    calls = async_mock_service(hass, "light", "turn_on")
+    result = await conversation.async_converse(
+        hass, "Turn?? on,, test;; light!!!", None, Context(), None
+    )
+
+    assert len(calls) == 1
+    assert calls[0].data["entity_id"][0] == "light.test_light"
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.intent is not None
+    assert result.response.intent.slots["name"]["value"] == "test light"
+    assert result.response.intent.slots["name"]["text"] == "test light"
+
+
 async def test_expose_flag_automatically_set(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -2511,6 +2534,7 @@ async def test_non_default_response(hass: HomeAssistant, init_components) -> Non
             context=Context(),
             conversation_id=None,
             device_id=None,
+            satellite_id=None,
             language=hass.config.language,
             agent_id=None,
         )
@@ -2861,6 +2885,7 @@ async def test_intent_cache_exposed(hass: HomeAssistant) -> None:
         context=Context(),
         conversation_id=None,
         device_id=None,
+        satellite_id=None,
         language=hass.config.language,
         agent_id=None,
     )
@@ -2900,6 +2925,7 @@ async def test_intent_cache_all_entities(hass: HomeAssistant) -> None:
         context=Context(),
         conversation_id=None,
         device_id=None,
+        satellite_id=None,
         language=hass.config.language,
         agent_id=None,
     )
@@ -2935,6 +2961,7 @@ async def test_intent_cache_fuzzy(hass: HomeAssistant) -> None:
         context=Context(),
         conversation_id=None,
         device_id=None,
+        satellite_id=None,
         language=hass.config.language,
         agent_id=None,
     )
@@ -2977,6 +3004,7 @@ async def test_entities_filtered_by_input(hass: HomeAssistant) -> None:
         context=Context(),
         conversation_id=None,
         device_id=None,
+        satellite_id=None,
         language=hass.config.language,
         agent_id=None,
     )
@@ -3003,6 +3031,7 @@ async def test_entities_filtered_by_input(hass: HomeAssistant) -> None:
         context=Context(),
         conversation_id=None,
         device_id=None,
+        satellite_id=None,
         language=hass.config.language,
         agent_id=None,
     )
@@ -3143,6 +3172,7 @@ async def test_handle_intents_with_response_errors(
         context=Context(),
         conversation_id=None,
         device_id=None,
+        satellite_id=None,
         language=hass.config.language,
         agent_id=None,
     )
@@ -3180,6 +3210,7 @@ async def test_handle_intents_filters_results(
         context=Context(),
         conversation_id=None,
         device_id=None,
+        satellite_id=None,
         language=hass.config.language,
         agent_id=None,
     )

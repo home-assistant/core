@@ -23,6 +23,7 @@ CONF_CHAT_MODEL = "chat_model"
 RECOMMENDED_CHAT_MODEL = "models/gemini-2.5-flash"
 RECOMMENDED_STT_MODEL = RECOMMENDED_CHAT_MODEL
 RECOMMENDED_TTS_MODEL = "models/gemini-2.5-flash-preview-tts"
+RECOMMENDED_IMAGE_MODEL = "models/gemini-2.5-flash-image-preview"
 CONF_TEMPERATURE = "temperature"
 RECOMMENDED_TEMPERATURE = 1.0
 CONF_TOP_P = "top_p"
