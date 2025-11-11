@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 # device_registry as dr, Maybe needed in migration. If not can be removed later.
 
@@ -99,6 +99,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                     ent_reg.async_update_entity(
                         entity_id,
                         new_unique_id=new_unique_id,
+                        device_id=entity.device_id,
                         name=f"AC {airtouch_device.name}",
                     )
 
@@ -113,19 +114,38 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                         new_unique_id = (
                             f"zone_{airtouch_device.system_id}_{zone_number}"
                         )
-                    ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
+                    ent_reg.async_update_entity(
+                        entity_id,
+                        new_unique_id=new_unique_id,
+                        device_id=entity.device_id,
+                    )
                 else:
                     _LOGGER.warning(
                         "Unknown unique_id format during migration: %s", old_unique_id
                     )
-                    return False
+                    continue
+
+            dev_reg = dr.async_get(hass)
+            for device in list(dev_reg.devices.values()):
+                if config_entry.entry_id in device.config_entries:
+                    has_entities = any(
+                        e.device_id == device.id for e in ent_reg.entities.values()
+                    )
+                    if not has_entities:
+                        _LOGGER.info("Removing unused device: %s", device.name)
+                        dev_reg.async_remove_device(device.id)
+
             # Migrate device info
-            new_data = config_entry.data.copy()
-            new_data["name"] = airtouch_device.name
-            new_data["model"] = airtouch_device.model
-            new_data["console_id"] = airtouch_device.console_id
-            new_data["system_id"] = airtouch_device.system_id
-            new_data["host"] = airtouch_device.ip
+            new_data = {**config_entry.data}
+            new_data.update(
+                {
+                    "name": airtouch_device.name,
+                    "model": airtouch_device.model,
+                    "console_id": airtouch_device.console_id,
+                    "system_id": airtouch_device.system_id,
+                    "host": airtouch_device.ip,
+                }
+            )
 
             hass.config_entries.async_update_entry(
                 config_entry,
