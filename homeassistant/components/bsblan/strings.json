@@ -106,14 +106,14 @@
   },
   "services": {
     "set_hot_water_schedule": {
-      "description": "Set the hot water heating schedule for a BSB-Lan device.",
+      "description": "Set the hot water heating schedule for a BSB-LAN device.",
       "fields": {
         "device": {
-          "description": "The BSB-Lan device to configure.",
+          "description": "The BSB-LAN device to configure.",
           "name": "Device"
         },
         "schedule": {
-          "description": "Hot water schedule configuration. Each day can have time periods specified as strings in the format \"HH:MM-HH:MM HH:MM-HH:MM\" (e.g., \"06:00-08:00 17:00-21:00\" for morning and evening periods). Set a day to null to clear its schedule.",
+          "description": "Schedule with day names (monday, tuesday, etc.) as keys. Time format: \"HH:MM-HH:MM\" (24-hour). Multiple periods per day separated by spaces: \"06:00-08:00 17:00-21:00\". Set a day to null to clear its schedule.",
           "name": "Schedule"
         }
       },

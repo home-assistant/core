@@ -12,7 +12,7 @@ from homeassistant.components.bsblan.services import (
     async_setup_services,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry
@@ -191,7 +191,11 @@ async def test_service_error_scenarios(
         device_id = device_id_override
 
     # Call the service and expect error
-    with pytest.raises(ServiceValidationError) as exc_info:
+    # API errors raise HomeAssistantError, user input errors raise ServiceValidationError
+    expected_exception = (
+        HomeAssistantError if setup_error == "api_error" else ServiceValidationError
+    )
+    with pytest.raises(expected_exception) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_HOT_WATER_SCHEDULE,
