@@ -22,17 +22,18 @@ class TypeInformation:
     As provided by the SDK, from `device.function` / `device.status_range`.
     """
 
+    dpcode: DPCode
+
     @classmethod
     def from_json(cls, dpcode: DPCode, data: str) -> Self | None:
         """Load JSON string and return a TypeInformation object."""
-        raise NotImplementedError("from_json is not implemented for this type")
+        return cls(dpcode)
 
 
 @dataclass
 class IntegerTypeData(TypeInformation):
     """Integer Type Data."""
 
-    dpcode: DPCode
     min: int
     max: int
     scale: float
@@ -101,10 +102,23 @@ class IntegerTypeData(TypeInformation):
 
 
 @dataclass
+class BitmapTypeInformation(TypeInformation):
+    """Bitmap type information."""
+
+    label: list[str]
+
+    @classmethod
+    def from_json(cls, dpcode: DPCode, data: str) -> Self | None:
+        """Load JSON string and return a BitmapTypeInformation object."""
+        if not (parsed := json.loads(data)):
+            return None
+        return cls(dpcode, **parsed)
+
+
+@dataclass
 class EnumTypeData(TypeInformation):
     """Enum Type Data."""
 
-    dpcode: DPCode
     range: list[str]
 
     @classmethod
@@ -116,6 +130,8 @@ class EnumTypeData(TypeInformation):
 
 
 _TYPE_INFORMATION_MAPPINGS: dict[DPType, type[TypeInformation]] = {
+    DPType.BITMAP: BitmapTypeInformation,
+    DPType.BOOLEAN: TypeInformation,
     DPType.ENUM: EnumTypeData,
     DPType.INTEGER: IntegerTypeData,
 }
@@ -146,13 +162,13 @@ class DPCodeWrapper(ABC):
         The raw device status is converted to a Home Assistant value.
         """
 
-    @abstractmethod
     def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
         """Convert a Home Assistant value back to a raw device value.
 
         This is called by `get_update_command` to prepare the value for sending
-        back to the device, and should be implemented in concrete classes.
+        back to the device, and should be implemented in concrete classes if needed.
         """
+        raise NotImplementedError
 
     def get_update_command(self, device: CustomerDevice, value: Any) -> dict[str, Any]:
         """Get the update command for the dpcode.
@@ -163,29 +179,6 @@ class DPCodeWrapper(ABC):
             "code": self.dpcode,
             "value": self._convert_value_to_raw_value(device, value),
         }
-
-
-class DPCodeBooleanWrapper(DPCodeWrapper):
-    """Simple wrapper for boolean values.
-
-    Supports True/False only.
-    """
-
-    def read_device_status(self, device: CustomerDevice) -> bool | None:
-        """Read the device value for the dpcode."""
-        if (raw_value := self._read_device_status_raw(device)) in (True, False):
-            return raw_value
-        return None
-
-    def _convert_value_to_raw_value(
-        self, device: CustomerDevice, value: Any
-    ) -> Any | None:
-        """Convert a Home Assistant value back to a raw device value."""
-        if value in (True, False):
-            return value
-        # Currently only called with boolean values
-        # Safety net in case of future changes
-        raise ValueError(f"Invalid boolean value `{value}`")
 
 
 class DPCodeTypeInformationWrapper[T: TypeInformation](DPCodeWrapper):
@@ -215,6 +208,31 @@ class DPCodeTypeInformationWrapper[T: TypeInformation](DPCodeWrapper):
                 dpcode=type_information.dpcode, type_information=type_information
             )
         return None
+
+
+class DPCodeBooleanWrapper(DPCodeTypeInformationWrapper[TypeInformation]):
+    """Simple wrapper for boolean values.
+
+    Supports True/False only.
+    """
+
+    DPTYPE = DPType.BOOLEAN
+
+    def read_device_status(self, device: CustomerDevice) -> bool | None:
+        """Read the device value for the dpcode."""
+        if (raw_value := self._read_device_status_raw(device)) in (True, False):
+            return raw_value
+        return None
+
+    def _convert_value_to_raw_value(
+        self, device: CustomerDevice, value: Any
+    ) -> Any | None:
+        """Convert a Home Assistant value back to a raw device value."""
+        if value in (True, False):
+            return value
+        # Currently only called with boolean values
+        # Safety net in case of future changes
+        raise ValueError(f"Invalid boolean value `{value}`")
 
 
 class DPCodeEnumWrapper(DPCodeTypeInformationWrapper[EnumTypeData]):
@@ -270,6 +288,48 @@ class DPCodeIntegerWrapper(DPCodeTypeInformationWrapper[IntegerTypeData]):
             f"Value `{new_value}` (converted from `{value}`) out of range:"
             f" ({self.type_information.min}-{self.type_information.max})"
         )
+
+
+class DPCodeBitmapBitWrapper(DPCodeWrapper):
+    """Simple wrapper for a specific bit in bitmap values."""
+
+    def __init__(self, dpcode: str, mask: int) -> None:
+        """Init DPCodeBitmapWrapper."""
+        super().__init__(dpcode)
+        self._mask = mask
+
+    def read_device_status(self, device: CustomerDevice) -> bool | None:
+        """Read the device value for the dpcode."""
+        if (raw_value := self._read_device_status_raw(device)) is None:
+            return None
+        return (raw_value & (1 << self._mask)) != 0
+
+    @classmethod
+    def find_dpcode(
+        cls,
+        device: CustomerDevice,
+        dpcodes: str | DPCode | tuple[DPCode, ...],
+        *,
+        bitmap_key: str,
+    ) -> Self | None:
+        """Find and return a DPCodeBitmapBitWrapper for the given DP codes."""
+        if (
+            type_information := find_dpcode(device, dpcodes, dptype=DPType.BITMAP)
+        ) and bitmap_key in type_information.label:
+            return cls(
+                type_information.dpcode, type_information.label.index(bitmap_key)
+            )
+        return None
+
+
+@overload
+def find_dpcode(
+    device: CustomerDevice,
+    dpcodes: str | DPCode | tuple[DPCode, ...] | None,
+    *,
+    prefer_function: bool = False,
+    dptype: Literal[DPType.BITMAP],
+) -> BitmapTypeInformation | None: ...
 
 
 @overload
