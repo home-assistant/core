@@ -367,5 +367,12 @@
       "name": "Turn up volume"
     }
   },
-  "title": "Media player"
+  "title": "Media player",
+  "triggers": {
+    "turns_on": {
+      "description": "Triggers when a media player turns on.",
+      "description_configured": "Triggers when a media player turns on",
+      "name": "When a media player turns on"
+    }
+  }
 }

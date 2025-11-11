@@ -1,0 +1,4 @@
+turns_on:
+  target:
+    entity:
+      domain: media_player
