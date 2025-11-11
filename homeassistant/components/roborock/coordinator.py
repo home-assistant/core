@@ -8,7 +8,7 @@ import logging
 from typing import Any, TypeVar
 
 from propcache.api import cached_property
-from roborock.data import HomeDataScene, RoborockCategory
+from roborock.data import HomeDataScene
 from roborock.devices.device import RoborockDevice
 from roborock.devices.traits.a01 import DyadApi, ZeoApi
 from roborock.devices.traits.v1 import PropertiesApi
@@ -383,15 +383,13 @@ class RoborockZeoUpdateCoordinator(
         super().__init__(hass, config_entry, device)
         self.api = api
         self.request_protocols: list[RoborockZeoProtocol] = []
-        if device.product.category == RoborockCategory.WASHING_MACHINE:
-            self.request_protocols = [
-                RoborockZeoProtocol.STATE,
-                RoborockZeoProtocol.COUNTDOWN,
-                RoborockZeoProtocol.WASHING_LEFT,
-                RoborockZeoProtocol.ERROR,
-            ]
-        else:
-            _LOGGER.warning("The device you added is not yet supported")
+        # This currently only supports the washing machine protocols
+        self.request_protocols = [
+            RoborockZeoProtocol.STATE,
+            RoborockZeoProtocol.COUNTDOWN,
+            RoborockZeoProtocol.WASHING_LEFT,
+            RoborockZeoProtocol.ERROR,
+        ]
 
     async def _async_update_data(
         self,
@@ -414,18 +412,15 @@ class RoborockDyadUpdateCoordinator(
         """Initialize."""
         super().__init__(hass, config_entry, device)
         self.api = api
-        self.request_protocols: list[RoborockDyadDataProtocol] = []
-        if device.product.category == RoborockCategory.WET_DRY_VAC:
-            self.request_protocols = [
-                RoborockDyadDataProtocol.STATUS,
-                RoborockDyadDataProtocol.POWER,
-                RoborockDyadDataProtocol.MESH_LEFT,
-                RoborockDyadDataProtocol.BRUSH_LEFT,
-                RoborockDyadDataProtocol.ERROR,
-                RoborockDyadDataProtocol.TOTAL_RUN_TIME,
-            ]
-        else:
-            _LOGGER.warning("The device you added is not yet supported")
+        # This currenltly only supports the WetDryVac protocols
+        self.request_protocols: list[RoborockDyadDataProtocol] = [
+            RoborockDyadDataProtocol.STATUS,
+            RoborockDyadDataProtocol.POWER,
+            RoborockDyadDataProtocol.MESH_LEFT,
+            RoborockDyadDataProtocol.BRUSH_LEFT,
+            RoborockDyadDataProtocol.ERROR,
+            RoborockDyadDataProtocol.TOTAL_RUN_TIME,
+        ]
 
     async def _async_update_data(
         self,
