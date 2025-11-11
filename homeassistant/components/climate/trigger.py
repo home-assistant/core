@@ -716,6 +716,88 @@ class ClimateTargetHumidityChangedTrigger(Trigger):
         )
 
 
+class ClimateCurrentHumidityChangedTrigger(Trigger):
+    """Trigger for when a climate current humidity changes."""
+
+    @override
+    @classmethod
+    async def async_validate_config(
+        cls, hass: HomeAssistant, config: ConfigType
+    ) -> ConfigType:
+        """Validate config."""
+        return cast(ConfigType, THRESHOLD_TRIGGER_SCHEMA(config))
+
+    def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
+        """Initialize the climate current humidity changed trigger."""
+        super().__init__(hass, config)
+        if TYPE_CHECKING:
+            assert config.options is not None
+            assert config.target is not None
+        self._options = config.options
+        self._target = config.target
+
+    @override
+    async def async_attach_runner(
+        self, run_action: TriggerActionRunner
+    ) -> CALLBACK_TYPE:
+        """Attach the trigger to an action runner."""
+        above = self._options.get(CONF_ABOVE)
+        below = self._options.get(CONF_BELOW)
+
+        @callback
+        def state_change_listener(
+            target_state_change_data: TargetStateChangedData,
+        ) -> None:
+            """Listen for state changes and call action."""
+            event = target_state_change_data.state_change_event
+            entity_id = event.data["entity_id"]
+            from_state = event.data["old_state"]
+            to_state = event.data["new_state"]
+
+            # Ignore unavailable states
+            if to_state is None or to_state.state == STATE_UNAVAILABLE:
+                return
+
+            # Check if current humidity changed
+            from_humidity = (
+                from_state.attributes.get(ATTR_CURRENT_HUMIDITY)
+                if from_state
+                else None
+            )
+            to_humidity = to_state.attributes.get(ATTR_CURRENT_HUMIDITY)
+
+            if to_humidity is None or from_humidity == to_humidity:
+                return
+
+            # Apply threshold filters if specified
+            if above is not None and to_humidity <= above:
+                return
+            if below is not None and to_humidity >= below:
+                return
+
+            run_action(
+                {
+                    ATTR_ENTITY_ID: entity_id,
+                    "from_state": from_state,
+                    "to_state": to_state,
+                },
+                f"climate {entity_id} current humidity changed to {to_humidity}",
+                event.context,
+            )
+
+        def entity_filter(entities: set[str]) -> set[str]:
+            """Filter entities of this domain."""
+            return {
+                entity_id
+                for entity_id in entities
+                if split_entity_id(entity_id)[0] == DOMAIN
+            }
+
+        return async_track_target_selector_state_change_event(
+            self._hass, self._target, state_change_listener, entity_filter
+        )
+
+
 TRIGGERS: dict[str, type[Trigger]] = {
     "turns_on": ClimateTurnsOnTrigger,
     "turns_off": ClimateTurnsOffTrigger,
@@ -726,6 +808,7 @@ TRIGGERS: dict[str, type[Trigger]] = {
     "target_temperature_changed": ClimateTargetTemperatureChangedTrigger,
     "current_temperature_changed": ClimateCurrentTemperatureChangedTrigger,
     "target_humidity_changed": ClimateTargetHumidityChangedTrigger,
+    "current_humidity_changed": ClimateCurrentHumidityChangedTrigger,
 }
 
 
