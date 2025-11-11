@@ -152,7 +152,7 @@ def check_deprecated_entity(
     return False
 
 
-def profile_pic(person: Person, _: Title | None) -> str | None:
+def profile_pic(person: Person, _: Title | None = None) -> str | None:
     """Return the gamer pic."""
 
     # Xbox sometimes returns a domain that uses a wrong certificate which
