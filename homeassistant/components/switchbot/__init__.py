@@ -102,6 +102,10 @@ PLATFORMS_BY_TYPE = {
     SupportedModels.RELAY_SWITCH_2PM.value: [Platform.SWITCH, Platform.SENSOR],
     SupportedModels.GARAGE_DOOR_OPENER.value: [Platform.COVER, Platform.SENSOR],
     SupportedModels.CLIMATE_PANEL.value: [Platform.SENSOR, Platform.BINARY_SENSOR],
+    SupportedModels.SMART_THERMOSTAT_RADIATOR.value: [
+        Platform.CLIMATE,
+        Platform.SENSOR,
+    ],
 }
 CLASS_BY_DEVICE = {
     SupportedModels.CEILING_LIGHT.value: switchbot.SwitchbotCeilingLight,
@@ -136,6 +140,7 @@ CLASS_BY_DEVICE = {
     SupportedModels.PLUG_MINI_EU.value: switchbot.SwitchbotRelaySwitch,
     SupportedModels.RELAY_SWITCH_2PM.value: switchbot.SwitchbotRelaySwitch2PM,
     SupportedModels.GARAGE_DOOR_OPENER.value: switchbot.SwitchbotGarageDoorOpener,
+    SupportedModels.SMART_THERMOSTAT_RADIATOR.value: switchbot.SwitchbotSmartThermostatRadiator,
 }
 
 
