@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from pyvlx import PyVLXException
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.velux import DOMAIN
@@ -12,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture
@@ -22,24 +23,28 @@ def platform() -> Platform:
 
 
 @pytest.mark.usefixtures("setup_integration")
-async def test_button_setup(
+async def test_button_snapshot(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test button entity setup and device association."""
+    """Snapshot the button entity (registry + state)."""
+    await snapshot_platform(
+        hass,
+        entity_registry,
+        snapshot,
+        mock_config_entry.entry_id,
+    )
 
+    # Get the button entity setup and test device association
     entity_entries = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
     assert len(entity_entries) == 1
-
     entry = entity_entries[0]
-    assert entry.translation_key is None
-    assert entry.unique_id == f"{mock_config_entry.entry_id}_reboot-gateway"
 
-    # Check device association
     assert entry.device_id is not None
     device_entry = device_registry.async_get(entry.device_id)
     assert device_entry is not None
