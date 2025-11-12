@@ -304,6 +304,7 @@ def mock_firmware_info(
         fw_data: bytes,
         expected_installed_firmware_type: ApplicationType,
         bootloader_reset_methods: Sequence[ResetTarget] = (),
+        application_probe_methods: Sequence[tuple[ApplicationType, int]] = (),
         progress_callback: Callable[[int, int], None] | None = None,
         *,
         domain: str = "homeassistant_hardware",
