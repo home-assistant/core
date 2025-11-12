@@ -41,7 +41,7 @@ async def test_labels(
     assert_result_info(info, [label1.label_id, label2.label_id])
     assert info.rate_limit is None
 
-    # Test non-exsting entity ID
+    # Test non-existing entity ID
     info = render_to_info(hass, "{{ labels('sensor.fake') }}")
     assert_result_info(info, [])
     assert info.rate_limit is None
@@ -306,7 +306,7 @@ async def test_label_entities(
 async def test_label_devices(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    label_registry: ar.AreaRegistry,
+    label_registry: lr.LabelRegistry,
 ) -> None:
     """Test label_devices function."""
 
