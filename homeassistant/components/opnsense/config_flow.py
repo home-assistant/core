@@ -43,10 +43,9 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             user_input = {}
 
-        description_placeholders = {}
-        description_placeholders["doc_url"] = (
-            "https://www.home-assistant.io/integrations/opnsense/"
-        )
+        description_placeholders = {
+            "doc_url": "https://www.home-assistant.io/integrations/opnsense/"
+        }
 
         return self.async_show_form(
             step_id="user",
