@@ -28,7 +28,6 @@ from homeassistant.helpers.update_coordinator import (
 from . import get_hub
 from .const import (
     _LOGGER,
-    CONF_PRECISION,
     CONF_SCALE,
     CONF_SLAVE_COUNT,
     CONF_VIRTUAL_COUNT,
@@ -87,10 +86,10 @@ class ModbusRegisterSensor(ModbusStructEntity, RestoreSensor, SensorEntity):
         self._attr_native_unit_of_measurement = entry.get(CONF_UNIT_OF_MEASUREMENT)
         self._attr_state_class = entry.get(CONF_STATE_CLASS)
         self._attr_device_class = entry.get(CONF_DEVICE_CLASS)
-        self._attr_suggested_display_precision = entry.get(CONF_PRECISION)
-        self._attr_suggested_unit_of_measurement = entry.get(CONF_UNIT_OF_MEASUREMENT)
         if self._precision > 0 or self._scale != int(self._scale):
             self._value_is_int = False
+        if self._precision > 0 and self._data_type not in ["string", "custom"]:
+            self._attr_suggested_display_precision = self._precision
 
     async def async_setup_slaves(
         self, hass: HomeAssistant, slave_count: int, entry: dict[str, Any]
