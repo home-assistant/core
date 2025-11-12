@@ -17,7 +17,6 @@ DOMAIN: Final = "wiim"
 SDK_LOGGER = logging.getLogger(__package__)
 
 PLATFORMS: Final[list[Platform]] = [
-    Platform.BUTTON,
     Platform.MEDIA_PLAYER,
 ]
 

@@ -41,7 +41,7 @@ async def test_async_setup_entry_success(
     with (
         patch("homeassistant.components.wiim.UpnpFactory") as mock_factory_cls,
         patch("wiim.endpoint.WiimApiEndpoint", return_value=mock_http_api),
-        patch("wiim.wiim_device.WiimDevice") as mock_wiim_device_cls,
+        patch("homeassistant.components.wiim.WiimDevice") as mock_wiim_device_cls,
         patch(
             "homeassistant.components.wiim.async_get_clientsession",
             return_value=AsyncMock(),
@@ -54,12 +54,19 @@ async def test_async_setup_entry_success(
         mock_factory_cls.return_value = factory_inst
 
         wiim_dev_inst = AsyncMock()
+        wiim_dev_inst._http_request = AsyncMock(return_value={"devices": []})
         mock_wiim_device_cls.return_value = wiim_dev_inst
 
         controller_inst = AsyncMock()
         controller_inst.add_device = AsyncMock()
         controller_inst.remove_device = AsyncMock()
         mock_controller_cls.return_value = controller_inst
+
+        mock_hass.data[DOMAIN] = WiimData(
+            controller=controller_inst,
+            entity_id_to_udn_map={},
+            entities_by_entity_id={},
+        )
 
         with patch.object(
             mock_hass, "async_add_executor_job", AsyncMock(return_value="192.168.1.100")

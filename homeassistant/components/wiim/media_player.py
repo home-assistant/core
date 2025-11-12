@@ -11,7 +11,6 @@ from typing import Any
 
 from async_upnp_client.client import UpnpService, UpnpStateVariable
 from defusedxml import ElementTree as ET
-import voluptuous as vol
 from wiim.consts import (
     AUDIO_AUX_MODE_IDS,
     CMD_TO_MODE_MAP,
@@ -48,7 +47,6 @@ from homeassistant.components.media_player import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utcnow
@@ -100,13 +98,6 @@ SUPPORT_WIIM_SEEKABLE = (
     | MediaPlayerEntityFeature.SHUFFLE_SET
 )
 
-# Service definitions
-SERVICE_PLAY_PRESET = "play_preset"
-ATTR_PRESET_NUMBER = "preset_number"
-SERVICE_PLAY_PRESET_SCHEMA = cv.make_entity_service_schema(
-    {vol.Required(ATTR_PRESET_NUMBER): cv.positive_int}
-)
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -133,12 +124,6 @@ async def async_setup_entry(
     wiim_data: WiimData = hass.data[DOMAIN]
     if not wiim_data.controller:
         pass
-
-    platform = entity_platform.async_get_current_platform()
-    if platform:
-        platform.async_register_entity_service(
-            SERVICE_PLAY_PRESET, SERVICE_PLAY_PRESET_SCHEMA, "async_play_preset_service"
-        )
 
     # Create and add the media player entity
     entity = WiimMediaPlayerEntity(device, entry)
@@ -1071,6 +1056,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
 
         commonevent_str = event_data.get("commonevent")
         if not commonevent_str:
+            self._update_ha_state_from_sdk_cache()
             return
 
         try:
@@ -2364,19 +2350,6 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             media_content_id,
         )
         raise BrowseError(f"Invalid browse path: {media_content_id}")
-
-    @exception_wrap
-    async def async_play_preset_service(self, preset_number: int) -> None:
-        """Service call: Play preset."""
-        # This service is usually called internally by play_media for presets
-        # but can be exposed directly.
-        if not self._device._http_api:  # noqa: SLF001
-            raise HomeAssistantError(
-                f"HTTP API not available for {self._device.name} to play preset."
-            )
-        await self._device._http_command_ok(  # noqa: SLF001
-            WiimHttpCommand.PLAY_PRESET, str(preset_number)
-        )
 
     @exception_wrap
     async def async_join_players(self, group_members: list[str]) -> None:

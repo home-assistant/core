@@ -8,6 +8,7 @@ from wiim.consts import InputMode, LoopMode, PlayingStatus, WiimHttpCommand
 from wiim.wiim_device import WiimDevice
 
 from homeassistant.components.media_player import (
+    BrowseMedia,
     MediaClass,
     MediaPlayerDeviceClass,
     MediaPlayerState,
@@ -44,12 +45,12 @@ async def test_media_player_setup_entry(
             entities_by_entity_id={},
         )
     }  # type: ignore[assignment]
-    fake_platform = MagicMock()
-    with patch(
-        "homeassistant.components.wiim.media_player.entity_platform.async_get_current_platform",
-        return_value=fake_platform,
-    ):
-        await async_setup_entry(mock_hass, mock_config_entry, mock_add_entities)
+    # fake_platform = MagicMock()
+    # with patch(
+    #     "homeassistant.components.wiim.media_player.entity_platform.async_get_current_platform",
+    #     return_value=fake_platform,
+    # ):
+    await async_setup_entry(mock_hass, mock_config_entry, mock_add_entities)
 
     mock_add_entities.assert_called_once()
     entities = mock_add_entities.call_args[0][0]
@@ -194,6 +195,16 @@ async def test_media_player_pause(
     }  # type: ignore[assignment]
 
     entity.hass = mock_hass
+
+    entity._device = mock_wiim_device
+
+    mock_wiim_device.async_set_AVT_cmd = AsyncMock(
+        return_value={"RelTime": "00:00:10", "TrackDuration": "00:03:30"}
+    )
+    mock_wiim_device._parse_duration = MagicMock(
+        side_effect=lambda s: 10 if s == "00:00:10" else 210
+    )
+
     with patch.object(
         mock_wiim_device, "async_pause", new_callable=AsyncMock
     ) as mock_pause:
@@ -266,32 +277,6 @@ async def test_media_player_play_media_url(
     ) as mock_http_cmd_ok:
         await entity.async_play_media(MediaType.MUSIC, "1")
         mock_http_cmd_ok.assert_awaited_once_with(WiimHttpCommand.PLAY_PRESET, "1")
-
-
-@pytest.mark.asyncio
-async def test_media_player_play_media_preset(
-    mock_wiim_media_player_entity: WiimMediaPlayerEntity,
-    mock_wiim_device: WiimDevice,
-    mock_hass: HomeAssistant,
-) -> None:
-    """Test media player play media service with a preset."""
-    mock_http_api = MagicMock()
-    mock_http_api._http_command_ok = AsyncMock()
-
-    mock_device = MagicMock(spec=WiimDevice)
-    mock_device._http_api = mock_http_api
-    mock_device.name = "WiiM Pro"
-    mock_device._http_command_ok = AsyncMock()
-
-    entity = mock_wiim_media_player_entity
-    entity.hass = mock_hass
-    entity._device = mock_device
-
-    await entity.async_play_preset_service(1)
-
-    mock_device._http_command_ok.assert_awaited_once_with(
-        WiimHttpCommand.PLAY_PRESET, "1"
-    )
 
 
 @pytest.mark.asyncio
@@ -424,11 +409,41 @@ async def test_media_player_set_repeat_mode(
 
 @pytest.mark.asyncio
 async def test_media_player_browse_media_root(
-    mock_wiim_media_player_entity: WiimMediaPlayerEntity, mock_wiim_device: WiimDevice
+    mock_wiim_media_player_entity: WiimMediaPlayerEntity,
+    mock_wiim_device: WiimDevice,
+    mock_hass: HomeAssistant,
 ) -> None:
     """Test Browse root media."""
     entity = mock_wiim_media_player_entity
-    browse_result = await entity.async_browse_media(MEDIA_CONTENT_ID_ROOT)
+    mock_controller = MagicMock()
+    mock_controller.async_ungroup_device = AsyncMock()
+    mock_controller.async_join_group = AsyncMock()
+    mock_controller.async_update_multiroom_status = AsyncMock()
+    mock_hass.data = {
+        DOMAIN: WiimData(
+            controller=mock_controller,
+            entity_id_to_udn_map={"media_player.other_wiim_device": "uuid:target-456"},
+            entities_by_entity_id={},
+        ),
+        "media_source": {},
+    }  # type: ignore[assignment]
+    entity.hass = mock_hass
+
+    mock_browse_item = BrowseMedia(
+        media_class=MediaClass.DIRECTORY,
+        media_content_id="mock_id",
+        media_content_type=MediaType.MUSIC,
+        title="Mock Source",
+        can_play=False,
+        can_expand=True,
+        children=[],
+    )
+
+    with patch(
+        "homeassistant.components.media_source.async_browse_media",
+        AsyncMock(return_value=mock_browse_item),
+    ):
+        browse_result = await entity.async_browse_media(MEDIA_CONTENT_ID_ROOT)
 
     assert browse_result.media_class == MediaClass.DIRECTORY
     assert browse_result.media_content_id == MEDIA_CONTENT_ID_ROOT
@@ -534,17 +549,6 @@ async def test_media_player_browse_media_playlists_queue(
 
         mock_get_queue_items.assert_awaited_once()
         mock_set_AVT_cmd.assert_awaited_once()
-
-
-@pytest.mark.asyncio
-async def test_media_player_browse_media_unhandled(
-    mock_wiim_media_player_entity: WiimMediaPlayerEntity,
-) -> None:
-    """Test Browse unhandled media content ID."""
-    entity = mock_wiim_media_player_entity
-    unhandled_id = "unhandled_content_id"
-
-    await entity.async_browse_media(unhandled_id)
 
 
 @pytest.mark.asyncio

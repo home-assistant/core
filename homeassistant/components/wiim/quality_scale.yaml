@@ -46,7 +46,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: done
+  diagnostics: todo
   discovery-update-info: done
   discovery: done
   docs-data-update: todo
