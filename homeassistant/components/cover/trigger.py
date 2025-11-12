@@ -34,9 +34,6 @@ OPENS_TRIGGER_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_OPTIONS, default={}): {
             vol.Optional(CONF_FULLY_OPENED, default=False): cv.boolean,
-            vol.Optional(CONF_DEVICE_CLASS, default=[]): vol.All(
-                cv.ensure_list, [vol.Coerce(CoverDeviceClass)]
-            ),
         },
         vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
     }
@@ -46,9 +43,6 @@ CLOSES_TRIGGER_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_OPTIONS, default={}): {
             vol.Optional(CONF_FULLY_CLOSED, default=False): cv.boolean,
-            vol.Optional(CONF_DEVICE_CLASS, default=[]): vol.All(
-                cv.ensure_list, [vol.Coerce(CoverDeviceClass)]
-            ),
         },
         vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
     }
@@ -56,11 +50,7 @@ CLOSES_TRIGGER_SCHEMA = vol.Schema(
 
 STOPS_TRIGGER_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_OPTIONS, default={}): {
-            vol.Optional(CONF_DEVICE_CLASS, default=[]): vol.All(
-                cv.ensure_list, [vol.Coerce(CoverDeviceClass)]
-            ),
-        },
+        vol.Optional(CONF_OPTIONS, default={}): {},
         vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
     }
 )
@@ -80,17 +70,16 @@ POSITION_CHANGED_TRIGGER_SCHEMA = vol.Schema(
             vol.Exclusive(CONF_BELOW, "position_range"): vol.All(
                 vol.Coerce(int), vol.Range(min=0, max=100)
             ),
-            vol.Optional(CONF_DEVICE_CLASS, default=[]): vol.All(
-                cv.ensure_list, [vol.Coerce(CoverDeviceClass)]
-            ),
         },
         vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
     }
 )
 
 
-class CoverOpensTrigger(Trigger):
-    """Trigger for when a cover opens."""
+class CoverOpensTriggerBase(Trigger):
+    """Base trigger for when a cover opens."""
+
+    device_class: CoverDeviceClass
 
     @override
     @classmethod
@@ -115,7 +104,6 @@ class CoverOpensTrigger(Trigger):
     ) -> CALLBACK_TYPE:
         """Attach the trigger to an action runner."""
         fully_opened = self._options[CONF_FULLY_OPENED]
-        device_classes_filter = self._options[CONF_DEVICE_CLASS]
 
         @callback
         def state_change_listener(
@@ -131,11 +119,10 @@ class CoverOpensTrigger(Trigger):
             if to_state is None or to_state.state == STATE_UNAVAILABLE:
                 return
 
-            # Filter by device class if specified
-            if device_classes_filter:
-                device_class = to_state.attributes.get(CONF_DEVICE_CLASS)
-                if device_class not in device_classes_filter:
-                    return
+            # Filter by device class
+            device_class = to_state.attributes.get(CONF_DEVICE_CLASS)
+            if device_class != self.device_class:
+                return
 
             # Trigger when cover opens or is opening
             if to_state.state in (CoverState.OPEN, CoverState.OPENING):
@@ -162,7 +149,7 @@ class CoverOpensTrigger(Trigger):
                         "from_state": from_state,
                         "to_state": to_state,
                     },
-                    f"cover opened on {entity_id}",
+                    f"{self.device_class} opened on {entity_id}",
                     event.context,
                 )
 
@@ -179,8 +166,10 @@ class CoverOpensTrigger(Trigger):
         )
 
 
-class CoverClosesTrigger(Trigger):
-    """Trigger for when a cover closes."""
+class CoverClosesTriggerBase(Trigger):
+    """Base trigger for when a cover closes."""
+
+    device_class: CoverDeviceClass
 
     @override
     @classmethod
@@ -205,7 +194,6 @@ class CoverClosesTrigger(Trigger):
     ) -> CALLBACK_TYPE:
         """Attach the trigger to an action runner."""
         fully_closed = self._options[CONF_FULLY_CLOSED]
-        device_classes_filter = self._options[CONF_DEVICE_CLASS]
 
         @callback
         def state_change_listener(
@@ -221,11 +209,10 @@ class CoverClosesTrigger(Trigger):
             if to_state is None or to_state.state == STATE_UNAVAILABLE:
                 return
 
-            # Filter by device class if specified
-            if device_classes_filter:
-                device_class = to_state.attributes.get(CONF_DEVICE_CLASS)
-                if device_class not in device_classes_filter:
-                    return
+            # Filter by device class
+            device_class = to_state.attributes.get(CONF_DEVICE_CLASS)
+            if device_class != self.device_class:
+                return
 
             # Trigger when cover closes or is closing
             if to_state.state in (CoverState.CLOSED, CoverState.CLOSING):
@@ -252,7 +239,7 @@ class CoverClosesTrigger(Trigger):
                         "from_state": from_state,
                         "to_state": to_state,
                     },
-                    f"cover closed on {entity_id}",
+                    f"{self.device_class} closed on {entity_id}",
                     event.context,
                 )
 
@@ -269,8 +256,10 @@ class CoverClosesTrigger(Trigger):
         )
 
 
-class CoverStopsTrigger(Trigger):
-    """Trigger for when a cover stops moving."""
+class CoverStopsTriggerBase(Trigger):
+    """Base trigger for when a cover stops moving."""
+
+    device_class: CoverDeviceClass
 
     @override
     @classmethod
@@ -285,16 +274,13 @@ class CoverStopsTrigger(Trigger):
         super().__init__(hass, config)
         if TYPE_CHECKING:
             assert config.target is not None
-            assert config.options is not None
         self._target = config.target
-        self._options = config.options
 
     @override
     async def async_attach_runner(
         self, run_action: TriggerActionRunner
     ) -> CALLBACK_TYPE:
         """Attach the trigger to an action runner."""
-        device_classes_filter = self._options[CONF_DEVICE_CLASS]
 
         @callback
         def state_change_listener(
@@ -310,11 +296,10 @@ class CoverStopsTrigger(Trigger):
             if to_state is None or to_state.state == STATE_UNAVAILABLE:
                 return
 
-            # Filter by device class if specified
-            if device_classes_filter:
-                device_class = to_state.attributes.get(CONF_DEVICE_CLASS)
-                if device_class not in device_classes_filter:
-                    return
+            # Filter by device class
+            device_class = to_state.attributes.get(CONF_DEVICE_CLASS)
+            if device_class != self.device_class:
+                return
 
             # Trigger when cover stops (from opening/closing to open/closed)
             if from_state and from_state.state in (
@@ -328,7 +313,7 @@ class CoverStopsTrigger(Trigger):
                             "from_state": from_state,
                             "to_state": to_state,
                         },
-                        f"cover stopped on {entity_id}",
+                        f"{self.device_class} stopped on {entity_id}",
                         event.context,
                     )
 
@@ -345,8 +330,10 @@ class CoverStopsTrigger(Trigger):
         )
 
 
-class CoverPositionChangedTrigger(Trigger):
-    """Trigger for when a cover's position changes."""
+class CoverPositionChangedTriggerBase(Trigger):
+    """Base trigger for when a cover's position changes."""
+
+    device_class: CoverDeviceClass
 
     @override
     @classmethod
@@ -373,7 +360,6 @@ class CoverPositionChangedTrigger(Trigger):
         upper_limit = self._options.get(CONF_UPPER)
         above_limit = self._options.get(CONF_ABOVE)
         below_limit = self._options.get(CONF_BELOW)
-        device_classes_filter = self._options.get(CONF_DEVICE_CLASS, [])
 
         @callback
         def state_change_listener(
@@ -389,11 +375,10 @@ class CoverPositionChangedTrigger(Trigger):
             if to_state is None or to_state.state == STATE_UNAVAILABLE:
                 return
 
-            # Filter by device class if specified
-            if device_classes_filter:
-                device_class = to_state.attributes.get(CONF_DEVICE_CLASS)
-                if device_class not in device_classes_filter:
-                    return
+            # Filter by device class
+            device_class = to_state.attributes.get(CONF_DEVICE_CLASS)
+            if device_class != self.device_class:
+                return
 
             # Get position values
             from_position = (
@@ -423,7 +408,7 @@ class CoverPositionChangedTrigger(Trigger):
                     "from_position": from_position,
                     "to_position": to_position,
                 },
-                f"position changed on {entity_id}",
+                f"{self.device_class} position changed on {entity_id}",
                 event.context,
             )
 
@@ -440,11 +425,94 @@ class CoverPositionChangedTrigger(Trigger):
         )
 
 
+# Device-class-specific trigger classes for curtain
+class CurtainOpensTrigger(CoverOpensTriggerBase):
+    """Trigger for when a curtain opens."""
+
+    device_class = CoverDeviceClass.CURTAIN
+
+
+class CurtainClosesTrigger(CoverClosesTriggerBase):
+    """Trigger for when a curtain closes."""
+
+    device_class = CoverDeviceClass.CURTAIN
+
+
+class CurtainStopsTrigger(CoverStopsTriggerBase):
+    """Trigger for when a curtain stops moving."""
+
+    device_class = CoverDeviceClass.CURTAIN
+
+
+class CurtainPositionChangedTrigger(CoverPositionChangedTriggerBase):
+    """Trigger for when a curtain's position changes."""
+
+    device_class = CoverDeviceClass.CURTAIN
+
+
+# Device-class-specific trigger classes for shutter
+class ShutterOpensTrigger(CoverOpensTriggerBase):
+    """Trigger for when a shutter opens."""
+
+    device_class = CoverDeviceClass.SHUTTER
+
+
+class ShutterClosesTrigger(CoverClosesTriggerBase):
+    """Trigger for when a shutter closes."""
+
+    device_class = CoverDeviceClass.SHUTTER
+
+
+class ShutterStopsTrigger(CoverStopsTriggerBase):
+    """Trigger for when a shutter stops moving."""
+
+    device_class = CoverDeviceClass.SHUTTER
+
+
+class ShutterPositionChangedTrigger(CoverPositionChangedTriggerBase):
+    """Trigger for when a shutter's position changes."""
+
+    device_class = CoverDeviceClass.SHUTTER
+
+
+# Device-class-specific trigger classes for blind
+class BlindOpensTrigger(CoverOpensTriggerBase):
+    """Trigger for when a blind opens."""
+
+    device_class = CoverDeviceClass.BLIND
+
+
+class BlindClosesTrigger(CoverClosesTriggerBase):
+    """Trigger for when a blind closes."""
+
+    device_class = CoverDeviceClass.BLIND
+
+
+class BlindStopsTrigger(CoverStopsTriggerBase):
+    """Trigger for when a blind stops moving."""
+
+    device_class = CoverDeviceClass.BLIND
+
+
+class BlindPositionChangedTrigger(CoverPositionChangedTriggerBase):
+    """Trigger for when a blind's position changes."""
+
+    device_class = CoverDeviceClass.BLIND
+
+
 TRIGGERS: dict[str, type[Trigger]] = {
-    "opens": CoverOpensTrigger,
-    "closes": CoverClosesTrigger,
-    "stops": CoverStopsTrigger,
-    "position_changed": CoverPositionChangedTrigger,
+    "curtain_opens": CurtainOpensTrigger,
+    "curtain_closes": CurtainClosesTrigger,
+    "curtain_stops": CurtainStopsTrigger,
+    "curtain_position_changed": CurtainPositionChangedTrigger,
+    "shutter_opens": ShutterOpensTrigger,
+    "shutter_closes": ShutterClosesTrigger,
+    "shutter_stops": ShutterStopsTrigger,
+    "shutter_position_changed": ShutterPositionChangedTrigger,
+    "blind_opens": BlindOpensTrigger,
+    "blind_closes": BlindClosesTrigger,
+    "blind_stops": BlindStopsTrigger,
+    "blind_position_changed": BlindPositionChangedTrigger,
 }
 
 

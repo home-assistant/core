@@ -1,65 +1,38 @@
-opens:
+curtain_opens:
   target:
     entity:
       domain: cover
+      device_class: curtain
   fields:
     fully_opened:
       required: false
       default: false
       selector:
         boolean:
-    device_class:
-      required: false
-      default: []
-      selector:
-        select:
-          multiple: true
-          options:
-            - curtain
-            - shutter
-            - blind
 
-closes:
+curtain_closes:
   target:
     entity:
       domain: cover
+      device_class: curtain
   fields:
     fully_closed:
       required: false
       default: false
       selector:
         boolean:
-    device_class:
-      required: false
-      default: []
-      selector:
-        select:
-          multiple: true
-          options:
-            - curtain
-            - shutter
-            - blind
 
-stops:
+curtain_stops:
   target:
     entity:
       domain: cover
-  fields:
-    device_class:
-      required: false
-      default: []
-      selector:
-        select:
-          multiple: true
-          options:
-            - curtain
-            - shutter
-            - blind
+      device_class: curtain
 
-position_changed:
+curtain_position_changed:
   target:
     entity:
       domain: cover
+      device_class: curtain
   fields:
     lower:
       required: false
@@ -89,13 +62,133 @@ position_changed:
           min: 0
           max: 100
           mode: box
-    device_class:
+
+shutter_opens:
+  target:
+    entity:
+      domain: cover
+      device_class: shutter
+  fields:
+    fully_opened:
       required: false
-      default: []
+      default: false
       selector:
-        select:
-          multiple: true
-          options:
-            - curtain
-            - shutter
-            - blind
+        boolean:
+
+shutter_closes:
+  target:
+    entity:
+      domain: cover
+      device_class: shutter
+  fields:
+    fully_closed:
+      required: false
+      default: false
+      selector:
+        boolean:
+
+shutter_stops:
+  target:
+    entity:
+      domain: cover
+      device_class: shutter
+
+shutter_position_changed:
+  target:
+    entity:
+      domain: cover
+      device_class: shutter
+  fields:
+    lower:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 100
+          mode: box
+    upper:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 100
+          mode: box
+    above:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 100
+          mode: box
+    below:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 100
+          mode: box
+
+blind_opens:
+  target:
+    entity:
+      domain: cover
+      device_class: blind
+  fields:
+    fully_opened:
+      required: false
+      default: false
+      selector:
+        boolean:
+
+blind_closes:
+  target:
+    entity:
+      domain: cover
+      device_class: blind
+  fields:
+    fully_closed:
+      required: false
+      default: false
+      selector:
+        boolean:
+
+blind_stops:
+  target:
+    entity:
+      domain: cover
+      device_class: blind
+
+blind_position_changed:
+  target:
+    entity:
+      domain: cover
+      device_class: blind
+  fields:
+    lower:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 100
+          mode: box
+    upper:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 100
+          mode: box
+    above:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 100
+          mode: box
+    below:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 100
+          mode: box
