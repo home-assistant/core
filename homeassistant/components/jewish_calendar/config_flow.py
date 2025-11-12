@@ -34,10 +34,12 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import (
-    CONF_CALENDAR_EVENTS,
     CONF_CANDLE_LIGHT_MINUTES,
+    CONF_DAILY_EVENTS,
     CONF_DIASPORA,
     CONF_HAVDALAH_OFFSET_MINUTES,
+    CONF_LEARNING_SCHEDULE,
+    CONF_YEARLY_EVENTS,
     DEFAULT_CALENDAR_EVENTS,
     DEFAULT_CANDLE_LIGHT,
     DEFAULT_DIASPORA,
@@ -45,7 +47,9 @@ from .const import (
     DEFAULT_LANGUAGE,
     DEFAULT_NAME,
     DOMAIN,
-    CalendarEventType,
+    DailyCalendarEventType,
+    LearningScheduleEventType,
+    YearlyCalendarEventType,
 )
 from .entity import JewishCalendarConfigEntry
 
@@ -56,10 +60,31 @@ OPTIONS_SCHEMA = vol.Schema(
             CONF_HAVDALAH_OFFSET_MINUTES, default=DEFAULT_HAVDALAH_OFFSET_MINUTES
         ): int,
         vol.Optional(
-            CONF_CALENDAR_EVENTS, default=DEFAULT_CALENDAR_EVENTS
+            CONF_DAILY_EVENTS,
+            default=DEFAULT_CALENDAR_EVENTS[CONF_DAILY_EVENTS],
         ): SelectSelector(
             SelectSelectorConfig(
-                options=list(CalendarEventType),
+                options=list(DailyCalendarEventType),
+                multiple=True,
+                mode=SelectSelectorMode.DROPDOWN,
+            )
+        ),
+        vol.Optional(
+            CONF_LEARNING_SCHEDULE,
+            default=DEFAULT_CALENDAR_EVENTS[CONF_LEARNING_SCHEDULE],
+        ): SelectSelector(
+            SelectSelectorConfig(
+                options=list(LearningScheduleEventType),
+                multiple=True,
+                mode=SelectSelectorMode.DROPDOWN,
+            )
+        ),
+        vol.Optional(
+            CONF_YEARLY_EVENTS,
+            default=DEFAULT_CALENDAR_EVENTS[CONF_YEARLY_EVENTS],
+        ): SelectSelector(
+            SelectSelectorConfig(
+                options=list(YearlyCalendarEventType),
                 multiple=True,
                 mode=SelectSelectorMode.DROPDOWN,
             )
