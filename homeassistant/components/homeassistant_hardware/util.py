@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
-from collections.abc import AsyncIterator, Callable, Iterable, Sequence
+from collections.abc import AsyncIterator, Callable, Sequence
 from contextlib import AsyncExitStack, asynccontextmanager
 from dataclasses import dataclass
 from enum import StrEnum
@@ -309,15 +309,20 @@ async def guess_firmware_info(hass: HomeAssistant, device_path: str) -> Firmware
 
 
 async def probe_silabs_firmware_info(
-    device: str, *, probe_methods: Iterable[ApplicationType] | None = None
+    device: str,
+    *,
+    bootloader_reset_methods: Sequence[ResetTarget],
+    application_probe_methods: Sequence[tuple[ApplicationType, int]],
 ) -> FirmwareInfo | None:
     """Probe the running firmware on a SiLabs device."""
     flasher = Flasher(
         device=device,
-        **(
-            {"probe_methods": [m.as_flasher_application_type() for m in probe_methods]}
-            if probe_methods
-            else {}
+        probe_methods=tuple(
+            (m.as_flasher_application_type(), baudrate)
+            for m, baudrate in application_probe_methods
+        ),
+        bootloader_reset=tuple(
+            m.as_flasher_reset_target() for m in bootloader_reset_methods
         ),
     )
 
@@ -343,11 +348,18 @@ async def probe_silabs_firmware_info(
 
 
 async def probe_silabs_firmware_type(
-    device: str, *, probe_methods: Iterable[ApplicationType] | None = None
+    device: str,
+    *,
+    bootloader_reset_methods: Sequence[ResetTarget],
+    application_probe_methods: Sequence[tuple[ApplicationType, int]],
 ) -> ApplicationType | None:
     """Probe the running firmware type on a SiLabs device."""
 
-    fw_info = await probe_silabs_firmware_info(device, probe_methods=probe_methods)
+    fw_info = await probe_silabs_firmware_info(
+        device,
+        bootloader_reset_methods=bootloader_reset_methods,
+        application_probe_methods=application_probe_methods,
+    )
     if fw_info is None:
         return None
 
@@ -359,12 +371,22 @@ async def async_flash_silabs_firmware(
     device: str,
     fw_data: bytes,
     expected_installed_firmware_type: ApplicationType,
-    bootloader_reset_methods: Sequence[ResetTarget] = (),
+    bootloader_reset_methods: Sequence[ResetTarget],
+    application_probe_methods: Sequence[tuple[ApplicationType, int]],
     progress_callback: Callable[[int, int], None] | None = None,
     *,
     domain: str = DOMAIN,
 ) -> FirmwareInfo:
     """Flash firmware to the SiLabs device."""
+    if not any(
+        method == expected_installed_firmware_type
+        for method, _ in application_probe_methods
+    ):
+        raise ValueError(
+            f"Expected installed firmware type {expected_installed_firmware_type!r}"
+            f" not in application probe methods {application_probe_methods!r}"
+        )
+
     async with async_firmware_update_context(hass, device, domain):
         firmware_info = await guess_firmware_info(hass, device)
         _LOGGER.debug("Identified firmware info: %s", firmware_info)
@@ -373,11 +395,9 @@ async def async_flash_silabs_firmware(
 
         flasher = Flasher(
             device=device,
-            probe_methods=(
-                ApplicationType.GECKO_BOOTLOADER.as_flasher_application_type(),
-                ApplicationType.EZSP.as_flasher_application_type(),
-                ApplicationType.SPINEL.as_flasher_application_type(),
-                ApplicationType.CPC.as_flasher_application_type(),
+            probe_methods=tuple(
+                (m.as_flasher_application_type(), baudrate)
+                for m, baudrate in application_probe_methods
             ),
             bootloader_reset=tuple(
                 m.as_flasher_reset_target() for m in bootloader_reset_methods
@@ -401,7 +421,13 @@ async def async_flash_silabs_firmware(
 
             probed_firmware_info = await probe_silabs_firmware_info(
                 device,
-                probe_methods=(expected_installed_firmware_type,),
+                bootloader_reset_methods=bootloader_reset_methods,
+                # Only probe for the expected installed firmware type
+                application_probe_methods=[
+                    (method, baudrate)
+                    for method, baudrate in application_probe_methods
+                    if method == expected_installed_firmware_type
+                ],
             )
 
         if probed_firmware_info is None:

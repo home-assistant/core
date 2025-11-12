@@ -78,6 +78,9 @@
       },
       "valve": {
         "name": "Valve"
+      },
+      "ventilation_frost_protection": {
+        "name": "Ventilation frost protection"
       }
     },
     "button": {
@@ -213,7 +216,18 @@
         "name": "Compressor hours load class 5"
       },
       "compressor_phase": {
-        "name": "Compressor phase"
+        "name": "Compressor phase",
+        "state": {
+          "cooling": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::cooling%]",
+          "defrost": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::defrosting%]",
+          "heating": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::heating%]",
+          "off": "[%key:common::state::off%]",
+          "passive_defrost": "Passive defrosting",
+          "pause": "[%key:common::state::idle%]",
+          "preparing": "Preparing",
+          "preparing_defrost": "Preparing defrost",
+          "ready": "[%key:common::state::idle%]"
+        }
       },
       "compressor_starts": {
         "name": "Compressor starts"
@@ -291,6 +305,15 @@
           "discharge": "[%key:common::state::discharging%]",
           "standby": "[%key:common::state::standby%]"
         }
+      },
+      "filter_hours": {
+        "name": "Filter hours"
+      },
+      "filter_overdue_hours": {
+        "name": "Filter overdue hours"
+      },
+      "filter_remaining_hours": {
+        "name": "Filter remaining hours"
       },
       "fuel_need": {
         "name": "Fuel need"
@@ -384,6 +407,9 @@
       },
       "hydraulic_separator_temperature": {
         "name": "Hydraulic separator temperature"
+      },
+      "outside_humidity": {
+        "name": "Outside humidity"
       },
       "outside_temperature": {
         "name": "Outside temperature"
@@ -488,6 +514,15 @@
       "spf_total": {
         "name": "Seasonal performance factor"
       },
+      "supply_fan_hours": {
+        "name": "Supply fan hours"
+      },
+      "supply_fan_speed": {
+        "name": "Supply fan speed"
+      },
+      "supply_humidity": {
+        "name": "Supply humidity"
+      },
       "supply_pressure": {
         "name": "Supply pressure"
       },
@@ -496,6 +531,9 @@
       },
       "valve_position": {
         "name": "Valve position"
+      },
+      "ventilation_input_volumeflow": {
+        "name": "Ventilation input volume flow"
       },
       "ventilation_level": {
         "name": "Ventilation level",
@@ -506,6 +544,9 @@
           "leveltwo": "2",
           "standby": "[%key:common::state::standby%]"
         }
+      },
+      "ventilation_output_volumeflow": {
+        "name": "Ventilation output volume flow"
       },
       "ventilation_reason": {
         "name": "Ventilation reason",
