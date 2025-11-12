@@ -104,7 +104,7 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
         except (APIException, requestsConnectionError):
             errors["base"] = "cannot_connect"
 
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
 
@@ -197,4 +197,4 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
         interface_details = await self.hass.async_add_executor_job(
             netinsight_client.get_interfaces
         )
-        self.available_interfaces = interface_details.values()
+        self.available_interfaces = list(interface_details.values())

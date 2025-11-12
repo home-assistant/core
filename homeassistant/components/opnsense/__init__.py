@@ -9,6 +9,7 @@ import voluptuous as vol
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
@@ -72,9 +73,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Test connection
     try:
         await hass.async_add_executor_job(interfaces_client.get_arp)
-    except APIException:
-        _LOGGER.exception("Failure while connecting to OPNsense API endpoint")
-        return False
+    except APIException as err:
+        raise ConfigEntryNotReady(f"Unable to connect to OPNsense API: {err}") from err
 
     hass.data[OPNSENSE_DATA] = {
         CONF_INTERFACE_CLIENT: interfaces_client,
