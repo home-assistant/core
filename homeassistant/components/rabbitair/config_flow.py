@@ -83,14 +83,11 @@ class RabbitAirConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             errors, info = await self._validate_and_map_errors(user_input)
             if not errors:
-                if info is None:
-                    _LOGGER.error("Validation returned no info")
-                    errors["base"] = "unknown"
-                else:
-                    user_input[CONF_MAC] = info["mac"]
-                    await self.async_set_unique_id(dr.format_mac(info["mac"]))
-                    self._abort_if_unique_id_configured(updates=user_input)
-                    return self.async_create_entry(title="Rabbit Air", data=user_input)
+                assert info is not None
+                user_input[CONF_MAC] = info["mac"]
+                await self.async_set_unique_id(dr.format_mac(info["mac"]))
+                self._abort_if_unique_id_configured(updates=user_input)
+                return self.async_create_entry(title="Rabbit Air", data=user_input)
 
         user_input = user_input or {}
         host = user_input.get(CONF_HOST, self._discovered_host)
@@ -114,8 +111,9 @@ class RabbitAirConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle zeroconf discovery."""
         mac = dr.format_mac(discovery_info.properties["id"])
         await self.async_set_unique_id(mac)
-        self._abort_if_unique_id_configured()
-        self._discovered_host = discovery_info.hostname.rstrip(".")
+        host = discovery_info.hostname.rstrip(".")
+        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+        self._discovered_host = host
         return await self.async_step_user()
 
     async def async_step_reconfigure(
@@ -130,7 +128,8 @@ class RabbitAirConfigFlow(ConfigFlow, domain=DOMAIN):
         entry = self._get_reconfigure_entry()
 
         errors: dict[str, str] = {}
-        current_host = entry.data.get(CONF_HOST, "")
+        assert CONF_HOST in entry.data
+        current_host = entry.data[CONF_HOST]
 
         if user_input is not None:
             validate_input_dict = {
@@ -139,17 +138,13 @@ class RabbitAirConfigFlow(ConfigFlow, domain=DOMAIN):
             }
             errors, info = await self._validate_and_map_errors(validate_input_dict)
             if not errors:
-                expected_mac = entry.unique_id or dr.format_mac(
-                    entry.data.get(CONF_MAC, "")
-                )
-                if not expected_mac or not info or "mac" not in info:
-                    errors["base"] = "unknown"
-                elif expected_mac != dr.format_mac(info["mac"]):
+                assert info is not None
+                expected_mac = entry.unique_id or dr.format_mac(entry.data[CONF_MAC])
+                if expected_mac != dr.format_mac(info["mac"]):
                     return self.async_abort(reason="reconfigure_device_mismatch")
-                else:
-                    return self.async_update_reload_and_abort(
-                        entry, data={**entry.data, CONF_HOST: user_input[CONF_HOST]}
-                    )
+                return self.async_update_reload_and_abort(
+                    entry, data={**entry.data, CONF_HOST: user_input[CONF_HOST]}
+                )
 
         return self.async_show_form(
             step_id="reconfigure",
