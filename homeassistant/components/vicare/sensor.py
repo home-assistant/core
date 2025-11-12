@@ -994,6 +994,14 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
     ),
     SUPPLY_TEMPERATURE_SENSOR,
     ViCareSensorEntityDescription(
+        key="supply_humidity",
+        translation_key="supply_humidity",
+        device_class=SensorDeviceClass.HUMIDITY,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_getter=lambda api: api.getSupplyHumidity(),
+    ),
+    ViCareSensorEntityDescription(
         key="supply_fan_hours",
         translation_key="supply_fan_hours",
         native_unit_of_measurement=UnitOfTime.HOURS,

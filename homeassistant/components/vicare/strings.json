@@ -503,6 +503,9 @@
       "supply_fan_speed": {
         "name": "Supply fan speed"
       },
+      "supply_humidity": {
+        "name": "Supply humidity"
+      },
       "supply_pressure": {
         "name": "Supply pressure"
       },
