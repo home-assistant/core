@@ -2,36 +2,20 @@
 
 from __future__ import annotations
 
-from enocean.protocol.packet import Packet
-from homeassistant_enocean.address import EnOceanDeviceAddress
-from homeassistant_enocean.device_type import EnOceanDeviceType
 from homeassistant_enocean.entity_id import EnOceanEntityID
 from homeassistant_enocean.gateway import EnOceanHomeAssistantGateway
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
-    RestoreSensor,
     SensorDeviceClass,
+    SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import (
-    CONF_DEVICE_CLASS,
-    CONF_ID,
-    CONF_NAME,
-    PERCENTAGE,
-    STATE_CLOSED,
-    STATE_OPEN,
-    UnitOfPower,
-    UnitOfTemperature,
-)
+from homeassistant.const import PERCENTAGE, UnitOfPower, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .config_entry import EnOceanConfigEntry
-from .const import LOGGER
 from .entity import EnOceanEntity
 
 CONF_MAX_TEMP = "max_temp"
@@ -76,17 +60,17 @@ SENSOR_DESC_WINDOWHANDLE = SensorEntityDescription(
 )
 
 
-PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_DEVICE_CLASS, default=SENSOR_TYPE_POWER): cv.string,
-        vol.Optional(CONF_MAX_TEMP, default=40): vol.Coerce(int),
-        vol.Optional(CONF_MIN_TEMP, default=0): vol.Coerce(int),
-        vol.Optional(CONF_RANGE_FROM, default=255): cv.positive_int,
-        vol.Optional(CONF_RANGE_TO, default=0): cv.positive_int,
-    }
-)
+# PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
+#     {
+#         vol.Required(CONF_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
+#         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+#         vol.Optional(CONF_DEVICE_CLASS, default=SENSOR_TYPE_POWER): cv.string,
+#         vol.Optional(CONF_MAX_TEMP, default=40): vol.Coerce(int),
+#         vol.Optional(CONF_MIN_TEMP, default=0): vol.Coerce(int),
+#         vol.Optional(CONF_RANGE_FROM, default=255): cv.positive_int,
+#         vol.Optional(CONF_RANGE_TO, default=0): cv.positive_int,
+#     }
+# )
 
 
 async def async_setup_entry(
@@ -95,6 +79,44 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entry."""
+    gateway = config_entry.runtime_data.gateway
+
+    for entity_id in gateway.sensor_entities:
+        properties = gateway.sensor_entities[entity_id]
+        properties.native_unit_of_measurement = "dbM"
+        async_add_entities(
+            [
+                EnOceanSensor(
+                    entity_id,
+                    gateway=gateway,
+                    device_class=properties.device_class,
+                    native_unit_of_measurement=properties.native_unit_of_measurement,
+                )
+            ]
+        )
+
+
+class EnOceanSensor(EnOceanEntity, SensorEntity):
+    """Representation of EnOcean switches."""
+
+    def __init__(
+        self,
+        entity_id: EnOceanEntityID,
+        gateway: EnOceanHomeAssistantGateway,
+        device_class: SensorDeviceClass | None = SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement: str | None = None,
+    ) -> None:
+        """Initialize the EnOcean switch."""
+        super().__init__(enocean_entity_id=entity_id, gateway=gateway)
+        self._attr_device_class = device_class
+        self._attr_native_unit_of_measurement = native_unit_of_measurement
+        self.gateway.register_sensor_callback(self.enocean_entity_id, self.update)
+
+    def update(self, value: float) -> None:
+        """Update the sensor state."""
+        self._attr_native_value = value
+        self.schedule_update_ha_state()
+
     # devices = config_entry.options.get(CONF_ENOCEAN_DEVICES, [])
 
     # for device in []:
@@ -281,170 +303,170 @@ async def async_setup_entry(
     #         continue
 
 
-class EnOceanSensor(EnOceanEntity, RestoreSensor):
-    """Representation of an EnOcean sensor device such as a power meter."""
+# class EnOceanSensor(EnOceanEntity, RestoreSensor):
+#     """Representation of an EnOcean sensor device such as a power meter."""
 
-    def __init__(
-        self,
-        enocean_entity_id: EnOceanEntityID,
-        description: SensorEntityDescription,
-        gateway: EnOceanHomeAssistantGateway,
-    ) -> None:
-        """Initialize the EnOcean sensor device."""
-        super().__init__(
-            enocean_entity_id=enocean_entity_id,
-            gateway=gateway,
-        )
-        self.entity_description = description
+#     def __init__(
+#         self,
+#         enocean_entity_id: EnOceanEntityID,
+#         description: SensorEntityDescription,
+#         gateway: EnOceanHomeAssistantGateway,
+#     ) -> None:
+#         """Initialize the EnOcean sensor device."""
+#         super().__init__(
+#             enocean_entity_id=enocean_entity_id,
+#             gateway=gateway,
+#         )
+#         self.entity_description = description
 
-    async def async_added_to_hass(self) -> None:
-        """Call when entity about to be added to hass."""
-        # If not None, we got an initial value.
-        await super().async_added_to_hass()
-        if self._attr_native_value is not None:
-            return
+#     async def async_added_to_hass(self) -> None:
+#         """Call when entity about to be added to hass."""
+#         # If not None, we got an initial value.
+#         await super().async_added_to_hass()
+#         if self._attr_native_value is not None:
+#             return
 
-        if (sensor_data := await self.async_get_last_sensor_data()) is not None:
-            self._attr_native_value = sensor_data.native_value
+#         if (sensor_data := await self.async_get_last_sensor_data()) is not None:
+#             self._attr_native_value = sensor_data.native_value
 
-    def value_changed(self, packet: Packet) -> None:
-        """Update the internal state of the sensor."""
-
-
-class EnOceanPowerSensor(EnOceanSensor):
-    """Representation of an EnOcean power sensor.
-
-    EEPs (EnOcean Equipment Profiles):
-    - A5-12-01 (Automated Meter Reading, Electricity)
-    """
-
-    def value_changed(self, packet: Packet) -> None:
-        """Update the internal state of the sensor."""
-        if packet.rorg != 0xA5:
-            return
-        packet.parse_eep(0x12, 0x01)
-        if packet.parsed["DT"]["raw_value"] == 1:
-            # this packet reports the current value
-            raw_val = packet.parsed["MR"]["raw_value"]
-            divisor = packet.parsed["DIV"]["raw_value"]
-            self._attr_native_value = raw_val / (10**divisor)
-            self.schedule_update_ha_state()
+#     def value_changed(self, packet: Packet) -> None:
+#         """Update the internal state of the sensor."""
 
 
-class EnOceanTemperatureSensor(EnOceanSensor):
-    """Representation of an EnOcean temperature sensor device.
+# class EnOceanPowerSensor(EnOceanSensor):
+#     """Representation of an EnOcean power sensor.
 
-    EEPs (EnOcean Equipment Profiles):
-    - A5-02-01 to A5-02-1B All 8 Bit Temperature Sensors of A5-02
-    - A5-10-01 to A5-10-14 (Room Operating Panels)
-    - A5-04-01 (Temp. and Humidity Sensor, Range 0°C to +40°C and 0% to 100%)
-    - A5-04-02 (Temp. and Humidity Sensor, Range -20°C to +60°C and 0% to 100%)
-    - A5-10-10 (Temp. and Humidity Sensor and Set Point)
-    - A5-10-12 (Temp. and Humidity Sensor, Set Point and Occupancy Control)
-    - 10 Bit Temp. Sensors are not supported (A5-02-20, A5-02-30)
+#     EEPs (EnOcean Equipment Profiles):
+#     - A5-12-01 (Automated Meter Reading, Electricity)
+#     """
 
-    For the following EEPs the scales must be set to "0 to 250":
-    - A5-04-01
-    - A5-04-02
-    - A5-10-10 to A5-10-14
-    """
-
-    def __init__(
-        self,
-        enocean_entity_id: EnOceanEntityID,
-        gateway: EnOceanDeviceAddress,
-        dev_name: str,
-        description: SensorEntityDescription,
-        *,
-        scale_min: int,
-        scale_max: int,
-        range_from: int,
-        range_to: int,
-        dev_type: EnOceanDeviceType,
-        name: str | None = None,
-    ) -> None:
-        """Initialize the EnOcean temperature sensor device."""
-        super().__init__(
-            enocean_entity_id=enocean_entity_id,
-            gateway=gateway,
-            description=description,
-        )
-        self._scale_min = scale_min
-        self._scale_max = scale_max
-        self.range_from = range_from
-        self.range_to = range_to
-
-    def value_changed(self, packet: Packet) -> None:
-        """Update the internal state of the sensor."""
-        if packet.data[0] != 0xA5:
-            return
-        temp_scale = self._scale_max - self._scale_min
-        temp_range = self.range_to - self.range_from
-        raw_val = packet.data[3]
-        temperature = temp_scale / temp_range * (raw_val - self.range_from)
-        temperature += self._scale_min
-        self._attr_native_value = round(temperature, 1)
-        self.schedule_update_ha_state()
+#     def value_changed(self, packet: Packet) -> None:
+#         """Update the internal state of the sensor."""
+#         if packet.rorg != 0xA5:
+#             return
+#         packet.parse_eep(0x12, 0x01)
+#         if packet.parsed["DT"]["raw_value"] == 1:
+#             # this packet reports the current value
+#             raw_val = packet.parsed["MR"]["raw_value"]
+#             divisor = packet.parsed["DIV"]["raw_value"]
+#             self._attr_native_value = raw_val / (10**divisor)
+#             self.schedule_update_ha_state()
 
 
-class EnOceanHumiditySensor(EnOceanSensor):
-    """Representation of an EnOcean humidity sensor device.
+# class EnOceanTemperatureSensor(EnOceanSensor):
+#     """Representation of an EnOcean temperature sensor device.
 
-    EEPs (EnOcean Equipment Profiles):
-    - A5-04-01 (Temp. and Humidity Sensor, Range 0°C to +40°C and 0% to 100%)
-    - A5-04-02 (Temp. and Humidity Sensor, Range -20°C to +60°C and 0% to 100%)
-    - A5-10-10 to A5-10-14 (Room Operating Panels)
-    """
+#     EEPs (EnOcean Equipment Profiles):
+#     - A5-02-01 to A5-02-1B All 8 Bit Temperature Sensors of A5-02
+#     - A5-10-01 to A5-10-14 (Room Operating Panels)
+#     - A5-04-01 (Temp. and Humidity Sensor, Range 0°C to +40°C and 0% to 100%)
+#     - A5-04-02 (Temp. and Humidity Sensor, Range -20°C to +60°C and 0% to 100%)
+#     - A5-10-10 (Temp. and Humidity Sensor and Set Point)
+#     - A5-10-12 (Temp. and Humidity Sensor, Set Point and Occupancy Control)
+#     - 10 Bit Temp. Sensors are not supported (A5-02-20, A5-02-30)
 
-    def value_changed(self, packet: Packet) -> None:
-        """Update the internal state of the sensor."""
-        if packet.rorg != 0xA5:
-            return
-        humidity = packet.data[2] * 100 / 250
-        self._attr_native_value = round(humidity, 1)
-        self.schedule_update_ha_state()
+#     For the following EEPs the scales must be set to "0 to 250":
+#     - A5-04-01
+#     - A5-04-02
+#     - A5-10-10 to A5-10-14
+#     """
+
+#     def __init__(
+#         self,
+#         enocean_entity_id: EnOceanEntityID,
+#         gateway: EnOceanDeviceAddress,
+#         dev_name: str,
+#         description: SensorEntityDescription,
+#         *,
+#         scale_min: int,
+#         scale_max: int,
+#         range_from: int,
+#         range_to: int,
+#         dev_type: EnOceanDeviceType,
+#         name: str | None = None,
+#     ) -> None:
+#         """Initialize the EnOcean temperature sensor device."""
+#         super().__init__(
+#             enocean_entity_id=enocean_entity_id,
+#             gateway=gateway,
+#             description=description,
+#         )
+#         self._scale_min = scale_min
+#         self._scale_max = scale_max
+#         self.range_from = range_from
+#         self.range_to = range_to
+
+#     def value_changed(self, packet: Packet) -> None:
+#         """Update the internal state of the sensor."""
+#         if packet.data[0] != 0xA5:
+#             return
+#         temp_scale = self._scale_max - self._scale_min
+#         temp_range = self.range_to - self.range_from
+#         raw_val = packet.data[3]
+#         temperature = temp_scale / temp_range * (raw_val - self.range_from)
+#         temperature += self._scale_min
+#         self._attr_native_value = round(temperature, 1)
+#         self.schedule_update_ha_state()
 
 
-class EnOceanWindowHandle(EnOceanSensor):
-    """Representation of an EnOcean window handle device.
+# class EnOceanHumiditySensor(EnOceanSensor):
+#     """Representation of an EnOcean humidity sensor device.
 
-    EEPs (EnOcean Equipment Profiles):
-    - F6-10-00 (Mechanical handle / Hoppe AG)
-    """
+#     EEPs (EnOcean Equipment Profiles):
+#     - A5-04-01 (Temp. and Humidity Sensor, Range 0°C to +40°C and 0% to 100%)
+#     - A5-04-02 (Temp. and Humidity Sensor, Range -20°C to +60°C and 0% to 100%)
+#     - A5-10-10 to A5-10-14 (Room Operating Panels)
+#     """
 
-    def value_changed(self, packet: Packet) -> None:
-        """Update the internal state of the sensor."""
-        action = (packet.data[1] & 0x70) >> 4
-
-        if action == 0x07:
-            self._attr_native_value = STATE_CLOSED
-        if action in (0x04, 0x06):
-            self._attr_native_value = STATE_OPEN
-        if action == 0x05:
-            self._attr_native_value = "tilt"
-
-        self.schedule_update_ha_state()
+#     def value_changed(self, packet: Packet) -> None:
+#         """Update the internal state of the sensor."""
+#         if packet.rorg != 0xA5:
+#             return
+#         humidity = packet.data[2] * 100 / 250
+#         self._attr_native_value = round(humidity, 1)
+#         self.schedule_update_ha_state()
 
 
-def _get_a5_02_min_max_temp(device_id: str, eep: str) -> tuple[int, int]:
-    """Determine the min and max temp for an A5-02-XX temperature sensor."""
-    sensor_range_type = int(eep[6:8], 16)
+# class EnOceanWindowHandle(EnOceanSensor):
+#     """Representation of an EnOcean window handle device.
 
-    if sensor_range_type in range(0x01, 0x0B + 1):
-        multiplier = sensor_range_type - 0x01
-        min_temp = -40 + multiplier * 10
-        max_temp = multiplier * 10
-        return min_temp, max_temp
+#     EEPs (EnOcean Equipment Profiles):
+#     - F6-10-00 (Mechanical handle / Hoppe AG)
+#     """
 
-    if sensor_range_type in range(0x10, 0x1B + 1):
-        multiplier = sensor_range_type - 0x10
-        min_temp = -60 + multiplier * 10
-        max_temp = 20 + multiplier * 10
-        return min_temp, max_temp
+#     def value_changed(self, packet: Packet) -> None:
+#         """Update the internal state of the sensor."""
+#         action = (packet.data[1] & 0x70) >> 4
 
-    LOGGER.warning(
-        "EnOcean device %s is an unsupported A5-02-XX temperature sensor with EEP %s; using default values (min_temp = 0, max_temp = 40)",
-        device_id,
-        eep,
-    )
-    return 0, 40
+#         if action == 0x07:
+#             self._attr_native_value = STATE_CLOSED
+#         if action in (0x04, 0x06):
+#             self._attr_native_value = STATE_OPEN
+#         if action == 0x05:
+#             self._attr_native_value = "tilt"
+
+#         self.schedule_update_ha_state()
+
+
+# def _get_a5_02_min_max_temp(device_id: str, eep: str) -> tuple[int, int]:
+#     """Determine the min and max temp for an A5-02-XX temperature sensor."""
+#     sensor_range_type = int(eep[6:8], 16)
+
+#     if sensor_range_type in range(0x01, 0x0B + 1):
+#         multiplier = sensor_range_type - 0x01
+#         min_temp = -40 + multiplier * 10
+#         max_temp = multiplier * 10
+#         return min_temp, max_temp
+
+#     if sensor_range_type in range(0x10, 0x1B + 1):
+#         multiplier = sensor_range_type - 0x10
+#         min_temp = -60 + multiplier * 10
+#         max_temp = 20 + multiplier * 10
+#         return min_temp, max_temp
+
+#     LOGGER.warning(
+#         "EnOcean device %s is an unsupported A5-02-XX temperature sensor with EEP %s; using default values (min_temp = 0, max_temp = 40)",
+#         device_id,
+#         eep,
+#     )
+#     return 0, 40
