@@ -31,6 +31,8 @@ def mock_lunatone_devices() -> Generator[AsyncMock]:
 
     def build_devices_mock(devices: Devices):
         device_list = []
+        if devices.data is None:
+            return device_list
         for device_data in devices.data.devices:
             device = AsyncMock(spec=Device)
             device.data = device_data

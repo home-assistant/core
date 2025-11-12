@@ -38,6 +38,7 @@ async def test_setup(
     entities = hass.states.async_all(Platform.LIGHT)
     for entity_state in entities:
         entity_entry = entity_registry.async_get(entity_state.entity_id)
+        assert entity_entry
         assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
         assert entity_state == snapshot(name=f"{entity_entry.entity_id}-state")
 
@@ -65,6 +66,7 @@ async def test_turn_on_off(
     )
 
     state = hass.states.get(TEST_ENTITY_ID)
+    assert state
     assert state.state == STATE_ON
 
     await hass.services.async_call(
@@ -75,6 +77,7 @@ async def test_turn_on_off(
     )
 
     state = hass.states.get(TEST_ENTITY_ID)
+    assert state
     assert state.state == STATE_OFF
 
 
@@ -108,6 +111,7 @@ async def test_turn_on_off_with_brightness(
     )
 
     state = hass.states.get(TEST_ENTITY_ID)
+    assert state
     assert state.state == STATE_ON
     assert state.attributes["brightness"] == expected_brightness
 
@@ -119,6 +123,7 @@ async def test_turn_on_off_with_brightness(
     )
 
     state = hass.states.get(TEST_ENTITY_ID)
+    assert state
     assert state.state == STATE_OFF
     assert not state.attributes["brightness"]
 
@@ -130,5 +135,6 @@ async def test_turn_on_off_with_brightness(
     )
 
     state = hass.states.get(TEST_ENTITY_ID)
+    assert state
     assert state.state == STATE_ON
     assert state.attributes["brightness"] == expected_brightness
