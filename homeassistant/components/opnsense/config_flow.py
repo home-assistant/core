@@ -180,8 +180,11 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
         interfaces_client = diagnostics.InterfaceClient(**api_data)
         try:
             await self.hass.async_add_executor_job(interfaces_client.get_arp)
-        except APIException:
+        except (APIException, requestsConnectionError):
             return self.async_abort(reason="cannot_connect")
+        except Exception:  # Allowed in config flows
+            _LOGGER.exception("Unexpected exception during import")
+            return self.async_abort(reason="unknown")
 
         return self.async_create_entry(title="OPNsense", data=import_data)
 
