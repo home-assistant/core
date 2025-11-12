@@ -625,7 +625,7 @@ async def test_async_flash_silabs_firmware(hass: HomeAssistant) -> None:
     # Verify Flasher was called with correct bootloader_reset parameter
     assert flasher_mock.call_count == 1
     assert flasher_mock.mock_calls[0].kwargs["bootloader_reset"] == (
-        ResetTarget.RTS_DTR,
+        ResetTarget.RTS_DTR.as_flasher_reset_target(),
     )
 
     # Both owning integrations/addons are stopped and restarted
