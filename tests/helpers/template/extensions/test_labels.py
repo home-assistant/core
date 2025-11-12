@@ -10,9 +10,8 @@ from homeassistant.helpers import (
     label_registry as lr,
 )
 
-from .helpers import assert_result_info, render_to_info
-
 from tests.common import MockConfigEntry
+from tests.helpers.template.helpers import assert_result_info, render_to_info
 
 
 async def test_labels(
