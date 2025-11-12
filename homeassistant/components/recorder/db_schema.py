@@ -71,7 +71,7 @@ class LegacyBase(DeclarativeBase):
     """Base class for tables, used for schema migration."""
 
 
-SCHEMA_VERSION = 52
+SCHEMA_VERSION = 53
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -128,7 +128,7 @@ LEGACY_STATES_ENTITY_ID_LAST_UPDATED_TS_INDEX = "ix_states_entity_id_last_update
 LEGACY_MAX_LENGTH_EVENT_CONTEXT_ID: Final = 36
 CONTEXT_ID_BIN_MAX_LENGTH = 16
 
-MYSQL_COLLATE = "utf8mb4_unicode_ci"
+MYSQL_COLLATE = "utf8mb4_bin"
 MYSQL_DEFAULT_CHARSET = "utf8mb4"
 MYSQL_ENGINE = "InnoDB"
 
