@@ -1,13 +1,12 @@
 {
   "domain": "marstek",
   "name": "Marstek",
-  "version": "1.0.0",
-  "codeowners": ["@ame"],
+  "codeowners": ["@MarstekEnergy"],
   "config_flow": true,
   "dependencies": ["network"],
-  "documentation": "https://github.com/MarstekEnergy/ha_marstek",
+  "documentation": "https://www.home-assistant.io/integrations/marstek",
   "integration_type": "device",
-  "iot_class": "local_push",
-  "requirements": [],
-  "logo": "logo.png"
+  "iot_class": "local_polling",
+  "quality_scale": "bronze",
+  "requirements": ["py-marstek==0.1.0"]
 }

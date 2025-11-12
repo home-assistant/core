@@ -6,14 +6,14 @@ import asyncio
 import logging
 from typing import Any
 
+from pymarstek import MarstekUDPClient
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN
-from .udp_client import MarstekUDPClient
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +35,7 @@ class MarstekConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> config_entries.ConfigFlowResult:
         """Handle the initial step - broadcast device discovery."""
         if user_input is not None:
             # User has selected a device from the discovered list
@@ -71,7 +71,7 @@ class MarstekConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Start broadcast device discovery
         try:
             _LOGGER.info("Starting device discovery")
-            udp_client = MarstekUDPClient(self.hass)
+            udp_client = MarstekUDPClient()
             await udp_client.async_setup()
 
             # Execute broadcast discovery with retry mechanism
@@ -160,7 +160,9 @@ class MarstekConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return []
 
-    async def async_step_zeroconf(self, discovery_info: dict[str, Any]) -> FlowResult:
+    async def async_step_zeroconf(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> config_entries.ConfigFlowResult:
         """Handle zeroconf discovery."""
         # This would be used if we implement mDNS discovery in the future
         return await self.async_step_user()
@@ -169,13 +171,9 @@ class MarstekConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class MarstekOptionsFlow(config_entries.OptionsFlow):
     """Handle Marstek options."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
-
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> config_entries.ConfigFlowResult:
         """Manage the options."""
         return self.async_show_form(
             step_id="init",

@@ -23,10 +23,7 @@ async def test_sensor_setup(
     mock_config_entry.add_to_hass(hass)
     mock_client = create_mock_udp_client()
 
-    with patch(
-        "homeassistant.components.marstek.sensor.MarstekUDPClient",
-        return_value=mock_client,
-    ):
+    with patch("pymarstek.MarstekUDPClient", return_value=mock_client):
         # Setup
         hass.data.setdefault(DOMAIN, {})
         hass.data[DOMAIN]["udp_client"] = mock_client
@@ -38,24 +35,28 @@ async def test_sensor_setup(
         entity_registry = er.async_get(hass)
 
         # Battery SoC sensor
-        battery_sensor = entity_registry.async_get("sensor.battery_level_192_168_1_100")
-        assert battery_sensor
-        assert battery_sensor.unique_id == "192.168.1.100_battery_soc"
+        battery_sensor_id = entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, "192.168.1.100_battery_soc"
+        )
+        assert battery_sensor_id == "sensor.marstek_es5_v1_battery_level_192_168_1_100"
 
         # Grid power sensor
-        power_sensor = entity_registry.async_get("sensor.grid_power_192_168_1_100")
-        assert power_sensor
-        assert power_sensor.unique_id == "192.168.1.100_battery_power"
+        power_sensor_id = entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, "192.168.1.100_battery_power"
+        )
+        assert power_sensor_id == "sensor.marstek_es5_v1_grid_power_192_168_1_100"
 
         # Device mode sensor
-        mode_sensor = entity_registry.async_get("sensor.device_mode_192_168_1_100")
-        assert mode_sensor
-        assert mode_sensor.unique_id == "192.168.1.100_device_mode"
+        mode_sensor_id = entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, "192.168.1.100_device_mode"
+        )
+        assert mode_sensor_id == "sensor.marstek_es5_v1_device_mode_192_168_1_100"
 
         # Battery status sensor
-        status_sensor = entity_registry.async_get("sensor.battery_status_192_168_1_100")
-        assert status_sensor
-        assert status_sensor.unique_id == "192.168.1.100_battery_status"
+        status_sensor_id = entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, "192.168.1.100_battery_status"
+        )
+        assert status_sensor_id == "sensor.marstek_es5_v1_battery_status_192_168_1_100"
 
 
 async def test_coordinator_creates_sensors(
@@ -66,10 +67,7 @@ async def test_coordinator_creates_sensors(
     mock_config_entry.add_to_hass(hass)
     mock_client = create_mock_udp_client()
 
-    with patch(
-        "homeassistant.components.marstek.sensor.MarstekUDPClient",
-        return_value=mock_client,
-    ):
+    with patch("pymarstek.MarstekUDPClient", return_value=mock_client):
         hass.data.setdefault(DOMAIN, {})
         hass.data[DOMAIN]["udp_client"] = mock_client
 
@@ -97,10 +95,7 @@ async def test_polling_paused(
     # Setup mock to return paused status
     mock_client.is_polling_paused.return_value = True
 
-    with patch(
-        "homeassistant.components.marstek.sensor.MarstekUDPClient",
-        return_value=mock_client,
-    ):
+    with patch("pymarstek.MarstekUDPClient", return_value=mock_client):
         hass.data.setdefault(DOMAIN, {})
         hass.data[DOMAIN]["udp_client"] = mock_client
 

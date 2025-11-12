@@ -1,29 +1,32 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "title": "Marstek Energy Storage",
-        "description": "Select your Marstek energy storage device from the discovered devices",
-        "data": {
-          "device": "Select Device"
-        }
-      }
+    "abort": {
+      "already_configured": "Device is already configured"
     },
     "error": {
       "cannot_connect": "Unable to connect to the device",
-      "no_devices_found": "No Marstek devices found on the network. Please ensure your device is powered on and connected to the same network.",
       "device_not_found": "Device not found at the specified IP address",
-      "discovery_failed": "Failed to discover devices. Please check your network connection and try again."
+      "discovery_failed": "Failed to discover devices. Please check your network connection and try again.",
+      "no_devices_found": "No Marstek devices found on the network. Please ensure your device is powered on and connected to the same network."
     },
-    "abort": {
-      "already_configured": "Device is already configured"
+    "step": {
+      "user": {
+        "data": {
+          "device": "Select Device"
+        },
+        "data_description": {
+          "device": "Choose the Marstek device you want to add"
+        },
+        "description": "Select your Marstek energy storage device from the discovered devices",
+        "title": "Marstek Energy Storage"
+      }
     }
   },
   "options": {
     "step": {
       "init": {
-        "title": "Marstek Options",
-        "description": "Configure Marstek integration options"
+        "description": "Configure Marstek integration options",
+        "title": "Marstek Options"
       }
     }
   }

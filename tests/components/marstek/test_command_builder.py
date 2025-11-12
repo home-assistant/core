@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 
-from homeassistant.components.marstek.command_builder import (
+from pymarstek.command_builder import (
     build_command,
     discover,
     get_battery_status,
@@ -16,7 +16,7 @@ from homeassistant.components.marstek.command_builder import (
     set_es_mode_manual_charge,
     set_es_mode_manual_discharge,
 )
-from homeassistant.components.marstek.const import (
+from pymarstek.const import (
     CMD_BATTERY_STATUS,
     CMD_DISCOVER,
     CMD_ES_MODE,
