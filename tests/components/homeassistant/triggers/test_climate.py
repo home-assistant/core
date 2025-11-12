@@ -6,8 +6,8 @@ from homeassistant.components import automation
 from homeassistant.components.climate import (
     ATTR_CURRENT_HUMIDITY,
     ATTR_CURRENT_TEMPERATURE,
-    ATTR_HVAC_ACTION,
     ATTR_HUMIDITY,
+    ATTR_HVAC_ACTION,
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
@@ -191,7 +191,9 @@ async def test_cooling_trigger_fires_when_cooling_starts(
         },
     )
 
-    hass.states.async_set("climate.test", "cool", {ATTR_HVAC_ACTION: "cooling"}, context=context)
+    hass.states.async_set(
+        "climate.test", "cool", {ATTR_HVAC_ACTION: "cooling"}, context=context
+    )
     await hass.async_block_till_done()
     assert len(service_calls) == 1
     assert service_calls[0].context.parent_id == context.id
@@ -218,7 +220,9 @@ async def test_heating_trigger_fires_when_heating_starts(
         },
     )
 
-    hass.states.async_set("climate.test", "heat", {ATTR_HVAC_ACTION: "heating"}, context=context)
+    hass.states.async_set(
+        "climate.test", "heat", {ATTR_HVAC_ACTION: "heating"}, context=context
+    )
     await hass.async_block_till_done()
     assert len(service_calls) == 1
     assert service_calls[0].context.parent_id == context.id
@@ -245,7 +249,9 @@ async def test_drying_trigger_fires_when_drying_starts(
         },
     )
 
-    hass.states.async_set("climate.test", "dry", {ATTR_HVAC_ACTION: "drying"}, context=context)
+    hass.states.async_set(
+        "climate.test", "dry", {ATTR_HVAC_ACTION: "drying"}, context=context
+    )
     await hass.async_block_till_done()
     assert len(service_calls) == 1
     assert service_calls[0].context.parent_id == context.id
@@ -272,7 +278,9 @@ async def test_target_temperature_changed_trigger(
         },
     )
 
-    hass.states.async_set("climate.test", "heat", {ATTR_TEMPERATURE: 22}, context=context)
+    hass.states.async_set(
+        "climate.test", "heat", {ATTR_TEMPERATURE: 22}, context=context
+    )
     await hass.async_block_till_done()
     assert len(service_calls) == 1
     assert service_calls[0].context.parent_id == context.id
@@ -331,7 +339,9 @@ async def test_current_temperature_changed_trigger(
         },
     )
 
-    hass.states.async_set("climate.test", "heat", {ATTR_CURRENT_TEMPERATURE: 21}, context=context)
+    hass.states.async_set(
+        "climate.test", "heat", {ATTR_CURRENT_TEMPERATURE: 21}, context=context
+    )
     await hass.async_block_till_done()
     assert len(service_calls) == 1
     assert service_calls[0].context.parent_id == context.id
@@ -385,7 +395,9 @@ async def test_current_humidity_changed_trigger(
         },
     )
 
-    hass.states.async_set("climate.test", "dry", {ATTR_CURRENT_HUMIDITY: 55}, context=context)
+    hass.states.async_set(
+        "climate.test", "dry", {ATTR_CURRENT_HUMIDITY: 55}, context=context
+    )
     await hass.async_block_till_done()
     assert len(service_calls) == 1
     assert service_calls[0].context.parent_id == context.id

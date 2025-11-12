@@ -80,8 +80,12 @@ UNMUTED_TRIGGER_SCHEMA = vol.Schema(
 VOLUME_CHANGED_TRIGGER_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_OPTIONS, default={}): {
-            vol.Optional("above"): vol.All(vol.Coerce(float), vol.Range(min=0.0, max=1.0)),
-            vol.Optional("below"): vol.All(vol.Coerce(float), vol.Range(min=0.0, max=1.0)),
+            vol.Optional("above"): vol.All(
+                vol.Coerce(float), vol.Range(min=0.0, max=1.0)
+            ),
+            vol.Optional("below"): vol.All(
+                vol.Coerce(float), vol.Range(min=0.0, max=1.0)
+            ),
         },
         vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
     }
@@ -279,7 +283,9 @@ class MediaPlayerPlayingTrigger(Trigger):
             ):
                 # If media_content_type filter is specified, check if it matches
                 if media_content_types_filter:
-                    media_content_type = to_state.attributes.get(ATTR_MEDIA_CONTENT_TYPE)
+                    media_content_type = to_state.attributes.get(
+                        ATTR_MEDIA_CONTENT_TYPE
+                    )
                     if media_content_type not in media_content_types_filter:
                         return
 
@@ -656,7 +662,6 @@ class MediaPlayerVolumeChangedTrigger(Trigger):
         return async_track_target_selector_state_change_event(
             self._hass, self._target, state_change_listener, entity_filter
         )
-
 
 
 TRIGGERS: dict[str, type[Trigger]] = {

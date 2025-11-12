@@ -117,9 +117,7 @@ async def test_opens_trigger_device_class_filter(
             automation.DOMAIN: {
                 "trigger": {
                     CONF_PLATFORM: "cover.opens",
-                    CONF_TARGET: {
-                        CONF_ENTITY_ID: ["cover.curtain", "cover.garage"]
-                    },
+                    CONF_TARGET: {CONF_ENTITY_ID: ["cover.curtain", "cover.garage"]},
                     "device_class": ["curtain"],
                 },
                 "action": {"service": "test.automation"},

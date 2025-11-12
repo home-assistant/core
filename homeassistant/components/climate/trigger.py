@@ -311,7 +311,9 @@ class ClimateCoolingTrigger(Trigger):
                 return
 
             # Check if climate started cooling
-            from_action = from_state.attributes.get(ATTR_HVAC_ACTION) if from_state else None
+            from_action = (
+                from_state.attributes.get(ATTR_HVAC_ACTION) if from_state else None
+            )
             to_action = to_state.attributes.get(ATTR_HVAC_ACTION)
 
             if from_action != "cooling" and to_action == "cooling":
@@ -379,7 +381,9 @@ class ClimateHeatingTrigger(Trigger):
                 return
 
             # Check if climate started heating
-            from_action = from_state.attributes.get(ATTR_HVAC_ACTION) if from_state else None
+            from_action = (
+                from_state.attributes.get(ATTR_HVAC_ACTION) if from_state else None
+            )
             to_action = to_state.attributes.get(ATTR_HVAC_ACTION)
 
             if from_action != "heating" and to_action == "heating":
@@ -447,7 +451,9 @@ class ClimateDryingTrigger(Trigger):
                 return
 
             # Check if climate started drying
-            from_action = from_state.attributes.get(ATTR_HVAC_ACTION) if from_state else None
+            from_action = (
+                from_state.attributes.get(ATTR_HVAC_ACTION) if from_state else None
+            )
             to_action = to_state.attributes.get(ATTR_HVAC_ACTION)
 
             if from_action != "drying" and to_action == "drying":
@@ -760,9 +766,7 @@ class ClimateCurrentHumidityChangedTrigger(Trigger):
 
             # Check if current humidity changed
             from_humidity = (
-                from_state.attributes.get(ATTR_CURRENT_HUMIDITY)
-                if from_state
-                else None
+                from_state.attributes.get(ATTR_CURRENT_HUMIDITY) if from_state else None
             )
             to_humidity = to_state.attributes.get(ATTR_CURRENT_HUMIDITY)
 

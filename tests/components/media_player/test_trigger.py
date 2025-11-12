@@ -1,7 +1,11 @@
 """Test media_player trigger."""
 
 from homeassistant.components import automation
-from homeassistant.components.media_player import ATTR_MEDIA_CONTENT_TYPE
+from homeassistant.components.media_player import (
+    ATTR_MEDIA_CONTENT_TYPE,
+    ATTR_MEDIA_VOLUME_LEVEL,
+    ATTR_MEDIA_VOLUME_MUTED,
+)
 from homeassistant.const import (
     CONF_ENTITY_ID,
     STATE_IDLE,
@@ -181,9 +185,7 @@ async def test_playing_trigger_with_media_content_type_filter(
     )
 
     # Start playing music - should trigger
-    hass.states.async_set(
-        entity_id, STATE_PLAYING, {ATTR_MEDIA_CONTENT_TYPE: "music"}
-    )
+    hass.states.async_set(entity_id, STATE_PLAYING, {ATTR_MEDIA_CONTENT_TYPE: "music"})
     await hass.async_block_till_done()
     assert len(service_calls) == 1
     assert service_calls[0].data[CONF_ENTITY_ID] == entity_id
@@ -192,9 +194,7 @@ async def test_playing_trigger_with_media_content_type_filter(
     # Stop and play video - should trigger
     hass.states.async_set(entity_id, STATE_IDLE)
     await hass.async_block_till_done()
-    hass.states.async_set(
-        entity_id, STATE_PLAYING, {ATTR_MEDIA_CONTENT_TYPE: "video"}
-    )
+    hass.states.async_set(entity_id, STATE_PLAYING, {ATTR_MEDIA_CONTENT_TYPE: "video"})
     await hass.async_block_till_done()
     assert len(service_calls) == 1
     assert service_calls[0].data[CONF_ENTITY_ID] == entity_id
@@ -318,7 +318,6 @@ async def test_muted_trigger(
     await async_setup_component(hass, "media_player", {})
 
     # Set initial state with volume unmuted
-    from homeassistant.components.media_player import ATTR_MEDIA_VOLUME_MUTED
     hass.states.async_set(entity_id, STATE_PLAYING, {ATTR_MEDIA_VOLUME_MUTED: False})
     await hass.async_block_till_done()
 
@@ -362,7 +361,6 @@ async def test_unmuted_trigger(
     await async_setup_component(hass, "media_player", {})
 
     # Set initial state with volume muted
-    from homeassistant.components.media_player import ATTR_MEDIA_VOLUME_MUTED
     hass.states.async_set(entity_id, STATE_PLAYING, {ATTR_MEDIA_VOLUME_MUTED: True})
     await hass.async_block_till_done()
 
@@ -406,7 +404,6 @@ async def test_volume_changed_trigger(
     await async_setup_component(hass, "media_player", {})
 
     # Set initial state with volume
-    from homeassistant.components.media_player import ATTR_MEDIA_VOLUME_LEVEL
     hass.states.async_set(entity_id, STATE_PLAYING, {ATTR_MEDIA_VOLUME_LEVEL: 0.5})
     await hass.async_block_till_done()
 
@@ -450,7 +447,6 @@ async def test_volume_changed_trigger_with_above_threshold(
     await async_setup_component(hass, "media_player", {})
 
     # Set initial state with volume
-    from homeassistant.components.media_player import ATTR_MEDIA_VOLUME_LEVEL
     hass.states.async_set(entity_id, STATE_PLAYING, {ATTR_MEDIA_VOLUME_LEVEL: 0.3})
     await hass.async_block_till_done()
 
@@ -497,7 +493,6 @@ async def test_volume_changed_trigger_with_below_threshold(
     await async_setup_component(hass, "media_player", {})
 
     # Set initial state with volume
-    from homeassistant.components.media_player import ATTR_MEDIA_VOLUME_LEVEL
     hass.states.async_set(entity_id, STATE_PLAYING, {ATTR_MEDIA_VOLUME_LEVEL: 0.7})
     await hass.async_block_till_done()
 

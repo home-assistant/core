@@ -101,7 +101,11 @@ class LightTurnsOnTrigger(Trigger):
                 return
 
             # Trigger when light turns on (from off to on)
-            if from_state and from_state.state == STATE_OFF and to_state.state == STATE_ON:
+            if (
+                from_state
+                and from_state.state == STATE_OFF
+                and to_state.state == STATE_ON
+            ):
                 run_action(
                     {
                         ATTR_ENTITY_ID: entity_id,
@@ -164,7 +168,11 @@ class LightTurnsOffTrigger(Trigger):
                 return
 
             # Trigger when light turns off (from on to off)
-            if from_state and from_state.state == STATE_ON and to_state.state == STATE_OFF:
+            if (
+                from_state
+                and from_state.state == STATE_ON
+                and to_state.state == STATE_OFF
+            ):
                 run_action(
                     {
                         ATTR_ENTITY_ID: entity_id,
