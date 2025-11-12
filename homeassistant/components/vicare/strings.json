@@ -521,6 +521,9 @@
       "valve_position": {
         "name": "Valve position"
       },
+      "ventilation_input_volumeflow": {
+        "name": "Ventilation input volume flow"
+      },
       "ventilation_level": {
         "name": "Ventilation level",
         "state": {
@@ -530,6 +533,9 @@
           "leveltwo": "2",
           "standby": "[%key:common::state::standby%]"
         }
+      },
+      "ventilation_output_volumeflow": {
+        "name": "Ventilation output volume flow"
       },
       "ventilation_reason": {
         "name": "Ventilation reason",
@@ -541,12 +547,6 @@
           "silent": "Silent",
           "standby": "[%key:common::state::standby%]"
         }
-      },
-      "ventilation_volumeflow_input": {
-        "name": "Ventilation volumeflow input"
-      },
-      "ventilation_volumeflow_output": {
-        "name": "Ventilation volumeflow output"
       },
       "volumetric_flow": {
         "name": "Volumetric flow"

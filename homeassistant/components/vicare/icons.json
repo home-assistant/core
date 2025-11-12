@@ -137,8 +137,14 @@
       "valve_position": {
         "default": "mdi:pipe-valve"
       },
+      "ventilation_input_volumeflow": {
+        "default": "mdi:air-filter"
+      },
       "ventilation_level": {
         "default": "mdi:fan"
+      },
+      "ventilation_output_volumeflow": {
+        "default": "mdi:air-filter"
       },
       "volumetric_flow": {
         "default": "mdi:gauge"
