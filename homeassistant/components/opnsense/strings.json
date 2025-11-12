@@ -11,21 +11,21 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
-      "user": {
-        "description": "Set required parameters to connect to your router. For more information, please refer to the [integration documentation]({doc_url})",
-        "data": {
-          "url": "[%key:common::config_flow::data::url%]",
-          "api_key": "[%key:common::config_flow::data::api_key%]",
-          "api_secret": "API secret",
-          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
-          "tracker_interfaces": "Interface(s) to use for tracking devices (if blank all will be used)"
-        }
-      },
       "reconfigure": {
         "description": "Update OPNsense connection settings and interface selection.",
         "data": {
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
           "tracker_interfaces": "Interface(s) to use for tracking devices (if blank all will be used)"
+        }
+      },
+      "user": {
+        "description": "Set required parameters to connect to your router. For more information, please refer to the [integration documentation]({doc_url})",
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "api_secret": "API secret",
+          "tracker_interfaces": "Interface(s) to use for tracking devices (if blank all will be used)",
+          "url": "[%key:common::config_flow::data::url%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         }
       }
     }
