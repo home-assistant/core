@@ -2036,7 +2036,7 @@ python-awair==0.2.4
 python-bsblan==3.1.0
 
 # homeassistant.components.ecobee
-python-ecobee-api==0.2.20
+python-ecobee-api==0.3.2
 
 # homeassistant.components.fully_kiosk
 python-fullykiosk==0.0.14
