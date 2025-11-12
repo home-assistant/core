@@ -107,7 +107,7 @@ def async_client_uptime_value_fn(hub: UnifiHub, client: Client) -> datetime:
 @callback
 def async_wired_client_speed_value_fn(hub: UnifiHub, client: Client) -> int:
     """Return wired client speed in Mbps."""
-    return client.wired_rate_mbps or 0
+    return client.wired_rate_mbps
 
 
 @callback
