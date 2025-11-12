@@ -124,7 +124,6 @@ class LocalCalendarEntity(CalendarEntity):
             await self.hass.async_add_executor_job(event_store.add, event)
             await self._async_store()
         await self.async_update_ha_state(force_refresh=True)
-        self.async_update_event_listeners()
 
     async def async_delete_event(
         self,
@@ -147,7 +146,6 @@ class LocalCalendarEntity(CalendarEntity):
                 raise HomeAssistantError(f"Error while deleting event: {err}") from err
             await self._async_store()
         await self.async_update_ha_state(force_refresh=True)
-        self.async_update_event_listeners()
 
     async def async_update_event(
         self,
@@ -179,7 +177,6 @@ class LocalCalendarEntity(CalendarEntity):
                 raise HomeAssistantError(f"Error while updating event: {err}") from err
             await self._async_store()
         await self.async_update_ha_state(force_refresh=True)
-        self.async_update_event_listeners()
 
 
 def _parse_event(event: dict[str, Any]) -> Event:
