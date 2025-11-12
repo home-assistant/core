@@ -14,7 +14,6 @@ CONFIG_DATA = {
     CONF_API_KEY: "key",
     CONF_API_SECRET: "secret",
     CONF_VERIFY_SSL: False,
-    CONF_TRACKER_INTERFACES: "LAN",
 }
 CONFIG_DATA_IMPORT = {
     CONF_URL: "http://router.lan/api",

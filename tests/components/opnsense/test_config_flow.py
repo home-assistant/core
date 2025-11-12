@@ -5,12 +5,15 @@ from unittest.mock import patch
 from pyopnsense.exceptions import APIException
 
 from homeassistant import data_entry_flow
-from homeassistant.components.opnsense import CONF_AVAILABLE_INTERFACES, OPNSENSE_DATA
-from homeassistant.components.opnsense.const import CONF_TRACKER_INTERFACES, DOMAIN
+from homeassistant.components.opnsense.const import (
+    CONF_TRACKER_INTERFACES,
+    DOMAIN,
+    OPNSENSE_DATA,
+)
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.core import HomeAssistant
 
-from . import CONFIG_DATA, CONFIG_DATA_IMPORT, INTERFACES, TITLE, setup_mock_diagnostics
+from . import CONFIG_DATA, CONFIG_DATA_IMPORT, TITLE, setup_mock_diagnostics
 
 from tests.common import MockConfigEntry
 
@@ -35,8 +38,8 @@ async def test_import(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-        assert result["title"] == TITLE
+        assert result.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result.get("title") == TITLE
 
         assert len(mock_setup_entry.mock_calls) == 1
 
@@ -46,29 +49,31 @@ async def test_user(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result.get("type") == data_entry_flow.FlowResultType.FORM
+    assert result.get("step_id") == "user"
 
     with (
         patch(
             "homeassistant.components.opnsense.async_setup_entry",
             return_value=True,
         ) as mock_setup_entry,
+        patch("homeassistant.components.opnsense.diagnostics") as mock_diagnostics,
         patch(
             "homeassistant.components.opnsense.config_flow.diagnostics"
-        ) as mock_diagnostics,
+        ) as mock_diagnostics_config_flow,
     ):
         setup_mock_diagnostics(mock_diagnostics)
+        setup_mock_diagnostics(mock_diagnostics_config_flow)
 
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data=CONFIG_DATA,
+        # Use async_configure instead of async_init for form submission
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONFIG_DATA,
         )
         await hass.async_block_till_done()
 
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-        assert result["title"] == TITLE
+        assert result.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result.get("title") == TITLE
 
         assert len(mock_setup_entry.mock_calls) == 1
 
@@ -85,16 +90,16 @@ async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
         context={"source": SOURCE_USER},
         data=CONFIG_DATA,
     )
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result.get("type") == data_entry_flow.FlowResultType.ABORT
+    assert result.get("reason") == "already_configured"
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
         data=CONFIG_DATA,
     )
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result.get("type") == data_entry_flow.FlowResultType.ABORT
+    assert result.get("reason") == "already_configured"
 
 
 async def test_on_api_error(hass: HomeAssistant) -> None:
@@ -109,8 +114,8 @@ async def test_on_api_error(hass: HomeAssistant) -> None:
             data=CONFIG_DATA,
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
-        assert result["errors"] == {"base": "cannot_connect"}
+        assert result.get("type") == data_entry_flow.FlowResultType.FORM
+        assert result.get("errors") == {"base": "cannot_connect"}
 
 
 async def test_on_invalid_interface(hass: HomeAssistant) -> None:
@@ -130,8 +135,8 @@ async def test_on_invalid_interface(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
-        assert result["errors"] == {"base": "invalid_interface"}
+        assert result.get("type") == data_entry_flow.FlowResultType.FORM
+        assert result.get("errors") == {"base": "invalid_interface"}
 
 
 async def test_on_unknown_error(hass: HomeAssistant) -> None:
@@ -145,8 +150,8 @@ async def test_on_unknown_error(hass: HomeAssistant) -> None:
             context={"source": SOURCE_USER},
             data=CONFIG_DATA,
         )
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
-        assert result["errors"] == {"base": "unknown"}
+        assert result.get("type") == data_entry_flow.FlowResultType.FORM
+        assert result.get("errors") == {"base": "unknown"}
 
 
 async def test_reconfigure_successful(hass: HomeAssistant) -> None:
@@ -159,7 +164,6 @@ async def test_reconfigure_successful(hass: HomeAssistant) -> None:
 
     # Mock that setup already saved the interfaces
     hass.data[OPNSENSE_DATA] = {}
-    hass.data[OPNSENSE_DATA][CONF_AVAILABLE_INTERFACES] = INTERFACES.values()
 
     with patch(
         "homeassistant.components.opnsense.config_flow.diagnostics"
@@ -167,8 +171,8 @@ async def test_reconfigure_successful(hass: HomeAssistant) -> None:
         setup_mock_diagnostics(mock_diagnostics)
 
         result = await entry.start_reconfigure_flow(hass)
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
-        assert result["step_id"] == "reconfigure"
+        assert result.get("type") == data_entry_flow.FlowResultType.FORM
+        assert result.get("step_id") == "reconfigure"
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -176,6 +180,6 @@ async def test_reconfigure_successful(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
-        assert result["reason"] == "reconfigure_successful"
+        assert result.get("type") == data_entry_flow.FlowResultType.ABORT
+        assert result.get("reason") == "reconfigure_successful"
         assert entry.data[CONF_TRACKER_INTERFACES] == ["LAN"]
