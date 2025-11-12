@@ -193,8 +193,12 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _async_get_available_interfaces(self, api_data: APIData) -> None:
         """Fetch available interfaces from OPNsense."""
-        netinsight_client = diagnostics.NetworkInsightClient(**api_data)
-        interface_details = await self.hass.async_add_executor_job(
-            netinsight_client.get_interfaces
-        )
-        self.available_interfaces = list(interface_details.values())
+        try:
+            netinsight_client = diagnostics.NetworkInsightClient(**api_data)
+            interface_details = await self.hass.async_add_executor_job(
+                netinsight_client.get_interfaces
+            )
+            self.available_interfaces = list(interface_details.values())
+        except Exception:
+            _LOGGER.exception("Failed to fetch available interfaces")
+            self.available_interfaces = []
