@@ -123,7 +123,7 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_TRACKER_INTERFACES: user_input.get(CONF_TRACKER_INTERFACES, None),
             }
             return self.async_update_reload_and_abort(
-                self._get_reconfigure_entry(),
+                reconfigure_entry,
                 data_updates=data,
             )
 
