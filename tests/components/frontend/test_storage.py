@@ -328,30 +328,20 @@ async def test_get_system_data(
     hass_storage[storage_key] = {
         "key": storage_key,
         "version": 1,
-        "data": {"test-key": "test-value", "test-complex": [{"foo": "bar"}]},
+        "data": {"default_panel": "lovelace"},
     }
 
     client = await hass_ws_client(hass)
 
-    # Get a simple string key
+    # Get default_panel key
 
     await client.send_json(
-        {"id": 6, "type": "frontend/get_system_data", "key": "test-key"}
+        {"id": 6, "type": "frontend/get_system_data", "key": "default_panel"}
     )
 
     res = await client.receive_json()
     assert res["success"], res
-    assert res["result"]["value"] == "test-value"
-
-    # Get a more complex key
-
-    await client.send_json(
-        {"id": 7, "type": "frontend/get_system_data", "key": "test-complex"}
-    )
-
-    res = await client.receive_json()
-    assert res["success"], res
-    assert res["result"]["value"][0]["foo"] == "bar"
+    assert res["result"]["value"] == "lovelace"
 
     # Get all data (no key)
 
@@ -359,16 +349,15 @@ async def test_get_system_data(
 
     res = await client.receive_json()
     assert res["success"], res
-    assert res["result"]["value"]["test-key"] == "test-value"
-    assert res["result"]["value"]["test-complex"][0]["foo"] == "bar"
+    assert res["result"]["value"]["default_panel"] == "lovelace"
 
 
 @pytest.mark.parametrize(
     ("subscriptions", "events"),
     [
         ([], []),
-        ([(1, {}, {})], [(1, {"test-key": "test-value"})]),
-        ([(1, {"key": "test-key"}, None)], [(1, "test-value")]),
+        ([(1, {}, {})], [(1, {"default_panel": "lovelace"})]),
+        ([(1, {"key": "default_panel"}, None)], [(1, "lovelace")]),
         ([(1, {"key": "other-key"}, None)], []),
     ],
 )
@@ -406,7 +395,7 @@ async def test_set_system_data_empty(
     # test creating
 
     await client.send_json(
-        {"id": 6, "type": "frontend/get_system_data", "key": "test-key"}
+        {"id": 6, "type": "frontend/get_system_data", "key": "default_panel"}
     )
 
     res = await client.receive_json()
@@ -417,8 +406,7 @@ async def test_set_system_data_empty(
         {
             "id": 7,
             "type": "frontend/set_system_data",
-            "key": "test-key",
-            "value": "test-value",
+            "default_panel": "lovelace",
         }
     )
 
@@ -430,62 +418,21 @@ async def test_set_system_data_empty(
     assert res["success"], res
 
     await client.send_json(
-        {"id": 8, "type": "frontend/get_system_data", "key": "test-key"}
+        {"id": 8, "type": "frontend/get_system_data", "key": "default_panel"}
     )
 
     res = await client.receive_json()
     assert res["success"], res
-    assert res["result"]["value"] == "test-value"
+    assert res["result"]["value"] == "lovelace"
 
 
 @pytest.mark.parametrize(
     ("subscriptions", "events"),
     [
-        (
-            [],
-            [[], []],
-        ),
-        (
-            [(1, {}, {"test-key": "test-value", "test-complex": "string"})],
-            [
-                [
-                    (
-                        1,
-                        {
-                            "test-complex": "string",
-                            "test-key": "test-value",
-                            "test-non-existent-key": "test-value-new",
-                        },
-                    )
-                ],
-                [
-                    (
-                        1,
-                        {
-                            "test-complex": [{"foo": "bar"}],
-                            "test-key": "test-value",
-                            "test-non-existent-key": "test-value-new",
-                        },
-                    )
-                ],
-            ],
-        ),
-        (
-            [(1, {"key": "test-key"}, "test-value")],
-            [[], []],
-        ),
-        (
-            [(1, {"key": "test-non-existent-key"}, None)],
-            [[(1, "test-value-new")], []],
-        ),
-        (
-            [(1, {"key": "test-complex"}, "string")],
-            [[], [(1, [{"foo": "bar"}])]],
-        ),
-        (
-            [(1, {"key": "other-key"}, None)],
-            [[], []],
-        ),
+        ([], []),
+        ([(1, {}, {"default_panel": "energy"})], [(1, {"default_panel": "lovelace"})]),
+        ([(1, {"key": "default_panel"}, "energy")], [(1, "lovelace")]),
+        ([(1, {"key": "other-key"}, None)], []),
     ],
 )
 async def test_set_system_data(
@@ -493,13 +440,13 @@ async def test_set_system_data(
     hass_ws_client: WebSocketGenerator,
     hass_storage: dict[str, Any],
     subscriptions: list[tuple[int, dict[str, str], Any]],
-    events: list[list[tuple[int, Any]]],
+    events: list[tuple[int, Any]],
 ) -> None:
     """Test set_system_data command with initial data."""
     storage_key = f"{DOMAIN}.system_data"
     hass_storage[storage_key] = {
         "version": 1,
-        "data": {"test-key": "test-value", "test-complex": "string"},
+        "data": {"default_panel": "energy"},
     }
 
     client = await hass_ws_client(hass)
@@ -523,18 +470,17 @@ async def test_set_system_data(
         res = await client.receive_json()
         assert res["success"], res
 
-    # test creating
+    # test updating default_panel
 
     await client.send_json(
         {
             "id": 5,
             "type": "frontend/set_system_data",
-            "key": "test-non-existent-key",
-            "value": "test-value-new",
+            "default_panel": "lovelace",
         }
     )
 
-    for msg_id, event_data in events[0]:
+    for msg_id, event_data in events:
         event = await client.receive_json()
         assert event == {"id": msg_id, "type": "event", "event": {"value": event_data}}
 
@@ -542,48 +488,12 @@ async def test_set_system_data(
     assert res["success"], res
 
     await client.send_json(
-        {"id": 6, "type": "frontend/get_system_data", "key": "test-non-existent-key"}
+        {"id": 6, "type": "frontend/get_system_data", "key": "default_panel"}
     )
 
     res = await client.receive_json()
     assert res["success"], res
-    assert res["result"]["value"] == "test-value-new"
-
-    # test updating with complex data
-
-    await client.send_json(
-        {
-            "id": 7,
-            "type": "frontend/set_system_data",
-            "key": "test-complex",
-            "value": [{"foo": "bar"}],
-        }
-    )
-
-    for msg_id, event_data in events[1]:
-        event = await client.receive_json()
-        assert event == {"id": msg_id, "type": "event", "event": {"value": event_data}}
-
-    res = await client.receive_json()
-    assert res["success"], res
-
-    await client.send_json(
-        {"id": 8, "type": "frontend/get_system_data", "key": "test-complex"}
-    )
-
-    res = await client.receive_json()
-    assert res["success"], res
-    assert res["result"]["value"][0]["foo"] == "bar"
-
-    # ensure other existing key was not modified
-
-    await client.send_json(
-        {"id": 9, "type": "frontend/get_system_data", "key": "test-key"}
-    )
-
-    res = await client.receive_json()
-    assert res["success"], res
-    assert res["result"]["value"] == "test-value"
+    assert res["result"]["value"] == "lovelace"
 
 
 async def test_set_system_data_requires_admin(
@@ -598,8 +508,7 @@ async def test_set_system_data_requires_admin(
         {
             "id": 5,
             "type": "frontend/set_system_data",
-            "key": "test-key",
-            "value": "test-value",
+            "default_panel": "lovelace",
         }
     )
 
@@ -607,3 +516,111 @@ async def test_set_system_data_requires_admin(
     assert not res["success"], res
     assert res["error"]["code"] == "unauthorized"
     assert res["error"]["message"] == "Admin access required"
+
+
+async def test_set_system_data_default_panel_string(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test setting default_panel with valid string value."""
+    client = await hass_ws_client(hass)
+
+    # Test setting default_panel with a string value
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "frontend/set_system_data",
+            "default_panel": "lovelace",
+        }
+    )
+
+    res = await client.receive_json()
+    assert res["success"], res
+
+    # Verify the value was set
+    await client.send_json(
+        {"id": 2, "type": "frontend/get_system_data", "key": "default_panel"}
+    )
+
+    res = await client.receive_json()
+    assert res["success"], res
+    assert res["result"]["value"] == "lovelace"
+
+
+async def test_set_system_data_default_panel_none(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test setting default_panel with None value."""
+    client = await hass_ws_client(hass)
+
+    # Test setting default_panel with None
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "frontend/set_system_data",
+            "default_panel": None,
+        }
+    )
+
+    res = await client.receive_json()
+    assert res["success"], res
+
+    # Verify the value was set
+    await client.send_json(
+        {"id": 2, "type": "frontend/get_system_data", "key": "default_panel"}
+    )
+
+    res = await client.receive_json()
+    assert res["success"], res
+    assert res["result"]["value"] is None
+
+
+@pytest.mark.parametrize(
+    ("invalid_value", "value_type"),
+    [
+        (True, "bool"),
+        (123, "int"),
+        (45.6, "float"),
+        ({"panel": "lovelace"}, "dict"),
+        (["lovelace", "energy"], "list"),
+    ],
+)
+async def test_set_system_data_default_panel_invalid_types(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    invalid_value: Any,
+    value_type: str,
+) -> None:
+    """Test setting default_panel with invalid types fails validation."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "frontend/set_system_data",
+            "default_panel": invalid_value,
+        }
+    )
+
+    res = await client.receive_json()
+    assert not res["success"], res
+    assert res["error"]["code"] == "invalid_format"
+
+
+async def test_set_system_data_invalid_key(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test that keys other than default_panel are rejected by schema."""
+    client = await hass_ws_client(hass)
+
+    # Test that other keys are rejected by voluptuous schema
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "frontend/set_system_data",
+            "other_key": "test-value",
+        }
+    )
+
+    res = await client.receive_json()
+    assert not res["success"], "Invalid key should have been rejected by schema"
+    assert res["error"]["code"] == "invalid_format"
