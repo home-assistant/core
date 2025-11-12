@@ -28,17 +28,11 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
 )
-from homeassistant.helpers.selector import (
-    SelectOptionDict,
-    SelectSelector,
-    SelectSelectorConfig,
-    SelectSelectorMode,
-)
+from homeassistant.helpers.selector import SelectOptionDict
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
 # Local application imports
 from .const import (
-    CONF_EXCLUDED_DEVICES,
     CONF_INSTALLATION_ID,
     CONF_MODEL,
     CONF_ROOT_TOPIC_PREFIX,
@@ -96,15 +90,6 @@ def _get_user_schema(defaults: MappingProxyType[str, Any] | None = None) -> vol.
                     CONF_UPDATE_FREQUENCY_SECONDS, DEFAULT_UPDATE_FREQUENCY_SECONDS
                 ),
             ): int,
-            vol.Optional(
-                CONF_EXCLUDED_DEVICES, default=defaults.get(CONF_EXCLUDED_DEVICES, [])
-            ): SelectSelector(
-                SelectSelectorConfig(
-                    options=DEVICE_CODES,
-                    multiple=True,
-                    mode=SelectSelectorMode.DROPDOWN,
-                )
-            ),
         }
     )
 

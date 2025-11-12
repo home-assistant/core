@@ -11,7 +11,6 @@ CONF_MODEL = "model"
 CONF_SERIAL = "serial"
 CONF_ROOT_TOPIC_PREFIX = "root_topic_prefix"
 CONF_UPDATE_FREQUENCY_SECONDS = "update_frequency"
-CONF_EXCLUDED_DEVICES = "excluded_devices"
 CONF_SIMPLE_NAMING = "simple_naming"
 
 DEVICE_MESSAGE = "device"

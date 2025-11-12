@@ -10,7 +10,6 @@
     "step": {
       "user": {
         "data": {
-          "excluded_devices": "Excluded devices",
           "host": "[%key:common::config_flow::data::host%]",
           "operation_mode": "Operation mode",
           "password": "[%key:common::config_flow::data::password%]",
@@ -22,7 +21,6 @@
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
-          "excluded_devices": "List of devices to exclude from being monitored.",
           "host": "Hostname or IP address of Victron Device, usually mDNS name like 'venus.local'",
           "operation_mode": "Operation mode controls which Home Assistant entity types are created. 'read_only' exposes only sensors and binary_sensors (no writable entities), 'full' exposes all entity types (sensors, binary_sensors, numbers, selects, switches), 'experimental' is reserved for future use (behaves like 'full' today).",
           "password": "Password for the Victron Device, default is empty. This is not your VRM password.",
@@ -1256,7 +1254,6 @@
     "step": {
       "init": {
         "data": {
-          "excluded_devices": "[%key:component::victron_gx_mqtt::config::step::user::data::excluded_devices%]",
           "host": "[%key:common::config_flow::data::host%]",
           "operation_mode": "[%key:component::victron_gx_mqtt::config::step::user::data::operation_mode%]",
           "password": "[%key:common::config_flow::data::password%]",
@@ -1268,7 +1265,6 @@
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
-          "excluded_devices": "[%key:component::victron_gx_mqtt::config::step::user::data_description::excluded_devices%]",
           "host": "[%key:component::victron_gx_mqtt::config::step::user::data_description::host%]",
           "operation_mode": "[%key:component::victron_gx_mqtt::config::step::user::data_description::operation_mode%]",
           "password": "[%key:component::victron_gx_mqtt::config::step::user::data_description::password%]",

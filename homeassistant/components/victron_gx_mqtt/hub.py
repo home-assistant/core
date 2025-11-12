@@ -5,7 +5,6 @@ import logging
 from victron_mqtt import (
     CannotConnectError,
     Device as VictronVenusDevice,
-    DeviceType,
     Hub as VictronVenusHub,
     Metric as VictronVenusMetric,
     MetricKind,
@@ -28,7 +27,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .binary_sensor import VictronBinarySensor
 from .const import (
-    CONF_EXCLUDED_DEVICES,
     CONF_INSTALLATION_ID,
     CONF_MODEL,
     CONF_ROOT_TOPIC_PREFIX,
@@ -63,19 +61,6 @@ class Hub:
 
         config = entry.data
         self.simple_naming = config.get(CONF_SIMPLE_NAMING, False)
-
-        # Convert string device type exclusions to DeviceType instances
-        excluded_device_strings = config.get(CONF_EXCLUDED_DEVICES, [])
-        excluded_device_types: list[DeviceType] = [
-            dt.code
-            for device_string in excluded_device_strings
-            if (dt := DeviceType.from_code(device_string)) is not None
-        ]
-
-        _LOGGER.info(
-            "Final excluded device types: %s", [dt.code for dt in excluded_device_types]
-        )
-
         host = config.get(CONF_HOST)
         assert host is not None
 
@@ -90,7 +75,6 @@ class Hub:
             serial=config.get(CONF_SERIAL, "noserial"),
             topic_prefix=config.get(CONF_ROOT_TOPIC_PREFIX) or None,
             operation_mode=OperationMode.READ_ONLY,
-            device_type_exclude_filter=excluded_device_types,
             update_frequency_seconds=config.get(
                 CONF_UPDATE_FREQUENCY_SECONDS, DEFAULT_UPDATE_FREQUENCY_SECONDS
             ),

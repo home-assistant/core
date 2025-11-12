@@ -6,7 +6,6 @@ import pytest
 from victron_mqtt import CannotConnectError
 
 from homeassistant.components.victron_gx_mqtt.const import (
-    CONF_EXCLUDED_DEVICES,
     CONF_INSTALLATION_ID,
     CONF_MODEL,
     CONF_ROOT_TOPIC_PREFIX,
@@ -74,7 +73,6 @@ async def test_user_flow_full_config(hass: HomeAssistant) -> None:
             CONF_SIMPLE_NAMING: True,
             CONF_ROOT_TOPIC_PREFIX: "N/test",
             CONF_UPDATE_FREQUENCY_SECONDS: 60,
-            CONF_EXCLUDED_DEVICES: ["battery"],
         },
     )
 
@@ -89,7 +87,6 @@ async def test_user_flow_full_config(hass: HomeAssistant) -> None:
         CONF_SIMPLE_NAMING: True,
         CONF_ROOT_TOPIC_PREFIX: "N/test",
         CONF_UPDATE_FREQUENCY_SECONDS: 60,
-        CONF_EXCLUDED_DEVICES: ["battery"],
         CONF_INSTALLATION_ID: MOCK_INSTALLATION_ID,
     }
 
@@ -111,7 +108,6 @@ async def test_user_flow_minimal_config(hass: HomeAssistant) -> None:
             CONF_SSL: False,
             CONF_SIMPLE_NAMING: False,
             CONF_UPDATE_FREQUENCY_SECONDS: DEFAULT_UPDATE_FREQUENCY_SECONDS,
-            CONF_EXCLUDED_DEVICES: [],
         },
     )
 
@@ -123,7 +119,6 @@ async def test_user_flow_minimal_config(hass: HomeAssistant) -> None:
         CONF_SSL: False,
         CONF_SIMPLE_NAMING: False,
         CONF_UPDATE_FREQUENCY_SECONDS: DEFAULT_UPDATE_FREQUENCY_SECONDS,
-        CONF_EXCLUDED_DEVICES: [],
         CONF_INSTALLATION_ID: MOCK_INSTALLATION_ID,
     }
 
@@ -146,7 +141,6 @@ async def test_user_flow_cannot_connect(
             CONF_SSL: False,
             CONF_SIMPLE_NAMING: False,
             CONF_UPDATE_FREQUENCY_SECONDS: DEFAULT_UPDATE_FREQUENCY_SECONDS,
-            CONF_EXCLUDED_DEVICES: [],
         },
     )
 
@@ -165,7 +159,6 @@ async def test_user_flow_cannot_connect(
             CONF_SSL: False,
             CONF_SIMPLE_NAMING: False,
             CONF_UPDATE_FREQUENCY_SECONDS: DEFAULT_UPDATE_FREQUENCY_SECONDS,
-            CONF_EXCLUDED_DEVICES: [],
         },
     )
 
@@ -190,7 +183,6 @@ async def test_user_flow_unknown_error(
             CONF_SSL: False,
             CONF_SIMPLE_NAMING: False,
             CONF_UPDATE_FREQUENCY_SECONDS: DEFAULT_UPDATE_FREQUENCY_SECONDS,
-            CONF_EXCLUDED_DEVICES: [],
         },
     )
 
@@ -209,7 +201,6 @@ async def test_user_flow_unknown_error(
             CONF_SSL: False,
             CONF_SIMPLE_NAMING: False,
             CONF_UPDATE_FREQUENCY_SECONDS: DEFAULT_UPDATE_FREQUENCY_SECONDS,
-            CONF_EXCLUDED_DEVICES: [],
         },
     )
 
@@ -242,7 +233,6 @@ async def test_user_flow_already_configured(hass: HomeAssistant) -> None:
             CONF_SSL: False,
             CONF_SIMPLE_NAMING: False,
             CONF_UPDATE_FREQUENCY_SECONDS: DEFAULT_UPDATE_FREQUENCY_SECONDS,
-            CONF_EXCLUDED_DEVICES: [],
         },
     )
 
@@ -366,7 +356,6 @@ async def test_options_flow_success(hass: HomeAssistant) -> None:
             CONF_SSL: False,
             CONF_SIMPLE_NAMING: False,
             CONF_UPDATE_FREQUENCY_SECONDS: DEFAULT_UPDATE_FREQUENCY_SECONDS,
-            CONF_EXCLUDED_DEVICES: [],
         },
     )
     mock_config_entry.add_to_hass(hass)
@@ -390,7 +379,6 @@ async def test_options_flow_success(hass: HomeAssistant) -> None:
                 CONF_SIMPLE_NAMING: True,
                 CONF_ROOT_TOPIC_PREFIX: "N/updated",
                 CONF_UPDATE_FREQUENCY_SECONDS: 45,
-                CONF_EXCLUDED_DEVICES: ["solarcharger"],
             },
         )
 
@@ -404,7 +392,6 @@ async def test_options_flow_success(hass: HomeAssistant) -> None:
             CONF_SIMPLE_NAMING: True,
             CONF_ROOT_TOPIC_PREFIX: "N/updated",
             CONF_UPDATE_FREQUENCY_SECONDS: 45,
-            CONF_EXCLUDED_DEVICES: ["solarcharger"],
         }
         assert len(mock_reload.mock_calls) == 1
 
@@ -423,7 +410,6 @@ async def test_options_flow_cannot_connect(
             CONF_SSL: False,
             CONF_SIMPLE_NAMING: False,
             CONF_UPDATE_FREQUENCY_SECONDS: DEFAULT_UPDATE_FREQUENCY_SECONDS,
-            CONF_EXCLUDED_DEVICES: [],
         },
     )
     mock_config_entry.add_to_hass(hass)
@@ -440,7 +426,6 @@ async def test_options_flow_cannot_connect(
             CONF_SSL: False,
             CONF_SIMPLE_NAMING: False,
             CONF_UPDATE_FREQUENCY_SECONDS: DEFAULT_UPDATE_FREQUENCY_SECONDS,
-            CONF_EXCLUDED_DEVICES: [],
         },
     )
 
