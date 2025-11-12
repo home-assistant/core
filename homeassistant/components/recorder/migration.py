@@ -2130,7 +2130,15 @@ class _SchemaVersion53Migrator(_SchemaVersionMigrator, target_version=53):
         """Version specific update method."""
         # Try to change the character set of events, states and statistics_meta tables
         if self.engine.dialect.name == SupportedDialect.MYSQL:
-            for table in ("events", "states", "statistics_meta"):
+            for table in (
+                "events",
+                "event_data",
+                "states",
+                "state_attributes",
+                "statistics",
+                "statistics_meta",
+                "statistics_short_term",
+            ):
                 _correct_table_character_set_and_collation(table, self.session_maker)
 
 
