@@ -27,6 +27,7 @@ from .const import (
     MODEL_LINKEDGO_ST1820_THERMOSTAT,
     MODEL_NEO_WATER_VALVE,
     MODEL_TOP_EV_CHARGER_EVE01,
+    ROLE_GENERIC,
 )
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
@@ -105,7 +106,7 @@ RPC_SWITCHES = {
         method_on="boolean_set",
         method_off="boolean_set",
         method_params_fn=lambda id, value: (id, value),
-        role="generic",
+        role=ROLE_GENERIC,
     ),
     "boolean_anti_freeze": RpcSwitchDescription(
         key="boolean",
@@ -142,6 +143,7 @@ RPC_SWITCHES = {
     "boolean_start_charging": RpcSwitchDescription(
         key="boolean",
         sub_key="value",
+        name="Charging",
         is_on=lambda status: bool(status["value"]),
         method_on="boolean_set",
         method_off="boolean_set",
@@ -163,6 +165,7 @@ RPC_SWITCHES = {
     "boolean_zone0": RpcSwitchDescription(
         key="boolean",
         sub_key="value",
+        entity_registry_enabled_default=False,
         is_on=lambda status: bool(status["value"]),
         method_on="boolean_set",
         method_off="boolean_set",
@@ -173,6 +176,7 @@ RPC_SWITCHES = {
     "boolean_zone1": RpcSwitchDescription(
         key="boolean",
         sub_key="value",
+        entity_registry_enabled_default=False,
         is_on=lambda status: bool(status["value"]),
         method_on="boolean_set",
         method_off="boolean_set",
@@ -183,6 +187,7 @@ RPC_SWITCHES = {
     "boolean_zone2": RpcSwitchDescription(
         key="boolean",
         sub_key="value",
+        entity_registry_enabled_default=False,
         is_on=lambda status: bool(status["value"]),
         method_on="boolean_set",
         method_off="boolean_set",
@@ -193,6 +198,7 @@ RPC_SWITCHES = {
     "boolean_zone3": RpcSwitchDescription(
         key="boolean",
         sub_key="value",
+        entity_registry_enabled_default=False,
         is_on=lambda status: bool(status["value"]),
         method_on="boolean_set",
         method_off="boolean_set",
@@ -203,6 +209,7 @@ RPC_SWITCHES = {
     "boolean_zone4": RpcSwitchDescription(
         key="boolean",
         sub_key="value",
+        entity_registry_enabled_default=False,
         is_on=lambda status: bool(status["value"]),
         method_on="boolean_set",
         method_off="boolean_set",
@@ -213,6 +220,7 @@ RPC_SWITCHES = {
     "boolean_zone5": RpcSwitchDescription(
         key="boolean",
         sub_key="value",
+        entity_registry_enabled_default=False,
         is_on=lambda status: bool(status["value"]),
         method_on="boolean_set",
         method_off="boolean_set",
@@ -243,6 +251,19 @@ RPC_SWITCHES = {
         available=lambda status: (left := status["left"]) is not None
         and left.get("vial", {}).get("level", -1) != -1,
     ),
+    "cury_left_boost": RpcSwitchDescription(
+        key="cury",
+        sub_key="slots",
+        name="Left slot boost",
+        translation_key="cury_boost",
+        is_on=lambda status: status["slots"]["left"]["boost"] is not None,
+        method_on="cury_boost",
+        method_off="cury_stop_boost",
+        method_params_fn=lambda id, _: (id, "left"),
+        entity_registry_enabled_default=True,
+        available=lambda status: (left := status["left"]) is not None
+        and left.get("vial", {}).get("level", -1) != -1,
+    ),
     "cury_right": RpcSwitchDescription(
         key="cury",
         sub_key="slots",
@@ -255,6 +276,29 @@ RPC_SWITCHES = {
         entity_registry_enabled_default=True,
         available=lambda status: (right := status["right"]) is not None
         and right.get("vial", {}).get("level", -1) != -1,
+    ),
+    "cury_right_boost": RpcSwitchDescription(
+        key="cury",
+        sub_key="slots",
+        name="Right slot boost",
+        translation_key="cury_boost",
+        is_on=lambda status: status["slots"]["right"]["boost"] is not None,
+        method_on="cury_boost",
+        method_off="cury_stop_boost",
+        method_params_fn=lambda id, _: (id, "right"),
+        entity_registry_enabled_default=True,
+        available=lambda status: (right := status["right"]) is not None
+        and right.get("vial", {}).get("level", -1) != -1,
+    ),
+    "cury_away_mode": RpcSwitchDescription(
+        key="cury",
+        sub_key="away_mode",
+        name="Away mode",
+        translation_key="cury_away_mode",
+        is_on=lambda status: status["away_mode"],
+        method_on="cury_set_away_mode",
+        method_off="cury_set_away_mode",
+        method_params_fn=lambda id, value: (id, value),
     ),
 }
 

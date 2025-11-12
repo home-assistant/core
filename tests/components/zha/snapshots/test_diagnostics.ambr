@@ -41,6 +41,8 @@
         'nwk_manager_id': 0,
         'nwk_update_id': 0,
         'pan_id': 4660,
+        'route_table': dict({
+        }),
         'security_level': 0,
         'source': None,
         'stack_specific': dict({
@@ -69,6 +71,7 @@
           'seq': 0,
           'tx_counter': 0,
         }),
+        'tx_power': None,
       }),
       'node_info': dict({
         'ieee': '**REDACTED**',
@@ -117,8 +120,8 @@
       'subentries': list([
       ]),
       'title': 'Mock Title',
-      'unique_id': None,
-      'version': 4,
+      'unique_id': '**REDACTED**',
+      'version': 5,
     }),
     'devices': list([
       dict({
@@ -276,6 +279,7 @@
             'state_class': None,
             'supported_features': 15,
             'translation_key': 'alarm_control_panel',
+            'translation_placeholders': None,
             'unique_id': '**REDACTED**',
           }),
           'state': dict({
@@ -321,6 +325,7 @@
             'primary': True,
             'state_class': None,
             'translation_key': 'ias_zone',
+            'translation_placeholders': None,
             'unique_id': '**REDACTED**',
           }),
           'state': dict({

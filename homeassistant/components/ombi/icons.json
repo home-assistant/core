@@ -3,11 +3,11 @@
     "submit_movie_request": {
       "service": "mdi:movie-roll"
     },
-    "submit_tv_request": {
-      "service": "mdi:television-classic"
-    },
     "submit_music_request": {
       "service": "mdi:music"
+    },
+    "submit_tv_request": {
+      "service": "mdi:television-classic"
     }
   }
 }
