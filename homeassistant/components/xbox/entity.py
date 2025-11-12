@@ -94,8 +94,7 @@ class XboxBaseEntity(CoordinatorEntity[XboxUpdateCoordinator]):
         """Return entity specific state attributes."""
         return (
             fn(self.data, self.title_info)
-            if hasattr(self.entity_description, "attributes_fn")
-            and (fn := self.entity_description.attributes_fn)
+            if (fn := self.entity_description.attributes_fn)
             else super().extra_state_attributes
         )
 
@@ -122,7 +121,7 @@ class XboxConsoleBaseEntity(CoordinatorEntity[XboxUpdateCoordinator]):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, console.id)},
             manufacturer="Microsoft",
-            model=MAP_MODEL.get(self._console.console_type, "Unknown"),
+            model=MAP_MODEL.get(self._console.console_type),
             name=console.name,
         )
 
@@ -135,11 +134,11 @@ class XboxConsoleBaseEntity(CoordinatorEntity[XboxUpdateCoordinator]):
 def check_deprecated_entity(
     hass: HomeAssistant,
     xuid: str,
-    entity_description: EntityDescription,
+    entity_description: XboxBaseEntityDescription,
     entity_domain: str,
 ) -> bool:
     """Check for deprecated entity and remove it."""
-    if not getattr(entity_description, "deprecated", False):
+    if not entity_description.deprecated:
         return True
     ent_reg = er.async_get(hass)
     if entity_id := ent_reg.async_get_entity_id(
@@ -152,7 +151,7 @@ def check_deprecated_entity(
     return False
 
 
-def profile_pic(person: Person, _: Title | None) -> str | None:
+def profile_pic(person: Person, _: Title | None = None) -> str | None:
     """Return the gamer pic."""
 
     # Xbox sometimes returns a domain that uses a wrong certificate which

@@ -258,6 +258,18 @@ class DPCodeBooleanWrapper(DPCodeTypeInformationWrapper[TypeInformation]):
         raise ValueError(f"Invalid boolean value `{value}`")
 
 
+class DPCodeJsonWrapper(DPCodeTypeInformationWrapper[TypeInformation]):
+    """Wrapper to extract information from a JSON value."""
+
+    DPTYPE = DPType.JSON
+
+    def read_json(self, device: CustomerDevice) -> Any | None:
+        """Read the device value for the dpcode."""
+        if (raw_value := self._read_device_status_raw(device)) is None:
+            return None
+        return json_loads(raw_value)
+
+
 class DPCodeBase64StringWrapper(DPCodeTypeInformationWrapper[TypeInformation]):
     """Wrapper for base64 encoded string/raw values.
 
@@ -278,17 +290,6 @@ class DPCodeBase64StringWrapper(DPCodeTypeInformationWrapper[TypeInformation]):
         except (ValueError, UnicodeDecodeError):
             return None
 
-
-class DPCodeJsonWrapper(DPCodeTypeInformationWrapper[TypeInformation]):
-    """Wrapper to extract information from a JSON value."""
-
-    DPTYPE = DPType.JSON
-
-    def read_json(self, device: CustomerDevice) -> Any | None:
-        """Read the device value for the dpcode."""
-        if (raw_value := self._read_device_status_raw(device)) is None:
-            return None
-        return json_loads(raw_value)
 
 
 class DPCodeEnumWrapper(DPCodeTypeInformationWrapper[EnumTypeData]):
