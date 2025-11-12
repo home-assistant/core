@@ -1,24 +1,14 @@
-"""Provides triggers for lights."""
+"""Provides triggers for climates."""
 
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.trigger import EntityStateTriggerBase, Trigger, TriggerConfig
 
 from .const import DOMAIN
 
 
-class TurnedOnTrigger(EntityStateTriggerBase):
-    """Trigger for when a light is turned on."""
-
-    domain = DOMAIN
-
-    def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
-        """Initialize the ON state trigger."""
-        super().__init__(hass, config, STATE_ON)
-
-
 class TurnedOffTrigger(EntityStateTriggerBase):
-    """Trigger for when a light is turned off."""
+    """Trigger for when a climate is turned off."""
 
     domain = DOMAIN
 
@@ -29,10 +19,9 @@ class TurnedOffTrigger(EntityStateTriggerBase):
 
 TRIGGERS: dict[str, type[Trigger]] = {
     "turned_off": TurnedOffTrigger,
-    "turned_on": TurnedOnTrigger,
 }
 
 
 async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
-    """Return the triggers for lights."""
+    """Return the triggers for climates."""
     return TRIGGERS

@@ -187,6 +187,13 @@
         "heat_cool": "Heat/cool",
         "off": "[%key:common::state::off%]"
       }
+    },
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
+      }
     }
   },
   "services": {
@@ -285,5 +292,18 @@
       "name": "[%key:common::action::turn_on%]"
     }
   },
-  "title": "Climate"
+  "title": "Climate",
+  "triggers": {
+    "turned_off": {
+      "description": "Triggers when a climate is turned off.",
+      "description_configured": "Triggers when a climate is turned off",
+      "fields": {
+        "behavior": {
+          "description": "The behavior of the targeted climates to trigger on.",
+          "name": "Behavior"
+        }
+      },
+      "name": "When a climate is turned off"
+    }
+  }
 }

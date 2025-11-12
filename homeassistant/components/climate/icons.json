@@ -96,5 +96,10 @@
     "turn_on": {
       "service": "mdi:power-on"
     }
+  },
+  "triggers": {
+    "turned_off": {
+      "trigger": "mdi:power-off"
+    }
   }
 }
