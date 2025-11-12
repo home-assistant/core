@@ -2433,7 +2433,7 @@ tesla-fleet-api==1.2.5
 tesla-powerwall==0.5.2
 
 # homeassistant.components.tesla_wall_connector
-tesla-wall-connector==1.0.2
+tesla-wall-connector==1.1.0
 
 # homeassistant.components.teslemetry
 teslemetry-stream==0.7.10
