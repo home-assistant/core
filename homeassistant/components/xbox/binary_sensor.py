@@ -111,7 +111,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Xbox Live friends."""
     xuids_added: set[str] = set()
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.status
 
     @callback
     def add_entities() -> None:

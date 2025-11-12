@@ -64,7 +64,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Xbox images."""
 
-    coordinator = config_entry.runtime_data
+    coordinator = config_entry.runtime_data.status
 
     xuids_added: set[str] = set()
 
