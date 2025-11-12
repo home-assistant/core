@@ -104,9 +104,8 @@ class SatelIntegraBinarySensor(SatelIntegraEntity, BinarySensorEntity):
         config_entry_id: str,
     ) -> None:
         """Initialize the binary_sensor."""
-        super().__init__(controller)
+        super().__init__(controller, device_number)
 
-        self._device_number = device_number
         self._attr_unique_id = f"{config_entry_id}_{sensor_type}_{device_number}"
         self._react_to_signal = react_to_signal
 

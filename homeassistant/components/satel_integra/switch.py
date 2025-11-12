@@ -67,9 +67,8 @@ class SatelIntegraSwitch(SatelIntegraEntity, SwitchEntity):
         config_entry_id: str,
     ) -> None:
         """Initialize the switch."""
-        super().__init__(controller)
+        super().__init__(controller, device_number)
 
-        self._device_number = device_number
         self._attr_unique_id = f"{config_entry_id}_switch_{device_number}"
         self._code = code
 

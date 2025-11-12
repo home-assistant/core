@@ -95,11 +95,10 @@ class SatelIntegraAlarmPanel(SatelIntegraEntity, AlarmControlPanelEntity):
         config_entry_id: str,
     ) -> None:
         """Initialize the alarm panel."""
-        super().__init__(controller)
+        super().__init__(controller, partition_id)
 
         self._attr_unique_id = f"{config_entry_id}_alarm_panel_{partition_id}"
         self._arm_home_mode = arm_home_mode
-        self._partition_id = partition_id
 
         self._attr_device_info = DeviceInfo(
             name=device_name, identifiers={(DOMAIN, self._attr_unique_id)}
@@ -134,7 +133,7 @@ class SatelIntegraAlarmPanel(SatelIntegraEntity, AlarmControlPanelEntity):
         for satel_state, ha_state in ALARM_STATE_MAP.items():
             if (
                 satel_state in self._satel.partition_states
-                and self._partition_id in self._satel.partition_states[satel_state]
+                and self._device_number in self._satel.partition_states[satel_state]
             ):
                 return ha_state
 
@@ -150,21 +149,21 @@ class SatelIntegraAlarmPanel(SatelIntegraEntity, AlarmControlPanelEntity):
             self._attr_alarm_state == AlarmControlPanelState.TRIGGERED
         )
 
-        await self._satel.disarm(code, [self._partition_id])
+        await self._satel.disarm(code, [self._device_number])
 
         if clear_alarm_necessary:
             # Wait 1s before clearing the alarm
             await asyncio.sleep(1)
-            await self._satel.clear_alarm(code, [self._partition_id])
+            await self._satel.clear_alarm(code, [self._device_number])
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
 
         if code:
-            await self._satel.arm(code, [self._partition_id])
+            await self._satel.arm(code, [self._device_number])
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
 
         if code:
-            await self._satel.arm(code, [self._partition_id], self._arm_home_mode)
+            await self._satel.arm(code, [self._device_number], self._arm_home_mode)
