@@ -4,7 +4,7 @@ from dataclasses import replace
 from datetime import timedelta
 import logging
 from types import MappingProxyType
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
 from librehardwaremonitor_api import (
@@ -165,16 +165,11 @@ async def test_orphaned_devices_are_removed_if_not_present_after_update(
         device_registry, hass, mock_config_entry, mock_lhm_client
     )
 
-    with patch.object(
-        device_registry,
-        "async_remove_device",
-        wraps=device_registry.async_update_device,
-    ) as mock_remove:
-        freezer.tick(timedelta(DEFAULT_SCAN_INTERVAL))
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+    freezer.tick(timedelta(DEFAULT_SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-        mock_remove.assert_called_once_with(orphaned_device.id)
+    assert device_registry.async_get(orphaned_device.id) is None
 
 
 async def test_orphaned_devices_are_removed_if_not_present_during_startup(
@@ -188,14 +183,9 @@ async def test_orphaned_devices_are_removed_if_not_present_during_startup(
         device_registry, hass, mock_config_entry, mock_lhm_client
     )
 
-    with patch.object(
-        device_registry,
-        "async_remove_device",
-        wraps=device_registry.async_update_device,
-    ) as mock_remove:
-        hass.config_entries.async_schedule_reload(mock_config_entry.entry_id)
+    hass.config_entries.async_schedule_reload(mock_config_entry.entry_id)
 
-        mock_remove.assert_called_once_with(orphaned_device.id)
+    assert device_registry.async_get(orphaned_device.id) is None
 
 
 async def _mock_orphaned_device(
@@ -206,19 +196,29 @@ async def _mock_orphaned_device(
 ) -> DeviceEntry:
     await init_integration(hass, mock_config_entry)
 
+    removed_device = "lpc-nct6687d-0"
+    previous_data = mock_lhm_client.get_data.return_value
+
     mock_lhm_client.get_data.return_value = LibreHardwareMonitorData(
         main_device_ids_and_names=MappingProxyType(
             {
-                DeviceId("amdcpu-0"): DeviceName("AMD Ryzen 7 7800X3D"),
-                DeviceId("gpu-nvidia-0"): DeviceName("NVIDIA GeForce RTX 4080 SUPER"),
+                device_id: name
+                for (device_id, name) in previous_data.main_device_ids_and_names.items()
+                if device_id != removed_device
             }
         ),
-        sensor_data=mock_lhm_client.get_data.return_value.sensor_data,
+        sensor_data=MappingProxyType(
+            {
+                sensor_id: data
+                for (sensor_id, data) in previous_data.sensor_data.items()
+                if not sensor_id.startswith(removed_device)
+            }
+        ),
     )
 
     return device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
-        identifiers={(DOMAIN, f"{mock_config_entry.entry_id}_lpc-nct6687d-0")},
+        identifiers={(DOMAIN, f"{mock_config_entry.entry_id}_{removed_device}")},
     )
 
 
