@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 from satel_integra.satel_integra import AsyncSatel
 
 from homeassistant.config_entries import ConfigSubentry
+from homeassistant.const import CONF_NAME
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
@@ -39,7 +40,6 @@ class SatelIntegraEntity(Entity):
         config_entry_id: str,
         subentry: ConfigSubentry,
         device_number: int,
-        device_name: str,
     ) -> None:
         """Initialize the Satel Integra entity."""
 
@@ -54,5 +54,5 @@ class SatelIntegraEntity(Entity):
         self._attr_unique_id = f"{config_entry_id}_{entity_type}_{device_number}"
 
         self._attr_device_info = DeviceInfo(
-            name=device_name, identifiers={(DOMAIN, self._attr_unique_id)}
+            name=subentry.data[CONF_NAME], identifiers={(DOMAIN, self._attr_unique_id)}
         )

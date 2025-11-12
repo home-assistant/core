@@ -8,7 +8,7 @@ from satel_integra.satel_integra import AsyncSatel
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigSubentry
-from homeassistant.const import CONF_CODE, CONF_NAME
+from homeassistant.const import CONF_CODE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -38,7 +38,6 @@ async def async_setup_entry(
 
     for subentry in switchable_output_subentries:
         switchable_output_num: int = subentry.data[CONF_SWITCHABLE_OUTPUT_NUMBER]
-        switchable_output_name: str = subentry.data[CONF_NAME]
 
         async_add_entities(
             [
@@ -47,7 +46,6 @@ async def async_setup_entry(
                     config_entry.entry_id,
                     subentry,
                     switchable_output_num,
-                    switchable_output_name,
                     config_entry.options.get(CONF_CODE),
                 ),
             ],
@@ -64,7 +62,6 @@ class SatelIntegraSwitch(SatelIntegraEntity, SwitchEntity):
         config_entry_id: str,
         subentry: ConfigSubentry,
         device_number: int,
-        device_name: str,
         code: str | None,
     ) -> None:
         """Initialize the switch."""
@@ -73,7 +70,6 @@ class SatelIntegraSwitch(SatelIntegraEntity, SwitchEntity):
             config_entry_id,
             subentry,
             device_number,
-            device_name,
         )
 
         self._code = code

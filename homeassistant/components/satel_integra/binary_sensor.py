@@ -9,7 +9,6 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigSubentry
-from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -44,7 +43,6 @@ async def async_setup_entry(
     for subentry in zone_subentries:
         zone_num: int = subentry.data[CONF_ZONE_NUMBER]
         zone_type: BinarySensorDeviceClass = subentry.data[CONF_ZONE_TYPE]
-        zone_name: str = subentry.data[CONF_NAME]
 
         async_add_entities(
             [
@@ -53,7 +51,6 @@ async def async_setup_entry(
                     config_entry.entry_id,
                     subentry,
                     zone_num,
-                    zone_name,
                     zone_type,
                     SIGNAL_ZONES_UPDATED,
                 )
@@ -69,7 +66,6 @@ async def async_setup_entry(
     for subentry in output_subentries:
         output_num: int = subentry.data[CONF_OUTPUT_NUMBER]
         ouput_type: BinarySensorDeviceClass = subentry.data[CONF_ZONE_TYPE]
-        output_name: str = subentry.data[CONF_NAME]
 
         async_add_entities(
             [
@@ -78,7 +74,6 @@ async def async_setup_entry(
                     config_entry.entry_id,
                     subentry,
                     output_num,
-                    output_name,
                     ouput_type,
                     SIGNAL_OUTPUTS_UPDATED,
                 )
@@ -96,7 +91,6 @@ class SatelIntegraBinarySensor(SatelIntegraEntity, BinarySensorEntity):
         config_entry_id: str,
         subentry: ConfigSubentry,
         device_number: int,
-        device_name: str,
         device_class: BinarySensorDeviceClass,
         react_to_signal: str,
     ) -> None:
@@ -106,7 +100,6 @@ class SatelIntegraBinarySensor(SatelIntegraEntity, BinarySensorEntity):
             config_entry_id,
             subentry,
             device_number,
-            device_name,
         )
 
         self._attr_device_class = device_class
