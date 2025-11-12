@@ -2,23 +2,12 @@
 
 from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.trigger import EntityStateTriggerBase, Trigger, TriggerConfig
+from homeassistant.helpers.trigger import Trigger, make_entity_state_trigger
 
 from .const import DOMAIN
 
-
-class TurnedOffTrigger(EntityStateTriggerBase):
-    """Trigger for when a climate is turned off."""
-
-    domain = DOMAIN
-
-    def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
-        """Initialize the OFF state trigger."""
-        super().__init__(hass, config, STATE_OFF)
-
-
 TRIGGERS: dict[str, type[Trigger]] = {
-    "turned_off": TurnedOffTrigger,
+    "turned_off": make_entity_state_trigger(DOMAIN, STATE_OFF),
 }
 
 
