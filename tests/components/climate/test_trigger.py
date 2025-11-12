@@ -3,6 +3,7 @@
 import pytest
 
 from homeassistant.components import automation
+from homeassistant.components.climate.const import HVACMode
 from homeassistant.const import (
     ATTR_AREA_ID,
     ATTR_DEVICE_ID,
@@ -12,8 +13,6 @@ from homeassistant.const import (
     CONF_OPTIONS,
     CONF_PLATFORM,
     CONF_TARGET,
-    STATE_OFF,
-    STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -144,29 +143,33 @@ async def setup_automation(
     ("trigger", "initial_state", "states"),
     [
         # Initial state None
-        ("climate.turned_off", None, [(STATE_OFF, 0), (STATE_ON, 0), (STATE_OFF, 1)]),
+        (
+            "climate.turned_off",
+            None,
+            [(HVACMode.OFF, 0), (HVACMode.HEAT, 0), (HVACMode.OFF, 1)],
+        ),
         # Initial state opposite of target state
         (
             "climate.turned_off",
-            STATE_ON,
-            [(STATE_OFF, 1), (STATE_ON, 0), (STATE_OFF, 1)],
+            HVACMode.HEAT,
+            [(HVACMode.OFF, 1), (HVACMode.HEAT, 0), (HVACMode.OFF, 1)],
         ),
         # Initial state same as target state
         (
             "climate.turned_off",
-            STATE_OFF,
-            [(STATE_OFF, 0), (STATE_ON, 0), (STATE_OFF, 1)],
+            HVACMode.OFF,
+            [(HVACMode.OFF, 0), (HVACMode.HEAT, 0), (HVACMode.OFF, 1)],
         ),
         # Initial state unavailable / unknown
         (
             "climate.turned_off",
             STATE_UNAVAILABLE,
-            [(STATE_OFF, 0), (STATE_ON, 0), (STATE_OFF, 1)],
+            [(HVACMode.OFF, 0), (HVACMode.HEAT, 0), (HVACMode.OFF, 1)],
         ),
         (
             "climate.turned_off",
             STATE_UNKNOWN,
-            [(STATE_OFF, 0), (STATE_ON, 0), (STATE_OFF, 1)],
+            [(HVACMode.OFF, 0), (HVACMode.HEAT, 0), (HVACMode.OFF, 1)],
         ),
     ],
 )
@@ -226,29 +229,33 @@ async def test_climate_state_trigger_behavior_any(
     ("trigger", "initial_state", "states"),
     [
         # Initial state None
-        ("climate.turned_off", None, [(STATE_OFF, 0), (STATE_ON, 0), (STATE_OFF, 1)]),
+        (
+            "climate.turned_off",
+            None,
+            [(HVACMode.OFF, 0), (HVACMode.HEAT, 0), (HVACMode.OFF, 1)],
+        ),
         # Initial state opposite of target state
         (
             "climate.turned_off",
-            STATE_ON,
-            [(STATE_OFF, 1), (STATE_ON, 0), (STATE_OFF, 1)],
+            HVACMode.HEAT,
+            [(HVACMode.OFF, 1), (HVACMode.HEAT, 0), (HVACMode.OFF, 1)],
         ),
         # Initial state same as target state
         (
             "climate.turned_off",
-            STATE_OFF,
-            [(STATE_OFF, 0), (STATE_ON, 0), (STATE_OFF, 1)],
+            HVACMode.OFF,
+            [(HVACMode.OFF, 0), (HVACMode.HEAT, 0), (HVACMode.OFF, 1)],
         ),
         # Initial state unavailable / unknown
         (
             "climate.turned_off",
             STATE_UNAVAILABLE,
-            [(STATE_OFF, 0), (STATE_ON, 0), (STATE_OFF, 1)],
+            [(HVACMode.OFF, 0), (HVACMode.HEAT, 0), (HVACMode.OFF, 1)],
         ),
         (
             "climate.turned_off",
             STATE_UNKNOWN,
-            [(STATE_OFF, 0), (STATE_ON, 0), (STATE_OFF, 1)],
+            [(HVACMode.OFF, 0), (HVACMode.HEAT, 0), (HVACMode.OFF, 1)],
         ),
     ],
 )
@@ -306,29 +313,33 @@ async def test_climate_state_trigger_behavior_first(
     ("trigger", "initial_state", "states"),
     [
         # Initial state None
-        ("climate.turned_off", None, [(STATE_OFF, 0), (STATE_ON, 0), (STATE_OFF, 1)]),
+        (
+            "climate.turned_off",
+            None,
+            [(HVACMode.OFF, 0), (HVACMode.HEAT, 0), (HVACMode.OFF, 1)],
+        ),
         # Initial state opposite of target state
         (
             "climate.turned_off",
-            STATE_ON,
-            [(STATE_OFF, 1), (STATE_ON, 0), (STATE_OFF, 1)],
+            HVACMode.HEAT,
+            [(HVACMode.OFF, 1), (HVACMode.HEAT, 0), (HVACMode.OFF, 1)],
         ),
         # Initial state same as target state
         (
             "climate.turned_off",
-            STATE_OFF,
-            [(STATE_OFF, 0), (STATE_ON, 0), (STATE_OFF, 1)],
+            HVACMode.OFF,
+            [(HVACMode.OFF, 0), (HVACMode.HEAT, 0), (HVACMode.OFF, 1)],
         ),
         # Initial state unavailable / unknown
         (
             "climate.turned_off",
             STATE_UNAVAILABLE,
-            [(STATE_OFF, 0), (STATE_ON, 0), (STATE_OFF, 1)],
+            [(HVACMode.OFF, 0), (HVACMode.HEAT, 0), (HVACMode.OFF, 1)],
         ),
         (
             "climate.turned_off",
             STATE_UNKNOWN,
-            [(STATE_OFF, 0), (STATE_ON, 0), (STATE_OFF, 1)],
+            [(HVACMode.OFF, 0), (HVACMode.HEAT, 0), (HVACMode.OFF, 1)],
         ),
     ],
 )
