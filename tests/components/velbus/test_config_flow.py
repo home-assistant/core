@@ -145,6 +145,12 @@ async def test_user_network_succes(
     assert result
     assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "vlp"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
+    assert result
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("controller")
@@ -168,6 +174,12 @@ async def test_user_usb_succes(hass: HomeAssistant) -> None:
     assert result
     assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "vlp"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
+    assert result
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("controller")
@@ -175,14 +187,14 @@ async def test_user_usb_succes(hass: HomeAssistant) -> None:
     ("getParams", "expected"),
     [
         ([], "no_modules"),
-        ([1, 2, 3, 4], ""),
+        ([1, 2, 3, 4], None),
     ],
 )
 async def test_vlp_step(
     hass: HomeAssistant,
     mock_process_uploaded_file: MagicMock,
     getParams: list,
-    expected: str,
+    expected: str | None,
 ) -> None:
     """Test VLP step."""
     result = await hass.config_entries.flow.async_init(
@@ -226,7 +238,7 @@ async def test_vlp_step(
         )
         await hass.async_block_till_done()
 
-    if expected == "":
+    if expected is None:
         assert result.get("type") is FlowResultType.CREATE_ENTRY
         assert len(mock_setup_entry.mock_calls) == 1
     else:

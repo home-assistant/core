@@ -198,7 +198,8 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_PORT: old_entry.data.get(CONF_PORT, None),
                     },
                 )
-            return self._create_device()
+            if not self._errors:
+                return self._create_device()
 
         return self.async_show_form(
             step_id="vlp",
