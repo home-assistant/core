@@ -11,7 +11,6 @@ import re
 from typing import Any, Self
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
-from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -1271,7 +1270,7 @@ async def test_saving_and_loading(
     assert hass_storage["core.config_entries"] == expected_stored_data | {}
 
 
-@freeze_time("2024-02-14 12:00:00")
+@pytest.mark.freeze_time("2024-02-14 12:00:00")
 async def test_as_dict(snapshot: SnapshotAssertion) -> None:
     """Test ConfigEntry.as_dict."""
 
@@ -5983,9 +5982,8 @@ async def test_reauth_reconfigure_missing_entry(
     await hass.async_block_till_done()
 
     with pytest.raises(
-        RuntimeError,
-        match=f"Detected code that initialises a {source} flow without a link "
-        "to the config entry. Please report this issue",
+        HomeAssistantError,
+        match=f"Cannot initialize a {source} flow without a link to the config entry",
     ):
         await manager.flow.async_init("test", context={"source": source})
     await hass.async_block_till_done()
@@ -6002,7 +6000,6 @@ async def test_reauth_reconfigure_missing_entry_component(
     hass: HomeAssistant,
     manager: config_entries.ConfigEntries,
     source: str,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the async_reauth_helper."""
     entry = MockConfigEntry(title="test_title", domain="test")
@@ -6015,19 +6012,18 @@ async def test_reauth_reconfigure_missing_entry_component(
     await manager.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()):
+    with (
+        patch.object(frame, "_REPORTED_INTEGRATIONS", set()),
+        pytest.raises(
+            HomeAssistantError,
+            match=f"Cannot initialize a {source} flow without a link to the config entry",
+        ),
+    ):
         await manager.flow.async_init("test", context={"source": source})
-        await hass.async_block_till_done()
 
-    # Flow still created, but deprecation logged
+    # Flow is not created
     flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-    assert flows[0]["context"]["source"] == source
-
-    assert (
-        f"Detected that integration 'hue' initialises a {source} flow"
-        " without a link to the config entry at homeassistant/components" in caplog.text
-    )
+    assert len(flows) == 0
 
 
 async def test_reconfigure(
