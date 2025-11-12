@@ -12,7 +12,7 @@
         }
       },
       "reconfigure": {
-        "description": "Reconfigure",
+        "description": "Update OPNsense connection settings and interface selection.",
         "data": {
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
           "tracker_interfaces": "Interface(s) to use for tracking devices (if blank all will be used)"
