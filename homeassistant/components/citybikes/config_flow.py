@@ -86,7 +86,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
             if network is None:
                 raise CannotConnect("Could not find a network")
 
-        await client.close()
         return {
             "network_id": network_id,
             "network_name": network.name,

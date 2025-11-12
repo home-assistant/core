@@ -5,7 +5,10 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import (
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS, UnitOfLength
 from homeassistant.core import HomeAssistant
@@ -31,6 +34,27 @@ from .const import (
 from .coordinator import CityBikesCoordinator
 
 _LOGGER = logging.getLogger(__name__)
+
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="bikes",
+        translation_key="bikes",
+        native_unit_of_measurement="bikes",
+        icon="mdi:bike",
+    ),
+    SensorEntityDescription(
+        key="ebikes",
+        translation_key="ebikes",
+        native_unit_of_measurement="bikes",
+        icon="mdi:lightning-bolt",
+    ),
+    SensorEntityDescription(
+        key="empty_slots",
+        translation_key="empty_slots",
+        native_unit_of_measurement="slots",
+        icon="mdi:parking",
+    ),
+)
 
 
 async def async_setup_entry(
@@ -71,13 +95,16 @@ async def async_setup_entry(
             if stations_list and not stations_list.intersection((station_id, station_uid)):
                 continue
 
-            entities.append(
-                CityBikesStation(
-                    coordinator,
-                    entry,
-                    station_id,
+            # Create multiple entities per station (bikes, ebikes, empty_slots)
+            for description in SENSOR_TYPES:
+                entities.append(
+                    CityBikesStation(
+                        coordinator,
+                        entry,
+                        station_id,
+                        description,
+                    )
                 )
-            )
 
     async_add_entities(entities)
 
@@ -86,8 +113,6 @@ class CityBikesStation(CoordinatorEntity[CityBikesCoordinator], SensorEntity):
     """CityBikes API Sensor."""
 
     _attr_attribution = CITYBIKES_ATTRIBUTION
-    _attr_native_unit_of_measurement = "bikes"
-    _attr_icon = "mdi:bike"
     _attr_has_entity_name = True
 
     def __init__(
@@ -95,16 +120,25 @@ class CityBikesStation(CoordinatorEntity[CityBikesCoordinator], SensorEntity):
         coordinator: CityBikesCoordinator,
         entry: ConfigEntry,
         station_id: str,
+        description: SensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
+        self.entity_description = description
         self._station_id = station_id
-        self._attr_unique_id = f"{entry.data[CONF_NETWORK]}_{station_id}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.data[CONF_NETWORK])},
-            name=coordinator.network.name if coordinator.network else "CityBikes",
+        self._entry = entry
+        # Unique ID includes the sensor type to differentiate entities
+        self._attr_unique_id = f"{entry.data[CONF_NETWORK]}_{station_id}_{description.key}"
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device information."""
+        station = self._get_station()
+        return DeviceInfo(
+            identifiers={(DOMAIN, f"{self._entry.data[CONF_NETWORK]}_{self._station_id}")},
+            name=station.name if station else f"Station {self._station_id}",
             manufacturer="CityBikes",
-            model="Bike Share Network",
+            model="Bike Share Station",
         )
 
     @property
@@ -114,16 +148,17 @@ class CityBikesStation(CoordinatorEntity[CityBikesCoordinator], SensorEntity):
             return None
         
         station = self._get_station()
-        if station:
+        if not station:
+            return None
+        
+        key = self.entity_description.key
+        if key == "bikes":
             return station.free_bikes
-        return None
-
-    @property
-    def name(self) -> str | None:
-        """Return the name of the sensor."""
-        station = self._get_station()
-        if station:
-            return station.name
+        if key == "ebikes":
+            return station.extra.get(ATTR_EBIKE)
+        if key == "empty_slots":
+            return station.empty_slots
+        
         return None
 
     @property
@@ -133,14 +168,28 @@ class CityBikesStation(CoordinatorEntity[CityBikesCoordinator], SensorEntity):
         if not station:
             return {}
         
-        return {
+        attrs = {
             ATTR_UID: station.extra.get(ATTR_UID),
             ATTR_LATITUDE: station.latitude,
             ATTR_LONGITUDE: station.longitude,
-            ATTR_EMPTY_SLOTS: station.empty_slots,
             ATTR_TIMESTAMP: station.timestamp,
-            ATTR_EBIKE: station.extra.get(ATTR_EBIKE),
         }
+        
+        # Add complementary data based on sensor type
+        key = self.entity_description.key
+        if key == "bikes":
+            attrs[ATTR_EMPTY_SLOTS] = station.empty_slots
+            attrs[ATTR_EBIKE] = station.extra.get(ATTR_EBIKE)
+        elif key == "ebikes":
+            attrs[ATTR_EMPTY_SLOTS] = station.empty_slots
+            # Calculate regular bikes (total - ebikes)
+            ebikes = station.extra.get(ATTR_EBIKE)
+            if ebikes is not None and station.free_bikes is not None:
+                attrs["regular_bikes"] = station.free_bikes - ebikes
+        elif key == "empty_slots":
+            attrs[ATTR_EBIKE] = station.extra.get(ATTR_EBIKE)
+        
+        return attrs
 
     def _get_station(self):
         """Get the station data from coordinator."""
@@ -150,4 +199,11 @@ class CityBikesStation(CoordinatorEntity[CityBikesCoordinator], SensorEntity):
         for station in self.coordinator.data["stations"]:
             if station.id == self._station_id:
                 return station
+        return None
+
+    def _get_station_name(self) -> str | None:
+        """Get the station name."""
+        station = self._get_station()
+        if station:
+            return station.name
         return None

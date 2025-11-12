@@ -25,6 +25,19 @@
     "abort": {
       "already_configured": "This network is already configured"
     }
+  },
+  "entity": {
+    "sensor": {
+      "bikes": {
+        "name": "Bikes"
+      },
+      "ebikes": {
+        "name": "E-bikes"
+      },
+      "empty_slots": {
+        "name": "Empty slots"
+      }
+    }
   }
 }
 
