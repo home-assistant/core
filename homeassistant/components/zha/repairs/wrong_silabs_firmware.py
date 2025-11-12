@@ -80,6 +80,9 @@ async def warn_on_wrong_silabs_firmware(hass: HomeAssistant, device: str) -> boo
             (ApplicationType.EZSP, 460800),
             (ApplicationType.SPINEL, 460800),
             (ApplicationType.CPC, 460800),
+            (ApplicationType.CPC, 230400),
+            (ApplicationType.CPC, 115200),
+            (ApplicationType.ROUTER, 115200),
         ],
     )
 
