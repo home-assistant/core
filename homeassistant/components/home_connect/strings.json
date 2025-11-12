@@ -1236,6 +1236,9 @@
     "fetch_api_error": {
       "message": "Error obtaining data from the API: {error}"
     },
+    "oauth2_implementation_unavailable": {
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    },
     "pause_program": {
       "message": "Error pausing program: {error}"
     },

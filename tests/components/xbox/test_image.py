@@ -7,9 +7,9 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pythonxbox.api.provider.people.models import PeopleResponse
 import respx
 from syrupy.assertion import SnapshotAssertion
-from xbox.webapi.api.provider.people.models import PeopleResponse
 
 from homeassistant.components.xbox.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -104,7 +104,7 @@ async def test_load_image_from_url(
     assert resp.content_type == "image/png"
     assert resp.content_length == 4
 
-    xbox_live_client.people.get_friends_own_batch.return_value = PeopleResponse(
+    xbox_live_client.people.get_friends_by_xuid.return_value = PeopleResponse(
         **await async_load_json_object_fixture(
             hass, "people_batch gamerpic.json", DOMAIN
         )  # pyright: ignore[reportArgumentType]
