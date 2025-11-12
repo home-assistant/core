@@ -75,6 +75,17 @@ EVENT_PROG_UPDATE_2 = {
     },
 }
 
+
+EVENT_PROG_UPDATE_3 = {
+    EventType.EVENT: {
+        EventKey.BSH_COMMON_OPTION_REMAINING_PROGRAM_TIME: None,
+        EventKey.BSH_COMMON_OPTION_PROGRAM_PROGRESS: 99,
+    },
+    EventType.STATUS: {
+        EventKey.BSH_COMMON_STATUS_OPERATION_STATE: "BSH.Common.EnumType.OperationState.Run",
+    },
+}
+
 EVENT_PROG_END = {
     EventType.STATUS: {
         EventKey.BSH_COMMON_STATUS_OPERATION_STATE: "BSH.Common.EnumType.OperationState.Ready",
@@ -266,6 +277,7 @@ PROGRAM_SEQUENCE_EVENTS = (
     EVENT_PROG_RUN,
     EVENT_PROG_UPDATE_1,
     EVENT_PROG_UPDATE_2,
+    EVENT_PROG_UPDATE_3,
     EVENT_PROG_END,
 )
 
@@ -276,6 +288,7 @@ ENTITY_ID_STATES = {
         "run",
         "run",
         "run",
+        "run",
         "ready",
     ),
     "sensor.dishwasher_program_finish_time": (
@@ -283,12 +296,14 @@ ENTITY_ID_STATES = {
         "2021-01-09T12:00:00+00:00",
         "2021-01-09T12:00:00+00:00",
         "2021-01-09T12:00:20+00:00",
+        STATE_UNKNOWN,
         "unavailable",
     ),
     "sensor.dishwasher_program_progress": (
         "unavailable",
         "60",
         "80",
+        "99",
         "99",
         "unavailable",
     ),
@@ -536,6 +551,14 @@ async def test_remaining_prog_time_edge_cases(
             "Dishwasher",
         ),
         (
+            "sensor.dishwasher_door",
+            EventKey.BSH_COMMON_STATUS_DOOR_STATE,
+            EventType.STATUS,
+            None,
+            STATE_UNKNOWN,
+            "Dishwasher",
+        ),
+        (
             "sensor.fridgefreezer_freezer_door_alarm",
             "EVENT_NOT_IN_STATUS_YET_SO_SET_TO_OFF",
             EventType.EVENT,
@@ -568,6 +591,14 @@ async def test_remaining_prog_time_edge_cases(
             "FridgeFreezer",
         ),
         (
+            "sensor.fridgefreezer_freezer_door_alarm",
+            EventKey.REFRIGERATION_FRIDGE_FREEZER_EVENT_DOOR_ALARM_FREEZER,
+            EventType.EVENT,
+            None,
+            STATE_UNKNOWN,
+            "FridgeFreezer",
+        ),
+        (
             "sensor.coffeemaker_bean_container_empty",
             EventType.EVENT,
             "EVENT_NOT_IN_STATUS_YET_SO_SET_TO_OFF",
@@ -597,6 +628,14 @@ async def test_remaining_prog_time_edge_cases(
             EventType.EVENT,
             BSH_EVENT_PRESENT_STATE_CONFIRMED,
             "confirmed",
+            "CoffeeMaker",
+        ),
+        (
+            "sensor.coffeemaker_bean_container_empty",
+            EventKey.CONSUMER_PRODUCTS_COFFEE_MAKER_EVENT_BEAN_CONTAINER_EMPTY,
+            EventType.EVENT,
+            None,
+            STATE_UNKNOWN,
             "CoffeeMaker",
         ),
     ],
@@ -610,7 +649,7 @@ async def test_sensors_states(
     entity_id: str,
     event_key: EventKey,
     event_type: EventType,
-    event_value_update: str,
+    event_value_update: str | None,
     appliance: HomeAppliance,
     expected: str,
 ) -> None:
