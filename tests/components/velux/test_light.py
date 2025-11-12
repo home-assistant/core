@@ -16,6 +16,7 @@ def platform() -> Platform:
 
 
 @pytest.mark.usefixtures("setup_integration")
+@pytest.mark.parametrize("mock_pyvlx", ["mock_light"], indirect=True)
 async def test_light_setup(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,

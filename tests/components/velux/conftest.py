@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pyvlx.opening_device import Blind
 
 from homeassistant.components.velux import DOMAIN
 from homeassistant.components.velux.binary_sensor import Window
@@ -65,7 +66,7 @@ def mock_discovered_config_entry() -> MockConfigEntry:
     )
 
 
-# fixtures for the binary sensor tests
+# various types of node fixtures
 @pytest.fixture
 def mock_window() -> AsyncMock:
     """Create a mock Velux window with a rain sensor."""
@@ -81,6 +82,18 @@ def mock_window() -> AsyncMock:
 
 
 @pytest.fixture
+def mock_cover_type(request: pytest.FixtureRequest) -> AsyncMock:
+    """Create a mock Velux cover of specified type."""
+    cover = AsyncMock(spec=request.param, autospec=True)
+    cover.name = f"Test {cover.__class__}"
+    cover.serial_number = "serial_1"
+    cover.is_opening = False
+    cover.is_closing = False
+    cover.position = MagicMock(position_percent=30, closed=False)
+    return cover
+
+
+@pytest.fixture
 def mock_light() -> AsyncMock:
     """Create a mock Velux light."""
     light = AsyncMock(spec=LighteningDevice, autospec=True)
@@ -91,12 +104,38 @@ def mock_light() -> AsyncMock:
 
 
 @pytest.fixture
-def mock_pyvlx(mock_window: MagicMock, mock_light: MagicMock) -> Generator[MagicMock]:
+def mock_blind() -> AsyncMock:
+    """Create a mock Velux blind (cover with tilt)."""
+    blind = AsyncMock(spec=Blind, autospec=True)
+    blind.name = "Test Blind"
+    blind.serial_number = "4711"
+    # Standard cover position (used by current_cover_position)
+    blind.position = MagicMock(position_percent=40, closed=False)
+    blind.is_opening = False
+    blind.is_closing = False
+    # Orientation/tilt-related attributes and methods
+    blind.orientation = MagicMock(position_percent=25)
+    blind.open_orientation = AsyncMock()
+    blind.close_orientation = AsyncMock()
+    blind.stop_orientation = AsyncMock()
+    blind.set_orientation = AsyncMock()
+    return blind
+
+
+# mock PyVLX fixture that retrieves mock nodes via request.param
+@pytest.fixture
+def mock_pyvlx(request: pytest.FixtureRequest) -> Generator[MagicMock]:
     """Create the library mock and patch PyVLX."""
+
     pyvlx = MagicMock()
-    pyvlx.nodes = [mock_window, mock_light]
+    if hasattr(request, "param"):
+        pyvlx.nodes = [request.getfixturevalue(request.param)]
+    else:
+        pyvlx.nodes = []
+
     pyvlx.load_scenes = AsyncMock()
     pyvlx.load_nodes = AsyncMock()
+    pyvlx.connect = AsyncMock()
     pyvlx.disconnect = AsyncMock()
 
     with patch("homeassistant.components.velux.PyVLX", return_value=pyvlx):
@@ -116,11 +155,12 @@ def mock_config_entry() -> MockConfigEntry:
     )
 
 
+# Fixture to set up the integration for testing, needs platform fixture, to be defined in each test file
 @pytest.fixture
 async def setup_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_pyvlx: MagicMock,
+    mock_pyvlx: AsyncMock,
     platform: Platform,
 ) -> None:
     """Set up the integration for testing."""
