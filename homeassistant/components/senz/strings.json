@@ -29,6 +29,9 @@
   "exceptions": {
     "oauth2_implementation_unavailable": {
       "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    },
+    "set_attribute_error": {
+      "message": "Failed to set {attribute} on the device."
     }
   }
 }
