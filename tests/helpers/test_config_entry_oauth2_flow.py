@@ -1137,3 +1137,116 @@ def test_compute_code_challenge_invalid_code_verifier(code_verifier: str) -> Non
         config_entry_oauth2_flow.LocalOAuth2ImplementationWithPkce.compute_code_challenge(
             code_verifier
         )
+
+
+async def test_async_get_config_entry_implementation_with_failing_provider_and_succeeding_provider(
+    hass: HomeAssistant,
+    local_impl: config_entry_oauth2_flow.LocalOAuth2Implementation,
+) -> None:
+    """Test async_get_config_entry_implementation when one provider fails but another succeeds."""
+
+    async def failing_cloud_provider(
+        _hass: HomeAssistant, _domain: str
+    ) -> list[config_entry_oauth2_flow.AbstractOAuth2Implementation]:
+        """Provider that raises an exception."""
+        raise config_entry_oauth2_flow.ImplementationUnavailableError
+
+    async def successful_local_provider(
+        _hass: HomeAssistant, _domain: str
+    ) -> list[config_entry_oauth2_flow.AbstractOAuth2Implementation]:
+        """Provider that returns implementations."""
+        return [local_impl]
+
+    config_entry_oauth2_flow.async_add_implementation_provider(
+        hass, "cloud", failing_cloud_provider
+    )
+    config_entry_oauth2_flow.async_add_implementation_provider(
+        hass, "application_credentials", successful_local_provider
+    )
+
+    config_entry = MockConfigEntry(
+        domain=TEST_DOMAIN,
+        data={
+            "auth_implementation": local_impl.domain,
+        },
+    )
+
+    # This should succeed and return the local implementation
+    # even though the failing cloud provider raised an exception.
+    implementation = (
+        await config_entry_oauth2_flow.async_get_config_entry_implementation(
+            hass, config_entry
+        )
+    )
+    assert implementation is local_impl
+
+
+async def test_async_get_config_entry_implementation_with_failing_provider(
+    hass: HomeAssistant,
+) -> None:
+    """Test async_get_config_entry_implementation when one provider fails and the other is empty."""
+
+    async def failing_cloud_provider(
+        _hass: HomeAssistant, _domain: str
+    ) -> list[config_entry_oauth2_flow.AbstractOAuth2Implementation]:
+        """Provider that raises an exception."""
+        raise config_entry_oauth2_flow.ImplementationUnavailableError
+
+    async def empty_local_provider(
+        _hass: HomeAssistant, _domain: str
+    ) -> list[config_entry_oauth2_flow.AbstractOAuth2Implementation]:
+        """Provider that returns implementations."""
+        return []
+
+    config_entry_oauth2_flow.async_add_implementation_provider(
+        hass, "cloud", failing_cloud_provider
+    )
+    config_entry_oauth2_flow.async_add_implementation_provider(
+        hass, "application_credentials", empty_local_provider
+    )
+
+    config_entry = MockConfigEntry(
+        domain=TEST_DOMAIN,
+        data={
+            "auth_implementation": TEST_DOMAIN,
+        },
+    )
+
+    # This should fail since the local provider returned an empty list
+    # and the cloud provider raised an exception.
+    with pytest.raises(config_entry_oauth2_flow.ImplementationUnavailableError):
+        await config_entry_oauth2_flow.async_get_config_entry_implementation(
+            hass, config_entry
+        )
+
+
+async def test_async_get_config_entry_implementation_missing_provider(
+    hass: HomeAssistant,
+) -> None:
+    """Test async_get_config_entry_implementation when both providers are empty."""
+
+    async def empty_provider(
+        _hass: HomeAssistant, _domain: str
+    ) -> list[config_entry_oauth2_flow.AbstractOAuth2Implementation]:
+        """Provider that returns implementations."""
+        return []
+
+    config_entry_oauth2_flow.async_add_implementation_provider(
+        hass, "cloud", empty_provider
+    )
+    config_entry_oauth2_flow.async_add_implementation_provider(
+        hass, "application_credentials", empty_provider
+    )
+
+    config_entry = MockConfigEntry(
+        domain=TEST_DOMAIN,
+        data={
+            "auth_implementation": TEST_DOMAIN,
+        },
+    )
+
+    # This should fail since both providers are empty.
+    with pytest.raises(ValueError, match="Implementation not available"):
+        await config_entry_oauth2_flow.async_get_config_entry_implementation(
+            hass, config_entry
+        )

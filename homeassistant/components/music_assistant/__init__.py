@@ -26,8 +26,8 @@ from homeassistant.helpers.issue_registry import (
     async_delete_issue,
 )
 
-from .actions import get_music_assistant_client, register_actions
 from .const import ATTR_CONF_EXPOSE_PLAYER_TO_HA, DOMAIN, LOGGER
+from .services import get_music_assistant_client, register_actions
 
 if TYPE_CHECKING:
     from music_assistant_models.event import MassEvent

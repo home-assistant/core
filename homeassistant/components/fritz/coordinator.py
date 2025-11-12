@@ -826,6 +826,21 @@ class AvmWrapper(FritzBoxTools):
             NewDisallow="0" if turn_on else "1",
         )
 
+    async def async_get_current_user_rights(self) -> dict[str, Any]:
+        """Call X_AVM-DE_GetCurrentUser service."""
+
+        result = await self._async_service_call(
+            "LANConfigSecurity",
+            "1",
+            "X_AVM-DE_GetCurrentUser",
+        )
+
+        user_rights = xmltodict.parse(result["NewX_AVM-DE_CurrentUserRights"])["rights"]
+
+        return {
+            k: user_rights["access"][idx] for idx, k in enumerate(user_rights["path"])
+        }
+
     async def async_wake_on_lan(self, mac_address: str) -> dict[str, Any]:
         """Call X_AVM-DE_WakeOnLANByMACAddress service."""
 

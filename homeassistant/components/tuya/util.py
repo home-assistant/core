@@ -42,6 +42,16 @@ def get_dpcode(
     return None
 
 
+def parse_dptype(dptype: str) -> DPType | None:
+    """Parse DPType from device DPCode information."""
+    try:
+        return DPType(dptype)
+    except ValueError:
+        # Sometimes, we get ill-formed DPTypes from the cloud,
+        # this fixes them and maps them to the correct DPType.
+        return _DPTYPE_MAPPING.get(dptype)
+
+
 def get_dptype(
     device: CustomerDevice, dpcode: DPCode | None, *, prefer_function: bool = False
 ) -> DPType | None:
@@ -57,13 +67,7 @@ def get_dptype(
 
     for device_specs in lookup_tuple:
         if current_definition := device_specs.get(dpcode):
-            current_type = current_definition.type
-            try:
-                return DPType(current_type)
-            except ValueError:
-                # Sometimes, we get ill-formed DPTypes from the cloud,
-                # this fixes them and maps them to the correct DPType.
-                return _DPTYPE_MAPPING.get(current_type)
+            return parse_dptype(current_definition.type)
 
     return None
 

@@ -3,7 +3,6 @@
 from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
-from freezegun import freeze_time
 import httpx
 from openai import PermissionDeniedError
 import pytest
@@ -212,7 +211,7 @@ async def test_generate_data_with_attachments(
 
 
 @pytest.mark.usefixtures("mock_init_component")
-@freeze_time("2025-06-14 22:59:00")
+@pytest.mark.freeze_time("2025-06-14 22:59:00")
 @pytest.mark.parametrize("image_model", ["gpt-image-1", "gpt-image-1-mini"])
 async def test_generate_image(
     hass: HomeAssistant,

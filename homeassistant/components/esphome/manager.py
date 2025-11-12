@@ -983,10 +983,6 @@ class ESPHomeManager:
 
         await reconnect_logic.start()
 
-        entry.async_on_unload(
-            entry.add_update_listener(entry_data.async_update_listener)
-        )
-
 
 @callback
 def _async_setup_device_registry(

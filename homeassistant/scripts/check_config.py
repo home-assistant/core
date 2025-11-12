@@ -90,7 +90,9 @@ def run(script_args: list) -> int:
         help="Exit non-zero if warnings are present",
     )
 
-    args, unknown = parser.parse_known_args(script_args)
+    # Parse all args including --config & --script. Do not use script_args.
+    # Example: python -m homeassistant --config "." --script check_config
+    args, unknown = parser.parse_known_args()
     if unknown:
         print(color("red", "Unknown arguments:", ", ".join(unknown)))
 

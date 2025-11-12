@@ -72,10 +72,12 @@ async def async_setup_entry(
 
         async_add_entities([MobileAppSensor(data, config_entry)])
 
-    async_dispatcher_connect(
-        hass,
-        f"{DOMAIN}_{ENTITY_TYPE}_register",
-        handle_sensor_registration,
+    config_entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            f"{DOMAIN}_{ENTITY_TYPE}_register",
+            handle_sensor_registration,
+        )
     )
 
 

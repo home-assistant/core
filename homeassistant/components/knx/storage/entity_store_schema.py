@@ -359,7 +359,7 @@ CLIMATE_KNX_SCHEMA = vol.Schema(
             write=False, state_required=True, valid_dpt="9.001"
         ),
         vol.Optional(CONF_GA_HUMIDITY_CURRENT): GASelector(
-            write=False, valid_dpt="9.002"
+            write=False, valid_dpt="9.007"
         ),
         vol.Required(CONF_TARGET_TEMPERATURE): GroupSelect(
             GroupSelectOption(

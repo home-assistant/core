@@ -84,6 +84,7 @@
       "abort": {
         "already_configured": "Chat already configured"
       },
+      "entry_type": "Allowed chat ID",
       "error": {
         "chat_not_found": "Chat not found"
       },

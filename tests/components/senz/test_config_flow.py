@@ -15,11 +15,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 
+from .const import CLIENT_ID, CLIENT_SECRET
+
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
-
-CLIENT_ID = "1234"
-CLIENT_SECRET = "5678"
 
 
 @pytest.mark.usefixtures("current_request_with_host")

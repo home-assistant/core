@@ -18,7 +18,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, DPType
 from .entity import TuyaEntity
-from .models import EnumTypeData
+from .models import EnumTypeData, find_dpcode
 from .util import get_dpcode
 
 TUYA_MODE_RETURN_HOME = "chargego"
@@ -97,8 +97,8 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
             self._attr_supported_features |= VacuumEntityFeature.RETURN_HOME
             self._return_home_use_switch_charge = True
         elif (
-            enum_type := self.find_dpcode(
-                DPCode.MODE, dptype=DPType.ENUM, prefer_function=True
+            enum_type := find_dpcode(
+                self.device, DPCode.MODE, dptype=DPType.ENUM, prefer_function=True
             )
         ) and TUYA_MODE_RETURN_HOME in enum_type.range:
             self._attr_supported_features |= VacuumEntityFeature.RETURN_HOME
@@ -111,8 +111,8 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
                 VacuumEntityFeature.STOP | VacuumEntityFeature.START
             )
 
-        if enum_type := self.find_dpcode(
-            DPCode.SUCTION, dptype=DPType.ENUM, prefer_function=True
+        if enum_type := find_dpcode(
+            self.device, DPCode.SUCTION, dptype=DPType.ENUM, prefer_function=True
         ):
             self._fan_speed = enum_type
             self._attr_fan_speed_list = enum_type.range

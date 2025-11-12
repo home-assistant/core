@@ -156,6 +156,13 @@
       "sanitize": {
         "default": "mdi:lotion"
       },
+      "sound_effect": {
+        "default": "mdi:volume-high",
+        "state": {
+          "off": "mdi:volume-off",
+          "on": "mdi:volume-high"
+        }
+      },
       "wrinkle_prevent": {
         "default": "mdi:tumble-dryer",
         "state": {
