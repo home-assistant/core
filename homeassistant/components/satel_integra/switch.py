@@ -20,6 +20,7 @@ from .const import (
     SUBENTRY_TYPE_SWITCHABLE_OUTPUT,
     SatelConfigEntry,
 )
+from .entity import SatelIntegraEntity
 
 
 async def async_setup_entry(
@@ -54,12 +55,8 @@ async def async_setup_entry(
         )
 
 
-class SatelIntegraSwitch(SwitchEntity):
-    """Representation of an Satel switch."""
-
-    _attr_should_poll = False
-    _attr_has_entity_name = True
-    _attr_name = None
+class SatelIntegraSwitch(SatelIntegraEntity, SwitchEntity):
+    """Representation of an Satel Integra switch."""
 
     def __init__(
         self,
@@ -70,10 +67,11 @@ class SatelIntegraSwitch(SwitchEntity):
         config_entry_id: str,
     ) -> None:
         """Initialize the switch."""
+        super().__init__(controller)
+
         self._device_number = device_number
         self._attr_unique_id = f"{config_entry_id}_switch_{device_number}"
         self._code = code
-        self._satel = controller
 
         self._attr_device_info = DeviceInfo(
             name=device_name, identifiers={(DOMAIN, self._attr_unique_id)}

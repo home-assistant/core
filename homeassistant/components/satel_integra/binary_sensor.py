@@ -27,6 +27,7 @@ from .const import (
     SUBENTRY_TYPE_ZONE,
     SatelConfigEntry,
 )
+from .entity import SatelIntegraEntity
 
 
 async def async_setup_entry(
@@ -89,12 +90,8 @@ async def async_setup_entry(
         )
 
 
-class SatelIntegraBinarySensor(BinarySensorEntity):
+class SatelIntegraBinarySensor(SatelIntegraEntity, BinarySensorEntity):
     """Representation of an Satel Integra binary sensor."""
-
-    _attr_should_poll = False
-    _attr_has_entity_name = True
-    _attr_name = None
 
     def __init__(
         self,
@@ -107,10 +104,11 @@ class SatelIntegraBinarySensor(BinarySensorEntity):
         config_entry_id: str,
     ) -> None:
         """Initialize the binary_sensor."""
+        super().__init__(controller)
+
         self._device_number = device_number
         self._attr_unique_id = f"{config_entry_id}_{sensor_type}_{device_number}"
         self._react_to_signal = react_to_signal
-        self._satel = controller
 
         self._attr_device_class = device_class
         self._attr_device_info = DeviceInfo(

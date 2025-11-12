@@ -27,6 +27,7 @@ from .const import (
     SUBENTRY_TYPE_PARTITION,
     SatelConfigEntry,
 )
+from .entity import SatelIntegraEntity
 
 ALARM_STATE_MAP = {
     AlarmState.TRIGGERED: AlarmControlPanelState.TRIGGERED,
@@ -76,18 +77,14 @@ async def async_setup_entry(
         )
 
 
-class SatelIntegraAlarmPanel(AlarmControlPanelEntity):
+class SatelIntegraAlarmPanel(SatelIntegraEntity, AlarmControlPanelEntity):
     """Representation of an AlarmDecoder-based alarm panel."""
 
     _attr_code_format = CodeFormat.NUMBER
-    _attr_should_poll = False
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
     )
-
-    _attr_has_entity_name = True
-    _attr_name = None
 
     def __init__(
         self,
@@ -98,10 +95,11 @@ class SatelIntegraAlarmPanel(AlarmControlPanelEntity):
         config_entry_id: str,
     ) -> None:
         """Initialize the alarm panel."""
+        super().__init__(controller)
+
         self._attr_unique_id = f"{config_entry_id}_alarm_panel_{partition_id}"
         self._arm_home_mode = arm_home_mode
         self._partition_id = partition_id
-        self._satel = controller
 
         self._attr_device_info = DeviceInfo(
             name=device_name, identifiers={(DOMAIN, self._attr_unique_id)}
