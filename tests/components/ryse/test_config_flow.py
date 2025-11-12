@@ -5,123 +5,138 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant import data_entry_flow
+from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.ryse.config_flow import RyseBLEDeviceConfigFlow
 from homeassistant.core import HomeAssistant
 
 
 @pytest.mark.asyncio
-async def test_user_step_show_form(hass: HomeAssistant) -> None:
-    """Test showing the initial form."""
+async def test_bluetooth_flow_show_confirm_form(hass: HomeAssistant) -> None:
+    """Test showing the confirmation form when a BLE device is discovered."""
     flow = RyseBLEDeviceConfigFlow()
     flow.hass = hass
+    flow.context = {}
 
-    result = await flow.async_step_user()
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "user"
+    # Mock a Bluetooth discovery
+    discovery_info = BluetoothServiceInfoBleak(
+        name="RYSE Shade",
+        address="AA:BB:CC:DD:EE:FF",
+        manufacturer_data={},
+        service_data={},
+        service_uuids=[],
+        rssi=-70,
+        source="local",
+        tx_power=None,
+        device=None,
+        advertisement=None,
+        connectable=True,
+        time=0,
+    )
 
-
-@pytest.mark.asyncio
-async def test_pairing_search_no_devices(hass: HomeAssistant) -> None:
-    """Test when no RYSE devices found."""
-    flow = RyseBLEDeviceConfigFlow()
-    flow.hass = hass
-
-    with (
-        patch(
-            "homeassistant.components.ryse.config_flow.async_discovered_service_info",
-            return_value=[],
-        ),
-        patch(
-            "homeassistant.components.ryse.config_flow.filter_ryse_devices_pairing",
-            return_value=[],
-        ),
-    ):
-        result = await flow.async_step_pairing_search()
+    result = await flow.async_step_bluetooth(discovery_info)
 
     assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "pairing_search"
+    assert result["step_id"] == "bluetooth_confirm"
+    assert flow._discovery_info == discovery_info
 
 
 @pytest.mark.asyncio
-async def test_pairing_search_with_devices(hass: HomeAssistant) -> None:
-    """Test discovered RYSE devices."""
+async def test_bluetooth_confirm_success(hass: HomeAssistant) -> None:
+    """Test successfully confirming and pairing the BLE device."""
     flow = RyseBLEDeviceConfigFlow()
     flow.hass = hass
+    flow.context = {}
 
-    mock_devices = ["RYSE Shade (AA:BB:CC:DD:EE:FF)"]
+    discovery_info = BluetoothServiceInfoBleak(
+        name="RYSE Shade",
+        address="AA:BB:CC:DD:EE:FF",
+        manufacturer_data={},
+        service_data={},
+        service_uuids=[],
+        rssi=-70,
+        source="local",
+        tx_power=None,
+        device=None,
+        advertisement=None,
+        connectable=True,
+        time=0,
+    )
+    flow._discovery_info = discovery_info
 
-    with (
-        patch(
-            "homeassistant.components.ryse.config_flow.async_discovered_service_info",
-            return_value=[{"address": "AA:BB:CC:DD:EE:FF"}],
-        ),
-        patch(
-            "homeassistant.components.ryse.config_flow.filter_ryse_devices_pairing",
-            return_value=mock_devices,
-        ),
-        patch.object(flow, "context", {"device_options": mock_devices}),
+    with patch(
+        "homeassistant.components.ryse.config_flow.pair_with_ble_device",
+        new=AsyncMock(return_value=True),
     ):
-        result = await flow.async_step_pairing_search()
+        result = await flow.async_step_bluetooth_confirm(user_input={})
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "select_device"
-
-
-@pytest.mark.asyncio
-async def test_select_device_and_pair_success(hass: HomeAssistant) -> None:
-    """Test selecting and pairing device successfully."""
-    flow = RyseBLEDeviceConfigFlow()
-    flow.hass = hass
-    flow.device_options = ["Shade1 (AA:BB:CC:DD:EE:FF)"]
-
-    with (
-        patch(
-            "homeassistant.components.ryse.config_flow.RyseBLEDeviceConfigFlow.async_set_unique_id",
-            new=AsyncMock(),
-        ),
-        patch(
-            "homeassistant.components.ryse.config_flow.pair_with_ble_device",
-            new=AsyncMock(return_value=True),
-        ),
-    ):
-        result = await flow.async_step_select_device(
-            {"device": "Shade1 (AA:BB:CC:DD:EE:FF)"}
-        )
-        assert flow.selected_device["address"] == "AA:BB:CC:DD:EE:FF"
-
-        result = await flow.async_step_pair()
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-        assert result["title"] == "RYSE gear Shade1"
-        assert result["data"]["address"] == "AA:BB:CC:DD:EE:FF"
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["title"] == "RYSE Shade"
+    assert result["data"] == {}
 
 
 @pytest.mark.asyncio
-async def test_pairing_failure(hass: HomeAssistant) -> None:
-    """Test when BLE pairing fails."""
+async def test_bluetooth_confirm_cannot_connect(hass: HomeAssistant) -> None:
+    """Test pairing failure (cannot connect)."""
     flow = RyseBLEDeviceConfigFlow()
     flow.hass = hass
-    flow.selected_device = {"name": "Shade", "address": "AA:BB"}
+    flow.context = {}
+
+    discovery_info = BluetoothServiceInfoBleak(
+        name="RYSE Shade",
+        address="AA:BB:CC:DD:EE:FF",
+        manufacturer_data={},
+        service_data={},
+        service_uuids=[],
+        rssi=-70,
+        source="local",
+        tx_power=None,
+        device=None,
+        advertisement=None,
+        connectable=True,
+        time=0,
+    )
+    flow._discovery_info = discovery_info
 
     with patch(
         "homeassistant.components.ryse.config_flow.pair_with_ble_device",
         new=AsyncMock(return_value=False),
     ):
-        result = await flow.async_step_pair()
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
-        assert result["step_id"] == "pair"
+        result = await flow.async_step_bluetooth_confirm(user_input={})
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "bluetooth_confirm"
+    assert "cannot_connect" in result["errors"]["base"]
 
 
 @pytest.mark.asyncio
-async def test_pairing_raises_exception(hass: HomeAssistant) -> None:
-    """Test pairing raises unexpected exception."""
+async def test_bluetooth_confirm_exception(hass: HomeAssistant) -> None:
+    """Test unexpected exception during pairing."""
     flow = RyseBLEDeviceConfigFlow()
     flow.hass = hass
-    flow.selected_device = {"name": "Shade", "address": "AA:BB"}
+    flow.context = {}
+
+    discovery_info = BluetoothServiceInfoBleak(
+        name="RYSE Shade",
+        address="AA:BB:CC:DD:EE:FF",
+        manufacturer_data={},
+        service_data={},
+        service_uuids=[],
+        rssi=-70,
+        source="local",
+        tx_power=None,
+        device=None,
+        advertisement=None,
+        connectable=True,
+        time=0,
+    )
+    flow._discovery_info = discovery_info
 
     with patch(
         "homeassistant.components.ryse.config_flow.pair_with_ble_device",
         new=AsyncMock(side_effect=Exception("oops")),
     ):
-        result = await flow.async_step_pair()
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
-        assert result["reason"] == "Unexpected error"
+        result = await flow.async_step_bluetooth_confirm(user_input={})
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "bluetooth_confirm"
+    assert result["errors"]["base"] == "unknown"

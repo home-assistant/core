@@ -7,6 +7,10 @@
       "unexpected_error": "An unexpected error occurred during pairing. Please try again later."
     },
     "step": {
+      "bluetooth_confirm": {
+        "description": "Please press the PAIR button on your RYSE device, then click Submit to start pairing.",
+        "title": "Pair your RYSE device"
+      },
       "pair": {
         "description": "Pairing failed. Please press the PAIR button and try again.",
         "title": "Pairing RYSE Device"

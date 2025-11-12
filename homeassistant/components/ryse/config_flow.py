@@ -3,13 +3,11 @@
 import logging
 from typing import Any
 
-from ryseble.bluetoothctl import filter_ryse_devices_pairing, pair_with_ble_device
-import voluptuous as vol
+from ryseble.bluetoothctl import pair_with_ble_device
 
 from homeassistant import config_entries
-from homeassistant.components.bluetooth import async_discovered_service_info
+from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.config_entries import ConfigFlowResult
-from homeassistant.const import CONF_ADDRESS
 
 from .const import DOMAIN
 
@@ -23,99 +21,49 @@ class RyseBLEDeviceConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize flow attributes."""
         self.device_options: dict[str, str] = {}
         self.selected_device: dict[str, str] | None = None
+        self._discovery_info: BluetoothServiceInfoBleak | None = None
 
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
+    async def async_step_bluetooth(
+        self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
-        """Triggered when user clicks 'Add Integration'."""
-        if user_input is None:
-            _LOGGER.debug("User started RYSE setup flow")
-            return self.async_show_form(
-                step_id="user",
-            )
-
-        _LOGGER.debug("User submitted pairing search trigger")
-        return await self.async_step_pairing_search()
-
-    async def async_step_pairing_search(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Check already discovered BLE devices for pairing mode."""
-        _LOGGER.info("Checking already discovered BLE devices for RYSE in pairing mode")
-
-        devices = async_discovered_service_info(self.hass, connectable=True)
-        existing_addresses = self._async_current_ids(include_ignore=False)
-
-        device_options = await filter_ryse_devices_pairing(devices, existing_addresses)
-        if not device_options:
-            _LOGGER.info("No RYSE devices in pairing mode found")
-            return self.async_show_form(
-                step_id="pairing_search",
-                data_schema=vol.Schema({}),
-            )
-
-        self.device_options = device_options
-        return await self.async_step_select_device()
-
-    async def async_step_select_device(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Let user select one of the discovered pairing devices."""
-        device_options = getattr(self, "device_options", {})
-
-        if user_input is None:
-            return self.async_show_form(
-                step_id="select_device",
-                data_schema=vol.Schema(
-                    {vol.Required(CONF_ADDRESS): vol.In(device_options)}
-                ),
-                description_placeholders={},
-            )
-
-        selected_device = user_input[CONF_ADDRESS]
-        address = selected_device.split("(")[-1].rstrip(")")
-        name = selected_device.split("(")[0].strip()
-
-        await self.async_set_unique_id(address)
+        """Handle bluetooth discovery step."""
+        await self.async_set_unique_id(discovery_info.address)
         self._abort_if_unique_id_configured()
 
-        _LOGGER.info("User selected device %s (%s)", name, address)
+        # Store discovery info for later use
+        self._discovery_info = discovery_info
 
-        # Store selected device as instance variable
-        self.selected_device = {"name": name, "address": address}
-        return await self.async_step_pair()
+        return await self.async_step_bluetooth_confirm()
 
-    async def async_step_pair(
+    async def async_step_bluetooth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Perform BLE pairing."""
-        device = getattr(self, "selected_device", None)
-        if not device:
-            return self.async_abort(reason="device_not_selected")
+        """Confirm discovered BLE device."""
+        assert self._discovery_info is not None
+        discovery_info = self._discovery_info
+        name = discovery_info.name or "RYSE device"
 
-        name = device["name"]
-        address = device["address"]
+        errors = {}
 
-        _LOGGER.info("Attempting to pair with %s (%s)", name, address)
+        if user_input is not None:
+            try:
+                # You can use your existing pairing function here
+                success = await pair_with_ble_device(name, discovery_info.address)
+                if not success:
+                    errors["base"] = "cannot_connect"
+                else:
+                    return self.async_create_entry(
+                        title=name,
+                        data={},
+                    )
+            except Exception:
+                _LOGGER.exception("Unexpected error during bluetooth confirm")
+                errors["base"] = "unknown"
 
-        try:
-            success = await pair_with_ble_device(name, address)
-            if not success:
-                _LOGGER.warning("Pairing failed for %s (%s)", name, address)
-                return self.async_show_form(
-                    step_id="pair",
-                )
-
-            _LOGGER.info("Successfully paired with RYSE device %s (%s)", name, address)
-            return self.async_create_entry(
-                title=name,
-                data={},
-            )
-
-        except (TimeoutError, OSError):
-            _LOGGER.error("Bluetooth error during pairing")
-            return self.async_abort(reason="bluetooth_error")
-
-        except Exception:
-            _LOGGER.exception("Unexpected error during pairing")
-            return self.async_abort(reason="unexpected_error")
+        self._set_confirm_only()
+        self.context["title_placeholders"] = {"name": name}
+        return self.async_show_form(
+            step_id="bluetooth_confirm",
+            description_placeholders={"name": name},
+            errors=errors,
+        )
