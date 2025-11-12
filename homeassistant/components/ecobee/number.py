@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
+from typing import Any
 
 from homeassistant.components.number import (
     NumberDeviceClass,
@@ -69,14 +70,13 @@ async def async_setup_entry(
 
     _LOGGER.debug("Adding compressor min temp number and aux heat")
     for index, thermostat in enumerate(data.ecobee.thermostats):
-        thermostat_settings = thermostat["settings"]
+        thermostat_settings: dict[str, Any] = thermostat["settings"]
         if thermostat_settings["hasHeatPump"]:
             compressor_entity = EcobeeCompressorMinTemp(data, index)
             entities.append(compressor_entity)
 
             if thermostat_settings["hasForcedAir"] or thermostat_settings["hasBoiler"]:
-                aux_entity = EcobeeAuxMaxOutdoorTemp(data, index, compressor_entity)
-                compressor_entity.aux_entity = aux_entity
+                aux_entity = EcobeeAuxMaxOutdoorTemp(data, index)
                 entities.append(aux_entity)
 
     async_add_entities(entities, True)
@@ -153,7 +153,6 @@ class EcobeeCompressorMinTemp(EcobeeBaseEntity, NumberEntity):
         super().__init__(data, thermostat_index)
         self._attr_unique_id = f"{self.base_unique_id}_compressor_protection_min_temp"
         self.update_without_throttle = False
-        self.aux_entity: EcobeeAuxMaxOutdoorTemp | None = None
 
     async def async_update(self) -> None:
         """Get the latest state from the thermostat."""
@@ -169,15 +168,14 @@ class EcobeeCompressorMinTemp(EcobeeBaseEntity, NumberEntity):
 
     def set_native_value(self, value: float) -> None:
         """Set new compressor minimum temperature."""
-        if self.aux_entity is not None:
+        if (
+            aux_entity_value := self.thermostat["settings"].get("auxMaxOutdoorTemp")
+        ) is not None:
             # We need to ensure there is at least a difference of 5 degrees between
             # the auxiliary max outdoor temp and the compressor min temp.
-            difference = (
-                self.aux_entity.native_value - int(value)
-                if self.aux_entity.native_value is not None
-                else None
-            )
-            if difference is not None and difference < 5:
+            difference = (aux_entity_value / 10) - int(value)
+
+            if difference < 5:
                 # Subtract 5 from our current value, round down to nearest 5 and ensure
                 # it is 0 or higher.
                 new_aux_value = max(int(value) + 5, 0)
@@ -189,7 +187,6 @@ class EcobeeCompressorMinTemp(EcobeeBaseEntity, NumberEntity):
                 self.data.ecobee.set_aux_maxtemp_threshold(
                     self.thermostat_index, int(new_aux_value)
                 )
-                self.aux_entity.update_without_throttle = True
 
         self.data.ecobee.set_aux_cutover_threshold(self.thermostat_index, int(value))
         self.update_without_throttle = True
@@ -216,13 +213,11 @@ class EcobeeAuxMaxOutdoorTemp(EcobeeBaseEntity, NumberEntity):
         self,
         data: EcobeeData,
         thermostat_index: int,
-        compressor_entity: EcobeeCompressorMinTemp,
     ) -> None:
         """Initialize ecobee auxiliary maximum outdoor temperature."""
         super().__init__(data, thermostat_index)
         self._attr_unique_id = f"{self.base_unique_id}_aux_max_outdoor_temp"
         self.update_without_throttle = False
-        self._compressor_entity = compressor_entity
 
     async def async_update(self) -> None:
         """Get the latest state from the thermostat."""
@@ -241,25 +236,26 @@ class EcobeeAuxMaxOutdoorTemp(EcobeeBaseEntity, NumberEntity):
         # We need to ensure there is at least a difference of 5 degrees between
         # the auxiliary max outdoor temp and the compressor min temp.
 
-        difference = (
-            value - self._compressor_entity.native_value
-            if self._compressor_entity.native_value is not None
-            else None
-        )
-        if difference is not None and difference < 5:
-            # Subtract 5 from our current value, round down to nearest 5 as
-            # compressor protection min temp only supports steps of 5, maximum is 65.
-            new_compressor_value = min(((value - 5) // 5) * 5, 65)
+        if (
+            compressor_value := self.thermostat["settings"].get(
+                "compressorProtectionMinTemp"
+            )
+        ) is not None:
+            difference = int(value - (compressor_value / 10))
 
-            _LOGGER.debug(
-                "Adjusting compressor protection min temp to %s°F to maintain 5°F "
-                "difference",
-                new_compressor_value,
-            )
-            self.data.ecobee.set_aux_cutover_threshold(
-                self.thermostat_index, int(new_compressor_value)
-            )
-            self._compressor_entity.update_without_throttle = True
+            if difference < 5:
+                # Subtract 5 from our current value, round down to nearest 5 as
+                # compressor protection min temp only supports steps of 5, maximum is 65.
+                new_compressor_value = min(((value - 5) // 5) * 5, 65)
+
+                _LOGGER.debug(
+                    "Adjusting compressor protection min temp to %s°F to maintain 5°F "
+                    "difference",
+                    new_compressor_value,
+                )
+                self.data.ecobee.set_aux_cutover_threshold(
+                    self.thermostat_index, int(new_compressor_value)
+                )
 
         self.data.ecobee.set_aux_maxtemp_threshold(self.thermostat_index, int(value))
         self.update_without_throttle = True
