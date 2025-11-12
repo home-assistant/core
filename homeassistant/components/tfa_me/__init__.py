@@ -29,14 +29,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: TFAmeConfigEntry) -> boo
         hass, entry, host, delta_interval, name_with_station_id
     )
 
-    # Save coordinator for later usage
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
-
     # First request for sensor data
     await coordinator.async_config_entry_first_refresh()
 
-    # Set coordinator data
-    entry.runtime_data = coordinator
+    # Save coordinator for later usage
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
     assert entry.unique_id
 

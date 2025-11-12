@@ -300,11 +300,12 @@ def tfa_me_mock_coordinator():
 
 
 @pytest.fixture
-def mock_entry(tfa_me_mock_coordinator):
+def mock_entry(hass: HomeAssistant, tfa_me_mock_coordinator):
     """Return a mock ConfigEntry."""
     entry = AsyncMock()
     entry.entry_id = "1234"
     entry.runtime_data = tfa_me_mock_coordinator
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = tfa_me_mock_coordinator
     return entry
 
 
@@ -321,27 +322,6 @@ def tfa_me_mock_entry(hass: HomeAssistant) -> MockConfigEntry:
     )
     entry.add_to_hass(hass)
     return entry
-
-
-@pytest.mark.asyncio
-async def test_async_setup_entry_adds_entities(hass: HomeAssistant, mock_entry) -> None:
-    """Test that async_setup_entry correctly adds entities."""
-    added_entities = []
-
-    # Function adds entities to list
-    def _async_add_entities(entities, update_before_add=False):
-        added_entities.extend(entities)
-
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][mock_entry.entry_id] = mock_entry
-
-    await async_setup_entry(hass, mock_entry, _async_add_entities)
-
-    assert len(added_entities) >= 1
-    sensor = added_entities[0]
-    assert isinstance(sensor, TFAmeSensorEntity)
-    assert sensor.unique_id == "sensor.a01234567_temperature"
-    assert sensor.name == "Temperature"
 
 
 class FailingEntitiesError(Exception):

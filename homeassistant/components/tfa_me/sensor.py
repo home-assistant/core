@@ -6,7 +6,7 @@ from typing import Any
 
 from tfa_me_ha_local.history import SensorHistory
 
-from homeassistant.components.sensor import SensorEntity, StateType
+from homeassistant.components.sensor import SensorEntity, SensorStateClass, StateType
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
@@ -27,7 +27,7 @@ async def async_setup_entry(
     """Set up TFA.me as Sensor."""
 
     # Get coordinator
-    coordinator = entry.runtime_data  # coordinator
+    coordinator = hass.data.setdefault(DOMAIN, {})[entry.entry_id]
     # Initialize first refresh/request and wait for parsed JSON data from coordinator
 
     try:
@@ -123,13 +123,16 @@ class TFAmeSensorEntity(CoordinatorEntity, SensorEntity):
                 ),  # 'Sensor/Station type XX'
             }
 
-            # Optional histories for rain
-            if "rain_hour" in self.uid:
+            # Some rain specials
+            if self.uid.endswith("_rain"):
+                self._attr_state_class = SensorStateClass.TOTAL_INCREASING
+            if "_rain_hour" in self.uid:
                 self.rain_history: SensorHistory = SensorHistory(max_age_minutes=60)
-            if "rain_24hours" in self.uid:
+            if "_rain_24hours" in self.uid:
                 self.rain_history_24: SensorHistory = SensorHistory(
                     max_age_minutes=(24 * 60)
                 )
+                self._attr_state_class = SensorStateClass.TOTAL
 
             # If this is a station add URL to station
             hex_value = int(sensor_id[:2], 16)
@@ -139,7 +142,6 @@ class TFAmeSensorEntity(CoordinatorEntity, SensorEntity):
                 )
 
             # Add icon for measurement
-            self.measure_name = "UNKNOWN"
             self.init_measure_value = 0
             self.measure_name = self.coordinator.data[self.uid]["measurement"]
             self.init_measure_value = self.coordinator.data[self.uid]["value"]
@@ -178,6 +180,7 @@ class TFAmeSensorEntity(CoordinatorEntity, SensorEntity):
                 value = self.coordinator.data[self.uid]["value"]
                 ts = self.coordinator.data[self.uid]["ts"]
                 self.rain_history.add_measurement(value, ts)
+                self.rain_history.cleanup()
 
             except (ValueError, TypeError, KeyError):
                 value = 0
@@ -187,6 +190,7 @@ class TFAmeSensorEntity(CoordinatorEntity, SensorEntity):
                 value = self.coordinator.data[self.uid]["value"]
                 ts = self.coordinator.data[self.uid]["ts"]
                 self.rain_history_24.add_measurement(value, ts)
+                self.rain_history_24.cleanup()
 
             except (ValueError, TypeError, KeyError):
                 value = 0
@@ -246,13 +250,8 @@ class TFAmeSensorEntity(CoordinatorEntity, SensorEntity):
             if (utc_now_ts - last_update_ts) <= (timeout):
                 measurement_value = self.coordinator.data[self.uid]["value"]
 
-                # Is this rain sensor relative value?
+                # Is this rain sensor relative value since last restart
                 if "rain_rel" in self.uid:
-                    reset_rain = self.coordinator.data[self.uid]["reset_rain"]
-                    if reset_rain:
-                        self.init_measure_value = measurement_value
-                        self.coordinator.data[self.uid]["reset_rain"] = False
-
                     measurement_value = float(
                         float(measurement_value) - float(self.init_measure_value)
                     )
