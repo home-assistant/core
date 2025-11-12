@@ -74,6 +74,7 @@ SENSORS: tuple[PlugwiseSensorEntityDescription, ...] = (
         translation_key="intended_boiler_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     PlugwiseSensorEntityDescription(
@@ -105,6 +106,7 @@ SENSORS: tuple[PlugwiseSensorEntityDescription, ...] = (
         translation_key="water_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     PlugwiseSensorEntityDescription(
@@ -361,6 +363,7 @@ SENSORS: tuple[PlugwiseSensorEntityDescription, ...] = (
         key="valve_position",
         translation_key="valve_position",
         native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     PlugwiseSensorEntityDescription(
@@ -375,7 +378,6 @@ SENSORS: tuple[PlugwiseSensorEntityDescription, ...] = (
         key="humidity",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
-        entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     PlugwiseSensorEntityDescription(
@@ -383,6 +385,7 @@ SENSORS: tuple[PlugwiseSensorEntityDescription, ...] = (
         translation_key="dhw_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     PlugwiseSensorEntityDescription(
@@ -390,6 +393,7 @@ SENSORS: tuple[PlugwiseSensorEntityDescription, ...] = (
         translation_key="domestic_hot_water_setpoint",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
     ),
 )
