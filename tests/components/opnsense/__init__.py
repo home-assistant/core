@@ -54,4 +54,3 @@ def setup_mock_diagnostics(mock_diagnostics):
     mock_diagnostics.NetworkInsightClient.return_value = network_insight_client
     network_insight_client.get_interfaces.return_value = INTERFACES
 
-    return mock_diagnostics
