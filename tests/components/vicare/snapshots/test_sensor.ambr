@@ -3048,6 +3048,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
@@ -3058,7 +3061,7 @@
     'supported_features': 0,
     'translation_key': 'compressor_inlet_temperature',
     'unique_id': 'gateway2_################-compressor_inlet_temperature-0',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
 # name: test_all_entities[sensor.model2_compressor_inlet_temperature-state]
@@ -3066,6 +3069,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'model2 Compressor inlet temperature',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.model2_compressor_inlet_temperature',
@@ -3097,6 +3101,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
@@ -3107,7 +3114,7 @@
     'supported_features': 0,
     'translation_key': 'compressor_outlet_temperature',
     'unique_id': 'gateway2_################-compressor_outlet_temperature-0',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
 # name: test_all_entities[sensor.model2_compressor_outlet_temperature-state]
@@ -3115,6 +3122,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'model2 Compressor outlet temperature',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.model2_compressor_outlet_temperature',
@@ -3245,6 +3253,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
@@ -3255,7 +3266,7 @@
     'supported_features': 0,
     'translation_key': 'condensor_subcooling_temperature',
     'unique_id': 'gateway2_################-condensor_subcooling_temperature-0',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
 # name: test_all_entities[sensor.model2_condensor_subcooling_temperature-state]
@@ -3263,6 +3274,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'model2 Condensor subcooling temperature',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.model2_condensor_subcooling_temperature',
@@ -3518,6 +3530,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
@@ -3528,7 +3543,7 @@
     'supported_features': 0,
     'translation_key': 'evaporator_liquid_temperature',
     'unique_id': 'gateway2_################-evaporator_liquid_temperature-0',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
 # name: test_all_entities[sensor.model2_evaporator_liquid_temperature-state]
@@ -3536,6 +3551,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'model2 Evaporator liquid temperature',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.model2_evaporator_liquid_temperature',
@@ -3567,6 +3583,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
@@ -3577,7 +3596,7 @@
     'supported_features': 0,
     'translation_key': 'evaporator_overheat_temperature',
     'unique_id': 'gateway2_################-evaporator_overheat_temperature-0',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
 # name: test_all_entities[sensor.model2_evaporator_overheat_temperature-state]
@@ -3585,6 +3604,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'model2 Evaporator overheat temperature',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.model2_evaporator_overheat_temperature',

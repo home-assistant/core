@@ -42,6 +42,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     VICARE_BAR,
+    VICARE_CELSIUS,
     VICARE_CUBIC_METER,
     VICARE_KW,
     VICARE_KWH,
@@ -75,6 +76,7 @@ VICARE_UNIT_TO_DEVICE_CLASS = {
 
 VICARE_UNIT_TO_HA_UNIT = {
     VICARE_BAR: UnitOfPressure.BAR,
+    VICARE_CELSIUS: UnitOfTemperature.CELSIUS,
     VICARE_CUBIC_METER: UnitOfVolume.CUBIC_METERS,
     VICARE_KW: UnitOfPower.KILO_WATT,
     VICARE_KWH: UnitOfEnergy.KILO_WATT_HOUR,
