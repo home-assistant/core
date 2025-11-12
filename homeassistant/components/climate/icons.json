@@ -98,6 +98,9 @@
     }
   },
   "triggers": {
+    "started_heating": {
+      "trigger": "mdi:fire"
+    },
     "turned_off": {
       "trigger": "mdi:power-off"
     }

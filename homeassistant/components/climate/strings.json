@@ -294,6 +294,17 @@
   },
   "title": "Climate",
   "triggers": {
+    "started_heating": {
+      "description": "Triggers when a climate starts to heat.",
+      "description_configured": "Triggers when a climate starts to heat",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::climate::triggers::turned_off::fields::behavior::description%]",
+          "name": "[%key:component::climate::triggers::turned_off::fields::behavior::name%]"
+        }
+      },
+      "name": "When a climate starts to heat"
+    },
     "turned_off": {
       "description": "Triggers when a climate is turned off.",
       "description_configured": "Triggers when a climate is turned off",

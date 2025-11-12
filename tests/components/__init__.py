@@ -138,3 +138,74 @@ def parametrize_trigger_states(
             [(target_state, 0), (other_state, 0), (target_state, 1)],
         ),
     ]
+
+
+def parametrize_attribute_trigger_states(
+    trigger: str, state: str, attribute: str, target_state: str, other_state: str
+) -> tuple[str, list[tuple[str, int]]]:
+    """Parametrize states and expected service call counts.
+
+    Returns a list of tuples with (trigger, initial_state, list of states),
+    where states is a list of tuples (state to set, expected service call count).
+    """
+    return [
+        # Initial state None
+        (
+            trigger,
+            (None, {}),
+            [
+                ((state, {attribute: target_state}), 0),
+                ((state, {}), 0),
+                ((state, {attribute: target_state}), 1),
+            ],
+        ),
+        # No initial state attribute
+        (
+            trigger,
+            (state, {}),
+            [
+                ((state, {attribute: target_state}), 1),
+                ((state, {}), 0),
+                ((state, {attribute: target_state}), 1),
+            ],
+        ),
+        # Initial state attribute different from target state
+        (
+            trigger,
+            (state, {}),
+            [
+                ((state, {attribute: target_state}), 1),
+                ((state, {attribute: other_state}), 0),
+                ((state, {attribute: target_state}), 1),
+            ],
+        ),
+        # Initial state attribute same as target state
+        (
+            trigger,
+            (state, {attribute: target_state}),
+            [
+                ((state, {attribute: target_state}), 0),
+                ((state, {}), 0),
+                ((state, {attribute: target_state}), 1),
+            ],
+        ),
+        # Initial state unavailable / unknown
+        (
+            trigger,
+            (STATE_UNAVAILABLE, {}),
+            [
+                ((state, {attribute: target_state}), 0),
+                ((state, {}), 0),
+                ((state, {attribute: target_state}), 1),
+            ],
+        ),
+        (
+            trigger,
+            (STATE_UNKNOWN, {}),
+            [
+                ((state, {attribute: target_state}), 0),
+                ((state, {}), 0),
+                ((state, {attribute: target_state}), 1),
+            ],
+        ),
+    ]
