@@ -1,5 +1,14 @@
 """The tests for components."""
 
+from homeassistant.const import (
+    ATTR_AREA_ID,
+    ATTR_DEVICE_ID,
+    ATTR_FLOOR_ID,
+    ATTR_LABEL_ID,
+    CONF_ENTITY_ID,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
@@ -66,4 +75,66 @@ async def target_entities(hass: HomeAssistant, domain: str) -> None:
         f"{domain}.label_{domain}",
         f"{domain}.area_{domain}",
         f"{domain}.device_{domain}",
+    ]
+
+
+def parametrize_target_entities(domain: str) -> list[tuple[dict, str, int]]:
+    """Parametrize target entities for different target types.
+
+    Meant to be used with target_entities.
+    """
+    return [
+        (
+            {CONF_ENTITY_ID: f"{domain}.standalone_{domain}"},
+            f"{domain}.standalone_{domain}",
+            1,
+        ),
+        ({ATTR_LABEL_ID: "test_label"}, f"{domain}.label_{domain}", 2),
+        ({ATTR_AREA_ID: "test_area"}, f"{domain}.area_{domain}", 2),
+        ({ATTR_FLOOR_ID: "test_floor"}, f"{domain}.area_{domain}", 2),
+        ({ATTR_LABEL_ID: "test_label"}, f"{domain}.device_{domain}", 2),
+        ({ATTR_AREA_ID: "test_area"}, f"{domain}.device_{domain}", 2),
+        ({ATTR_FLOOR_ID: "test_floor"}, f"{domain}.device_{domain}", 2),
+        ({ATTR_DEVICE_ID: "test_device"}, f"{domain}.device_{domain}", 1),
+    ]
+
+
+def parametrize_trigger_states(
+    trigger: str, target_state: str, other_state: str
+) -> tuple[str, list[tuple[str, int]]]:
+    """Parametrize states and expected service call counts.
+
+    Returns a list of tuples with (trigger, initial_state, list of states),
+    where states is a list of tuples (state to set, expected service call count).
+    """
+    return [
+        # Initial state None
+        (
+            trigger,
+            None,
+            [(target_state, 0), (other_state, 0), (target_state, 1)],
+        ),
+        # Initial state different from target state
+        (
+            trigger,
+            other_state,
+            [(target_state, 1), (other_state, 0), (target_state, 1)],
+        ),
+        # Initial state same as target state
+        (
+            trigger,
+            target_state,
+            [(target_state, 0), (other_state, 0), (target_state, 1)],
+        ),
+        # Initial state unavailable / unknown
+        (
+            trigger,
+            STATE_UNAVAILABLE,
+            [(target_state, 0), (other_state, 0), (target_state, 1)],
+        ),
+        (
+            trigger,
+            STATE_UNKNOWN,
+            [(target_state, 0), (other_state, 0), (target_state, 1)],
+        ),
     ]

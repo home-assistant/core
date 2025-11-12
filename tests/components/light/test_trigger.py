@@ -4,23 +4,21 @@ import pytest
 
 from homeassistant.components import automation
 from homeassistant.const import (
-    ATTR_AREA_ID,
-    ATTR_DEVICE_ID,
-    ATTR_FLOOR_ID,
-    ATTR_LABEL_ID,
     CONF_ENTITY_ID,
     CONF_OPTIONS,
     CONF_PLATFORM,
     CONF_TARGET,
     STATE_OFF,
     STATE_ON,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.setup import async_setup_component
 
-from tests.components import target_entities
+from tests.components import (
+    parametrize_target_entities,
+    parametrize_trigger_states,
+    target_entities,
+)
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
@@ -66,55 +64,14 @@ async def setup_automation(
 
 
 @pytest.mark.parametrize(
-    ("trigger_target_config", "entity_id", "lights_in_target"),
-    [
-        ({CONF_ENTITY_ID: "light.standalone_light"}, "light.standalone_light", 1),
-        ({ATTR_LABEL_ID: "test_label"}, "light.label_light", 2),
-        ({ATTR_AREA_ID: "test_area"}, "light.area_light", 2),
-        ({ATTR_FLOOR_ID: "test_floor"}, "light.area_light", 2),
-        ({ATTR_LABEL_ID: "test_label"}, "light.device_light", 2),
-        ({ATTR_AREA_ID: "test_area"}, "light.device_light", 2),
-        ({ATTR_FLOOR_ID: "test_floor"}, "light.device_light", 2),
-        ({ATTR_DEVICE_ID: "test_device"}, "light.device_light", 1),
-    ],
+    ("trigger_target_config", "entity_id", "entities_in_target"),
+    parametrize_target_entities("light"),
 )
 @pytest.mark.parametrize(
     ("trigger", "initial_state", "states"),
     [
-        # Initial state None
-        ("light.turned_on", None, [(STATE_ON, 0), (STATE_OFF, 0), (STATE_ON, 1)]),
-        ("light.turned_off", None, [(STATE_OFF, 0), (STATE_ON, 0), (STATE_OFF, 1)]),
-        # Initial state opposite of target state
-        ("light.turned_on", STATE_OFF, [(STATE_ON, 1), (STATE_OFF, 0), (STATE_ON, 1)]),
-        ("light.turned_off", STATE_ON, [(STATE_OFF, 1), (STATE_ON, 0), (STATE_OFF, 1)]),
-        # Initial state same as target state
-        ("light.turned_on", STATE_ON, [(STATE_ON, 0), (STATE_OFF, 0), (STATE_ON, 1)]),
-        (
-            "light.turned_off",
-            STATE_OFF,
-            [(STATE_OFF, 0), (STATE_ON, 0), (STATE_OFF, 1)],
-        ),
-        # Initial state unavailable / unknown
-        (
-            "light.turned_on",
-            STATE_UNAVAILABLE,
-            [(STATE_ON, 0), (STATE_OFF, 0), (STATE_ON, 1)],
-        ),
-        (
-            "light.turned_off",
-            STATE_UNAVAILABLE,
-            [(STATE_OFF, 0), (STATE_ON, 0), (STATE_OFF, 1)],
-        ),
-        (
-            "light.turned_on",
-            STATE_UNKNOWN,
-            [(STATE_ON, 0), (STATE_OFF, 0), (STATE_ON, 1)],
-        ),
-        (
-            "light.turned_off",
-            STATE_UNKNOWN,
-            [(STATE_OFF, 0), (STATE_ON, 0), (STATE_OFF, 1)],
-        ),
+        *parametrize_trigger_states("light.turned_on", STATE_ON, STATE_OFF),
+        *parametrize_trigger_states("light.turned_off", STATE_OFF, STATE_ON),
     ],
 )
 async def test_light_state_trigger_behavior_any(
@@ -123,7 +80,7 @@ async def test_light_state_trigger_behavior_any(
     target_lights: list[str],
     trigger_target_config: dict,
     entity_id: str,
-    lights_in_target: int,
+    entities_in_target: int,
     trigger: str,
     initial_state: str,
     states: list[tuple[str, int]],
@@ -152,60 +109,19 @@ async def test_light_state_trigger_behavior_any(
         for other_entity_id in other_entity_ids:
             set_or_remove_state(hass, other_entity_id, state)
             await hass.async_block_till_done()
-        assert len(service_calls) == (lights_in_target - 1) * expected_calls
+        assert len(service_calls) == (entities_in_target - 1) * expected_calls
         service_calls.clear()
 
 
 @pytest.mark.parametrize(
-    ("trigger_target_config", "entity_id"),
-    [
-        ({CONF_ENTITY_ID: "light.standalone_light"}, "light.standalone_light"),
-        ({ATTR_LABEL_ID: "test_label"}, "light.label_light"),
-        ({ATTR_AREA_ID: "test_area"}, "light.area_light"),
-        ({ATTR_FLOOR_ID: "test_floor"}, "light.area_light"),
-        ({ATTR_LABEL_ID: "test_label"}, "light.device_light"),
-        ({ATTR_AREA_ID: "test_area"}, "light.device_light"),
-        ({ATTR_FLOOR_ID: "test_floor"}, "light.device_light"),
-        ({ATTR_DEVICE_ID: "test_device"}, "light.device_light"),
-    ],
+    ("trigger_target_config", "entity_id", "entities_in_target"),
+    parametrize_target_entities("light"),
 )
 @pytest.mark.parametrize(
     ("trigger", "initial_state", "states"),
     [
-        # Initial state None
-        ("light.turned_on", None, [(STATE_ON, 0), (STATE_OFF, 0), (STATE_ON, 1)]),
-        ("light.turned_off", None, [(STATE_OFF, 0), (STATE_ON, 0), (STATE_OFF, 1)]),
-        # Initial state opposite of target state
-        ("light.turned_on", STATE_OFF, [(STATE_ON, 1), (STATE_OFF, 0), (STATE_ON, 1)]),
-        ("light.turned_off", STATE_ON, [(STATE_OFF, 1), (STATE_ON, 0), (STATE_OFF, 1)]),
-        # Initial state same as target state
-        ("light.turned_on", STATE_ON, [(STATE_ON, 0), (STATE_OFF, 0), (STATE_ON, 1)]),
-        (
-            "light.turned_off",
-            STATE_OFF,
-            [(STATE_OFF, 0), (STATE_ON, 0), (STATE_OFF, 1)],
-        ),
-        # Initial state unavailable / unknown
-        (
-            "light.turned_on",
-            STATE_UNAVAILABLE,
-            [(STATE_ON, 0), (STATE_OFF, 0), (STATE_ON, 1)],
-        ),
-        (
-            "light.turned_off",
-            STATE_UNAVAILABLE,
-            [(STATE_OFF, 0), (STATE_ON, 0), (STATE_OFF, 1)],
-        ),
-        (
-            "light.turned_on",
-            STATE_UNKNOWN,
-            [(STATE_ON, 0), (STATE_OFF, 0), (STATE_ON, 1)],
-        ),
-        (
-            "light.turned_off",
-            STATE_UNKNOWN,
-            [(STATE_OFF, 0), (STATE_ON, 0), (STATE_OFF, 1)],
-        ),
+        *parametrize_trigger_states("light.turned_on", STATE_ON, STATE_OFF),
+        *parametrize_trigger_states("light.turned_off", STATE_OFF, STATE_ON),
     ],
 )
 async def test_light_state_trigger_behavior_first(
@@ -214,6 +130,7 @@ async def test_light_state_trigger_behavior_first(
     target_lights: list[str],
     trigger_target_config: dict,
     entity_id: str,
+    entities_in_target: int,
     trigger: str,
     initial_state: str,
     states: list[tuple[str, int, list[str]]],
@@ -246,55 +163,14 @@ async def test_light_state_trigger_behavior_first(
 
 
 @pytest.mark.parametrize(
-    ("trigger_target_config", "entity_id"),
-    [
-        ({CONF_ENTITY_ID: "light.standalone_light"}, "light.standalone_light"),
-        ({ATTR_LABEL_ID: "test_label"}, "light.label_light"),
-        ({ATTR_AREA_ID: "test_area"}, "light.area_light"),
-        ({ATTR_FLOOR_ID: "test_floor"}, "light.area_light"),
-        ({ATTR_LABEL_ID: "test_label"}, "light.device_light"),
-        ({ATTR_AREA_ID: "test_area"}, "light.device_light"),
-        ({ATTR_FLOOR_ID: "test_floor"}, "light.device_light"),
-        ({ATTR_DEVICE_ID: "test_device"}, "light.device_light"),
-    ],
+    ("trigger_target_config", "entity_id", "entities_in_target"),
+    parametrize_target_entities("light"),
 )
 @pytest.mark.parametrize(
     ("trigger", "initial_state", "states"),
     [
-        # Initial state None
-        ("light.turned_on", None, [(STATE_ON, 0), (STATE_OFF, 0), (STATE_ON, 1)]),
-        ("light.turned_off", None, [(STATE_OFF, 0), (STATE_ON, 0), (STATE_OFF, 1)]),
-        # Initial state opposite of target state
-        ("light.turned_on", STATE_OFF, [(STATE_ON, 1), (STATE_OFF, 0), (STATE_ON, 1)]),
-        ("light.turned_off", STATE_ON, [(STATE_OFF, 1), (STATE_ON, 0), (STATE_OFF, 1)]),
-        # Initial state same as target state
-        ("light.turned_on", STATE_ON, [(STATE_ON, 0), (STATE_OFF, 0), (STATE_ON, 1)]),
-        (
-            "light.turned_off",
-            STATE_OFF,
-            [(STATE_OFF, 0), (STATE_ON, 0), (STATE_OFF, 1)],
-        ),
-        # Initial state unavailable / unknown
-        (
-            "light.turned_on",
-            STATE_UNAVAILABLE,
-            [(STATE_ON, 0), (STATE_OFF, 0), (STATE_ON, 1)],
-        ),
-        (
-            "light.turned_off",
-            STATE_UNAVAILABLE,
-            [(STATE_OFF, 0), (STATE_ON, 0), (STATE_OFF, 1)],
-        ),
-        (
-            "light.turned_on",
-            STATE_UNKNOWN,
-            [(STATE_ON, 0), (STATE_OFF, 0), (STATE_ON, 1)],
-        ),
-        (
-            "light.turned_off",
-            STATE_UNKNOWN,
-            [(STATE_OFF, 0), (STATE_ON, 0), (STATE_OFF, 1)],
-        ),
+        *parametrize_trigger_states("light.turned_on", STATE_ON, STATE_OFF),
+        *parametrize_trigger_states("light.turned_off", STATE_OFF, STATE_ON),
     ],
 )
 async def test_light_state_trigger_behavior_last(
@@ -303,6 +179,7 @@ async def test_light_state_trigger_behavior_last(
     target_lights: list[str],
     trigger_target_config: dict,
     entity_id: str,
+    entities_in_target: int,
     trigger: str,
     initial_state: str,
     states: list[tuple[str, int]],

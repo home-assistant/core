@@ -4,22 +4,15 @@ import pytest
 
 from homeassistant.components import automation
 from homeassistant.components.climate.const import HVACMode
-from homeassistant.const import (
-    ATTR_AREA_ID,
-    ATTR_DEVICE_ID,
-    ATTR_FLOOR_ID,
-    ATTR_LABEL_ID,
-    CONF_ENTITY_ID,
-    CONF_OPTIONS,
-    CONF_PLATFORM,
-    CONF_TARGET,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import CONF_ENTITY_ID, CONF_OPTIONS, CONF_PLATFORM, CONF_TARGET
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.setup import async_setup_component
 
-from tests.components import target_entities
+from tests.components import (
+    parametrize_target_entities,
+    parametrize_trigger_states,
+    target_entities,
+)
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
@@ -65,54 +58,13 @@ async def setup_automation(
 
 
 @pytest.mark.parametrize(
-    ("trigger_target_config", "entity_id", "climates_in_target"),
-    [
-        (
-            {CONF_ENTITY_ID: "climate.standalone_climate"},
-            "climate.standalone_climate",
-            1,
-        ),
-        ({ATTR_LABEL_ID: "test_label"}, "climate.label_climate", 2),
-        ({ATTR_AREA_ID: "test_area"}, "climate.area_climate", 2),
-        ({ATTR_FLOOR_ID: "test_floor"}, "climate.area_climate", 2),
-        ({ATTR_LABEL_ID: "test_label"}, "climate.device_climate", 2),
-        ({ATTR_AREA_ID: "test_area"}, "climate.device_climate", 2),
-        ({ATTR_FLOOR_ID: "test_floor"}, "climate.device_climate", 2),
-        ({ATTR_DEVICE_ID: "test_device"}, "climate.device_climate", 1),
-    ],
+    ("trigger_target_config", "entity_id", "entities_in_target"),
+    parametrize_target_entities("climate"),
 )
 @pytest.mark.parametrize(
     ("trigger", "initial_state", "states"),
     [
-        # Initial state None
-        (
-            "climate.turned_off",
-            None,
-            [(HVACMode.OFF, 0), (HVACMode.HEAT, 0), (HVACMode.OFF, 1)],
-        ),
-        # Initial state opposite of target state
-        (
-            "climate.turned_off",
-            HVACMode.HEAT,
-            [(HVACMode.OFF, 1), (HVACMode.HEAT, 0), (HVACMode.OFF, 1)],
-        ),
-        # Initial state same as target state
-        (
-            "climate.turned_off",
-            HVACMode.OFF,
-            [(HVACMode.OFF, 0), (HVACMode.HEAT, 0), (HVACMode.OFF, 1)],
-        ),
-        # Initial state unavailable / unknown
-        (
-            "climate.turned_off",
-            STATE_UNAVAILABLE,
-            [(HVACMode.OFF, 0), (HVACMode.HEAT, 0), (HVACMode.OFF, 1)],
-        ),
-        (
-            "climate.turned_off",
-            STATE_UNKNOWN,
-            [(HVACMode.OFF, 0), (HVACMode.HEAT, 0), (HVACMode.OFF, 1)],
-        ),
+        *parametrize_trigger_states("climate.turned_off", HVACMode.OFF, HVACMode.HEAT),
     ],
 )
 async def test_climate_state_trigger_behavior_any(
@@ -121,7 +73,7 @@ async def test_climate_state_trigger_behavior_any(
     target_climates: list[str],
     trigger_target_config: dict,
     entity_id: str,
-    climates_in_target: int,
+    entities_in_target: int,
     trigger: str,
     initial_state: str,
     states: list[tuple[str, int]],
@@ -150,55 +102,18 @@ async def test_climate_state_trigger_behavior_any(
         for other_entity_id in other_entity_ids:
             set_or_remove_state(hass, other_entity_id, state)
             await hass.async_block_till_done()
-        assert len(service_calls) == (climates_in_target - 1) * expected_calls
+        assert len(service_calls) == (entities_in_target - 1) * expected_calls
         service_calls.clear()
 
 
 @pytest.mark.parametrize(
-    ("trigger_target_config", "entity_id"),
-    [
-        ({CONF_ENTITY_ID: "climate.standalone_climate"}, "climate.standalone_climate"),
-        ({ATTR_LABEL_ID: "test_label"}, "climate.label_climate"),
-        ({ATTR_AREA_ID: "test_area"}, "climate.area_climate"),
-        ({ATTR_FLOOR_ID: "test_floor"}, "climate.area_climate"),
-        ({ATTR_LABEL_ID: "test_label"}, "climate.device_climate"),
-        ({ATTR_AREA_ID: "test_area"}, "climate.device_climate"),
-        ({ATTR_FLOOR_ID: "test_floor"}, "climate.device_climate"),
-        ({ATTR_DEVICE_ID: "test_device"}, "climate.device_climate"),
-    ],
+    ("trigger_target_config", "entity_id", "entities_in_target"),
+    parametrize_target_entities("climate"),
 )
 @pytest.mark.parametrize(
     ("trigger", "initial_state", "states"),
     [
-        # Initial state None
-        (
-            "climate.turned_off",
-            None,
-            [(HVACMode.OFF, 0), (HVACMode.HEAT, 0), (HVACMode.OFF, 1)],
-        ),
-        # Initial state opposite of target state
-        (
-            "climate.turned_off",
-            HVACMode.HEAT,
-            [(HVACMode.OFF, 1), (HVACMode.HEAT, 0), (HVACMode.OFF, 1)],
-        ),
-        # Initial state same as target state
-        (
-            "climate.turned_off",
-            HVACMode.OFF,
-            [(HVACMode.OFF, 0), (HVACMode.HEAT, 0), (HVACMode.OFF, 1)],
-        ),
-        # Initial state unavailable / unknown
-        (
-            "climate.turned_off",
-            STATE_UNAVAILABLE,
-            [(HVACMode.OFF, 0), (HVACMode.HEAT, 0), (HVACMode.OFF, 1)],
-        ),
-        (
-            "climate.turned_off",
-            STATE_UNKNOWN,
-            [(HVACMode.OFF, 0), (HVACMode.HEAT, 0), (HVACMode.OFF, 1)],
-        ),
+        *parametrize_trigger_states("climate.turned_off", HVACMode.OFF, HVACMode.HEAT),
     ],
 )
 async def test_climate_state_trigger_behavior_first(
@@ -206,6 +121,7 @@ async def test_climate_state_trigger_behavior_first(
     service_calls: list[ServiceCall],
     target_climates: list[str],
     trigger_target_config: dict,
+    entities_in_target: int,
     entity_id: str,
     trigger: str,
     initial_state: str,
@@ -239,50 +155,13 @@ async def test_climate_state_trigger_behavior_first(
 
 
 @pytest.mark.parametrize(
-    ("trigger_target_config", "entity_id"),
-    [
-        ({CONF_ENTITY_ID: "climate.standalone_climate"}, "climate.standalone_climate"),
-        ({ATTR_LABEL_ID: "test_label"}, "climate.label_climate"),
-        ({ATTR_AREA_ID: "test_area"}, "climate.area_climate"),
-        ({ATTR_FLOOR_ID: "test_floor"}, "climate.area_climate"),
-        ({ATTR_LABEL_ID: "test_label"}, "climate.device_climate"),
-        ({ATTR_AREA_ID: "test_area"}, "climate.device_climate"),
-        ({ATTR_FLOOR_ID: "test_floor"}, "climate.device_climate"),
-        ({ATTR_DEVICE_ID: "test_device"}, "climate.device_climate"),
-    ],
+    ("trigger_target_config", "entity_id", "entities_in_target"),
+    parametrize_target_entities("climate"),
 )
 @pytest.mark.parametrize(
     ("trigger", "initial_state", "states"),
     [
-        # Initial state None
-        (
-            "climate.turned_off",
-            None,
-            [(HVACMode.OFF, 0), (HVACMode.HEAT, 0), (HVACMode.OFF, 1)],
-        ),
-        # Initial state opposite of target state
-        (
-            "climate.turned_off",
-            HVACMode.HEAT,
-            [(HVACMode.OFF, 1), (HVACMode.HEAT, 0), (HVACMode.OFF, 1)],
-        ),
-        # Initial state same as target state
-        (
-            "climate.turned_off",
-            HVACMode.OFF,
-            [(HVACMode.OFF, 0), (HVACMode.HEAT, 0), (HVACMode.OFF, 1)],
-        ),
-        # Initial state unavailable / unknown
-        (
-            "climate.turned_off",
-            STATE_UNAVAILABLE,
-            [(HVACMode.OFF, 0), (HVACMode.HEAT, 0), (HVACMode.OFF, 1)],
-        ),
-        (
-            "climate.turned_off",
-            STATE_UNKNOWN,
-            [(HVACMode.OFF, 0), (HVACMode.HEAT, 0), (HVACMode.OFF, 1)],
-        ),
+        *parametrize_trigger_states("climate.turned_off", HVACMode.OFF, HVACMode.HEAT),
     ],
 )
 async def test_climate_state_trigger_behavior_last(
@@ -290,6 +169,7 @@ async def test_climate_state_trigger_behavior_last(
     service_calls: list[ServiceCall],
     target_climates: list[str],
     trigger_target_config: dict,
+    entities_in_target: int,
     entity_id: str,
     trigger: str,
     initial_state: str,
