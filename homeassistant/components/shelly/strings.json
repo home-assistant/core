@@ -129,6 +129,32 @@
     }
   },
   "entity": {
+    "button": {
+      "calibrate": {
+        "name": "Calibrate"
+      },
+      "close": {
+        "name": "Close"
+      },
+      "mute_alarm": {
+        "name": "Mute alarm"
+      },
+      "open": {
+        "name": "Open"
+      },
+      "self_test": {
+        "name": "Self-test"
+      },
+      "turn_off_the_screen": {
+        "name": "Turn off the screen"
+      },
+      "turn_on_the_screen": {
+        "name": "Turn on the screen"
+      },
+      "unmute_alarm": {
+        "name": "Unmute alarm"
+      }
+    },
     "climate": {
       "thermostat": {
         "state_attributes": {
@@ -159,6 +185,43 @@
               "triple_push": "Triple push"
             }
           }
+        }
+      }
+    },
+    "number": {
+      "current_limit": {
+        "name": "Current limit"
+      },
+      "external_temperature": {
+        "name": "External temperature"
+      },
+      "left_slot_intensity": {
+        "name": "Left slot intensity"
+      },
+      "right_slot_intensity": {
+        "name": "Right slot intensity"
+      },
+      "target_humidity": {
+        "name": "Target humidity"
+      },
+      "target_temperature": {
+        "name": "Target temperature"
+      },
+      "valve_position": {
+        "name": "Valve position"
+      }
+    },
+    "select": {
+      "cury_mode": {
+        "name": "Mode",
+        "state": {
+          "bedroom": "Bedroom",
+          "hall": "Hall",
+          "lavatory_room": "Lavatory room",
+          "living_room": "Living room",
+          "none": "None",
+          "reception": "Reception",
+          "workplace": "Workplace"
         }
       }
     },
@@ -199,6 +262,9 @@
       },
       "current_with_channel_name": {
         "name": "{channel_name} current"
+      },
+      "current_with_phase_name": {
+        "name": "Phase {phase_name} current"
       },
       "detected_objects": {
         "name": "Detected objects",
@@ -291,6 +357,9 @@
       "power_with_channel_name": {
         "name": "{channel_name} power"
       },
+      "power_with_phase_name": {
+        "name": "Phase {phase_name} power"
+      },
       "pulse_counter": {
         "name": "Pulse counter"
       },
@@ -315,8 +384,8 @@
       "pulse_counter_with_channel_name": {
         "name": "{channel_name} pulse counter"
       },
-      "rainfall_last_24h": {
-        "name": "Rainfall last 24h"
+      "rainfall": {
+        "name": "Rainfall"
       },
       "right_slot_level": {
         "name": "Right slot level"
