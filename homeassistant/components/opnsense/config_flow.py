@@ -22,8 +22,6 @@ _LOGGER = logging.getLogger(__name__)
 class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
     """OPNsense config flow."""
 
-    VERSION = 1
-
     def __init__(self) -> None:
         """Initialize OPNsense config flow."""
         self.available_interfaces: Interfaces | None = None
