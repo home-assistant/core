@@ -60,16 +60,14 @@ async def async_migrate_unique_id(hass: HomeAssistant, entry: XboxConfigEntry) -
     if entry.version == 1 and entry.minor_version < 2:
         # Migrate unique_id from `xbox` to account xuid and
         # change generic entry name to user's gamertag
+        coordinator = entry.runtime_data.status
+        xuid = coordinator.client.xuid
+        gamertag = coordinator.data.presence[xuid].gamertag
+
         return hass.config_entries.async_update_entry(
             entry,
-            unique_id=entry.runtime_data.status.client.xuid,
-            title=(
-                entry.runtime_data.status.data.presence[
-                    entry.runtime_data.status.client.xuid
-                ].gamertag
-                if entry.title == "Home Assistant Cloud"
-                else entry.title
-            ),
+            unique_id=xuid,
+            title=(gamertag if entry.title == "Home Assistant Cloud" else entry.title),
             minor_version=2,
         )
 
