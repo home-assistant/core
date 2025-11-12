@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.template import TemplateEnvironment
 from homeassistant.helpers.template.extensions.base import (
     BaseTemplateExtension,
@@ -123,7 +124,7 @@ def test_limited_ok_functions_not_registered_in_limited_env() -> None:
     # The restricted function should be registered but raise TemplateError
     assert "restricted_func" in env.globals
     with pytest.raises(
-        Exception,  # TemplateError
+        TemplateError,
         match="Use of 'restricted_func' is not supported in limited templates",
     ):
         env.globals["restricted_func"]()
