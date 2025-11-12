@@ -13,13 +13,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
-from .const import (
-    CONF_API_SECRET,
-    CONF_AVAILABLE_INTERFACES,
-    CONF_TRACKER_INTERFACES,
-    DOMAIN,
-    OPNSENSE_DATA,
-)
+from .const import CONF_API_SECRET, CONF_TRACKER_INTERFACES, DOMAIN
 from .types import APIData, Interfaces
 
 _LOGGER = logging.getLogger(__name__)
@@ -72,6 +66,10 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle user step."""
+        # Check if already configured. Only one instance allowed for now.
+        await self.async_set_unique_id(DOMAIN)
+        self._abort_if_unique_id_configured()
+
         errors = {}
 
         if user_input is None:
@@ -129,14 +127,15 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
                 data_updates=data,
             )
 
-        available_interfaces = []
-        if (
-            OPNSENSE_DATA in self.hass.data
-            and CONF_AVAILABLE_INTERFACES in self.hass.data[OPNSENSE_DATA]
-        ):
-            available_interfaces = self.hass.data[OPNSENSE_DATA][
-                CONF_AVAILABLE_INTERFACES
-            ]
+        api_data: APIData = {
+            "api_key": reconfigure_entry.data[CONF_API_KEY],
+            "api_secret": reconfigure_entry.data[CONF_API_SECRET],
+            "base_url": reconfigure_entry.data[CONF_URL],
+            "verify_cert": reconfigure_entry.data[CONF_VERIFY_SSL],
+        }
+        await asyncio.gather(
+            self._async_get_available_interfaces(api_data),
+        )
 
         return self.async_show_form(
             step_id="reconfigure",
@@ -153,7 +152,7 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
                         ),
                     ): SelectSelector(
                         SelectSelectorConfig(
-                            options=list(available_interfaces),
+                            options=list(self.available_interfaces or []),
                             multiple=True,
                             sort=True,
                         )
@@ -166,6 +165,9 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
         self, import_data: (dict[str, Any])
     ) -> ConfigFlowResult:
         """Import a Yaml config."""
+        # Check if already configured. Only one instance allowed for now.
+        await self.async_set_unique_id(DOMAIN)
+        self._abort_if_unique_id_configured()
         self._async_abort_entries_match({CONF_URL: import_data[CONF_URL]})
 
         # Test connection
@@ -188,11 +190,10 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
         interfaces_client = diagnostics.InterfaceClient(**api_data)
         await self.hass.async_add_executor_job(interfaces_client.get_arp)
 
-    async def _async_get_available_interfaces(self, api_data: APIData) -> Interfaces:
+    async def _async_get_available_interfaces(self, api_data: APIData) -> None:
         """Fetch available interfaces from OPNsense."""
         netinsight_client = diagnostics.NetworkInsightClient(**api_data)
         interface_details = await self.hass.async_add_executor_job(
             netinsight_client.get_interfaces
         )
         self.available_interfaces = interface_details.values()
-        return self.available_interfaces
