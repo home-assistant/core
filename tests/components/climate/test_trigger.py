@@ -17,16 +17,9 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers import (
-    area_registry as ar,
-    device_registry as dr,
-    entity_registry as er,
-    floor_registry as fr,
-    label_registry as lr,
-)
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, mock_device_registry
+from tests.components import target_entities
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
@@ -37,58 +30,7 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
 @pytest.fixture
 async def target_climates(hass: HomeAssistant) -> None:
     """Create multiple climate entities associated with different targets."""
-    await async_setup_component(hass, "climate", {})
-
-    config_entry = MockConfigEntry(domain="test")
-    config_entry.add_to_hass(hass)
-
-    floor_reg = fr.async_get(hass)
-    floor = floor_reg.async_create("Test Floor")
-
-    area_reg = ar.async_get(hass)
-    area = area_reg.async_create("Test Area", floor_id=floor.floor_id)
-
-    label_reg = lr.async_get(hass)
-    label = label_reg.async_create("Test Label")
-
-    device = dr.DeviceEntry(id="test_device", area_id=area.id, labels={label.label_id})
-    mock_device_registry(hass, {device.id: device})
-
-    entity_reg = er.async_get(hass)
-    # Climate associated with area
-    climate_area = entity_reg.async_get_or_create(
-        domain="climate",
-        platform="test",
-        unique_id="climate_area",
-        suggested_object_id="area_climate",
-    )
-    entity_reg.async_update_entity(climate_area.entity_id, area_id=area.id)
-
-    # Climate associated with device
-    entity_reg.async_get_or_create(
-        domain="climate",
-        platform="test",
-        unique_id="climate_device",
-        suggested_object_id="device_climate",
-        device_id=device.id,
-    )
-
-    # Climate associated with label
-    climate_label = entity_reg.async_get_or_create(
-        domain="climate",
-        platform="test",
-        unique_id="climate_label",
-        suggested_object_id="label_climate",
-    )
-    entity_reg.async_update_entity(climate_label.entity_id, labels={label.label_id})
-
-    # Return all available climate entities
-    return [
-        "climate.standalone_climate",
-        "climate.label_climate",
-        "climate.area_climate",
-        "climate.device_climate",
-    ]
+    return await target_entities(hass, "climate")
 
 
 def set_or_remove_state(hass: HomeAssistant, entity_id: str, state: str | None) -> None:
