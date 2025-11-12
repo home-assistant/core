@@ -31,7 +31,6 @@ from homeassistant.core import (
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
-    HomeAssistantError,
     ServiceValidationError,
 )
 from homeassistant.helpers import config_validation as cv, entity_registry as er
@@ -398,46 +397,45 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def async_send_telegram_message(service: ServiceCall) -> ServiceResponse:
         """Handle sending Telegram Bot message service calls."""
 
-        if ATTR_ENTITY_ID in service.data:
-            notify_entities: list[str] = service.data[ATTR_ENTITY_ID]
+        # this is the list of targets to send the message to
+        targets: list[tuple[TelegramBotConfigEntry, int]] = _build_targets(
+            hass, service
+        )
 
-            for notify_entity in notify_entities:
-                _parse_notify_entity(hass, notify_entity)
+        service_responses: list[dict[str, int]] = []
 
-                # invoke service
-
-        msgtype = service.service
-        kwargs = dict(service.data)
-        _LOGGER.debug("New telegram message %s: %s", msgtype, kwargs)
-
-        config_entry_id: str | None = service.data.get(CONF_CONFIG_ENTRY_ID)
-        config_entry: TelegramBotConfigEntry | None = None
-        if config_entry_id:
-            config_entry = hass.config_entries.async_get_known_entry(config_entry_id)
-
-        else:
-            config_entries: list[TelegramBotConfigEntry] = (
-                service.hass.config_entries.async_entries(DOMAIN)
-            )
-
-            if len(config_entries) == 1:
-                config_entry = config_entries[0]
-
-            if len(config_entries) > 1:
+        # invoke the service for each target
+        for target_config_entry, target_chat_id in targets:
+            if not hasattr(target_config_entry, "runtime_data"):
                 raise ServiceValidationError(
-                    "Multiple config entries found. Please specify the Telegram bot to use.",
+                    "No config entries found or setup failed. Please set up the Telegram Bot first.",
                     translation_domain=DOMAIN,
-                    translation_key="multiple_config_entry",
+                    translation_key="missing_config_entry",
                 )
 
-        if not config_entry or not hasattr(config_entry, "runtime_data"):
-            raise ServiceValidationError(
-                "No config entries found or setup failed. Please set up the Telegram Bot first.",
-                translation_domain=DOMAIN,
-                translation_key="missing_config_entry",
+            service_response = await _call_service(
+                service, target_config_entry.runtime_data, target_chat_id
             )
+            if service_response is not None:
+                formatted_response = [
+                    {ATTR_CHAT_ID: chat_id, ATTR_MESSAGEID: message_id}
+                    for chat_id, message_id in service_response.items()
+                ]
+                service_responses.extend(formatted_response)
 
-        notify_service = config_entry.runtime_data
+        if service.return_response:
+            # return is correct, but mypy cannot infer it
+            return {"chats": service_responses}  # type: ignore[dict-item]
+
+        return None
+
+    async def _call_service(
+        service: ServiceCall, notify_service: TelegramNotificationService, target: int
+    ) -> dict[int, int] | None:
+        msgtype = service.service
+
+        kwargs = dict(service.data)
+        kwargs[ATTR_TARGET] = target
 
         messages = None
         if msgtype == SERVICE_SEND_MESSAGE:
@@ -486,27 +484,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
 
         if service.return_response and messages is not None:
-            target: list[int] | None = service.data.get(ATTR_TARGET)
-            if not target:
-                target = notify_service.get_target_chat_ids(None)
-
-            failed_chat_ids = [chat_id for chat_id in target if chat_id not in messages]
-            if failed_chat_ids:
-                raise HomeAssistantError(
-                    f"Failed targets: {failed_chat_ids}",
-                    translation_domain=DOMAIN,
-                    translation_key="failed_chat_ids",
-                    translation_placeholders={
-                        "chat_ids": ", ".join([str(i) for i in failed_chat_ids]),
-                        "bot_name": config_entry.title,
-                    },
-                )
-
-            return {
-                "chats": [
-                    {"chat_id": cid, "message_id": mid} for cid, mid in messages.items()
-                ]
-            }
+            return messages
 
         return None
 
@@ -539,44 +517,81 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-def _parse_notify_entity(
-    hass: HomeAssistant, notify_entity_id: str
-) -> tuple[TelegramBotConfigEntry, int]:
-    """Parse notify entity ID to get config entry and chat ID."""
+def _build_targets(
+    hass: HomeAssistant, service: ServiceCall
+) -> list[tuple[TelegramBotConfigEntry, int]]:
+    """Build list of targets where each target is represented by its corresponding config entry and chat ID."""
 
-    entity_registry = er.async_get(hass)
-    registry_entry = entity_registry.async_get(notify_entity_id)
+    targets: list[tuple[TelegramBotConfigEntry, int]] = []
 
-    if not registry_entry:
-        raise ServiceValidationError(
-            f"Notify entity not found: {notify_entity_id}",
-            translation_domain=DOMAIN,
-            translation_key="action_failed",
-        )
+    # build target list from notify entities using service data: `entity_id`
+    if ATTR_ENTITY_ID in service.data:
+        notify_entity_ids: list[str] = service.data[ATTR_ENTITY_ID]
+        entity_registry = er.async_get(hass)
 
-    if not registry_entry.config_entry_id:
-        raise ServiceValidationError(
-            f"Notify entity has no associated config entry: {notify_entity_id}",
-            translation_domain=DOMAIN,
-            translation_key="action_failed",
-        )
+        # parse entity IDs to get config entries and chat IDs
+        for notify_entity_id in notify_entity_ids:
+            # get config entry from notify entity
+            registry_entry = entity_registry.async_get(notify_entity_id)
+            if not registry_entry:
+                raise ServiceValidationError(
+                    f"Notify entity not found: {notify_entity_id}",
+                    translation_domain=DOMAIN,
+                    translation_key="action_failed",
+                )
+            notify_config_entry = hass.config_entries.async_get_known_entry(
+                str(registry_entry.config_entry_id)
+            )
 
-    notify_config_entry = hass.config_entries.async_get_known_entry(
-        registry_entry.config_entry_id
+            # get chat id from subentry
+            notify_config_subentry = notify_config_entry.subentries[
+                str(registry_entry.config_subentry_id)
+            ]
+            notify_chat_id: int = notify_config_subentry.data[ATTR_CHAT_ID]
+
+            targets.append((notify_config_entry, notify_chat_id))
+
+    # build target list using service data: `config_entry_id` and `target`
+    if CONF_CONFIG_ENTRY_ID in service.data:
+        # parse config entry from service data
+        config_entry_id: str = service.data[CONF_CONFIG_ENTRY_ID]
+        config_entry = hass.config_entries.async_get_known_entry(config_entry_id)
+
+        # parse chat IDs from service data
+        target: list[int] | None = service.data.get(ATTR_TARGET)
+        if target is None:
+            # try to get default chat ID from config entry
+            subentries = list(config_entry.subentries.values())
+            if len(subentries) != 1:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="to_do",
+                )
+
+            chat_id: int = subentries[0].data[ATTR_CHAT_ID]
+            target = [chat_id]
+
+        targets.extend([(config_entry, chat_id) for chat_id in target])
+
+    # we're done building targets from service data
+    if len(targets) > 0:
+        return targets
+
+    # there's no targets so we try to find a default target
+    config_entries: list[TelegramBotConfigEntry] = (
+        service.hass.config_entries.async_entries(DOMAIN)
     )
-    if not registry_entry.config_subentry_id:
-        raise ServiceValidationError(
-            f"Notify entity has no associated config subentry: {notify_entity_id}",
-            translation_domain=DOMAIN,
-            translation_key="action_failed",
-        )
+    if len(config_entries) == 1:
+        subentries = list(config_entries[0].subentries.values())
+        if len(subentries) == 1:
+            default_chat_id: int = subentries[0].data[ATTR_CHAT_ID]
+            return [(config_entries[0], default_chat_id)]
 
-    notify_config_subentry = notify_config_entry.subentries[
-        registry_entry.config_subentry_id
-    ]
-    chat_id: int = notify_config_subentry.data[ATTR_CHAT_ID]
-
-    return (notify_config_entry, chat_id)
+    # can't determine default since multiple config entries or multiple subentries exist
+    raise ServiceValidationError(
+        translation_domain=DOMAIN,
+        translation_key="no_targets_specified",
+    )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) -> bool:
