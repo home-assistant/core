@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+import re
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -14,7 +15,6 @@ from homeassistant.const import EntityCategory, UnitOfInformation
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.util import slugify
 
 from .api import StorageQuotaData
 from .coordinator import GoogleDriveConfigEntry, GoogleDriveDataUpdateCoordinator
@@ -22,6 +22,14 @@ from .entity import GoogleDriveEntity
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
+
+
+def _slugify(text: str | None) -> str:
+    if text == "" or text is None:
+        return ""
+    slug = re.sub(r"[^0-9a-zA-Z]+", "_", text)
+    slug = slug.strip("_")
+    return slug.lower()
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -106,7 +114,7 @@ class GoogleDriveSensorEntity(GoogleDriveEntity, SensorEntity):
         super().__init__(coordinator=coordinator)
         self.entity_description = description
         self._attr_unique_id = (
-            f"{slugify(coordinator.config_entry.unique_id)}_{description.key}"
+            f"{_slugify(coordinator.config_entry.unique_id)}_{description.key}"
         )
 
     @property
