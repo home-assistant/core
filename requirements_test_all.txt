@@ -93,7 +93,7 @@ PyTransportNSW==0.1.1
 PyTurboJPEG==1.8.0
 
 # homeassistant.components.vicare
-PyViCare==2.54.0
+PyViCare==2.55.0
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.14.3
@@ -2514,7 +2514,7 @@ ultraheat-api==0.5.7
 unifi-discovery==1.2.0
 
 # homeassistant.components.homeassistant_hardware
-universal-silabs-flasher==0.0.37
+universal-silabs-flasher==0.1.0
 
 # homeassistant.components.upb
 upb-lib==0.6.1
