@@ -112,6 +112,9 @@
     "pm1": {
       "default": "mdi:molecule"
     },
+    "pm4": {
+      "default": "mdi:molecule"
+    },
     "pm10": {
       "default": "mdi:molecule"
     },
