@@ -500,19 +500,222 @@ class BlindPositionChangedTrigger(CoverPositionChangedTriggerBase):
     device_class = CoverDeviceClass.BLIND
 
 
+# Device-class-specific trigger classes for awning
+class AwningOpensTrigger(CoverOpensTriggerBase):
+    """Trigger for when an awning opens."""
+
+    device_class = CoverDeviceClass.AWNING
+
+
+class AwningClosesTrigger(CoverClosesTriggerBase):
+    """Trigger for when an awning closes."""
+
+    device_class = CoverDeviceClass.AWNING
+
+
+class AwningStopsTrigger(CoverStopsTriggerBase):
+    """Trigger for when an awning stops moving."""
+
+    device_class = CoverDeviceClass.AWNING
+
+
+class AwningPositionChangedTrigger(CoverPositionChangedTriggerBase):
+    """Trigger for when an awning's position changes."""
+
+    device_class = CoverDeviceClass.AWNING
+
+
+# Device-class-specific trigger classes for damper
+class DamperOpensTrigger(CoverOpensTriggerBase):
+    """Trigger for when a damper opens."""
+
+    device_class = CoverDeviceClass.DAMPER
+
+
+class DamperClosesTrigger(CoverClosesTriggerBase):
+    """Trigger for when a damper closes."""
+
+    device_class = CoverDeviceClass.DAMPER
+
+
+class DamperStopsTrigger(CoverStopsTriggerBase):
+    """Trigger for when a damper stops moving."""
+
+    device_class = CoverDeviceClass.DAMPER
+
+
+class DamperPositionChangedTrigger(CoverPositionChangedTriggerBase):
+    """Trigger for when a damper's position changes."""
+
+    device_class = CoverDeviceClass.DAMPER
+
+
+# Device-class-specific trigger classes for door
+class DoorOpensTrigger(CoverOpensTriggerBase):
+    """Trigger for when a door opens."""
+
+    device_class = CoverDeviceClass.DOOR
+
+
+class DoorClosesTrigger(CoverClosesTriggerBase):
+    """Trigger for when a door closes."""
+
+    device_class = CoverDeviceClass.DOOR
+
+
+class DoorStopsTrigger(CoverStopsTriggerBase):
+    """Trigger for when a door stops moving."""
+
+    device_class = CoverDeviceClass.DOOR
+
+
+class DoorPositionChangedTrigger(CoverPositionChangedTriggerBase):
+    """Trigger for when a door's position changes."""
+
+    device_class = CoverDeviceClass.DOOR
+
+
+# Device-class-specific trigger classes for garage
+class GarageOpensTrigger(CoverOpensTriggerBase):
+    """Trigger for when a garage opens."""
+
+    device_class = CoverDeviceClass.GARAGE
+
+
+class GarageClosesTrigger(CoverClosesTriggerBase):
+    """Trigger for when a garage closes."""
+
+    device_class = CoverDeviceClass.GARAGE
+
+
+class GarageStopsTrigger(CoverStopsTriggerBase):
+    """Trigger for when a garage stops moving."""
+
+    device_class = CoverDeviceClass.GARAGE
+
+
+class GaragePositionChangedTrigger(CoverPositionChangedTriggerBase):
+    """Trigger for when a garage's position changes."""
+
+    device_class = CoverDeviceClass.GARAGE
+
+
+# Device-class-specific trigger classes for gate
+class GateOpensTrigger(CoverOpensTriggerBase):
+    """Trigger for when a gate opens."""
+
+    device_class = CoverDeviceClass.GATE
+
+
+class GateClosesTrigger(CoverClosesTriggerBase):
+    """Trigger for when a gate closes."""
+
+    device_class = CoverDeviceClass.GATE
+
+
+class GateStopsTrigger(CoverStopsTriggerBase):
+    """Trigger for when a gate stops moving."""
+
+    device_class = CoverDeviceClass.GATE
+
+
+class GatePositionChangedTrigger(CoverPositionChangedTriggerBase):
+    """Trigger for when a gate's position changes."""
+
+    device_class = CoverDeviceClass.GATE
+
+
+# Device-class-specific trigger classes for shade
+class ShadeOpensTrigger(CoverOpensTriggerBase):
+    """Trigger for when a shade opens."""
+
+    device_class = CoverDeviceClass.SHADE
+
+
+class ShadeClosesTrigger(CoverClosesTriggerBase):
+    """Trigger for when a shade closes."""
+
+    device_class = CoverDeviceClass.SHADE
+
+
+class ShadeStopsTrigger(CoverStopsTriggerBase):
+    """Trigger for when a shade stops moving."""
+
+    device_class = CoverDeviceClass.SHADE
+
+
+class ShadePositionChangedTrigger(CoverPositionChangedTriggerBase):
+    """Trigger for when a shade's position changes."""
+
+    device_class = CoverDeviceClass.SHADE
+
+
+# Device-class-specific trigger classes for window
+class WindowOpensTrigger(CoverOpensTriggerBase):
+    """Trigger for when a window opens."""
+
+    device_class = CoverDeviceClass.WINDOW
+
+
+class WindowClosesTrigger(CoverClosesTriggerBase):
+    """Trigger for when a window closes."""
+
+    device_class = CoverDeviceClass.WINDOW
+
+
+class WindowStopsTrigger(CoverStopsTriggerBase):
+    """Trigger for when a window stops moving."""
+
+    device_class = CoverDeviceClass.WINDOW
+
+
+class WindowPositionChangedTrigger(CoverPositionChangedTriggerBase):
+    """Trigger for when a window's position changes."""
+
+    device_class = CoverDeviceClass.WINDOW
+
+
 TRIGGERS: dict[str, type[Trigger]] = {
-    "curtain_opens": CurtainOpensTrigger,
-    "curtain_closes": CurtainClosesTrigger,
-    "curtain_stops": CurtainStopsTrigger,
-    "curtain_position_changed": CurtainPositionChangedTrigger,
-    "shutter_opens": ShutterOpensTrigger,
-    "shutter_closes": ShutterClosesTrigger,
-    "shutter_stops": ShutterStopsTrigger,
-    "shutter_position_changed": ShutterPositionChangedTrigger,
+    "awning_opens": AwningOpensTrigger,
+    "awning_closes": AwningClosesTrigger,
+    "awning_stops": AwningStopsTrigger,
+    "awning_position_changed": AwningPositionChangedTrigger,
     "blind_opens": BlindOpensTrigger,
     "blind_closes": BlindClosesTrigger,
     "blind_stops": BlindStopsTrigger,
     "blind_position_changed": BlindPositionChangedTrigger,
+    "curtain_opens": CurtainOpensTrigger,
+    "curtain_closes": CurtainClosesTrigger,
+    "curtain_stops": CurtainStopsTrigger,
+    "curtain_position_changed": CurtainPositionChangedTrigger,
+    "damper_opens": DamperOpensTrigger,
+    "damper_closes": DamperClosesTrigger,
+    "damper_stops": DamperStopsTrigger,
+    "damper_position_changed": DamperPositionChangedTrigger,
+    "door_opens": DoorOpensTrigger,
+    "door_closes": DoorClosesTrigger,
+    "door_stops": DoorStopsTrigger,
+    "door_position_changed": DoorPositionChangedTrigger,
+    "garage_opens": GarageOpensTrigger,
+    "garage_closes": GarageClosesTrigger,
+    "garage_stops": GarageStopsTrigger,
+    "garage_position_changed": GaragePositionChangedTrigger,
+    "gate_opens": GateOpensTrigger,
+    "gate_closes": GateClosesTrigger,
+    "gate_stops": GateStopsTrigger,
+    "gate_position_changed": GatePositionChangedTrigger,
+    "shade_opens": ShadeOpensTrigger,
+    "shade_closes": ShadeClosesTrigger,
+    "shade_stops": ShadeStopsTrigger,
+    "shade_position_changed": ShadePositionChangedTrigger,
+    "shutter_opens": ShutterOpensTrigger,
+    "shutter_closes": ShutterClosesTrigger,
+    "shutter_stops": ShutterStopsTrigger,
+    "shutter_position_changed": ShutterPositionChangedTrigger,
+    "window_opens": WindowOpensTrigger,
+    "window_closes": WindowClosesTrigger,
+    "window_stops": WindowStopsTrigger,
+    "window_position_changed": WindowPositionChangedTrigger,
 }
 
 

@@ -192,3 +192,458 @@ blind_position_changed:
           min: 0
           max: 100
           mode: box
+
+awning_opens:
+  target:
+    entity:
+      domain: cover
+      device_class: awning
+  fields:
+    fully_opened:
+      required: false
+      default: false
+      selector:
+        boolean:
+
+awning_closes:
+  target:
+    entity:
+      domain: cover
+      device_class: awning
+  fields:
+    fully_closed:
+      required: false
+      default: false
+      selector:
+        boolean:
+
+awning_stops:
+  target:
+    entity:
+      domain: cover
+      device_class: awning
+
+awning_position_changed:
+  target:
+    entity:
+      domain: cover
+      device_class: awning
+  fields:
+    lower:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 100
+          mode: box
+    upper:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 100
+          mode: box
+    above:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 100
+          mode: box
+    below:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 100
+          mode: box
+
+damper_opens:
+  target:
+    entity:
+      domain: cover
+      device_class: damper
+  fields:
+    fully_opened:
+      required: false
+      default: false
+      selector:
+        boolean:
+
+damper_closes:
+  target:
+    entity:
+      domain: cover
+      device_class: damper
+  fields:
+    fully_closed:
+      required: false
+      default: false
+      selector:
+        boolean:
+
+damper_stops:
+  target:
+    entity:
+      domain: cover
+      device_class: damper
+
+damper_position_changed:
+  target:
+    entity:
+      domain: cover
+      device_class: damper
+  fields:
+    lower:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 100
+          mode: box
+    upper:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 100
+          mode: box
+    above:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 100
+          mode: box
+    below:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 100
+          mode: box
+
+door_opens:
+  target:
+    entity:
+      domain: cover
+      device_class: door
+  fields:
+    fully_opened:
+      required: false
+      default: false
+      selector:
+        boolean:
+
+door_closes:
+  target:
+    entity:
+      domain: cover
+      device_class: door
+  fields:
+    fully_closed:
+      required: false
+      default: false
+      selector:
+        boolean:
+
+door_stops:
+  target:
+    entity:
+      domain: cover
+      device_class: door
+
+door_position_changed:
+  target:
+    entity:
+      domain: cover
+      device_class: door
+  fields:
+    lower:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 100
+          mode: box
+    upper:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 100
+          mode: box
+    above:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 100
+          mode: box
+    below:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 100
+          mode: box
+
+garage_opens:
+  target:
+    entity:
+      domain: cover
+      device_class: garage
+  fields:
+    fully_opened:
+      required: false
+      default: false
+      selector:
+        boolean:
+
+garage_closes:
+  target:
+    entity:
+      domain: cover
+      device_class: garage
+  fields:
+    fully_closed:
+      required: false
+      default: false
+      selector:
+        boolean:
+
+garage_stops:
+  target:
+    entity:
+      domain: cover
+      device_class: garage
+
+garage_position_changed:
+  target:
+    entity:
+      domain: cover
+      device_class: garage
+  fields:
+    lower:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 100
+          mode: box
+    upper:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 100
+          mode: box
+    above:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 100
+          mode: box
+    below:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 100
+          mode: box
+
+gate_opens:
+  target:
+    entity:
+      domain: cover
+      device_class: gate
+  fields:
+    fully_opened:
+      required: false
+      default: false
+      selector:
+        boolean:
+
+gate_closes:
+  target:
+    entity:
+      domain: cover
+      device_class: gate
+  fields:
+    fully_closed:
+      required: false
+      default: false
+      selector:
+        boolean:
+
+gate_stops:
+  target:
+    entity:
+      domain: cover
+      device_class: gate
+
+gate_position_changed:
+  target:
+    entity:
+      domain: cover
+      device_class: gate
+  fields:
+    lower:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 100
+          mode: box
+    upper:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 100
+          mode: box
+    above:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 100
+          mode: box
+    below:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 100
+          mode: box
+
+shade_opens:
+  target:
+    entity:
+      domain: cover
+      device_class: shade
+  fields:
+    fully_opened:
+      required: false
+      default: false
+      selector:
+        boolean:
+
+shade_closes:
+  target:
+    entity:
+      domain: cover
+      device_class: shade
+  fields:
+    fully_closed:
+      required: false
+      default: false
+      selector:
+        boolean:
+
+shade_stops:
+  target:
+    entity:
+      domain: cover
+      device_class: shade
+
+shade_position_changed:
+  target:
+    entity:
+      domain: cover
+      device_class: shade
+  fields:
+    lower:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 100
+          mode: box
+    upper:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 100
+          mode: box
+    above:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 100
+          mode: box
+    below:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 100
+          mode: box
+
+window_opens:
+  target:
+    entity:
+      domain: cover
+      device_class: window
+  fields:
+    fully_opened:
+      required: false
+      default: false
+      selector:
+        boolean:
+
+window_closes:
+  target:
+    entity:
+      domain: cover
+      device_class: window
+  fields:
+    fully_closed:
+      required: false
+      default: false
+      selector:
+        boolean:
+
+window_stops:
+  target:
+    entity:
+      domain: cover
+      device_class: window
+
+window_position_changed:
+  target:
+    entity:
+      domain: cover
+      device_class: window
+  fields:
+    lower:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 100
+          mode: box
+    upper:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 100
+          mode: box
+    above:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 100
+          mode: box
+    below:
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 100
+          mode: box

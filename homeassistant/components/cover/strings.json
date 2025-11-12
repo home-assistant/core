@@ -287,6 +287,356 @@
         }
       },
       "name": "When the position of a blind changes"
+    },
+    "awning_opens": {
+      "description": "Triggers when an awning opens.",
+      "description_configured": "Triggers when an awning opens",
+      "fields": {
+        "fully_opened": {
+          "description": "Only trigger when the awning is fully opened (position at 100%).",
+          "name": "Fully opened"
+        }
+      },
+      "name": "When an awning opens"
+    },
+    "awning_closes": {
+      "description": "Triggers when an awning closes.",
+      "description_configured": "Triggers when an awning closes",
+      "fields": {
+        "fully_closed": {
+          "description": "Only trigger when the awning is fully closed (position at 0%).",
+          "name": "Fully closed"
+        }
+      },
+      "name": "When an awning closes"
+    },
+    "awning_stops": {
+      "description": "Triggers when an awning stops moving.",
+      "description_configured": "Triggers when an awning stops moving",
+      "name": "When an awning stops moving"
+    },
+    "awning_position_changed": {
+      "description": "Triggers when the position of an awning changes.",
+      "description_configured": "Triggers when the position of an awning changes",
+      "fields": {
+        "lower": {
+          "description": "The minimum position value to trigger on. Only triggers when position is at or above this value.",
+          "name": "Lower limit"
+        },
+        "upper": {
+          "description": "The maximum position value to trigger on. Only triggers when position is at or below this value.",
+          "name": "Upper limit"
+        },
+        "above": {
+          "description": "Only trigger when position is above this value.",
+          "name": "Above"
+        },
+        "below": {
+          "description": "Only trigger when position is below this value.",
+          "name": "Below"
+        }
+      },
+      "name": "When the position of an awning changes"
+    },
+    "damper_opens": {
+      "description": "Triggers when a damper opens.",
+      "description_configured": "Triggers when a damper opens",
+      "fields": {
+        "fully_opened": {
+          "description": "Only trigger when the damper is fully opened (position at 100%).",
+          "name": "Fully opened"
+        }
+      },
+      "name": "When a damper opens"
+    },
+    "damper_closes": {
+      "description": "Triggers when a damper closes.",
+      "description_configured": "Triggers when a damper closes",
+      "fields": {
+        "fully_closed": {
+          "description": "Only trigger when the damper is fully closed (position at 0%).",
+          "name": "Fully closed"
+        }
+      },
+      "name": "When a damper closes"
+    },
+    "damper_stops": {
+      "description": "Triggers when a damper stops moving.",
+      "description_configured": "Triggers when a damper stops moving",
+      "name": "When a damper stops moving"
+    },
+    "damper_position_changed": {
+      "description": "Triggers when the position of a damper changes.",
+      "description_configured": "Triggers when the position of a damper changes",
+      "fields": {
+        "lower": {
+          "description": "The minimum position value to trigger on. Only triggers when position is at or above this value.",
+          "name": "Lower limit"
+        },
+        "upper": {
+          "description": "The maximum position value to trigger on. Only triggers when position is at or below this value.",
+          "name": "Upper limit"
+        },
+        "above": {
+          "description": "Only trigger when position is above this value.",
+          "name": "Above"
+        },
+        "below": {
+          "description": "Only trigger when position is below this value.",
+          "name": "Below"
+        }
+      },
+      "name": "When the position of a damper changes"
+    },
+    "door_opens": {
+      "description": "Triggers when a door opens.",
+      "description_configured": "Triggers when a door opens",
+      "fields": {
+        "fully_opened": {
+          "description": "Only trigger when the door is fully opened (position at 100%).",
+          "name": "Fully opened"
+        }
+      },
+      "name": "When a door opens"
+    },
+    "door_closes": {
+      "description": "Triggers when a door closes.",
+      "description_configured": "Triggers when a door closes",
+      "fields": {
+        "fully_closed": {
+          "description": "Only trigger when the door is fully closed (position at 0%).",
+          "name": "Fully closed"
+        }
+      },
+      "name": "When a door closes"
+    },
+    "door_stops": {
+      "description": "Triggers when a door stops moving.",
+      "description_configured": "Triggers when a door stops moving",
+      "name": "When a door stops moving"
+    },
+    "door_position_changed": {
+      "description": "Triggers when the position of a door changes.",
+      "description_configured": "Triggers when the position of a door changes",
+      "fields": {
+        "lower": {
+          "description": "The minimum position value to trigger on. Only triggers when position is at or above this value.",
+          "name": "Lower limit"
+        },
+        "upper": {
+          "description": "The maximum position value to trigger on. Only triggers when position is at or below this value.",
+          "name": "Upper limit"
+        },
+        "above": {
+          "description": "Only trigger when position is above this value.",
+          "name": "Above"
+        },
+        "below": {
+          "description": "Only trigger when position is below this value.",
+          "name": "Below"
+        }
+      },
+      "name": "When the position of a door changes"
+    },
+    "garage_opens": {
+      "description": "Triggers when a garage opens.",
+      "description_configured": "Triggers when a garage opens",
+      "fields": {
+        "fully_opened": {
+          "description": "Only trigger when the garage is fully opened (position at 100%).",
+          "name": "Fully opened"
+        }
+      },
+      "name": "When a garage opens"
+    },
+    "garage_closes": {
+      "description": "Triggers when a garage closes.",
+      "description_configured": "Triggers when a garage closes",
+      "fields": {
+        "fully_closed": {
+          "description": "Only trigger when the garage is fully closed (position at 0%).",
+          "name": "Fully closed"
+        }
+      },
+      "name": "When a garage closes"
+    },
+    "garage_stops": {
+      "description": "Triggers when a garage stops moving.",
+      "description_configured": "Triggers when a garage stops moving",
+      "name": "When a garage stops moving"
+    },
+    "garage_position_changed": {
+      "description": "Triggers when the position of a garage changes.",
+      "description_configured": "Triggers when the position of a garage changes",
+      "fields": {
+        "lower": {
+          "description": "The minimum position value to trigger on. Only triggers when position is at or above this value.",
+          "name": "Lower limit"
+        },
+        "upper": {
+          "description": "The maximum position value to trigger on. Only triggers when position is at or below this value.",
+          "name": "Upper limit"
+        },
+        "above": {
+          "description": "Only trigger when position is above this value.",
+          "name": "Above"
+        },
+        "below": {
+          "description": "Only trigger when position is below this value.",
+          "name": "Below"
+        }
+      },
+      "name": "When the position of a garage changes"
+    },
+    "gate_opens": {
+      "description": "Triggers when a gate opens.",
+      "description_configured": "Triggers when a gate opens",
+      "fields": {
+        "fully_opened": {
+          "description": "Only trigger when the gate is fully opened (position at 100%).",
+          "name": "Fully opened"
+        }
+      },
+      "name": "When a gate opens"
+    },
+    "gate_closes": {
+      "description": "Triggers when a gate closes.",
+      "description_configured": "Triggers when a gate closes",
+      "fields": {
+        "fully_closed": {
+          "description": "Only trigger when the gate is fully closed (position at 0%).",
+          "name": "Fully closed"
+        }
+      },
+      "name": "When a gate closes"
+    },
+    "gate_stops": {
+      "description": "Triggers when a gate stops moving.",
+      "description_configured": "Triggers when a gate stops moving",
+      "name": "When a gate stops moving"
+    },
+    "gate_position_changed": {
+      "description": "Triggers when the position of a gate changes.",
+      "description_configured": "Triggers when the position of a gate changes",
+      "fields": {
+        "lower": {
+          "description": "The minimum position value to trigger on. Only triggers when position is at or above this value.",
+          "name": "Lower limit"
+        },
+        "upper": {
+          "description": "The maximum position value to trigger on. Only triggers when position is at or below this value.",
+          "name": "Upper limit"
+        },
+        "above": {
+          "description": "Only trigger when position is above this value.",
+          "name": "Above"
+        },
+        "below": {
+          "description": "Only trigger when position is below this value.",
+          "name": "Below"
+        }
+      },
+      "name": "When the position of a gate changes"
+    },
+    "shade_opens": {
+      "description": "Triggers when a shade opens.",
+      "description_configured": "Triggers when a shade opens",
+      "fields": {
+        "fully_opened": {
+          "description": "Only trigger when the shade is fully opened (position at 100%).",
+          "name": "Fully opened"
+        }
+      },
+      "name": "When a shade opens"
+    },
+    "shade_closes": {
+      "description": "Triggers when a shade closes.",
+      "description_configured": "Triggers when a shade closes",
+      "fields": {
+        "fully_closed": {
+          "description": "Only trigger when the shade is fully closed (position at 0%).",
+          "name": "Fully closed"
+        }
+      },
+      "name": "When a shade closes"
+    },
+    "shade_stops": {
+      "description": "Triggers when a shade stops moving.",
+      "description_configured": "Triggers when a shade stops moving",
+      "name": "When a shade stops moving"
+    },
+    "shade_position_changed": {
+      "description": "Triggers when the position of a shade changes.",
+      "description_configured": "Triggers when the position of a shade changes",
+      "fields": {
+        "lower": {
+          "description": "The minimum position value to trigger on. Only triggers when position is at or above this value.",
+          "name": "Lower limit"
+        },
+        "upper": {
+          "description": "The maximum position value to trigger on. Only triggers when position is at or below this value.",
+          "name": "Upper limit"
+        },
+        "above": {
+          "description": "Only trigger when position is above this value.",
+          "name": "Above"
+        },
+        "below": {
+          "description": "Only trigger when position is below this value.",
+          "name": "Below"
+        }
+      },
+      "name": "When the position of a shade changes"
+    },
+    "window_opens": {
+      "description": "Triggers when a window opens.",
+      "description_configured": "Triggers when a window opens",
+      "fields": {
+        "fully_opened": {
+          "description": "Only trigger when the window is fully opened (position at 100%).",
+          "name": "Fully opened"
+        }
+      },
+      "name": "When a window opens"
+    },
+    "window_closes": {
+      "description": "Triggers when a window closes.",
+      "description_configured": "Triggers when a window closes",
+      "fields": {
+        "fully_closed": {
+          "description": "Only trigger when the window is fully closed (position at 0%).",
+          "name": "Fully closed"
+        }
+      },
+      "name": "When a window closes"
+    },
+    "window_stops": {
+      "description": "Triggers when a window stops moving.",
+      "description_configured": "Triggers when a window stops moving",
+      "name": "When a window stops moving"
+    },
+    "window_position_changed": {
+      "description": "Triggers when the position of a window changes.",
+      "description_configured": "Triggers when the position of a window changes",
+      "fields": {
+        "lower": {
+          "description": "The minimum position value to trigger on. Only triggers when position is at or above this value.",
+          "name": "Lower limit"
+        },
+        "upper": {
+          "description": "The maximum position value to trigger on. Only triggers when position is at or below this value.",
+          "name": "Upper limit"
+        },
+        "above": {
+          "description": "Only trigger when position is above this value.",
+          "name": "Above"
+        },
+        "below": {
+          "description": "Only trigger when position is below this value.",
+          "name": "Below"
+        }
+      },
+      "name": "When the position of a window changes"
     }
   }
 }
