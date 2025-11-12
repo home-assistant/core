@@ -26,19 +26,6 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_velux_client() -> Generator[AsyncMock]:
-    """Mock a Velux client."""
-    with (
-        patch(
-            "homeassistant.components.velux.config_flow.PyVLX",
-            autospec=True,
-        ) as mock_client,
-    ):
-        client = mock_client.return_value
-        yield client
-
-
-@pytest.fixture
 def mock_user_config_entry() -> MockConfigEntry:
     """Return the user config entry."""
     return MockConfigEntry(
@@ -122,23 +109,32 @@ def mock_blind() -> AsyncMock:
     return blind
 
 
-# mock PyVLX fixture that retrieves mock nodes via request.param
 @pytest.fixture
 def mock_pyvlx(request: pytest.FixtureRequest) -> Generator[MagicMock]:
-    """Create the library mock and patch PyVLX."""
+    """Create the library mock and patch PyVLX in both component and config_flow.
+
+    Tests can parameterize this fixture with the name of a node fixture to include
+    (e.g., "mock_window", "mock_blind", "mock_light", or "mock_cover_type").
+    If no parameter is provided, an empty node list is used.
+    """
 
     pyvlx = MagicMock()
+
     if hasattr(request, "param"):
         pyvlx.nodes = [request.getfixturevalue(request.param)]
     else:
         pyvlx.nodes = []
 
+    # Async methods invoked by the integration/config flow
     pyvlx.load_scenes = AsyncMock()
     pyvlx.load_nodes = AsyncMock()
     pyvlx.connect = AsyncMock()
     pyvlx.disconnect = AsyncMock()
 
-    with patch("homeassistant.components.velux.PyVLX", return_value=pyvlx):
+    with (
+        patch("homeassistant.components.velux.PyVLX", return_value=pyvlx),
+        patch("homeassistant.components.velux.config_flow.PyVLX", return_value=pyvlx),
+    ):
         yield pyvlx
 
 

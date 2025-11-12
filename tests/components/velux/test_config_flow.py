@@ -26,7 +26,7 @@ DHCP_DISCOVERY = DhcpServiceInfo(
 async def test_user_flow(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    mock_velux_client: AsyncMock,
+    mock_pyvlx: AsyncMock,
 ) -> None:
     """Test starting a flow by user with valid values."""
     result = await hass.config_entries.flow.async_init(
@@ -53,8 +53,8 @@ async def test_user_flow(
     }
     assert not result["result"].unique_id
 
-    mock_velux_client.disconnect.assert_called_once()
-    mock_velux_client.connect.assert_called_once()
+    mock_pyvlx.disconnect.assert_called_once()
+    mock_pyvlx.connect.assert_called_once()
 
 
 @pytest.mark.parametrize(
@@ -66,14 +66,14 @@ async def test_user_flow(
 )
 async def test_user_errors(
     hass: HomeAssistant,
-    mock_velux_client: AsyncMock,
+    mock_pyvlx: AsyncMock,
     exception: Exception,
     error: str,
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test starting a flow by user but with exceptions."""
 
-    mock_velux_client.connect.side_effect = exception
+    mock_pyvlx.connect.side_effect = exception
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -95,9 +95,9 @@ async def test_user_errors(
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": error}
 
-    mock_velux_client.connect.assert_called_once()
+    mock_pyvlx.connect.assert_called_once()
 
-    mock_velux_client.connect.side_effect = None
+    mock_pyvlx.connect.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -140,7 +140,7 @@ async def test_user_flow_duplicate_entry(
 
 async def test_dhcp_discovery(
     hass: HomeAssistant,
-    mock_velux_client: AsyncMock,
+    mock_pyvlx: AsyncMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test we can setup from dhcp discovery."""
@@ -168,8 +168,8 @@ async def test_dhcp_discovery(
     }
     assert result["result"].unique_id == "VELUX_KLF_ABCD"
 
-    mock_velux_client.disconnect.assert_called()
-    mock_velux_client.connect.assert_called()
+    mock_pyvlx.disconnect.assert_called()
+    mock_pyvlx.connect.assert_called()
 
 
 @pytest.mark.parametrize(
@@ -181,7 +181,7 @@ async def test_dhcp_discovery(
 )
 async def test_dhcp_discovery_errors(
     hass: HomeAssistant,
-    mock_velux_client: AsyncMock,
+    mock_pyvlx: AsyncMock,
     exception: Exception,
     error: str,
     mock_setup_entry: AsyncMock,
@@ -196,7 +196,7 @@ async def test_dhcp_discovery_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discovery_confirm"
 
-    mock_velux_client.connect.side_effect = exception
+    mock_pyvlx.connect.side_effect = exception
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -207,7 +207,7 @@ async def test_dhcp_discovery_errors(
     assert result["step_id"] == "discovery_confirm"
     assert result["errors"] == {"base": error}
 
-    mock_velux_client.connect.side_effect = None
+    mock_pyvlx.connect.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -226,7 +226,7 @@ async def test_dhcp_discovery_errors(
 
 async def test_dhcp_discovery_already_configured(
     hass: HomeAssistant,
-    mock_velux_client: AsyncMock,
+    mock_pyvlx: AsyncMock,
     mock_discovered_config_entry: MockConfigEntry,
     mock_setup_entry: AsyncMock,
 ) -> None:
@@ -245,7 +245,7 @@ async def test_dhcp_discovery_already_configured(
 async def test_dhcp_discover_unique_id(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    mock_velux_client: AsyncMock,
+    mock_pyvlx: AsyncMock,
     mock_user_config_entry: MockConfigEntry,
 ) -> None:
     """Test dhcp discovery when already configured."""
@@ -268,7 +268,7 @@ async def test_dhcp_discover_unique_id(
 
 async def test_dhcp_discovery_not_loaded(
     hass: HomeAssistant,
-    mock_velux_client: AsyncMock,
+    mock_pyvlx: AsyncMock,
     mock_user_config_entry: MockConfigEntry,
     mock_setup_entry: AsyncMock,
 ) -> None:
