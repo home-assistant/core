@@ -4,11 +4,10 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from pyvlx.opening_device import Blind
+from pyvlx.lightening_device import LighteningDevice
+from pyvlx.opening_device import Blind, Window
 
 from homeassistant.components.velux import DOMAIN
-from homeassistant.components.velux.binary_sensor import Window
-from homeassistant.components.velux.light import LighteningDevice
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 
@@ -26,9 +25,10 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_user_config_entry() -> MockConfigEntry:
-    """Return the user config entry."""
+def mock_config_entry() -> MockConfigEntry:
+    """Return a mock config entry (unified fixture for all tests)."""
     return MockConfigEntry(
+        entry_id="test_entry_id",
         domain=DOMAIN,
         title="127.0.0.1",
         data={
@@ -53,7 +53,8 @@ def mock_discovered_config_entry() -> MockConfigEntry:
     )
 
 
-# various types of node fixtures
+# various types of fixtures for specific node types
+# first the window
 @pytest.fixture
 def mock_window() -> AsyncMock:
     """Create a mock Velux window with a rain sensor."""
@@ -68,28 +69,7 @@ def mock_window() -> AsyncMock:
     return window
 
 
-@pytest.fixture
-def mock_cover_type(request: pytest.FixtureRequest) -> AsyncMock:
-    """Create a mock Velux cover of specified type."""
-    cover = AsyncMock(spec=request.param, autospec=True)
-    cover.name = f"Test {cover.__class__}"
-    cover.serial_number = "serial_1"
-    cover.is_opening = False
-    cover.is_closing = False
-    cover.position = MagicMock(position_percent=30, closed=False)
-    return cover
-
-
-@pytest.fixture
-def mock_light() -> AsyncMock:
-    """Create a mock Velux light."""
-    light = AsyncMock(spec=LighteningDevice, autospec=True)
-    light.name = "Test Light"
-    light.serial_number = "0815"
-    light.intensity = MagicMock()
-    return light
-
-
+# a blind
 @pytest.fixture
 def mock_blind() -> AsyncMock:
     """Create a mock Velux blind (cover with tilt)."""
@@ -107,6 +87,30 @@ def mock_blind() -> AsyncMock:
     blind.stop_orientation = AsyncMock()
     blind.set_orientation = AsyncMock()
     return blind
+
+
+# a light
+@pytest.fixture
+def mock_light() -> AsyncMock:
+    """Create a mock Velux light."""
+    light = AsyncMock(spec=LighteningDevice, autospec=True)
+    light.name = "Test Light"
+    light.serial_number = "0815"
+    light.intensity = MagicMock()
+    return light
+
+
+# fixture to create all other cover types via parameterization
+@pytest.fixture
+def mock_cover_type(request: pytest.FixtureRequest) -> AsyncMock:
+    """Create a mock Velux cover of specified type."""
+    cover = AsyncMock(spec=request.param, autospec=True)
+    cover.name = f"Test {cover.__class__}"
+    cover.serial_number = f"serial_{request.param.__name__}"
+    cover.is_opening = False
+    cover.is_closing = False
+    cover.position = MagicMock(position_percent=30, closed=False)
+    return cover
 
 
 @pytest.fixture
@@ -136,19 +140,6 @@ def mock_pyvlx(request: pytest.FixtureRequest) -> Generator[MagicMock]:
         patch("homeassistant.components.velux.config_flow.PyVLX", return_value=pyvlx),
     ):
         yield pyvlx
-
-
-@pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
-    """Return a mock config entry."""
-    return MockConfigEntry(
-        entry_id="test_entry_id",
-        domain=DOMAIN,
-        data={
-            CONF_HOST: "testhost",
-            CONF_PASSWORD: "testpw",
-        },
-    )
 
 
 # Fixture to set up the integration for testing, needs platform fixture, to be defined in each test file

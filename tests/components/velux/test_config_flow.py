@@ -112,11 +112,11 @@ async def test_user_errors(
 
 async def test_user_flow_duplicate_entry(
     hass: HomeAssistant,
-    mock_user_config_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test initialized flow with a duplicate entry."""
-    mock_user_config_entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -246,14 +246,14 @@ async def test_dhcp_discover_unique_id(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_pyvlx: AsyncMock,
-    mock_user_config_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test dhcp discovery when already configured."""
-    mock_user_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_user_config_entry.entry_id)
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    assert mock_user_config_entry.state is ConfigEntryState.LOADED
-    assert mock_user_config_entry.unique_id is None
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.unique_id is None
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -263,20 +263,20 @@ async def test_dhcp_discover_unique_id(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
-    assert mock_user_config_entry.unique_id == "VELUX_KLF_ABCD"
+    assert mock_config_entry.unique_id == "VELUX_KLF_ABCD"
 
 
 async def test_dhcp_discovery_not_loaded(
     hass: HomeAssistant,
     mock_pyvlx: AsyncMock,
-    mock_user_config_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test dhcp discovery when entry with same host not loaded."""
-    mock_user_config_entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
-    assert mock_user_config_entry.state is not ConfigEntryState.LOADED
-    assert mock_user_config_entry.unique_id is None
+    assert mock_config_entry.state is not ConfigEntryState.LOADED
+    assert mock_config_entry.unique_id is None
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -286,4 +286,4 @@ async def test_dhcp_discovery_not_loaded(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
-    assert mock_user_config_entry.unique_id is None
+    assert mock_config_entry.unique_id is None

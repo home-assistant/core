@@ -82,7 +82,7 @@
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
     'translation_key': None,
-    'unique_id': 'serial_1',
+    'unique_id': 'serial_Awning',
     'unit_of_measurement': None,
   })
 # ---
@@ -133,7 +133,7 @@
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
     'translation_key': None,
-    'unique_id': 'serial_1',
+    'unique_id': 'serial_GarageDoor',
     'unit_of_measurement': None,
   })
 # ---
@@ -184,7 +184,7 @@
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
     'translation_key': None,
-    'unique_id': 'serial_1',
+    'unique_id': 'serial_Gate',
     'unit_of_measurement': None,
   })
 # ---
@@ -235,7 +235,7 @@
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
     'translation_key': None,
-    'unique_id': 'serial_1',
+    'unique_id': 'serial_RollerShutter',
     'unit_of_measurement': None,
   })
 # ---
@@ -286,7 +286,7 @@
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
     'translation_key': None,
-    'unique_id': 'serial_1',
+    'unique_id': 'serial_Window',
     'unit_of_measurement': None,
   })
 # ---
