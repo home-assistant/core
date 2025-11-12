@@ -9,13 +9,11 @@ from satel_integra.satel_integra import AsyncSatel
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import CONF_CODE, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     CONF_SWITCHABLE_OUTPUT_NUMBER,
-    DOMAIN,
     SIGNAL_OUTPUTS_UPDATED,
     SUBENTRY_TYPE_SWITCHABLE_OUTPUT,
     SatelConfigEntry,
@@ -71,13 +69,10 @@ class SatelIntegraSwitch(SatelIntegraEntity, SwitchEntity):
             controller,
             f"{config_entry_id}_switch_{device_number}",
             device_number,
+            device_name,
         )
 
         self._code = code
-
-        self._attr_device_info = DeviceInfo(
-            name=device_name, identifiers={(DOMAIN, self._attr_unique_id)}
-        )
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""

@@ -10,7 +10,6 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -20,7 +19,6 @@ from .const import (
     CONF_ZONE_NUMBER,
     CONF_ZONE_TYPE,
     CONF_ZONES,
-    DOMAIN,
     SIGNAL_OUTPUTS_UPDATED,
     SIGNAL_ZONES_UPDATED,
     SUBENTRY_TYPE_OUTPUT,
@@ -108,14 +106,11 @@ class SatelIntegraBinarySensor(SatelIntegraEntity, BinarySensorEntity):
             controller,
             f"{config_entry_id}_{sensor_type}_{device_number}",
             device_number,
+            device_name,
         )
-
-        self._react_to_signal = react_to_signal
 
         self._attr_device_class = device_class
-        self._attr_device_info = DeviceInfo(
-            name=device_name, identifiers={(DOMAIN, self._attr_unique_id)}
-        )
+        self._react_to_signal = react_to_signal
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""

@@ -15,14 +15,12 @@ from homeassistant.components.alarm_control_panel import (
 )
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     CONF_ARM_HOME_MODE,
     CONF_PARTITION_NUMBER,
-    DOMAIN,
     SIGNAL_PANEL_MESSAGE,
     SUBENTRY_TYPE_PARTITION,
     SatelConfigEntry,
@@ -99,13 +97,10 @@ class SatelIntegraAlarmPanel(SatelIntegraEntity, AlarmControlPanelEntity):
             controller,
             f"{config_entry_id}_alarm_panel_{device_number}",
             device_number,
+            device_name,
         )
 
         self._arm_home_mode = arm_home_mode
-
-        self._attr_device_info = DeviceInfo(
-            name=device_name, identifiers={(DOMAIN, self._attr_unique_id)}
-        )
 
     async def async_added_to_hass(self) -> None:
         """Update alarm status and register callbacks for future updates."""
