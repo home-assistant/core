@@ -44,7 +44,6 @@ class XboxBinarySensorEntityDescription(
     """Xbox binary sensor description."""
 
     is_on_fn: Callable[[Person], bool | None]
-    deprecated: bool | None = None
 
 
 def profile_attributes(person: Person, _: Title | None) -> dict[str, Any]:
@@ -120,16 +119,16 @@ async def async_setup_entry(
 
         current_xuids = set(coordinator.data.presence)
         if new_xuids := current_xuids - xuids_added:
-            for xuid in new_xuids:
-                async_add_entities(
-                    [
-                        XboxBinarySensorEntity(coordinator, xuid, description)
-                        for description in SENSOR_DESCRIPTIONS
-                        if check_deprecated_entity(
-                            hass, xuid, description, BINARY_SENSOR_DOMAIN
-                        )
-                    ]
-                )
+            async_add_entities(
+                [
+                    XboxBinarySensorEntity(coordinator, xuid, description)
+                    for xuid in new_xuids
+                    for description in SENSOR_DESCRIPTIONS
+                    if check_deprecated_entity(
+                        hass, xuid, description, BINARY_SENSOR_DOMAIN
+                    )
+                ]
+            )
             xuids_added |= new_xuids
         xuids_added &= current_xuids
 
