@@ -22,5 +22,27 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "ph": {
+        "name": "pH"
+      },
+      "chlorine_orp_value": {
+        "name": "Chlorine ORP value"
+      },
+      "water_temperature": {
+        "name": "Water temperature"
+      },
+      "air_temperature": {
+        "name": "Air temperature"
+      },
+      "ph_acid_base_flow_rate": {
+        "name": "pH Acid/Base flow rate"
+      },
+      "chlorine_flow_rate": {
+        "name": "Chlorine flow rate"
+      }
+    }
   }
 }

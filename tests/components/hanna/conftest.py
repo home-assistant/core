@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from homeassistant.components.hanna.const import DOMAIN
-from homeassistant.const import CONF_CODE, CONF_EMAIL, CONF_PASSWORD
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 
 from tests.common import MockConfigEntry
 
@@ -35,10 +35,6 @@ def mock_config_entry() -> MockConfigEntry:
     """Mock a config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        data={
-            CONF_EMAIL: "test@example.com",
-            CONF_PASSWORD: "test-password",
-            CONF_CODE: "test-code",
-        },
+        data={CONF_EMAIL: "test@example.com", CONF_PASSWORD: "test-password"},
         title="test@example.com",
     )

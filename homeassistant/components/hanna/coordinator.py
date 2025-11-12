@@ -17,12 +17,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN
 
-
-class HannaConfigEntry(ConfigEntry):
-    """Config entry for Hanna integration with typed runtime data."""
-
-    runtime_data: dict[str, "HannaDataCoordinator"] | None
-
+type HannaConfigEntry = ConfigEntry[dict[str, HannaDataCoordinator]]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,7 +28,7 @@ class HannaDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: HannaConfigEntry,
         device: dict[str, Any],
         api_client: HannaCloudClient,
     ) -> None:
@@ -70,7 +65,6 @@ class HannaDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             readings = await self.hass.async_add_executor_job(
                 self.api_client.get_last_device_reading, self.device_identifier
             )
-            self.readings = readings
         except RequestException as e:
             raise UpdateFailed(f"Error communicating with Hanna API: {e}") from e
         except (KeyError, IndexError) as e:

@@ -50,12 +50,4 @@ async def async_setup_entry(hass: HomeAssistant, entry: HannaConfigEntry) -> boo
 
 async def async_unload_entry(hass: HomeAssistant, entry: HannaConfigEntry) -> bool:
     """Unload a config entry."""
-    # Unload platforms
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    # Unload coordinators
-    if unload_ok and entry.runtime_data is not None:
-        for coordinator in entry.runtime_data.values():
-            await coordinator.async_shutdown()
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

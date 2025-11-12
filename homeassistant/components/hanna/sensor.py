@@ -15,13 +15,12 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfElectricPotential, UnitOfTemperature
+from homeassistant.const import UnitOfElectricPotential, UnitOfTemperature, UnitOfVolume
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import UNDEFINED, StateType
+from homeassistant.helpers.typing import StateType
 
-from .coordinator import HannaDataCoordinator
+from .coordinator import HannaConfigEntry, HannaDataCoordinator
 from .entity import HannaEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,60 +28,63 @@ _LOGGER = logging.getLogger(__name__)
 SENSOR_DESCRIPTIONS = [
     SensorEntityDescription(
         key="ph",
-        name="pH value",
-        icon="mdi:flask",
         device_class=SensorDeviceClass.PH,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="orp",
-        name="Chlorine ORP value",
+        translation_key="chlorine_orp_value",
         icon="mdi:flask",
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="temp",
-        name="Water temperature",
+        translation_key="water_temperature",
         icon="mdi:thermometer",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="airTemp",
-        name="Air temperature",
+        translation_key="air_temperature",
         icon="mdi:thermometer",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
-        key="acidBase", name="pH Acid/Base flow rate", icon="mdi:chemical-weapon"
+        key="acidBase",
+        translation_key="ph_acid_base_flow_rate",
+        icon="mdi:chemical-weapon",
+        native_unit_of_measurement=UnitOfVolume.MILLILITERS,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
-        key="cl", name="Chlorine flow rate", icon="mdi:chemical-weapon"
+        key="cl",
+        translation_key="chlorine_flow_rate",
+        icon="mdi:chemical-weapon",
+        native_unit_of_measurement=UnitOfVolume.MILLILITERS,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 ]
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: HannaConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Hanna sensors from a config entry."""
     device_coordinators = entry.runtime_data
 
-    entities: list[HannaSensor] = []
-
-    for coordinator in device_coordinators.values():
-        entities.extend(
-            [
-                HannaSensor(coordinator, description)
-                for description in SENSOR_DESCRIPTIONS
-            ]
-        )
-
-    if entities:
-        async_add_entities(entities)
+    async_add_entities(
+        HannaSensor(coordinator, description)
+        for description in SENSOR_DESCRIPTIONS
+        for coordinator in device_coordinators.values()
+    )
 
 
 class HannaSensor(HannaEntity, SensorEntity):
@@ -98,15 +100,11 @@ class HannaSensor(HannaEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.device_identifier}_{description.key}"
         self._attr_has_entity_name = True
         self._attr_should_poll = False
-        self._attr_state_class = SensorStateClass.MEASUREMENT
-        self._attr_name = (
-            None
-            if description.name is None or description.name is UNDEFINED
-            else description.name
-        )
+        self._attr_translation_key = description.translation_key
         self._attr_icon = description.icon
-        self._attr_native_unit_of_measurement = description.native_unit_of_measurement
+        self._attr_state_class = description.state_class
         self._attr_device_class = description.device_class
+        self._attr_native_unit_of_measurement = description.native_unit_of_measurement
         self.description = description
 
     @property
