@@ -258,7 +258,7 @@ aioharmony==0.5.3
 aiohasupervisor==0.3.3
 
 # homeassistant.components.home_connect
-aiohomeconnect==0.23.0
+aiohomeconnect==0.23.1
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.20
@@ -1199,7 +1199,7 @@ loqedAPI==2.1.10
 luftdaten==0.7.4
 
 # homeassistant.components.lunatone
-lunatone-rest-api-client==0.5.3
+lunatone-rest-api-client==0.5.7
 
 # homeassistant.components.lupusec
 lupupy==0.3.2
@@ -2036,7 +2036,7 @@ python-awair==0.2.4
 python-bsblan==3.1.0
 
 # homeassistant.components.ecobee
-python-ecobee-api==0.2.20
+python-ecobee-api==0.3.2
 
 # homeassistant.components.fully_kiosk
 python-fullykiosk==0.0.14
@@ -2433,7 +2433,7 @@ tesla-fleet-api==1.2.5
 tesla-powerwall==0.5.2
 
 # homeassistant.components.tesla_wall_connector
-tesla-wall-connector==1.0.2
+tesla-wall-connector==1.1.0
 
 # homeassistant.components.teslemetry
 teslemetry-stream==0.7.10
