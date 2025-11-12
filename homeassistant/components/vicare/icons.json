@@ -116,6 +116,12 @@
       "ess_state_of_charge": {
         "default": "mdi:home-battery"
       },
+      "heating_rod_hours": {
+        "default": "mdi:counter"
+      },
+      "heating_rod_starts": {
+        "default": "mdi:counter"
+      },
       "pcc_energy_consumption": {
         "default": "mdi:transmission-tower-export"
       },
