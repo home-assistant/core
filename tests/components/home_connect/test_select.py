@@ -347,6 +347,7 @@ async def test_filter_programs(
     ],
     indirect=["appliance"],
 )
+@pytest.mark.parametrize("program_value", ["A not known program", None])
 async def test_select_program_functionality(
     hass: HomeAssistant,
     client: MagicMock,
@@ -359,6 +360,7 @@ async def test_select_program_functionality(
     program_key: ProgramKey,
     program_to_set: str,
     event_key: EventKey,
+    program_value: str,
 ) -> None:
     """Test select functionality."""
     assert await integration_setup(client)
@@ -389,7 +391,7 @@ async def test_select_program_functionality(
                             timestamp=0,
                             level="",
                             handling="",
-                            value="A not known program",
+                            value=program_value,
                         )
                     ]
                 ),
