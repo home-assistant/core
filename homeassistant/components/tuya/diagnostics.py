@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-from contextlib import suppress
-import json
-from typing import Any, cast
+from typing import Any
 
 from tuya_sharing import CustomerDevice
 
@@ -101,30 +99,20 @@ def _async_device_as_dict(
             data["status"][dpcode] = REDACTED
             continue
 
-        with suppress(ValueError, TypeError):
-            value = json.loads(value)
         data["status"][dpcode] = value
 
     # Gather Tuya functions
     for function in device.function.values():
-        value = function.values
-        with suppress(ValueError, TypeError, AttributeError):
-            value = json.loads(cast(str, function.values))
-
         data["function"][function.code] = {
             "type": function.type,
-            "value": value,
+            "value": function.values,
         }
 
     # Gather Tuya status ranges
     for status_range in device.status_range.values():
-        value = status_range.values
-        with suppress(ValueError, TypeError, AttributeError):
-            value = json.loads(status_range.values)
-
         data["status_range"][status_range.code] = {
             "type": status_range.type,
-            "value": value,
+            "value": status_range.values,
         }
 
     # Gather information how this Tuya device is represented in Home Assistant
