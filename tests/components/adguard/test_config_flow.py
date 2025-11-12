@@ -18,6 +18,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
+import pytest
+
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -41,6 +43,9 @@ async def test_show_authenticate_form(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
 
+@pytest.mark.parametrize(
+    "ignore_missing_translations", [["component.adguard.config.error.cannot_connect"]]
+)
 async def test_connection_error(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
@@ -106,6 +111,10 @@ async def test_full_flow_implementation(
     assert not config_entry.options
 
 
+@pytest.mark.parametrize(
+    "ignore_missing_translations",
+    [["component.adguard.config.abort.already_configured"]],
+)
 async def test_integration_already_exists(hass: HomeAssistant) -> None:
     """Test we only allow a single config flow."""
     MockConfigEntry(
@@ -218,6 +227,9 @@ async def test_hassio_confirm(
     }
 
 
+@pytest.mark.parametrize(
+    "ignore_missing_translations", [["component.adguard.config.error.cannot_connect"]]
+)
 async def test_hassio_connection_error(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
