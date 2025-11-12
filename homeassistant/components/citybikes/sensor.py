@@ -51,7 +51,7 @@ ATTR_LATITUDE = "latitude"
 ATTR_LONGITUDE = "longitude"
 ATTR_EMPTY_SLOTS = "empty_slots"
 ATTR_TIMESTAMP = "timestamp"
-ATTR_EBIKE = "ebike"
+ATTR_EBIKE = "ebikes"
 
 CONF_NETWORK = "network"
 CONF_STATIONS_LIST = "stations"
