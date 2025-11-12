@@ -16,7 +16,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
-from .models import DPCodeB64DecodeWrapper, DPCodeEnumWrapper, DPCodeWrapper
+from .models import DPCodeBase64StringWrapper, DPCodeEnumWrapper, DPCodeWrapper
 
 # All descriptions can be found here. Mostly the Enum data types in the
 # default status set of each category (that don't have a set instruction)
@@ -89,7 +89,7 @@ EVENTS: dict[DeviceCategory, tuple[EventEntityDescription, ...]] = {
             translation_key="numbered_button",
             translation_placeholders={"button_number": "9"},
         ),
-    ),
+    )
 }
 
 
@@ -97,22 +97,10 @@ def _get_dpcode_wrapper(
     device: CustomerDevice,
     description: EventEntityDescription,
 ) -> DPCodeWrapper | None:
-    """Get the appropriate DPCode wrapper for the event description.
-
-    Try to find an enum wrapper first. If not found, try b64 decode wrapper.
-    """
-    # Try to get enum wrapper for DPType.ENUM
-    if enum_wrapper := DPCodeEnumWrapper.find_dpcode(
-        device, description.key, prefer_function=True
-    ):
-        return enum_wrapper
-
-    # For RAW/STRING types, try to get a b64 decode wrapper
-    if b64_wrapper := DPCodeB64DecodeWrapper.find_dpcode(
-        device, description.key, prefer_function=True
-    ):
-        return b64_wrapper
-
+    """Get the appropriate DPCode wrapper for the event description."""
+    for cls in (DPCodeEnumWrapper, DPCodeBase64StringWrapper):
+        if wrapper := cls.find_dpcode(device, description.key, prefer_function=True):
+            return wrapper
     return None
 
 
@@ -184,11 +172,11 @@ class TuyaEventEntity(TuyaEntity, EventEntity):
             return
 
         event_type = "dpcode_update"
-        event_attributes = {}
+        event_attributes = {"value": value}
         if isinstance(self._dpcode_wrapper, DPCodeEnumWrapper):
             event_type = value
-        else:
-            event_attributes = {"value": value}
+            event_attributes = {}
+            
 
         self._trigger_event(event_type, event_attributes)
         self.async_write_ha_state()
