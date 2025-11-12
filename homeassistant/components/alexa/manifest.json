@@ -1,10 +1,14 @@
 {
   "domain": "alexa",
   "name": "Amazon Alexa",
-  "after_dependencies": ["camera"],
-  "codeowners": ["@home-assistant/cloud", "@ochlocracy", "@jbouwh"],
+  "codeowners": ["@jasonhollis"],
+  "config_flow": true,
+  "documentation": "https://github.com/jasonhollis/alexa-oauth2",
+  "issue_tracker": "https://github.com/jasonhollis/alexa-oauth2/issues",
+  "iot_class": "cloud_push",
+  "integration_type": "service",
+  "version": "2.0.0",
   "dependencies": ["http"],
-  "documentation": "https://www.home-assistant.io/integrations/alexa",
-  "integration_type": "system",
-  "iot_class": "cloud_push"
+  "homeassistant": "2024.10.0",
+  "requirements": ["PyJWT>=2.8.0"]
 }

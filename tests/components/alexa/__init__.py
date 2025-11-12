@@ -1,1 +1,1 @@
-"""Tests for alexa."""
+"""Tests for the Alexa integration."""

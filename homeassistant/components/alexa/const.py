@@ -1,222 +1,85 @@
-"""Constants for the Alexa integration."""
+"""Constants for the Alexa integration.
 
-from collections import OrderedDict
+CRITICAL FIX (2025-11-01): Changed OAuth scope from 'alexa::skills:account_linking'
+to 'profile:user_id' for compatibility with Alexa Smart Home skills using Login with Amazon.
+"""
 
-from homeassistant.components import climate
-from homeassistant.const import UnitOfTemperature
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 
+# Domain
 DOMAIN = "alexa"
-EVENT_ALEXA_SMART_HOME = "alexa_smart_home"
 
-# Flash briefing constants
-CONF_UID = "uid"
-CONF_TITLE = "title"
-CONF_AUDIO = "audio"
-CONF_TEXT = "text"
-CONF_DISPLAY_URL = "display_url"
+# OAuth2 Endpoints (Amazon LWA)
+AMAZON_AUTH_URL = "https://www.amazon.com/ap/oa"
+AMAZON_TOKEN_URL = "https://api.amazon.com/auth/o2/token"
+AMAZON_REVOKE_URL = "https://api.amazon.com/auth/o2/revoke"
 
-CONF_FILTER = "filter"
-CONF_ENTITY_CONFIG = "entity_config"
-CONF_ENDPOINT = "endpoint"
-CONF_LOCALE = "locale"
+# OAuth2 Scopes
+# Required scope for Alexa Smart Home with Login with Amazon
+REQUIRED_SCOPES = "profile:user_id"
 
-ATTR_UID = "uid"
-ATTR_UPDATE_DATE = "updateDate"
-ATTR_TITLE_TEXT = "titleText"
-ATTR_STREAM_URL = "streamUrl"
-ATTR_MAIN_TEXT = "mainText"
-ATTR_REDIRECTION_URL = "redirectionURL"
+# Timeouts (seconds)
+OAUTH_TIMEOUT_SECONDS = 30
+TOKEN_EXCHANGE_TIMEOUT_SECONDS = 30
+TOKEN_REFRESH_TIMEOUT_SECONDS = 30
 
-SYN_RESOLUTION_MATCH = "ER_SUCCESS_MATCH"
+# Token Lifecycle
+TOKEN_REFRESH_BUFFER_SECONDS = 300  # Refresh 5 minutes before expiry
+TOKEN_EXPIRY_BUFFER_SECONDS = 300  # Refresh 5 minutes before expiry (alias)
+TOKEN_CLOCK_SKEW_BUFFER_SECONDS = 60  # Allow 60 seconds of clock skew
 
-# Alexa requires timestamps to be formatted according to ISO 8601, YYYY-MM-DDThh:mm:ssZ
-# https://developer.amazon.com/es-ES/docs/alexa/device-apis/alexa-scenecontroller.html#activate-response-event
-DATE_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
+# Storage
+STORAGE_KEY_TOKENS = "alexa_oauth_tokens"
+STORAGE_KEY = "alexa_oauth_tokens"  # Alias for backward compatibility
+STORAGE_VERSION = 2  # Version 2 adds real encryption
 
-API_DIRECTIVE = "directive"
-API_ENDPOINT = "endpoint"
-API_EVENT = "event"
-API_CONTEXT = "context"
-API_HEADER = "header"
-API_PAYLOAD = "payload"
-API_SCOPE = "scope"
-API_CHANGE = "change"
-API_PASSWORD = "password"
+# Config Flow
+CONF_REDIRECT_URI = "redirect_uri"
 
-CONF_DISPLAY_CATEGORIES = "display_categories"
-CONF_SUPPORTED_LOCALES = (
-    "de-DE",
-    "en-AU",
-    "en-CA",
-    "en-GB",
-    "en-IN",
-    "en-US",
-    "es-ES",
-    "es-MX",
-    "es-US",
-    "fr-CA",
-    "fr-FR",
-    "hi-IN",
-    "it-IT",
-    "ja-JP",
-    "nl-NL",
-    "pt-BR",
-)
+# Error codes
+ERROR_CANNOT_CONNECT = "cannot_connect"
+ERROR_INVALID_AUTH = "invalid_auth"
+ERROR_INVALID_CODE = "invalid_code"
+ERROR_INVALID_STATE = "invalid_state"
+ERROR_UNKNOWN = "unknown"
 
-API_TEMP_UNITS = {
-    UnitOfTemperature.FAHRENHEIT: "FAHRENHEIT",
-    UnitOfTemperature.CELSIUS: "CELSIUS",
+# Phase 3: YAML Migration
+YAML_CONFIG_SECTION = "alexa"
+YAML_CONFIG_FILENAME = "configuration.yaml"
+YAML_MIGRATION_MARKER = ".alexa_migrated"
+YAML_BACKUP_SUFFIX = ".alexa_backup"
+
+# Phase 3: Advanced Reauth
+REAUTH_REASON_REFRESH_TOKEN_EXPIRED = "refresh_token_expired"
+REAUTH_REASON_APP_REVOKED = "app_revoked"
+REAUTH_REASON_CLIENT_SECRET_ROTATED = "client_secret_rotated"
+REAUTH_REASON_REGIONAL_CHANGE = "regional_change"
+REAUTH_REASON_SCOPE_CHANGED = "scope_changed"
+
+# Phase 3: Reauth Detection
+REAUTH_MAX_RETRY_ATTEMPTS = 3
+REAUTH_RETRY_DELAY_SECONDS = 5
+REAUTH_BACKOFF_MULTIPLIER = 2
+
+# Phase 3: Regional Endpoints (Amazon LWA regions)
+REGIONAL_ENDPOINTS = {
+    "na": {  # North America
+        "auth_url": "https://www.amazon.com/ap/oa",
+        "token_url": "https://api.amazon.com/auth/o2/token",
+        "revoke_url": "https://api.amazon.com/auth/o2/revoke",
+    },
+    "eu": {  # Europe
+        "auth_url": "https://www.amazon.co.uk/ap/oa",
+        "token_url": "https://api.amazon.co.uk/auth/o2/token",
+        "revoke_url": "https://api.amazon.co.uk/auth/o2/revoke",
+    },
+    "fe": {  # Far East
+        "auth_url": "https://www.amazon.co.jp/ap/oa",
+        "token_url": "https://api.amazon.co.jp/auth/o2/token",
+        "revoke_url": "https://api.amazon.co.jp/auth/o2/revoke",
+    },
 }
 
-# Needs to be ordered dict for `async_api_set_thermostat_mode` which does a
-# reverse mapping of this dict and we want to map the first occurrence of OFF
-# back to HA state.
-API_THERMOSTAT_MODES: OrderedDict[str, str] = OrderedDict(
-    [
-        (climate.HVACMode.HEAT, "HEAT"),
-        (climate.HVACMode.COOL, "COOL"),
-        (climate.HVACMode.HEAT_COOL, "AUTO"),
-        (climate.HVACMode.AUTO, "AUTO"),
-        (climate.HVACMode.OFF, "OFF"),
-        (climate.HVACMode.FAN_ONLY, "CUSTOM"),
-        (climate.HVACMode.DRY, "CUSTOM"),
-    ]
-)
-API_THERMOSTAT_MODES_CUSTOM = {
-    climate.HVACMode.DRY: "DEHUMIDIFY",
-    climate.HVACMode.FAN_ONLY: "FAN",
-}
-API_THERMOSTAT_PRESETS = {climate.PRESET_ECO: "ECO"}
-
-# AlexaModeController does not like a single mode for the fan preset or humidifier mode,
-# we add PRESET_MODE_NA if a fan / humidifier / remote has only one preset_mode
-PRESET_MODE_NA = "-"
-
-STORAGE_ACCESS_TOKEN = "access_token"
-STORAGE_REFRESH_TOKEN = "refresh_token"
-
-
-class Cause:
-    """Possible causes for property changes.
-
-    https://developer.amazon.com/docs/smarthome/state-reporting-for-a-smart-home-skill.html#cause-object
-    """
-
-    # Indicates that the event was caused by a customer interaction with an
-    # application. For example, a customer switches on a light, or locks a door
-    # using the Alexa app or an app provided by a device vendor.
-    APP_INTERACTION = "APP_INTERACTION"
-
-    # Indicates that the event was caused by a physical interaction with an
-    # endpoint. For example manually switching on a light or manually locking a
-    # door lock
-    PHYSICAL_INTERACTION = "PHYSICAL_INTERACTION"
-
-    # Indicates that the event was caused by the periodic poll of an appliance,
-    # which found a change in value. For example, you might poll a temperature
-    # sensor every hour, and send the updated temperature to Alexa.
-    PERIODIC_POLL = "PERIODIC_POLL"
-
-    # Indicates that the event was caused by the application of a device rule.
-    # For example, a customer configures a rule to switch on a light if a
-    # motion sensor detects motion. In this case, Alexa receives an event from
-    # the motion sensor, and another event from the light to indicate that its
-    # state change was caused by the rule.
-    RULE_TRIGGER = "RULE_TRIGGER"
-
-    # Indicates that the event was caused by a voice interaction with Alexa.
-    # For example a user speaking to their Echo device.
-    VOICE_INTERACTION = "VOICE_INTERACTION"
-
-
-class Inputs:
-    """Valid names for the InputController.
-
-    https://developer.amazon.com/docs/device-apis/alexa-property-schemas.html#input
-    """
-
-    VALID_SOURCE_NAME_MAP = {
-        "antenna": "TUNER",
-        "antennatv": "TUNER",
-        "aux": "AUX 1",
-        "aux1": "AUX 1",
-        "aux2": "AUX 2",
-        "aux3": "AUX 3",
-        "aux4": "AUX 4",
-        "aux5": "AUX 5",
-        "aux6": "AUX 6",
-        "aux7": "AUX 7",
-        "bluray": "BLURAY",
-        "blurayplayer": "BLURAY",
-        "cable": "CABLE",
-        "cd": "CD",
-        "coax": "COAX 1",
-        "coax1": "COAX 1",
-        "coax2": "COAX 2",
-        "composite": "COMPOSITE 1",
-        "composite1": "COMPOSITE 1",
-        "dvd": "DVD",
-        "game": "GAME",
-        "gameconsole": "GAME",
-        "hdradio": "HD RADIO",
-        "hdmi": "HDMI 1",
-        "hdmi1": "HDMI 1",
-        "hdmi2": "HDMI 2",
-        "hdmi3": "HDMI 3",
-        "hdmi4": "HDMI 4",
-        "hdmi5": "HDMI 5",
-        "hdmi6": "HDMI 6",
-        "hdmi7": "HDMI 7",
-        "hdmi8": "HDMI 8",
-        "hdmi9": "HDMI 9",
-        "hdmi10": "HDMI 10",
-        "hdmiarc": "HDMI ARC",
-        "input": "INPUT 1",
-        "input1": "INPUT 1",
-        "input2": "INPUT 2",
-        "input3": "INPUT 3",
-        "input4": "INPUT 4",
-        "input5": "INPUT 5",
-        "input6": "INPUT 6",
-        "input7": "INPUT 7",
-        "input8": "INPUT 8",
-        "input9": "INPUT 9",
-        "input10": "INPUT 10",
-        "ipod": "IPOD",
-        "line": "LINE 1",
-        "line1": "LINE 1",
-        "line2": "LINE 2",
-        "line3": "LINE 3",
-        "line4": "LINE 4",
-        "line5": "LINE 5",
-        "line6": "LINE 6",
-        "line7": "LINE 7",
-        "mediaplayer": "MEDIA PLAYER",
-        "optical": "OPTICAL 1",
-        "optical1": "OPTICAL 1",
-        "optical2": "OPTICAL 2",
-        "phono": "PHONO",
-        "playstation": "PLAYSTATION",
-        "playstation3": "PLAYSTATION 3",
-        "playstation4": "PLAYSTATION 4",
-        "rokumediaplayer": "MEDIA PLAYER",
-        "satellite": "SATELLITE",
-        "satellitetv": "SATELLITE",
-        "smartcast": "SMARTCAST",
-        "tuner": "TUNER",
-        "tv": "TV",
-        "usbdac": "USB DAC",
-        "video": "VIDEO 1",
-        "video1": "VIDEO 1",
-        "video2": "VIDEO 2",
-        "video3": "VIDEO 3",
-        "xbox": "XBOX",
-    }
-
-    VALID_SOUND_MODE_MAP = {
-        "movie": "MOVIE",
-        "music": "MUSIC",
-        "night": "NIGHT",
-        "sport": "SPORT",
-        "tv": "TV",
-    }
+# Phase 3: Migration Storage
+MIGRATION_STORAGE_KEY = "alexa_migration_state"
+MIGRATION_STORAGE_VERSION = 1
