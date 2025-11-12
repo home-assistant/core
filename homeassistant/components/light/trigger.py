@@ -10,10 +10,11 @@ from homeassistant.const import (
     CONF_TARGET,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback, split_entity_id
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.event import process_state_match
 from homeassistant.helpers.target import (
     TargetStateChangedData,
     async_track_target_selector_state_change_event,
@@ -51,7 +52,9 @@ class StateTriggerBase(Trigger):
         """Validate config."""
         return cast(ConfigType, STATE_TRIGGER_SCHEMA(config))
 
-    def __init__(self, hass: HomeAssistant, config: TriggerConfig, state: str) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config: TriggerConfig, to_state: str
+    ) -> None:
         """Initialize the state trigger."""
         super().__init__(hass, config)
         if TYPE_CHECKING:
@@ -59,19 +62,18 @@ class StateTriggerBase(Trigger):
             assert config.target is not None
         self._options = config.options
         self._target = config.target
-        self._state = state
+        self._to_state = to_state
 
     @override
     async def async_attach_runner(
         self, run_action: TriggerActionRunner
     ) -> CALLBACK_TYPE:
         """Attach the trigger to an action runner."""
-        match_config_state = process_state_match(self._state)
 
         def check_all_match(entity_ids: set[str]) -> bool:
             """Check if all entity states match."""
             return all(
-                match_config_state(state.state)
+                state.state == self._to_state
                 for entity_id in entity_ids
                 if (state := self._hass.states.get(entity_id)) is not None
             )
@@ -80,7 +82,7 @@ class StateTriggerBase(Trigger):
             """Check that only one entity state matches."""
             return (
                 sum(
-                    match_config_state(state.state)
+                    state.state == self._to_state
                     for entity_id in entity_ids
                     if (state := self._hass.states.get(entity_id)) is not None
                 )
@@ -99,15 +101,18 @@ class StateTriggerBase(Trigger):
             from_state = event.data["old_state"]
             to_state = event.data["new_state"]
 
-            if to_state is None:
+            # The trigger should never fire if the previous state was not a valid state
+            if not from_state or from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
                 return
 
-            # This check is required for "first" behavior, to check that it went from zero
-            # entities matching the state to one. Otherwise, if previously there were two
-            # entities on the desired state and one changed, this would trigger.
-            # For "last" behavior it is not required, but serves as a quicker fail check.
-            if not match_config_state(to_state.state):
+            # The trigger should never fire if the new state is not the to state
+            if not to_state or to_state.state != self._to_state:
                 return
+
+            # The trigger should never fire if the previous and new states are the same
+            if from_state.state == to_state.state:
+                return
+
             if behavior == BEHAVIOR_LAST:
                 if not check_all_match(target_state_change_data.targeted_entity_ids):
                     return
