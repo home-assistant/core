@@ -49,7 +49,7 @@ def assert_result_info(
         f"Template result mismatch:\n"
         f"  Expected: {result!r} (type: {type(result).__name__})\n"
         f"  Actual:   {actual!r} (type: {type(actual).__name__})\n"
-        f"  Template: {info._template!r}"
+        f"  Template: {info.template!r}"
     )
     assert info.all_states == all_states
     assert info.filter("invalid_entity_name.somewhere") == all_states
