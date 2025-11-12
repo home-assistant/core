@@ -118,6 +118,9 @@
     "pm25": {
       "default": "mdi:molecule"
     },
+    "pm4": {
+      "default": "mdi:molecule"
+    },
     "power": {
       "default": "mdi:flash"
     },
