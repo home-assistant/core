@@ -10,20 +10,18 @@
     "step": {
       "user": {
         "data": {
-          "elevated_tracing": "Elevate tracing for topic",
           "excluded_devices": "Excluded devices",
-          "host": "Victron venus host name or IP",
+          "host": "[%key:common::config_flow::data::host%]",
           "operation_mode": "Operation mode",
-          "password": "Password",
-          "port": "MQTT port",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]",
           "root_topic_prefix": "Optional root topic prefix",
           "simple_naming": "Simple naming (no installation id in entity ids)",
-          "ssl": "Use SSL",
+          "ssl": "[%key:common::config_flow::data::ssl%]",
           "update_frequency": "Update frequency (seconds)",
-          "username": "Username"
+          "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
-          "elevated_tracing": "For debugging purpose only: If substring is in topic those topics will have full traces",
           "excluded_devices": "List of devices to exclude from being monitored.",
           "host": "Hostname or IP address of Victron Device, usually mDNS name like 'venus.local'",
           "operation_mode": "Operation mode controls which Home Assistant entity types are created. 'read_only' exposes only sensors and binary_sensors (no writable entities), 'full' exposes all entity types (sensors, binary_sensors, numbers, selects, switches), 'experimental' is reserved for future use (behaves like 'full' today).",
@@ -1247,41 +1245,39 @@
   },
   "options": {
     "abort": {
-      "already_configured": "Already configured",
+      "already_configured": "[%key:component::victron_gx_mqtt::config::abort::already_configured%]",
       "not_victronvenus": "Not a Victron Venus device"
     },
     "error": {
-      "cannot_connect": "Failed to connect to host",
-      "invalid_auth": "Authentication issue",
-      "unknown": "Unknown failure"
+      "cannot_connect": "[%key:component::victron_gx_mqtt::config::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:component::victron_gx_mqtt::config::error::unknown%]"
     },
     "step": {
       "init": {
         "data": {
-          "elevated_tracing": "Elevate tracing for topic",
-          "excluded_devices": "Excluded devices",
-          "host": "Victron venus host name or IP",
-          "operation_mode": "Operation mode",
-          "password": "Password",
-          "port": "MQTT port",
-          "root_topic_prefix": "Optional root topic prefix",
-          "simple_naming": "Simple naming (no installation id in entity ids)",
-          "ssl": "Use SSL",
-          "update_frequency": "Update frequency (seconds)",
-          "username": "Username"
+          "excluded_devices": "[%key:component::victron_gx_mqtt::config::step::user::data::excluded_devices%]",
+          "host": "[%key:common::config_flow::data::host%]",
+          "operation_mode": "[%key:component::victron_gx_mqtt::config::step::user::data::operation_mode%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "root_topic_prefix": "[%key:component::victron_gx_mqtt::config::step::user::data::root_topic_prefix%]",
+          "simple_naming": "[%key:component::victron_gx_mqtt::config::step::user::data::simple_naming%]",
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "update_frequency": "[%key:component::victron_gx_mqtt::config::step::user::data::update_frequency%]",
+          "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
-          "elevated_tracing": "For debugging purpose only: If substring is in topic those topics will have full traces",
-          "excluded_devices": "List of devices to exclude from being monitored.",
-          "host": "Hostname or IP address of Victron Device, usually mDNS name like 'venus.local'",
-          "operation_mode": "Operation mode controls which Home Assistant entity types are created. 'read_only' exposes only sensors and binary_sensors (no writable entities), 'full' exposes all entity types (sensors, binary_sensors, numbers, selects, switches), 'experimental' is reserved for future use (behaves like 'full' today).",
-          "password": "Password for the Victron Device, default is empty. This is not your VRM password.",
-          "port": "The MQTT port on the host. Normally it is 1883.",
-          "root_topic_prefix": "Root topic prefix if used via MQTT gateway.",
-          "simple_naming": "Use simple naming for entities, can work only when you have single Cerbo on the network.",
-          "ssl": "Indicates whether to use SSL to connect to the Victron Device. Normally it is disabled.",
-          "update_frequency": "Update frequency in seconds. Default is 30 seconds. Set to 0 to update always.",
-          "username": "Username for the MQTT server, default is empty. Not needed by Victron devices. This is only needed if you use route your mqtt messages through non Victron server and it does require username."
+          "excluded_devices": "[%key:component::victron_gx_mqtt::config::step::user::data_description::excluded_devices%]",
+          "host": "[%key:component::victron_gx_mqtt::config::step::user::data_description::host%]",
+          "operation_mode": "[%key:component::victron_gx_mqtt::config::step::user::data_description::operation_mode%]",
+          "password": "[%key:component::victron_gx_mqtt::config::step::user::data_description::password%]",
+          "port": "[%key:component::victron_gx_mqtt::config::step::user::data_description::port%]",
+          "root_topic_prefix": "[%key:component::victron_gx_mqtt::config::step::user::data_description::root_topic_prefix%]",
+          "simple_naming": "[%key:component::victron_gx_mqtt::config::step::user::data_description::simple_naming%]",
+          "ssl": "[%key:component::victron_gx_mqtt::config::step::user::data_description::ssl%]",
+          "update_frequency": "[%key:component::victron_gx_mqtt::config::step::user::data_description::update_frequency%]",
+          "username": "[%key:component::victron_gx_mqtt::config::step::user::data_description::username%]"
         }
       }
     }
