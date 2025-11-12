@@ -13,6 +13,7 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelState,
     CodeFormat,
 )
+from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -66,6 +67,7 @@ async def async_setup_entry(
                 SatelIntegraAlarmPanel(
                     controller,
                     config_entry.entry_id,
+                    subentry,
                     partition_num,
                     zone_name,
                     arm_home_mode,
@@ -88,6 +90,7 @@ class SatelIntegraAlarmPanel(SatelIntegraEntity, AlarmControlPanelEntity):
         self,
         controller: AsyncSatel,
         config_entry_id: str,
+        subentry: ConfigSubentry,
         device_number: int,
         device_name: str,
         arm_home_mode: int,
@@ -95,7 +98,8 @@ class SatelIntegraAlarmPanel(SatelIntegraEntity, AlarmControlPanelEntity):
         """Initialize the alarm panel."""
         super().__init__(
             controller,
-            f"{config_entry_id}_alarm_panel_{device_number}",
+            config_entry_id,
+            subentry,
             device_number,
             device_name,
         )

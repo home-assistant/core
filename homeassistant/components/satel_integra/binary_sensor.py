@@ -8,6 +8,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -15,10 +16,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     CONF_OUTPUT_NUMBER,
-    CONF_OUTPUTS,
     CONF_ZONE_NUMBER,
     CONF_ZONE_TYPE,
-    CONF_ZONES,
     SIGNAL_OUTPUTS_UPDATED,
     SIGNAL_ZONES_UPDATED,
     SUBENTRY_TYPE_OUTPUT,
@@ -52,10 +51,10 @@ async def async_setup_entry(
                 SatelIntegraBinarySensor(
                     controller,
                     config_entry.entry_id,
+                    subentry,
                     zone_num,
                     zone_name,
                     zone_type,
-                    CONF_ZONES,
                     SIGNAL_ZONES_UPDATED,
                 )
             ],
@@ -77,10 +76,10 @@ async def async_setup_entry(
                 SatelIntegraBinarySensor(
                     controller,
                     config_entry.entry_id,
+                    subentry,
                     output_num,
                     output_name,
                     ouput_type,
-                    CONF_OUTPUTS,
                     SIGNAL_OUTPUTS_UPDATED,
                 )
             ],
@@ -95,16 +94,17 @@ class SatelIntegraBinarySensor(SatelIntegraEntity, BinarySensorEntity):
         self,
         controller: AsyncSatel,
         config_entry_id: str,
+        subentry: ConfigSubentry,
         device_number: int,
         device_name: str,
         device_class: BinarySensorDeviceClass,
-        sensor_type: str,
         react_to_signal: str,
     ) -> None:
         """Initialize the binary_sensor."""
         super().__init__(
             controller,
-            f"{config_entry_id}_{sensor_type}_{device_number}",
+            config_entry_id,
+            subentry,
             device_number,
             device_name,
         )

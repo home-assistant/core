@@ -7,6 +7,7 @@ from typing import Any
 from satel_integra.satel_integra import AsyncSatel
 
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_CODE, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -44,6 +45,7 @@ async def async_setup_entry(
                 SatelIntegraSwitch(
                     controller,
                     config_entry.entry_id,
+                    subentry,
                     switchable_output_num,
                     switchable_output_name,
                     config_entry.options.get(CONF_CODE),
@@ -60,6 +62,7 @@ class SatelIntegraSwitch(SatelIntegraEntity, SwitchEntity):
         self,
         controller: AsyncSatel,
         config_entry_id: str,
+        subentry: ConfigSubentry,
         device_number: int,
         device_name: str,
         code: str | None,
@@ -67,7 +70,8 @@ class SatelIntegraSwitch(SatelIntegraEntity, SwitchEntity):
         """Initialize the switch."""
         super().__init__(
             controller,
-            f"{config_entry_id}_switch_{device_number}",
+            config_entry_id,
+            subentry,
             device_number,
             device_name,
         )
