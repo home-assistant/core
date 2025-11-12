@@ -87,7 +87,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _load_available_interfaces, hass, api_data, tracker_interfaces
     )
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = entry.data
     hass.async_create_task(
         async_load_platform(
             hass,
