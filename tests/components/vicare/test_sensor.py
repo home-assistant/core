@@ -26,6 +26,7 @@ async def test_all_entities(
     fixtures: list[Fixture] = [
         Fixture({"type:boiler"}, "vicare/Vitodens300W.json"),
         Fixture({"type:heatpump"}, "vicare/Vitocal250A.json"),
+        Fixture({"type:heatpump"}, "vicare/Vitocal222G_Vitovent300W.json"),
         Fixture({"type:ventilation"}, "vicare/ViAir300F.json"),
         Fixture({"type:ess"}, "vicare/VitoChargeVX3.json"),
         Fixture({None}, "vicare/VitoValor.json"),
