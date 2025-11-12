@@ -90,7 +90,9 @@ class WattsVisionDeviceCoordinator(DataUpdateCoordinator[Device]):
         self._fast_polling_until: datetime | None = None
 
         # Listen to hub coordinator updates
-        hub_coordinator.async_add_listener(self._handle_hub_update)
+        self.unsubscribe_hub_listener = hub_coordinator.async_add_listener(
+            self._handle_hub_update
+        )
 
     def _handle_hub_update(self) -> None:
         """Handle updates from hub coordinator."""

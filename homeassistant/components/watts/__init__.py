@@ -93,4 +93,7 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: WattsVisionConfigEntry
 ) -> bool:
     """Unload a config entry."""
+    for device_coordinator in entry.runtime_data.device_coordinators.values():
+        device_coordinator.unsubscribe_hub_listener()
+
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

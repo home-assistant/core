@@ -23,7 +23,7 @@ rules:
   action-exceptions:
     status: exempt
     comment: Integration does not register custom actions.
-  config-entry-unloading: todo
+  config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
     comment: Integration does not have configuration parameters.
