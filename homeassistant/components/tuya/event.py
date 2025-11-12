@@ -89,7 +89,7 @@ EVENTS: dict[DeviceCategory, tuple[EventEntityDescription, ...]] = {
             translation_key="numbered_button",
             translation_placeholders={"button_number": "9"},
         ),
-    )
+    ),
 }
 
 
@@ -176,7 +176,6 @@ class TuyaEventEntity(TuyaEntity, EventEntity):
         if isinstance(self._dpcode_wrapper, DPCodeEnumWrapper):
             event_type = value
             event_attributes = {}
-            
 
         self._trigger_event(event_type, event_attributes)
         self.async_write_ha_state()

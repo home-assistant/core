@@ -291,7 +291,6 @@ class DPCodeBase64StringWrapper(DPCodeTypeInformationWrapper[TypeInformation]):
             return None
 
 
-
 class DPCodeEnumWrapper(DPCodeTypeInformationWrapper[EnumTypeData]):
     """Simple wrapper for EnumTypeData values."""
 
