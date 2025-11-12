@@ -1074,6 +1074,20 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_getter=lambda api: api.getAirborneDustPM10(),
     ),
+    ViCareSensorEntityDescription(
+        key="ventilation_volumeflow_input",
+        translation_key="ventilation_volumeflow_input",
+        native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        value_getter=lambda api: api.getSupplyVolumeFlow(),
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ViCareSensorEntityDescription(
+        key="ventilation_volumeflow_output",
+        translation_key="ventilation_volumeflow_output",
+        native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        value_getter=lambda api: api.getExhaustVolumeFlow(),
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
 )
 
 CIRCUIT_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (

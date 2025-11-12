@@ -539,6 +539,12 @@
           "standby": "[%key:common::state::standby%]"
         }
       },
+      "ventilation_volumeflow_input": {
+        "name": "Ventilation volumeflow input"
+      },
+      "ventilation_volumeflow_output": {
+        "name": "Ventilation volumeflow output"
+      },
       "volumetric_flow": {
         "name": "Volumetric flow"
       },
