@@ -113,6 +113,14 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ViCareSensorEntityDescription(
+        key="outside_humidity",
+        translation_key="outside_humidity",
+        native_unit_of_measurement=PERCENTAGE,
+        value_getter=lambda api: api.getOutsideHumidity(),
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ViCareSensorEntityDescription(
         key="return_temperature",
         translation_key="return_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,

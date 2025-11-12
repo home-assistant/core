@@ -397,6 +397,9 @@
       "hydraulic_separator_temperature": {
         "name": "Hydraulic separator temperature"
       },
+      "outside_humidity": {
+        "name": "Outside humidity"
+      },
       "outside_temperature": {
         "name": "Outside temperature"
       },
