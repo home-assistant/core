@@ -58,7 +58,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         account = await senz_api.get_account()
     except RequestError as err:
-        raise ConfigEntryNotReady from err
+        # if err.FINDTHEERRORCODE == 401:
+        #     raise ConfigEntryAuthFailed(
+        #         translation_domain=DOMAIN,
+        #         translation_key="config_entry_auth_failed",
+        #     ) from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="config_entry_not_ready",
+        ) from err
 
     coordinator: SENZDataUpdateCoordinator = DataUpdateCoordinator(
         hass,
