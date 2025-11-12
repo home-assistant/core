@@ -16,7 +16,6 @@ from .const import (
     CONF_API_SECRET,
     CONF_INTERFACE_CLIENT,
     CONF_TRACKER_INTERFACES,
-    DATA_HASS_CONFIG,
     DOMAIN,
     OPNSENSE_DATA,
 )
@@ -44,7 +43,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the OPNsense component."""
-    hass.data[DATA_HASS_CONFIG] = config
     if config.get(DOMAIN) is not None:
         hass.async_create_task(
             hass.config_entries.flow.async_init(

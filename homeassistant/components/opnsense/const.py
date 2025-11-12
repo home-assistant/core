@@ -1,6 +1,5 @@
 """Constants for OPNsense component."""
 
-DATA_HASS_CONFIG = "opnsense_hass_config"
 DOMAIN = "opnsense"
 OPNSENSE_DATA = DOMAIN
 
