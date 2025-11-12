@@ -10,6 +10,7 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
+from homeassistant.components.backup import AddonInfo, AgentBackup
 from homeassistant.components.google_drive.const import DOMAIN
 from homeassistant.const import UnitOfInformation
 from homeassistant.core import HomeAssistant
@@ -105,4 +106,24 @@ def mock_config_entry(expires_at: int) -> MockConfigEntry:
                 "scope": "https://www.googleapis.com/auth/drive.file",
             },
         },
+    )
+
+
+@pytest.fixture
+def mock_agent_backup() -> AgentBackup:
+    """Return a mocked AgentBackup."""
+    return AgentBackup(
+        addons=[AddonInfo(name="Test", slug="test", version="1.0.0")],
+        backup_id="test-backup",
+        database_included=True,
+        date="2025-01-01T01:23:45.678Z",
+        extra_metadata={
+            "with_automatic_settings": False,
+        },
+        folders=[],
+        homeassistant_included=True,
+        homeassistant_version="2024.12.0",
+        name="Test",
+        protected=False,
+        size=987,
     )
