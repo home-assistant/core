@@ -21,7 +21,7 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_interface": "Interface(s) does not exist",
+      "invalid_interface": "Interface(s) do not exist",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
