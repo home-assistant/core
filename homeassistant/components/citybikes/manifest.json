@@ -1,7 +1,7 @@
 {
   "domain": "citybikes",
   "name": "CityBikes",
-  "codeowners": [],
+  "codeowners": ["pbr0ck3r"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/citybikes",
   "integration_type": "hub",

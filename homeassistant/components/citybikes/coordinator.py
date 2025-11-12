@@ -13,7 +13,6 @@ from citybikes.asyncio import Client as CitybikesClient
 from homeassistant.const import APPLICATION_NAME, __version__
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -38,7 +37,7 @@ class CityBikesCoordinator(DataUpdateCoordinator):
         hass: HomeAssistant,
         client: CitybikesClient,
         network_id: str,
-        config_entry: ConfigEntry | None = None,
+        config_entry: ConfigEntry,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(

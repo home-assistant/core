@@ -10,9 +10,8 @@ from citybikes.asyncio import Client as CitybikesClient
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
@@ -28,12 +27,6 @@ from homeassistant.util import location as location_util
 from .const import CONF_NETWORK, CONF_RADIUS, CONF_STATIONS_LIST, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-STEP_USER_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_NETWORK, default=""): str,
-    }
-)
 
 STEP_STATIONS_DATA_SCHEMA = vol.Schema(
     {
@@ -100,13 +93,13 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 class CityBikesConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for CityBikes."""
 
-    VERSION = 1
-
     def __init__(self) -> None:
         """Initialize the config flow."""
         self.network_id: str | None = None
         self.network_name: str | None = None
         self.station_config: dict[str, Any] = {}
+        self.latitude: float | None = None
+        self.longitude: float | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -123,6 +116,13 @@ class CityBikesConfigFlow(ConfigFlow, domain=DOMAIN):
                 info = await validate_input(self.hass, user_input)
                 self.network_id = info["network_id"]
                 self.network_name = info["network_name"]
+                # Store latitude/longitude if provided, otherwise use hass.config defaults
+                self.latitude = user_input.get(
+                    CONF_LATITUDE, self.hass.config.latitude
+                )
+                self.longitude = user_input.get(
+                    CONF_LONGITUDE, self.hass.config.longitude
+                )
 
                 await self.async_set_unique_id(self.network_id)
                 self._abort_if_unique_id_configured()
@@ -134,9 +134,22 @@ class CityBikesConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
+        # Create schema with default values from hass.config
+        schema = vol.Schema(
+            {
+                vol.Optional(CONF_NETWORK, default=""): str,
+                vol.Optional(
+                    CONF_LATITUDE, default=self.hass.config.latitude
+                ): cv.latitude,
+                vol.Optional(
+                    CONF_LONGITUDE, default=self.hass.config.longitude
+                ): cv.longitude,
+            }
+        )
+
         return self.async_show_form(
             step_id="user",
-            data_schema=STEP_USER_DATA_SCHEMA,
+            data_schema=schema,
             errors=errors,
         )
 
@@ -152,12 +165,19 @@ class CityBikesConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "no_station_filter"
             else:
                 self.station_config = user_input
+                # Add latitude/longitude to options if they differ from hass.config
+                options = self.station_config.copy()
+                if self.latitude != self.hass.config.latitude:
+                    options[CONF_LATITUDE] = self.latitude
+                if self.longitude != self.hass.config.longitude:
+                    options[CONF_LONGITUDE] = self.longitude
+                
                 return self.async_create_entry(
                     title=self.network_name or "CityBikes",
                     data={
                         CONF_NETWORK: self.network_id,
                     },
-                    options=self.station_config,
+                    options=options,
                 )
 
         return self.async_show_form(

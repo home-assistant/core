@@ -74,8 +74,9 @@ async def async_setup_entry(
             radius, UnitOfLength.FEET, UnitOfLength.METERS
         )
 
-    latitude = hass.config.latitude
-    longitude = hass.config.longitude
+    # Use latitude/longitude from options if provided, otherwise use hass.config
+    latitude = options.get(CONF_LATITUDE, hass.config.latitude)
+    longitude = options.get(CONF_LONGITUDE, hass.config.longitude)
 
     entities: list[CityBikesStation] = []
     data = coordinator.data
