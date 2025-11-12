@@ -18,16 +18,9 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers import (
-    area_registry as ar,
-    device_registry as dr,
-    entity_registry as er,
-    floor_registry as fr,
-    label_registry as lr,
-)
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, mock_device_registry
+from tests.components import target_entities
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
@@ -38,58 +31,7 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
 @pytest.fixture
 async def target_lights(hass: HomeAssistant) -> None:
     """Create multiple light entities associated with different targets."""
-    await async_setup_component(hass, "light", {})
-
-    config_entry = MockConfigEntry(domain="test")
-    config_entry.add_to_hass(hass)
-
-    floor_reg = fr.async_get(hass)
-    floor = floor_reg.async_create("Test Floor")
-
-    area_reg = ar.async_get(hass)
-    area = area_reg.async_create("Test Area", floor_id=floor.floor_id)
-
-    label_reg = lr.async_get(hass)
-    label = label_reg.async_create("Test Label")
-
-    device = dr.DeviceEntry(id="test_device", area_id=area.id, labels={label.label_id})
-    mock_device_registry(hass, {device.id: device})
-
-    entity_reg = er.async_get(hass)
-    # Light associated with area
-    light_area = entity_reg.async_get_or_create(
-        domain="light",
-        platform="test",
-        unique_id="light_area",
-        suggested_object_id="area_light",
-    )
-    entity_reg.async_update_entity(light_area.entity_id, area_id=area.id)
-
-    # Light associated with device
-    entity_reg.async_get_or_create(
-        domain="light",
-        platform="test",
-        unique_id="light_device",
-        suggested_object_id="device_light",
-        device_id=device.id,
-    )
-
-    # Light associated with label
-    light_label = entity_reg.async_get_or_create(
-        domain="light",
-        platform="test",
-        unique_id="light_label",
-        suggested_object_id="label_light",
-    )
-    entity_reg.async_update_entity(light_label.entity_id, labels={label.label_id})
-
-    # Return all available light entities
-    return [
-        "light.standalone_light",
-        "light.label_light",
-        "light.area_light",
-        "light.device_light",
-    ]
+    return await target_entities(hass, "light")
 
 
 def set_or_remove_state(hass: HomeAssistant, entity_id: str, state: str | None) -> None:
