@@ -454,6 +454,8 @@ async def test_light_state_trigger_behavior_last_from_none(
             assert service_call.data[CONF_ENTITY_ID] == entity_id
         service_calls.clear()
 
+        # Setting the state of other lights fires the trigger again, because
+        # the check that all other lights are in the desired state still passes
         for other_entity_id in other_entity_ids:
             set_or_remove_state(hass, other_entity_id, state)
             await hass.async_block_till_done()
