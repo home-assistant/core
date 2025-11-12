@@ -78,6 +78,9 @@
       },
       "valve": {
         "name": "Valve"
+      },
+      "ventilation_frost_protection": {
+        "name": "Ventilation frost protection"
       }
     },
     "button": {
