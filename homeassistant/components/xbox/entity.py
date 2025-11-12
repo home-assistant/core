@@ -6,13 +6,11 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import Any
 
-from xbox.webapi.api.provider.people.models import Person
-from xbox.webapi.api.provider.smartglass.models import ConsoleType, SmartglassConsole
-from xbox.webapi.api.provider.titlehub.models import Title
+from pythonxbox.api.provider.people.models import Person
+from pythonxbox.api.provider.smartglass.models import ConsoleType, SmartglassConsole
+from pythonxbox.api.provider.titlehub.models import Title
 from yarl import URL
 
-from homeassistant.components.automation import automations_with_entity
-from homeassistant.components.script import scripts_with_entity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -134,13 +132,6 @@ class XboxConsoleBaseEntity(CoordinatorEntity[XboxUpdateCoordinator]):
         return self.coordinator.data.consoles[self._console.id]
 
 
-def entity_used_in(hass: HomeAssistant, entity_id: str) -> list[str]:
-    """Get list of related automations and scripts."""
-    used_in = automations_with_entity(hass, entity_id)
-    used_in += scripts_with_entity(hass, entity_id)
-    return used_in
-
-
 def check_deprecated_entity(
     hass: HomeAssistant,
     xuid: str,
@@ -161,7 +152,7 @@ def check_deprecated_entity(
     return False
 
 
-def profile_pic(person: Person, _: Title | None) -> str | None:
+def profile_pic(person: Person, _: Title | None = None) -> str | None:
     """Return the gamer pic."""
 
     # Xbox sometimes returns a domain that uses a wrong certificate which

@@ -666,6 +666,7 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "namecheapdns",
     "nanoleaf",
     "nasweb",
+    "neato",
     "nederlandse_spoorwegen",
     "ness_alarm",
     "netatmo",
@@ -1033,7 +1034,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "v2c",
     "vallox",
     "vasttrafik",
-    "velux",
     "venstar",
     "vera",
     "verisure",
@@ -1688,6 +1688,7 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "namecheapdns",
     "nanoleaf",
     "nasweb",
+    "neato",
     "nederlandse_spoorwegen",
     "nest",
     "ness_alarm",
@@ -2261,7 +2262,7 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
             integration.add_error(
                 "quality_scale",
                 (
-                    "New integrations marked as internal should be added to INTEGRATIONS_WITHOUT_SCALE in script/hassfest/quality_scale.py."
+                    "New integrations marked as internal should be added to NO_QUALITY_SCALE in script/hassfest/quality_scale.py."
                     if integration.quality_scale == "internal"
                     else "Quality scale definition not found. New integrations are required to at least reach the Bronze tier."
                 ),
