@@ -10,8 +10,7 @@
     'function': dict({
       'null': dict({
         'type': 'Boolean',
-        'value': dict({
-        }),
+        'value': '{}',
       }),
     }),
     'home_assistant': dict({
@@ -77,8 +76,7 @@
     'status_range': dict({
       'null': dict({
         'type': 'Boolean',
-        'value': dict({
-        }),
+        'value': '{}',
       }),
     }),
     'sub': False,
@@ -98,8 +96,7 @@
         'function': dict({
           'null': dict({
             'type': 'Boolean',
-            'value': dict({
-            }),
+            'value': '{}',
           }),
         }),
         'home_assistant': dict({
@@ -164,8 +161,7 @@
         'status_range': dict({
           'null': dict({
             'type': 'Boolean',
-            'value': dict({
-            }),
+            'value': '{}',
           }),
         }),
         'sub': False,
