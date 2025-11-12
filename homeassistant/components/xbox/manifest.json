@@ -3,7 +3,7 @@
   "name": "Xbox",
   "codeowners": ["@hunterjm", "@tr4nt0r"],
   "config_flow": true,
-  "dependencies": ["auth", "application_credentials"],
+  "dependencies": ["application_credentials"],
   "dhcp": [
     {
       "hostname": "xbox*"
