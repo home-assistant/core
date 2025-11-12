@@ -93,16 +93,16 @@ def _get_delay(planned: datetime | None, actual: datetime | None) -> bool:
 class TripStatus(Enum):
     """Enumeration for trip status."""
 
-    CANCELLED = "CANCELLED"
-    CHANGE_NOT_POSSIBLE = "CHANGE_NOT_POSSIBLE"
-    ALTERNATIVE_TRANSPORT = "ALTERNATIVE_TRANSPORT"
-    DISRUPTION = "DISRUPTION"
-    MAINTENANCE = "MAINTENANCE"
-    UNCERTAIN = "UNCERTAIN"
-    REPLACEMENT = "REPLACEMENT"
-    ADDITIONAL = "ADDITIONAL"
-    SPECIAL = "SPECIAL"
-    NORMAL = "NORMAL"
+    additional = "ADDITIONAL"
+    alternative_transport = "ALTERNATIVE_TRANSPORT"
+    cancelled = "CANCELLED"
+    change_not_possible = "CHANGE_NOT_POSSIBLE"
+    disruption = "DISRUPTION"
+    maintenance = "MAINTENANCE"
+    normal = "NORMAL"
+    replacement = "REPLACEMENT"
+    special = "SPECIAL"
+    uncertain = "UNCERTAIN"
 
     def __str__(self) -> str:
         """Return the string representation."""
@@ -115,7 +115,6 @@ class NSSensorEntityDescription(SensorEntityDescription):
     """Describes Nederlandse Spoorwegen sensor entity."""
 
     is_next: bool = False
-    convert_fn: Callable[[Any], Any] | None = None
     value_fn: Callable[[Any], Any] | None = None
 
 
@@ -193,7 +192,7 @@ SENSOR_DESCRIPTIONS: tuple[NSSensorEntityDescription, ...] = (
         key="status",
         translation_key="status",
         device_class=SensorDeviceClass.ENUM,
-        convert_fn=TripStatus,
+        options=[status.value for status in TripStatus],
         value_fn=lambda trip: getattr(trip, "status", None),
         entity_registry_enabled_default=False,
     ),
@@ -330,10 +329,7 @@ class NSSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity):
         )
         if data is None:
             return None
-        if self.entity_description.convert_fn:
-            return self.entity_description.convert_fn(
-                self.entity_description.value_fn(data)
-            )
+
         return self.entity_description.value_fn(data)
 
     @property

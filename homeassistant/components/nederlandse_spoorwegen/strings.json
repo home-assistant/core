@@ -106,7 +106,19 @@
         "name": "Route to"
       },
       "status": {
-        "name": "Status"
+        "name": "Status",
+        "state": {
+          "additional": "Additional",
+          "alternative_transport": "Alternative transport",
+          "cancelled": "Cancelled",
+          "change_not_possible": "Change not possible",
+          "disruption": "Disruption",
+          "maintenance": "Maintenance",
+          "normal": "Normal",
+          "replacement": "Replacement",
+          "special": "Special",
+          "uncertain": "Uncertain"
+        }
       },
       "transfers": {
         "name": "Transfers"
