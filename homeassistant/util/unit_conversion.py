@@ -74,6 +74,7 @@ _DAYS_TO_SECS = 24 * _HRS_TO_SECS  # 1 day = 24 hours = 86400 seconds
 # Energy conversion constants
 _WH_TO_J = 3600  # 1 Wh = 3600 J
 _WH_TO_CAL = _WH_TO_J / 4.184  # 1 Wh = 860.42065 cal
+_WH_TO_WS = 3600  # 1 Wh = 3600 Ws
 
 # Mass conversion constants
 _POUND_TO_G = 453.59237
@@ -334,7 +335,7 @@ class EnergyConverter(BaseUnitConverter):
         UnitOfEnergy.KILO_JOULE: _WH_TO_J,
         UnitOfEnergy.MEGA_JOULE: _WH_TO_J / 1e3,
         UnitOfEnergy.GIGA_JOULE: _WH_TO_J / 1e6,
-        UnitOfEnergy.WATT_SECOND: 3.6e6,
+        UnitOfEnergy.WATT_SECOND: _WH_TO_WS * 1e3,
         UnitOfEnergy.MILLIWATT_HOUR: 1e6,
         UnitOfEnergy.WATT_HOUR: 1e3,
         UnitOfEnergy.KILO_WATT_HOUR: 1,
