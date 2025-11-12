@@ -53,12 +53,12 @@ async def async_setup_entry(
             [
                 SatelIntegraBinarySensor(
                     controller,
+                    config_entry.entry_id,
                     zone_num,
                     zone_name,
                     zone_type,
                     CONF_ZONES,
                     SIGNAL_ZONES_UPDATED,
-                    config_entry.entry_id,
                 )
             ],
             config_subentry_id=subentry.subentry_id,
@@ -78,12 +78,12 @@ async def async_setup_entry(
             [
                 SatelIntegraBinarySensor(
                     controller,
+                    config_entry.entry_id,
                     output_num,
                     output_name,
                     ouput_type,
                     CONF_OUTPUTS,
                     SIGNAL_OUTPUTS_UPDATED,
-                    config_entry.entry_id,
                 )
             ],
             config_subentry_id=subentry.subentry_id,
@@ -96,17 +96,20 @@ class SatelIntegraBinarySensor(SatelIntegraEntity, BinarySensorEntity):
     def __init__(
         self,
         controller: AsyncSatel,
+        config_entry_id: str,
         device_number: int,
         device_name: str,
         device_class: BinarySensorDeviceClass,
         sensor_type: str,
         react_to_signal: str,
-        config_entry_id: str,
     ) -> None:
         """Initialize the binary_sensor."""
-        super().__init__(controller, device_number)
+        super().__init__(
+            controller,
+            f"{config_entry_id}_{sensor_type}_{device_number}",
+            device_number,
+        )
 
-        self._attr_unique_id = f"{config_entry_id}_{sensor_type}_{device_number}"
         self._react_to_signal = react_to_signal
 
         self._attr_device_class = device_class

@@ -45,10 +45,10 @@ async def async_setup_entry(
             [
                 SatelIntegraSwitch(
                     controller,
+                    config_entry.entry_id,
                     switchable_output_num,
                     switchable_output_name,
                     config_entry.options.get(CONF_CODE),
-                    config_entry.entry_id,
                 ),
             ],
             config_subentry_id=subentry.subentry_id,
@@ -61,15 +61,18 @@ class SatelIntegraSwitch(SatelIntegraEntity, SwitchEntity):
     def __init__(
         self,
         controller: AsyncSatel,
+        config_entry_id: str,
         device_number: int,
         device_name: str,
         code: str | None,
-        config_entry_id: str,
     ) -> None:
         """Initialize the switch."""
-        super().__init__(controller, device_number)
+        super().__init__(
+            controller,
+            f"{config_entry_id}_switch_{device_number}",
+            device_number,
+        )
 
-        self._attr_unique_id = f"{config_entry_id}_switch_{device_number}"
         self._code = code
 
         self._attr_device_info = DeviceInfo(

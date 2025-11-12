@@ -14,7 +14,13 @@ class SatelIntegraEntity(Entity):
     _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(self, controller: AsyncSatel, device_number: int) -> None:
+    def __init__(
+        self,
+        controller: AsyncSatel,
+        unique_id: str,
+        device_number: int,
+    ) -> None:
         """Initialize the Satel Integra entity."""
         self._satel = controller
         self._device_number = device_number
+        self._attr_unique_id = unique_id
