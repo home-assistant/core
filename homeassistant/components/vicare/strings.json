@@ -497,6 +497,12 @@
       "spf_total": {
         "name": "Seasonal performance factor"
       },
+      "supply_fan_hours": {
+        "name": "Supply fan hours"
+      },
+      "supply_fan_speed": {
+        "name": "Supply fan speed"
+      },
       "supply_pressure": {
         "name": "Supply pressure"
       },

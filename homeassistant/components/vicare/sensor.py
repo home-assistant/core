@@ -28,6 +28,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     PERCENTAGE,
+    REVOLUTIONS_PER_MINUTE,
     EntityCategory,
     UnitOfEnergy,
     UnitOfMass,
@@ -992,6 +993,24 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         value_getter=lambda api: api.getHydraulicSeparatorTemperature(),
     ),
     SUPPLY_TEMPERATURE_SENSOR,
+    ViCareSensorEntityDescription(
+        key="supply_fan_hours",
+        translation_key="supply_fan_hours",
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        value_getter=lambda api: api.getSupplyFanHours(),
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
+    ViCareSensorEntityDescription(
+        key="supply_fan_speed",
+        translation_key="supply_fan_speed",
+        native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
+        value_getter=lambda api: api.getSupplyFanSpeed(),
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
     ViCareSensorEntityDescription(
         key="filter_hours",
         translation_key="filter_hours",
