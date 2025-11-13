@@ -5,12 +5,11 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 import base64
 from dataclasses import dataclass
-import json
-from typing import Any, Literal, Self, overload
+from typing import Any, Literal, Self, cast, overload
 
 from tuya_sharing import CustomerDevice
 
-from homeassistant.util.json import json_loads
+from homeassistant.util.json import json_loads, json_loads_object
 
 from .const import DPCode, DPType
 from .util import parse_dptype, remap_value
@@ -40,7 +39,6 @@ class IntegerTypeData(TypeInformation):
     scale: float
     step: float
     unit: str | None = None
-    type: str | None = None
 
     @property
     def max_scaled(self) -> float:
@@ -88,7 +86,7 @@ class IntegerTypeData(TypeInformation):
     @classmethod
     def from_json(cls, dpcode: DPCode, data: str) -> Self | None:
         """Load JSON string and return a IntegerTypeData object."""
-        if not (parsed := json.loads(data)):
+        if not (parsed := cast(dict[str, Any] | None, json_loads_object(data))):
             return None
 
         return cls(
@@ -98,7 +96,6 @@ class IntegerTypeData(TypeInformation):
             scale=float(parsed["scale"]),
             step=max(float(parsed["step"]), 1),
             unit=parsed.get("unit"),
-            type=parsed.get("type"),
         )
 
 
@@ -111,9 +108,9 @@ class BitmapTypeInformation(TypeInformation):
     @classmethod
     def from_json(cls, dpcode: DPCode, data: str) -> Self | None:
         """Load JSON string and return a BitmapTypeInformation object."""
-        if not (parsed := json.loads(data)):
+        if not (parsed := json_loads_object(data)):
             return None
-        return cls(dpcode, **parsed)
+        return cls(dpcode, **cast(dict[str, list[str]], parsed))
 
 
 @dataclass
@@ -125,9 +122,9 @@ class EnumTypeData(TypeInformation):
     @classmethod
     def from_json(cls, dpcode: DPCode, data: str) -> Self | None:
         """Load JSON string and return a EnumTypeData object."""
-        if not (parsed := json.loads(data)):
+        if not (parsed := json_loads_object(data)):
             return None
-        return cls(dpcode, **parsed)
+        return cls(dpcode, **cast(dict[str, list[str]], parsed))
 
 
 _TYPE_INFORMATION_MAPPINGS: dict[DPType, type[TypeInformation]] = {
