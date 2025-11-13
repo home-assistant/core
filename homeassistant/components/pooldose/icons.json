@@ -1,10 +1,10 @@
 {
   "entity": {
     "sensor": {
-      "ofa_orp_value": {
+      "ofa_orp_time": {
         "default": "mdi:clock"
       },
-      "ofa_ph_value": {
+      "ofa_ph_time": {
         "default": "mdi:clock"
       },
       "orp": {

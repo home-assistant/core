@@ -1,0 +1,306 @@
+{
+  "gameClips": [
+    {
+      "gameClipId": "0829f20b-604b-483e-89ff-d37d1071cd70",
+      "state": 6,
+      "datePublished": "2025-11-06T10:21:42.965555Z",
+      "dateRecorded": "2025-11-06T09:20:31Z",
+      "lastModified": "2025-11-06T10:21:42.965555Z",
+      "userCaption": "",
+      "type": 8,
+      "durationInSeconds": 241,
+      "scid": "d1adc8aa-0a31-4407-90f2-7e9b54b0347c",
+      "titleId": 1297287135,
+      "rating": 0.0,
+      "ratingCount": 0,
+      "views": 0,
+      "titleData": "",
+      "systemProperties": "bcf6f66d-0663-44d0-bc5f-08e6d478e2410;",
+      "savedByUser": true,
+      "achievementId": "",
+      "greatestMomentId": "",
+      "thumbnails": [
+        {
+          "uri": "https://gameclipscontent-t3011.media.xboxlive.com/xuid-2535458333395495-public/0829f20b-604b-483e-89ff-d37d1071cd70_Thumbnail.PNG",
+          "fileSize": 0,
+          "thumbnailType": 1
+        },
+        {
+          "uri": "https://gameclipscontent-t3011.media.xboxlive.com/xuid-2535458333395495-public/0829f20b-604b-483e-89ff-d37d1071cd70_Thumbnail.PNG",
+          "fileSize": 0,
+          "thumbnailType": 2
+        }
+      ],
+      "gameClipUris": [
+        {
+          "uri": "https://gameclipscontent-d3011.media.xboxlive.com/xuid-2535458333395495-private/0829f20b-604b-483e-89ff-d37d1071cd70.MP4?skoid=2938738c-0e58-4f21-9b82-98081ade42e2&sktid=68cd85cc-e0b3-43c8-ba3c-67686dbf8a67&skt=2025-11-06T08%3A21%3A55Z&ske=2025-11-07T08%3A21%3A55Z&sks=b&skv=2025-05-05&sv=2025-05-05&st=2025-11-06T10%3A06%3A42Z&se=2125-11-06T10%3A21%3A42Z&sr=b&sp=r&sig=RIGvLFCUB5u4%2F2T8XZiCbpf2QNuUkbwyAQPv2NVGCoY%3D&__gda__=1762438393_b3aeadeb04f94410cc7223369a9052b6",
+          "fileSize": 247412686,
+          "uriType": 2,
+          "expiration": "2025-11-06T14:13:13.4974877Z"
+        }
+      ],
+      "xuid": "2535458333395495",
+      "clipName": "",
+      "titleName": "Blue Dragon",
+      "gameClipLocale": "de-DE",
+      "clipContentAttributes": 0,
+      "deviceType": "Durango",
+      "commentCount": 0,
+      "likeCount": 0,
+      "shareCount": 0,
+      "partialViews": 0
+    },
+    {
+      "gameClipId": "6fa2731a-8b58-4aa6-848c-4bf15734358b",
+      "state": 6,
+      "datePublished": "2025-11-06T10:20:41.3010531Z",
+      "dateRecorded": "2025-11-06T09:13:23Z",
+      "lastModified": "2025-11-06T10:20:41.3010531Z",
+      "userCaption": "",
+      "type": 8,
+      "durationInSeconds": 240,
+      "scid": "d1adc8aa-0a31-4407-90f2-7e9b54b0347c",
+      "titleId": 1297287135,
+      "rating": 0.0,
+      "ratingCount": 0,
+      "views": 0,
+      "titleData": "",
+      "systemProperties": "d3767e1c-5a0c-4155-a503-e5355eded9850;",
+      "savedByUser": true,
+      "achievementId": "",
+      "greatestMomentId": "",
+      "thumbnails": [
+        {
+          "uri": "https://gameclipscontent-t3021.media.xboxlive.com/xuid-2535458333395495-public/6fa2731a-8b58-4aa6-848c-4bf15734358b_Thumbnail.PNG",
+          "fileSize": 0,
+          "thumbnailType": 1
+        },
+        {
+          "uri": "https://gameclipscontent-t3021.media.xboxlive.com/xuid-2535458333395495-public/6fa2731a-8b58-4aa6-848c-4bf15734358b_Thumbnail.PNG",
+          "fileSize": 0,
+          "thumbnailType": 2
+        }
+      ],
+      "gameClipUris": [
+        {
+          "uri": "https://gameclipscontent-d3021.media.xboxlive.com/xuid-2535458333395495-private/6fa2731a-8b58-4aa6-848c-4bf15734358b.MP4?skoid=2938738c-0e58-4f21-9b82-98081ade42e2&sktid=68cd85cc-e0b3-43c8-ba3c-67686dbf8a67&skt=2025-11-06T08%3A20%3A51Z&ske=2025-11-07T08%3A20%3A51Z&sks=b&skv=2025-05-05&sv=2025-05-05&st=2025-11-06T10%3A05%3A41Z&se=2125-11-06T10%3A20%3A41Z&sr=b&sp=r&sig=s%2FWDtmE2cnAwl9iJJFcch3knbRlkxkALoinHQwCnNP0%3D&__gda__=1762438393_eb8a56c3f482d00099045aa892a2aa05",
+          "fileSize": 222153409,
+          "uriType": 2,
+          "expiration": "2025-11-06T14:13:13.4974877Z"
+        }
+      ],
+      "xuid": "2535458333395495",
+      "clipName": "",
+      "titleName": "Blue Dragon",
+      "gameClipLocale": "de-DE",
+      "clipContentAttributes": 0,
+      "deviceType": "Durango",
+      "commentCount": 0,
+      "likeCount": 0,
+      "shareCount": 0,
+      "partialViews": 0
+    },
+    {
+      "gameClipId": "37956427-4118-4b3e-aecb-f3f96ef34e6e",
+      "state": 6,
+      "datePublished": "2025-11-06T10:20:07.3264687Z",
+      "dateRecorded": "2025-11-06T09:40:34Z",
+      "lastModified": "2025-11-06T10:20:07.3264687Z",
+      "userCaption": "",
+      "type": 8,
+      "durationInSeconds": 235,
+      "scid": "d1adc8aa-0a31-4407-90f2-7e9b54b0347c",
+      "titleId": 1297287135,
+      "rating": 0.0,
+      "ratingCount": 0,
+      "views": 0,
+      "titleData": "",
+      "systemProperties": "581c6615-64c7-4c5c-a2ae-693724a590ea0;",
+      "savedByUser": true,
+      "achievementId": "",
+      "greatestMomentId": "",
+      "thumbnails": [
+        {
+          "uri": "https://gameclipscontent-t2014.media.xboxlive.com/xuid-2535458333395495-public/37956427-4118-4b3e-aecb-f3f96ef34e6e_Thumbnail.PNG",
+          "fileSize": 0,
+          "thumbnailType": 1
+        },
+        {
+          "uri": "https://gameclipscontent-t2014.media.xboxlive.com/xuid-2535458333395495-public/37956427-4118-4b3e-aecb-f3f96ef34e6e_Thumbnail.PNG",
+          "fileSize": 0,
+          "thumbnailType": 2
+        }
+      ],
+      "gameClipUris": [
+        {
+          "uri": "https://gameclipscontent-d2014.media.xboxlive.com/xuid-2535458333395495-private/37956427-4118-4b3e-aecb-f3f96ef34e6e.MP4?skoid=2938738c-0e58-4f21-9b82-98081ade42e2&sktid=68cd85cc-e0b3-43c8-ba3c-67686dbf8a67&skt=2025-11-06T08%3A23%3A54Z&ske=2025-11-07T08%3A23%3A54Z&sks=b&skv=2025-05-05&sv=2025-05-05&st=2025-11-06T10%3A05%3A07Z&se=2125-11-06T10%3A20%3A07Z&sr=b&sp=r&sig=C262odufd8%2FCLr2rfnLii3BkrvfdMDq6fc7DhugurNo%3D&__gda__=1762438393_c6e390b226209b3dc8c230619b21c1e2",
+          "fileSize": 132755687,
+          "uriType": 2,
+          "expiration": "2025-11-06T14:13:13.4974877Z"
+        }
+      ],
+      "xuid": "2535458333395495",
+      "clipName": "",
+      "titleName": "Blue Dragon",
+      "gameClipLocale": "de-DE",
+      "clipContentAttributes": 0,
+      "deviceType": "Durango",
+      "commentCount": 0,
+      "likeCount": 0,
+      "shareCount": 0,
+      "partialViews": 0
+    },
+    {
+      "gameClipId": "6aecd078-be33-4d52-853a-a78c0c678b45",
+      "state": 6,
+      "datePublished": "2025-11-06T10:14:51.5814436Z",
+      "dateRecorded": "2025-11-06T09:09:04Z",
+      "lastModified": "2025-11-06T10:14:51.5814436Z",
+      "userCaption": "",
+      "type": 8,
+      "durationInSeconds": 236,
+      "scid": "d1adc8aa-0a31-4407-90f2-7e9b54b0347c",
+      "titleId": 1297287135,
+      "rating": 0.0,
+      "ratingCount": 0,
+      "views": 1,
+      "titleData": "",
+      "systemProperties": "82683d6d-a589-4823-8d53-914495c1ed1f0;",
+      "savedByUser": true,
+      "achievementId": "",
+      "greatestMomentId": "",
+      "thumbnails": [
+        {
+          "uri": "https://gameclipscontent-t3020.media.xboxlive.com/xuid-2535458333395495-public/6aecd078-be33-4d52-853a-a78c0c678b45_Thumbnail.PNG",
+          "fileSize": 0,
+          "thumbnailType": 1
+        },
+        {
+          "uri": "https://gameclipscontent-t3020.media.xboxlive.com/xuid-2535458333395495-public/6aecd078-be33-4d52-853a-a78c0c678b45_Thumbnail.PNG",
+          "fileSize": 0,
+          "thumbnailType": 2
+        }
+      ],
+      "gameClipUris": [
+        {
+          "uri": "https://gameclipscontent-d3020.media.xboxlive.com/xuid-2535458333395495-private/6aecd078-be33-4d52-853a-a78c0c678b45.MP4?skoid=2938738c-0e58-4f21-9b82-98081ade42e2&sktid=68cd85cc-e0b3-43c8-ba3c-67686dbf8a67&skt=2025-11-06T08%3A03%3A12Z&ske=2025-11-07T08%3A03%3A12Z&sks=b&skv=2025-05-05&sv=2025-05-05&st=2025-11-06T09%3A59%3A51Z&se=2125-11-06T10%3A14%3A51Z&sr=b&sp=r&sig=%2B5f%2FWXL4GrazXoMnf%2FkYr9cFKVLhjKaO3Xqgtfbyynk%3D&__gda__=1762438393_75d2d2fa2d78c3b09efc7ad984d32652",
+          "fileSize": 224659316,
+          "uriType": 2,
+          "expiration": "2025-11-06T14:13:13.4974877Z"
+        }
+      ],
+      "xuid": "2535458333395495",
+      "clipName": "",
+      "titleName": "Blue Dragon",
+      "gameClipLocale": "de-DE",
+      "clipContentAttributes": 0,
+      "deviceType": "Durango",
+      "commentCount": 0,
+      "likeCount": 0,
+      "shareCount": 0,
+      "partialViews": 0
+    },
+    {
+      "gameClipId": "84bdc7a5-fa53-4348-9502-4cd804906f3b",
+      "state": 6,
+      "datePublished": "2025-11-06T10:13:31.2003126Z",
+      "dateRecorded": "2025-11-06T09:04:54Z",
+      "lastModified": "2025-11-06T10:13:31.2003126Z",
+      "userCaption": "",
+      "type": 8,
+      "durationInSeconds": 241,
+      "scid": "d1adc8aa-0a31-4407-90f2-7e9b54b0347c",
+      "titleId": 1297287135,
+      "rating": 0.0,
+      "ratingCount": 0,
+      "views": 1,
+      "titleData": "",
+      "systemProperties": "74a47fb9-18b9-4f7b-9396-2b35a22e56940;",
+      "savedByUser": true,
+      "achievementId": "",
+      "greatestMomentId": "",
+      "thumbnails": [
+        {
+          "uri": "https://gameclipscontent-t3019.media.xboxlive.com/xuid-2535458333395495-public/84bdc7a5-fa53-4348-9502-4cd804906f3b_Thumbnail.PNG",
+          "fileSize": 0,
+          "thumbnailType": 1
+        },
+        {
+          "uri": "https://gameclipscontent-t3019.media.xboxlive.com/xuid-2535458333395495-public/84bdc7a5-fa53-4348-9502-4cd804906f3b_Thumbnail.PNG",
+          "fileSize": 0,
+          "thumbnailType": 2
+        }
+      ],
+      "gameClipUris": [
+        {
+          "uri": "https://gameclipscontent-d3019.media.xboxlive.com/xuid-2535458333395495-private/84bdc7a5-fa53-4348-9502-4cd804906f3b.MP4?skoid=2938738c-0e58-4f21-9b82-98081ade42e2&sktid=68cd85cc-e0b3-43c8-ba3c-67686dbf8a67&skt=2025-11-06T08%3A15%3A51Z&ske=2025-11-07T08%3A15%3A51Z&sks=b&skv=2025-05-05&sv=2025-05-05&st=2025-11-06T09%3A58%3A31Z&se=2125-11-06T10%3A13%3A31Z&sr=b&sp=r&sig=ApVvSe1MvO6oNDZ7hXOfULno0ppsWZfYKLT1uvK33kM%3D&__gda__=1762438393_7ef9df98bb4d508c0f685c8a53d020f2",
+          "fileSize": 192633589,
+          "uriType": 2,
+          "expiration": "2025-11-06T14:13:13.4974877Z"
+        }
+      ],
+      "xuid": "2535458333395495",
+      "clipName": "",
+      "titleName": "Blue Dragon",
+      "gameClipLocale": "de-DE",
+      "clipContentAttributes": 0,
+      "deviceType": "Durango",
+      "commentCount": 0,
+      "likeCount": 0,
+      "shareCount": 0,
+      "partialViews": 0
+    },
+
+    {
+      "gameClipId": "c06597b0-28ce-4d2f-856d-b7cde9a40f4a",
+      "state": 6,
+      "datePublished": "2025-10-22T05:45:10.0466564Z",
+      "dateRecorded": "2025-10-22T05:34:33Z",
+      "lastModified": "2025-10-22T05:45:10.0466564Z",
+      "userCaption": "",
+      "type": 8,
+      "durationInSeconds": 118,
+      "scid": "d1adc8aa-0a31-4407-90f2-7e9b54b0347c",
+      "titleId": 1297287135,
+      "rating": 0.0,
+      "ratingCount": 0,
+      "views": 1,
+      "titleData": "",
+      "systemProperties": "9fdf1bc5-e66b-4712-b826-9f7bab0d40550;",
+      "savedByUser": true,
+      "achievementId": "",
+      "greatestMomentId": "",
+      "thumbnails": [
+        {
+          "uri": "https://gameclipscontent-t2002.media.xboxlive.com/xuid-2535451917097448-public/c06597b0-28ce-4d2f-856d-b7cde9a40f4a_Thumbnail.PNG",
+          "fileSize": 0,
+          "thumbnailType": 1
+        },
+        {
+          "uri": "https://gameclipscontent-t2002.media.xboxlive.com/xuid-2535451917097448-public/c06597b0-28ce-4d2f-856d-b7cde9a40f4a_Thumbnail.PNG",
+          "fileSize": 0,
+          "thumbnailType": 2
+        }
+      ],
+      "gameClipUris": [
+        {
+          "uri": "https://gameclipscontent-d2002.media.xboxlive.com/xuid-2535451917097448-private/c06597b0-28ce-4d2f-856d-b7cde9a40f4a.MP4?sv=2024-08-04&si=DefaultAccess&sr=b&sig=jFfGvWMCJokdjj76LbDeX%2BlIb0P6isx6YmwT8epJoco%3D&__gda__=1762438393_721759b6969e54700792a9b4e5998408",
+          "fileSize": 71018911,
+          "uriType": 2,
+          "expiration": "2025-11-06T14:13:13.4974877Z"
+        }
+      ],
+      "xuid": "2535451917097448",
+      "clipName": "",
+      "titleName": "Blue Dragon",
+      "gameClipLocale": "en-GB",
+      "clipContentAttributes": 0,
+      "deviceType": "Edmonton",
+      "commentCount": 0,
+      "likeCount": 0,
+      "shareCount": 0,
+      "partialViews": 0
+    }
+  ],
+  "pagingInfo": { "continuationToken": "abcde_vwxyzZAAAAA2" }
+}

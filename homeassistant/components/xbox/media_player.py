@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from xbox.webapi.api.provider.catalog.models import Image
-from xbox.webapi.api.provider.smartglass.models import (
+from pythonxbox.api.provider.catalog.models import Image
+from pythonxbox.api.provider.smartglass.models import (
     PlaybackState,
     PowerState,
     VolumeDirection,
@@ -56,7 +56,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Xbox media_player from a config entry."""
 
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.status
 
     async_add_entities(
         [
@@ -70,6 +70,7 @@ class XboxMediaPlayer(XboxConsoleBaseEntity, MediaPlayerEntity):
     """Representation of an Xbox Media Player."""
 
     _attr_media_image_remotely_accessible = True
+    _attr_translation_key = "xbox"
 
     @property
     def state(self) -> MediaPlayerState | None:
@@ -97,6 +98,11 @@ class XboxMediaPlayer(XboxConsoleBaseEntity, MediaPlayerEntity):
         if app_details and app_details.product_family == "Games":
             return MediaType.GAME
         return MediaType.APP
+
+    @property
+    def media_content_id(self) -> str | None:
+        """Content ID of current playing media."""
+        return self.data.app_details.product_id if self.data.app_details else None
 
     @property
     def media_title(self) -> str | None:
