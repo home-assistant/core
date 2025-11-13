@@ -239,11 +239,12 @@ async def test_pump(
     assert state
     assert state.state == "off"
 
-    # PumpStatus --> DeviceFault bit
+    # Initial state: kRunning bit only (no fault bits) should be off
     state = hass.states.get("binary_sensor.mock_pump_problem")
     assert state
-    assert state.state == "unknown"
+    assert state.state == "off"
 
+    # Set DeviceFault bit
     set_node_attribute(matter_node, 1, 512, 16, 1)
     await trigger_subscription_callback(hass, matter_client)
 
@@ -251,7 +252,14 @@ async def test_pump(
     assert state
     assert state.state == "on"
 
-    # PumpStatus --> SupplyFault bit
+    # Clear all bits - problem sensor should be off
+    set_node_attribute(matter_node, 1, 512, 16, 0)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("binary_sensor.mock_pump_problem")
+    assert state
+    assert state.state == "off"
+
+    # Set SupplyFault bit
     set_node_attribute(matter_node, 1, 512, 16, 2)
     await trigger_subscription_callback(hass, matter_client)
 
@@ -270,10 +278,27 @@ async def test_dishwasher_alarm(
     state = hass.states.get("binary_sensor.dishwasher_door_alarm")
     assert state
 
+    # set DoorAlarm alarm
     set_node_attribute(matter_node, 1, 93, 2, 4)
     await trigger_subscription_callback(hass, matter_client)
 
     state = hass.states.get("binary_sensor.dishwasher_door_alarm")
+    assert state
+    assert state.state == "on"
+
+    # clear DoorAlarm alarm
+    set_node_attribute(matter_node, 1, 93, 2, 0)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("binary_sensor.dishwasher_inflow_alarm")
+    assert state
+    assert state.state == "off"
+
+    # set InflowError alarm
+    set_node_attribute(matter_node, 1, 93, 2, 1)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("binary_sensor.dishwasher_inflow_alarm")
     assert state
     assert state.state == "on"
 
