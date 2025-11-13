@@ -281,6 +281,9 @@ class DPCodeEnumWrapper(DPCodeTypeInformationWrapper[EnumTypeData]):
         if (raw_value := self._read_device_status_raw(device)) is None:
             return None
         if raw_value not in self.type_information.range:
+            if self._strict:
+                return None
+
             # We should not reject these, at least until quirks are implemented
             LOGGER.debug(
                 "Found invalid enum value `%s` for %s, expected one of %s",
@@ -288,8 +291,6 @@ class DPCodeEnumWrapper(DPCodeTypeInformationWrapper[EnumTypeData]):
                 self.dpcode,
                 self.type_information.range,
             )
-            if self._strict:
-                return None
         return raw_value
 
     def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
