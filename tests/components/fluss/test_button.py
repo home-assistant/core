@@ -18,7 +18,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-@pytest.mark.asyncio
 async def test_async_setup_entry_multiple_devices(
     hass: HomeAssistant,
     mock_api_client_multiple_devices: AsyncMock,
@@ -36,7 +35,6 @@ async def test_async_setup_entry_multiple_devices(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@pytest.mark.asyncio
 async def test_button_press_success(
     hass: HomeAssistant,
     mock_api_client: FlussApiClient,
@@ -66,7 +64,6 @@ async def test_button_press_success(
     mock_api_client.async_trigger_device.assert_called_once_with("1")
 
 
-@pytest.mark.asyncio
 async def test_button_press_error(
     hass: HomeAssistant,
     mock_api_client: FlussApiClient,
@@ -87,7 +84,6 @@ async def test_button_press_error(
         )
 
 
-@pytest.mark.asyncio
 async def test_no_devices_setup(
     hass: HomeAssistant,
     mock_api_client: FlussApiClient,
@@ -104,7 +100,6 @@ async def test_no_devices_setup(
     assert hass.states.get("button.test_device") is None
 
 
-@pytest.mark.asyncio
 async def test_unload_entry(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,

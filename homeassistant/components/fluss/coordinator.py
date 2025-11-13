@@ -7,16 +7,15 @@ from typing import Any
 from fluss_api import (
     FlussApiClient,
     FlussApiClientAuthenticationError,
-    FlussApiClientCommunicationError,
     FlussApiClientError,
 )
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import slugify
-from homeassistant.exceptions import ConfigEntryAuthFailed
 
 from .const import LOGGER, UPDATE_INTERVAL_TIMEDELTA
 

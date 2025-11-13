@@ -41,7 +41,7 @@ class FlussConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except FlussApiClientAuthenticationError:
                 errors["base"] = "invalid_auth"
-            except Exception:
+            except Exception:  # noqa: BLE001
                 LOGGER.exception("Unexpected exception occurred")
                 errors["base"] = "unknown"
             if not errors:

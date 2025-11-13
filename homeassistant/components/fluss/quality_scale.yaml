@@ -1,6 +1,9 @@
 rules:
   # Bronze
-  action-setup: exempt
+  action-setup:
+    status: exempt
+    comment: |
+      No actions present
   appropriate-polling: done
   brands: done
   common-modules: done
@@ -37,20 +40,23 @@ rules:
     status: exempt
     comment: |
       Not needed
-  discovery: done
+  discovery: todo
   stale-devices: todo
   diagnostics: todo
   exception-translations: todo
-  icon-translations: exempt
+  icon-translations:
+    status: exempt
+    comment: |
+      No icons used
   reconfiguration-flow: todo
   dynamic-devices: todo
-  discovery-update-info: exempt
-  repair-issues: exempt
+  discovery-update-info: todo
+  repair-issues:
+    status: exempt
+    comment: |
+      No issues to repair
   docs-use-cases: done
-  docs-supported-devices: 
-      status: exempt
-      comment: |
-        There is only one device
+  docs-supported-devices: todo
   docs-supported-functions: done
   docs-data-update: todo
   docs-known-limitations: done

@@ -20,7 +20,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 
 @pytest.mark.parametrize(
-    "side_effect, expected_exception",
+    ("side_effect", "expected_exception"),
     [
         (FlussApiClientAuthenticationError, ConfigEntryAuthFailed),
         (FlussApiClientCommunicationError, ConfigEntryNotReady),
@@ -70,7 +70,9 @@ async def test_async_unload_entry(
         assert mock_config_entry.state is ConfigEntryState.LOADED
 
     # Test unloading
-    with patch("homeassistant.components.fluss.async_unload_platforms", return_value=True):
+    with patch(
+        "homeassistant.components.fluss.async_unload_platforms", return_value=True
+    ):
         assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
         assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 

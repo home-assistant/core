@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, patch
 
-from fluss_api import FlussApiClient
 import pytest
 
 from homeassistant.components.fluss.const import DOMAIN

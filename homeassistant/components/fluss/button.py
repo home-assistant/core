@@ -16,7 +16,7 @@ async def async_setup_entry(
     hass: HomeAssistant,
     entry: FlussConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
-) -> bool:
+) -> None:
     """Set up the Fluss Devices, filtering out any invalid payloads."""
     coordinator = entry.runtime_data
     devices = coordinator.data
@@ -25,7 +25,6 @@ async def async_setup_entry(
         FlussButton(coordinator, device_id, device)
         for device_id, device in devices.items()
     )
-    return True
 
 
 class FlussButton(FlussEntity, ButtonEntity):

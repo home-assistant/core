@@ -9,10 +9,8 @@ from fluss_api import (
 )
 import pytest
 
-from homeassistant.components.fluss import async_setup_entry
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from tests.common import MockConfigEntry
 

@@ -14,8 +14,6 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
-
 
 async def test_show_form(hass: HomeAssistant) -> None:
     """Test that the form is shown."""
