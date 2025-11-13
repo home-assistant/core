@@ -47,7 +47,7 @@ class VictronBinarySensor(VictronBaseEntity, BinarySensorEntity):
         installation_id: str,
     ) -> None:
         """Initialize the binary sensor."""
-        self._attr_is_on = bool(metric.value)
+        self._attr_is_on = self._is_on(metric.value)
         super().__init__(
             device, metric, device_info, "binary_sensor", simple_naming, installation_id
         )
@@ -56,8 +56,12 @@ class VictronBinarySensor(VictronBaseEntity, BinarySensorEntity):
         """Return a string representation of the sensor."""
         return f"VictronBinarySensor({super().__repr__()}), is_on={self._attr_is_on})"
 
+    @staticmethod
+    def _is_on(value: Any) -> bool:
+        return str(value) == SWITCH_ON
+
     def _on_update_task(self, value: Any) -> None:
-        new_val = str(value) == SWITCH_ON
+        new_val = self._is_on(value)
         if self._attr_is_on == new_val:
             return
         self._attr_is_on = new_val

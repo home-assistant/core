@@ -387,6 +387,22 @@ async def test_on_new_metric_sensor(
     entity = entities[0]
     assert isinstance(entity, VictronSensor)
 
+    # Patch schedule_update_ha_state and call _on_update_task
+    with patch.object(entity, "schedule_update_ha_state") as mock_schedule_update:
+        # Call with a value that should trigger an update
+        entity._on_update_task(42)
+        mock_schedule_update.assert_called_once()
+        assert entity._attr_native_value == 42
+
+        # Call with same value that should not trigger an update
+        entity._on_update_task(42)
+        mock_schedule_update.assert_called_once()
+        assert entity._attr_native_value == 42
+
+        entity._on_update_task(100)
+        assert mock_schedule_update.call_count == 2
+        assert entity._attr_native_value == 100
+
 
 async def test_on_new_metric_binary_sensor(
     hass: HomeAssistant, mock_config_entry, basic_config, mock_victron_hub
@@ -412,6 +428,7 @@ async def test_on_new_metric_binary_sensor(
 
     mock_metric = MagicMock(spec=VictronVenusMetric)
     mock_metric.metric_kind = MetricKind.BINARY_SENSOR
+    mock_metric.value = "Off"
 
     # Trigger the callback
     hub._on_new_metric(mock_victron_hub, mock_device, mock_metric)
@@ -423,6 +440,22 @@ async def test_on_new_metric_binary_sensor(
     assert len(entities) == 1
     entity = entities[0]
     assert isinstance(entity, VictronBinarySensor)
+
+    # Patch schedule_update_ha_state and call _on_update_task
+    with patch.object(entity, "schedule_update_ha_state") as mock_schedule_update:
+        # Call with a value that should trigger an update
+        entity._on_update_task("On")
+        mock_schedule_update.assert_called_once()
+        assert entity.is_on is True
+
+        # Call with same value that should not trigger an update
+        entity._on_update_task("On")
+        mock_schedule_update.assert_called_once()
+        assert entity.is_on is True
+
+        entity._on_update_task("Off")
+        assert mock_schedule_update.call_count == 2
+        assert entity.is_on is False
 
 
 async def test_hub_registers_stop_listener(
