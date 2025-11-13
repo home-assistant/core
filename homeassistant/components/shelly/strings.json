@@ -157,6 +157,9 @@
       "flood_with_channel_name": {
         "name": "{channel_name} flood"
       },
+      "input_with_number": {
+        "name": "Input {input_number}"
+      },
       "mute": {
         "name": "Mute"
       },
@@ -189,9 +192,6 @@
       },
       "overvoltage_with_channel_name": {
         "name": "{channel_name} overvoltage"
-      },
-      "power_with_channel_name": {
-        "name": "{channel_name}"
       },
       "restart_required": {
         "name": "Restart required"

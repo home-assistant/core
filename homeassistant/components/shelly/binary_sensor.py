@@ -85,14 +85,24 @@ class RpcBinarySensor(ShellyRpcAttributeEntity, BinarySensorEntity):
             delattr(self, "_attr_name")
 
         if not description.role:
-            translation_placeholders, translation_key = (
-                get_entity_translation_attributes(
-                    get_rpc_channel_name(coordinator.device, key),
-                    description.translation_key,
-                    description.device_class,
-                    self._default_to_device_class_name(),
+            translation_placeholders = None
+            translation_key = None
+
+            if description.key != "input":
+                translation_placeholders, translation_key = (
+                    get_entity_translation_attributes(
+                        get_rpc_channel_name(coordinator.device, key),
+                        description.translation_key,
+                        description.device_class,
+                        self._default_to_device_class_name(),
+                    )
                 )
-            )
+            else:
+                component = key.split(":")[0]
+                component_id = key.split(":")[-1]
+                if component.lower() == "input" and component_id.isnumeric():
+                    translation_placeholders = {"input_number": component_id}
+                    translation_key = "input_with_number"
 
             if translation_placeholders:
                 self._attr_translation_placeholders = translation_placeholders
@@ -296,7 +306,7 @@ RPC_SENSORS: Final = {
     "boolean_generic": RpcBinarySensorDescription(
         key="boolean",
         sub_key="value",
-        removal_condition=lambda config, _status, key: not is_view_for_platform(
+        removal_condition=lambda config, _, key: not is_view_for_platform(
             config, key, BINARY_SENSOR_PLATFORM
         ),
         role=ROLE_GENERIC,
