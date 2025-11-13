@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 
+from blinkpy.auth import UnauthorizedError
 from blinkpy.blinkpy import Blink, BlinkSyncModule
 
 from homeassistant.components.alarm_control_panel import (
@@ -13,7 +14,7 @@ from homeassistant.components.alarm_control_panel import (
 )
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -91,6 +92,9 @@ class BlinkSyncModuleHA(
 
         except TimeoutError as er:
             raise HomeAssistantError("Blink failed to disarm camera") from er
+        except UnauthorizedError as er:
+            self.coordinator.config_entry.async_start_reauth(self.hass)
+            raise ConfigEntryAuthFailed("Blink authorization failed") from er
 
         await self.coordinator.async_refresh()
 
@@ -101,5 +105,8 @@ class BlinkSyncModuleHA(
 
         except TimeoutError as er:
             raise HomeAssistantError("Blink failed to arm camera away") from er
+        except UnauthorizedError as er:
+            self.coordinator.config_entry.async_start_reauth(self.hass)
+            raise ConfigEntryAuthFailed("Blink authorization failed") from er
 
         await self.coordinator.async_refresh()
