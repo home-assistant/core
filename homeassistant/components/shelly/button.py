@@ -21,13 +21,23 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, LOGGER, MODEL_FRANKEVER_WATER_VALVE, SHELLY_GAS_MODELS
+from .const import (
+    CONF_SLEEP_PERIOD,
+    DOMAIN,
+    LOGGER,
+    MODEL_FRANKEVER_WATER_VALVE,
+    ROLE_GENERIC,
+    SHELLY_GAS_MODELS,
+    SHELLY_WALL_DISPLAY_MODELS,
+)
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     RpcEntityDescription,
     ShellyRpcAttributeEntity,
+    ShellySleepingRpcAttributeEntity,
     async_setup_entry_rpc,
     get_entity_block_device_info,
     get_entity_rpc_device_info,
@@ -54,6 +64,7 @@ class ShellyButtonDescription[
     """Class to describe a Button entity."""
 
     press_action: str
+    params: dict[str, Any] | None = None
 
     supported: Callable[[_ShellyCoordinatorT], bool] = lambda _: True
 
@@ -66,14 +77,12 @@ class RpcButtonDescription(RpcEntityDescription, ButtonEntityDescription):
 BUTTONS: Final[list[ShellyButtonDescription[Any]]] = [
     ShellyButtonDescription[ShellyBlockCoordinator | ShellyRpcCoordinator](
         key="reboot",
-        name="Restart",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
         press_action="trigger_reboot",
     ),
     ShellyButtonDescription[ShellyBlockCoordinator](
         key="self_test",
-        name="Self test",
         translation_key="self_test",
         entity_category=EntityCategory.DIAGNOSTIC,
         press_action="trigger_shelly_gas_self_test",
@@ -81,19 +90,31 @@ BUTTONS: Final[list[ShellyButtonDescription[Any]]] = [
     ),
     ShellyButtonDescription[ShellyBlockCoordinator](
         key="mute",
-        name="Mute",
-        translation_key="mute",
+        translation_key="mute_alarm",
         entity_category=EntityCategory.CONFIG,
         press_action="trigger_shelly_gas_mute",
         supported=lambda coordinator: coordinator.model in SHELLY_GAS_MODELS,
     ),
     ShellyButtonDescription[ShellyBlockCoordinator](
         key="unmute",
-        name="Unmute",
-        translation_key="unmute",
+        translation_key="unmute_alarm",
         entity_category=EntityCategory.CONFIG,
         press_action="trigger_shelly_gas_unmute",
         supported=lambda coordinator: coordinator.model in SHELLY_GAS_MODELS,
+    ),
+    ShellyButtonDescription[ShellyRpcCoordinator](
+        key="turn_on_screen",
+        translation_key="turn_on_the_screen",
+        press_action="wall_display_set_screen",
+        params={"value": True},
+        supported=lambda coordinator: coordinator.model in SHELLY_WALL_DISPLAY_MODELS,
+    ),
+    ShellyButtonDescription[ShellyRpcCoordinator](
+        key="turn_off_screen",
+        translation_key="turn_off_the_screen",
+        press_action="wall_display_set_screen",
+        params={"value": False},
+        supported=lambda coordinator: coordinator.model in SHELLY_WALL_DISPLAY_MODELS,
     ),
 ]
 
@@ -184,9 +205,10 @@ async def async_setup_entry(
     if TYPE_CHECKING:
         assert coordinator is not None
 
-    await er.async_migrate_entries(
-        hass, config_entry.entry_id, partial(async_migrate_unique_ids, coordinator)
-    )
+    if coordinator.device.initialized:
+        await er.async_migrate_entries(
+            hass, config_entry.entry_id, partial(async_migrate_unique_ids, coordinator)
+        )
 
     entities: list[ShellyButton] = []
 
@@ -202,22 +224,31 @@ async def async_setup_entry(
         return
 
     # add RPC buttons
-    async_setup_entry_rpc(
-        hass, config_entry, async_add_entities, RPC_BUTTONS, RpcVirtualButton
-    )
+    if config_entry.data[CONF_SLEEP_PERIOD]:
+        async_setup_entry_rpc(
+            hass,
+            config_entry,
+            async_add_entities,
+            RPC_BUTTONS,
+            RpcSleepingSmokeMuteButton,
+        )
+    else:
+        async_setup_entry_rpc(
+            hass, config_entry, async_add_entities, RPC_BUTTONS, RpcVirtualButton
+        )
 
-    # the user can remove virtual components from the device configuration, so
-    # we need to remove orphaned entities
-    virtual_button_component_ids = get_virtual_component_ids(
-        coordinator.device.config, BUTTON_PLATFORM
-    )
-    async_remove_orphaned_entities(
-        hass,
-        config_entry.entry_id,
-        coordinator.mac,
-        BUTTON_PLATFORM,
-        virtual_button_component_ids,
-    )
+        # the user can remove virtual components from the device configuration, so
+        # we need to remove orphaned entities
+        virtual_button_component_ids = get_virtual_component_ids(
+            coordinator.device.config, BUTTON_PLATFORM
+        )
+        async_remove_orphaned_entities(
+            hass,
+            config_entry.entry_id,
+            coordinator.mac,
+            BUTTON_PLATFORM,
+            virtual_button_component_ids,
+        )
 
 
 class ShellyBaseButton(
@@ -299,7 +330,7 @@ class ShellyButton(ShellyBaseButton):
         if TYPE_CHECKING:
             assert method is not None
 
-        await method()
+        await method(**(self.entity_description.params or {}))
 
 
 class ShellyBluTrvButton(ShellyRpcAttributeEntity, ButtonEntity):
@@ -313,7 +344,7 @@ class ShellyBluTrvButton(ShellyRpcAttributeEntity, ButtonEntity):
         coordinator: ShellyRpcCoordinator,
         key: str,
         attribute: str,
-        description: RpcEntityDescription,
+        description: RpcButtonDescription,
     ) -> None:
         """Initialize button."""
         super().__init__(coordinator, key, attribute, description)
@@ -327,6 +358,9 @@ class ShellyBluTrvButton(ShellyRpcAttributeEntity, ButtonEntity):
             config, ble_addr, coordinator.mac, fw_ver
         )
 
+        if hasattr(self, "_attr_name") and description.role != ROLE_GENERIC:
+            delattr(self, "_attr_name")
+
     @rpc_call
     async def async_press(self) -> None:
         """Triggers the Shelly button press service."""
@@ -339,6 +373,19 @@ class RpcVirtualButton(ShellyRpcAttributeEntity, ButtonEntity):
     entity_description: RpcButtonDescription
     _id: int
 
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        attribute: str,
+        description: RpcButtonDescription,
+    ) -> None:
+        """Initialize select."""
+        super().__init__(coordinator, key, attribute, description)
+
+        if hasattr(self, "_attr_name") and description.role != ROLE_GENERIC:
+            delattr(self, "_attr_name")
+
     @rpc_call
     async def async_press(self) -> None:
         """Triggers the Shelly button press service."""
@@ -348,29 +395,74 @@ class RpcVirtualButton(ShellyRpcAttributeEntity, ButtonEntity):
         await self.coordinator.device.button_trigger(self._id, "single_push")
 
 
+class RpcSleepingSmokeMuteButton(ShellySleepingRpcAttributeEntity, ButtonEntity):
+    """Defines a Shelly RPC Smoke mute alarm button."""
+
+    entity_description: RpcButtonDescription
+
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        attribute: str,
+        description: RpcButtonDescription,
+        entry: RegistryEntry | None = None,
+    ) -> None:
+        """Initialize the sleeping sensor."""
+        super().__init__(coordinator, key, attribute, description, entry)
+
+        if hasattr(self, "_attr_name"):
+            delattr(self, "_attr_name")
+
+    @rpc_call
+    async def async_press(self) -> None:
+        """Triggers the Shelly button press service."""
+        if TYPE_CHECKING:
+            assert isinstance(self.coordinator, ShellyRpcCoordinator)
+
+        _id = int(self.key.split(":")[-1])
+        await self.coordinator.device.smoke_mute_alarm(_id)
+
+    @property
+    def available(self) -> bool:
+        """Available."""
+        available = super().available
+
+        if self.coordinator.device.initialized:
+            return available and self.status["alarm"]
+
+        return False
+
+
 RPC_BUTTONS = {
     "button_generic": RpcButtonDescription(
         key="button",
-        role="generic",
+        role=ROLE_GENERIC,
     ),
     "button_open": RpcButtonDescription(
         key="button",
+        translation_key="open",
         entity_registry_enabled_default=False,
         role="open",
         models={MODEL_FRANKEVER_WATER_VALVE},
     ),
     "button_close": RpcButtonDescription(
         key="button",
+        translation_key="close",
         entity_registry_enabled_default=False,
         role="close",
         models={MODEL_FRANKEVER_WATER_VALVE},
     ),
     "calibrate": RpcButtonDescription(
         key="blutrv",
-        name="Calibrate",
         translation_key="calibrate",
         entity_category=EntityCategory.CONFIG,
         entity_class=ShellyBluTrvButton,
         models={MODEL_BLU_GATEWAY_G3},
+    ),
+    "smoke_mute": RpcButtonDescription(
+        key="smoke",
+        sub_key="mute",
+        translation_key="mute_alarm",
     ),
 }

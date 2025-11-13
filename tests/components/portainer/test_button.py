@@ -57,11 +57,7 @@ async def test_buttons(
     client_method: str,
 ) -> None:
     """Test pressing a Portainer container action button triggers client call. Click, click!"""
-    with patch(
-        "homeassistant.components.portainer._PLATFORMS",
-        [Platform.BUTTON],
-    ):
-        await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     entity_id = f"button.practical_morse_{action}_container"
     method_mock = getattr(mock_portainer_client, client_method)
@@ -93,11 +89,7 @@ async def test_buttons_exceptions(
     client_method: str,
 ) -> None:
     """Test that Portainer buttons, but this time when they will do boom for sure."""
-    with patch(
-        "homeassistant.components.portainer._PLATFORMS",
-        [Platform.BUTTON],
-    ):
-        await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     action = client_method.split("_")[0]
     entity_id = f"button.practical_morse_{action}_container"

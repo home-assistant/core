@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from homeassistant.components.velux import DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
@@ -16,7 +17,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-@pytest.mark.usefixtures("mock_module")
+@pytest.mark.usefixtures("mock_pyvlx")
 async def test_rain_sensor_state(
     hass: HomeAssistant,
     mock_window: MagicMock,
@@ -62,7 +63,7 @@ async def test_rain_sensor_state(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-@pytest.mark.usefixtures("mock_module")
+@pytest.mark.usefixtures("mock_pyvlx")
 async def test_rain_sensor_device_association(
     hass: HomeAssistant,
     mock_window: MagicMock,
@@ -95,3 +96,11 @@ async def test_rain_sensor_device_association(
     # Verify device has correct identifiers
     assert ("velux", mock_window.serial_number) in device_entry.identifiers
     assert device_entry.name == mock_window.name
+
+    # Verify via_device is gateway
+    assert device_entry.via_device_id is not None
+    via_device_entry = device_registry.async_get(device_entry.via_device_id)
+    assert via_device_entry is not None
+    assert via_device_entry.identifiers == {
+        (DOMAIN, f"gateway_{mock_config_entry.entry_id}")
+    }

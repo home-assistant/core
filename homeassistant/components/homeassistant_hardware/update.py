@@ -86,7 +86,8 @@ class BaseFirmwareUpdateEntity(
 
     # Subclasses provide the mapping between firmware types and entity descriptions
     entity_description: FirmwareUpdateEntityDescription
-    bootloader_reset_methods: list[ResetTarget] = []
+    BOOTLOADER_RESET_METHODS: list[ResetTarget]
+    APPLICATION_PROBE_METHODS: list[tuple[ApplicationType, int]]
 
     _attr_supported_features = (
         UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
@@ -149,6 +150,11 @@ class BaseFirmwareUpdateEntity(
             self._latest_manifest = hardware_extra_data.firmware_manifest
 
         self._update_attributes()
+
+        # Fetch firmware info early to avoid prolonged "unknown" state when the device
+        # is initially set up
+        if self._latest_manifest is None:
+            await self.coordinator.async_request_refresh()
 
     @property
     def extra_restore_state_data(self) -> FirmwareUpdateExtraStoredData:
@@ -273,7 +279,8 @@ class BaseFirmwareUpdateEntity(
                 device=self._current_device,
                 fw_data=fw_data,
                 expected_installed_firmware_type=self.entity_description.expected_firmware_type,
-                bootloader_reset_methods=self.bootloader_reset_methods,
+                bootloader_reset_methods=self.BOOTLOADER_RESET_METHODS,
+                application_probe_methods=self.APPLICATION_PROBE_METHODS,
                 progress_callback=self._update_progress,
                 domain=self._config_entry.domain,
             )

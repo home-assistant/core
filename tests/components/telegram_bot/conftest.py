@@ -6,8 +6,16 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from telegram import Bot, Chat, ChatFullInfo, Message, User, WebhookInfo
-from telegram.constants import AccentColor, ChatType
+from telegram import (
+    AcceptedGiftTypes,
+    Bot,
+    Chat,
+    ChatFullInfo,
+    Message,
+    User,
+    WebhookInfo,
+)
+from telegram.constants import ChatType
 
 from homeassistant.components.telegram_bot import (
     ATTR_PARSER,
@@ -19,6 +27,7 @@ from homeassistant.components.telegram_bot import (
 from homeassistant.components.telegram_bot.const import (
     CONF_CHAT_ID,
     PLATFORM_BROADCAST,
+    PLATFORM_POLLING,
     PLATFORM_WEBHOOKS,
 )
 from homeassistant.config_entries import ConfigSubentryData
@@ -51,22 +60,31 @@ def config_webhooks() -> dict[str, Any]:
 
 
 @pytest.fixture
-def config_polling() -> dict[str, Any]:
-    """Fixture for a polling platform configuration."""
-    return {
-        DOMAIN: [
-            {
-                CONF_PLATFORM: "polling",
-                CONF_API_KEY: "1234567890:ABC",
-                CONF_ALLOWED_CHAT_IDS: [
-                    # "me"
-                    12345678,
-                    # Some chat
-                    -123456789,
-                ],
-            }
-        ]
-    }
+def mock_polling_config_entry() -> MockConfigEntry:
+    """Return the default mocked config entry."""
+    return MockConfigEntry(
+        unique_id="mock api key",
+        domain=DOMAIN,
+        data={
+            CONF_PLATFORM: PLATFORM_POLLING,
+            CONF_API_KEY: "mock api key",
+        },
+        options={ATTR_PARSER: PARSER_MD},
+        subentries_data=[
+            ConfigSubentryData(
+                unique_id="1234567890",
+                data={CONF_CHAT_ID: 12345678},
+                subentry_type=CONF_ALLOWED_CHAT_IDS,
+                title="mock chat 1",
+            ),
+            ConfigSubentryData(
+                unique_id="1234567890",
+                data={CONF_CHAT_ID: -123456789},
+                subentry_type=CONF_ALLOWED_CHAT_IDS,
+                title="mock chat 2",
+            ),
+        ],
+    )
 
 
 @pytest.fixture
@@ -105,7 +123,8 @@ def mock_external_calls() -> Generator[None]:
         first_name="mock first_name",
         type="PRIVATE",
         max_reaction_count=100,
-        accent_color_id=AccentColor.COLOR_000,
+        accent_color_id=0,
+        accepted_gift_types=AcceptedGiftTypes(True, True, True, True),
     )
     test_user = User(123456, "Testbot", True, "mock last name", "mock username")
     message = Message(
@@ -265,14 +284,12 @@ def mock_broadcast_config_entry() -> MockConfigEntry:
             ConfigSubentryData(
                 unique_id="123456",
                 data={CONF_CHAT_ID: 123456},
-                subentry_id="mock_id1",
                 subentry_type=CONF_ALLOWED_CHAT_IDS,
                 title="mock chat 1",
             ),
             ConfigSubentryData(
                 unique_id="654321",
                 data={CONF_CHAT_ID: 654321},
-                subentry_id="mock_id2",
                 subentry_type=CONF_ALLOWED_CHAT_IDS,
                 title="mock chat 2",
             ),
@@ -297,7 +314,6 @@ def mock_webhooks_config_entry() -> MockConfigEntry:
             ConfigSubentryData(
                 unique_id="1234567890",
                 data={CONF_CHAT_ID: 1234567890},
-                subentry_id="mock_id",
                 subentry_type=CONF_ALLOWED_CHAT_IDS,
                 title="mock chat",
             )
@@ -325,9 +341,7 @@ async def webhook_platform(
 
 
 @pytest.fixture
-async def polling_platform(
-    hass: HomeAssistant, config_polling: dict[str, Any], mock_external_calls: None
-) -> None:
+def mock_polling_calls() -> Generator[None]:
     """Fixture for setting up the polling platform using appropriate config and mocks."""
     with patch(
         "homeassistant.components.telegram_bot.polling.ApplicationBuilder"
@@ -342,10 +356,4 @@ async def polling_platform(
         application.stop = AsyncMock()
         application.shutdown = AsyncMock()
 
-        await async_setup_component(
-            hass,
-            DOMAIN,
-            config_polling,
-        )
-
-        await hass.async_block_till_done()
+        yield
