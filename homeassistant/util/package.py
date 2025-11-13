@@ -12,7 +12,7 @@ import site
 from subprocess import PIPE, Popen
 import sys
 from urllib.parse import urlparse
-
+from pip._internal.models.link import Link
 from packaging.requirements import InvalidRequirement, Requirement
 
 from .system_info import is_official_image
@@ -73,6 +73,11 @@ def is_installed(requirement_str: str) -> bool:
         # remove it.
         try:
             req = Requirement(urlparse(requirement_str).fragment)
+            _LOGGER.error(
+                "Requirement '%s' is using a deprecated URL fragment syntax. "
+                "Please update to a standard requirement specifier with Direct url "
+                "Check home assistant documentation https://developers.home-assistant.io/docs/creating_integration_manifest/#custom-requirements-during-development--testing"
+            )
         except InvalidRequirement:
             _LOGGER.error("Invalid requirement '%s'", requirement_str)
             return False
@@ -86,16 +91,24 @@ def is_installed(requirement_str: str) -> bool:
                 "Installed version for %s resolved to None", req.name
             )
             return False
+        # For VCS installs using library@git+
         if req.url:
-            # If hash matches the installed vcs commit id
-            # then it is the latest version
-            # Branch and tag returns False
-            if (origin := Distribution.from_name(req.name).origin) is None or getattr(
-                origin, "vcs_info", None
-            ) is None:
-                return False
+            # Override to fetch specifier from VCS link
+            # Link provided from https://github.com/pypa/pip/pull/13495/files
+            req = Requirement(Link(requirement_str).show_url)
 
-            return origin.vcs_info.commit_id[:7] in req.url
+            # In case library>=version is provided we return false and log error.
+            if not req.url:
+                _LOGGER.error("Unable to determine URL for VCS install of %s", req.name)
+                return False
+            # If contain library@<commit_id, branch or tag> or library>=<commit_id, branch or tag>
+            if (
+                origin := Distribution.from_name(req.name).origin
+            ) is not None and getattr(origin, "vcs_info", None) is not None:
+                return origin.vcs_info.commit_id[:7] in req.url
+            # If specifier is empty we cannot determine version so return False
+            if not req.specifier:
+                return False
     except PackageNotFoundError:
         return False
 

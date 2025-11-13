@@ -466,6 +466,21 @@ def test_is_installed_non_vcs_commit() -> None:
         assert package.is_installed(requirement_str) is False
 
 
+def test_is_installed_invalid_specifier() -> None:
+    """Test is_installed with homeassistant and no VCS info present (simulate dir install)."""
+    requirement_str = (
+        "homeassistant@git+https://github.com/home-assistant/core>=2025.5.0"
+    )
+    fake_dist = MagicMock(origin=None)
+    with (
+        patch(
+            "homeassistant.util.package.Distribution.from_name", return_value=fake_dist
+        ),
+        patch("homeassistant.util.package.version", return_value="2025.5.0"),
+    ):
+        assert package.is_installed(requirement_str) is False
+
+
 def test_check_package_previous_failed_install() -> None:
     """Test for when a previously install package failed and left cruft behind."""
     pkg = metadata("homeassistant")
