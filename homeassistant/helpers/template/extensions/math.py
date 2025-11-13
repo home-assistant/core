@@ -398,16 +398,19 @@ class MathExtension(BaseTemplateExtension):
                 f"got {value=}, {in_min=}, {in_max=}, {out_min=}, {out_max=}"
             ) from err
 
-        if in_min_num == in_max_num:
-            raise ValueError(f"{in_min=} must not equal {in_max=}")
-
         # Apply edge behavior in original space for accuracy.
         if edges == "clamp":
             value_num = max(in_min_num, min(in_max_num, value_num))
         elif edges == "wrap":
+            if in_min_num == in_max_num:
+                raise ValueError(f"{in_min=} must not equal {in_max=}")
+
             range_size = in_max_num - in_min_num  # Validated against div0 above.
             value_num = ((value_num - in_min_num) % range_size) + in_min_num
         elif edges == "mirror":
+            if in_min_num == in_max_num:
+                raise ValueError(f"{in_min=} must not equal {in_max=}")
+
             range_size = in_max_num - in_min_num  # Validated against div0 above.
             # Determine which period we're in and whether it should be mirrored
             offset = value_num - in_min_num
