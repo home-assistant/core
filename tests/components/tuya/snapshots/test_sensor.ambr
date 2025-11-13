@@ -10280,7 +10280,7 @@
     'supported_features': 0,
     'translation_key': 'excretion_time_day',
     'unique_id': 'tuya.yohkwjjdjlzludd3psmexcretion_time_day',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': 's',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.kattenbak_excretion_duration-state]
@@ -10289,7 +10289,7 @@
       'device_class': 'duration',
       'friendly_name': 'Kattenbak Excretion duration',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      'unit_of_measurement': 's',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.kattenbak_excretion_duration',
@@ -15026,7 +15026,7 @@
     'supported_features': 0,
     'translation_key': 'excretion_time_day',
     'unique_id': 'tuya.nyriu7sjgj9oruzmpsmexcretion_time_day',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': 's',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.poopy_nano_2_excretion_duration-state]
@@ -15035,7 +15035,7 @@
       'device_class': 'duration',
       'friendly_name': 'Poopy Nano 2 Excretion duration',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      'unit_of_measurement': 's',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.poopy_nano_2_excretion_duration',
