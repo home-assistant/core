@@ -105,12 +105,6 @@ def async_client_uptime_value_fn(hub: UnifiHub, client: Client) -> datetime:
 
 
 @callback
-def async_wired_client_speed_value_fn(hub: UnifiHub, client: Client) -> int:
-    """Return wired client speed in Mbps."""
-    return client.wired_rate_mbps
-
-
-@callback
 def async_wired_client_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Check if client is wired and allowed."""
     client = hub.api.clients[obj_id]
@@ -437,7 +431,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         name_fn=lambda _: "Link speed",
         object_fn=lambda api, obj_id: api.clients[obj_id],
         unique_id_fn=lambda hub, obj_id: f"wired_speed-{obj_id}",
-        value_fn=async_wired_client_speed_value_fn,
+        value_fn=lambda hub, client: client.wired_rate_mbps,
     ),
     UnifiSensorEntityDescription[Ports, Port](
         key="PoE port power sensor",
