@@ -12,6 +12,7 @@ from victron_mqtt import (
     OperationMode,
 )
 
+from homeassistant.components.victron_gx_mqtt.binary_sensor import VictronBinarySensor
 from homeassistant.components.victron_gx_mqtt.const import (
     CONF_INSTALLATION_ID,
     CONF_MODEL,
@@ -22,7 +23,7 @@ from homeassistant.components.victron_gx_mqtt.const import (
     DEFAULT_UPDATE_FREQUENCY_SECONDS,
     DOMAIN,
 )
-from homeassistant.components.victron_gx_mqtt.hub import Hub
+from homeassistant.components.victron_gx_mqtt.hub import Hub, VictronSensor
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
@@ -350,7 +351,7 @@ async def test_publish(
     mock_victron_hub.publish.assert_called_once_with("metric_id", "device_id", 123.45)
 
 
-async def test_on_new_metric(
+async def test_on_new_metric_sensor(
     hass: HomeAssistant, mock_config_entry, basic_config, mock_victron_hub
 ) -> None:
     """Test _on_new_metric callback."""
@@ -375,22 +376,53 @@ async def test_on_new_metric(
     mock_metric = MagicMock(spec=VictronVenusMetric)
     mock_metric.metric_kind = MetricKind.SENSOR
 
-    with patch.object(hub, "create_entity") as mock_create_entity:
-        mock_entity = MagicMock()
-        mock_create_entity.return_value = mock_entity
+    # Trigger the callback
+    hub._on_new_metric(mock_victron_hub, mock_device, mock_metric)
 
-        # Trigger the callback
-        hub._on_new_metric(mock_victron_hub, mock_device, mock_metric)
+    # Verify add_entities was called with a list containing one entity
+    mock_add_entities.assert_called_once()
+    entities = mock_add_entities.call_args[0][0]
+    assert isinstance(entities, list)
+    assert len(entities) == 1
+    entity = entities[0]
+    assert isinstance(entity, VictronSensor)
 
-        # Verify create_entity was called
-        mock_create_entity.assert_called_once()
-        call_args = mock_create_entity.call_args
-        assert call_args[0][0] is mock_device
-        assert call_args[0][1] is mock_metric
-        assert call_args[0][3] == "12345"  # installation_id
 
-        # Verify add_entities was called
-        mock_add_entities.assert_called_once_with([mock_entity])
+async def test_on_new_metric_binary_sensor(
+    hass: HomeAssistant, mock_config_entry, basic_config, mock_victron_hub
+) -> None:
+    """Test _on_new_metric callback for binary sensor."""
+    mock_config_entry.data = basic_config
+    mock_config_entry.unique_id = "test_unique_id"
+
+    hub = Hub(hass, mock_config_entry)
+
+    # Register callback for binary sensor
+    mock_add_entities = MagicMock()
+    hub.register_add_entities_callback(mock_add_entities, MetricKind.BINARY_SENSOR)
+
+    # Create mock device and metric
+    mock_device = MagicMock(spec=VictronVenusDevice)
+    mock_device.unique_id = "device_456"
+    mock_device.manufacturer = "Victron Energy"
+    mock_device.name = "Relay"
+    mock_device.device_id = "299"
+    mock_device.model = "GX Relay"
+    mock_device.serial_number = "HQ87654321"
+
+    mock_metric = MagicMock(spec=VictronVenusMetric)
+    mock_metric.metric_kind = MetricKind.BINARY_SENSOR
+
+    # Trigger the callback
+    hub._on_new_metric(mock_victron_hub, mock_device, mock_metric)
+
+    # Verify add_entities was called with a list containing one entity
+    mock_add_entities.assert_called_once()
+    entities = mock_add_entities.call_args[0][0]
+    assert isinstance(entities, list)
+    assert len(entities) == 1
+    entity = entities[0]
+    assert isinstance(entity, VictronBinarySensor)
 
 
 async def test_hub_registers_stop_listener(
