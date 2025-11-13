@@ -49,7 +49,7 @@
       "message": "Anglian Water services are currently unavailable for maintenance."
     },
     "smart_meter_unavailable": {
-      "message": "This account no longer has a smart meter assoicated with it."
+      "message": "This account no longer has a smart meter associated with it."
     }
   }
 }
