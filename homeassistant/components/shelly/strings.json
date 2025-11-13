@@ -441,14 +441,14 @@
       }
     },
     "switch": {
-      "anti_freeze": {
-        "name": "Anti-Freeze"
-      },
       "charging": {
         "name": "Charging"
       },
       "child_lock": {
         "name": "Child lock"
+      },
+      "frost_protection": {
+        "name": "Frost protection"
       },
       "left_slot": {
         "name": "Left slot"
@@ -465,11 +465,11 @@
       "right_slot_boost": {
         "name": "Right slot boost"
       },
-      "state": {
-        "name": "State"
+      "thermostat_enabled": {
+        "name": "Thermostat enabled"
       },
-      "thermostat": {
-        "name": "Thermostat"
+      "valve_opened": {
+        "name": "Valve opened"
       },
       "zone_with_number": {
         "name": "Zone {zone_number}"

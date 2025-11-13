@@ -111,7 +111,7 @@ RPC_SWITCHES = {
     "boolean_anti_freeze": RpcSwitchDescription(
         key="boolean",
         sub_key="value",
-        translation_key="anti_freeze",
+        translation_key="frost_protection",
         entity_registry_enabled_default=False,
         is_on=lambda status: bool(status["value"]),
         method_on="boolean_set",
@@ -134,7 +134,7 @@ RPC_SWITCHES = {
     "boolean_enable": RpcSwitchDescription(
         key="boolean",
         sub_key="value",
-        translation_key="thermostat",
+        translation_key="thermostat_enabled",
         entity_registry_enabled_default=False,
         is_on=lambda status: bool(status["value"]),
         method_on="boolean_set",
@@ -157,7 +157,7 @@ RPC_SWITCHES = {
     "boolean_state": RpcSwitchDescription(
         key="boolean",
         sub_key="value",
-        translation_key="state",
+        translation_key="valve_opened",
         entity_registry_enabled_default=False,
         is_on=lambda status: bool(status["value"]),
         method_on="boolean_set",
