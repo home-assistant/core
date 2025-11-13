@@ -65,6 +65,9 @@
         "name": "Following",
         "unit_of_measurement": "people"
       },
+      "free_storage": {
+        "name": "Free space - {name}"
+      },
       "friends": {
         "name": "Friends",
         "unit_of_measurement": "[%key:component::xbox::entity::sensor::following::unit_of_measurement%]"
@@ -105,6 +108,9 @@
       },
       "status": {
         "name": "Status"
+      },
+      "total_storage": {
+        "name": "Total space - {name}"
       }
     }
   },
