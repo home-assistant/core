@@ -17,6 +17,7 @@ from .const import DOMAIN, DPCode
 
 _REDACTED_DPCODES = {
     DPCode.ALARM_MESSAGE,
+    DPCode.ALARM_MSG,
     DPCode.DOORBELL_PIC,
     DPCode.MOVEMENT_DETECT_PIC,
 }
