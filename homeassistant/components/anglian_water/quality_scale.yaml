@@ -74,10 +74,7 @@ rules:
     status: exempt
     comment: |
       Entities do not require different icons.
-  reconfiguration-flow:
-    status: exempt
-    comment: |
-      To complete in a later PR.
+  reconfiguration-flow: todo
   repair-issues:
     status: exempt
     comment: |
