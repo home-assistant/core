@@ -6,10 +6,18 @@ from datetime import datetime, timedelta
 import logging
 
 from visionpluspython.client import WattsVisionClient
+from visionpluspython.exceptions import (
+    WattsVisionAuthError,
+    WattsVisionConnectionError,
+    WattsVisionDeviceError,
+    WattsVisionError,
+    WattsVisionTimeoutError,
+)
 from visionpluspython.models import Device
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, FAST_POLLING_INTERVAL, UPDATE_INTERVAL
@@ -53,7 +61,22 @@ class WattsVisionHubCoordinator(DataUpdateCoordinator[dict[str, Device]]):
                     devices = await self.client.get_devices_report(device_ids)
                     _LOGGER.debug("Updated %d devices", len(devices))
 
-        except (ConnectionError, TimeoutError, ValueError) as err:
+        except WattsVisionAuthError as err:
+            _LOGGER.error("Authentication error during devices update: %s", err)
+            raise ConfigEntryAuthFailed(
+                f"Authentication failed during devices update: {err}"
+            ) from err
+        except (
+            WattsVisionConnectionError,
+            WattsVisionTimeoutError,
+            ConnectionError,
+            TimeoutError,
+        ) as err:
+            _LOGGER.error("Connection error during devices update: %s", err)
+            raise UpdateFailed(
+                f"Connection error during devices update: {err}"
+            ) from err
+        except (WattsVisionDeviceError, WattsVisionError, ValueError) as err:
             _LOGGER.error("API error during devices update: %s", err)
             raise UpdateFailed(f"API error during devices update: {err}") from err
         else:
@@ -112,11 +135,28 @@ class WattsVisionDeviceCoordinator(DataUpdateCoordinator[Device]):
 
         try:
             device = await self.client.get_device(self.device_id, refresh=True)
-        except (ConnectionError, TimeoutError, ValueError) as err:
-            _LOGGER.error("Failed to refresh device %s: %s", self.device_id, err)
-            raise UpdateFailed(
-                f"Failed to refresh device {self.device_id}: {err}"
+        except WattsVisionAuthError as err:
+            _LOGGER.error(
+                "Authentication error refreshing device %s: %s", self.device_id, err
+            )
+            raise ConfigEntryAuthFailed(
+                f"Authentication failed for device {self.device_id}: {err}"
             ) from err
+        except (
+            WattsVisionConnectionError,
+            WattsVisionTimeoutError,
+            ConnectionError,
+            TimeoutError,
+        ) as err:
+            _LOGGER.error(
+                "Connection error refreshing device %s: %s", self.device_id, err
+            )
+            raise UpdateFailed(
+                f"Connection error for device {self.device_id}: {err}"
+            ) from err
+        except (WattsVisionDeviceError, WattsVisionError, ValueError) as err:
+            _LOGGER.error("API error refreshing device %s: %s", self.device_id, err)
+            raise UpdateFailed(f"API error for device {self.device_id}: {err}") from err
 
         if not device:
             _LOGGER.error("Device %s not found during refresh", self.device_id)
