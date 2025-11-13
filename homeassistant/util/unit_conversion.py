@@ -38,6 +38,7 @@ from homeassistant.const import (
     UnitOfVolumetricFlux,
 )
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.deprecation import deprecated_function
 
 # Distance conversion constants
 _MM_TO_M = 0.001  # 1 mm = 0.001 m
@@ -191,10 +192,14 @@ class CarbonMonoxideConcentrationConverter(BaseUnitConverter):
         CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: (
             _CARBON_MONOXIDE_MOLAR_MASS / _AMBIENT_IDEAL_GAS_MOLAR_VOLUME * 1e3
         ),
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: (
+            _CARBON_MONOXIDE_MOLAR_MASS / _AMBIENT_IDEAL_GAS_MOLAR_VOLUME * 1e6
+        ),
     }
     VALID_UNITS = {
         CONCENTRATION_PARTS_PER_MILLION,
         CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     }
 
 
@@ -460,6 +465,7 @@ class PressureConverter(BaseUnitConverter):
 
     UNIT_CLASS = "pressure"
     _UNIT_CONVERSION: dict[str | None, float] = {
+        UnitOfPressure.MILLIPASCAL: 1 * 1000,
         UnitOfPressure.PA: 1,
         UnitOfPressure.HPA: 1 / 100,
         UnitOfPressure.KPA: 1 / 1000,
@@ -474,6 +480,7 @@ class PressureConverter(BaseUnitConverter):
         / (_MM_TO_M * 1000 * _STANDARD_GRAVITY * _MERCURY_DENSITY),
     }
     VALID_UNITS = {
+        UnitOfPressure.MILLIPASCAL,
         UnitOfPressure.PA,
         UnitOfPressure.HPA,
         UnitOfPressure.KPA,
@@ -701,6 +708,9 @@ class TemperatureConverter(BaseUnitConverter):
         )
 
     @classmethod
+    @deprecated_function(
+        "TemperatureDeltaConverter.convert", breaks_in_ha_version="2026.12.0"
+    )
     def convert_interval(cls, interval: float, from_unit: str, to_unit: str) -> float:
         """Convert a temperature interval from one unit to another.
 
@@ -742,6 +752,25 @@ class TemperatureConverter(BaseUnitConverter):
     def _celsius_to_kelvin(cls, celsius: float) -> float:
         """Convert a temperature in Celsius to Kelvin."""
         return celsius + 273.15
+
+
+class TemperatureDeltaConverter(BaseUnitConverter):
+    """Utility to convert temperature intervals.
+
+    eg. a 10°C interval (10°C to 20°C) will return a 18°F (50°F to 68°F) interval
+    """
+
+    UNIT_CLASS = "temperature_delta"
+    VALID_UNITS = {
+        UnitOfTemperature.CELSIUS,
+        UnitOfTemperature.FAHRENHEIT,
+        UnitOfTemperature.KELVIN,
+    }
+    _UNIT_CONVERSION = {
+        UnitOfTemperature.CELSIUS: 1.0,
+        UnitOfTemperature.FAHRENHEIT: 1.8,
+        UnitOfTemperature.KELVIN: 1.0,
+    }
 
 
 class UnitlessRatioConverter(BaseUnitConverter):
@@ -820,6 +849,7 @@ class VolumeFlowRateConverter(BaseUnitConverter):
         UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 1
         / (_HRS_TO_MINUTES * _L_TO_CUBIC_METER),
         UnitOfVolumeFlowRate.LITERS_PER_SECOND: 1 / (_HRS_TO_SECS * _L_TO_CUBIC_METER),
+        UnitOfVolumeFlowRate.GALLONS_PER_HOUR: 1 / _GALLON_TO_CUBIC_METER,
         UnitOfVolumeFlowRate.GALLONS_PER_MINUTE: 1
         / (_HRS_TO_MINUTES * _GALLON_TO_CUBIC_METER),
         UnitOfVolumeFlowRate.MILLILITERS_PER_SECOND: 1
@@ -833,6 +863,7 @@ class VolumeFlowRateConverter(BaseUnitConverter):
         UnitOfVolumeFlowRate.LITERS_PER_HOUR,
         UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
         UnitOfVolumeFlowRate.LITERS_PER_SECOND,
+        UnitOfVolumeFlowRate.GALLONS_PER_HOUR,
         UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
         UnitOfVolumeFlowRate.MILLILITERS_PER_SECOND,
     }
