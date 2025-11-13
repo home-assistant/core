@@ -149,6 +149,8 @@ def parametrize_attribute_trigger_states(
 
     Returns a list of tuples with (trigger, initial_state, list of states),
     where states is a list of tuples (state to set, expected service call count).
+
+    The initial_state and state to set are tuples of (state, {attribute: value}).
     """
     return [
         # Initial state None
