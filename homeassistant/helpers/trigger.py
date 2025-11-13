@@ -301,13 +301,24 @@ class EntityTriggerBase(Trigger):
     def is_state_to_state(self, state: State) -> bool:
         """Check if the state matches the target state."""
 
-    @abc.abstractmethod
     def check_all_match(self, entity_ids: set[str]) -> bool:
         """Check if all entity states match."""
+        return all(
+            self.is_state_to_state(state)
+            for entity_id in entity_ids
+            if (state := self._hass.states.get(entity_id)) is not None
+        )
 
-    @abc.abstractmethod
     def check_one_match(self, entity_ids: set[str]) -> bool:
         """Check that only one entity state matches."""
+        return (
+            sum(
+                self.is_state_to_state(state)
+                for entity_id in entity_ids
+                if (state := self._hass.states.get(entity_id)) is not None
+            )
+            == 1
+        )
 
     @override
     async def async_attach_runner(
@@ -384,25 +395,6 @@ class EntityStateTriggerBase(EntityTriggerBase):
         """Check if the state matches the target state."""
         return state.state == self._to_state
 
-    def check_all_match(self, entity_ids: set[str]) -> bool:
-        """Check if all entity states match."""
-        return all(
-            state.state == self._to_state
-            for entity_id in entity_ids
-            if (state := self._hass.states.get(entity_id)) is not None
-        )
-
-    def check_one_match(self, entity_ids: set[str]) -> bool:
-        """Check that only one entity state matches."""
-        return (
-            sum(
-                state.state == self._to_state
-                for entity_id in entity_ids
-                if (state := self._hass.states.get(entity_id)) is not None
-            )
-            == 1
-        )
-
 
 class EntityStateAttributeTriggerBase(EntityTriggerBase):
     """Trigger for entity state attribute changes."""
@@ -418,25 +410,6 @@ class EntityStateAttributeTriggerBase(EntityTriggerBase):
     def is_state_to_state(self, state: State) -> bool:
         """Check if the state matches the target state."""
         return state.attributes.get(self._attribute) == self._to_state
-
-    def check_all_match(self, entity_ids: set[str]) -> bool:
-        """Check if all entity states match."""
-        return all(
-            state.attributes.get(self._attribute) == self._to_state
-            for entity_id in entity_ids
-            if (state := self._hass.states.get(entity_id)) is not None
-        )
-
-    def check_one_match(self, entity_ids: set[str]) -> bool:
-        """Check that only one entity state matches."""
-        return (  # type: ignore[no-any-return]
-            sum(
-                state.attributes.get(self._attribute) == self._to_state
-                for entity_id in entity_ids
-                if (state := self._hass.states.get(entity_id)) is not None
-            )
-            == 1
-        )
 
 
 def make_entity_state_trigger(
