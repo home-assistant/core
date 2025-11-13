@@ -269,6 +269,7 @@ async def websocket_subscribe_user_data(
         vol.Required(SYSTEM_DATA_DEFAULT_PANEL): vol.Any(str, None),
     }
 )
+@websocket_api.require_admin
 @websocket_api.async_response
 @with_system_store
 async def websocket_set_system_data(
@@ -278,10 +279,6 @@ async def websocket_set_system_data(
     store: SystemStore,
 ) -> None:
     """Handle set system data command."""
-    if not connection.user.is_admin:
-        connection.send_error(msg["id"], "unauthorized", "Admin access required")
-        return
-
     await store.async_set_item("default_panel", msg[SYSTEM_DATA_DEFAULT_PANEL])
     connection.send_result(msg["id"])
 
