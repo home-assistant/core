@@ -31,6 +31,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
+    HomeAssistantError,
     ServiceValidationError,
 )
 from homeassistant.helpers import config_validation as cv, entity_registry as er
@@ -403,6 +404,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
 
         service_responses: list[dict[str, int]] = []
+        errors: list[HomeAssistantError] = []
 
         # invoke the service for each target
         for target_config_entry, target_chat_id in targets:
@@ -413,15 +415,24 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     translation_key="missing_config_entry",
                 )
 
-            service_response = await _call_service(
-                service, target_config_entry.runtime_data, target_chat_id
-            )
-            if service_response is not None:
-                formatted_response = [
-                    {ATTR_CHAT_ID: chat_id, ATTR_MESSAGEID: message_id}
-                    for chat_id, message_id in service_response.items()
-                ]
-                service_responses.extend(formatted_response)
+            try:
+                service_response = await _call_service(
+                    service, target_config_entry.runtime_data, target_chat_id
+                )
+                if service_response is not None:
+                    formatted_response = [
+                        {ATTR_CHAT_ID: chat_id, ATTR_MESSAGEID: message_id}
+                        for chat_id, message_id in service_response.items()
+                    ]
+                    service_responses.extend(formatted_response)
+            except HomeAssistantError as ex:
+                _LOGGER.error(ex)
+                errors.append(ex)
+
+        if len(errors) == 1:
+            raise errors[0]
+
+        # we should handle errors
 
         if service.return_response:
             # return is correct, but mypy cannot infer it
@@ -552,45 +563,51 @@ def _build_targets(
             targets.append((notify_config_entry, notify_chat_id))
 
     # build target list using service data: `config_entry_id` and `target`
+
+    config_entries: list[TelegramBotConfigEntry] = (
+        service.hass.config_entries.async_entries(DOMAIN)
+    )
+    config_entry = config_entries[0]
+
+    # parse config entry from service data if provided
     if CONF_CONFIG_ENTRY_ID in service.data:
-        # parse config entry from service data
         config_entry_id: str = service.data[CONF_CONFIG_ENTRY_ID]
         config_entry = hass.config_entries.async_get_known_entry(config_entry_id)
 
-        # parse chat IDs from service data
-        target: list[int] | None = service.data.get(ATTR_TARGET)
-        if target is None:
-            # try to get default chat ID from config entry
-            subentries = list(config_entry.subentries.values())
-            if len(subentries) != 1:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="to_do",
-                )
+    # parse chat IDs from service data
+    if ATTR_TARGET in service.data:
+        target: int | list[int] = service.data[ATTR_TARGET]
+        chat_ids = [target] if isinstance(target, int) else target
 
-            chat_id: int = subentries[0].data[ATTR_CHAT_ID]
-            target = [chat_id]
-
-        targets.extend([(config_entry, chat_id) for chat_id in target])
+        targets.extend([(config_entry, chat_id) for chat_id in chat_ids])
 
     # we're done building targets from service data
     if len(targets) > 0:
         return targets
 
     # there's no targets so we try to find a default target
-    config_entries: list[TelegramBotConfigEntry] = (
-        service.hass.config_entries.async_entries(DOMAIN)
-    )
+
     if len(config_entries) == 1:
-        subentries = list(config_entries[0].subentries.values())
-        if len(subentries) == 1:
+        subentries = list(config_entry.subentries.values())
+
+        if len(subentries) == 0:
+            raise ServiceValidationError(
+                "No allowed chat IDs found for bot",
+                translation_domain=DOMAIN,
+                translation_key="missing_allowed_chat_ids",
+                translation_placeholders={
+                    "bot_name": config_entry.title,
+                },
+            )
+
+        if len(subentries) > 0:
             default_chat_id: int = subentries[0].data[ATTR_CHAT_ID]
             return [(config_entries[0], default_chat_id)]
 
     # can't determine default since multiple config entries or multiple subentries exist
     raise ServiceValidationError(
         translation_domain=DOMAIN,
-        translation_key="no_targets_specified",
+        translation_key="no_targets_found",
     )
 
 

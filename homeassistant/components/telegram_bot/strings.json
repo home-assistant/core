@@ -203,8 +203,8 @@
     "missing_input": {
       "message": "{field} is required."
     },
-    "multiple_config_entry": {
-      "message": "Multiple config entries found. Please specify the Telegram bot to use in the Config entry ID field."
+    "no_targets_found": {
+      "message": "No targets found."
     }
   },
   "issues": {

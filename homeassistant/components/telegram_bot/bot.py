@@ -301,24 +301,6 @@ class TelegramNotificationService:
         self.hass = hass
         self._last_message_id: dict[int, int] = {}
 
-    def _get_allowed_chat_ids(self) -> list[int]:
-        allowed_chat_ids: list[int] = [
-            subentry.data[CONF_CHAT_ID] for subentry in self.config.subentries.values()
-        ]
-
-        if not allowed_chat_ids:
-            bot_name: str = self.config.title
-            raise ServiceValidationError(
-                "No allowed chat IDs found for bot",
-                translation_domain=DOMAIN,
-                translation_key="missing_allowed_chat_ids",
-                translation_placeholders={
-                    "bot_name": bot_name,
-                },
-            )
-
-        return allowed_chat_ids
-
     def _get_msg_ids(
         self, msg_data: dict[str, Any], chat_id: int
     ) -> tuple[Any | None, int | None]:
@@ -349,7 +331,9 @@ class TelegramNotificationService:
         :param target: optional list of integers ([12234, -12345])
         :return list of chat_id targets (integers)
         """
-        allowed_chat_ids: list[int] = self._get_allowed_chat_ids()
+        allowed_chat_ids: list[int] = [
+            subentry.data[CONF_CHAT_ID] for subentry in self.config.subentries.values()
+        ]
 
         if target is None:
             return [allowed_chat_ids[0]]

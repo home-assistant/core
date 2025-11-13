@@ -161,7 +161,7 @@ async def test_polling_platform_init(hass: HomeAssistant, polling_platform) -> N
     ],
 )
 async def test_send_message(
-    hass: HomeAssistant, webhook_platform, service: str, input: dict[str]
+    hass: HomeAssistant, webhook_platform, service: str, input: dict[str, Any]
 ) -> None:
     """Test the send_message service. Tests any service that does not require files to be sent."""
     context = Context()
@@ -857,7 +857,7 @@ async def test_multiple_config_entries_error(
         )
 
     await hass.async_block_till_done()
-    assert err.value.translation_key == "multiple_config_entry"
+    assert err.value.translation_key == "no_targets_found"
 
 
 async def test_send_message_with_config_entry(
@@ -886,7 +886,8 @@ async def test_send_message_with_config_entry(
         )
     await hass.async_block_till_done()
 
-    assert err.value.translation_key == "failed_chat_ids"
+    assert err.value.translation_key == "invalid_chat_ids"
+    assert err.value.translation_placeholders is not None
     assert err.value.translation_placeholders["chat_ids"] == "1"
     assert err.value.translation_placeholders["bot_name"] == "Mock Title"
 
@@ -926,7 +927,7 @@ async def test_send_message_no_chat_id_error(
         )
         await hass.async_block_till_done()
 
-        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result.get("type") is FlowResultType.CREATE_ENTRY
 
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
@@ -941,6 +942,7 @@ async def test_send_message_no_chat_id_error(
         )
 
     assert err.value.translation_key == "missing_allowed_chat_ids"
+    assert err.value.translation_placeholders is not None
     assert err.value.translation_placeholders["bot_name"] == "Testbot mock last name"
 
 
@@ -995,6 +997,7 @@ async def test_delete_message(
     await hass.async_block_till_done()
 
     assert err.value.translation_key == "invalid_chat_ids"
+    assert err.value.translation_placeholders is not None
     assert err.value.translation_placeholders["chat_ids"] == "1"
     assert err.value.translation_placeholders["bot_name"] == "Mock Title"
 
