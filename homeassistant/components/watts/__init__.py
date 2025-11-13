@@ -39,8 +39,6 @@ type WattsVisionConfigEntry = ConfigEntry[WattsVisionRuntimeData]
 async def async_setup_entry(hass: HomeAssistant, entry: WattsVisionConfigEntry) -> bool:
     """Set up Watts Vision from a config entry."""
 
-    _LOGGER.debug("Setting up Watts Vision integration")
-
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
             hass, entry

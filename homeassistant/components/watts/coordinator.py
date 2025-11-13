@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 import logging
+from typing import TYPE_CHECKING
 
 from visionpluspython.client import WattsVisionClient
 from visionpluspython.exceptions import (
@@ -22,6 +23,11 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN, FAST_POLLING_INTERVAL, UPDATE_INTERVAL
 
+if TYPE_CHECKING:
+    from . import WattsVisionRuntimeData
+
+type WattsVisionConfigEntry = ConfigEntry[WattsVisionRuntimeData]
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -29,7 +35,10 @@ class WattsVisionHubCoordinator(DataUpdateCoordinator[dict[str, Device]]):
     """Hub coordinator for bulk device discovery and updates."""
 
     def __init__(
-        self, hass: HomeAssistant, client: WattsVisionClient, config_entry: ConfigEntry
+        self,
+        hass: HomeAssistant,
+        client: WattsVisionClient,
+        config_entry: WattsVisionConfigEntry,
     ) -> None:
         """Initialize the hub coordinator."""
         super().__init__(
@@ -95,7 +104,7 @@ class WattsVisionDeviceCoordinator(DataUpdateCoordinator[Device]):
         self,
         hass: HomeAssistant,
         client: WattsVisionClient,
-        config_entry: ConfigEntry,
+        config_entry: WattsVisionConfigEntry,
         hub_coordinator: WattsVisionHubCoordinator,
         device_id: str,
     ) -> None:
