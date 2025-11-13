@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -13,7 +14,7 @@ from homeassistant.components.valve import (
     SERVICE_CLOSE_VALVE,
     SERVICE_OPEN_VALVE,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -37,6 +38,7 @@ async def test_platform_setup_and_discovery(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@patch("homeassistant.components.tuya.PLATFORMS", [Platform.VALVE])
 @pytest.mark.parametrize(
     "mock_device_code",
     ["sfkzq_ed7frwissyqrejic"],
@@ -66,6 +68,7 @@ async def test_open_valve(
     )
 
 
+@patch("homeassistant.components.tuya.PLATFORMS", [Platform.VALVE])
 @pytest.mark.parametrize(
     "mock_device_code",
     ["sfkzq_ed7frwissyqrejic"],
@@ -93,3 +96,35 @@ async def test_close_valve(
     mock_manager.send_commands.assert_called_once_with(
         mock_device.id, [{"code": "switch_1", "value": False}]
     )
+
+
+@patch("homeassistant.components.tuya.PLATFORMS", [Platform.VALVE])
+@pytest.mark.parametrize(
+    "mock_device_code",
+    ["sfkzq_ed7frwissyqrejic"],
+)
+@pytest.mark.parametrize(
+    ("initial_status", "expected_state"),
+    [
+        (True, "open"),
+        (False, "closed"),
+        (None, STATE_UNKNOWN),
+        ("some string", STATE_UNKNOWN),
+    ],
+)
+async def test_state(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    initial_status: Any,
+    expected_state: str,
+) -> None:
+    """Test valve state."""
+    entity_id = "valve.jie_hashui_fa_valve_1"
+    mock_device.status["switch_1"] = initial_status
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    state = hass.states.get(entity_id)
+    assert state is not None, f"{entity_id} does not exist"
+    assert state.state == expected_state

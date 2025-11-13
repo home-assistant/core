@@ -2,12 +2,13 @@
 
 from datetime import timedelta
 
-from aioamazondevices.api import AmazonDevice, AmazonEchoApi
+from aioamazondevices.api import AmazonEchoApi
 from aioamazondevices.exceptions import (
     CannotAuthenticate,
     CannotConnect,
     CannotRetrieveData,
 )
+from aioamazondevices.structures import AmazonDevice
 from aiohttp import ClientSession
 
 from homeassistant.config_entries import ConfigEntry
@@ -68,7 +69,7 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
                 translation_key="cannot_retrieve_data_with_error",
                 translation_placeholders={"error": repr(err)},
             ) from err
-        except (CannotAuthenticate, TypeError) as err:
+        except CannotAuthenticate as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_auth",

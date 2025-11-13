@@ -184,6 +184,9 @@ async def zigpy_app_controller():
             warnings.simplefilter("ignore", DeprecationWarning)
             mock_app = _wrap_mock_instance(app)
             mock_app.backups = _wrap_mock_instance(app.backups)
+            mock_app._concurrent_requests_semaphore = _wrap_mock_instance(
+                app._concurrent_requests_semaphore
+            )
 
         yield mock_app
 
@@ -192,7 +195,7 @@ async def zigpy_app_controller():
 async def config_entry_fixture() -> MockConfigEntry:
     """Fixture representing a config entry."""
     return MockConfigEntry(
-        version=4,
+        version=5,
         domain=zha_const.DOMAIN,
         data={
             zigpy.config.CONF_DEVICE: {
