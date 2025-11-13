@@ -17,6 +17,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
+from .models import DPCodeBooleanWrapper
 
 VALVES: dict[DeviceCategory, tuple[ValveEntityDescription, ...]] = {
     DeviceCategory.SFKZQ: (
@@ -93,9 +94,13 @@ async def async_setup_entry(
             device = manager.device_map[device_id]
             if descriptions := VALVES.get(device.category):
                 entities.extend(
-                    TuyaValveEntity(device, manager, description)
+                    TuyaValveEntity(device, manager, description, dpcode_wrapper)
                     for description in descriptions
-                    if description.key in device.status
+                    if (
+                        dpcode_wrapper := DPCodeBooleanWrapper.find_dpcode(
+                            device, description.key, prefer_function=True
+                        )
+                    )
                 )
 
         async_add_entities(entities)
@@ -117,25 +122,25 @@ class TuyaValveEntity(TuyaEntity, ValveEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: ValveEntityDescription,
+        dpcode_wrapper: DPCodeBooleanWrapper,
     ) -> None:
         """Init TuyaValveEntity."""
         super().__init__(device, device_manager)
         self.entity_description = description
         self._attr_unique_id = f"{super().unique_id}{description.key}"
+        self._dpcode_wrapper = dpcode_wrapper
 
     @property
-    def is_closed(self) -> bool:
+    def is_closed(self) -> bool | None:
         """Return if the valve is closed."""
-        return not self.device.status.get(self.entity_description.key, False)
+        if (is_open := self._dpcode_wrapper.read_device_status(self.device)) is None:
+            return None
+        return not is_open
 
     async def async_open_valve(self) -> None:
         """Open the valve."""
-        await self.hass.async_add_executor_job(
-            self._send_command, [{"code": self.entity_description.key, "value": True}]
-        )
+        await self._async_send_dpcode_update(self._dpcode_wrapper, True)
 
     async def async_close_valve(self) -> None:
         """Close the valve."""
-        await self.hass.async_add_executor_job(
-            self._send_command, [{"code": self.entity_description.key, "value": False}]
-        )
+        await self._async_send_dpcode_update(self._dpcode_wrapper, False)

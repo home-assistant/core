@@ -653,9 +653,17 @@
       "sanitize": {
         "name": "Sanitize"
       },
+      "sound_effect": {
+        "name": "Sound effect"
+      },
       "wrinkle_prevent": {
         "name": "Wrinkle prevent"
       }
+    }
+  },
+  "exceptions": {
+    "oauth2_implementation_unavailable": {
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     }
   },
   "issues": {
