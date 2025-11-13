@@ -57,12 +57,14 @@ class _AlarmModeWrapper(DPCodeEnumWrapper):
     """
 
     _ACTION_MAPPINGS = {
+        # Home Assistant action => Tuya device mode
         "arm_home": "home",
         "arm_away": "arm",
         "disarm": "disarmed",
         "trigger": "sos",
     }
     _STATE_MAPPINGS = {
+        # Tuya device mode => Home Assistant panel state
         "disarmed": AlarmControlPanelState.DISARMED,
         "arm": AlarmControlPanelState.ARMED_AWAY,
         "home": AlarmControlPanelState.ARMED_HOME,
