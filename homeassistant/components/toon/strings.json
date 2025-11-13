@@ -32,6 +32,11 @@
       }
     }
   },
+  "exceptions": {
+    "oauth2_implementation_unavailable": {
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    }
+  },
   "services": {
     "update": {
       "description": "Updates all entities with fresh data from Toon.",
