@@ -1,4 +1,4 @@
-"""The tests for LG NEtcast device triggers."""
+"""The tests for LG Netcast device triggers."""
 
 from collections.abc import Generator
 from unittest.mock import patch
