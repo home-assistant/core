@@ -28,11 +28,9 @@ from aioshelly.const import (
     MODEL_WALL_DISPLAY_X2,
     MODEL_WALL_DISPLAY_XL,
 )
-import voluptuous as vol
 
 from homeassistant.components.number import NumberMode
 from homeassistant.const import UnitOfVolumeFlowRate
-from homeassistant.helpers import config_validation as cv
 
 DOMAIN: Final = "shelly"
 
@@ -347,11 +345,3 @@ ROLE_GENERIC = "generic"
 TRV_CHANNEL = 0
 
 CONF_KEY: Final = "key"
-
-SERVICE_KVS_GET: Final = "kvs_get"
-SERVICE_KVS_GET_SCHEMA = vol.Schema(
-    {
-        vol.Required("device_id"): cv.string,
-        vol.Required(CONF_KEY): str,
-    }
-)

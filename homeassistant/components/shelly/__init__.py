@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from functools import partial
-from typing import TYPE_CHECKING, Final
+from typing import Final
 
 from aioshelly.ble.const import BLE_SCRIPT_NAME
 from aioshelly.block_device import BlockDevice
@@ -26,18 +26,8 @@ from homeassistant.const import (
     CONF_USERNAME,
     Platform,
 )
-from homeassistant.core import (
-    HomeAssistant,
-    ServiceCall,
-    ServiceResponse,
-    SupportsResponse,
-)
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
-    HomeAssistantError,
-    ServiceValidationError,
-)
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -47,21 +37,17 @@ from homeassistant.helpers import (
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.json import JsonValueType
 
 from .const import (
     BLOCK_EXPECTED_SLEEP_PERIOD,
     BLOCK_WRONG_SLEEP_PERIOD,
     CONF_COAP_PORT,
-    CONF_KEY,
     CONF_SLEEP_PERIOD,
     DOMAIN,
     FIRMWARE_UNSUPPORTED_ISSUE_ID,
     LOGGER,
     MODELS_WITH_WRONG_SLEEP_PERIOD,
     PUSH_UPDATE_ISSUE_ID,
-    SERVICE_KVS_GET,
-    SERVICE_KVS_GET_SCHEMA,
 )
 from .coordinator import (
     ShellyBlockCoordinator,
@@ -77,6 +63,7 @@ from .repairs import (
     async_manage_open_wifi_ap_issue,
     async_manage_outbound_websocket_incorrectly_enabled_issue,
 )
+from .services import async_setup_services
 from .utils import (
     async_create_issue_unsupported_firmware,
     async_migrate_rpc_virtual_components_unique_ids,
@@ -131,69 +118,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if (conf := config.get(DOMAIN)) is not None:
         hass.data[DOMAIN] = {CONF_COAP_PORT: conf[CONF_COAP_PORT]}
 
-    async def async_kvs_get(call: ServiceCall) -> ServiceResponse:
-        """Handle the kvs_get service call."""
-        key = call.data[CONF_KEY]
-        device_id = call.data["device_id"]
-
-        device_registry = dr.async_get(hass)
-        device = device_registry.async_get(device_id)
-
-        if TYPE_CHECKING:
-            assert device is not None
-
-        # Find the config entry for this device
-        config_entry: ShellyConfigEntry | None = None
-        for entry_id in device.config_entries:
-            entry = hass.config_entries.async_get_entry(entry_id)
-            if entry and entry.domain == DOMAIN:
-                config_entry = entry
-                break
-
-        if TYPE_CHECKING:
-            assert config_entry is not None
-
-        # Check if device is RPC (Gen2+) device
-        if get_device_entry_gen(config_entry) not in RPC_GENERATIONS:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="not_rpc_device",
-            )
-
-        runtime_data = config_entry.runtime_data
-
-        if not runtime_data.rpc:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="device_not_ready",
-            )
-
-        try:
-            response = await runtime_data.rpc.device.call_rpc("KVS.Get", {"key": key})
-        except RpcCallError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="rpc_call_error",
-                translation_placeholders={"error": str(err)},
-            ) from err
-        except DeviceConnectionError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="device_connection_error",
-            ) from err
-        else:
-            result: dict[str, JsonValueType] = {}
-            result["value"] = response.get("value")
-
-            return result
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_KVS_GET,
-        async_kvs_get,
-        schema=SERVICE_KVS_GET_SCHEMA,
-        supports_response=SupportsResponse.ONLY,
-    )
+    async_setup_services(hass)
 
     return True
 
