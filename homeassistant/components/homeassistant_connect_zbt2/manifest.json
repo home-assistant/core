@@ -10,7 +10,7 @@
     "bellows",
     "universal_silabs_flasher",
     "zigpy.serial",
-    "pyserial_asyncio_fast"
+    "serial_asyncio_fast"
   ],
   "quality_scale": "bronze",
   "usb": [
