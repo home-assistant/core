@@ -142,7 +142,7 @@
     },
     "event": {
       "input": {
-        "name": "{channel_name}",
+        "name": "Input {input_number}",
         "state_attributes": {
           "event_type": {
             "state": {

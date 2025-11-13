@@ -31,8 +31,7 @@ from .utils import (
     async_remove_orphaned_entities,
     async_remove_shelly_entity,
     get_device_entry_gen,
-    get_entity_translation_attributes,
-    get_rpc_channel_name,
+    get_rpc_component_name,
     get_rpc_entity_name,
     get_rpc_key_instances,
     is_block_momentary_input,
@@ -59,7 +58,6 @@ class ShellyRpcEventDescription(EventEntityDescription):
 BLOCK_EVENT: Final = ShellyBlockEventDescription(
     key="input",
     translation_key="input",
-    translation_placeholders={"channel_name": ""},
     device_class=EventDeviceClass.BUTTON,
     removal_condition=lambda settings, block: not is_block_momentary_input(
         settings, block, True
@@ -68,7 +66,6 @@ BLOCK_EVENT: Final = ShellyBlockEventDescription(
 RPC_EVENT: Final = ShellyRpcEventDescription(
     key="input",
     translation_key="input",
-    translation_placeholders={"channel_name": ""},
     device_class=EventDeviceClass.BUTTON,
     event_types=list(RPC_INPUTS_EVENTS_TYPES),
     removal_condition=lambda config, status, key: not is_rpc_momentary_input(
@@ -198,9 +195,6 @@ class ShellyBlockEvent(ShellyBlockEntity, EventEntity):
             self._attr_event_types = list(BASIC_INPUTS_EVENTS_TYPES)
         self.entity_description = description
 
-        if hasattr(self, "_attr_name"):
-            delattr(self, "_attr_name")
-
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
@@ -235,18 +229,17 @@ class ShellyRpcEvent(CoordinatorEntity[ShellyRpcCoordinator], EventEntity):
         self._attr_unique_id = f"{coordinator.mac}-{key}"
         self.entity_description = description
 
-        if description.key == "script":
+        if description.key == "input":
+            component = key.split(":")[0]
+            component_id = key.split(":")[-1]
+            if get_rpc_component_name(coordinator.device, key) is None and (
+                component.lower() == "input" and component_id.isnumeric()
+            ):
+                self._attr_translation_placeholders = {"input_number": component_id}
+            else:
+                self._attr_name = get_rpc_entity_name(coordinator.device, key)
+        elif description.key == "script":
             self._attr_name = get_rpc_entity_name(coordinator.device, key)
-
-        translation_placeholders, _ = get_entity_translation_attributes(
-            get_rpc_channel_name(coordinator.device, key),
-            description.translation_key,
-            description.device_class,
-            self._default_to_device_class_name(),
-        )
-
-        if translation_placeholders:
-            self._attr_translation_placeholders = translation_placeholders
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
