@@ -1,7 +1,5 @@
 """Support for VELUX KLF 200 devices."""
 
-from collections.abc import Awaitable, Callable
-
 from pyvlx import Node
 
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -15,7 +13,6 @@ class VeluxEntity(Entity):
 
     _attr_should_poll = False
     _attr_has_entity_name = True
-    update_callback: Callable[["Node"], Awaitable[None]] | None = None
 
     def __init__(self, node: Node, config_entry_id: str) -> None:
         """Initialize the Velux device."""
@@ -39,18 +36,15 @@ class VeluxEntity(Entity):
             via_device=(DOMAIN, f"gateway_{config_entry_id}"),
         )
 
+    async def after_update_callback(self, node) -> None:
+        """Call after device was updated."""
+        self.async_write_ha_state()
+
     async def async_added_to_hass(self) -> None:
         """Register callback and store reference for cleanup."""
 
-        async def after_update_callback(node) -> None:
-            """Call after device was updated."""
-            self.async_write_ha_state()
-
-        self.node.register_device_updated_cb(after_update_callback)
-        self.update_callback = after_update_callback
+        self.node.register_device_updated_cb(self.after_update_callback)
 
     async def async_will_remove_from_hass(self) -> None:
         """Clean up registered callbacks."""
-        if self.update_callback:
-            self.node.unregister_device_updated_cb(self.update_callback)
-            self.update_callback = None
+        self.node.unregister_device_updated_cb(self.after_update_callback)
