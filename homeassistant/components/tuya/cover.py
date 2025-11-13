@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from tuya_sharing import CustomerDevice, Manager
 
@@ -22,8 +22,52 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, DPType
 from .entity import TuyaEntity
-from .models import EnumTypeData, IntegerTypeData, find_dpcode
-from .util import get_dpcode
+from .models import DPCodeIntegerWrapper, find_dpcode
+from .util import get_dpcode, remap_value
+
+
+class _DPCodePositionWrapper(DPCodeIntegerWrapper):
+    """Wrapper to find DPCode of IntegerTypeData."""
+
+    def _position_reversed(self, device: CustomerDevice) -> bool:
+        """Check if the position and direction should be reversed."""
+        return True
+
+    def read_device_status(self, device: CustomerDevice) -> float | None:
+        if (value := super().read_device_status(device)) is None:
+            return None
+
+        return round(
+            remap_value(
+                value,
+                self.type_information.min,
+                self.type_information.max,
+                0,
+                100,
+                self._position_reversed(device),
+            )
+        )
+
+    def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
+        value = super()._convert_value_to_raw_value(device, value)
+        return round(
+            remap_value(
+                value,
+                self.type_information.min,
+                self.type_information.max,
+                0,
+                100,
+                self._position_reversed(device),
+            )
+        )
+
+
+class _DPCodePositionWithControlModeWrapper(_DPCodePositionWrapper):
+    """Wrapper to find DPCode of IntegerTypeData."""
+
+    def _position_reversed(self, device: CustomerDevice) -> bool:
+        """Check if the position and direction should be reversed."""
+        return device.status.get(DPCode.CONTROL_BACK_MODE) != "back"
 
 
 @dataclass(frozen=True)
@@ -33,11 +77,11 @@ class TuyaCoverEntityDescription(CoverEntityDescription):
     current_state: DPCode | tuple[DPCode, ...] | None = None
     current_state_inverse: bool = False
     current_position: DPCode | tuple[DPCode, ...] | None = None
+    position_wrapper: type[_DPCodePositionWrapper] = _DPCodePositionWrapper
     set_position: DPCode | None = None
     open_instruction_value: str = "open"
     close_instruction_value: str = "close"
     stop_instruction_value: str = "stop"
-    motor_reverse_mode: DPCode | None = None
 
 
 COVERS: dict[DeviceCategory, tuple[TuyaCoverEntityDescription, ...]] = {
@@ -117,8 +161,8 @@ COVERS: dict[DeviceCategory, tuple[TuyaCoverEntityDescription, ...]] = {
             key=DPCode.CONTROL,
             translation_key="curtain",
             current_position=DPCode.PERCENT_CONTROL,
+            position_wrapper=_DPCodePositionWithControlModeWrapper,
             set_position=DPCode.PERCENT_CONTROL,
-            motor_reverse_mode=DPCode.CONTROL_BACK_MODE,
             device_class=CoverDeviceClass.CURTAIN,
         ),
         TuyaCoverEntityDescription(
@@ -126,8 +170,8 @@ COVERS: dict[DeviceCategory, tuple[TuyaCoverEntityDescription, ...]] = {
             translation_key="indexed_curtain",
             translation_placeholders={"index": "2"},
             current_position=DPCode.PERCENT_CONTROL_2,
+            position_wrapper=_DPCodePositionWithControlModeWrapper,
             set_position=DPCode.PERCENT_CONTROL_2,
-            motor_reverse_mode=DPCode.CONTROL_BACK_MODE,
             device_class=CoverDeviceClass.CURTAIN,
         ),
     ),
@@ -159,7 +203,22 @@ async def async_setup_entry(
             device = manager.device_map[device_id]
             if descriptions := COVERS.get(device.category):
                 entities.extend(
-                    TuyaCoverEntity(device, manager, description)
+                    TuyaCoverEntity(
+                        device,
+                        manager,
+                        description,
+                        current_position=description.position_wrapper.find_dpcode(
+                            device, description.current_position
+                        ),
+                        set_position=description.position_wrapper.find_dpcode(
+                            device, description.set_position, prefer_function=True
+                        ),
+                        tilt_position=description.position_wrapper.find_dpcode(
+                            device,
+                            (DPCode.ANGLE_HORIZONTAL, DPCode.ANGLE_VERTICAL),
+                            prefer_function=True,
+                        ),
+                    )
                     for description in descriptions
                     if (
                         description.key in device.function
@@ -179,11 +238,7 @@ async def async_setup_entry(
 class TuyaCoverEntity(TuyaEntity, CoverEntity):
     """Tuya Cover Device."""
 
-    _current_position: IntegerTypeData | None = None
     _current_state: DPCode | None = None
-    _set_position: IntegerTypeData | None = None
-    _tilt: IntegerTypeData | None = None
-    _motor_reverse_mode_enum: EnumTypeData | None = None
     entity_description: TuyaCoverEntityDescription
 
     def __init__(
@@ -191,12 +246,20 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: TuyaCoverEntityDescription,
+        *,
+        current_position: _DPCodePositionWrapper | None = None,
+        set_position: _DPCodePositionWrapper | None = None,
+        tilt_position: _DPCodePositionWrapper | None = None,
     ) -> None:
         """Init Tuya Cover."""
         super().__init__(device, device_manager)
         self.entity_description = description
         self._attr_unique_id = f"{super().unique_id}{description.key}"
         self._attr_supported_features = CoverEntityFeature(0)
+
+        self._current_position = current_position or set_position
+        self._set_position = set_position
+        self._tilt_position = tilt_position
 
         # Check if this cover is based on a switch or has controls
         if get_dpcode(self.device, description.key):
@@ -216,72 +279,15 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
 
         self._current_state = get_dpcode(self.device, description.current_state)
 
-        # Determine type to use for setting the position
-        if int_type := find_dpcode(
-            self.device,
-            description.set_position,
-            dptype=DPType.INTEGER,
-            prefer_function=True,
-        ):
+        if set_position:
             self._attr_supported_features |= CoverEntityFeature.SET_POSITION
-            self._set_position = int_type
-            # Set as default, unless overwritten below
-            self._current_position = int_type
-
-        # Determine type for getting the position
-        if int_type := find_dpcode(
-            self.device,
-            description.current_position,
-            dptype=DPType.INTEGER,
-            prefer_function=True,
-        ):
-            self._current_position = int_type
-
-        # Determine type to use for setting the tilt
-        if int_type := find_dpcode(
-            self.device,
-            (DPCode.ANGLE_HORIZONTAL, DPCode.ANGLE_VERTICAL),
-            dptype=DPType.INTEGER,
-            prefer_function=True,
-        ):
+        if tilt_position:
             self._attr_supported_features |= CoverEntityFeature.SET_TILT_POSITION
-            self._tilt = int_type
-
-        # Determine type to use for checking motor reverse mode
-        if (motor_mode := description.motor_reverse_mode) and (
-            enum_type := find_dpcode(
-                self.device,
-                motor_mode,
-                dptype=DPType.ENUM,
-                prefer_function=True,
-            )
-        ):
-            self._motor_reverse_mode_enum = enum_type
-
-    @property
-    def _is_position_reversed(self) -> bool:
-        """Check if the cover position and direction should be reversed."""
-        # The default is True
-        # Having motor_reverse_mode == "back" cancels the inversion
-        return not (
-            self._motor_reverse_mode_enum
-            and self.device.status.get(self._motor_reverse_mode_enum.dpcode) == "back"
-        )
 
     @property
     def current_cover_position(self) -> int | None:
         """Return cover current position."""
-        if self._current_position is None:
-            return None
-
-        if (position := self.device.status.get(self._current_position.dpcode)) is None:
-            return None
-
-        return round(
-            self._current_position.remap_value_to(
-                position, 0, 100, reverse=self._is_position_reversed
-            )
-        )
+        return self._read_wrapper(self._current_position)
 
     @property
     def current_cover_tilt_position(self) -> int | None:
@@ -289,13 +295,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
 
         None is unknown, 0 is closed, 100 is fully open.
         """
-        if self._tilt is None:
-            return None
-
-        if (angle := self.device.status.get(self._tilt.dpcode)) is None:
-            return None
-
-        return round(self._tilt.remap_value_to(angle, 0, 100))
+        return self._read_wrapper(self._tilt_position)
 
     @property
     def is_closed(self) -> bool | None:
@@ -332,16 +332,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         ]
 
         if self._set_position is not None:
-            commands.append(
-                {
-                    "code": self._set_position.dpcode,
-                    "value": round(
-                        self._set_position.remap_value_from(
-                            100, 0, 100, reverse=self._is_position_reversed
-                        ),
-                    ),
-                }
-            )
+            commands.append(self._set_position.get_update_command(self.device, 100))
 
         self._send_command(commands)
 
@@ -361,40 +352,13 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         ]
 
         if self._set_position is not None:
-            commands.append(
-                {
-                    "code": self._set_position.dpcode,
-                    "value": round(
-                        self._set_position.remap_value_from(
-                            0, 0, 100, reverse=self._is_position_reversed
-                        ),
-                    ),
-                }
-            )
+            commands.append(self._set_position.get_update_command(self.device, 0))
 
         self._send_command(commands)
 
-    def set_cover_position(self, **kwargs: Any) -> None:
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        if TYPE_CHECKING:
-            # guarded by CoverEntityFeature.SET_POSITION
-            assert self._set_position is not None
-
-        self._send_command(
-            [
-                {
-                    "code": self._set_position.dpcode,
-                    "value": round(
-                        self._set_position.remap_value_from(
-                            kwargs[ATTR_POSITION],
-                            0,
-                            100,
-                            reverse=self._is_position_reversed,
-                        )
-                    ),
-                }
-            ]
-        )
+        await self._async_send_dpcode_update(self._set_position, kwargs[ATTR_POSITION])
 
     def stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
@@ -407,24 +371,8 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
             ]
         )
 
-    def set_cover_tilt_position(self, **kwargs: Any) -> None:
+    async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
-        if TYPE_CHECKING:
-            # guarded by CoverEntityFeature.SET_TILT_POSITION
-            assert self._tilt is not None
-
-        self._send_command(
-            [
-                {
-                    "code": self._tilt.dpcode,
-                    "value": round(
-                        self._tilt.remap_value_from(
-                            kwargs[ATTR_TILT_POSITION],
-                            0,
-                            100,
-                            reverse=self._is_position_reversed,
-                        )
-                    ),
-                }
-            ]
+        await self._async_send_dpcode_update(
+            self._tilt_position, kwargs[ATTR_TILT_POSITION]
         )
