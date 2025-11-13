@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
 import base64
 from dataclasses import dataclass
 from typing import Any, Literal, Self, cast, overload
@@ -136,10 +135,11 @@ _TYPE_INFORMATION_MAPPINGS: dict[DPType, type[TypeInformation]] = {
     DPType.INTEGER: IntegerTypeData,
     DPType.JSON: TypeInformation,
     DPType.RAW: TypeInformation,
+    DPType.STRING: TypeInformation,
 }
 
 
-class DPCodeWrapper(ABC):
+class DPCodeWrapper:
     """Base DPCode wrapper.
 
     Used as a common interface for referring to a DPCode, and
@@ -160,12 +160,12 @@ class DPCodeWrapper(ABC):
         """
         return device.status.get(self.dpcode)
 
-    @abstractmethod
     def read_device_status(self, device: CustomerDevice) -> Any | None:
         """Read the device value for the dpcode.
 
         The raw device status is converted to a Home Assistant value.
         """
+        raise NotImplementedError
 
     def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
         """Convert a Home Assistant value back to a raw device value.
@@ -324,6 +324,16 @@ class DPCodeIntegerWrapper(DPCodeTypeInformationWrapper[IntegerTypeData]):
             f"Value `{new_value}` (converted from `{value}`) out of range:"
             f" ({self.type_information.min}-{self.type_information.max})"
         )
+
+
+class DPCodeStringWrapper(DPCodeTypeInformationWrapper[TypeInformation]):
+    """Wrapper to extract information from a STRING value."""
+
+    DPTYPE = DPType.STRING
+
+    def read_device_status(self, device: CustomerDevice) -> str | None:
+        """Read the device value for the dpcode."""
+        return self._read_device_status_raw(device)
 
 
 class DPCodeBitmapBitWrapper(DPCodeWrapper):
