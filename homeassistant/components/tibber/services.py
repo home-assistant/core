@@ -33,7 +33,15 @@ SERVICE_SCHEMA: Final = vol.Schema(
 
 
 async def __get_prices(call: ServiceCall) -> ServiceResponse:
-    tibber_connection = call.hass.data[DOMAIN][API_TYPE_GRAPHQL].tibber
+    domain_data = call.hass.data.get(DOMAIN, {})
+    runtime = domain_data.get(API_TYPE_GRAPHQL)
+    if runtime is None:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="graphql_required",
+        )
+
+    tibber_connection = runtime.tibber
 
     start = __get_date(call.data.get(ATTR_START), "start")
     end = __get_date(call.data.get(ATTR_END), "end")

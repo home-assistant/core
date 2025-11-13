@@ -4,10 +4,12 @@ from __future__ import annotations
 
 from typing import Any
 
+import aiohttp
 import tibber
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 
 from .const import API_TYPE_DATA_API, API_TYPE_GRAPHQL, CONF_API_TYPE, DOMAIN
 
@@ -21,7 +23,7 @@ async def async_get_config_entry_diagnostics(
     domain_data = hass.data.get(DOMAIN, {})
 
     if api_type == API_TYPE_GRAPHQL:
-        runtime = domain_data.get(API_TYPE_GRAPHQL, {}).get(config_entry.entry_id)
+        runtime = domain_data.get(API_TYPE_GRAPHQL, {})
         if runtime and hasattr(runtime, "tibber"):
             tibber_connection: tibber.Tibber = runtime.tibber
             return {
@@ -42,6 +44,38 @@ async def async_get_config_entry_diagnostics(
             "homes": [],
         }
 
+    runtime = domain_data.get(API_TYPE_DATA_API)
+    if runtime is None:
+        return {
+            "api_type": API_TYPE_DATA_API,
+            "devices": [],
+        }
+
+    devices: dict[str, Any] = {}
+    error: str | None = None
+    try:
+        devices = await (await runtime.async_get_client(hass)).get_all_devices()
+    except (
+        ConfigEntryAuthFailed,
+        TimeoutError,
+        aiohttp.ClientError,
+        tibber.InvalidLoginError,
+        tibber.RetryableHttpExceptionError,
+        tibber.FatalHttpExceptionError,
+    ) as err:
+        devices = {}
+        error = repr(err)
+
     return {
         "api_type": API_TYPE_DATA_API,
+        "error": error,
+        "devices": [
+            {
+                "id": device.id,
+                "name": device.name,
+                "brand": device.brand,
+                "model": device.model,
+            }
+            for device in devices.values()
+        ],
     }

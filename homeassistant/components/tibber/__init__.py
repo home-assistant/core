@@ -8,6 +8,7 @@ import logging
 import aiohttp
 from aiohttp.client_exceptions import ClientError, ClientResponseError
 import tibber
+from tibber import data_api as tibber_data_api
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, EVENT_HOMEASSISTANT_STOP, Platform
@@ -55,14 +56,14 @@ class TibberDataAPIRuntimeData:
 
     async def async_get_client(
         self, hass: HomeAssistant
-    ) -> tibber.data_api.TibberDataAPI:
+    ) -> tibber_data_api.TibberDataAPI:
         """Return an authenticated Tibber Data API client."""
         await self.session.async_ensure_token_valid()
         token = self.session.token
         access_token = token.get(CONF_ACCESS_TOKEN)
         if not access_token:
             raise ConfigEntryAuthFailed("Access token missing from OAuth session")
-        return tibber.data_api.TibberDataAPI(
+        return tibber_data_api.TibberDataAPI(
             access_token,
             websession=async_get_clientsession(hass),
         )
@@ -170,10 +171,12 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
         GRAPHQL_PLATFORMS if api_type == API_TYPE_GRAPHQL else DATA_API_PLATFORMS,
     )
 
-    if api_type == API_TYPE_GRAPHQL:
-        if unload_ok:
-            tibber_connection = hass.data[DOMAIN][api_type].tibber
-            await tibber_connection.rt_disconnect()
+    if unload_ok:
+        if api_type == API_TYPE_GRAPHQL:
+            runtime = hass.data[DOMAIN].get(api_type)
+            if runtime:
+                tibber_connection = runtime.tibber
+                await tibber_connection.rt_disconnect()
 
-    hass.data[DOMAIN].pop(api_type)
+        hass.data[DOMAIN].pop(api_type, None)
     return unload_ok

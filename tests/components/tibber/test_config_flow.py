@@ -201,7 +201,7 @@ async def test_data_api_full_flow(
     )
 
     with patch(
-        "homeassistant.components.tibber.config_flow.tibber.TibberDataAPI",
+        "homeassistant.components.tibber.config_flow.TibberDataAPI",
         return_value=data_api_client,
         create=True,
     ):

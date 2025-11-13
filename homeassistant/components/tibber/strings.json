@@ -62,6 +62,28 @@
       "battery_stored_energy": {
         "name": "Stored energy"
       },
+      "charging_current_max": {
+        "name": "Maximum charging current"
+      },
+      "charging_current_offline_fallback": {
+        "name": "Offline fallback charging current"
+      },
+      "charging_status": {
+        "name": "Charging status",
+        "state": {
+          "charging": "Charging",
+          "idle": "Idle",
+          "unknown": "Unknown"
+        }
+      },
+      "connector_status": {
+        "name": "Connector status",
+        "state": {
+          "connected": "Connected",
+          "disconnected": "Disconnected",
+          "unknown": "Unknown"
+        }
+      },
       "current_l1": {
         "name": "Current L1"
       },
@@ -134,6 +156,9 @@
       "power_production": {
         "name": "Power production"
       },
+      "range_remaining": {
+        "name": "Remaining range"
+      },
       "signal_strength": {
         "name": "Signal strength"
       },
@@ -142,6 +167,12 @@
       },
       "solar_power_production": {
         "name": "Power production"
+      },
+      "storage_state_of_charge": {
+        "name": "Storage state of charge"
+      },
+      "storage_target_state_of_charge": {
+        "name": "Storage target state of charge"
       },
       "thermostat_measured_temperature": {
         "name": "Measured temperature"
@@ -164,6 +195,9 @@
     }
   },
   "exceptions": {
+    "graphql_required": {
+      "message": "Configure the Tibber GraphQL API before calling this service."
+    },
     "invalid_date": {
       "message": "Invalid datetime provided {date}"
     },
