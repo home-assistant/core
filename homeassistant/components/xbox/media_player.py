@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from xbox.webapi.api.provider.catalog.models import Image
-from xbox.webapi.api.provider.smartglass.models import (
+from pythonxbox.api.provider.catalog.models import Image
+from pythonxbox.api.provider.smartglass.models import (
     PlaybackState,
     PowerState,
     VolumeDirection,
@@ -56,7 +56,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Xbox media_player from a config entry."""
 
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.status
 
     async_add_entities(
         [
