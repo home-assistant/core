@@ -34,20 +34,8 @@ async def setup_credentials(hass: HomeAssistant) -> None:
     """Fixture to setup credentials."""
     assert await async_setup_component(hass, "application_credentials", {})
     await async_import_client_credential(
-        hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET), "imported-cred"
+        hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET), "cloud"
     )
-
-
-@pytest.fixture(autouse=True)
-def mock_oauth2_implementation() -> Generator[AsyncMock]:
-    """Mock config entry oauth2 implementation."""
-    with patch(
-        "homeassistant.components.xbox.coordinator.async_get_config_entry_implementation",
-        return_value=AsyncMock(),
-    ) as mock_client:
-        client = mock_client.return_value
-
-        yield client
 
 
 @pytest.fixture(name="config_entry")
