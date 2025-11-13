@@ -13,20 +13,19 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelState,
     CodeFormat,
 )
-from homeassistant.const import CONF_NAME
+from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     CONF_ARM_HOME_MODE,
     CONF_PARTITION_NUMBER,
-    DOMAIN,
     SIGNAL_PANEL_MESSAGE,
     SUBENTRY_TYPE_PARTITION,
     SatelConfigEntry,
 )
+from .entity import SatelIntegraEntity
 
 ALARM_STATE_MAP = {
     AlarmState.TRIGGERED: AlarmControlPanelState.TRIGGERED,
@@ -59,53 +58,48 @@ async def async_setup_entry(
 
     for subentry in partition_subentries:
         partition_num: int = subentry.data[CONF_PARTITION_NUMBER]
-        zone_name: str = subentry.data[CONF_NAME]
         arm_home_mode: int = subentry.data[CONF_ARM_HOME_MODE]
 
         async_add_entities(
             [
                 SatelIntegraAlarmPanel(
                     controller,
-                    zone_name,
-                    arm_home_mode,
-                    partition_num,
                     config_entry.entry_id,
+                    subentry,
+                    partition_num,
+                    arm_home_mode,
                 )
             ],
             config_subentry_id=subentry.subentry_id,
         )
 
 
-class SatelIntegraAlarmPanel(AlarmControlPanelEntity):
+class SatelIntegraAlarmPanel(SatelIntegraEntity, AlarmControlPanelEntity):
     """Representation of an AlarmDecoder-based alarm panel."""
 
     _attr_code_format = CodeFormat.NUMBER
-    _attr_should_poll = False
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
     )
 
-    _attr_has_entity_name = True
-    _attr_name = None
-
     def __init__(
         self,
         controller: AsyncSatel,
-        device_name: str,
-        arm_home_mode: int,
-        partition_id: int,
         config_entry_id: str,
+        subentry: ConfigSubentry,
+        device_number: int,
+        arm_home_mode: int,
     ) -> None:
         """Initialize the alarm panel."""
-        self._attr_unique_id = f"{config_entry_id}_alarm_panel_{partition_id}"
-        self._arm_home_mode = arm_home_mode
-        self._partition_id = partition_id
-        self._satel = controller
-
-        self._attr_device_info = DeviceInfo(
-            name=device_name, identifiers={(DOMAIN, self._attr_unique_id)}
+        super().__init__(
+            controller,
+            config_entry_id,
+            subentry,
+            device_number,
         )
+
+        self._arm_home_mode = arm_home_mode
 
     async def async_added_to_hass(self) -> None:
         """Update alarm status and register callbacks for future updates."""
@@ -136,7 +130,7 @@ class SatelIntegraAlarmPanel(AlarmControlPanelEntity):
         for satel_state, ha_state in ALARM_STATE_MAP.items():
             if (
                 satel_state in self._satel.partition_states
-                and self._partition_id in self._satel.partition_states[satel_state]
+                and self._device_number in self._satel.partition_states[satel_state]
             ):
                 return ha_state
 
@@ -152,21 +146,21 @@ class SatelIntegraAlarmPanel(AlarmControlPanelEntity):
             self._attr_alarm_state == AlarmControlPanelState.TRIGGERED
         )
 
-        await self._satel.disarm(code, [self._partition_id])
+        await self._satel.disarm(code, [self._device_number])
 
         if clear_alarm_necessary:
             # Wait 1s before clearing the alarm
             await asyncio.sleep(1)
-            await self._satel.clear_alarm(code, [self._partition_id])
+            await self._satel.clear_alarm(code, [self._device_number])
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
 
         if code:
-            await self._satel.arm(code, [self._partition_id])
+            await self._satel.arm(code, [self._device_number])
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
 
         if code:
-            await self._satel.arm(code, [self._partition_id], self._arm_home_mode)
+            await self._satel.arm(code, [self._device_number], self._arm_home_mode)
