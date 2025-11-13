@@ -254,7 +254,6 @@ async def websocket_subscribe_user_data(
     connection.send_result(msg["id"])
 
 
-@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "frontend/set_system_data",
@@ -262,6 +261,7 @@ async def websocket_subscribe_user_data(
         vol.Required("value"): vol.Any(bool, str, int, float, dict, list, None),
     }
 )
+@websocket_api.require_admin
 @websocket_api.async_response
 @with_system_store
 async def websocket_set_system_data(
@@ -271,10 +271,6 @@ async def websocket_set_system_data(
     store: SystemStore,
 ) -> None:
     """Handle set system data command."""
-    if not connection.user.is_admin:
-        connection.send_error(msg["id"], "unauthorized", "Admin access required")
-        return
-
     await store.async_set_item(msg["key"], msg["value"])
     connection.send_result(msg["id"])
 
