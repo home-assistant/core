@@ -105,7 +105,11 @@ def is_installed(requirement_str: str) -> bool:
             if (
                 origin := Distribution.from_name(req.name).origin
             ) is not None and getattr(origin, "vcs_info", None) is not None:
-                return origin.vcs_info.commit_id[:7] in req.url
+                # If commit_id match or url match installed version
+                return (
+                    origin.vcs_info.commit_id[:7] in req.url
+                    or req.url == installed_version
+                )
             # If specifier is empty we cannot determine version so return False
             if not req.specifier:
                 return False

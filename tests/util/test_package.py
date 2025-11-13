@@ -410,12 +410,12 @@ def test_get_is_installed() -> None:
 @pytest.mark.parametrize(
     ("requirement_str", "expected"),
     [
-        # Tag match hash
+        # Tag matches version
         (
             "homeassistant@git+https://github.com/home-assistant/core@2025.5.0",
-            False,
+            True,
         ),
-        # Branch match hash
+        # Branch matches hash
         (
             "homeassistant@git+https://github.com/home-assistant/core@dev",
             False,
