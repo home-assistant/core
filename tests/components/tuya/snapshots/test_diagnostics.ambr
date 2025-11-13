@@ -10,8 +10,7 @@
     'function': dict({
       'null': dict({
         'type': 'Raw',
-        'value': dict({
-        }),
+        'value': '{}',
       }),
     }),
     'home_assistant': dict({
@@ -175,14 +174,7 @@
     'status_range': dict({
       'null': dict({
         'type': 'Enum',
-        'value': dict({
-          'range': list([
-            'normal',
-            'alarm',
-            'fault',
-            'others',
-          ]),
-        }),
+        'value': '{"range":["normal","alarm","fault","others"]}',
       }),
     }),
     'sub': False,
