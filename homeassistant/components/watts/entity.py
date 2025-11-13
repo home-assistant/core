@@ -24,15 +24,13 @@ class WattsVisionEntity(CoordinatorEntity[WattsVisionDeviceCoordinator]):
         super().__init__(coordinator, context=device_id)
         self.device_id = device_id
         self._attr_unique_id = device_id
-
-        if self.device:
-            self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, self.device_id)},
-                name=self.device.device_name,
-                manufacturer="Watts",
-                model=f"Vision+ {self.device.device_type}",
-                suggested_area=self.device.room_name,
-            )
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self.device_id)},
+            name=self.device.device_name,
+            manufacturer="Watts",
+            model=f"Vision+ {self.device.device_type}",
+            suggested_area=self.device.room_name,
+        )
 
     @property
     def device(self) -> Device:

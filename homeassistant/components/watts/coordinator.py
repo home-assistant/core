@@ -26,7 +26,7 @@ from .const import DOMAIN, FAST_POLLING_INTERVAL, UPDATE_INTERVAL
 if TYPE_CHECKING:
     from . import WattsVisionRuntimeData
 
-type WattsVisionConfigEntry = ConfigEntry[WattsVisionRuntimeData]
+    type WattsVisionConfigEntry = ConfigEntry[WattsVisionRuntimeData]
 
 _LOGGER = logging.getLogger(__name__)
 
