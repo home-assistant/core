@@ -59,10 +59,7 @@ rules:
   docs-troubleshooting: done
   docs-use-cases: todo
   dynamic-devices: todo
-  entity-category:
-    status: exempt
-    comment: |
-      No diagnostic information available.
+  entity-category: done
   entity-device-class: done
   entity-disabled-by-default:
     status: exempt

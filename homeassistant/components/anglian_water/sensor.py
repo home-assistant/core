@@ -9,6 +9,7 @@ from enum import StrEnum
 from pyanglianwater.meter import SmartMeter
 
 from homeassistant.components.sensor import (
+    EntityCategory,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -48,6 +49,7 @@ ENTITY_DESCRIPTIONS: tuple[AnglianWaterSensorEntityDescription, ...] = (
         value_fn=lambda entity: entity.get_yesterday_consumption,
         state_class=SensorStateClass.TOTAL,
         translation_key=AnglianWaterSensor.YESTERDAY_CONSUMPTION,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     AnglianWaterSensorEntityDescription(
         key=AnglianWaterSensor.LATEST_READING,
@@ -56,22 +58,23 @@ ENTITY_DESCRIPTIONS: tuple[AnglianWaterSensorEntityDescription, ...] = (
         value_fn=lambda entity: entity.latest_read,
         state_class=SensorStateClass.TOTAL_INCREASING,
         translation_key=AnglianWaterSensor.LATEST_READING,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     AnglianWaterSensorEntityDescription(
         key=AnglianWaterSensor.YESTERDAY_WATER_COST,
         native_unit_of_measurement="GBP",
         device_class=SensorDeviceClass.MONETARY,
         value_fn=lambda entity: entity.yesterday_water_cost,
-        state_class=SensorStateClass.TOTAL,
         translation_key=AnglianWaterSensor.YESTERDAY_WATER_COST,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     AnglianWaterSensorEntityDescription(
         key=AnglianWaterSensor.YESTERDAY_SEWERAGE_COST,
         native_unit_of_measurement="GBP",
         device_class=SensorDeviceClass.MONETARY,
         value_fn=lambda entity: entity.yesterday_sewerage_cost,
-        state_class=SensorStateClass.TOTAL,
         translation_key=AnglianWaterSensor.YESTERDAY_SEWERAGE_COST,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
 
