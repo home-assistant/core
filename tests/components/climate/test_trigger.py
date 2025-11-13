@@ -85,7 +85,7 @@ async def test_climate_state_trigger_behavior_any(
     entity_id: str,
     entities_in_target: int,
     trigger: str,
-    initial_state: str,
+    initial_state: str | None,
     states: list[tuple[str, int]],
 ) -> None:
     """Test that the climate state trigger fires when any climate state changes to a specific state."""
@@ -140,8 +140,8 @@ async def test_climate_state_attribute_trigger_behavior_any(
     entity_id: str,
     entities_in_target: int,
     trigger: str,
-    initial_state: str,
-    states: list[tuple[str, int]],
+    initial_state: tuple[str | None, dict],
+    states: list[tuple[tuple[str, dict], int]],
 ) -> None:
     """Test that the climate state trigger fires when any climate state changes to a specific state."""
     await async_setup_component(hass, "climate", {})
@@ -189,7 +189,7 @@ async def test_climate_state_trigger_behavior_first(
     entities_in_target: int,
     entity_id: str,
     trigger: str,
-    initial_state: str,
+    initial_state: str | None,
     states: list[tuple[str, int, list[str]]],
 ) -> None:
     """Test that the climate state trigger fires when the first climate changes to a specific state."""
@@ -243,8 +243,8 @@ async def test_climate_state_attribute_trigger_behavior_first(
     entity_id: str,
     entities_in_target: int,
     trigger: str,
-    initial_state: str,
-    states: list[tuple[str, int]],
+    initial_state: tuple[str | None, dict],
+    states: list[tuple[tuple[str, dict], int]],
 ) -> None:
     """Test that the climate state trigger fires when any climate state changes to a specific state."""
     await async_setup_component(hass, "climate", {})
@@ -291,7 +291,7 @@ async def test_climate_state_trigger_behavior_last(
     entities_in_target: int,
     entity_id: str,
     trigger: str,
-    initial_state: str,
+    initial_state: str | None,
     states: list[tuple[str, int]],
 ) -> None:
     """Test that the climate state trigger fires when the last climate changes to a specific state."""
@@ -344,8 +344,8 @@ async def test_climate_state_attribute_trigger_behavior_last(
     entity_id: str,
     entities_in_target: int,
     trigger: str,
-    initial_state: str,
-    states: list[tuple[str, int]],
+    initial_state: tuple[str | None, dict],
+    states: list[tuple[tuple[str, dict], int]],
 ) -> None:
     """Test that the climate state trigger fires when any climate state changes to a specific state."""
     await async_setup_component(hass, "climate", {})

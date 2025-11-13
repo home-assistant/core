@@ -101,7 +101,7 @@ def parametrize_target_entities(domain: str) -> list[tuple[dict, str, int]]:
 
 def parametrize_trigger_states(
     trigger: str, target_state: str, other_state: str
-) -> tuple[str, list[tuple[str, int]]]:
+) -> list[tuple[str, str | None, list[tuple[str, int]]]]:
     """Parametrize states and expected service call counts.
 
     Returns a list of tuples with (trigger, initial_state, list of states),
@@ -142,11 +142,15 @@ def parametrize_trigger_states(
 
 def parametrize_attribute_trigger_states(
     trigger: str, state: str, attribute: str, target_state: str, other_state: str
-) -> tuple[str, list[tuple[str, int]]]:
+) -> list[
+    tuple[str, tuple[str | None, dict], list[tuple[tuple[str | None, dict], int]]]
+]:
     """Parametrize states and expected service call counts.
 
     Returns a list of tuples with (trigger, initial_state, list of states),
     where states is a list of tuples (state to set, expected service call count).
+
+    The initial_state and state to set are tuples of (state, {attribute: value}).
     """
     return [
         # Initial state None
@@ -172,10 +176,10 @@ def parametrize_attribute_trigger_states(
         # Initial state attribute different from target state
         (
             trigger,
-            (state, {}),
+            (state, {attribute: other_state}),
             [
                 ((state, {attribute: target_state}), 1),
-                ((state, {attribute: other_state}), 0),
+                ((state, {}), 0),
                 ((state, {attribute: target_state}), 1),
             ],
         ),

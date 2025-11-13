@@ -82,7 +82,7 @@ async def test_light_state_trigger_behavior_any(
     entity_id: str,
     entities_in_target: int,
     trigger: str,
-    initial_state: str,
+    initial_state: str | None,
     states: list[tuple[str, int]],
 ) -> None:
     """Test that the light state trigger fires when any light state changes to a specific state."""
@@ -132,7 +132,7 @@ async def test_light_state_trigger_behavior_first(
     entity_id: str,
     entities_in_target: int,
     trigger: str,
-    initial_state: str,
+    initial_state: str | None,
     states: list[tuple[str, int, list[str]]],
 ) -> None:
     """Test that the light state trigger fires when the first light changes to a specific state."""
@@ -181,7 +181,7 @@ async def test_light_state_trigger_behavior_last(
     entity_id: str,
     entities_in_target: int,
     trigger: str,
-    initial_state: str,
+    initial_state: str | None,
     states: list[tuple[str, int]],
 ) -> None:
     """Test that the light state trigger fires when the last light changes to a specific state."""
