@@ -1,13 +1,27 @@
 {
   "common": {
-    "low_voltage": "Low voltage",
     "high_voltage": "High voltage",
-    "starter_voltage": "Starter voltage",
-    "midpoint_voltage": "Midpoint voltage"
+    "low_voltage": "Low voltage",
+    "midpoint_voltage": "Midpoint voltage",
+    "starter_voltage": "Starter voltage"
   },
   "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "invalid_access_token": "Invalid encryption key for instant readout",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+    },
     "flow_title": "{title}",
     "step": {
+      "access_token": {
+        "data": {
+          "access_token": "The encryption key for instant readout of the Victron device."
+        },
+        "data_description": {
+          "access_token": "The encryption key for instant readout may be found in the VictronConnect app under Settings > Product info > Instant readout details > Encryption data > Encryption Key."
+        },
+        "title": "{title}"
+      },
       "user": {
         "data": {
           "address": "The Bluetooth address of the Victron device."
@@ -15,21 +29,7 @@
         "data_description": {
           "address": "This Bluetooth address is automatically discovered. You may view a device's Bluetooth address in the VictronConnect app under Settings > Product info > Instant readout details > Encryption data > MAC Address."
         }
-      },
-      "access_token": {
-        "title": "{title}",
-        "data": {
-          "access_token": "The encryption key for instant readout of the Victron device."
-        },
-        "data_description": {
-          "access_token": "The encryption key for instant readout may be found in the VictronConnect app under Settings > Product info > Instant readout details > Encryption data > Encryption Key."
-        }
       }
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "invalid_access_token": "Invalid encryption key for instant readout",
-      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     }
   },
   "entity": {
@@ -51,28 +51,20 @@
       "alarm": {
         "name": "Alarm",
         "state": {
-          "low_voltage": "Undervoltage",
+          "bms_lockout": "Battery management system lockout",
+          "dc_ripple": "DC ripple",
+          "high_starter_voltage": "High starter voltage",
+          "high_temperature": "High temperature",
+          "high_v_ac_out": "AC-out overvoltage",
           "high_voltage": "Overvoltage",
           "low_soc": "Low state of charge",
           "low_starter_voltage": "Low starter voltage",
-          "high_starter_voltage": "High starter voltage",
           "low_temperature": "Low temperature",
-          "high_temperature": "High temperature",
+          "low_v_ac_out": "AC-out undervoltage",
+          "low_voltage": "Undervoltage",
           "mid_voltage": "[%key:component::victron_ble::common::midpoint_voltage%]",
           "overload": "Overload",
-          "dc_ripple": "DC ripple",
-          "low_v_ac_out": "AC-out undervoltage",
-          "high_v_ac_out": "AC-out overvoltage",
-          "short_circuit": "Short circuit",
-          "bms_lockout": "Battery management system lockout"
-        }
-      },
-      "aux_mode": {
-        "name": "Aux mode",
-        "state": {
-          "starter_voltage": "[%key:component::victron_ble::common::starter_voltage%]",
-          "midpoint_voltage": "[%key:component::victron_ble::common::midpoint_voltage%]",
-          "temperature": "Temperature sensor"
+          "short_circuit": "Short circuit"
         }
       },
       "balancer_status": {
@@ -95,92 +87,79 @@
       "cell_voltage": {
         "name": "Cell {cell} voltage"
       },
-      "charge_state": {
-        "name": "Charge state"
-      },
       "charger_error": {
         "name": "Charger error",
         "state": {
-          "no_error": "No error",
-          "temperature_battery_high": "Battery temperature too high",
-          "voltage_high": "Battery overvoltage",
-          "remote_temperature_a": "Remote temperature sensor failure (auto-reset)",
-          "remote_temperature_b": "[%key:component::victron_ble::entity::sensor::charger_error::state::remote_temperature_a%]",
-          "remote_temperature_c": "Remote temperature sensor failure (not auto-reset)",
-          "remote_battery_a": "Remote battery voltage sense failure",
-          "remote_battery_b": "[%key:component::victron_ble::entity::sensor::charger_error::state::remote_battery_a%]",
-          "remote_battery_c": "[%key:component::victron_ble::entity::sensor::charger_error::state::remote_battery_a%]",
-          "high_ripple": "Battery high ripple voltage",
-          "temperature_battery_low": "Battery temperature too low",
-          "temperature_charger": "Charger temperature too high",
-          "over_current": "Charger overcurrent",
+          "bms": "BMS connection lost",
           "bulk_time": "Bulk time limit exceeded",
-          "current_sensor": "Current sensor issue",
-          "internal_temperature_a": "Internal temperature sensor failure",
-          "internal_temperature_b": "[%key:component::victron_ble::entity::sensor::charger_error::state::internal_temperature_a%]",
-          "fan": "Fan failure",
-          "overheated": "Terminals overheated",
-          "short_circuit": "Charger short circuit",
+          "calibration_lost": "Factory calibration data lost",
+          "communication": "Communication warning",
           "converter_issue": "Converter issue",
-          "over_charge": "Overcharge protection",
-          "input_voltage": "Input overvoltage",
+          "cpu_temperature": "CPU temperature too high",
+          "current_sensor": "Current sensor issue",
+          "fan": "Fan failure",
+          "firmware": "Invalid or incompatible firmware",
+          "high_ripple": "Battery high ripple voltage",
           "input_current": "Input overcurrent",
           "input_power": "Input overpower",
-          "input_shutdown_voltage": "Input shutdown (battery overvoltage)",
           "input_shutdown_current": "Input shutdown (current flow during off mode)",
           "input_shutdown_failure": "PV input failed to shutdown",
-          "inverter_shutdown_41": "Inverter shutdown (PV isolation)",
-          "inverter_shutdown_42": "[%key:component::victron_ble::entity::sensor::charger_error::state::inverter_shutdown_41%]",
-          "inverter_shutdown_43": "Inverter shutdown (Ground fault)",
-          "inverter_overload": "Inverter overload",
-          "inverter_temperature": "Inverter temperature too high",
-          "inverter_peak_current": "Inverter peak current",
-          "inverter_output_voltage_a": "Inverter output voltage",
-          "inverter_output_voltage_b": "[%key:component::victron_ble::entity::sensor::charger_error::state::inverter_output_voltage_a%]",
-          "inverter_self_test": "Inverter self-test failed",
+          "input_shutdown_voltage": "Input shutdown (battery overvoltage)",
+          "input_voltage": "Input overvoltage",
+          "internal_dc_voltage": "Internal DC voltage error",
+          "internal_supply": "Internal supply voltage error",
+          "internal_temperature": "Internal temperature sensor failure",
           "inverter_ac": "Inverter AC voltage on output",
-          "communication": "Communication warning",
-          "synchronisation": "Synchronized charging device configuration issue",
-          "bms": "BMS connection lost",
+          "inverter_output_voltage": "Inverter output voltage",
+          "inverter_overload": "Inverter overload",
+          "inverter_peak_current": "Inverter peak current",
+          "inverter_self_test": "Inverter self-test failed",
+          "inverter_shutdown_ground_fault": "Inverter shutdown (Ground fault)",
+          "inverter_shutdown_pv_isolation": "Inverter shutdown (PV isolation)",
+          "inverter_temperature": "Inverter temperature too high",
           "network": "Network misconfigured",
+          "no_error": "No error",
+          "over_charge": "Overcharge protection",
+          "over_current": "Charger overcurrent",
+          "overheated": "Terminals overheated",
           "pv_input_shutdown": "PV input shutdown",
-          "cpu_temperature": "CPU temperature too high",
-          "calibration_lost": "Factory calibration data lost",
-          "firmware": "Invalid or incompatible firmware",
-          "settings": "Settings data lost",
-          "tester_fail": "Tester fail",
-          "internal_dc_voltage_a": "Internal DC voltage error",
-          "internal_dc_voltage_b": "[%key:component::victron_ble::entity::sensor::charger_error::state::internal_dc_voltage_a%]",
+          "remote_battery": "Remote battery voltage sense failure",
+          "remote_temperature_auto_reset": "Remote temperature sensor failure (auto-reset)",
+          "remote_temperature_not_auto_reset": "Remote temperature sensor failure (not auto-reset)",
           "self_test": "PV residual current sensor self-test failure",
-          "internal_supply": "Internal supply voltage error"
+          "settings": "Settings data lost",
+          "short_circuit": "Charger short circuit",
+          "synchronisation": "Synchronized charging device configuration issue",
+          "temperature_battery_high": "Battery temperature too high",
+          "temperature_battery_low": "Battery temperature too low",
+          "temperature_charger": "Charger temperature too high",
+          "tester_fail": "Tester fail",
+          "voltage_high": "Battery overvoltage"
         }
       },
-      "consumped_ampere_hours": {
+      "consumed_ampere_hours": {
         "name": "Consumed ampere hours"
-      },
-      "current": {
-        "name": "[%key:component::sensor::entity_component::current::name%]"
       },
       "device_state": {
         "name": "Device state",
         "state": {
-          "off": "[%key:common::state::off%]",
-          "low_power": "Low power",
-          "fault": "Fault",
-          "bulk": "Bulk",
           "absorption": "Absorption",
-          "float": "Float",
-          "storage": "Storage",
-          "equalize_manual": "Equalize (manual)",
-          "inverting": "Inverting",
-          "power_supply": "Power supply",
-          "starting_up": "Starting up",
-          "repeated_absorption": "Repeated absorption",
-          "recondition": "Recondition",
-          "battery_safe": "Battery safe",
           "active": "Active",
+          "battery_safe": "Battery safe",
+          "bulk": "Bulk",
+          "equalize_manual": "Equalize (manual)",
           "external_control": "External control",
-          "not_available": "Not available"
+          "fault": "Fault",
+          "float": "Float",
+          "inverting": "Inverting",
+          "low_power": "Low power",
+          "not_available": "Not available",
+          "off": "[%key:common::state::off%]",
+          "power_supply": "Power supply",
+          "recondition": "Recondition",
+          "repeated_absorption": "Repeated absorption",
+          "starting_up": "Starting up",
+          "storage": "Storage"
         }
       },
       "error_code": {
@@ -195,23 +174,23 @@
       "meter_type": {
         "name": "Meter type",
         "state": {
-          "solar_charger": "Solar charger",
-          "wind_charger": "Wind charger",
-          "shaft_generator": "Shaft generator",
-          "alternator": "Alternator",
-          "fuel_cell": "Fuel cell",
-          "water_generator": "Water generator",
-          "dc_dc_charger": "DC-DC charger",
           "ac_charger": "AC charger",
-          "generic_source": "Generic source",
-          "generic_load": "Generic load",
+          "alternator": "Alternator",
+          "bilge_pump": "Bilge pump",
+          "dc_dc_charger": "DC-DC charger",
+          "dc_system": "DC system",
           "electric_drive": "Electric drive",
           "fridge": "Fridge",
-          "water_pump": "Water pump",
-          "bilge_pump": "Bilge pump",
-          "dc_system": "DC system",
+          "fuel_cell": "Fuel cell",
+          "generic_load": "Generic load",
+          "generic_source": "Generic source",
           "inverter": "Inverter",
-          "water_heater": "Water heater"
+          "shaft_generator": "Shaft generator",
+          "solar_charger": "Solar charger",
+          "water_generator": "Water generator",
+          "water_heater": "Water heater",
+          "water_pump": "Water pump",
+          "wind_charger": "Wind charger"
         }
       },
       "midpoint_voltage": {
@@ -220,16 +199,16 @@
       "off_reason": {
         "name": "Off reason",
         "state": {
-          "no_reason": "No reason",
-          "no_input_power": "No input power",
-          "switched_off_switch": "Switched off by switch",
-          "switched_off_register": "Switched off by register",
-          "remote_input": "Remote input",
-          "protection_active": "Protection active",
-          "pay_as_you_go_out_of_credit": "Pay-as-you-go out of credit",
+          "analysing_input_voltage": "Analyzing input voltage",
           "bms": "Battery management system",
           "engine_shutdown": "Engine shutdown",
-          "analysing_input_voltage": "Analyzing input voltage"
+          "no_input_power": "No input power",
+          "no_reason": "No reason",
+          "pay_as_you_go_out_of_credit": "Pay-as-you-go out of credit",
+          "protection_active": "Protection active",
+          "remote_input": "Remote input",
+          "switched_off_register": "Switched off by register",
+          "switched_off_switch": "Switched off by switch"
         }
       },
       "output_voltage": {
@@ -243,12 +222,6 @@
       },
       "starter_voltage": {
         "name": "[%key:component::victron_ble::common::starter_voltage%]"
-      },
-      "temperature": {
-        "name": "[%key:component::sensor::entity_component::temperature::name%]"
-      },
-      "voltage": {
-        "name": "[%key:component::sensor::entity_component::voltage::name%]"
       },
       "warning": {
         "name": "Warning"

@@ -1,6 +1,9 @@
 """Sensor platform for Victron BLE."""
 
+from collections.abc import Callable
+from dataclasses import dataclass
 import logging
+from typing import Any
 
 from sensor_state_data import DeviceKey
 from victron_ble_ha_parser import Keys, Units
@@ -61,20 +64,16 @@ CHARGER_ERROR_OPTIONS = [
     "no_error",
     "temperature_battery_high",
     "voltage_high",
-    "remote_temperature_a",
-    "remote_temperature_b",
-    "remote_temperature_c",
-    "remote_battery_a",
-    "remote_battery_b",
-    "remote_battery_c",
+    "remote_temperature_auto_reset",
+    "remote_temperature_not_auto_reset",
+    "remote_battery",
     "high_ripple",
     "temperature_battery_low",
     "temperature_charger",
     "over_current",
     "bulk_time",
     "current_sensor",
-    "internal_temperature_a",
-    "internal_temperature_b",
+    "internal_temperature",
     "fan",
     "overheated",
     "short_circuit",
@@ -86,14 +85,12 @@ CHARGER_ERROR_OPTIONS = [
     "input_shutdown_voltage",
     "input_shutdown_current",
     "input_shutdown_failure",
-    "inverter_shutdown_41",
-    "inverter_shutdown_42",
-    "inverter_shutdown_43",
+    "inverter_shutdown_pv_isolation",
+    "inverter_shutdown_ground_fault",
     "inverter_overload",
     "inverter_temperature",
     "inverter_peak_current",
-    "inverter_output_voltage_a",
-    "inverter_output_voltage_b",
+    "inverter_output_voltage",
     "inverter_self_test",
     "inverter_ac",
     "communication",
@@ -106,11 +103,52 @@ CHARGER_ERROR_OPTIONS = [
     "firmware",
     "settings",
     "tester_fail",
-    "internal_dc_voltage_a",
-    "internal_dc_voltage_b",
+    "internal_dc_voltage",
     "self_test",
     "internal_supply",
 ]
+
+
+def error_to_state(value: float | str | None) -> str | None:
+    """Convert error code to state string."""
+    value_map: dict[Any, str] = {
+        "internal_supply_a": "internal_supply",
+        "internal_supply_b": "internal_supply",
+        "internal_supply_c": "internal_supply",
+        "internal_supply_d": "internal_supply",
+        "inverter_shutdown_41": "inverter_shutdown_pv_isolation",
+        "inverter_shutdown_42": "inverter_shutdown_pv_isolation",
+        "inverter_shutdown_43": "inverter_shutdown_ground_fault",
+        "internal_temperature_a": "internal_temperature",
+        "internal_temperature_b": "internal_temperature",
+        "inverter_output_voltage_a": "inverter_output_voltage",
+        "inverter_output_voltage_b": "inverter_output_voltage",
+        "internal_dc_voltage_a": "internal_dc_voltage",
+        "internal_dc_voltage_b": "internal_dc_voltage",
+        "remote_temperature_a": "remote_temperature_auto_reset",
+        "remote_temperature_b": "remote_temperature_auto_reset",
+        "remote_temperature_c": "remote_temperature_not_auto_reset",
+        "remote_battery_a": "remote_battery",
+        "remote_battery_b": "remote_battery",
+        "remote_battery_c": "remote_battery",
+        "pv_input_shutdown_80": "pv_input_shutdown",
+        "pv_input_shutdown_81": "pv_input_shutdown",
+        "pv_input_shutdown_82": "pv_input_shutdown",
+        "pv_input_shutdown_83": "pv_input_shutdown",
+        "pv_input_shutdown_84": "pv_input_shutdown",
+        "pv_input_shutdown_85": "pv_input_shutdown",
+        "pv_input_shutdown_86": "pv_input_shutdown",
+        "pv_input_shutdown_87": "pv_input_shutdown",
+        "inverter_self_test_a": "inverter_self_test",
+        "inverter_self_test_b": "inverter_self_test",
+        "inverter_self_test_c": "inverter_self_test",
+        "network_a": "network",
+        "network_b": "network",
+        "network_c": "network",
+        "network_d": "network",
+    }
+    return value_map.get(value)
+
 
 DEVICE_STATE_OPTIONS = [
     "off",
@@ -135,112 +173,122 @@ DEVICE_STATE_OPTIONS = [
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
 
+
+@dataclass(frozen=True, kw_only=True)
+class VictronBLESensorEntityDescription(SensorEntityDescription):
+    """Describes Victron BLE sensor entity."""
+
+    value_fn: Callable[[float | int | str | None], float | int | str | None] = (
+        lambda x: x
+    )
+
+
 SENSOR_DESCRIPTIONS = {
-    Keys.AC_IN_POWER: SensorEntityDescription(
+    Keys.AC_IN_POWER: VictronBLESensorEntityDescription(
         key=Keys.AC_IN_POWER,
+        translation_key=Keys.AC_IN_POWER,
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    Keys.AC_IN_STATE: SensorEntityDescription(
+    Keys.AC_IN_STATE: VictronBLESensorEntityDescription(
         key=Keys.AC_IN_STATE,
         device_class=SensorDeviceClass.ENUM,
         translation_key="ac_in_state",
         options=AC_IN_OPTIONS,
     ),
-    Keys.AC_OUT_POWER: SensorEntityDescription(
+    Keys.AC_OUT_POWER: VictronBLESensorEntityDescription(
         key=Keys.AC_OUT_POWER,
+        translation_key=Keys.AC_OUT_POWER,
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    Keys.AC_OUT_STATE: SensorEntityDescription(
+    Keys.AC_OUT_STATE: VictronBLESensorEntityDescription(
         key=Keys.AC_OUT_STATE,
         device_class=SensorDeviceClass.ENUM,
         translation_key="device_state",
         options=DEVICE_STATE_OPTIONS,
     ),
-    Keys.ALARM: SensorEntityDescription(
+    Keys.ALARM: VictronBLESensorEntityDescription(
         key=Keys.ALARM,
         device_class=SensorDeviceClass.ENUM,
         translation_key="alarm",
         options=ALARM_OPTIONS,
     ),
-    Keys.AUX_MODE: SensorEntityDescription(
-        key=Keys.AUX_MODE,
-        device_class=SensorDeviceClass.ENUM,
-        translation_key="aux_mode",
-    ),
-    Keys.BALANCER_STATUS: SensorEntityDescription(
+    Keys.BALANCER_STATUS: VictronBLESensorEntityDescription(
         key=Keys.BALANCER_STATUS,
         device_class=SensorDeviceClass.ENUM,
         translation_key="balancer_status",
+        options=["balanced", "balancing", "imbalance"],
     ),
-    Keys.BATTERY_CURRENT: SensorEntityDescription(
+    Keys.BATTERY_CURRENT: VictronBLESensorEntityDescription(
         key=Keys.BATTERY_CURRENT,
+        translation_key=Keys.BATTERY_CURRENT,
         device_class=SensorDeviceClass.CURRENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    Keys.BATTERY_TEMPERATURE: SensorEntityDescription(
+    Keys.BATTERY_TEMPERATURE: VictronBLESensorEntityDescription(
         key=Keys.BATTERY_TEMPERATURE,
+        translation_key=Keys.BATTERY_TEMPERATURE,
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    Keys.BATTERY_VOLTAGE: SensorEntityDescription(
+    Keys.BATTERY_VOLTAGE: VictronBLESensorEntityDescription(
         key=Keys.BATTERY_VOLTAGE,
+        translation_key=Keys.BATTERY_VOLTAGE,
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    Keys.CHARGE_STATE: SensorEntityDescription(
-        key=Keys.CHARGE_STATE,
-        device_class=SensorDeviceClass.ENUM,
-        translation_key="device_state",
-    ),
-    Keys.CHARGER_ERROR: SensorEntityDescription(
+    Keys.CHARGER_ERROR: VictronBLESensorEntityDescription(
         key=Keys.CHARGER_ERROR,
         device_class=SensorDeviceClass.ENUM,
         translation_key="charger_error",
         options=CHARGER_ERROR_OPTIONS,
+        value_fn=error_to_state,
     ),
-    Keys.CONSUMED_AMPERE_HOURS: SensorEntityDescription(
+    Keys.CONSUMED_AMPERE_HOURS: VictronBLESensorEntityDescription(
         key=Keys.CONSUMED_AMPERE_HOURS,
+        translation_key=Keys.CONSUMED_AMPERE_HOURS,
         native_unit_of_measurement=Units.ELECTRIC_CURRENT_FLOW_AMPERE_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    Keys.CURRENT: SensorEntityDescription(
+    Keys.CURRENT: VictronBLESensorEntityDescription(
         key=Keys.CURRENT,
         device_class=SensorDeviceClass.CURRENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    Keys.DEVICE_STATE: SensorEntityDescription(
+    Keys.DEVICE_STATE: VictronBLESensorEntityDescription(
         key=Keys.DEVICE_STATE,
         device_class=SensorDeviceClass.ENUM,
         translation_key="device_state",
         options=DEVICE_STATE_OPTIONS,
     ),
-    Keys.ERROR_CODE: SensorEntityDescription(
+    Keys.ERROR_CODE: VictronBLESensorEntityDescription(
         key=Keys.ERROR_CODE,
         device_class=SensorDeviceClass.ENUM,
         translation_key="charger_error",
         options=CHARGER_ERROR_OPTIONS,
     ),
-    Keys.EXTERNAL_DEVICE_LOAD: SensorEntityDescription(
+    Keys.EXTERNAL_DEVICE_LOAD: VictronBLESensorEntityDescription(
         key=Keys.EXTERNAL_DEVICE_LOAD,
+        translation_key=Keys.EXTERNAL_DEVICE_LOAD,
         device_class=SensorDeviceClass.CURRENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    Keys.INPUT_VOLTAGE: SensorEntityDescription(
+    Keys.INPUT_VOLTAGE: VictronBLESensorEntityDescription(
         key=Keys.INPUT_VOLTAGE,
+        translation_key=Keys.INPUT_VOLTAGE,
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    Keys.METER_TYPE: SensorEntityDescription(
+    Keys.METER_TYPE: VictronBLESensorEntityDescription(
         key=Keys.METER_TYPE,
         device_class=SensorDeviceClass.ENUM,
         translation_key="meter_type",
@@ -264,13 +312,14 @@ SENSOR_DESCRIPTIONS = {
             "water_heater",
         ],
     ),
-    Keys.MIDPOINT_VOLTAGE: SensorEntityDescription(
+    Keys.MIDPOINT_VOLTAGE: VictronBLESensorEntityDescription(
         key=Keys.MIDPOINT_VOLTAGE,
+        translation_key=Keys.MIDPOINT_VOLTAGE,
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    Keys.OFF_REASON: SensorEntityDescription(
+    Keys.OFF_REASON: VictronBLESensorEntityDescription(
         key=Keys.OFF_REASON,
         device_class=SensorDeviceClass.ENUM,
         translation_key="off_reason",
@@ -287,62 +336,66 @@ SENSOR_DESCRIPTIONS = {
             "analysing_input_voltage",
         ],
     ),
-    Keys.OUTPUT_VOLTAGE: SensorEntityDescription(
+    Keys.OUTPUT_VOLTAGE: VictronBLESensorEntityDescription(
         key=Keys.OUTPUT_VOLTAGE,
+        translation_key=Keys.OUTPUT_VOLTAGE,
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    Keys.REMAINING_MINUTES: SensorEntityDescription(
+    Keys.REMAINING_MINUTES: VictronBLESensorEntityDescription(
         key=Keys.REMAINING_MINUTES,
+        translation_key=Keys.REMAINING_MINUTES,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SensorDeviceClass.SIGNAL_STRENGTH: SensorEntityDescription(
+    SensorDeviceClass.SIGNAL_STRENGTH: VictronBLESensorEntityDescription(
         key=SensorDeviceClass.SIGNAL_STRENGTH.value,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    Keys.SOLAR_POWER: SensorEntityDescription(
+    Keys.SOLAR_POWER: VictronBLESensorEntityDescription(
         key=Keys.SOLAR_POWER,
+        translation_key=Keys.SOLAR_POWER,
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    Keys.STARTER_VOLTAGE: SensorEntityDescription(
+    Keys.STARTER_VOLTAGE: VictronBLESensorEntityDescription(
         key=Keys.STARTER_VOLTAGE,
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    Keys.STATE_OF_CHARGE: SensorEntityDescription(
+    Keys.STATE_OF_CHARGE: VictronBLESensorEntityDescription(
         key=Keys.STATE_OF_CHARGE,
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    Keys.TEMPERATURE: SensorEntityDescription(
+    Keys.TEMPERATURE: VictronBLESensorEntityDescription(
         key=Keys.TEMPERATURE,
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    Keys.VOLTAGE: SensorEntityDescription(
+    Keys.VOLTAGE: VictronBLESensorEntityDescription(
         key=Keys.VOLTAGE,
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    Keys.WARNING: SensorEntityDescription(
+    Keys.WARNING: VictronBLESensorEntityDescription(
         key=Keys.WARNING,
         device_class=SensorDeviceClass.ENUM,
         translation_key="alarm",
         options=ALARM_OPTIONS,
     ),
-    Keys.YIELD_TODAY: SensorEntityDescription(
+    Keys.YIELD_TODAY: VictronBLESensorEntityDescription(
         key=Keys.YIELD_TODAY,
+        translation_key=Keys.YIELD_TODAY,
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -351,8 +404,9 @@ SENSOR_DESCRIPTIONS = {
 
 for i in range(1, 8):
     cell_key = getattr(Keys, f"CELL_{i}_VOLTAGE")
-    SENSOR_DESCRIPTIONS[cell_key] = SensorEntityDescription(
+    SENSOR_DESCRIPTIONS[cell_key] = VictronBLESensorEntityDescription(
         key=cell_key,
+        translation_key="cell_voltage",
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -387,11 +441,7 @@ def sensor_update_to_bluetooth_data_update(
             for device_key, sensor_values in sensor_update.entity_values.items()
             if device_key.key in SENSOR_DESCRIPTIONS
         },
-        entity_names={
-            _device_key_to_bluetooth_entity_key(device_key): sensor_values.name
-            for device_key, sensor_values in sensor_update.entity_values.items()
-            if device_key.key in SENSOR_DESCRIPTIONS
-        },
+        entity_names={},
     )
 
 
@@ -414,43 +464,11 @@ async def async_setup_entry(
 class VictronBLESensorEntity(PassiveBluetoothProcessorEntity, SensorEntity):
     """Representation of Victron BLE sensor."""
 
+    entity_description: VictronBLESensorEntityDescription
+
     @property
     def native_value(self) -> float | int | str | None:
         """Return the state of the sensor."""
         value = self.processor.entity_data.get(self.entity_key)
 
-        # Remap error codes with identical strings to single values
-        if self.entity_key in (Keys.CHARGER_ERROR, Keys.ERROR_CODE):
-            if value in (
-                "internal_supply_a",
-                "internal_supply_b",
-                "internal_supply_c",
-                "internal_supply_d",
-            ):
-                return "internal_supply"
-            if value in (
-                "inverter_self_test_a",
-                "inverter_self_test_b",
-                "inverter_self_test_c",
-            ):
-                return "inverter_self_test"
-            if value in (
-                "network_a",
-                "network_b",
-                "network_c",
-                "network_d",
-            ):
-                return "network"
-            if value in (
-                "pv_input_shutdown_80",
-                "pv_input_shutdown_81",
-                "pv_input_shutdown_82",
-                "pv_input_shutdown_83",
-                "pv_input_shutdown_84",
-                "pv_input_shutdown_85",
-                "pv_input_shutdown_86",
-                "pv_input_shutdown_87",
-            ):
-                return "pv_input_shutdown"
-
-        return value
+        return self.entity_description.value_fn(value)
