@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from functools import wraps
-from typing import Any, TypedDict, cast
+from typing import Any
 
 import voluptuous as vol
 
@@ -13,15 +13,6 @@ from homeassistant.components.websocket_api import ActiveConnection
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.storage import Store
 from homeassistant.util.hass_dict import HassKey
-
-from .const import SYSTEM_DATA_DEFAULT_PANEL
-
-
-class SystemStorageData(TypedDict, total=False):
-    """System storage data structure."""
-
-    default_panel: str | None
-
 
 DATA_STORAGE: HassKey[dict[str, UserStore]] = HassKey("frontend_storage")
 DATA_SYSTEM_STORAGE: HassKey[SystemStore] = HassKey("frontend_system_storage")
@@ -111,7 +102,7 @@ class SystemStore:
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the system store."""
         self._store = _SystemStore(hass)
-        self.data: SystemStorageData = {}
+        self.data: dict[str, Any] = {}
         self.subscriptions: dict[str | None, list[Callable[[], None]]] = {}
 
     async def async_load(self) -> None:
@@ -120,7 +111,7 @@ class SystemStore:
 
     async def async_set_item(self, key: str, value: Any) -> None:
         """Set an item and save the store."""
-        cast(dict[str, Any], self.data)[key] = value
+        self.data[key] = value
         await self._store.async_save(self.data)
         for cb in self.subscriptions.get(None, []):
             cb()
@@ -141,7 +132,7 @@ class SystemStore:
         return unsubscribe
 
 
-class _SystemStore(Store[SystemStorageData]):
+class _SystemStore(Store[dict[str, Any]]):
     """System store for frontend data."""
 
     def __init__(self, hass: HomeAssistant) -> None:
@@ -266,7 +257,8 @@ async def websocket_subscribe_user_data(
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "frontend/set_system_data",
-        vol.Required(SYSTEM_DATA_DEFAULT_PANEL): vol.Any(str, None),
+        vol.Required("key"): str,
+        vol.Required("value"): vol.Any(bool, str, int, float, dict, list, None),
     }
 )
 @websocket_api.async_response
@@ -282,7 +274,7 @@ async def websocket_set_system_data(
         connection.send_error(msg["id"], "unauthorized", "Admin access required")
         return
 
-    await store.async_set_item("default_panel", msg[SYSTEM_DATA_DEFAULT_PANEL])
+    await store.async_set_item(msg["key"], msg["value"])
     connection.send_result(msg["id"])
 
 
