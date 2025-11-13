@@ -254,6 +254,7 @@ async def websocket_subscribe_user_data(
     connection.send_result(msg["id"])
 
 
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "frontend/set_system_data",
