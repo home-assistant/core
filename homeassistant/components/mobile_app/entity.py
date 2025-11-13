@@ -109,16 +109,12 @@ class MobileAppEntity(RestoreEntity):
     def _apply_pending_update(self) -> None:
         """Restore any pending update for this entity."""
         entity_type = self._config[ATTR_SENSOR_TYPE]
-        pending_updates = self.hass.data[DOMAIN][entity_type].get(
-            DATA_PENDING_UPDATES, {}
-        )
-        if self._attr_unique_id in pending_updates:
+        pending_updates = self.hass.data[DOMAIN][entity_type][DATA_PENDING_UPDATES]
+        if update := pending_updates.pop(self._attr_unique_id, None):
             _LOGGER.debug(
                 "Applying pending update for %s: %s",
                 self._attr_unique_id,
-                pending_updates[self._attr_unique_id],
+                update,
             )
             # Apply the pending update
-            self._config.update(pending_updates[self._attr_unique_id])
-            # Remove from pending updates
-            del pending_updates[self._attr_unique_id]
+            self._config.update(update)

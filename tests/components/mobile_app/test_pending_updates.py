@@ -5,7 +5,6 @@ from typing import Any
 
 from aiohttp.test_utils import TestClient
 
-from homeassistant.components.mobile_app.const import DOMAIN
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -17,7 +16,7 @@ async def test_pending_update_stored_when_entity_disabled(
     create_registrations: tuple[dict[str, Any], dict[str, Any]],
     webhook_client: TestClient,
 ) -> None:
-    """Test that updates are stored as pending when entity is disabled."""
+    """Test that updates sent while entity is disabled are applied when re-enabled."""
     webhook_id = create_registrations[1]["webhook_id"]
     webhook_url = f"/api/webhook/{webhook_id}"
 
@@ -49,7 +48,7 @@ async def test_pending_update_stored_when_entity_disabled(
     )
     await hass.async_block_till_done()
 
-    # Try to re-register with new state - should store as pending
+    # Try to re-register with new state while disabled
     reg_resp = await webhook_client.post(
         webhook_url,
         json={
@@ -67,11 +66,18 @@ async def test_pending_update_stored_when_entity_disabled(
     assert reg_resp.status == HTTPStatus.CREATED
     await hass.async_block_till_done()
 
-    # Verify the pending update is stored
-    unique_store_key = f"{webhook_id}_battery_state"
-    pending_updates = hass.data[DOMAIN]["sensor"]["pending_updates"]
-    assert unique_store_key in pending_updates
-    assert pending_updates[unique_store_key]["state"] == 75
+    # Re-enable the entity
+    entity_registry.async_update_entity("sensor.test_1_battery_state", disabled_by=None)
+
+    # Reload the config entry to trigger entity re-creation
+    config_entry = hass.config_entries.async_entries("mobile_app")[1]
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Verify the update sent while disabled was applied
+    entity = hass.states.get("sensor.test_1_battery_state")
+    assert entity is not None
+    assert entity.state == "75"
 
 
 async def test_pending_update_applied_when_entity_enabled(
@@ -80,7 +86,7 @@ async def test_pending_update_applied_when_entity_enabled(
     create_registrations: tuple[dict[str, Any], dict[str, Any]],
     webhook_client: TestClient,
 ) -> None:
-    """Test that pending updates are applied when entity is re-enabled."""
+    """Test that updates sent while disabled are applied when entity is re-enabled."""
     webhook_id = create_registrations[1]["webhook_id"]
     webhook_url = f"/api/webhook/{webhook_id}"
 
@@ -112,7 +118,7 @@ async def test_pending_update_applied_when_entity_enabled(
     )
     await hass.async_block_till_done()
 
-    # Send update while disabled - should store as pending
+    # Send update while disabled
     reg_resp = await webhook_client.post(
         webhook_url,
         json={
@@ -130,11 +136,6 @@ async def test_pending_update_applied_when_entity_enabled(
     assert reg_resp.status == HTTPStatus.CREATED
     await hass.async_block_till_done()
 
-    # Verify pending update exists
-    unique_store_key = f"{webhook_id}_battery_state"
-    pending_updates = hass.data[DOMAIN]["sensor"]["pending_updates"]
-    assert unique_store_key in pending_updates
-
     # Re-enable the entity
     entity_registry.async_update_entity("sensor.test_1_battery_state", disabled_by=None)
 
@@ -143,14 +144,10 @@ async def test_pending_update_applied_when_entity_enabled(
     await hass.config_entries.async_reload(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Verify the pending update was applied
+    # Verify the update sent while disabled was applied
     entity = hass.states.get("sensor.test_1_battery_state")
     assert entity is not None
     assert entity.state == "50"
-
-    # Verify pending update was removed
-    pending_updates = hass.data[DOMAIN]["sensor"]["pending_updates"]
-    assert unique_store_key not in pending_updates
 
 
 async def test_pending_update_with_attributes(
@@ -306,7 +303,7 @@ async def test_pending_update_not_stored_on_enabled_entities(
     create_registrations: tuple[dict[str, Any], dict[str, Any]],
     webhook_client: TestClient,
 ) -> None:
-    """Test that enabled entities receive updates immediately, not via pending."""
+    """Test that enabled entities receive updates immediately."""
     webhook_id = create_registrations[1]["webhook_id"]
     webhook_url = f"/api/webhook/{webhook_id}"
 
@@ -352,11 +349,6 @@ async def test_pending_update_not_stored_on_enabled_entities(
     entity = hass.states.get("sensor.test_1_battery_state")
     assert entity is not None
     assert entity.state == "50"
-
-    # Verify NO pending update was stored
-    unique_store_key = f"{webhook_id}_battery_state"
-    pending_updates = hass.data[DOMAIN]["sensor"]["pending_updates"]
-    assert unique_store_key not in pending_updates
 
 
 async def test_pending_update_fallback_to_restore_state(
@@ -427,7 +419,7 @@ async def test_multiple_pending_updates_for_different_sensors(
     create_registrations: tuple[dict[str, Any], dict[str, Any]],
     webhook_client: TestClient,
 ) -> None:
-    """Test that multiple pending updates can coexist for different sensors."""
+    """Test that multiple sensors can be updated while disabled and applied when re-enabled."""
     webhook_id = create_registrations[1]["webhook_id"]
     webhook_url = f"/api/webhook/{webhook_id}"
 
@@ -486,11 +478,6 @@ async def test_multiple_pending_updates_for_different_sensors(
     )
     await hass.async_block_till_done()
 
-    # Verify both pending updates exist
-    pending_updates = hass.data[DOMAIN]["sensor"]["pending_updates"]
-    assert f"{webhook_id}_battery_state" in pending_updates
-    assert f"{webhook_id}_battery_temp" in pending_updates
-
     # Re-enable both entities
     entity_registry.async_update_entity("sensor.test_1_battery_state", disabled_by=None)
     entity_registry.async_update_entity("sensor.test_1_battery_temp", disabled_by=None)
@@ -500,7 +487,7 @@ async def test_multiple_pending_updates_for_different_sensors(
     await hass.config_entries.async_reload(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Verify both updates were applied
+    # Verify both updates sent while disabled were applied
     battery_state = hass.states.get("sensor.test_1_battery_state")
     battery_temp = hass.states.get("sensor.test_1_battery_temp")
 
@@ -509,11 +496,6 @@ async def test_multiple_pending_updates_for_different_sensors(
     assert battery_temp is not None
     assert battery_temp.state == "30"
 
-    # Verify both pending updates were removed
-    pending_updates = hass.data[DOMAIN]["sensor"]["pending_updates"]
-    assert f"{webhook_id}_battery_state" not in pending_updates
-    assert f"{webhook_id}_battery_temp" not in pending_updates
-
 
 async def test_update_sensor_states_with_pending_updates(
     hass: HomeAssistant,
@@ -521,7 +503,7 @@ async def test_update_sensor_states_with_pending_updates(
     create_registrations: tuple[dict[str, Any], dict[str, Any]],
     webhook_client: TestClient,
 ) -> None:
-    """Test that update_sensor_states works with pending updates mechanism."""
+    """Test that update_sensor_states updates are applied when entity is re-enabled."""
     webhook_id = create_registrations[1]["webhook_id"]
     webhook_url = f"/api/webhook/{webhook_id}"
 
@@ -553,7 +535,7 @@ async def test_update_sensor_states_with_pending_updates(
     )
     await hass.async_block_till_done()
 
-    # Use update_sensor_states while disabled - should store as pending
+    # Use update_sensor_states while disabled
     resp = await webhook_client.post(
         webhook_url,
         json={
@@ -571,12 +553,6 @@ async def test_update_sensor_states_with_pending_updates(
     assert resp.status == HTTPStatus.OK
     await hass.async_block_till_done()
 
-    # Verify the pending update is stored
-    unique_store_key = f"{webhook_id}_battery_state"
-    pending_updates = hass.data[DOMAIN]["sensor"]["pending_updates"]
-    assert unique_store_key in pending_updates
-    assert pending_updates[unique_store_key]["state"] == 75
-
     # Re-enable the entity
     entity_registry.async_update_entity("sensor.test_1_battery_state", disabled_by=None)
 
@@ -585,14 +561,10 @@ async def test_update_sensor_states_with_pending_updates(
     await hass.config_entries.async_reload(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Verify the pending update was applied
+    # Verify the update sent while disabled was applied
     entity = hass.states.get("sensor.test_1_battery_state")
     assert entity is not None
     assert entity.state == "75"
-
-    # Verify pending update was removed
-    pending_updates = hass.data[DOMAIN]["sensor"]["pending_updates"]
-    assert unique_store_key not in pending_updates
 
 
 async def test_update_sensor_states_always_stores_pending(
@@ -600,7 +572,7 @@ async def test_update_sensor_states_always_stores_pending(
     create_registrations: tuple[dict[str, Any], dict[str, Any]],
     webhook_client: TestClient,
 ) -> None:
-    """Test that update_sensor_states always stores data in pending updates."""
+    """Test that update_sensor_states applies updates to enabled entities."""
     webhook_id = create_registrations[1]["webhook_id"]
     webhook_url = f"/api/webhook/{webhook_id}"
 
@@ -648,12 +620,6 @@ async def test_update_sensor_states_always_stores_pending(
     assert entity is not None
     assert entity.state == "50"
 
-    # Pending update should be cleaned up after successful signal handling
-    unique_store_key = f"{webhook_id}_battery_state"
-    pending_updates = hass.data[DOMAIN]["sensor"]["pending_updates"]
-    # The pending update is removed by the entity's _handle_update method
-    assert unique_store_key not in pending_updates
-
 
 async def test_binary_sensor_pending_update(
     hass: HomeAssistant,
@@ -661,7 +627,7 @@ async def test_binary_sensor_pending_update(
     create_registrations: tuple[dict[str, Any], dict[str, Any]],
     webhook_client: TestClient,
 ) -> None:
-    """Test that binary sensors properly handle pending updates."""
+    """Test that binary sensor updates are applied when entity is re-enabled."""
     webhook_id = create_registrations[1]["webhook_id"]
     webhook_url = f"/api/webhook/{webhook_id}"
 
@@ -693,7 +659,7 @@ async def test_binary_sensor_pending_update(
     )
     await hass.async_block_till_done()
 
-    # Send update while disabled - should store as pending
+    # Send update while disabled
     reg_resp = await webhook_client.post(
         webhook_url,
         json={
@@ -710,11 +676,6 @@ async def test_binary_sensor_pending_update(
     assert reg_resp.status == HTTPStatus.CREATED
     await hass.async_block_till_done()
 
-    # Verify pending update exists
-    unique_store_key = f"{webhook_id}_motion_sensor"
-    pending_updates = hass.data[DOMAIN]["binary_sensor"]["pending_updates"]
-    assert unique_store_key in pending_updates
-
     # Re-enable the entity
     entity_registry.async_update_entity(
         "binary_sensor.test_1_motion_detected", disabled_by=None
@@ -725,14 +686,10 @@ async def test_binary_sensor_pending_update(
     await hass.config_entries.async_reload(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Verify the pending update was applied
+    # Verify the update sent while disabled was applied
     entity = hass.states.get("binary_sensor.test_1_motion_detected")
     assert entity is not None
     assert entity.state == "on"
-
-    # Verify pending update was removed
-    pending_updates = hass.data[DOMAIN]["binary_sensor"]["pending_updates"]
-    assert unique_store_key not in pending_updates
 
 
 async def test_register_sensor_always_stores_pending(
@@ -740,7 +697,7 @@ async def test_register_sensor_always_stores_pending(
     create_registrations: tuple[dict[str, Any], dict[str, Any]],
     webhook_client: TestClient,
 ) -> None:
-    """Test that register_sensor always stores data in pending updates."""
+    """Test that register_sensor applies updates to enabled entities."""
     webhook_id = create_registrations[1]["webhook_id"]
     webhook_url = f"/api/webhook/{webhook_id}"
 
@@ -786,9 +743,3 @@ async def test_register_sensor_always_stores_pending(
     entity = hass.states.get("sensor.test_1_battery_state")
     assert entity is not None
     assert entity.state == "75"
-
-    # Pending update should be cleaned up after successful signal handling
-    unique_store_key = f"{webhook_id}_battery_state"
-    pending_updates = hass.data[DOMAIN]["sensor"]["pending_updates"]
-    # The pending update is removed by the entity's _handle_update method
-    assert unique_store_key not in pending_updates
