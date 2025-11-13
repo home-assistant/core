@@ -66,7 +66,10 @@ async def _handle_webhook(
         # Only attempt to parse if there's an actual body
         if request.can_read_body:
             text = await request.text()
-            base_result["json"] = json_loads(text)
+            if text:
+                base_result["json"] = json_loads(text)
+            else:
+                base_result["json"] = {}
         else:
             base_result["json"] = {}
     else:
