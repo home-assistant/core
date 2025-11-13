@@ -89,19 +89,19 @@ async def test_service(
     ("status_updates", "expected_state"),
     [
         (
-            {"master_mode": "disarmed", "master_state": "normal", "alarm_msg": None},
+            {"master_mode": "disarmed"},
             AlarmControlPanelState.DISARMED,
         ),
         (
-            {"master_mode": "arm", "master_state": "normal", "alarm_msg": None},
+            {"master_mode": "arm"},
             AlarmControlPanelState.ARMED_AWAY,
         ),
         (
-            {"master_mode": "home", "master_state": "normal", "alarm_msg": None},
+            {"master_mode": "home"},
             AlarmControlPanelState.ARMED_HOME,
         ),
         (
-            {"master_mode": "sos", "master_state": "normal", "alarm_msg": None},
+            {"master_mode": "sos"},
             AlarmControlPanelState.TRIGGERED,
         ),
         (
