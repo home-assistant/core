@@ -24,6 +24,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import color as color_util
+from homeassistant.util.json import json_loads_object
 
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, DPType, WorkMode
@@ -238,6 +239,13 @@ LIGHTS: dict[DeviceCategory, tuple[TuyaLightEntityDescription, ...]] = {
             color_mode=DPCode.WORK_MODE,
             brightness=DPCode.BRIGHT_VALUE,
             color_data=DPCode.COLOUR_DATA,
+        ),
+    ),
+    DeviceCategory.MSP: (
+        TuyaLightEntityDescription(
+            key=DPCode.LIGHT,
+            translation_key="light",
+            entity_category=EntityCategory.CONFIG,
         ),
     ),
     DeviceCategory.QJDCZ: (
@@ -492,11 +500,11 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
                 values = self.device.status_range[dpcode].values
 
             # Fetch color data type information
-            if function_data := json.loads(values):
+            if function_data := json_loads_object(values):
                 self._color_data_type = ColorTypeData(
-                    h_type=IntegerTypeData(dpcode, **function_data["h"]),
-                    s_type=IntegerTypeData(dpcode, **function_data["s"]),
-                    v_type=IntegerTypeData(dpcode, **function_data["v"]),
+                    h_type=IntegerTypeData(dpcode, **cast(dict, function_data["h"])),
+                    s_type=IntegerTypeData(dpcode, **cast(dict, function_data["s"])),
+                    v_type=IntegerTypeData(dpcode, **cast(dict, function_data["v"])),
                 )
             else:
                 # If no type is found, use a default one
@@ -763,12 +771,12 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         if not (status_data := self.device.status[self._color_data_dpcode]):
             return None
 
-        if not (status := json.loads(status_data)):
+        if not (status := json_loads_object(status_data)):
             return None
 
         return ColorData(
             type_data=self._color_data_type,
-            h_value=status["h"],
-            s_value=status["s"],
-            v_value=status["v"],
+            h_value=cast(int, status["h"]),
+            s_value=cast(int, status["s"]),
+            v_value=cast(int, status["v"]),
         )
