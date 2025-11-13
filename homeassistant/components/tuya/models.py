@@ -277,9 +277,9 @@ class DPCodeEnumWrapper(DPCodeTypeInformationWrapper[EnumTypeData]):
         Values outside of the list defined by the Enum type information will
         return None.
         """
-        if (
-            raw_value := self._read_device_status_raw(device)
-        ) not in self.type_information.range:
+        if (raw_value := self._read_device_status_raw(device)) is None:
+            return None
+        if raw_value not in self.type_information.range:
             # We should not reject these, at least until quirks are implemented
             LOGGER.debug(
                 "Found invalid enum value `%s` for %s, expected one of %s",
