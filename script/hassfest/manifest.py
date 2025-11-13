@@ -93,6 +93,7 @@ NO_IOT_CLASS = [
     "input_text",
     "intent_script",
     "intent",
+    "location",
     "logbook",
     "logger",
     "lovelace",
@@ -269,6 +270,7 @@ INTEGRATION_MANIFEST_SCHEMA = vol.Schema(
                 }
             )
         ],
+        vol.Optional("locations"): [str],
         vol.Required("documentation"): vol.All(vol.Url(), core_documentation_url),
         vol.Optional("quality_scale"): vol.In(SUPPORTED_QUALITY_SCALES),
         vol.Optional("requirements"): [str],
