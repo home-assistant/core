@@ -12,8 +12,9 @@ import site
 from subprocess import PIPE, Popen
 import sys
 from urllib.parse import urlparse
-from pip._internal.models.link import Link
+
 from packaging.requirements import InvalidRequirement, Requirement
+from pip._internal.models.link import Link
 
 from .system_info import is_official_image
 
