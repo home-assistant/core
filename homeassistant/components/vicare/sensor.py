@@ -59,7 +59,7 @@ from .utils import (
     get_burners,
     get_circuits,
     get_compressors,
-    get_condensors,
+    get_condensers,
     get_device_serial,
     get_evaporators,
     is_supported,
@@ -1237,10 +1237,10 @@ COMPRESSOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
     ),
 )
 
-CONDENSOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
+CONDENSER_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
     ViCareSensorEntityDescription(
-        key="condensor_liquid_temperature",
-        translation_key="condensor_liquid_temperature",
+        key="condenser_liquid_temperature",
+        translation_key="condenser_liquid_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_getter=lambda api: api.getCondensorLiquidTemperature(),
@@ -1248,8 +1248,8 @@ CONDENSOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
     ),
     ViCareSensorEntityDescription(
-        key="condensor_subcooling_temperature",
-        translation_key="condensor_subcooling_temperature",
+        key="condenser_subcooling_temperature",
+        translation_key="condenser_subcooling_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_getter=lambda api: api.getCondensorSubcoolingTemperature(),
@@ -1303,7 +1303,7 @@ def _build_entities(
             (get_circuits(device.api), CIRCUIT_SENSORS),
             (get_burners(device.api), BURNER_SENSORS),
             (get_compressors(device.api), COMPRESSOR_SENSORS),
-            (get_condensors(device.api), CONDENSOR_SENSORS),
+            (get_condensers(device.api), CONDENSER_SENSORS),
             (get_evaporators(device.api), EVAPORATOR_SENSORS),
         ):
             entities.extend(
