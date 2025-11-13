@@ -17,6 +17,8 @@ class OAuth2FlowHandler(
 ):
     """Config flow to handle SENZ OAuth2 authentication."""
 
+    VERSION = 1
+    MINOR_VERSION = 2
     DOMAIN = DOMAIN
 
     @property
