@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
+from homeassistant.components.senz.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_oauth2_flow import (
@@ -9,6 +10,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 
 from . import setup_integration
+from .const import ENTRY_UNIQUE_ID
 
 from tests.common import MockConfigEntry
 
@@ -43,3 +45,36 @@ async def test_oauth_implementation_not_available(
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_migrate_config_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_senz_client: MagicMock,
+    expires_at: float,
+    access_token: str,
+) -> None:
+    """Test migration of config entry."""
+    mock_entry_v1_1 = MockConfigEntry(
+        version=1,
+        minor_version=1,
+        domain=DOMAIN,
+        title="SENZ test",
+        data={
+            "auth_implementation": DOMAIN,
+            "token": {
+                "access_token": access_token,
+                "scope": "rest_api offline_access",
+                "expires_in": 86399,
+                "refresh_token": "3012bc9f-7a65-4240-b817-9154ffdcc30f",
+                "token_type": "Bearer",
+                "expires_at": expires_at,
+            },
+        },
+        entry_id="senz_test",
+    )
+
+    await setup_integration(hass, mock_entry_v1_1)
+    assert mock_entry_v1_1.version == 1
+    assert mock_entry_v1_1.minor_version == 2
+    assert mock_entry_v1_1.unique_id == ENTRY_UNIQUE_ID
