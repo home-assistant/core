@@ -114,12 +114,18 @@ async def setup_credentials(hass: HomeAssistant) -> None:
 
 
 @pytest.fixture
-async def access_token(hass: HomeAssistant) -> str:
+def unique_id() -> str:
+    """Return a unique ID."""
+    return ENTRY_UNIQUE_ID
+
+
+@pytest.fixture
+async def access_token(hass: HomeAssistant, unique_id: str) -> str:
     """Return a valid access token."""
     return config_entry_oauth2_flow._encode_jwt(
         hass,
         {
-            "sub": ENTRY_UNIQUE_ID,
+            "sub": unique_id,
             "aud": [],
             "scp": [
                 "rest_api",
