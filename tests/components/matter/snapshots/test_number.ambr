@@ -115,7 +115,7 @@
     'state': '10',
   })
 # ---
-# name: test_numbers[aqara_thermostat_w500][number.floor_heating_thermostat_none-entry]
+# name: test_numbers[aqara_thermostat_w500][number.floor_heating_thermostat_occupied_setback-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -133,7 +133,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.floor_heating_thermostat_none',
+    'entity_id': 'number.floor_heating_thermostat_occupied_setback',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -145,7 +145,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Occupied setback',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -155,10 +155,10 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_numbers[aqara_thermostat_w500][number.floor_heating_thermostat_none-state]
+# name: test_numbers[aqara_thermostat_w500][number.floor_heating_thermostat_occupied_setback-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Floor Heating Thermostat None',
+      'friendly_name': 'Floor Heating Thermostat Occupied setback',
       'max': 3.0,
       'min': 0.5,
       'mode': <NumberMode.BOX: 'box'>,
@@ -166,7 +166,7 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.floor_heating_thermostat_none',
+    'entity_id': 'number.floor_heating_thermostat_occupied_setback',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
