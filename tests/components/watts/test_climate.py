@@ -236,3 +236,25 @@ async def test_set_temperature_api_error(
             },
             blocking=True,
         )
+
+
+async def test_set_hvac_mode_value_error(
+    hass: HomeAssistant,
+    mock_watts_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test error handling when setting mode fails."""
+    await setup_integration(hass, mock_config_entry, mock_watts_client)
+
+    mock_watts_client.set_thermostat_mode.side_effect = ValueError("Invalid mode")
+
+    with pytest.raises(HomeAssistantError, match="Error setting HVAC mode"):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {
+                ATTR_ENTITY_ID: "climate.living_room_thermostat",
+                ATTR_HVAC_MODE: HVACMode.HEAT,
+            },
+            blocking=True,
+        )
