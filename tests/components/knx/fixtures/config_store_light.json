@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "minor_version": 1,
+  "minor_version": 2,
   "key": "knx/config_store.json",
   "data": {
     "entities": {

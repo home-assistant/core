@@ -1,0 +1,76 @@
+{
+  "endpoint": "https://apigw.tuyaus.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "BlissRadia ",
+  "category": "bzyd",
+  "product_id": "ssimhf6r8kgwepfb",
+  "product_name": "BlissRadia ",
+  "online": true,
+  "sub": false,
+  "time_zone": "-04:00",
+  "active_time": "2025-08-19T14:01:37+00:00",
+  "create_time": "2025-08-19T14:01:37+00:00",
+  "update_time": "2025-08-19T14:01:37+00:00",
+  "function": {
+    "switch_led": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "volume_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": 5,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "snooze": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "colour_data": {
+      "type": "Json",
+      "value": {}
+    }
+  },
+  "status_range": {
+    "switch_led": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "volume_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": 5,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "snooze": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "colour_data": {
+      "type": "String",
+      "value": {}
+    }
+  },
+  "status": {
+    "switch_led": false,
+    "volume_set": 5,
+    "snooze": false,
+    "colour_data": {
+      "h": 0,
+      "s": 900,
+      "v": 1000
+    }
+  },
+  "set_up": false,
+  "support_local": true
+}

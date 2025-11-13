@@ -50,7 +50,7 @@
   },
   "chargingPower": {
     "status": "ERROR",
-    "code": "NOT_SUPPORTED",
-    "message": "Resource is not supported for this vehicle"
+    "code": "PROPERTY_NOT_FOUND",
+    "message": "No valid value could be found for the requested property"
   }
 }

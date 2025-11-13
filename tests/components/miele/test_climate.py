@@ -36,6 +36,22 @@ async def test_climate_states(
 
 @pytest.mark.parametrize("load_device_file", ["fridge_freezer.json"])
 @pytest.mark.parametrize(
+    "load_action_file", ["action_offline.json"], ids=["fridge_freezer_offline"]
+)
+async def test_climate_states_offline(
+    hass: HomeAssistant,
+    mock_miele_client: MagicMock,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    setup_platform: MockConfigEntry,
+) -> None:
+    """Test climate entity state."""
+
+    await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)
+
+
+@pytest.mark.parametrize("load_device_file", ["fridge_freezer.json"])
+@pytest.mark.parametrize(
     "load_action_file", ["action_fridge_freezer.json"], ids=["fridge_freezer"]
 )
 async def test_climate_states_mulizone(

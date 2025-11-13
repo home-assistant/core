@@ -9,10 +9,16 @@
       "pipeline": {
         "default": "mdi:filter-outline"
       },
+      "pipeline_2": {
+        "default": "mdi:filter-outline"
+      },
       "vad_sensitivity": {
         "default": "mdi:volume-high"
       },
       "wake_word": {
+        "default": "mdi:microphone"
+      },
+      "wake_word_2": {
         "default": "mdi:microphone"
       }
     }

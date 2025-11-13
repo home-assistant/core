@@ -1,0 +1,149 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Kattenbak",
+  "category": "msp",
+  "product_id": "3ddulzljdjjwkhoy",
+  "product_name": "ZEDAR K1200",
+  "online": true,
+  "sub": false,
+  "time_zone": "+02:00",
+  "active_time": "2025-07-08T18:02:16+00:00",
+  "create_time": "2025-07-08T18:02:16+00:00",
+  "update_time": "2025-07-08T18:02:16+00:00",
+  "function": {
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "auto_clean": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "delay_clean_time": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 600,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "manual_clean": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "light": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "factory_reset": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "status": {
+      "type": "Enum",
+      "value": {
+        "range": ["standby", "sleep", "uv"]
+      }
+    }
+  },
+  "status_range": {
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "auto_clean": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "delay_clean_time": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 600,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "cat_weight": {
+      "type": "Integer",
+      "value": {
+        "unit": "g",
+        "min": 0,
+        "max": 10000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "excretion_times_day": {
+      "type": "Integer",
+      "value": {
+        "unit": "times",
+        "min": 0,
+        "max": 2,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "excretion_time_day": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 600,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "manual_clean": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "light": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "fault": {
+      "type": "Bitmap",
+      "value": {
+        "label": [
+          "motor_fault",
+          "g_sensor_fault",
+          "full_fault",
+          "box_out",
+          "filter_fault"
+        ]
+      }
+    },
+    "factory_reset": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "status": {
+      "type": "Enum",
+      "value": {
+        "range": ["standby", "sleep", "uv"]
+      }
+    }
+  },
+  "status": {
+    "switch": false,
+    "auto_clean": true,
+    "delay_clean_time": 90,
+    "cat_weight": 0,
+    "excretion_times_day": 1,
+    "excretion_time_day": 35,
+    "manual_clean": false,
+    "light": false,
+    "fault": 0,
+    "factory_reset": false,
+    "status": "standby"
+  },
+  "set_up": false,
+  "support_local": true
+}

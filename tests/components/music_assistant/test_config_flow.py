@@ -15,7 +15,7 @@ import pytest
 
 from homeassistant.components.music_assistant.config_flow import CONF_URL
 from homeassistant.components.music_assistant.const import DEFAULT_NAME, DOMAIN
-from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -66,7 +66,7 @@ async def test_full_flow(
     assert result["result"].unique_id == "1234"
 
 
-async def test_zero_conf_flow(
+async def test_zeroconf_flow(
     hass: HomeAssistant,
     mock_get_server_info: AsyncMock,
 ) -> None:
@@ -90,21 +90,21 @@ async def test_zero_conf_flow(
     assert result["result"].unique_id == "1234"
 
 
-async def test_zero_conf_missing_server_id(
+async def test_zeroconf_invalid_discovery_info(
     hass: HomeAssistant,
     mock_get_server_info: AsyncMock,
 ) -> None:
-    """Test zeroconf flow with missing server id."""
-    bad_zero_conf_data = deepcopy(ZEROCONF_DATA)
-    bad_zero_conf_data.properties.pop("server_id")
+    """Test zeroconf flow with invalid discovery info."""
+    bad_zeroconf_data = deepcopy(ZEROCONF_DATA)
+    bad_zeroconf_data.properties.pop("server_id")
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
-        data=bad_zero_conf_data,
+        data=bad_zeroconf_data,
     )
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "missing_server_id"
+    assert result["reason"] == "invalid_discovery_info"
 
 
 async def test_duplicate_user(
@@ -215,3 +215,144 @@ async def test_flow_zeroconf_connect_issue(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
+
+
+async def test_user_url_different_from_server_base_url(
+    hass: HomeAssistant,
+    mock_get_server_info: AsyncMock,
+) -> None:
+    """Test that user-provided URL is used even when different from server base_url."""
+    # Mock server info with a different base_url than what user will provide
+    server_info = ServerInfoMessage.from_json(
+        await async_load_fixture(hass, "server_info_message.json", DOMAIN)
+    )
+    server_info.base_url = "http://different-server:8095"
+    mock_get_server_info.return_value = server_info
+
+    user_url = "http://user-provided-server:8095"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: user_url},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == DEFAULT_NAME
+    # Verify that the user-provided URL is stored, not the server's base_url
+    assert result["data"] == {
+        CONF_URL: user_url,
+    }
+    assert result["result"].unique_id == "1234"
+
+
+async def test_duplicate_user_with_different_urls(
+    hass: HomeAssistant,
+    mock_get_server_info: AsyncMock,
+) -> None:
+    """Test duplicate detection works with different user URLs."""
+    # Set up existing config entry with one URL
+    existing_url = "http://existing-server:8095"
+    existing_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Music Assistant",
+        data={CONF_URL: existing_url},
+        unique_id="1234",
+    )
+    existing_config_entry.add_to_hass(hass)
+
+    # Mock server info with different base_url
+    server_info = ServerInfoMessage.from_json(
+        await async_load_fixture(hass, "server_info_message.json", DOMAIN)
+    )
+    server_info.base_url = "http://server-reported-url:8095"
+    mock_get_server_info.return_value = server_info
+
+    # Try to configure with a different user URL but same server_id
+    new_user_url = "http://new-user-url:8095"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: new_user_url},
+    )
+    await hass.async_block_till_done()
+
+    # Should detect as duplicate because server_id is the same
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_zeroconf_existing_entry_working_url(
+    hass: HomeAssistant,
+    mock_get_server_info: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test zeroconf flow when existing entry has working URL."""
+    mock_config_entry.add_to_hass(hass)
+
+    # Mock server info with different base_url
+    server_info = ServerInfoMessage.from_json(
+        await async_load_fixture(hass, "server_info_message.json", DOMAIN)
+    )
+    server_info.base_url = "http://different-discovered-url:8095"
+    mock_get_server_info.return_value = server_info
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZEROCONF_DATA,
+    )
+    await hass.async_block_till_done()
+
+    # Should abort because current URL is working
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    # Verify the URL was not changed
+    assert mock_config_entry.data[CONF_URL] == "http://localhost:8095"
+
+
+async def test_zeroconf_existing_entry_ignored(
+    hass: HomeAssistant,
+    mock_get_server_info: AsyncMock,
+) -> None:
+    """Test zeroconf flow when existing entry was ignored."""
+    # Create an ignored config entry (no URL field)
+    ignored_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Music Assistant",
+        data={},  # No URL field for ignored entries
+        unique_id="1234",
+        source=SOURCE_IGNORE,
+    )
+    ignored_config_entry.add_to_hass(hass)
+
+    # Mock server info with discovered URL
+    server_info = ServerInfoMessage.from_json(
+        await async_load_fixture(hass, "server_info_message.json", DOMAIN)
+    )
+    server_info.base_url = "http://discovered-url:8095"
+    mock_get_server_info.return_value = server_info
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZEROCONF_DATA,
+    )
+    await hass.async_block_till_done()
+
+    # Should abort because entry was ignored (respect user's choice)
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
