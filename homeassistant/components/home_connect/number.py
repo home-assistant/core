@@ -17,7 +17,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .common import setup_home_connect_entry
+from .common import setup_home_connect_entry, should_add_option_entity
 from .const import DOMAIN, UNIT_MAP
 from .coordinator import HomeConnectApplianceData, HomeConnectConfigEntry
 from .entity import HomeConnectEntity, HomeConnectOptionEntity, constraint_fetcher
@@ -143,10 +143,8 @@ def _get_option_entities_for_appliance(
     return [
         HomeConnectOptionNumberEntity(entry.runtime_data, appliance, description)
         for description in NUMBER_OPTIONS
-        if description.key in appliance.options
-        # Restore it if once existed
-        or entity_registry.async_get_entity_id(
-            Platform.NUMBER, DOMAIN, f"{appliance.info.ha_id}-{description.key}"
+        if should_add_option_entity(
+            description, appliance, entity_registry, Platform.NUMBER
         )
     ]
 

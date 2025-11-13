@@ -7,12 +7,35 @@ from typing import cast
 
 from aiohomeconnect.model import EventKey
 
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import HomeConnectApplianceData, HomeConnectConfigEntry
 from .entity import HomeConnectEntity, HomeConnectOptionEntity
+
+
+def should_add_option_entity(
+    description: EntityDescription,
+    appliance: HomeConnectApplianceData,
+    entity_registry: er.EntityRegistry,
+    platform: Platform,
+) -> bool:
+    """Check if the option entity should be added for the appliance.
+
+    This function returns `True` if the option is available in the appliance options
+    or if the entity was added in previous loads of this integration.
+    """
+    description_key = description.key
+    return description_key in appliance.options or (
+        entity_registry.async_get_entity_id(
+            platform, DOMAIN, f"{appliance.info.ha_id}-{description_key}"
+        )
+        is not None
+    )
 
 
 def _create_option_entities(
