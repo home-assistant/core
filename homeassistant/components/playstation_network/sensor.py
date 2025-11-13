@@ -54,7 +54,7 @@ class PlaystationNetworkSensor(StrEnum):
     NOW_PLAYING = "now_playing"
 
 
-SENSOR_DESCRIPTIONS_TROPHY: tuple[PlaystationNetworkSensorEntityDescription, ...] = (
+SENSOR_DESCRIPTIONS: tuple[PlaystationNetworkSensorEntityDescription, ...] = (
     PlaystationNetworkSensorEntityDescription(
         key=PlaystationNetworkSensor.TROPHY_LEVEL,
         translation_key=PlaystationNetworkSensor.TROPHY_LEVEL,
@@ -106,8 +106,6 @@ SENSOR_DESCRIPTIONS_TROPHY: tuple[PlaystationNetworkSensorEntityDescription, ...
             else None
         ),
     ),
-)
-SENSOR_DESCRIPTIONS_USER: tuple[PlaystationNetworkSensorEntityDescription, ...] = (
     PlaystationNetworkSensorEntityDescription(
         key=PlaystationNetworkSensor.ONLINE_ID,
         translation_key=PlaystationNetworkSensor.ONLINE_ID,
@@ -152,7 +150,7 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data.user_data
     async_add_entities(
         PlaystationNetworkSensorEntity(coordinator, description)
-        for description in SENSOR_DESCRIPTIONS_TROPHY + SENSOR_DESCRIPTIONS_USER
+        for description in SENSOR_DESCRIPTIONS
     )
 
     for (
@@ -166,7 +164,7 @@ async def async_setup_entry(
                     description,
                     config_entry.subentries[subentry_id],
                 )
-                for description in SENSOR_DESCRIPTIONS_USER
+                for description in SENSOR_DESCRIPTIONS
             ],
             config_subentry_id=subentry_id,
         )
