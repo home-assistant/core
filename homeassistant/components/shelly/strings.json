@@ -448,7 +448,7 @@
         "name": "Child lock"
       },
       "frost_protection": {
-        "name": "%key:component::shelly::entity::climate::thermostat::state_attributes::preset_mode::state::frost_protection%]"
+        "name": "[%key:component::shelly::entity::climate::thermostat::state_attributes::preset_mode::state::frost_protection%]"
       },
       "left_slot": {
         "name": "Left slot"
