@@ -149,14 +149,14 @@
   "triggers": {
     "garage_opened": {
       "description": "Triggers when a garage door opens.",
-      "description_configured": "Triggers when a garage door opens",
+      "description_configured": "[%key:component::cover::triggers::garage_opened::description%]",
       "fields": {
         "behavior": {
           "description": "The behavior of the targeted garage doors to trigger on.",
           "name": "Behavior"
         },
         "fully_opened": {
-          "description": "Trigger when the targeted garage doors are fully opened.",
+          "description": "Require the garage doors to be fully opened before triggering.",
           "name": "Fully opened"
         }
       },

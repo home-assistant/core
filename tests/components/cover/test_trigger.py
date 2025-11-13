@@ -312,7 +312,7 @@ async def test_cover_state_attribute_trigger_behavior_first(
     initial_state: tuple[str | None, dict],
     states: list[tuple[tuple[str, dict], int]],
 ) -> None:
-    """Test that the cover state trigger fires when any cover state changes to a specific state."""
+    """Test that the cover state trigger fires when the first cover state changes to a specific state."""
     await async_setup_component(hass, "cover", {})
 
     other_entity_ids = set(target_covers) - {entity_id}
@@ -373,7 +373,7 @@ async def test_cover_state_attribute_trigger_behavior_last(
     initial_state: tuple[str | None, dict],
     states: list[tuple[tuple[str, dict], int]],
 ) -> None:
-    """Test that the cover state trigger fires when any cover state changes to a specific state."""
+    """Test that the cover state trigger fires when the last cover state changes to a specific state."""
     await async_setup_component(hass, "cover", {})
 
     other_entity_ids = set(target_covers) - {entity_id}

@@ -47,7 +47,7 @@ class CoverOpenedClosedTrigger(EntityTriggerBase):
     _attribute_value: int | None = None
     _device_class: CoverDeviceClass | None
     _domain: str = DOMAIN
-    _to_states: tuple[str, ...]
+    _to_states: set[str]
 
     def is_state_same(self, from_state: State, to_state: State) -> bool:
         """Check if the old and new states are considered the same."""
@@ -87,7 +87,7 @@ class CoverOpenedTrigger(CoverOpenedClosedTrigger):
     """Class for cover opened triggers."""
 
     _schema = COVER_OPENED_TRIGGER_SCHEMA
-    _to_states = (CoverState.OPEN, CoverState.OPENING)
+    _to_states = {CoverState.OPEN, CoverState.OPENING}
 
     def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
         """Initialize the state trigger."""
