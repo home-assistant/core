@@ -1,0 +1,21 @@
+garage_opened:
+  target:
+    entity:
+      domain: climate
+      device_class: garage
+  fields:
+    behavior:
+      required: true
+      default: any
+      selector:
+        select:
+          translation_key: trigger_behavior
+          options:
+            - first
+            - last
+            - any
+    fully_opened:
+      required: true
+      default: false
+      selector:
+        boolean:

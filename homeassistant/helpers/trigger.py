@@ -274,6 +274,7 @@ class EntityTriggerBase(Trigger):
     """Trigger for entity state changes."""
 
     _domain: str
+    _schema: vol.Schema = ENTITY_STATE_TRIGGER_SCHEMA
     _to_state: str
 
     @override
@@ -282,7 +283,7 @@ class EntityTriggerBase(Trigger):
         cls, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
         """Validate config."""
-        return cast(ConfigType, ENTITY_STATE_TRIGGER_SCHEMA(config))
+        return cast(ConfigType, cls._schema(config))
 
     def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
         """Initialize the state trigger."""
@@ -319,6 +320,14 @@ class EntityTriggerBase(Trigger):
             )
             == 1
         )
+
+    def entity_filter(self, entities: set[str]) -> set[str]:
+        """Filter entities of this domain."""
+        return {
+            entity_id
+            for entity_id in entities
+            if split_entity_id(entity_id)[0] == self._domain
+        }
 
     @override
     async def async_attach_runner(
@@ -371,16 +380,8 @@ class EntityTriggerBase(Trigger):
                 event.context,
             )
 
-        def entity_filter(entities: set[str]) -> set[str]:
-            """Filter entities of this domain."""
-            return {
-                entity_id
-                for entity_id in entities
-                if split_entity_id(entity_id)[0] == self._domain
-            }
-
         return async_track_target_selector_state_change_event(
-            self._hass, self._target, state_change_listener, entity_filter
+            self._hass, self._target, state_change_listener, self.entity_filter
         )
 
 

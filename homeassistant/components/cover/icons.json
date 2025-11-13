@@ -108,5 +108,10 @@
     "toggle_cover_tilt": {
       "service": "mdi:arrow-top-right-bottom-left"
     }
+  },
+  "triggers": {
+    "garage_opened": {
+      "trigger": "mdi:garage-open"
+    }
   }
 }

@@ -82,6 +82,15 @@
       "name": "Window"
     }
   },
+  "selector": {
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
+      }
+    }
+  },
   "services": {
     "close_cover": {
       "description": "Closes a cover.",
@@ -136,5 +145,22 @@
       "name": "Toggle tilt"
     }
   },
-  "title": "Cover"
+  "title": "Cover",
+  "triggers": {
+    "garage_opened": {
+      "description": "Triggers when a garage door opens.",
+      "description_configured": "Triggers when a garage door opens",
+      "fields": {
+        "behavior": {
+          "description": "The behavior of the targeted garage doors to trigger on.",
+          "name": "Behavior"
+        },
+        "fully_opened": {
+          "description": "Trigger when the targeted garage doors are fully opened.",
+          "name": "Fully opened"
+        }
+      },
+      "name": "When a garage door opens"
+    }
+  }
 }
