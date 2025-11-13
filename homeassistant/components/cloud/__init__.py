@@ -55,6 +55,7 @@ from .const import (
     CONF_ALIASES,
     CONF_API_SERVER,
     CONF_COGNITO_CLIENT_ID,
+    CONF_DISCOVERY_SERVICE_ACTIONS,
     CONF_ENTITY_CONFIG,
     CONF_FILTER,
     CONF_GOOGLE_ACTIONS,
@@ -139,6 +140,7 @@ CONFIG_SCHEMA = vol.Schema(
                 {
                     vol.Required(CONF_MODE): vol.In([MODE_DEV]),
                     vol.Required(CONF_API_SERVER): str,
+                    vol.Optional(CONF_DISCOVERY_SERVICE_ACTIONS): {str: cv.url},
                 }
             ),
             _BASE_CONFIG_SCHEMA.extend(
