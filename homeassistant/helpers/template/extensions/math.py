@@ -338,14 +338,16 @@ class MathExtension(BaseTemplateExtension):
 
         Constrains value to the range [min_value, max_value] (inclusive).
         """
-        return MathExtension.remap(
-            value,
-            in_min=min_value,
-            in_max=max_value,
-            out_min=min_value,
-            out_max=max_value,
-            edges="clamp",
-        )
+        try:
+            value_num = float(value)
+            min_value_num = float(min_value)
+            max_value_num = float(max_value)
+        except (ValueError, TypeError) as err:
+            raise ValueError(
+                f"function requires numeric arguments, "
+                f"got {value=}, {min_value=}, {max_value=}"
+            ) from err
+        return max(min_value_num, min(max_value_num, value_num))
 
     @staticmethod
     def wrap(value: Any, min_value: Any, max_value: Any) -> Any:
@@ -353,14 +355,20 @@ class MathExtension(BaseTemplateExtension):
 
         Wraps value cyclically within [min_value, max_value) (inclusive min, exclusive max).
         """
-        return MathExtension.remap(
-            value,
-            in_min=min_value,
-            in_max=max_value,
-            out_min=min_value,
-            out_max=max_value,
-            edges="wrap",
-        )
+        try:
+            value_num = float(value)
+            min_value_num = float(min_value)
+            max_value_num = float(max_value)
+        except (ValueError, TypeError) as err:
+            raise ValueError(
+                f"function requires numeric arguments, "
+                f"got {value=}, {min_value=}, {max_value=}"
+            ) from err
+        try:
+            range_size = max_value_num - min_value_num
+            return ((value_num - min_value_num) % range_size) + min_value_num
+        except ZeroDivisionError:  # be lenient: if the range is empty, just clamp
+            return min_value_num
 
     @staticmethod
     def remap(

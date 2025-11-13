@@ -367,6 +367,9 @@ def test_clamp(hass: HomeAssistant) -> None:
     assert MathExtension.clamp(-15, -10, -1) == -10.0
     assert MathExtension.clamp(0, -10, -1) == -1.0
 
+    # Test with non-range
+    assert MathExtension.clamp(5, 10, 10) == 10.0
+
     # Test error handling - invalid input types
     for case in (
         "{{ clamp('invalid', 0, 10) }}",
@@ -408,6 +411,9 @@ def test_wrap(hass: HomeAssistant) -> None:
     # Test with arbitrary ranges
     assert MathExtension.wrap(25, 10, 20) == 15.0
     assert MathExtension.wrap(5, 10, 20) == 15.0
+
+    # Test with non-range
+    assert MathExtension.wrap(5, 10, 10) == 10.0
 
     # Test error handling - invalid input types
     for case in (
