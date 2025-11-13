@@ -183,6 +183,7 @@ class TeslemetryEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=ENERGY_HISTORY_INTERVAL,
         )
         self.api = api
+        self.data = {}
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update energy site data using Teslemetry API."""
@@ -198,10 +199,13 @@ class TeslemetryEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise UpdateFailed("Received invalid data")
 
         # Add all time periods together
-        output = dict.fromkeys(ENERGY_HISTORY_FIELDS, 0)
-        for period in data["time_series"]:
+        output = dict.fromkeys(ENERGY_HISTORY_FIELDS, None)
+        for period in data.get("time_series", []):
             for key in ENERGY_HISTORY_FIELDS:
                 if key in period:
-                    output[key] += period[key]
+                    if output[key] is None:
+                        output[key] = period[key]
+                    else:
+                        output[key] += period[key]
 
         return output

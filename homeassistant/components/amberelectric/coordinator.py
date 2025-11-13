@@ -10,14 +10,14 @@ from amberelectric.models.actual_interval import ActualInterval
 from amberelectric.models.channel import ChannelType
 from amberelectric.models.current_interval import CurrentInterval
 from amberelectric.models.forecast_interval import ForecastInterval
-from amberelectric.models.price_descriptor import PriceDescriptor
 from amberelectric.rest import ApiException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import LOGGER
+from .const import LOGGER, REQUEST_TIMEOUT
+from .helpers import normalize_descriptor
 
 type AmberConfigEntry = ConfigEntry[AmberUpdateCoordinator]
 
@@ -47,27 +47,6 @@ def is_controlled_load(
 def is_feed_in(interval: ActualInterval | CurrentInterval | ForecastInterval) -> bool:
     """Return true if the supplied interval is on the feed in channel."""
     return interval.channel_type == ChannelType.FEEDIN
-
-
-def normalize_descriptor(descriptor: PriceDescriptor | None) -> str | None:
-    """Return the snake case versions of descriptor names. Returns None if the name is not recognized."""
-    if descriptor is None:
-        return None
-    if descriptor.value == "spike":
-        return "spike"
-    if descriptor.value == "high":
-        return "high"
-    if descriptor.value == "neutral":
-        return "neutral"
-    if descriptor.value == "low":
-        return "low"
-    if descriptor.value == "veryLow":
-        return "very_low"
-    if descriptor.value == "extremelyLow":
-        return "extremely_low"
-    if descriptor.value == "negative":
-        return "negative"
-    return None
 
 
 class AmberUpdateCoordinator(DataUpdateCoordinator):
@@ -103,7 +82,11 @@ class AmberUpdateCoordinator(DataUpdateCoordinator):
             "grid": {},
         }
         try:
-            data = self._api.get_current_prices(self.site_id, next=48)
+            data = self._api.get_current_prices(
+                self.site_id,
+                next=288,
+                _request_timeout=REQUEST_TIMEOUT,
+            )
             intervals = [interval.actual_instance for interval in data]
         except ApiException as api_exception:
             raise UpdateFailed("Missing price data, skipping update") from api_exception

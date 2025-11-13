@@ -64,7 +64,7 @@ PROGRAM_TO_SPEED: dict[int, str] = {
 }
 
 
-class MieleVacuumStateCode(MieleEnum):
+class MieleVacuumStateCode(MieleEnum, missing_to_none=True):
     """Define vacuum state codes."""
 
     idle = 0
@@ -82,12 +82,10 @@ class MieleVacuumStateCode(MieleEnum):
     blocked_front_wheel = 5900
     docked = 5903, 5904
     remote_controlled = 5910
-    missing2none = -9999
 
 
 SUPPORTED_FEATURES = (
     VacuumEntityFeature.STATE
-    | VacuumEntityFeature.BATTERY
     | VacuumEntityFeature.FAN_SPEED
     | VacuumEntityFeature.START
     | VacuumEntityFeature.STOP
@@ -173,11 +171,6 @@ class MieleVacuum(MieleEntity, StateVacuumEntity):
         return VACUUM_PHASE_TO_ACTIVITY.get(
             MieleVacuumStateCode(self.device.state_program_phase).value
         )
-
-    @property
-    def battery_level(self) -> int | None:
-        """Return the battery level."""
-        return self.device.state_battery_level
 
     @property
     def fan_speed(self) -> str | None:

@@ -63,7 +63,7 @@ async def test_load_config_status_forbidden(
             "user_inactive_or_deleted",
         ),
         (PaperlessForbiddenError(), ConfigEntryState.SETUP_ERROR, "forbidden"),
-        (InitializationError(), ConfigEntryState.SETUP_ERROR, "cannot_connect"),
+        (InitializationError(), ConfigEntryState.SETUP_RETRY, "cannot_connect"),
     ],
 )
 async def test_setup_config_error_handling(

@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/pi_hole",
   "iot_class": "local_polling",
   "loggers": ["hole"],
-  "requirements": ["hole==0.8.0"]
+  "requirements": ["hole==0.9.0"]
 }

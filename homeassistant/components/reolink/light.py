@@ -7,9 +7,11 @@ from dataclasses import dataclass
 from typing import Any
 
 from reolink_aio.api import Host
+from reolink_aio.const import MAX_COLOR_TEMP, MIN_COLOR_TEMP
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_COLOR_TEMP_KELVIN,
     ColorMode,
     LightEntity,
     LightEntityDescription,
@@ -37,8 +39,10 @@ class ReolinkLightEntityDescription(
     """A class that describes light entities."""
 
     get_brightness_fn: Callable[[Host, int], int | None] | None = None
+    get_color_temp_fn: Callable[[Host, int], int | None] | None = None
     is_on_fn: Callable[[Host, int], bool]
     set_brightness_fn: Callable[[Host, int, int], Any] | None = None
+    set_color_temp_fn: Callable[[Host, int, int], Any] | None = None
     turn_on_off_fn: Callable[[Host, int, bool], Any]
 
 
@@ -64,6 +68,10 @@ LIGHT_ENTITIES = (
         turn_on_off_fn=lambda api, ch, value: api.set_whiteled(ch, state=value),
         get_brightness_fn=lambda api, ch: api.whiteled_brightness(ch),
         set_brightness_fn=lambda api, ch, value: api.set_whiteled(ch, brightness=value),
+        get_color_temp_fn=lambda api, ch: api.whiteled_color_temperature(ch),
+        set_color_temp_fn=lambda api, ch, value: (
+            api.baichuan.set_floodlight(ch, color_temp=value)
+        ),
     ),
     ReolinkLightEntityDescription(
         key="status_led",
@@ -127,12 +135,20 @@ class ReolinkLightEntity(ReolinkChannelCoordinatorEntity, LightEntity):
         self.entity_description = entity_description
         super().__init__(reolink_data, channel)
 
-        if entity_description.set_brightness_fn is None:
-            self._attr_supported_color_modes = {ColorMode.ONOFF}
-            self._attr_color_mode = ColorMode.ONOFF
-        else:
+        if (
+            entity_description.set_color_temp_fn is not None
+            and self._host.api.supported(self._channel, "color_temp")
+        ):
+            self._attr_supported_color_modes = {ColorMode.COLOR_TEMP}
+            self._attr_color_mode = ColorMode.COLOR_TEMP
+            self._attr_min_color_temp_kelvin = MIN_COLOR_TEMP
+            self._attr_max_color_temp_kelvin = MAX_COLOR_TEMP
+        elif entity_description.set_brightness_fn is not None:
             self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
             self._attr_color_mode = ColorMode.BRIGHTNESS
+        else:
+            self._attr_supported_color_modes = {ColorMode.ONOFF}
+            self._attr_color_mode = ColorMode.ONOFF
 
     @property
     def is_on(self) -> bool:
@@ -152,6 +168,13 @@ class ReolinkLightEntity(ReolinkChannelCoordinatorEntity, LightEntity):
 
         return round(255 * bright_pct / 100.0)
 
+    @property
+    def color_temp_kelvin(self) -> int | None:
+        """Return the color temperature of this light in kelvin."""
+        assert self.entity_description.get_color_temp_fn is not None
+
+        return self.entity_description.get_color_temp_fn(self._host.api, self._channel)
+
     @raise_translated_error
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn light off."""
@@ -169,6 +192,13 @@ class ReolinkLightEntity(ReolinkChannelCoordinatorEntity, LightEntity):
             brightness_pct = int(brightness / 255.0 * 100)
             await self.entity_description.set_brightness_fn(
                 self._host.api, self._channel, brightness_pct
+            )
+
+        if (
+            color_temp := kwargs.get(ATTR_COLOR_TEMP_KELVIN)
+        ) is not None and self.entity_description.set_color_temp_fn is not None:
+            await self.entity_description.set_color_temp_fn(
+                self._host.api, self._channel, color_temp
             )
 
         await self.entity_description.turn_on_off_fn(

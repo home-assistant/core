@@ -8,7 +8,11 @@ from typing import Any
 from pylast import LastFMNetwork, PyLastError, User, WSError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import callback
 from homeassistant.helpers.selector import (
@@ -155,7 +159,7 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
 
-class LastFmOptionsFlowHandler(OptionsFlow):
+class LastFmOptionsFlowHandler(OptionsFlowWithReload):
     """LastFm Options flow handler."""
 
     config_entry: LastFMConfigEntry

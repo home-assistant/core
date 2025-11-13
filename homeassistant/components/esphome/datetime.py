@@ -29,7 +29,9 @@ class EsphomeDateTime(EsphomeEntity[DateTimeInfo, DateTimeState], DateTimeEntity
 
     async def async_set_value(self, value: datetime) -> None:
         """Update the current datetime."""
-        self._client.datetime_command(self._key, int(value.timestamp()))
+        self._client.datetime_command(
+            self._key, int(value.timestamp()), device_id=self._static_info.device_id
+        )
 
 
 async_setup_entry = partial(

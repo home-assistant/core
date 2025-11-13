@@ -10,9 +10,7 @@ from dataclasses import dataclass
 from typing import cast
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
@@ -24,9 +22,8 @@ from .const import (
     CHARGER_MAX_ICP_CURRENT_KEY,
     CHARGER_PART_NUMBER_KEY,
     CHARGER_SERIAL_NUMBER_KEY,
-    DOMAIN,
 )
-from .coordinator import InvalidAuth, WallboxCoordinator
+from .coordinator import WallboxConfigEntry, WallboxCoordinator
 from .entity import WallboxEntity
 
 
@@ -81,26 +78,20 @@ NUMBER_TYPES: dict[str, WallboxNumberEntityDescription] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: WallboxConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Create wallbox number entities in HASS."""
-    coordinator: WallboxCoordinator = hass.data[DOMAIN][entry.entry_id]
-    # Check if the user has sufficient rights to change values, if so, add number component:
-    try:
-        await coordinator.async_set_charging_current(
-            coordinator.data[CHARGER_MAX_CHARGING_CURRENT_KEY]
-        )
-    except InvalidAuth:
-        return
-    except HomeAssistantError as exc:
-        raise PlatformNotReady from exc
-
+    coordinator: WallboxCoordinator = entry.runtime_data
     async_add_entities(
         WallboxNumber(coordinator, entry, description)
         for ent in coordinator.data
         if (description := NUMBER_TYPES.get(ent))
     )
+
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
 class WallboxNumber(WallboxEntity, NumberEntity):
@@ -111,7 +102,7 @@ class WallboxNumber(WallboxEntity, NumberEntity):
     def __init__(
         self,
         coordinator: WallboxCoordinator,
-        entry: ConfigEntry,
+        entry: WallboxConfigEntry,
         description: WallboxNumberEntityDescription,
     ) -> None:
         """Initialize a Wallbox number entity."""

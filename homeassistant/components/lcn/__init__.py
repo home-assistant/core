@@ -104,7 +104,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: LcnConfigEntry) -
     ) as ex:
         await lcn_connection.async_close()
         raise ConfigEntryNotReady(
-            f"Unable to connect to {config_entry.title}: {ex}"
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={
+                "config_entry_title": config_entry.title,
+            },
         ) from ex
 
     _LOGGER.info('LCN connected to "%s"', config_entry.title)

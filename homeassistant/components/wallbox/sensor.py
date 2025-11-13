@@ -11,7 +11,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     UnitOfElectricCurrent,
@@ -43,9 +42,8 @@ from .const import (
     CHARGER_SERIAL_NUMBER_KEY,
     CHARGER_STATE_OF_CHARGE_KEY,
     CHARGER_STATUS_DESCRIPTION_KEY,
-    DOMAIN,
 )
-from .coordinator import WallboxCoordinator
+from .coordinator import WallboxConfigEntry, WallboxCoordinator
 from .entity import WallboxEntity
 
 
@@ -170,17 +168,21 @@ SENSOR_TYPES: dict[str, WallboxSensorEntityDescription] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: WallboxConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Create wallbox sensor entities in HASS."""
-    coordinator: WallboxCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: WallboxCoordinator = entry.runtime_data
 
     async_add_entities(
         WallboxSensor(coordinator, description)
         for ent in coordinator.data
         if (description := SENSOR_TYPES.get(ent))
     )
+
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
 class WallboxSensor(WallboxEntity, SensorEntity):

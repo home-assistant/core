@@ -81,6 +81,7 @@ def mock_api() -> MagicMock:
     jf_api.get_item.side_effect = api_get_item_side_effect
     jf_api.get_media_folders.return_value = load_json_fixture("get-media-folders.json")
     jf_api.user_items.side_effect = api_user_items_side_effect
+    jf_api.search_media_items.return_value = load_json_fixture("user-items.json")
 
     return jf_api
 

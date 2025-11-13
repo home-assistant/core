@@ -13,12 +13,16 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import dt as dt_util
 
+from tests.common import MockConfigEntry
+
 
 async def test_firmware_update_coordinator_fetching(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test the firmware update coordinator loads manifests."""
     session = async_get_clientsession(hass)
+
+    mock_config_entry = MockConfigEntry()
 
     manifest = FirmwareManifest(
         url=URL("https://example.org/firmware"),
@@ -35,7 +39,7 @@ async def test_firmware_update_coordinator_fetching(
         return_value=mock_client,
     ):
         coordinator = FirmwareUpdateCoordinator(
-            hass, session, "https://example.org/firmware"
+            hass, mock_config_entry, session, "https://example.org/firmware"
         )
 
     listener = Mock()

@@ -131,7 +131,7 @@ def mock_ble_device() -> Generator[MagicMock]:
     with patch(
         "homeassistant.components.bluetooth.async_ble_device_from_address",
         return_value=BLEDevice(
-            address="c0:ff:ee:c0:ff:ee", name=DEFAULT_NAME, rssi=-50, details={}
+            address="c0:ff:ee:c0:ff:ee", name=DEFAULT_NAME, details={}
         ),
     ) as ble_device:
         yield ble_device

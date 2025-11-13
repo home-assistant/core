@@ -7,16 +7,21 @@ from typing import TYPE_CHECKING
 import voluptuous as vol
 
 from homeassistant.components.notify import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
     ATTR_FORMAT,
     ATTR_IMAGES,
+    ATTR_MESSAGE_ID,
+    ATTR_REACTION,
+    ATTR_ROOM,
+    ATTR_THREAD_ID,
     CONF_ROOMS_REGEX,
     DOMAIN,
     FORMAT_HTML,
     FORMAT_TEXT,
+    SERVICE_REACT,
     SERVICE_SEND_MESSAGE,
 )
 
@@ -36,10 +41,19 @@ SERVICE_SCHEMA_SEND_MESSAGE = vol.Schema(
                 MESSAGE_FORMATS
             ),
             vol.Optional(ATTR_IMAGES): vol.All(cv.ensure_list, [cv.string]),
+            vol.Optional(ATTR_THREAD_ID): cv.string,
         },
         vol.Required(ATTR_TARGET): vol.All(
             cv.ensure_list, [cv.matches_regex(CONF_ROOMS_REGEX)]
         ),
+    }
+)
+
+SERVICE_SCHEMA_REACT = vol.Schema(
+    {
+        vol.Required(ATTR_REACTION): cv.string,
+        vol.Required(ATTR_ROOM): cv.matches_regex(CONF_ROOMS_REGEX),
+        vol.Required(ATTR_MESSAGE_ID): cv.string,
     }
 )
 
@@ -50,7 +64,14 @@ async def _handle_send_message(call: ServiceCall) -> None:
     await matrix_bot.handle_send_message(call)
 
 
-def register_services(hass: HomeAssistant) -> None:
+async def _handle_react(call: ServiceCall) -> None:
+    """Handle the react service call."""
+    matrix_bot: MatrixBot = call.hass.data[DOMAIN]
+    await matrix_bot.handle_send_reaction(call)
+
+
+@callback
+def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the Matrix bot component."""
 
     hass.services.async_register(
@@ -58,4 +79,11 @@ def register_services(hass: HomeAssistant) -> None:
         SERVICE_SEND_MESSAGE,
         _handle_send_message,
         schema=SERVICE_SCHEMA_SEND_MESSAGE,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_REACT,
+        _handle_react,
+        schema=SERVICE_SCHEMA_REACT,
     )

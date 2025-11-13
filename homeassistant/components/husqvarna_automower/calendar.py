@@ -70,10 +70,11 @@ class AutomowerCalendarEntity(AutomowerBaseEntity, CalendarEntity):
     @property
     def event(self) -> CalendarEvent | None:
         """Return the current or next upcoming event."""
+        if not self.available:
+            return None
         schedule = self.mower_attributes.calendar
         cursor = schedule.timeline.active_after(dt_util.now())
         program_event = next(cursor, None)
-        _LOGGER.debug("program_event %s", program_event)
         if not program_event:
             return None
         work_area_name = None
@@ -95,6 +96,8 @@ class AutomowerCalendarEntity(AutomowerBaseEntity, CalendarEntity):
 
         This is only called when opening the calendar in the UI.
         """
+        if not self.available:
+            return []
         schedule = self.mower_attributes.calendar
         cursor = schedule.timeline.overlapping(
             start_date,

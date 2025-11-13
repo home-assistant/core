@@ -871,7 +871,7 @@ async def test_sensor_unique_ids(
     assert entity
     assert entity.unique_id == f"{mock_config.entry_id}_{t1.id}_dist_to_zone"
     state = hass.states.get(sensor_t1)
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Home Test tracker 1 Distance"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Home Test tracker 1 distance"
 
     entity = entity_registry.async_get("sensor.home_test2_distance")
     assert entity

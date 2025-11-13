@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable, Coroutine, Iterable, KeysView, Mapping
 from datetime import datetime, timedelta
 from functools import wraps
+import inspect
 import random
 import re
 import string
@@ -125,7 +125,7 @@ class Throttle:
     def __call__(self, method: Callable) -> Callable:
         """Caller for the throttle."""
         # Make sure we return a coroutine if the method is async.
-        if asyncio.iscoroutinefunction(method):
+        if inspect.iscoroutinefunction(method):
 
             async def throttled_value() -> None:
                 """Stand-in function for when real func is being throttled."""

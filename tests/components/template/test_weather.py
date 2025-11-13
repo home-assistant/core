@@ -15,6 +15,7 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_OZONE,
     ATTR_WEATHER_PRESSURE,
     ATTR_WEATHER_TEMPERATURE,
+    ATTR_WEATHER_UV_INDEX,
     ATTR_WEATHER_VISIBILITY,
     ATTR_WEATHER_WIND_BEARING,
     ATTR_WEATHER_WIND_GUST_SPEED,
@@ -131,6 +132,7 @@ async def setup_weather(
                 {
                     "platform": "template",
                     "name": "test",
+                    "unique_id": "abc123",
                     "attribution_template": "{{ states('sensor.attribution') }}",
                     "condition_template": "sunny",
                     "temperature_template": "{{ states('sensor.temperature') | float }}",
@@ -608,6 +610,7 @@ SAVED_EXTRA_DATA = {
     "last_ozone": None,
     "last_pressure": None,
     "last_temperature": 20,
+    "last_uv_index": None,
     "last_visibility": None,
     "last_wind_bearing": None,
     "last_wind_gust_speed": None,
@@ -623,6 +626,7 @@ SAVED_EXTRA_DATA_WITH_FUTURE_KEY = {
     "last_ozone": None,
     "last_pressure": None,
     "last_temperature": 20,
+    "last_uv_index": None,
     "last_visibility": None,
     "last_wind_bearing": None,
     "last_wind_gust_speed": None,
@@ -790,6 +794,7 @@ async def test_trigger_action(hass: HomeAssistant) -> None:
                             "wind_speed_template": "{{ my_variable + 1 }}",
                             "wind_bearing_template": "{{ my_variable + 1 }}",
                             "ozone_template": "{{ my_variable + 1 }}",
+                            "uv_index_template": "{{ my_variable + 1 }}",
                             "visibility_template": "{{ my_variable + 1 }}",
                             "pressure_template": "{{ my_variable + 1 }}",
                             "wind_gust_speed_template": "{{ my_variable + 1 }}",
@@ -864,6 +869,7 @@ async def test_trigger_weather_services(
     assert state.attributes["wind_speed"] == 3.0
     assert state.attributes["wind_bearing"] == 3.0
     assert state.attributes["ozone"] == 3.0
+    assert state.attributes["uv_index"] == 3.0
     assert state.attributes["visibility"] == 3.0
     assert state.attributes["pressure"] == 3.0
     assert state.attributes["wind_gust_speed"] == 3.0
@@ -962,6 +968,7 @@ SAVED_EXTRA_DATA_MISSING_KEY = {
     "last_ozone": None,
     "last_pressure": None,
     "last_temperature": 20,
+    "last_uv_index": None,
     "last_visibility": None,
     "last_wind_bearing": None,
     "last_wind_gust_speed": None,
@@ -1041,6 +1048,7 @@ async def test_new_style_template_state_text(hass: HomeAssistant) -> None:
                     "wind_speed_template": "{{ states('sensor.windspeed') }}",
                     "wind_bearing_template": "{{ states('sensor.windbearing') }}",
                     "ozone_template": "{{ states('sensor.ozone') }}",
+                    "uv_index_template": "{{ states('sensor.uv_index') }}",
                     "visibility_template": "{{ states('sensor.visibility') }}",
                     "wind_gust_speed_template": "{{ states('sensor.wind_gust_speed') }}",
                     "cloud_coverage_template": "{{ states('sensor.cloud_coverage') }}",
@@ -1063,6 +1071,7 @@ async def test_new_style_template_state_text(hass: HomeAssistant) -> None:
         ("sensor.windspeed", ATTR_WEATHER_WIND_SPEED, 20),
         ("sensor.windbearing", ATTR_WEATHER_WIND_BEARING, 180),
         ("sensor.ozone", ATTR_WEATHER_OZONE, 25),
+        ("sensor.uv_index", ATTR_WEATHER_UV_INDEX, 3.7),
         ("sensor.visibility", ATTR_WEATHER_VISIBILITY, 4.6),
         ("sensor.wind_gust_speed", ATTR_WEATHER_WIND_GUST_SPEED, 30),
         ("sensor.cloud_coverage", ATTR_WEATHER_CLOUD_COVERAGE, 75),

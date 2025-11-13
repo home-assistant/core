@@ -21,7 +21,6 @@
         '1234567890',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'devolo',
@@ -31,7 +30,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '1234567890',
-    'suggested_area': None,
     'sw_version': '5.6.1',
     'via_device_id': None,
   })
@@ -58,7 +56,6 @@
         '1234567890',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'devolo',
@@ -68,7 +65,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '1234567890',
-    'suggested_area': None,
     'sw_version': '5.6.1',
     'via_device_id': None,
   })
@@ -91,7 +87,6 @@
         '1234567890',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'devolo',
@@ -101,7 +96,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '1234567890',
-    'suggested_area': None,
     'sw_version': '5.6.1',
     'via_device_id': None,
   })

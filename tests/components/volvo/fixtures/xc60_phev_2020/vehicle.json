@@ -1,0 +1,17 @@
+{
+  "vin": "YV1ABCDEFG1234567",
+  "modelYear": 2020,
+  "gearbox": "AUTOMATIC",
+  "fuelType": "PETROL/ELECTRIC",
+  "externalColour": "Bright Silver",
+  "batteryCapacityKWH": 11.832,
+  "images": {
+    "exteriorImageUrl": "https://cas.volvocars.com/image/dynamic/MY20_0000/123/exterior-v1/_/default.png?market=se&client=public-api-engineering&angle=1&bg=00000000&w=1920",
+    "internalImageUrl": "https://cas.volvocars.com/image/dynamic/MY20_0000/123/interior-v1/_/default.jpg?market=se&client=public-api-engineering&angle=0&w=1920"
+  },
+  "descriptions": {
+    "model": "XC60",
+    "upholstery": "CHARCOAL/LEABR3/CHARC/SPO",
+    "steering": "LEFT"
+  }
+}

@@ -22,6 +22,19 @@ def async_entity_id_to_device_id(
 
 
 @callback
+def async_entity_id_to_device(
+    hass: HomeAssistant,
+    entity_id_or_uuid: str,
+) -> dr.DeviceEntry | None:
+    """Resolve the device entry for the entity id or entity uuid."""
+
+    if (device_id := async_entity_id_to_device_id(hass, entity_id_or_uuid)) is None:
+        return None
+
+    return dr.async_get(hass).async_get(device_id)
+
+
+@callback
 def async_device_info_to_link_from_entity(
     hass: HomeAssistant,
     entity_id_or_uuid: str,

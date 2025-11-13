@@ -13,7 +13,6 @@ from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, AgentBackup
 from homeassistant.components.webdav.backup import async_register_backup_agents_listener
 from homeassistant.components.webdav.const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.backup import async_initialize_backup
 from homeassistant.setup import async_setup_component
 
 from .const import BACKUP_METADATA
@@ -31,7 +30,6 @@ async def setup_backup_integration(
         patch("homeassistant.components.backup.is_hassio", return_value=False),
         patch("homeassistant.components.backup.store.STORE_DELAY_SAVE", 0),
     ):
-        async_initialize_backup(hass)
         assert await async_setup_component(hass, BACKUP_DOMAIN, {})
         mock_config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(mock_config_entry.entry_id)

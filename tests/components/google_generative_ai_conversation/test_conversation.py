@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 from freezegun import freeze_time
 from google.genai.types import GenerateContentResponse
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import conversation
 from homeassistant.components.conversation import UserContent
@@ -80,6 +81,7 @@ async def test_function_call(
     mock_config_entry_with_assist: MockConfigEntry,
     mock_chat_log: MockChatLog,  # noqa: F811
     mock_send_message_stream: AsyncMock,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test function calling."""
     agent_id = "conversation.google_ai_conversation"
@@ -94,8 +96,14 @@ async def test_function_call(
                         "content": {
                             "parts": [
                                 {
+                                    "text": "The user asked me to call a function",
+                                    "thought": True,
+                                    "thought_signature": b"_thought_signature_1",
+                                },
+                                {
                                     "text": "Hi there!",
-                                }
+                                    "thought_signature": b"_thought_signature_2",
+                                },
                             ],
                             "role": "model",
                         }
@@ -118,6 +126,7 @@ async def test_function_call(
                                             "param2": 2.7,
                                         },
                                     },
+                                    "thought_signature": b"_thought_signature_3",
                                 }
                             ],
                             "role": "model",
@@ -136,6 +145,7 @@ async def test_function_call(
                             "parts": [
                                 {
                                     "text": "I've called the ",
+                                    "thought_signature": b"_thought_signature_4",
                                 }
                             ],
                             "role": "model",
@@ -150,6 +160,25 @@ async def test_function_call(
                             "parts": [
                                 {
                                     "text": "test function with the provided parameters.",
+                                    "thought_signature": b"_thought_signature_5",
+                                }
+                            ],
+                            "role": "model",
+                        },
+                        "finish_reason": "STOP",
+                    }
+                ],
+            ),
+        ],
+        # Follow-up response
+        [
+            GenerateContentResponse(
+                candidates=[
+                    {
+                        "content": {
+                            "parts": [
+                                {
+                                    "text": "You are welcome!",
                                 }
                             ],
                             "role": "model",
@@ -195,12 +224,31 @@ async def test_function_call(
             "response": {
                 "result": "Test response",
             },
+            "scheduling": None,
+            "will_continue": None,
         },
         "inline_data": None,
         "text": None,
         "thought": None,
+        "thought_signature": None,
         "video_metadata": None,
     }
+
+    # Test history conversion for multi-turn conversation
+    with patch(
+        "google.genai.chats.AsyncChats.create", return_value=AsyncMock()
+    ) as mock_create:
+        mock_create.return_value.send_message_stream = mock_send_message_stream
+        await conversation.async_converse(
+            hass,
+            "Thank you!",
+            mock_chat_log.conversation_id,
+            context,
+            agent_id=agent_id,
+            device_id="test_device",
+        )
+
+    assert mock_create.call_args[1].get("history") == snapshot
 
 
 @pytest.mark.usefixtures("mock_init_component")
@@ -359,7 +407,7 @@ async def test_empty_response(
     assert result.response.response_type == intent.IntentResponseType.ERROR, result
     assert result.response.error_code == "unknown", result
     assert result.response.as_dict()["speech"]["plain"]["speech"] == (
-        ERROR_GETTING_RESPONSE
+        "Unable to get response"
     )
 
 
