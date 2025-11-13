@@ -15,7 +15,7 @@ from .coordinator import GoodweConfigEntry, GoodweRuntimeData, GoodweUpdateCoord
 async def async_setup_entry(hass: HomeAssistant, entry: GoodweConfigEntry) -> bool:
     """Set up the Goodwe components from a config entry."""
     host = entry.data[CONF_HOST]
-    port = entry.data[CONF_PORT]
+    port = entry.data.get(CONF_PORT, GOODWE_UDP_PORT)
     model_family = entry.data[CONF_MODEL_FAMILY]
 
     # Connect to Goodwe inverter
