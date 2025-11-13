@@ -109,7 +109,6 @@ async def test_remove_air_quality_entities(
         "123",
         suggested_object_id="home",
         disabled_by=None,
-        config_subentry_id=mock_config_entry.entry_id,
     )
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
