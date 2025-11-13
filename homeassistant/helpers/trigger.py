@@ -33,6 +33,7 @@ from homeassistant.core import (
     HassJob,
     HassJobType,
     HomeAssistant,
+    State,
     callback,
     get_hassjob_callable_job_type,
     is_callback,
@@ -269,7 +270,7 @@ class Trigger(abc.ABC):
         """Attach the trigger to an action runner."""
 
 
-class EntityStateTriggerBase(Trigger):
+class EntityTriggerBase(Trigger):
     """Trigger for entity state changes."""
 
     _domain: str
@@ -292,30 +293,27 @@ class EntityStateTriggerBase(Trigger):
         self._options = config.options
         self._target = config.target
 
+    @abc.abstractmethod
+    def is_state_same(self, from_state: State, to_state: State) -> bool:
+        """Check if the old and new states are considered the same."""
+
+    @abc.abstractmethod
+    def is_state_to_state(self, state: State) -> bool:
+        """Check if the state matches the target state."""
+
+    @abc.abstractmethod
+    def check_all_match(self, entity_ids: set[str]) -> bool:
+        """Check if all entity states match."""
+
+    @abc.abstractmethod
+    def check_one_match(self, entity_ids: set[str]) -> bool:
+        """Check that only one entity state matches."""
+
     @override
     async def async_attach_runner(
         self, run_action: TriggerActionRunner
     ) -> CALLBACK_TYPE:
         """Attach the trigger to an action runner."""
-
-        def check_all_match(entity_ids: set[str]) -> bool:
-            """Check if all entity states match."""
-            return all(
-                state.state == self._to_state
-                for entity_id in entity_ids
-                if (state := self._hass.states.get(entity_id)) is not None
-            )
-
-        def check_one_match(entity_ids: set[str]) -> bool:
-            """Check that only one entity state matches."""
-            return (
-                sum(
-                    state.state == self._to_state
-                    for entity_id in entity_ids
-                    if (state := self._hass.states.get(entity_id)) is not None
-                )
-                == 1
-            )
 
         behavior = self._options.get(ATTR_BEHAVIOR)
 
@@ -334,18 +332,22 @@ class EntityStateTriggerBase(Trigger):
                 return
 
             # The trigger should never fire if the new state is not the to state
-            if not to_state or to_state.state != self._to_state:
+            if not to_state or not self.is_state_to_state(to_state):
                 return
 
             # The trigger should never fire if the previous and new states are the same
-            if from_state.state == to_state.state:
+            if self.is_state_same(from_state, to_state):
                 return
 
             if behavior == BEHAVIOR_LAST:
-                if not check_all_match(target_state_change_data.targeted_entity_ids):
+                if not self.check_all_match(
+                    target_state_change_data.targeted_entity_ids
+                ):
                     return
             elif behavior == BEHAVIOR_FIRST:
-                if not check_one_match(target_state_change_data.targeted_entity_ids):
+                if not self.check_one_match(
+                    target_state_change_data.targeted_entity_ids
+                ):
                     return
 
             run_action(
@@ -371,18 +373,99 @@ class EntityStateTriggerBase(Trigger):
         )
 
 
+class EntityStateTriggerBase(EntityTriggerBase):
+    """Trigger for entity state changes."""
+
+    def is_state_same(self, from_state: State, to_state: State) -> bool:
+        """Check if the old and new states are considered the same."""
+        return from_state.state == to_state.state
+
+    def is_state_to_state(self, state: State) -> bool:
+        """Check if the state matches the target state."""
+        return state.state == self._to_state
+
+    def check_all_match(self, entity_ids: set[str]) -> bool:
+        """Check if all entity states match."""
+        return all(
+            state.state == self._to_state
+            for entity_id in entity_ids
+            if (state := self._hass.states.get(entity_id)) is not None
+        )
+
+    def check_one_match(self, entity_ids: set[str]) -> bool:
+        """Check that only one entity state matches."""
+        return (
+            sum(
+                state.state == self._to_state
+                for entity_id in entity_ids
+                if (state := self._hass.states.get(entity_id)) is not None
+            )
+            == 1
+        )
+
+
+class EntityStateAttributeTriggerBase(EntityTriggerBase):
+    """Trigger for entity state attribute changes."""
+
+    _attribute: str
+
+    def is_state_same(self, from_state: State, to_state: State) -> bool:
+        """Check if the old and new states are considered the same."""
+        return from_state.attributes.get(self._attribute) == to_state.attributes.get(
+            self._attribute
+        )
+
+    def is_state_to_state(self, state: State) -> bool:
+        """Check if the state matches the target state."""
+        return state.attributes.get(self._attribute) == self._to_state
+
+    def check_all_match(self, entity_ids: set[str]) -> bool:
+        """Check if all entity states match."""
+        return all(
+            state.attributes.get(self._attribute) == self._to_state
+            for entity_id in entity_ids
+            if (state := self._hass.states.get(entity_id)) is not None
+        )
+
+    def check_one_match(self, entity_ids: set[str]) -> bool:
+        """Check that only one entity state matches."""
+        return (  # type: ignore[no-any-return]
+            sum(
+                state.attributes.get(self._attribute) == self._to_state
+                for entity_id in entity_ids
+                if (state := self._hass.states.get(entity_id)) is not None
+            )
+            == 1
+        )
+
+
 def make_entity_state_trigger(
     domain: str, to_state: str
 ) -> type[EntityStateTriggerBase]:
     """Create an entity state trigger class."""
 
-    class CustomEntityStateTrigger(EntityStateTriggerBase):
+    class CustomTrigger(EntityStateTriggerBase):
         """Trigger for entity state changes."""
 
         _domain = domain
         _to_state = to_state
 
-    return CustomEntityStateTrigger
+    return CustomTrigger
+
+
+def make_entity_state_attribute_trigger(
+    domain: str, attribute: str, to_state: str
+) -> type[EntityStateAttributeTriggerBase]:
+    """Create an entity state attribute trigger class."""
+
+    class CustomTrigger(EntityStateAttributeTriggerBase):
+        """Trigger for entity state changes."""
+
+        _domain = domain
+        _to_state = to_state
+        _attribute = attribute
+
+    return CustomTrigger
 
 
 class TriggerProtocol(Protocol):

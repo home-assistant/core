@@ -1,4 +1,4 @@
-turned_off:
+.trigger_common: &trigger_common
   target:
     entity:
       domain: climate
@@ -13,3 +13,7 @@ turned_off:
             - first
             - last
             - any
+
+started_heating: *trigger_common
+
+turned_off: *trigger_common
