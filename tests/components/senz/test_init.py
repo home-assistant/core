@@ -1,6 +1,12 @@
 """Test init of senz integration."""
 
+from http import HTTPStatus
+import time
 from unittest.mock import MagicMock, patch
+
+from aiosenz import TOKEN_ENDPOINT
+from httpx import HTTPStatusError, RequestError
+import pytest
 
 from homeassistant.components.senz.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -13,6 +19,7 @@ from . import setup_integration
 from .const import ENTRY_UNIQUE_ID
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_load_unload_entry(
@@ -78,3 +85,77 @@ async def test_migrate_config_entry(
     assert mock_entry_v1_1.version == 1
     assert mock_entry_v1_1.minor_version == 2
     assert mock_entry_v1_1.unique_id == ENTRY_UNIQUE_ID
+
+
+@pytest.mark.parametrize(
+    ("expires_at", "status", "expected_state"),
+    [
+        (
+            time.time() - 3600,
+            HTTPStatus.UNAUTHORIZED,
+            ConfigEntryState.SETUP_ERROR,
+        ),
+        (
+            time.time() - 3600,
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            ConfigEntryState.SETUP_ERROR,
+        ),
+    ],
+    ids=["unauthorized", "internal_server_error"],
+)
+async def test_expired_token_refresh_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    status: HTTPStatus,
+    expected_state: ConfigEntryState,
+) -> None:
+    """Test failure while refreshing token with a transient error."""
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.post(
+        TOKEN_ENDPOINT,
+        status=status,
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is expected_state
+
+
+@pytest.mark.parametrize(
+    ("error", "expected_state"),
+    [
+        (
+            HTTPStatusError(
+                message="Exception",
+                request=None,
+                response=MagicMock(status_code=HTTPStatus.UNAUTHORIZED),
+            ),
+            ConfigEntryState.SETUP_ERROR,
+        ),
+        (
+            HTTPStatusError(
+                message="Exception",
+                request=None,
+                response=MagicMock(status_code=HTTPStatus.FORBIDDEN),
+            ),
+            ConfigEntryState.SETUP_RETRY,
+        ),
+        (RequestError("Exception"), ConfigEntryState.SETUP_RETRY),
+    ],
+    ids=["unauthorized", "forbidden", "request_error"],
+)
+async def test_setup_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_senz_client: MagicMock,
+    error: Exception,
+    expected_state: ConfigEntryState,
+) -> None:
+    """Test setup failure due to unauthorized error."""
+    mock_senz_client.get_account.side_effect = error
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is expected_state
