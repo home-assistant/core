@@ -36,16 +36,16 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
             CONF_API_KEY: "test-api-key",
         },
         subentries_data=[
-            {
-                "data": {
+            ConfigSubentryDataWithId(
+                data={
                     CONF_LATITUDE: 10.1,
                     CONF_LONGITUDE: 20.1,
                 },
-                "subentry_type": "location",
-                "title": "Home",
-                "subentry_id": "home-subentry-id",
-                "unique_id": None,
-            }
+                subentry_type="location",
+                title="Home",
+                subentry_id="home-subentry-id",
+                unique_id=None,
+            )
         ],
     )
     config_entry.add_to_hass(hass)
