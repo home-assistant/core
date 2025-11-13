@@ -378,14 +378,14 @@ class MathExtension(BaseTemplateExtension):
         out_min: Any,
         out_max: Any,
         *,
-        steps: int | None = None,
+        steps: int = 0,
         edges: Literal["none", "clamp", "wrap", "mirror"] = "none",
     ) -> Any:
         """Filter and function to remap a value from one range to another.
 
         Maps value from input range [in_min, in_max] to output range [out_min, out_max].
 
-        The optional steps parameter, if provided and greater than 0, quantizes the output into
+        The steps parameter, if greater than 0, quantizes the output into
         the specified number of discrete steps.
 
         The edges parameter controls how out-of-bounds input values are handled:
@@ -431,8 +431,8 @@ class MathExtension(BaseTemplateExtension):
             value_num = in_min_num + position_in_period
         # Unknown "edges" values are left as-is; no use throwing an error.
 
-        if steps and steps < 0:
-            steps = None
+        if steps < 0:  # noqa: PLR1730 (we don't want a function call here)
+            steps = 0
 
         if not steps and (in_min_num == out_min_num and in_max_num == out_max_num):
             return value_num  # No remapping needed. Save some cycles and floating-point precision.
