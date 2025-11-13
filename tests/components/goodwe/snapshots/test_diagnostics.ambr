@@ -3,7 +3,7 @@
   dict({
     'config_entry': dict({
       'data': dict({
-        'host': 'localhost',
+        'host': '1.2.3.4',
         'model_family': 'ET',
         'port': 8899,
       }),
