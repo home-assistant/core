@@ -748,5 +748,21 @@
         "manual": "Enter address manually"
       }
     }
+  },
+  "services": {
+    "kvs_get": {
+      "description": "Get a value from the device's Key-Value Storage.",
+      "fields": {
+        "device_id": {
+          "description": "The ID of the Shelly device to get the KVS value from.",
+          "name": "Device"
+        },
+        "key": {
+          "description": "The name of the key for which the KVS value will be retrieved.",
+          "name": "Key"
+        }
+      },
+      "name": "KVS get"
+    }
   }
 }

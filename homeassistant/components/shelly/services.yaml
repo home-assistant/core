@@ -1,4 +1,4 @@
-get_kvs:
+kvs_get:
   fields:
     device_id:
       required: true
@@ -7,6 +7,5 @@ get_kvs:
           integration: shelly
     key:
       required: true
-      example: "my_key"
       selector:
         text:
