@@ -35,7 +35,7 @@ async def test_entities(
 ) -> None:
     """Test the climate entities."""
     with patch("homeassistant.components.watts.PLATFORMS", [Platform.CLIMATE]):
-        await setup_integration(hass, mock_config_entry, mock_watts_client)
+        await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
@@ -46,7 +46,7 @@ async def test_set_temperature(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test setting temperature."""
-    await setup_integration(hass, mock_config_entry, mock_watts_client)
+    await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get("climate.living_room_thermostat")
     assert state is not None
@@ -74,7 +74,7 @@ async def test_set_temperature_triggers_fast_polling(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that setting temperature triggers fast polling."""
-    await setup_integration(hass, mock_config_entry, mock_watts_client)
+    await setup_integration(hass, mock_config_entry)
 
     # Trigger fast polling
     await hass.services.async_call(
@@ -106,7 +106,7 @@ async def test_fast_polling_stops_after_duration(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that fast polling stops after the duration expires."""
-    await setup_integration(hass, mock_config_entry, mock_watts_client)
+    await setup_integration(hass, mock_config_entry)
 
     # Trigger fast polling
     await hass.services.async_call(
@@ -152,7 +152,7 @@ async def test_set_hvac_mode_heat(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test setting HVAC mode to heat."""
-    await setup_integration(hass, mock_config_entry, mock_watts_client)
+    await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -175,7 +175,7 @@ async def test_set_hvac_mode_auto(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test setting HVAC mode to auto."""
-    await setup_integration(hass, mock_config_entry, mock_watts_client)
+    await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -198,7 +198,7 @@ async def test_set_hvac_mode_off(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test setting HVAC mode to off."""
-    await setup_integration(hass, mock_config_entry, mock_watts_client)
+    await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -221,7 +221,7 @@ async def test_set_temperature_api_error(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test error handling when setting temperature fails."""
-    await setup_integration(hass, mock_config_entry, mock_watts_client)
+    await setup_integration(hass, mock_config_entry)
 
     # Make the API call fail
     mock_watts_client.set_thermostat_temperature.side_effect = RuntimeError("API Error")
@@ -244,7 +244,7 @@ async def test_set_hvac_mode_value_error(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test error handling when setting mode fails."""
-    await setup_integration(hass, mock_config_entry, mock_watts_client)
+    await setup_integration(hass, mock_config_entry)
 
     mock_watts_client.set_thermostat_mode.side_effect = ValueError("Invalid mode")
 

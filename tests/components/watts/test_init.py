@@ -26,7 +26,7 @@ async def test_setup_entry_success(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test successful setup and unload of entry."""
-    await setup_integration(hass, mock_config_entry, mock_watts_client)
+    await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
