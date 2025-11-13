@@ -136,7 +136,9 @@ class IcloudAccount:
             _LOGGER.error("No iCloud device found")
             raise ConfigEntryNotReady from err
 
-        self._owner_fullname = f"{user_info.get('firstName')} {user_info.get('lastName')}"
+        self._owner_fullname = (
+            f"{user_info.get('firstName')} {user_info.get('lastName')}"
+        )
 
         self._family_members_fullname = {}
         if user_info.get("membersInfo") is not None:
