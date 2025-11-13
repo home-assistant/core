@@ -1,7 +1,6 @@
 """Fixtures for the Watts integration tests."""
 
 from collections.abc import Generator
-import json
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -15,7 +14,11 @@ from homeassistant.components.watts.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import (
+    MockConfigEntry,
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
 
 CLIENT_ID = "test_client_id"
 CLIENT_SECRET = "test_client_secret"
@@ -56,9 +59,9 @@ def mock_watts_client() -> Generator[AsyncMock]:
     ) as mock_client_class:
         client = mock_client_class.return_value
 
-        discover_data = json.loads(load_fixture("discover_devices.json", DOMAIN))
-        device_report_data = json.loads(load_fixture("device_report.json", DOMAIN))
-        device_detail_data = json.loads(load_fixture("device_detail.json", DOMAIN))
+        discover_data = load_json_array_fixture("discover_devices.json", DOMAIN)
+        device_report_data = load_json_object_fixture("device_report.json", DOMAIN)
+        device_detail_data = load_json_object_fixture("device_detail.json", DOMAIN)
 
         discovered_devices = [
             create_device_from_data(device_data) for device_data in discover_data
