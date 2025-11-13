@@ -36,8 +36,8 @@ class IntegerTypeData(TypeInformation):
 
     min: int
     max: int
-    scale: float
-    step: float
+    scale: int
+    step: int
     unit: str | None = None
 
     @property
@@ -55,7 +55,7 @@ class IntegerTypeData(TypeInformation):
         """Return the step scaled."""
         return self.step / (10**self.scale)
 
-    def scale_value(self, value: float) -> float:
+    def scale_value(self, value: int) -> float:
         """Scale a value."""
         return value / (10**self.scale)
 
@@ -93,8 +93,8 @@ class IntegerTypeData(TypeInformation):
             dpcode,
             min=int(parsed["min"]),
             max=int(parsed["max"]),
-            scale=float(parsed["scale"]),
-            step=max(float(parsed["step"]), 1),
+            scale=int(parsed["scale"]),
+            step=int(parsed["step"]),
             unit=parsed.get("unit"),
         )
 
