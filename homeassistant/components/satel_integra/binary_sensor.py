@@ -8,25 +8,22 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.const import CONF_NAME
+from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     CONF_OUTPUT_NUMBER,
-    CONF_OUTPUTS,
     CONF_ZONE_NUMBER,
     CONF_ZONE_TYPE,
-    CONF_ZONES,
-    DOMAIN,
     SIGNAL_OUTPUTS_UPDATED,
     SIGNAL_ZONES_UPDATED,
     SUBENTRY_TYPE_OUTPUT,
     SUBENTRY_TYPE_ZONE,
     SatelConfigEntry,
 )
+from .entity import SatelIntegraEntity
 
 
 async def async_setup_entry(
@@ -46,18 +43,16 @@ async def async_setup_entry(
     for subentry in zone_subentries:
         zone_num: int = subentry.data[CONF_ZONE_NUMBER]
         zone_type: BinarySensorDeviceClass = subentry.data[CONF_ZONE_TYPE]
-        zone_name: str = subentry.data[CONF_NAME]
 
         async_add_entities(
             [
                 SatelIntegraBinarySensor(
                     controller,
-                    zone_num,
-                    zone_name,
-                    zone_type,
-                    CONF_ZONES,
-                    SIGNAL_ZONES_UPDATED,
                     config_entry.entry_id,
+                    subentry,
+                    zone_num,
+                    zone_type,
+                    SIGNAL_ZONES_UPDATED,
                 )
             ],
             config_subentry_id=subentry.subentry_id,
@@ -71,51 +66,44 @@ async def async_setup_entry(
     for subentry in output_subentries:
         output_num: int = subentry.data[CONF_OUTPUT_NUMBER]
         ouput_type: BinarySensorDeviceClass = subentry.data[CONF_ZONE_TYPE]
-        output_name: str = subentry.data[CONF_NAME]
 
         async_add_entities(
             [
                 SatelIntegraBinarySensor(
                     controller,
-                    output_num,
-                    output_name,
-                    ouput_type,
-                    CONF_OUTPUTS,
-                    SIGNAL_OUTPUTS_UPDATED,
                     config_entry.entry_id,
+                    subentry,
+                    output_num,
+                    ouput_type,
+                    SIGNAL_OUTPUTS_UPDATED,
                 )
             ],
             config_subentry_id=subentry.subentry_id,
         )
 
 
-class SatelIntegraBinarySensor(BinarySensorEntity):
+class SatelIntegraBinarySensor(SatelIntegraEntity, BinarySensorEntity):
     """Representation of an Satel Integra binary sensor."""
-
-    _attr_should_poll = False
-    _attr_has_entity_name = True
-    _attr_name = None
 
     def __init__(
         self,
         controller: AsyncSatel,
-        device_number: int,
-        device_name: str,
-        device_class: BinarySensorDeviceClass,
-        sensor_type: str,
-        react_to_signal: str,
         config_entry_id: str,
+        subentry: ConfigSubentry,
+        device_number: int,
+        device_class: BinarySensorDeviceClass,
+        react_to_signal: str,
     ) -> None:
         """Initialize the binary_sensor."""
-        self._device_number = device_number
-        self._attr_unique_id = f"{config_entry_id}_{sensor_type}_{device_number}"
-        self._react_to_signal = react_to_signal
-        self._satel = controller
+        super().__init__(
+            controller,
+            config_entry_id,
+            subentry,
+            device_number,
+        )
 
         self._attr_device_class = device_class
-        self._attr_device_info = DeviceInfo(
-            name=device_name, identifiers={(DOMAIN, self._attr_unique_id)}
-        )
+        self._react_to_signal = react_to_signal
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
