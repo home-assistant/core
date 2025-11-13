@@ -1,6 +1,6 @@
 """The tests for the yale platform."""
 
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from aiohttp import ClientResponseError
 import pytest
@@ -19,6 +19,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
+)
 from homeassistant.setup import async_setup_component
 
 from .mocks import (
@@ -28,6 +31,8 @@ from .mocks import (
     _mock_inoperative_yale_lock_detail,
     _mock_lock_with_offline_key,
     _mock_operative_yale_lock_detail,
+    mock_client_credentials,
+    mock_yale_config_entry,
 )
 
 from tests.typing import WebSocketGenerator
@@ -234,3 +239,18 @@ async def test_device_remove_devices(
     )
     response = await client.remove_device(dead_device_entry.id, config_entry.entry_id)
     assert response["success"]
+
+
+async def test_oauth_implementation_not_available(hass: HomeAssistant) -> None:
+    """Test that unavailable OAuth implementation raises ConfigEntryNotReady."""
+    await mock_client_credentials(hass)
+    entry = await mock_yale_config_entry(hass)
+
+    with patch(
+        "homeassistant.components.yale.async_get_config_entry_implementation",
+        side_effect=ImplementationUnavailableError,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY

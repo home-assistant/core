@@ -1,25 +1,38 @@
 {
+  "entity": {
+    "event": {
+      "update_event": {
+        "default": "mdi:message-reply"
+      }
+    }
+  },
   "services": {
-    "send_message": {
-      "service": "mdi:send"
+    "answer_callback_query": {
+      "service": "mdi:check"
     },
-    "send_chat_action": {
-      "service": "mdi:send"
+    "delete_message": {
+      "service": "mdi:delete"
     },
-    "send_photo": {
-      "service": "mdi:camera"
+    "edit_caption": {
+      "service": "mdi:pencil"
     },
-    "send_sticker": {
-      "service": "mdi:sticker"
+    "edit_message": {
+      "service": "mdi:pencil"
+    },
+    "edit_message_media": {
+      "service": "mdi:pencil"
+    },
+    "edit_replymarkup": {
+      "service": "mdi:pencil"
+    },
+    "leave_chat": {
+      "service": "mdi:exit-run"
     },
     "send_animation": {
       "service": "mdi:animation"
     },
-    "send_video": {
-      "service": "mdi:video"
-    },
-    "send_voice": {
-      "service": "mdi:microphone"
+    "send_chat_action": {
+      "service": "mdi:send"
     },
     "send_document": {
       "service": "mdi:file-document"
@@ -27,26 +40,23 @@
     "send_location": {
       "service": "mdi:map-marker"
     },
+    "send_message": {
+      "service": "mdi:send"
+    },
+    "send_photo": {
+      "service": "mdi:camera"
+    },
     "send_poll": {
       "service": "mdi:poll"
     },
-    "edit_message": {
-      "service": "mdi:pencil"
+    "send_sticker": {
+      "service": "mdi:sticker"
     },
-    "edit_caption": {
-      "service": "mdi:pencil"
+    "send_video": {
+      "service": "mdi:video"
     },
-    "edit_replymarkup": {
-      "service": "mdi:pencil"
-    },
-    "answer_callback_query": {
-      "service": "mdi:check"
-    },
-    "delete_message": {
-      "service": "mdi:delete"
-    },
-    "leave_chat": {
-      "service": "mdi:exit-run"
+    "send_voice": {
+      "service": "mdi:microphone"
     },
     "set_message_reaction": {
       "service": "mdi:emoticon-happy"
