@@ -1,6 +1,5 @@
 """Provides triggers for covers."""
 
-import logging
 from typing import Final
 
 import voluptuous as vol
@@ -29,8 +28,6 @@ COVER_OPENED_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.extend(
         },
     }
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def get_device_class_or_undefined(
@@ -65,7 +62,6 @@ class CoverOpenedClosedTrigger(EntityTriggerBase):
 
     def is_state_to_state(self, state: State) -> bool:
         """Check if the state matches the target state."""
-        _LOGGER.debug("Checking state %s for cover opened trigger", state)
         if state.state not in self._to_states:
             return False
         if (
