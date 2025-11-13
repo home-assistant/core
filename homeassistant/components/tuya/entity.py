@@ -66,8 +66,8 @@ class TuyaEntity(Entity):
         LOGGER.debug("Sending commands for device %s: %s", self.device.id, commands)
         self.device_manager.send_commands(self.device.id, commands)
 
-    def _read_dpcode(self, dpcode_wrapper: DPCodeWrapper | None) -> Any | None:
-        """Read to the device."""
+    def _read_wrapper(self, dpcode_wrapper: DPCodeWrapper | None) -> Any | None:
+        """Read the wrapper device status."""
         if dpcode_wrapper is None:
             return None
         return dpcode_wrapper.read_device_status(self.device)

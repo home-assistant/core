@@ -83,14 +83,14 @@ class TuyaCameraEntity(TuyaEntity, CameraEntity):
     @property
     def is_recording(self) -> bool:
         """Return true if the device is recording."""
-        if (status := self._read_dpcode(self._recording_status)) is not None:
+        if (status := self._read_wrapper(self._recording_status)) is not None:
             return status
         return False
 
     @property
     def motion_detection_enabled(self) -> bool:
         """Return the camera motion detection status."""
-        if (status := self._read_dpcode(self._motion_detection_switch)) is not None:
+        if (status := self._read_wrapper(self._motion_detection_switch)) is not None:
             return status
         return False
 
