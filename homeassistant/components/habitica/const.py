@@ -13,6 +13,10 @@ SIGN_UP_URL = "https://habitica.com/register"
 HABITICANS_URL = "https://cdn.habitica.com/assets/home-main@3x-Dwnue45Z.png"
 
 DOMAIN = "habitica"
+DATA_HABIT_SENSORS = "habitica_habit_sensors"
+
+# Optimistic updates
+OPTIMISTIC_HABIT_SCORE_DELTA = 1.0
 
 MANUFACTURER = "HabitRPG, Inc."
 NAME = "Habitica"

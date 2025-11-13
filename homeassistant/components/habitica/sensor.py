@@ -13,17 +13,21 @@ from uuid import UUID
 from habiticalib import ContentData, GroupData, HabiticaClass, TaskData, UserData, ha
 
 from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
 from . import HABITICA_KEY
-from .const import ASSETS_URL
+from .const import ASSETS_URL, DATA_HABIT_SENSORS, DOMAIN
 from .coordinator import HabiticaConfigEntry, HabiticaDataUpdateCoordinator
 from .entity import HabiticaBase, HabiticaPartyBase, HabiticaPartyMemberBase
 from .util import (
@@ -304,20 +308,6 @@ SENSOR_DESCRIPTIONS: tuple[HabiticaSensorEntityDescription, ...] = (
         key=HabiticaSensorEntity.HABITS,
         translation_key=HabiticaSensorEntity.HABITS,
         value_fn=lambda user, _: len([h for h in user.tasksOrder.habits if h]),
-        entity_picture=ha.HABIT,
-        attributes_fn=lambda user, _: {
-            "habit_tasks": [
-                {
-                    "id": str(habit.id),
-                    "text": habit.text,
-                    "value": habit.value,
-                    "counter_up": habit.counterUp,
-                    "counter_down": habit.counterDown,
-                }
-                for habit in user.tasks.habits.values()
-                if habit and habit.id
-            ][:10]  # Limit to 10 habits for performance
-        },
     ),
 )
 
@@ -411,18 +401,56 @@ async def async_setup_entry(
 
     coordinator = config_entry.runtime_data
 
+    # Initialize habit sensor registry in hass.data
+    config_entry_id = config_entry.entry_id
+    if DATA_HABIT_SENSORS not in hass.data:
+        hass.data[DATA_HABIT_SENSORS] = {}
+    if config_entry_id not in hass.data[DATA_HABIT_SENSORS]:
+        hass.data[DATA_HABIT_SENSORS][config_entry_id] = {}
+
     async_add_entities(
         HabiticaSensor(coordinator, description)
         for description in SENSOR_DESCRIPTIONS + SENSOR_DESCRIPTIONS_COMMON
     )
 
-    # Add individual habit sensors
-    if coordinator.data and coordinator.data.habits:
-        habit_sensors = []
-        for habit in coordinator.data.habits:
-            if habit and habit.id:
-                habit_sensors.append(HabiticaHabitSensor(coordinator, habit))
-        async_add_entities(habit_sensors)
+    # Add individual habit sensors with dynamic management
+    habits_added: set[str] = set()
+
+    @callback
+    def add_habit_sensors() -> None:
+        """Add or remove habit sensors based on coordinator data."""
+        nonlocal habits_added
+        sensors = []
+        entity_registry = er.async_get(hass)
+
+        current_habits = set()
+        if coordinator.data and coordinator.data.habits:
+            for habit in coordinator.data.habits:
+                if habit and habit.id:
+                    habit_id = str(habit.id)
+                    current_habits.add(habit_id)
+
+                    # Add new habit sensor if not already added
+                    if habit_id not in habits_added:
+                        sensors.append(HabiticaHabitSensor(coordinator, habit))
+                        habits_added.add(habit_id)
+
+        # Remove sensors for habits that no longer exist
+        for habit_id in habits_added.copy():
+            if habit_id not in current_habits:
+                if entity_id := entity_registry.async_get_entity_id(
+                    SENSOR_DOMAIN,
+                    DOMAIN,
+                    f"{coordinator.config_entry.unique_id}_habit_{habit_id}",
+                ):
+                    entity_registry.async_remove(entity_id)
+                habits_added.remove(habit_id)
+
+        if sensors:
+            async_add_entities(sensors)
+
+    coordinator.async_add_listener(add_habit_sensors)
+    add_habit_sensors()
 
     if party := coordinator.data.user.party.id:
         party_coordinator = hass.data[HABITICA_KEY][party]
@@ -503,10 +531,12 @@ class HabiticaSensor(HabiticaBase, SensorEntity):
         return None
 
 
-class HabiticaHabitSensor(HabiticaBase, SensorEntity):
+class HabiticaHabitSensor(
+    CoordinatorEntity[HabiticaDataUpdateCoordinator], SensorEntity
+):
     """Sensor for individual Habitica habits."""
 
-    _attr_has_entity_name = True
+    _attr_has_entity_name = False
 
     def __init__(
         self,
@@ -516,36 +546,120 @@ class HabiticaHabitSensor(HabiticaBase, SensorEntity):
         """Initialize the habit sensor."""
         super().__init__(coordinator)
         self.habit = habit
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_habit_{habit.id}"
+        self.habit_id = str(habit.id)
+        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_habit_{habit.id}"
         self._attr_name = habit.text
-        self._attr_entity_picture = f"{ASSETS_URL}{ha.HABIT}"
+        self._optimistic_value: float | None = None
+        self._optimistic_counter_up: int | None = None
+        self._optimistic_counter_down: int | None = None
+
+        # Set device info to link to the main Habitica device
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, coordinator.config_entry.unique_id)},
+        )
+
+    def _get_current_habit(self) -> TaskData | None:
+        """Get current habit data from coordinator."""
+        if self.coordinator.data and self.coordinator.data.habits:
+            for habit in self.coordinator.data.habits:
+                if habit and habit.id == self.habit.id:
+                    return habit
+        return None
+
+    def set_optimistic_update(self, value_delta: float, direction: str) -> None:
+        """Set optimistic value for immediate UI feedback."""
+        current_habit = self._get_current_habit()
+        if current_habit:
+            # Set optimistic value
+            current_value = current_habit.value if current_habit.value else 0
+            self._optimistic_value = round(current_value + value_delta, 2)
+
+            # Set optimistic counters
+            if direction == "up":
+                self._optimistic_counter_up = (current_habit.counterUp or 0) + 1
+                self._optimistic_counter_down = current_habit.counterDown or 0
+            else:
+                self._optimistic_counter_up = current_habit.counterUp or 0
+                self._optimistic_counter_down = (current_habit.counterDown or 0) + 1
+
+            # Trigger state update
+            self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+
+        # Register this sensor in hass.data for button lookup
+        config_entry_id = self.coordinator.config_entry.entry_id
+        if DATA_HABIT_SENSORS in self.hass.data:
+            if config_entry_id in self.hass.data[DATA_HABIT_SENSORS]:
+                self.hass.data[DATA_HABIT_SENSORS][config_entry_id][self.habit_id] = (
+                    self
+                )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """When entity will be removed from hass."""
+        await super().async_will_remove_from_hass()
+
+        # Unregister this sensor
+        config_entry_id = self.coordinator.config_entry.entry_id
+        if (
+            DATA_HABIT_SENSORS in self.hass.data
+            and config_entry_id in self.hass.data[DATA_HABIT_SENSORS]
+            and self.habit_id in self.hass.data[DATA_HABIT_SENSORS][config_entry_id]
+        ):
+            del self.hass.data[DATA_HABIT_SENSORS][config_entry_id][self.habit_id]
+
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        # Clear optimistic values when real data arrives
+        self._optimistic_value = None
+        self._optimistic_counter_up = None
+        self._optimistic_counter_down = None
+        super()._handle_coordinator_update()
 
     @property
     def native_value(self) -> StateType:
         """Return the habit value."""
+        # Return optimistic value if set (for immediate UI feedback)
+        if self._optimistic_value is not None:
+            return self._optimistic_value
+
         # Find the current habit data from coordinator
-        if self.coordinator.data and self.coordinator.data.habits:
-            for current_habit in self.coordinator.data.habits:
-                if current_habit and current_habit.id == self.habit.id:
-                    return round(current_habit.value, 2) if current_habit.value else 0
+        current_habit = self._get_current_habit()
+        if current_habit:
+            return round(current_habit.value, 2) if current_habit.value else 0
         return 0
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return habit specific attributes."""
-        if self.coordinator.data and self.coordinator.data.habits:
-            for current_habit in self.coordinator.data.habits:
-                if current_habit and current_habit.id == self.habit.id:
-                    return {
-                        "habit_id": str(current_habit.id),
-                        "text": current_habit.text,
-                        "notes": current_habit.notes or "",
-                        "counter_up": current_habit.counterUp or 0,
-                        "counter_down": current_habit.counterDown or 0,
-                        "frequency": current_habit.frequency.value if current_habit.frequency else "daily",
-                        "up": current_habit.up if hasattr(current_habit, 'up') else True,
-                        "down": current_habit.down if hasattr(current_habit, 'down') else True,
-                    }
+        current_habit = self._get_current_habit()
+        if current_habit:
+            # Use optimistic counters if available for immediate UI feedback
+            counter_up = (
+                self._optimistic_counter_up
+                if self._optimistic_counter_up is not None
+                else (current_habit.counterUp or 0)
+            )
+            counter_down = (
+                self._optimistic_counter_down
+                if self._optimistic_counter_down is not None
+                else (current_habit.counterDown or 0)
+            )
+
+            return {
+                "habit_id": str(current_habit.id),
+                "text": current_habit.text,
+                "notes": current_habit.notes or "",
+                "counter_up": counter_up,
+                "counter_down": counter_down,
+                "frequency": current_habit.frequency.value
+                if current_habit.frequency
+                else "daily",
+                "up": current_habit.up if hasattr(current_habit, "up") else True,
+                "down": current_habit.down if hasattr(current_habit, "down") else True,
+            }
         return {}
 
 

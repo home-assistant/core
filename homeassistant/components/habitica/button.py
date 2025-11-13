@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
 
-from habiticalib import Direction, Habitica, HabiticaClass, Skill, TaskType, ha
+from habiticalib import Direction, Habitica, HabiticaClass, Skill, TaskType
 
 from homeassistant.components.button import (
     DOMAIN as BUTTON_DOMAIN,
@@ -16,10 +16,16 @@ from homeassistant.components.button import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ASSETS_URL, DOMAIN
-from .coordinator import HabiticaConfigEntry, HabiticaData
+from .const import ASSETS_URL, DATA_HABIT_SENSORS, DOMAIN, OPTIMISTIC_HABIT_SCORE_DELTA
+from .coordinator import (
+    HabiticaConfigEntry,
+    HabiticaData,
+    HabiticaDataUpdateCoordinator,
+)
 from .entity import HabiticaBase
 
 PARALLEL_UPDATES = 1
@@ -289,16 +295,53 @@ async def async_setup_entry(
         HabiticaButton(coordinator, description) for description in BUTTON_DESCRIPTIONS
     )
 
-    # Add individual habit buttons
-    if coordinator.data and coordinator.data.habits:
-        habit_buttons = []
-        for habit in coordinator.data.habits:
-            if habit and habit.id:
-                # Create positive button
-                habit_buttons.append(HabiticaHabitButton(coordinator, habit, "up"))
-                # Create negative button  
-                habit_buttons.append(HabiticaHabitButton(coordinator, habit, "down"))
-        async_add_entities(habit_buttons)
+    # Add individual habit buttons with dynamic management
+    habits_added: set[str] = set()
+
+    @callback
+    def add_habit_buttons() -> None:
+        """Add or remove habit buttons based on coordinator data."""
+        nonlocal habits_added
+        buttons = []
+        entity_registry = er.async_get(hass)
+
+        current_habits = set()
+        if coordinator.data and coordinator.data.habits:
+            for habit in coordinator.data.habits:
+                if habit and habit.id:
+                    habit_id = str(habit.id)
+                    current_habits.add(habit_id)
+
+                    # Add new habit buttons if not already added
+                    if habit_id not in habits_added:
+                        buttons.append(HabiticaHabitButton(coordinator, habit, "up"))
+                        buttons.append(HabiticaHabitButton(coordinator, habit, "down"))
+                        habits_added.add(habit_id)
+
+        # Remove buttons for habits that no longer exist
+        for habit_id in habits_added.copy():
+            if habit_id not in current_habits:
+                # Remove up button
+                if entity_id := entity_registry.async_get_entity_id(
+                    BUTTON_DOMAIN,
+                    DOMAIN,
+                    f"{coordinator.config_entry.unique_id}_habit_{habit_id}_up",
+                ):
+                    entity_registry.async_remove(entity_id)
+                # Remove down button
+                if entity_id := entity_registry.async_get_entity_id(
+                    BUTTON_DOMAIN,
+                    DOMAIN,
+                    f"{coordinator.config_entry.unique_id}_habit_{habit_id}_down",
+                ):
+                    entity_registry.async_remove(entity_id)
+                habits_added.remove(habit_id)
+
+        if buttons:
+            async_add_entities(buttons)
+
+    coordinator.async_add_listener(add_habit_buttons)
+    add_habit_buttons()
 
 
 class HabiticaButton(HabiticaBase, ButtonEntity):
@@ -328,14 +371,16 @@ class HabiticaButton(HabiticaBase, ButtonEntity):
         return None
 
 
-class HabiticaHabitButton(HabiticaBase, ButtonEntity):
+class HabiticaHabitButton(
+    CoordinatorEntity[HabiticaDataUpdateCoordinator], ButtonEntity
+):
     """Button for scoring Habitica habits."""
 
-    _attr_has_entity_name = True
+    _attr_has_entity_name = False
 
     def __init__(
         self,
-        coordinator: HabiticaConfigEntry,
+        coordinator: HabiticaDataUpdateCoordinator,
         habit: Any,
         direction: str,
     ) -> None:
@@ -343,15 +388,43 @@ class HabiticaHabitButton(HabiticaBase, ButtonEntity):
         super().__init__(coordinator)
         self.habit = habit
         self.direction = direction
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_habit_{habit.id}_{direction}"
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.unique_id}_habit_{habit.id}_{direction}"
+        )
         self._attr_name = f"{habit.text} ({direction})"
         self._attr_icon = "mdi:plus" if direction == "up" else "mdi:minus"
-        self._attr_entity_picture = f"{ASSETS_URL}{ha.HABIT}"
+
+        # Set device info to link to the main Habitica device
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, coordinator.config_entry.unique_id)},
+        )
+
+    def _get_habit_sensor(self) -> Any | None:
+        """Get the corresponding habit sensor from registry."""
+        config_entry_id = self.coordinator.config_entry.entry_id
+        habit_id = str(self.habit.id)
+        return (
+            self.hass.data.get(DATA_HABIT_SENSORS, {})
+            .get(config_entry_id, {})
+            .get(habit_id)
+        )
 
     async def async_press(self) -> None:
         """Handle button press to score habit."""
         direction_value = Direction.UP if self.direction == "up" else Direction.DOWN
-        
+
+        # Optimistic update: immediately update the sensor for responsive UI
+        estimated_delta = (
+            OPTIMISTIC_HABIT_SCORE_DELTA
+            if self.direction == "up"
+            else -OPTIMISTIC_HABIT_SCORE_DELTA
+        )
+
+        # Find the corresponding sensor and trigger optimistic update
+        if sensor := self._get_habit_sensor():
+            sensor.set_optimistic_update(estimated_delta, self.direction)
+
+        # Execute the actual API call (this will trigger coordinator refresh after)
         await self.coordinator.execute(
             lambda habitica: habitica.update_score(self.habit.id, direction_value)
         )
@@ -361,12 +434,11 @@ class HabiticaHabitButton(HabiticaBase, ButtonEntity):
         """Return if button is available."""
         if not super().available or not self.coordinator.data:
             return False
-        
+
         # Check if habit still exists and allows this direction
         for current_habit in self.coordinator.data.habits:
             if current_habit and current_habit.id == self.habit.id:
                 if self.direction == "up":
-                    return getattr(current_habit, 'up', True)
-                else:
-                    return getattr(current_habit, 'down', True)
+                    return getattr(current_habit, "up", True)
+                return getattr(current_habit, "down", True)
         return False

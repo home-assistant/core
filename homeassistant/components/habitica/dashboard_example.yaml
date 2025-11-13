@@ -1,0 +1,33 @@
+type: vertical-stack
+cards:
+  - type: horizontal-stack
+    cards:
+      - show_name: true
+        show_icon: true
+        type: button
+        entity: button.demo_habit_down
+        name: −
+        icon: mdi:minus-circle
+        tap_action:
+          action: toggle
+      - type: entity
+        entity: sensor.demo_habit
+        name: Demo Habit
+        secondary_info: last-changed
+      - type: button
+        entity: button.demo_habit_up
+        name: +
+        icon: mdi:plus-circle
+        tap_action:
+          action: toggle
+  - type: markdown
+    content: |
+      **{{ state_attr('sensor.demo_habit', 'text') }}**
+
+      📝 {{ state_attr('sensor.demo_habit', 'notes') }}
+
+      ✅ Completed: {{ state_attr('sensor.demo_habit', 'counter_up') }} times
+      ❌ Missed: {{ state_attr('sensor.demo_habit', 'counter_down') }} times
+      🔄 Resets: {{ state_attr('sensor.demo_habit', 'frequency') }}
+
+      Current Score: **{{ states('sensor.demo_habit') }}**

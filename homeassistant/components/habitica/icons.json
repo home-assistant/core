@@ -135,6 +135,9 @@
       "group_leader": {
         "default": "mdi:shield-crown"
       },
+      "habits": {
+        "default": "mdi:checkbox-multiple-marked-circle-outline"
+      },
       "hatching_potions_total": {
         "default": "mdi:flask-round-bottom"
       },
