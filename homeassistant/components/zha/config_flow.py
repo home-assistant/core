@@ -84,6 +84,9 @@ FORMATION_REUSE_SETTINGS = "reuse_settings"
 FORMATION_CHOOSE_AUTOMATIC_BACKUP = "choose_automatic_backup"
 FORMATION_UPLOAD_MANUAL_BACKUP = "upload_manual_backup"
 
+# A no-op progress step to ensure the frontend registers this integration's config flow
+PRE_CONFIRM_DELAY = 0.5
+
 CHOOSE_AUTOMATIC_BACKUP = "choose_automatic_backup"
 OVERWRITE_COORDINATOR_IEEE = "overwrite_coordinator_ieee"
 
@@ -193,6 +196,7 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
 
         self._hass = None  # type: ignore[assignment]
         self._radio_mgr = ZhaRadioManager()
+        self._pre_confirm_task: asyncio.Task[None] | None = None
         self._restore_backup_task: asyncio.Task[None] | None = None
         self._reset_old_radio_task: asyncio.Task[None] | None = None
         self._form_network_task: asyncio.Task[None] | None = None
@@ -874,6 +878,31 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
         """Handle a ZHA config flow start."""
         return await self.async_step_choose_serial_port(user_input)
 
+    async def async_step_pre_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Fake initial progress step to help config flow chaining."""
+
+        if self._pre_confirm_task is None:
+            self._pre_confirm_task = self.hass.async_create_task(
+                asyncio.sleep(PRE_CONFIRM_DELAY),
+                "Pre-confirm task",
+            )
+
+        if not self._pre_confirm_task.done():
+            return self.async_show_progress(
+                step_id="pre_confirm",
+                progress_action="pre_confirm",
+                progress_task=self._pre_confirm_task,
+            )
+
+        try:
+            await self._pre_confirm_task
+        finally:
+            self._pre_confirm_task = None
+
+        return self.async_show_progress_done(next_step_id="confirm")
+
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -988,7 +1017,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
             pid,
         )
         self.context["title_placeholders"] = {CONF_NAME: self._title}
-        return await self.async_step_confirm()
+        return await self.async_step_pre_confirm()
 
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
@@ -1057,7 +1086,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
             }
         )
 
-        return await self.async_step_confirm()
+        return await self.async_step_pre_confirm()
 
     async def async_step_hardware(
         self, data: dict[str, Any] | None = None
@@ -1088,7 +1117,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
         self._radio_mgr.device_settings = device_settings
         self.context["title_placeholders"] = {CONF_NAME: name}
 
-        return await self.async_step_confirm()
+        return await self.async_step_pre_confirm()
 
     async def _async_create_radio_entry(self) -> ConfigFlowResult:
         """Create a config entry with the current flow state."""

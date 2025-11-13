@@ -79,6 +79,13 @@ def disable_platform_only():
 
 
 @pytest.fixture(autouse=True)
+def reduce_pre_confirm_delay():
+    """Disable pre-confirm step delay to speed up tests."""
+    with patch("homeassistant.components.zha.config_flow.PRE_CONFIRM_DELAY", 0):
+        yield
+
+
+@pytest.fixture(autouse=True)
 def mock_multipan_platform():
     """Mock the multipan platform."""
     with (
