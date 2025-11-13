@@ -14,7 +14,6 @@ from aiohomeconnect.model.error import (
     TooManyRequestsError,
 )
 
-from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -62,12 +61,11 @@ class HomeConnectEntity(CoordinatorEntity[HomeConnectCoordinator]):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self.update_native_value()
-        available = self._attr_available = self.appliance.info.connected
         self.async_write_ha_state()
         _LOGGER.debug(
             "Updated %s, new state: %s",
             self.entity_id,
-            STATE_UNAVAILABLE if not available else self.state,
+            self._stringify_state(self.available),
         )
 
     @property
@@ -83,11 +81,16 @@ class HomeConnectEntity(CoordinatorEntity[HomeConnectCoordinator]):
         as event updates should take precedence over the coordinator
         refresh.
         """
-        return self._attr_available
+        return self.appliance.info.connected
 
 
 class HomeConnectOptionEntity(HomeConnectEntity):
     """Class for entities that represents program options."""
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return super().available and self.bsh_key in self.appliance.options
 
     @property
     def option_value(self) -> str | int | float | bool | None:
@@ -95,20 +98,6 @@ class HomeConnectOptionEntity(HomeConnectEntity):
         if event := self.appliance.events.get(EventKey(self.bsh_key)):
             return event.value
         return None
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self.update_native_value()
-        available = self._attr_available = (
-            self.appliance.info.connected and self.bsh_key in self.appliance.options
-        )
-        self.async_write_ha_state()
-        _LOGGER.debug(
-            "Updated %s, new state: %s",
-            self.entity_id,
-            STATE_UNAVAILABLE if not available else self.state,
-        )
 
     async def async_set_option(self, value: str | float | bool) -> None:
         """Set an option for the entity."""
