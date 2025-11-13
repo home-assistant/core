@@ -75,9 +75,9 @@ class BSBLANClimate(BSBLanEntity, ClimateEntity):
         self._attr_unique_id = f"{format_mac(data.device.MAC)}-climate"
 
         # Set temperature range if available, otherwise use Home Assistant defaults
-        if data.static.min_temp.value is not None:
+        if data.static.min_temp is not None and data.static.min_temp.value is not None:
             self._attr_min_temp = data.static.min_temp.value
-        if data.static.max_temp.value is not None:
+        if data.static.max_temp is not None and data.static.max_temp.value is not None:
             self._attr_max_temp = data.static.max_temp.value
         self._attr_temperature_unit = data.fast_coordinator.client.get_temperature_unit
 
