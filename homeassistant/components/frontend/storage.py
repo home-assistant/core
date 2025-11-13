@@ -11,6 +11,7 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api import ActiveConnection
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import singleton
 from homeassistant.helpers.storage import Store
 from homeassistant.util.hass_dict import HassKey
 
@@ -88,12 +89,12 @@ class _UserStore(Store[dict[str, Any]]):
         )
 
 
+@singleton.singleton(DATA_SYSTEM_STORAGE, async_=True)
 async def async_system_store(hass: HomeAssistant) -> SystemStore:
     """Access the system store."""
-    if DATA_SYSTEM_STORAGE not in hass.data:
-        store = hass.data[DATA_SYSTEM_STORAGE] = SystemStore(hass)
-        await store.async_load()
-    return hass.data[DATA_SYSTEM_STORAGE]
+    store = SystemStore(hass)
+    await store.async_load()
+    return store
 
 
 class SystemStore:
