@@ -5372,7 +5372,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'power_with_channel_name',
+    'translation_key': 'input_with_number',
     'unique_id': '123456789ABC-input:2-input',
     'unit_of_measurement': None,
   })
@@ -6338,7 +6338,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'power_with_channel_name',
+    'translation_key': 'input_with_number',
     'unique_id': '123456789ABC-input:0-input',
     'unit_of_measurement': None,
   })
@@ -6387,7 +6387,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'power_with_channel_name',
+    'translation_key': 'input_with_number',
     'unique_id': '123456789ABC-input:1-input',
     'unit_of_measurement': None,
   })
@@ -7392,7 +7392,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'power_with_channel_name',
+    'translation_key': 'input_with_number',
     'unique_id': '123456789ABC-input:0-input',
     'unit_of_measurement': None,
   })
@@ -7441,7 +7441,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'power_with_channel_name',
+    'translation_key': 'input_with_number',
     'unique_id': '123456789ABC-input:1-input',
     'unit_of_measurement': None,
   })

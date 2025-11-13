@@ -41,6 +41,7 @@ from .utils import (
     get_device_entry_gen,
     get_entity_translation_attributes,
     get_rpc_channel_name,
+    get_rpc_entity_name,
     is_block_momentary_input,
     is_rpc_momentary_input,
     is_view_for_platform,
@@ -85,9 +86,6 @@ class RpcBinarySensor(ShellyRpcAttributeEntity, BinarySensorEntity):
             delattr(self, "_attr_name")
 
         if not description.role:
-            translation_placeholders = None
-            translation_key = None
-
             if description.key != "input":
                 translation_placeholders, translation_key = (
                     get_entity_translation_attributes(
@@ -97,17 +95,21 @@ class RpcBinarySensor(ShellyRpcAttributeEntity, BinarySensorEntity):
                         self._default_to_device_class_name(),
                     )
                 )
+
+                if translation_placeholders:
+                    self._attr_translation_placeholders = translation_placeholders
+                    if translation_key:
+                        self._attr_translation_key = translation_key
             else:
                 component = key.split(":")[0]
                 component_id = key.split(":")[-1]
                 if component.lower() == "input" and component_id.isnumeric():
-                    translation_placeholders = {"input_number": component_id}
-                    translation_key = "input_with_number"
-
-            if translation_placeholders:
-                self._attr_translation_placeholders = translation_placeholders
-                if translation_key:
-                    self._attr_translation_key = translation_key
+                    self._attr_translation_placeholders = {"input_number": component_id}
+                    self._attr_translation_key = "input_with_number"
+                else:
+                    self._attr_name = get_rpc_entity_name(
+                        coordinator.device, key, description.name, description.role
+                    )
 
     @property
     def is_on(self) -> bool:
