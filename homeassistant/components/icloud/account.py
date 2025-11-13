@@ -12,7 +12,7 @@ from pyicloud.exceptions import (
     PyiCloudFailedLoginException,
     PyiCloudNoDevicesException,
     PyiCloudServiceNotActivatedException,
-    PyiCloudServiceUnavailable
+    PyiCloudServiceUnavailable,
 )
 from pyicloud.services.findmyiphone import AppleDevice
 
