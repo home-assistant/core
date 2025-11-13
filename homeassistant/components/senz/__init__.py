@@ -6,12 +6,12 @@ from datetime import timedelta
 import logging
 
 from aiosenz import SENZAPI, Thermostat
-from httpx import RequestError
+from httpx import HTTPStatusError, RequestError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, httpx_client
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
@@ -57,12 +57,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         account = await senz_api.get_account()
+    except HTTPStatusError as err:
+        if err.response.status_code == 401:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="config_entry_auth_failed",
+            ) from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="config_entry_not_ready",
+        ) from err
     except RequestError as err:
-        # if err.FINDTHEERRORCODE == 401:
-        #     raise ConfigEntryAuthFailed(
-        #         translation_domain=DOMAIN,
-        #         translation_key="config_entry_auth_failed",
-        #     ) from err
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="config_entry_not_ready",
