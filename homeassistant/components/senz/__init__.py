@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from http import HTTPStatus
 import logging
 
 from aiosenz import SENZAPI, Thermostat
@@ -60,7 +61,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SENZConfigEntry) -> bool
     try:
         account = await senz_api.get_account()
     except HTTPStatusError as err:
-        if err.response.status_code == 401:
+        if err.response.status_code == HTTPStatus.UNAUTHORIZED:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="config_entry_auth_failed",
