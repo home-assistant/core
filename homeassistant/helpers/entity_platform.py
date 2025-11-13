@@ -336,8 +336,8 @@ class EntityPlatform:
                 )
                 self.logger.warning(
                     (
-                        "The %s platform module for the %s custom component does not support platform"
-                        " setup because it does not implement async_setup_platform or setup_platform."
+                        "The %s platform module for the %s custom component does not implement"
+                        " async_setup_platform or setup_platform."
                     ),
                     self.platform_name,
                     self.domain,
