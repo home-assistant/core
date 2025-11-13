@@ -606,4 +606,4 @@ async def test_set_system_data_requires_admin(
     res = await client.receive_json()
     assert not res["success"], res
     assert res["error"]["code"] == "unauthorized"
-    assert res["error"]["message"] == "Admin access required"
+    assert res["error"]["message"] == "Unauthorized"
