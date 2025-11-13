@@ -35,7 +35,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-type XboxConfigEntry = ConfigEntry[XboxUpdateCoordinator]
+type XboxConfigEntry = ConfigEntry[XboxCoordinators]
 
 
 @dataclass
@@ -55,17 +55,25 @@ class XboxData:
     title_info: dict[str, Title] = field(default_factory=dict)
 
 
+@dataclass
+class XboxCoordinators:
+    """Xbox coordinators."""
+
+    status: XboxUpdateCoordinator
+    consoles: XboxConsolesCoordinator
+
+
 class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
     """Store Xbox Console Status."""
 
-    config_entry: ConfigEntry
+    config_entry: XboxConfigEntry
     consoles: SmartglassConsoleList
     client: XboxLiveClient
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: XboxConfigEntry,
     ) -> None:
         """Initialize."""
         super().__init__(
@@ -280,3 +288,43 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
             for entry in self.hass.config_entries.async_entries(DOMAIN)
             if entry.unique_id is not None
         }
+
+
+class XboxConsolesCoordinator(DataUpdateCoordinator[SmartglassConsoleList]):
+    """Update list of Xbox consoles."""
+
+    config_entry: XboxConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: XboxConfigEntry,
+        coordinator: XboxUpdateCoordinator,
+    ) -> None:
+        """Initialize."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+            update_interval=timedelta(minutes=10),
+        )
+        self.client = coordinator.client
+        self.async_set_updated_data(coordinator.consoles)
+
+    async def _async_update_data(self) -> SmartglassConsoleList:
+        """Fetch console data."""
+
+        try:
+            return await self.client.smartglass.get_console_list()
+        except TimeoutException as e:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="timeout_exception",
+            ) from e
+        except (RequestError, HTTPStatusError) as e:
+            _LOGGER.debug("Xbox exception:", exc_info=True)
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="request_exception",
+            ) from e

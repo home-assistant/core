@@ -273,7 +273,7 @@ aioharmony==0.5.3
 aiohasupervisor==0.3.3
 
 # homeassistant.components.home_connect
-aiohomeconnect==0.23.0
+aiohomeconnect==0.23.1
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.20
@@ -1220,7 +1220,7 @@ ibeacon-ble==1.2.0
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
 # homeassistant.components.remote_calendar
-ical==11.0.0
+ical==11.1.0
 
 # homeassistant.components.caldav
 icalendar==6.3.1
@@ -1395,7 +1395,7 @@ loqedAPI==2.1.10
 luftdaten==0.7.4
 
 # homeassistant.components.lunatone
-lunatone-rest-api-client==0.5.3
+lunatone-rest-api-client==0.5.7
 
 # homeassistant.components.lupusec
 lupupy==0.3.2
@@ -2449,7 +2449,7 @@ python-clementine-remote==1.0.1
 python-digitalocean==1.13.2
 
 # homeassistant.components.ecobee
-python-ecobee-api==0.2.20
+python-ecobee-api==0.3.2
 
 # homeassistant.components.etherscan
 python-etherscan-api==0.0.3
@@ -2604,7 +2604,7 @@ pyvera==0.3.16
 pyversasense==0.0.6
 
 # homeassistant.components.vesync
-pyvesync==3.2.1
+pyvesync==3.2.2
 
 # homeassistant.components.vizio
 pyvizio==0.1.61
@@ -2948,7 +2948,7 @@ tesla-fleet-api==1.2.5
 tesla-powerwall==0.5.2
 
 # homeassistant.components.tesla_wall_connector
-tesla-wall-connector==1.0.2
+tesla-wall-connector==1.1.0
 
 # homeassistant.components.teslemetry
 teslemetry-stream==0.7.10

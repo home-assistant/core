@@ -130,14 +130,14 @@ def get_compressors(device: PyViCareDevice) -> list[PyViCareHeatingDeviceCompone
     return []
 
 
-def get_condensers(device: PyViCareDevice) -> list[PyViCareHeatingDeviceComponent]:
-    """Return the list of condensers."""
+def get_condensors(device: PyViCareDevice) -> list[PyViCareHeatingDeviceComponent]:
+    """Return the list of condensors."""
     try:
         return device.condensors
     except PyViCareNotSupportedFeatureError:
-        _LOGGER.debug("No condensers found")
+        _LOGGER.debug("No condensors found")
     except AttributeError as error:
-        _LOGGER.debug("No condensers found: %s", error)
+        _LOGGER.debug("No condensors found: %s", error)
     return []
 
 
