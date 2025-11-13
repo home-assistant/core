@@ -28,14 +28,14 @@ from homeassistant.data_entry_flow import section
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import LocationSelector, LocationSelectorConfig
 
-from .const import CONF_API_KEY_OPTIONS, CONF_REFERRER, DOMAIN
+from .const import CONF_REFERRER, DOMAIN, SECTION_API_KEY_OPTIONS
 
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_API_KEY): str,
-        vol.Optional(CONF_API_KEY_OPTIONS): section(
+        vol.Optional(SECTION_API_KEY_OPTIONS): section(
             vol.Schema({vol.Optional(CONF_REFERRER): str}), {"collapsed": True}
         ),
     }
@@ -110,10 +110,11 @@ class GoogleWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {
             "api_key_url": "https://developers.google.com/maps/documentation/weather/get-api-key",
+            "restricting_api_keys_url": "https://developers.google.com/maps/api-security-best-practices#restricting-api-keys",
         }
         if user_input is not None:
             api_key = user_input[CONF_API_KEY]
-            referrer = user_input.get(CONF_API_KEY_OPTIONS, {}).get(CONF_REFERRER)
+            referrer = user_input.get(SECTION_API_KEY_OPTIONS, {}).get(CONF_REFERRER)
             self._async_abort_entries_match({CONF_API_KEY: api_key})
             if _is_location_already_configured(self.hass, user_input[CONF_LOCATION]):
                 return self.async_abort(reason="already_configured")

@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 from google_weather_api import GoogleWeatherApiError
+import pytest
 
 from homeassistant.components.google_weather.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -28,45 +29,24 @@ async def test_async_setup_entry(
     assert state.state == "sunny"
 
 
-async def test_config_not_ready_current_conditions(
+@pytest.mark.parametrize(
+    "failing_api_method",
+    [
+        "async_get_current_conditions",
+        "async_get_daily_forecast",
+        "async_get_hourly_forecast",
+    ],
+)
+async def test_config_not_ready(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_google_weather_api: AsyncMock,
+    failing_api_method: str,
 ) -> None:
-    """Test for setup failure if async_get_current_conditions fails."""
-    mock_google_weather_api.async_get_current_conditions.side_effect = (
-        GoogleWeatherApiError()
-    )
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_config_not_ready_daily_forecast(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_google_weather_api: AsyncMock,
-) -> None:
-    """Test for setup failure if async_get_daily_forecast fails."""
-    mock_google_weather_api.async_get_daily_forecast.side_effect = (
-        GoogleWeatherApiError()
-    )
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_config_not_ready_hourly_forecast(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_google_weather_api: AsyncMock,
-) -> None:
-    """Test for setup failure if async_get_hourly_forecast fails."""
-    mock_google_weather_api.async_get_hourly_forecast.side_effect = (
-        GoogleWeatherApiError()
-    )
+    """Test for setup failure if an API call fails."""
+    getattr(
+        mock_google_weather_api, failing_api_method
+    ).side_effect = GoogleWeatherApiError()
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
@@ -87,4 +67,3 @@ async def test_unload_entry(
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
-    assert not hass.data.get(DOMAIN)
