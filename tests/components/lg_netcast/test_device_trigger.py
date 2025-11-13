@@ -1,4 +1,7 @@
-"""The tests for LG NEtcast device triggers."""
+"""The tests for LG Netcast device triggers."""
+
+from collections.abc import Generator
+from unittest.mock import patch
 
 import pytest
 
@@ -17,6 +20,13 @@ from homeassistant.setup import async_setup_component
 from . import ENTITY_ID, UNIQUE_ID, setup_lgnetcast
 
 from tests.common import MockConfigEntry, async_get_device_automations
+
+
+@pytest.fixture(autouse=True)
+def mock_lg_netcast() -> Generator[None]:
+    """Mock LG Netcast library."""
+    with patch("homeassistant.components.lg_netcast.LgNetCastClient"):
+        yield
 
 
 async def test_get_triggers(
