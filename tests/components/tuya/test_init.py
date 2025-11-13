@@ -71,5 +71,6 @@ async def test_fixtures_valid(hass: HomeAssistant) -> None:
             for key in statuses:
                 if key in _REDACTED_DPCODES and statuses[key] != "**REDACTED**":
                     assert statuses[key] == "**REDACTED**", (
-                        f"Please mark `data['status']['{key}']` as `**REDACTED**` in {device_code}.json"
+                        f"Please mark `data['status']['{key}']` as `**REDACTED**`"
+                        f" in {device_code}.json"
                     )
