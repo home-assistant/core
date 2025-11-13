@@ -11,7 +11,7 @@ from tuya_sharing import CustomerDevice
 
 from homeassistant.util.json import json_loads, json_loads_object
 
-from .const import DPCode, DPType
+from .const import LOGGER, DPCode, DPType
 from .util import parse_dptype, remap_value
 
 
@@ -279,9 +279,15 @@ class DPCodeEnumWrapper(DPCodeTypeInformationWrapper[EnumTypeData]):
         """
         if (
             raw_value := self._read_device_status_raw(device)
-        ) in self.type_information.range:
-            return raw_value
-        return None
+        ) not in self.type_information.range:
+            # We should not reject these, at least until quirks are implemented
+            LOGGER.debug(
+                "Found invalid enum value `%s` for %s, expected one of %s",
+                raw_value,
+                self.dpcode,
+                self.type_information.range,
+            )
+        return raw_value
 
     def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
         """Convert a Home Assistant value back to a raw device value."""
