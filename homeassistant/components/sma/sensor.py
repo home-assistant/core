@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import pysma
+from pysma.sensor import Sensor
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -859,7 +859,7 @@ class SMAsensor(CoordinatorEntity[SMADataUpdateCoordinator], SensorEntity):
         self,
         coordinator: SMADataUpdateCoordinator,
         description: SensorEntityDescription | None,
-        pysma_sensor: pysma.sensor.Sensor,
+        pysma_sensor: Sensor,
         entry: SMAConfigEntry,
     ) -> None:
         """Initialize the sensor."""
@@ -873,16 +873,17 @@ class SMAsensor(CoordinatorEntity[SMADataUpdateCoordinator], SensorEntity):
         url = f"{protocol}://{entry.data[CONF_HOST]}"
 
         self._sensor = pysma_sensor
+        self._serial = coordinator.data.sma_device_info.serial
         assert entry.unique_id
 
         self._attr_device_info = DeviceInfo(
             configuration_url=url,
             identifiers={(DOMAIN, entry.unique_id)},
-            manufacturer=coordinator.data.sma_device_info["manufacturer"],
-            model=coordinator.data.sma_device_info["type"],
-            name=coordinator.data.sma_device_info["name"],
-            sw_version=coordinator.data.sma_device_info["sw_version"],
-            serial_number=coordinator.data.sma_device_info["serial"],
+            manufacturer=coordinator.data.sma_device_info.manufacturer,
+            model=coordinator.data.sma_device_info.type,
+            name=coordinator.data.sma_device_info.name,
+            sw_version=coordinator.data.sma_device_info.sw_version,
+            serial_number=coordinator.data.sma_device_info.serial,
         )
         self._attr_unique_id = (
             f"{entry.unique_id}-{pysma_sensor.key}_{pysma_sensor.key_idx}"
@@ -901,6 +902,14 @@ class SMAsensor(CoordinatorEntity[SMADataUpdateCoordinator], SensorEntity):
             name_prefix = "SMA"
 
         return f"{name_prefix} {super().name}"
+
+    @property
+    def available(self) -> bool:
+        """Return if the device is available."""
+        return (
+            super().available
+            and self._serial == self.coordinator.data.sma_device_info.serial
+        )
 
     @property
     def native_value(self) -> StateType:

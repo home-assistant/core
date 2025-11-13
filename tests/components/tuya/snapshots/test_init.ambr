@@ -1,4 +1,35 @@
 # serializer version: 1
+# name: test_device_registry[18yvbamhgkjc]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        '18yvbamhgkjc',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Interruptor Zigbee',
+    'model_id': 'hmabvy81',
+    'name': 'Interruptor',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[1nw1rysgyj8th1l5qbnxw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -2748,7 +2779,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart Switch (unsupported)',
+    'model': 'Smart Switch',
     'model_id': 'uenof8jd',
     'name': 'Smart Switch',
     'name_by_user': None,
@@ -4494,6 +4525,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[jgsopsvzh2ec3itjzc]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'jgsopsvzh2ec3itjzc',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Osprey Smart Plug',
+    'model_id': 'jti3ce2hzvsposgj',
+    'name': 'Dehumidifier ',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[jlduh7vigcdsw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -5331,6 +5393,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[nyriu7sjgj9oruzmpsm]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'nyriu7sjgj9oruzmpsm',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Poopy Nano 2',
+    'model_id': 'mzuro9jgjs7uiryn',
+    'name': 'Poopy Nano 2',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[o5kqedcacfng0plpnocfw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -6068,6 +6161,37 @@
     'model': 'Wi-Fi solar grid micro inverter （GT）',
     'model_id': '6b3pbbuqbfabhfiq',
     'name': 'Wi-Fi solar grid micro inverter （GT）',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_registry[qt0o5jlatiqf2rscps]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'qt0o5jlatiqf2rscps',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Security Camera ',
+    'model_id': 'csr2fqitalj5o0tq',
+    'name': 'Intercom',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
@@ -7215,6 +7339,37 @@
     'model': 'Smart Socket',
     'model_id': 'wifvoilfrqeo6hvu',
     'name': 'Licht drucker',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_registry[vADxMzNytofrgbm4zc]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'vADxMzNytofrgbm4zc',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Smart Plug',
+    'model_id': '4mbgrfotyNzMxDAv',
+    'name': 'Air Purifier ',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
