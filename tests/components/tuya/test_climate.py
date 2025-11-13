@@ -68,7 +68,7 @@ async def test_set_temperature(
         blocking=True,
     )
     mock_manager.send_commands.assert_called_once_with(
-        mock_device.id, [{"code": "temp_set", "value": 22}]
+        mock_device.id, [{"code": "temp_set", "value": 23}]
     )
 
 

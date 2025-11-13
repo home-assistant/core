@@ -100,6 +100,11 @@ class XboxMediaPlayer(XboxConsoleBaseEntity, MediaPlayerEntity):
         return MediaType.APP
 
     @property
+    def media_content_id(self) -> str | None:
+        """Content ID of current playing media."""
+        return self.data.app_details.product_id if self.data.app_details else None
+
+    @property
     def media_title(self) -> str | None:
         """Title of current playing media."""
         if not (app_details := self.data.app_details):
