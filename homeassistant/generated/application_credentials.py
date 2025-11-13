@@ -39,6 +39,7 @@ APPLICATION_CREDENTIALS = [
     "spotify",
     "tesla_fleet",
     "twitch",
+    "tibber",
     "volvo",
     "weheat",
     "withings",

@@ -5,10 +5,15 @@ from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import pytest
 
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.tibber.const import DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -44,3 +49,15 @@ async def mock_tibber_setup(
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         yield tibber_mock
+
+
+@pytest.fixture
+async def setup_credentials(recorder_mock: Recorder, hass: HomeAssistant) -> None:
+    """Set up application credentials for the OAuth flow."""
+    assert await async_setup_component(hass, "application_credentials", {})
+    await async_import_client_credential(
+        hass,
+        DOMAIN,
+        ClientCredential("test-client-id", "test-client-secret"),
+        DOMAIN,
+    )
