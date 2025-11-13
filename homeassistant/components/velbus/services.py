@@ -34,15 +34,6 @@ from .const import (
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register the velbus services."""
 
-    def check_entry_id(interface: str) -> str:
-        """Check the config_entry for a specific interface."""
-        for config_entry in hass.config_entries.async_entries(DOMAIN):
-            if "port" in config_entry.data and config_entry.data["port"] == interface:
-                return config_entry.entry_id
-        raise vol.Invalid(
-            "The interface provided is not defined as a port in a Velbus integration"
-        )
-
     async def get_config_entry(call: ServiceCall) -> VelbusConfigEntry:
         """Get the config entry for this service call."""
         if CONF_CONFIG_ENTRY in call.data:

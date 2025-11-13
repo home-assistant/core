@@ -133,6 +133,15 @@ BUTTON_ENTITIES = (
         supported=lambda api, ch: api.supported(ch, "ptz_guard"),
         method=lambda api, ch: api.set_ptz_guard(ch, command=GuardEnum.set.value),
     ),
+    ReolinkButtonEntityDescription(
+        key="reboot",
+        always_available=True,
+        device_class=ButtonDeviceClass.RESTART,
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        supported=lambda api, ch: api.supported(ch, "reboot"),
+        method=lambda api, ch: api.reboot(ch),
+    ),
 )
 
 HOST_BUTTON_ENTITIES = (

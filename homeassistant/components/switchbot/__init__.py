@@ -75,6 +75,7 @@ PLATFORMS_BY_TYPE = {
     SupportedModels.HUBMINI_MATTER.value: [Platform.SENSOR],
     SupportedModels.CIRCULATOR_FAN.value: [Platform.FAN, Platform.SENSOR],
     SupportedModels.S10_VACUUM.value: [Platform.VACUUM, Platform.SENSOR],
+    SupportedModels.S20_VACUUM.value: [Platform.VACUUM, Platform.SENSOR],
     SupportedModels.K10_VACUUM.value: [Platform.VACUUM, Platform.SENSOR],
     SupportedModels.K10_PRO_VACUUM.value: [Platform.VACUUM, Platform.SENSOR],
     SupportedModels.K10_PRO_COMBO_VACUUM.value: [Platform.VACUUM, Platform.SENSOR],
@@ -101,6 +102,11 @@ PLATFORMS_BY_TYPE = {
     SupportedModels.PLUG_MINI_EU.value: [Platform.SWITCH, Platform.SENSOR],
     SupportedModels.RELAY_SWITCH_2PM.value: [Platform.SWITCH, Platform.SENSOR],
     SupportedModels.GARAGE_DOOR_OPENER.value: [Platform.COVER, Platform.SENSOR],
+    SupportedModels.CLIMATE_PANEL.value: [Platform.SENSOR, Platform.BINARY_SENSOR],
+    SupportedModels.SMART_THERMOSTAT_RADIATOR.value: [
+        Platform.CLIMATE,
+        Platform.SENSOR,
+    ],
 }
 CLASS_BY_DEVICE = {
     SupportedModels.CEILING_LIGHT.value: switchbot.SwitchbotCeilingLight,
@@ -118,6 +124,7 @@ CLASS_BY_DEVICE = {
     SupportedModels.ROLLER_SHADE.value: switchbot.SwitchbotRollerShade,
     SupportedModels.CIRCULATOR_FAN.value: switchbot.SwitchbotFan,
     SupportedModels.S10_VACUUM.value: switchbot.SwitchbotVacuum,
+    SupportedModels.S20_VACUUM.value: switchbot.SwitchbotVacuum,
     SupportedModels.K10_VACUUM.value: switchbot.SwitchbotVacuum,
     SupportedModels.K10_PRO_VACUUM.value: switchbot.SwitchbotVacuum,
     SupportedModels.K10_PRO_COMBO_VACUUM.value: switchbot.SwitchbotVacuum,
@@ -135,6 +142,7 @@ CLASS_BY_DEVICE = {
     SupportedModels.PLUG_MINI_EU.value: switchbot.SwitchbotRelaySwitch,
     SupportedModels.RELAY_SWITCH_2PM.value: switchbot.SwitchbotRelaySwitch2PM,
     SupportedModels.GARAGE_DOOR_OPENER.value: switchbot.SwitchbotGarageDoorOpener,
+    SupportedModels.SMART_THERMOSTAT_RADIATOR.value: switchbot.SwitchbotSmartThermostatRadiator,
 }
 
 
