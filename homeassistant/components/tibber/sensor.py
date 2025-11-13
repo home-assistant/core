@@ -7,7 +7,7 @@ import datetime
 from datetime import timedelta
 import logging
 from random import randrange
-from typing import Any, cast
+from typing import Any
 
 import aiohttp
 from tibber import FatalHttpExceptionError, RetryableHttpExceptionError, TibberHome
@@ -490,7 +490,7 @@ class TibberDataAPISensor(CoordinatorEntity[TibberDataAPICoordinator], SensorEnt
 
         for capability in self._device.sensors:
             if capability.id == self.entity_description.key:
-                return cast(StateType, capability.value)
+                return capability.value
         return None
 
     @property
