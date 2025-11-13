@@ -23,6 +23,7 @@ from homeassistant.components.homeassistant_hardware.util import (
     FirmwareInfo,
     OwningAddon,
     OwningIntegration,
+    ResetTarget,
     async_flash_silabs_firmware,
     get_otbr_addon_firmware_info,
     guess_firmware_info,
@@ -502,7 +503,14 @@ async def test_probe_silabs_firmware_info(
         "homeassistant.components.homeassistant_hardware.util.Flasher",
         return_value=mock_flasher,
     ):
-        result = await probe_silabs_firmware_info("/dev/ttyUSB0")
+        result = await probe_silabs_firmware_info(
+            "/dev/ttyUSB0",
+            bootloader_reset_methods=[ResetTarget.RTS_DTR],
+            application_probe_methods=[
+                (ApplicationType.EZSP, 460800),
+                (ApplicationType.SPINEL, 460800),
+            ],
+        )
         assert result == expected_fw_info
 
 
@@ -531,12 +539,21 @@ async def test_probe_silabs_firmware_type(
         autospec=True,
         return_value=probe_result,
     ):
-        result = await probe_silabs_firmware_type("/dev/ttyUSB0")
+        result = await probe_silabs_firmware_type(
+            "/dev/ttyUSB0",
+            bootloader_reset_methods=[ResetTarget.RTS_DTR],
+            application_probe_methods=[
+                (ApplicationType.EZSP, 460800),
+                (ApplicationType.SPINEL, 460800),
+            ],
+        )
         assert result == expected
 
 
 async def test_async_flash_silabs_firmware(hass: HomeAssistant) -> None:
     """Test async_flash_silabs_firmware."""
+    await async_setup_component(hass, "homeassistant_hardware", {})
+
     owner1 = create_mock_owner()
     owner2 = create_mock_owner()
 
@@ -580,7 +597,7 @@ async def test_async_flash_silabs_firmware(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.homeassistant_hardware.util.Flasher",
             return_value=mock_flasher,
-        ),
+        ) as flasher_mock,
         patch(
             "homeassistant.components.homeassistant_hardware.util.parse_firmware_image"
         ),
@@ -594,19 +611,28 @@ async def test_async_flash_silabs_firmware(hass: HomeAssistant) -> None:
             device="/dev/ttyUSB0",
             fw_data=b"firmware contents",
             expected_installed_firmware_type=ApplicationType.SPINEL,
-            bootloader_reset_type=None,
+            bootloader_reset_methods=[ResetTarget.RTS_DTR],
+            application_probe_methods=[
+                (ApplicationType.EZSP, 460800),
+                (ApplicationType.SPINEL, 460800),
+            ],
             progress_callback=progress_callback,
         )
 
     assert progress_callback.mock_calls == [call(0, 100), call(50, 100), call(100, 100)]
     assert after_flash_info == expected_firmware_info
 
+    # Verify Flasher was called with correct bootloader_reset parameter
+    assert flasher_mock.call_count == 1
+    assert flasher_mock.mock_calls[0].kwargs["bootloader_reset"] == (
+        ResetTarget.RTS_DTR.as_flasher_reset_target(),
+    )
+
     # Both owning integrations/addons are stopped and restarted
     assert owner1.temporarily_stop.mock_calls == [
         call(hass),
         # pylint: disable-next=unnecessary-dunder-call
         call().__aenter__(ANY),
-        # pylint: disable-next=unnecessary-dunder-call
         call().__aexit__(ANY, None, None, None),
     ]
 
@@ -614,13 +640,36 @@ async def test_async_flash_silabs_firmware(hass: HomeAssistant) -> None:
         call(hass),
         # pylint: disable-next=unnecessary-dunder-call
         call().__aenter__(ANY),
-        # pylint: disable-next=unnecessary-dunder-call
         call().__aexit__(ANY, None, None, None),
     ]
 
 
+async def test_async_flash_silabs_firmware_expected_type_not_probed(
+    hass: HomeAssistant,
+) -> None:
+    """Test firmware flashing requires probing config to exist for firmware type."""
+    with pytest.raises(
+        ValueError,
+        match=(
+            r"Expected installed firmware type .*? not in application probe methods .*?"
+        ),
+    ):
+        await async_flash_silabs_firmware(
+            hass=hass,
+            device="/dev/ttyUSB0",
+            fw_data=b"firmware contents",
+            expected_installed_firmware_type=ApplicationType.SPINEL,
+            bootloader_reset_methods=[ResetTarget.RTS_DTR],
+            application_probe_methods=[
+                (ApplicationType.EZSP, 460800),
+            ],
+        )
+
+
 async def test_async_flash_silabs_firmware_flash_failure(hass: HomeAssistant) -> None:
     """Test async_flash_silabs_firmware flash failure."""
+    await async_setup_component(hass, "homeassistant_hardware", {})
+
     owner1 = create_mock_owner()
     owner2 = create_mock_owner()
 
@@ -653,7 +702,11 @@ async def test_async_flash_silabs_firmware_flash_failure(hass: HomeAssistant) ->
             device="/dev/ttyUSB0",
             fw_data=b"firmware contents",
             expected_installed_firmware_type=ApplicationType.SPINEL,
-            bootloader_reset_type=None,
+            bootloader_reset_methods=[ResetTarget.RTS_DTR],
+            application_probe_methods=[
+                (ApplicationType.EZSP, 460800),
+                (ApplicationType.SPINEL, 460800),
+            ],
         )
 
     # Both owning integrations/addons are stopped and restarted
@@ -661,20 +714,20 @@ async def test_async_flash_silabs_firmware_flash_failure(hass: HomeAssistant) ->
         call(hass),
         # pylint: disable-next=unnecessary-dunder-call
         call().__aenter__(ANY),
-        # pylint: disable-next=unnecessary-dunder-call
         call().__aexit__(ANY, HomeAssistantError, exc.value, ANY),
     ]
     assert owner2.temporarily_stop.mock_calls == [
         call(hass),
         # pylint: disable-next=unnecessary-dunder-call
         call().__aenter__(ANY),
-        # pylint: disable-next=unnecessary-dunder-call
         call().__aexit__(ANY, HomeAssistantError, exc.value, ANY),
     ]
 
 
 async def test_async_flash_silabs_firmware_probe_failure(hass: HomeAssistant) -> None:
     """Test async_flash_silabs_firmware probe failure."""
+    await async_setup_component(hass, "homeassistant_hardware", {})
+
     owner1 = create_mock_owner()
     owner2 = create_mock_owner()
 
@@ -713,7 +766,11 @@ async def test_async_flash_silabs_firmware_probe_failure(hass: HomeAssistant) ->
             device="/dev/ttyUSB0",
             fw_data=b"firmware contents",
             expected_installed_firmware_type=ApplicationType.SPINEL,
-            bootloader_reset_type=None,
+            bootloader_reset_methods=[ResetTarget.RTS_DTR],
+            application_probe_methods=[
+                (ApplicationType.EZSP, 460800),
+                (ApplicationType.SPINEL, 460800),
+            ],
         )
 
     # Both owning integrations/addons are stopped and restarted
@@ -721,13 +778,11 @@ async def test_async_flash_silabs_firmware_probe_failure(hass: HomeAssistant) ->
         call(hass),
         # pylint: disable-next=unnecessary-dunder-call
         call().__aenter__(ANY),
-        # pylint: disable-next=unnecessary-dunder-call
         call().__aexit__(ANY, None, None, None),
     ]
     assert owner2.temporarily_stop.mock_calls == [
         call(hass),
         # pylint: disable-next=unnecessary-dunder-call
         call().__aenter__(ANY),
-        # pylint: disable-next=unnecessary-dunder-call
         call().__aexit__(ANY, None, None, None),
     ]

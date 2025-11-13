@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 import asyncio
-from collections import OrderedDict
 import logging
 
-from satel_integra.satel_integra import AlarmState
+from satel_integra.satel_integra import AlarmState, AsyncSatel
 
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
@@ -16,16 +15,30 @@ from homeassistant.components.alarm_control_panel import (
 )
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     CONF_ARM_HOME_MODE,
     CONF_PARTITION_NUMBER,
+    DOMAIN,
     SIGNAL_PANEL_MESSAGE,
     SUBENTRY_TYPE_PARTITION,
     SatelConfigEntry,
 )
+
+ALARM_STATE_MAP = {
+    AlarmState.TRIGGERED: AlarmControlPanelState.TRIGGERED,
+    AlarmState.TRIGGERED_FIRE: AlarmControlPanelState.TRIGGERED,
+    AlarmState.ENTRY_TIME: AlarmControlPanelState.PENDING,
+    AlarmState.ARMED_MODE3: AlarmControlPanelState.ARMED_HOME,
+    AlarmState.ARMED_MODE2: AlarmControlPanelState.ARMED_HOME,
+    AlarmState.ARMED_MODE1: AlarmControlPanelState.ARMED_HOME,
+    AlarmState.ARMED_MODE0: AlarmControlPanelState.ARMED_AWAY,
+    AlarmState.EXIT_COUNTDOWN_OVER_10: AlarmControlPanelState.ARMING,
+    AlarmState.EXIT_COUNTDOWN_UNDER_10: AlarmControlPanelState.ARMING,
+}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,14 +58,18 @@ async def async_setup_entry(
     )
 
     for subentry in partition_subentries:
-        partition_num = subentry.data[CONF_PARTITION_NUMBER]
-        zone_name = subentry.data[CONF_NAME]
-        arm_home_mode = subentry.data[CONF_ARM_HOME_MODE]
+        partition_num: int = subentry.data[CONF_PARTITION_NUMBER]
+        zone_name: str = subentry.data[CONF_NAME]
+        arm_home_mode: int = subentry.data[CONF_ARM_HOME_MODE]
 
         async_add_entities(
             [
                 SatelIntegraAlarmPanel(
-                    controller, zone_name, arm_home_mode, partition_num
+                    controller,
+                    zone_name,
+                    arm_home_mode,
+                    partition_num,
+                    config_entry.entry_id,
                 )
             ],
             config_subentry_id=subentry.subentry_id,
@@ -69,18 +86,31 @@ class SatelIntegraAlarmPanel(AlarmControlPanelEntity):
         | AlarmControlPanelEntityFeature.ARM_AWAY
     )
 
-    def __init__(self, controller, name, arm_home_mode, partition_id) -> None:
+    _attr_has_entity_name = True
+    _attr_name = None
+
+    def __init__(
+        self,
+        controller: AsyncSatel,
+        device_name: str,
+        arm_home_mode: int,
+        partition_id: int,
+        config_entry_id: str,
+    ) -> None:
         """Initialize the alarm panel."""
-        self._attr_name = name
-        self._attr_unique_id = f"satel_alarm_panel_{partition_id}"
+        self._attr_unique_id = f"{config_entry_id}_alarm_panel_{partition_id}"
         self._arm_home_mode = arm_home_mode
         self._partition_id = partition_id
         self._satel = controller
 
+        self._attr_device_info = DeviceInfo(
+            name=device_name, identifiers={(DOMAIN, self._attr_unique_id)}
+        )
+
     async def async_added_to_hass(self) -> None:
         """Update alarm status and register callbacks for future updates."""
-        _LOGGER.debug("Starts listening for panel messages")
-        self._update_alarm_status()
+        self._attr_alarm_state = self._read_alarm_state()
+
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass, SIGNAL_PANEL_MESSAGE, self._update_alarm_status
@@ -88,55 +118,29 @@ class SatelIntegraAlarmPanel(AlarmControlPanelEntity):
         )
 
     @callback
-    def _update_alarm_status(self):
+    def _update_alarm_status(self) -> None:
         """Handle alarm status update."""
         state = self._read_alarm_state()
-        _LOGGER.debug("Got status update, current status: %s", state)
+
         if state != self._attr_alarm_state:
             self._attr_alarm_state = state
             self.async_write_ha_state()
-        else:
-            _LOGGER.debug("Ignoring alarm status message, same state")
 
-    def _read_alarm_state(self):
+    def _read_alarm_state(self) -> AlarmControlPanelState | None:
         """Read current status of the alarm and translate it into HA status."""
 
-        # Default - disarmed:
-        hass_alarm_status = AlarmControlPanelState.DISARMED
-
         if not self._satel.connected:
+            _LOGGER.debug("Alarm panel not connected")
             return None
 
-        state_map = OrderedDict(
-            [
-                (AlarmState.TRIGGERED, AlarmControlPanelState.TRIGGERED),
-                (AlarmState.TRIGGERED_FIRE, AlarmControlPanelState.TRIGGERED),
-                (AlarmState.ENTRY_TIME, AlarmControlPanelState.PENDING),
-                (AlarmState.ARMED_MODE3, AlarmControlPanelState.ARMED_HOME),
-                (AlarmState.ARMED_MODE2, AlarmControlPanelState.ARMED_HOME),
-                (AlarmState.ARMED_MODE1, AlarmControlPanelState.ARMED_HOME),
-                (AlarmState.ARMED_MODE0, AlarmControlPanelState.ARMED_AWAY),
-                (
-                    AlarmState.EXIT_COUNTDOWN_OVER_10,
-                    AlarmControlPanelState.PENDING,
-                ),
-                (
-                    AlarmState.EXIT_COUNTDOWN_UNDER_10,
-                    AlarmControlPanelState.PENDING,
-                ),
-            ]
-        )
-        _LOGGER.debug("State map of Satel: %s", self._satel.partition_states)
-
-        for satel_state, ha_state in state_map.items():
+        for satel_state, ha_state in ALARM_STATE_MAP.items():
             if (
                 satel_state in self._satel.partition_states
                 and self._partition_id in self._satel.partition_states[satel_state]
             ):
-                hass_alarm_status = ha_state
-                break
+                return ha_state
 
-        return hass_alarm_status
+        return AlarmControlPanelState.DISARMED
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
@@ -148,8 +152,6 @@ class SatelIntegraAlarmPanel(AlarmControlPanelEntity):
             self._attr_alarm_state == AlarmControlPanelState.TRIGGERED
         )
 
-        _LOGGER.debug("Disarming, self._attr_alarm_state: %s", self._attr_alarm_state)
-
         await self._satel.disarm(code, [self._partition_id])
 
         if clear_alarm_necessary:
@@ -159,14 +161,12 @@ class SatelIntegraAlarmPanel(AlarmControlPanelEntity):
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
-        _LOGGER.debug("Arming away")
 
         if code:
             await self._satel.arm(code, [self._partition_id])
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
-        _LOGGER.debug("Arming home")
 
         if code:
             await self._satel.arm(code, [self._partition_id], self._arm_home_mode)

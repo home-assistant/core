@@ -4,6 +4,7 @@ from http import HTTPStatus
 from unittest.mock import patch
 
 from pysqueezebox import Server
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.squeezebox.const import (
@@ -96,6 +97,7 @@ async def test_user_form(hass: HomeAssistant) -> None:
         assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_options_form(hass: HomeAssistant) -> None:
     """Test we can configure options."""
     entry = MockConfigEntry(
@@ -605,8 +607,8 @@ async def test_dhcp_discovery_no_server_found(hass: HomeAssistant) -> None:
 
     # Now try to complete the edit step with full schema
     with patch(
-        "homeassistant.components.squeezebox.config_flow.async_discover",
-        mock_failed_discover,
+        "pysqueezebox.Server.async_query",
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -621,7 +623,7 @@ async def test_dhcp_discovery_no_server_found(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "edit"
-    assert result["errors"] == {"base": "unknown"}
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_dhcp_discovery_existing_player(

@@ -80,7 +80,9 @@ async def test_low_battery(hass: HomeAssistant) -> None:
 async def test_initial_states(hass: HomeAssistant) -> None:
     """Test plant initialises attributes if sensor already exists."""
     hass.states.async_set(
-        MOISTURE_ENTITY, 5, {ATTR_UNIT_OF_MEASUREMENT: UnitOfConductivity.MICROSIEMENS}
+        MOISTURE_ENTITY,
+        5,
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfConductivity.MICROSIEMENS_PER_CM},
     )
     plant_name = "some_plant"
     assert await async_setup_component(
@@ -101,7 +103,9 @@ async def test_update_states(hass: HomeAssistant) -> None:
         hass, plant.DOMAIN, {plant.DOMAIN: {plant_name: GOOD_CONFIG}}
     )
     hass.states.async_set(
-        MOISTURE_ENTITY, 5, {ATTR_UNIT_OF_MEASUREMENT: UnitOfConductivity.MICROSIEMENS}
+        MOISTURE_ENTITY,
+        5,
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfConductivity.MICROSIEMENS_PER_CM},
     )
     await hass.async_block_till_done()
     state = hass.states.get(f"plant.{plant_name}")
@@ -121,7 +125,7 @@ async def test_unavailable_state(hass: HomeAssistant) -> None:
     hass.states.async_set(
         MOISTURE_ENTITY,
         STATE_UNAVAILABLE,
-        {ATTR_UNIT_OF_MEASUREMENT: UnitOfConductivity.MICROSIEMENS},
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfConductivity.MICROSIEMENS_PER_CM},
     )
     await hass.async_block_till_done()
     state = hass.states.get(f"plant.{plant_name}")
@@ -139,7 +143,9 @@ async def test_state_problem_if_unavailable(hass: HomeAssistant) -> None:
         hass, plant.DOMAIN, {plant.DOMAIN: {plant_name: GOOD_CONFIG}}
     )
     hass.states.async_set(
-        MOISTURE_ENTITY, 42, {ATTR_UNIT_OF_MEASUREMENT: UnitOfConductivity.MICROSIEMENS}
+        MOISTURE_ENTITY,
+        42,
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfConductivity.MICROSIEMENS_PER_CM},
     )
     await hass.async_block_till_done()
     state = hass.states.get(f"plant.{plant_name}")
@@ -148,7 +154,7 @@ async def test_state_problem_if_unavailable(hass: HomeAssistant) -> None:
     hass.states.async_set(
         MOISTURE_ENTITY,
         STATE_UNAVAILABLE,
-        {ATTR_UNIT_OF_MEASUREMENT: UnitOfConductivity.MICROSIEMENS},
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfConductivity.MICROSIEMENS_PER_CM},
     )
     await hass.async_block_till_done()
     state = hass.states.get(f"plant.{plant_name}")

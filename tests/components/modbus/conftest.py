@@ -172,6 +172,43 @@ async def mock_modbus_fixture(
     return mock_pymodbus
 
 
+@pytest.fixture(name="mock_modbus_to_test_errors_config")
+async def mock_modbus_to_test_errors_config_fixture(
+    hass: HomeAssistant,
+    check_config_loaded,
+    config_addon,
+    do_config,
+    mock_pymodbus,
+):
+    """Load integration a base hub modbus."""
+    conf = copy.deepcopy(do_config)
+    for key in conf:
+        if config_addon:
+            conf[key][0].update(config_addon)
+
+    config = {
+        DOMAIN: [
+            {
+                CONF_TYPE: TCP,
+                CONF_HOST: TEST_MODBUS_HOST,
+                CONF_PORT: TEST_PORT_TCP,
+                CONF_NAME: TEST_MODBUS_NAME,
+                **conf,
+            }
+        ]
+    }
+    now = dt_util.utcnow()
+    with mock.patch(
+        "homeassistant.helpers.event.dt_util.utcnow",
+        return_value=now,
+        autospec=True,
+    ):
+        result = await async_setup_component(hass, DOMAIN, config)
+
+    await hass.async_block_till_done()
+    return result
+
+
 @pytest.fixture(name="mock_do_cycle")
 async def mock_do_cycle_fixture(
     hass: HomeAssistant,

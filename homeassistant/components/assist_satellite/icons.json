@@ -8,11 +8,11 @@
     "announce": {
       "service": "mdi:bullhorn"
     },
-    "start_conversation": {
-      "service": "mdi:forum"
-    },
     "ask_question": {
       "service": "mdi:microphone-question"
+    },
+    "start_conversation": {
+      "service": "mdi:forum"
     }
   }
 }

@@ -4,10 +4,10 @@
       "electricity_active_tariff": {
         "default": "mdi:flash"
       },
-      "short_power_failure_count": {
+      "long_power_failure_count": {
         "default": "mdi:flash-off"
       },
-      "long_power_failure_count": {
+      "short_power_failure_count": {
         "default": "mdi:flash-off"
       },
       "voltage_swell_l1_count": {

@@ -1,5 +1,4 @@
 {
-  "title": "Schedule",
   "entity_component": {
     "_": {
       "name": "[%key:component::schedule::title%]",
@@ -11,8 +10,8 @@
         "editable": {
           "name": "[%key:common::generic::ui_managed%]",
           "state": {
-            "true": "[%key:common::state::yes%]",
-            "false": "[%key:common::state::no%]"
+            "false": "[%key:common::state::no%]",
+            "true": "[%key:common::state::yes%]"
           }
         },
         "next_event": {
@@ -22,13 +21,14 @@
     }
   },
   "services": {
-    "reload": {
-      "name": "[%key:common::action::reload%]",
-      "description": "Reloads schedules from the YAML-configuration."
-    },
     "get_schedule": {
-      "name": "Get schedule",
-      "description": "Retrieves the configured time ranges of one or multiple schedules."
+      "description": "Retrieves the configured time ranges of one or multiple schedules.",
+      "name": "Get schedule"
+    },
+    "reload": {
+      "description": "Reloads schedules from the YAML-configuration.",
+      "name": "[%key:common::action::reload%]"
     }
-  }
+  },
+  "title": "Schedule"
 }
