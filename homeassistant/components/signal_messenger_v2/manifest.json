@@ -1,0 +1,10 @@
+{
+  "domain": "signal_messenger_v2",
+  "name": "Signal Messenger v2",
+  "codeowners": ["@bbernhard"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/signal_messenger_v2",
+  "iot_class": "cloud_push",
+  "quality_scale": "bronze",
+  "requirements": ["pysignalclirestapi==0.3.24"]
+}

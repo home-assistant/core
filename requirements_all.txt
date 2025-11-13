@@ -2362,6 +2362,7 @@ pyseventeentrack==1.1.1
 pysiaalarm==3.1.1
 
 # homeassistant.components.signal_messenger
+# homeassistant.components.signal_messenger_v2
 pysignalclirestapi==0.3.24
 
 # homeassistant.components.sky_hub

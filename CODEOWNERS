@@ -1434,6 +1434,8 @@ build.json @home-assistant/supervisor
 /tests/components/sighthound/ @robmarkcole
 /homeassistant/components/signal_messenger/ @bbernhard
 /tests/components/signal_messenger/ @bbernhard
+/homeassistant/components/signal_messenger_v2/ @bbernhard
+/tests/components/signal_messenger_v2/ @bbernhard
 /homeassistant/components/simplefin/ @scottg489 @jeeftor
 /tests/components/simplefin/ @scottg489 @jeeftor
 /homeassistant/components/simplepush/ @engrbm87
