@@ -1787,7 +1787,11 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
         if description.suggested_unit_of_measurement is None:
             self._attr_suggested_unit_of_measurement = dpcode_wrapper.suggested_unit
 
-        self._validate_device_class_unit()
+        if isinstance(dpcode_wrapper, DPCodeEnumWrapper):
+            self._attr_device_class = SensorDeviceClass.ENUM
+            self._attr_options = dpcode_wrapper.type_information.range
+        else:
+            self._validate_device_class_unit()
 
     def _validate_device_class_unit(self) -> None:
         """Validate device class unit compatibility."""

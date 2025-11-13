@@ -686,7 +686,12 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'normal',
+        'charge',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -704,7 +709,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Battery state',
     'platform': 'tuya',
@@ -719,7 +724,12 @@
 # name: test_platform_setup_and_discovery[sensor.aqi_battery_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'AQI Battery state',
+      'options': list([
+        'normal',
+        'charge',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.aqi_battery_state',
@@ -2441,7 +2451,12 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'low',
+        'high',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -2459,7 +2474,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Battery state',
     'platform': 'tuya',
@@ -2474,7 +2489,12 @@
 # name: test_platform_setup_and_discovery[sensor.br_7_in_1_wlan_wetterstation_anthrazit_battery_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit Battery state',
+      'options': list([
+        'low',
+        'high',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_battery_state',
@@ -7013,7 +7033,13 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -7031,7 +7057,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Battery state',
     'platform': 'tuya',
@@ -7046,7 +7072,13 @@
 # name: test_platform_setup_and_discovery[sensor.frysen_battery_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'Frysen Battery state',
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.frysen_battery_state',
@@ -7840,7 +7872,13 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -7858,7 +7896,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Battery state',
     'platform': 'tuya',
@@ -7873,7 +7911,13 @@
 # name: test_platform_setup_and_discovery[sensor.greenhouse_battery_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'Greenhouse Battery state',
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.greenhouse_battery_state',
@@ -8378,7 +8422,13 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'normal',
+        'lower_alarm',
+        'upper_alarm',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -8396,7 +8446,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Liquid state',
     'platform': 'tuya',
@@ -8411,7 +8461,13 @@
 # name: test_platform_setup_and_discovery[sensor.house_water_level_liquid_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'House Water Level Liquid state',
+      'options': list([
+        'normal',
+        'lower_alarm',
+        'upper_alarm',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.house_water_level_liquid_state',
@@ -8479,7 +8535,13 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -8497,7 +8559,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Battery state',
     'platform': 'tuya',
@@ -8512,7 +8574,13 @@
 # name: test_platform_setup_and_discovery[sensor.humid_pelargonia_battery_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'humid pelargonia Battery state',
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.humid_pelargonia_battery_state',
@@ -9189,7 +9257,13 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -9207,7 +9281,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Battery state',
     'platform': 'tuya',
@@ -9222,7 +9296,13 @@
 # name: test_platform_setup_and_discovery[sensor.ifs_std002_battery_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'IFS-STD002 Battery state',
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ifs_std002_battery_state',
@@ -10015,7 +10095,13 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -10033,7 +10119,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Battery state',
     'platform': 'tuya',
@@ -10048,7 +10134,13 @@
 # name: test_platform_setup_and_discovery[sensor.jie_hashui_fa_battery_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': '接HA水阀 Battery state',
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.jie_hashui_fa_battery_state',
@@ -10063,7 +10155,14 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'great',
+        'good',
+        'medium',
+        'severe',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -10081,7 +10180,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Air quality',
     'platform': 'tuya',
@@ -10096,7 +10195,14 @@
 # name: test_platform_setup_and_discovery[sensor.kalado_air_purifier_air_quality-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'Kalado Air Purifier Air quality',
+      'options': list([
+        'great',
+        'good',
+        'medium',
+        'severe',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.kalado_air_purifier_air_quality',
@@ -10600,7 +10706,13 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -10618,7 +10730,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Battery state',
     'platform': 'tuya',
@@ -10633,7 +10745,13 @@
 # name: test_platform_setup_and_discovery[sensor.kippenluik_battery_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'Kippenluik Battery state',
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.kippenluik_battery_state',
@@ -14497,7 +14615,13 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -14515,7 +14639,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Battery state',
     'platform': 'tuya',
@@ -14530,7 +14654,13 @@
 # name: test_platform_setup_and_discovery[sensor.patates_battery_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'Patates Battery state',
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.patates_battery_state',
@@ -14763,7 +14893,13 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -14781,7 +14917,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Battery state',
     'platform': 'tuya',
@@ -14796,7 +14932,13 @@
 # name: test_platform_setup_and_discovery[sensor.pir_outside_stairs_battery_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'PIR outside stairs Battery state',
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.pir_outside_stairs_battery_state',
@@ -14923,7 +15065,13 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'level_1',
+        'level_2',
+        'level_3',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -14941,7 +15089,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Water level',
     'platform': 'tuya',
@@ -14956,7 +15104,13 @@
 # name: test_platform_setup_and_discovery[sensor.pixi_smart_drinking_fountain_water_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'PIXI Smart Drinking Fountain Water level',
+      'options': list([
+        'level_1',
+        'level_2',
+        'level_3',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.pixi_smart_drinking_fountain_water_level',
@@ -15731,7 +15885,13 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'normal',
+        'lower_alarm',
+        'upper_alarm',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -15749,7 +15909,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Liquid state',
     'platform': 'tuya',
@@ -15764,7 +15924,13 @@
 # name: test_platform_setup_and_discovery[sensor.rainwater_tank_level_liquid_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'Rainwater Tank Level Liquid state',
+      'options': list([
+        'normal',
+        'lower_alarm',
+        'upper_alarm',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.rainwater_tank_level_liquid_state',
@@ -16009,7 +16175,13 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -16027,7 +16199,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Battery state',
     'platform': 'tuya',
@@ -16042,7 +16214,13 @@
 # name: test_platform_setup_and_discovery[sensor.rat_trap_hedge_battery_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'rat trap hedge Battery state',
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.rat_trap_hedge_battery_state',
@@ -16057,7 +16235,13 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -16075,7 +16259,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Battery state',
     'platform': 'tuya',
@@ -16090,7 +16274,13 @@
 # name: test_platform_setup_and_discovery[sensor.rauchmelder_alexsandro_battery_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'Rauchmelder Alexsandro  Battery state',
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.rauchmelder_alexsandro_battery_state',
@@ -16105,7 +16295,13 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -16123,7 +16319,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Battery state',
     'platform': 'tuya',
@@ -16138,7 +16334,13 @@
 # name: test_platform_setup_and_discovery[sensor.rauchmelder_drucker_battery_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'Rauchmelder Drucker Battery state',
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.rauchmelder_drucker_battery_state',
@@ -16486,7 +16688,14 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'work',
+        'standby',
+        'charging',
+        'charge_done',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -16504,7 +16713,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Status',
     'platform': 'tuya',
@@ -16519,7 +16728,14 @@
 # name: test_platform_setup_and_discovery[sensor.smart_odor_eliminator_pro_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'Smart Odor Eliminator-Pro Status',
+      'options': list([
+        'work',
+        'standby',
+        'charging',
+        'charge_done',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_odor_eliminator_pro_status',
@@ -16801,7 +17017,13 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -16819,7 +17041,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Battery state',
     'platform': 'tuya',
@@ -16834,7 +17056,13 @@
 # name: test_platform_setup_and_discovery[sensor.smoke_alarm_battery_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'Smoke Alarm Battery state',
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smoke_alarm_battery_state',
@@ -16953,7 +17181,13 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -16971,7 +17205,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Battery state',
     'platform': 'tuya',
@@ -16986,7 +17220,13 @@
 # name: test_platform_setup_and_discovery[sensor.smoke_detector_upstairs_battery_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': ' Smoke detector upstairs  Battery state',
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smoke_detector_upstairs_battery_state',
@@ -17509,7 +17749,13 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -17527,7 +17773,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Battery state',
     'platform': 'tuya',
@@ -17542,7 +17788,13 @@
 # name: test_platform_setup_and_discovery[sensor.solar_zijpad_battery_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'Solar zijpad Battery state',
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solar_zijpad_battery_state',
@@ -17833,7 +18085,13 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'standby',
+        'cooking',
+        'done',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -17851,7 +18109,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Status',
     'platform': 'tuya',
@@ -17866,7 +18124,13 @@
 # name: test_platform_setup_and_discovery[sensor.sous_vide_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'Sous Vide Status',
+      'options': list([
+        'standby',
+        'cooking',
+        'done',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.sous_vide_status',
@@ -18111,7 +18375,13 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -18129,7 +18399,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Battery state',
     'platform': 'tuya',
@@ -18144,7 +18414,13 @@
 # name: test_platform_setup_and_discovery[sensor.steel_cage_door_battery_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'Steel cage door Battery state',
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.steel_cage_door_battery_state',
@@ -21436,7 +21712,13 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -21454,7 +21736,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Battery state',
     'platform': 'tuya',
@@ -21469,7 +21751,13 @@
 # name: test_platform_setup_and_discovery[sensor.wifi_temperature_humidity_sensor_battery_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'WiFi Temperature & Humidity Sensor Battery state',
+      'options': list([
+        'low',
+        'middle',
+        'high',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.wifi_temperature_humidity_sensor_battery_state',
