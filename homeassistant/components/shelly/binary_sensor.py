@@ -41,7 +41,6 @@ from .utils import (
     get_device_entry_gen,
     get_entity_translation_attributes,
     get_rpc_channel_name,
-    get_rpc_entity_name,
     is_block_momentary_input,
     is_rpc_momentary_input,
     is_view_for_platform,
@@ -83,33 +82,31 @@ class RpcBinarySensor(ShellyRpcAttributeEntity, BinarySensorEntity):
         super().__init__(coordinator, key, attribute, description)
 
         if hasattr(self, "_attr_name") and description.role != ROLE_GENERIC:
-            delattr(self, "_attr_name")
-
-        if not description.role:
-            if description.key != "input":
-                translation_placeholders, translation_key = (
-                    get_entity_translation_attributes(
-                        get_rpc_channel_name(coordinator.device, key),
-                        description.translation_key,
-                        description.device_class,
-                        self._default_to_device_class_name(),
-                    )
-                )
-
-                if translation_placeholders:
-                    self._attr_translation_placeholders = translation_placeholders
-                    if translation_key:
-                        self._attr_translation_key = translation_key
-            else:
+            if not description.role and description.key == "input":
                 component = key.split(":")[0]
                 component_id = key.split(":")[-1]
                 if component.lower() == "input" and component_id.isnumeric():
                     self._attr_translation_placeholders = {"input_number": component_id}
                     self._attr_translation_key = "input_with_number"
                 else:
-                    self._attr_name = get_rpc_entity_name(
-                        coordinator.device, key, description.name, description.role
-                    )
+                    return
+
+            delattr(self, "_attr_name")
+
+        if not description.role and description.key != "input":
+            translation_placeholders, translation_key = (
+                get_entity_translation_attributes(
+                    get_rpc_channel_name(coordinator.device, key),
+                    description.translation_key,
+                    description.device_class,
+                    self._default_to_device_class_name(),
+                )
+            )
+
+            if translation_placeholders:
+                self._attr_translation_placeholders = translation_placeholders
+                if translation_key:
+                    self._attr_translation_key = translation_key
 
     @property
     def is_on(self) -> bool:
