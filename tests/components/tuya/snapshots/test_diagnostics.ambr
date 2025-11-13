@@ -8,8 +8,60 @@
     'disabled_polling': False,
     'endpoint': 'https://apigw.tuyaeu.com',
     'function': dict({
-      'null': dict({
+      'alarm_delay_time': dict({
+        'type': 'Integer',
+        'value': '{"unit":"s","min":0,"max":999,"scale":0,"step":1}',
+      }),
+      'alarm_time': dict({
+        'type': 'Integer',
+        'value': '{"unit":"min","min":0,"max":999,"scale":0,"step":1}',
+      }),
+      'delay_set': dict({
+        'type': 'Integer',
+        'value': '{"unit":"s","min":0,"max":999,"scale":0,"step":1}',
+      }),
+      'master_mode': dict({
+        'type': 'Enum',
+        'value': '{"range":["disarmed","arm","home","sos"]}',
+      }),
+      'master_state': dict({
+        'type': 'Enum',
+        'value': '{"range":["normal","alarm"]}',
+      }),
+      'muffling': dict({
+        'type': 'Boolean',
+        'value': '{}',
+      }),
+      'sub_admin': dict({
         'type': 'Raw',
+        'value': '{}',
+      }),
+      'sub_class': dict({
+        'type': 'Enum',
+        'value': '{"range":["remote_controller","detector"]}',
+      }),
+      'switch_alarm_light': dict({
+        'type': 'Boolean',
+        'value': '{}',
+      }),
+      'switch_alarm_propel': dict({
+        'type': 'Boolean',
+        'value': '{}',
+      }),
+      'switch_alarm_sound': dict({
+        'type': 'Boolean',
+        'value': '{}',
+      }),
+      'switch_kb_light': dict({
+        'type': 'Boolean',
+        'value': '{}',
+      }),
+      'switch_kb_sound': dict({
+        'type': 'Boolean',
+        'value': '{}',
+      }),
+      'switch_mode_sound': dict({
+        'type': 'Boolean',
         'value': '{}',
       }),
     }),
@@ -172,9 +224,73 @@
       'telnet_state': 'sim_card_no',
     }),
     'status_range': dict({
-      'null': dict({
+      'alarm_delay_time': dict({
+        'type': 'Integer',
+        'value': '{"unit":"s","min":0,"max":999,"scale":0,"step":1}',
+      }),
+      'alarm_msg': dict({
+        'type': 'Raw',
+        'value': '{}',
+      }),
+      'alarm_time': dict({
+        'type': 'Integer',
+        'value': '{"unit":"min","min":0,"max":999,"scale":0,"step":1}',
+      }),
+      'delay_set': dict({
+        'type': 'Integer',
+        'value': '{"unit":"s","min":0,"max":999,"scale":0,"step":1}',
+      }),
+      'master_mode': dict({
+        'type': 'Enum',
+        'value': '{"range":["disarmed","arm","home","sos"]}',
+      }),
+      'master_state': dict({
+        'type': 'Enum',
+        'value': '{"range":["normal","alarm"]}',
+      }),
+      'muffling': dict({
+        'type': 'Boolean',
+        'value': '{}',
+      }),
+      'sub_admin': dict({
+        'type': 'Raw',
+        'value': '{}',
+      }),
+      'sub_class': dict({
+        'type': 'Enum',
+        'value': '{"range":["remote_controller","detector"]}',
+      }),
+      'sub_state': dict({
         'type': 'Enum',
         'value': '{"range":["normal","alarm","fault","others"]}',
+      }),
+      'switch_alarm_light': dict({
+        'type': 'Boolean',
+        'value': '{}',
+      }),
+      'switch_alarm_propel': dict({
+        'type': 'Boolean',
+        'value': '{}',
+      }),
+      'switch_alarm_sound': dict({
+        'type': 'Boolean',
+        'value': '{}',
+      }),
+      'switch_kb_light': dict({
+        'type': 'Boolean',
+        'value': '{}',
+      }),
+      'switch_kb_sound': dict({
+        'type': 'Boolean',
+        'value': '{}',
+      }),
+      'switch_mode_sound': dict({
+        'type': 'Boolean',
+        'value': '{}',
+      }),
+      'telnet_state': dict({
+        'type': 'Enum',
+        'value': '{"range":["normal","network_no","phone_no","sim_card_no","network_search","signal_level_1","signal_level_2","signal_level_3","signal_level_4","signal_level_5"]}',
       }),
     }),
     'sub': False,
@@ -193,7 +309,15 @@
     'disabled_polling': False,
     'endpoint': 'https://apigw.tuyaeu.com',
     'function': dict({
-      'null': dict({
+      'alarm_time': dict({
+        'type': 'Integer',
+        'value': '{"unit":"s","min":0,"max":3600,"scale":0,"step":1}',
+      }),
+      'muffling': dict({
+        'type': 'Boolean',
+        'value': '{}',
+      }),
+      'self_checking': dict({
         'type': 'Boolean',
         'value': '{}',
       }),
@@ -259,7 +383,27 @@
       'self_checking': False,
     }),
     'status_range': dict({
-      'null': dict({
+      'alarm_time': dict({
+        'type': 'Integer',
+        'value': '{"unit":"s","min":0,"max":3600,"scale":0,"step":1}',
+      }),
+      'checking_result': dict({
+        'type': 'Enum',
+        'value': '{"range":["checking","check_success","check_failure","others"]}',
+      }),
+      'gas_sensor_status': dict({
+        'type': 'Enum',
+        'value': '{"range":["alarm","normal"]}',
+      }),
+      'gas_sensor_value': dict({
+        'type': 'Integer',
+        'value': '{"unit":"ppm","min":0,"max":999,"scale":0,"step":1}',
+      }),
+      'muffling': dict({
+        'type': 'Boolean',
+        'value': '{}',
+      }),
+      'self_checking': dict({
         'type': 'Boolean',
         'value': '{}',
       }),
@@ -279,7 +423,15 @@
         'category': 'rqbj',
         'create_time': '2025-06-24T20:33:10+00:00',
         'function': dict({
-          'null': dict({
+          'alarm_time': dict({
+            'type': 'Integer',
+            'value': '{"unit":"s","min":0,"max":3600,"scale":0,"step":1}',
+          }),
+          'muffling': dict({
+            'type': 'Boolean',
+            'value': '{}',
+          }),
+          'self_checking': dict({
             'type': 'Boolean',
             'value': '{}',
           }),
@@ -344,7 +496,27 @@
           'self_checking': False,
         }),
         'status_range': dict({
-          'null': dict({
+          'alarm_time': dict({
+            'type': 'Integer',
+            'value': '{"unit":"s","min":0,"max":3600,"scale":0,"step":1}',
+          }),
+          'checking_result': dict({
+            'type': 'Enum',
+            'value': '{"range":["checking","check_success","check_failure","others"]}',
+          }),
+          'gas_sensor_status': dict({
+            'type': 'Enum',
+            'value': '{"range":["alarm","normal"]}',
+          }),
+          'gas_sensor_value': dict({
+            'type': 'Integer',
+            'value': '{"unit":"ppm","min":0,"max":999,"scale":0,"step":1}',
+          }),
+          'muffling': dict({
+            'type': 'Boolean',
+            'value': '{}',
+          }),
+          'self_checking': dict({
             'type': 'Boolean',
             'value': '{}',
           }),
