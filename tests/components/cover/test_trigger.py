@@ -68,6 +68,7 @@ async def setup_automation(
 def parametrize_opened_closed_trigger_states(
     trigger: str,
     trigger_options: dict,
+    device_class: str,
     target_state: tuple[str, dict],
     other_state: tuple[str, dict],
 ) -> list[
@@ -75,8 +76,9 @@ def parametrize_opened_closed_trigger_states(
 ]:
     """Parametrize states and expected service call counts.
 
-    Returns a list of tuples with (trigger, trigger_options, initial_state, list of states),
-    where states is a list of tuples (state to set, expected service call count).
+    Returns a list of tuples with (trigger, trigger_options, device_class,
+    initial_state, list of states), where states is a list of tuples
+    (state to set, expected service call count).
     """
     return [
         ## TODO: Check what happens if attribute is missing
@@ -84,6 +86,7 @@ def parametrize_opened_closed_trigger_states(
         (
             trigger,
             trigger_options,
+            device_class,
             (None, {}),
             [
                 (target_state, 0),
@@ -98,6 +101,7 @@ def parametrize_opened_closed_trigger_states(
         (
             trigger,
             trigger_options,
+            device_class,
             other_state,
             [
                 (target_state, 1),
@@ -109,6 +113,7 @@ def parametrize_opened_closed_trigger_states(
         (
             trigger,
             trigger_options,
+            device_class,
             target_state,
             [
                 (target_state, 0),
@@ -120,6 +125,7 @@ def parametrize_opened_closed_trigger_states(
         (
             trigger,
             trigger_options,
+            device_class,
             (STATE_UNAVAILABLE, {}),
             [
                 (target_state, 0),
@@ -130,6 +136,7 @@ def parametrize_opened_closed_trigger_states(
         (
             trigger,
             trigger_options,
+            device_class,
             (STATE_UNKNOWN, {}),
             [
                 (target_state, 0),
@@ -140,62 +147,73 @@ def parametrize_opened_closed_trigger_states(
     ]
 
 
-def parametrize_opened_trigger_states() -> list[
+def parametrize_opened_trigger_states(
+    trigger: str, device_class: str
+) -> list[
     tuple[str, tuple[str | None, dict], list[tuple[tuple[str | None, dict], int]]]
 ]:
     """Parametrize states and expected service call counts.
 
-    Returns a list of tuples with (trigger, trigger_options, initial_state, list of states),
-    where states is a list of tuples (state to set, expected service call count).
+    Returns a list of tuples with (trigger, trigger_options, device_class,
+    initial_state, list of states), where states is a list of tuples
+    (state to set, expected service call count).
     """
     return [
         # States without current position attribute
         *parametrize_opened_closed_trigger_states(
-            "cover.garage_opened",
+            trigger,
             {"fully_opened": True},
+            device_class,
             (CoverState.OPEN, {}),
             (CoverState.CLOSED, {}),
         ),
         *parametrize_opened_closed_trigger_states(
-            "cover.garage_opened",
+            trigger,
             {"fully_opened": True},
+            device_class,
             (CoverState.OPENING, {}),
             (CoverState.CLOSED, {}),
         ),
         *parametrize_opened_closed_trigger_states(
-            "cover.garage_opened",
+            trigger,
             {},
+            device_class,
             (CoverState.OPEN, {}),
             (CoverState.CLOSED, {}),
         ),
         *parametrize_opened_closed_trigger_states(
-            "cover.garage_opened",
+            trigger,
             {},
+            device_class,
             (CoverState.OPENING, {}),
             (CoverState.CLOSED, {}),
         ),
         # States with current position attribute
         *parametrize_opened_closed_trigger_states(
-            "cover.garage_opened",
+            trigger,
             {"fully_opened": True},
+            device_class,
             (CoverState.OPEN, {ATTR_CURRENT_POSITION: 100}),
             (CoverState.OPEN, {ATTR_CURRENT_POSITION: 0}),
         ),
         *parametrize_opened_closed_trigger_states(
-            "cover.garage_opened",
+            trigger,
             {"fully_opened": True},
+            device_class,
             (CoverState.OPENING, {ATTR_CURRENT_POSITION: 100}),
             (CoverState.OPENING, {ATTR_CURRENT_POSITION: 0}),
         ),
         *parametrize_opened_closed_trigger_states(
-            "cover.garage_opened",
+            trigger,
             {},
+            device_class,
             (CoverState.OPEN, {ATTR_CURRENT_POSITION: 1}),
             (CoverState.CLOSED, {ATTR_CURRENT_POSITION: 0}),
         ),
         *parametrize_opened_closed_trigger_states(
-            "cover.garage_opened",
+            trigger,
             {},
+            device_class,
             (CoverState.OPENING, {ATTR_CURRENT_POSITION: 1}),
             (CoverState.CLOSED, {ATTR_CURRENT_POSITION: 0}),
         ),
@@ -207,13 +225,14 @@ def parametrize_opened_trigger_states() -> list[
     parametrize_target_entities("cover"),
 )
 @pytest.mark.parametrize(
-    ("trigger", "trigger_options", "initial_state", "states"),
+    ("trigger", "trigger_options", "device_class", "initial_state", "states"),
     [
-        *parametrize_opened_trigger_states(),
+        *parametrize_opened_trigger_states("cover.garage_opened", "garage"),
         # No initial state attribute.
         (
             "cover.garage_opened",
             {"fully_opened": True},
+            "garage",
             (CoverState.OPEN, {}),
             [
                 ((CoverState.OPEN, {ATTR_CURRENT_POSITION: 100}), 1),
@@ -232,6 +251,7 @@ async def test_cover_state_attribute_trigger_behavior_any(
     entities_in_target: int,
     trigger: str,
     trigger_options: dict,
+    device_class: str,
     initial_state: tuple[str | None, dict],
     states: list[tuple[tuple[str, dict], int]],
 ) -> None:
@@ -274,9 +294,9 @@ async def test_cover_state_attribute_trigger_behavior_any(
     parametrize_target_entities("cover"),
 )
 @pytest.mark.parametrize(
-    ("trigger", "trigger_options", "initial_state", "states"),
+    ("trigger", "trigger_options", "device_class", "initial_state", "states"),
     [
-        *parametrize_opened_trigger_states(),
+        *parametrize_opened_trigger_states("cover.garage_opened", "garage"),
     ],
 )
 async def test_cover_state_attribute_trigger_behavior_first(
@@ -288,6 +308,7 @@ async def test_cover_state_attribute_trigger_behavior_first(
     entities_in_target: int,
     trigger: str,
     trigger_options: dict,
+    device_class: str,
     initial_state: tuple[str | None, dict],
     states: list[tuple[tuple[str, dict], int]],
 ) -> None:
@@ -334,9 +355,9 @@ async def test_cover_state_attribute_trigger_behavior_first(
     parametrize_target_entities("cover"),
 )
 @pytest.mark.parametrize(
-    ("trigger", "trigger_options", "initial_state", "states"),
+    ("trigger", "trigger_options", "device_class", "initial_state", "states"),
     [
-        *parametrize_opened_trigger_states(),
+        *parametrize_opened_trigger_states("cover.garage_opened", "garage"),
     ],
 )
 async def test_cover_state_attribute_trigger_behavior_last(
@@ -348,6 +369,7 @@ async def test_cover_state_attribute_trigger_behavior_last(
     entities_in_target: int,
     trigger: str,
     trigger_options: dict,
+    device_class: str,
     initial_state: tuple[str | None, dict],
     states: list[tuple[tuple[str, dict], int]],
 ) -> None:
