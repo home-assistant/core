@@ -20,7 +20,7 @@ async def test_sensor(
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test number platform."""
+    """Test sensor platform."""
     with patch(
         "homeassistant.components.anglian_water._PLATFORMS",
         [Platform.SENSOR],
