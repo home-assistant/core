@@ -1418,10 +1418,8 @@ class ConfigEntriesFlowManager(
             SOURCE_REAUTH,
             SOURCE_RECONFIGURE,
         } and "entry_id" not in context:
-            # Deprecated in 2024.12, should fail in 2025.12
-            report_usage(
-                f"initialises a {source} flow without a link to the config entry",
-                breaks_in_ha_version="2025.12",
+            raise HomeAssistantError(
+                f"Cannot initialize a {source} flow without a link to the config entry"
             )
 
         flow_id = ulid_util.ulid_now()
@@ -3738,9 +3736,6 @@ class OptionsFlow(ConfigEntryBaseFlow):
 
     handler: str
 
-    _config_entry: ConfigEntry
-    """For compatibility only - to be removed in 2025.12"""
-
     @callback
     def _async_abort_entries_match(
         self, match_dict: dict[str, Any] | None = None
@@ -3781,25 +3776,9 @@ class OptionsFlow(ConfigEntryBaseFlow):
         Please note that this is not available inside `__init__` method, and
         can only be referenced after initialisation.
         """
-        # For compatibility only - to be removed in 2025.12
-        if hasattr(self, "_config_entry"):
-            return self._config_entry
-
         if self.hass is None:
             raise ValueError("The config entry is not available during initialisation")
         return self.hass.config_entries.async_get_known_entry(self._config_entry_id)
-
-    @config_entry.setter
-    def config_entry(self, value: ConfigEntry) -> None:
-        """Set the config entry value."""
-        report_usage(
-            "sets option flow config_entry explicitly, which is deprecated",
-            core_behavior=ReportBehavior.ERROR,
-            core_integration_behavior=ReportBehavior.ERROR,
-            custom_integration_behavior=ReportBehavior.LOG,
-            breaks_in_ha_version="2025.12",
-        )
-        self._config_entry = value
 
 
 class OptionsFlowWithConfigEntry(OptionsFlow):
