@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import json
 import logging
 from typing import Any
 
@@ -16,6 +15,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
+from homeassistant.util.json import json_loads
 
 from . import (
     DEFAULT_METHODS,
@@ -66,10 +66,7 @@ async def _handle_webhook(
         # Only attempt to parse if there's an actual body
         if request.can_read_body:
             text = await request.text()
-            if text.strip():
-                base_result["json"] = json.loads(text)
-            else:
-                base_result["json"] = {}
+            base_result["json"] = json_loads(text)
         else:
             base_result["json"] = {}
     else:
