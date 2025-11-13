@@ -39,7 +39,6 @@ class IntegerTypeData(TypeInformation):
     scale: float
     step: float
     unit: str | None = None
-    type: str | None = None
 
     @property
     def max_scaled(self) -> float:
@@ -97,7 +96,6 @@ class IntegerTypeData(TypeInformation):
             scale=float(parsed["scale"]),
             step=max(float(parsed["step"]), 1),
             unit=parsed.get("unit"),
-            type=parsed.get("type"),
         )
 
 
