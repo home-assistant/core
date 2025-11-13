@@ -77,6 +77,12 @@
       }
     },
     "button": {
+      "factory_reset": {
+        "name": "Factory reset"
+      },
+      "manual_clean": {
+        "name": "Manual clean"
+      },
       "reset_duster_cloth": {
         "name": "Reset duster cloth"
       },
@@ -165,6 +171,9 @@
       },
       "cook_time": {
         "name": "Cooking time"
+      },
+      "delay_clean_time": {
+        "name": "Delay clean time"
       },
       "down_delay": {
         "name": "Down delay"
@@ -885,6 +894,9 @@
       },
       "arm_beep": {
         "name": "Arm beep"
+      },
+      "auto_clean": {
+        "name": "Auto clean"
       },
       "battery_lock": {
         "name": "Battery lock"

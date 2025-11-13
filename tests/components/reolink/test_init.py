@@ -14,7 +14,7 @@ from reolink_aio.exceptions import (
 )
 
 from homeassistant.components.reolink import (
-    DEVICE_UPDATE_INTERVAL,
+    DEVICE_UPDATE_INTERVAL_MIN,
     FIRMWARE_UPDATE_INTERVAL,
     NUM_CRED_ERRORS,
 )
@@ -174,7 +174,7 @@ async def test_credential_error_three(
     issue_id = f"config_entry_reauth_{DOMAIN}_{config_entry.entry_id}"
     for _ in range(NUM_CRED_ERRORS):
         assert (HOMEASSISTANT_DOMAIN, issue_id) not in issue_registry.issues
-        freezer.tick(DEVICE_UPDATE_INTERVAL)
+        freezer.tick(DEVICE_UPDATE_INTERVAL_MIN)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
@@ -338,6 +338,15 @@ async def test_removing_chime(
         "support_ch_uid",
     ),
     [
+        (
+            f"{TEST_MAC}_firmware",
+            f"{TEST_UID}_firmware",
+            f"{TEST_MAC}",
+            f"{TEST_UID}",
+            Platform.UPDATE,
+            True,
+            False,
+        ),
         (
             f"{TEST_MAC}_0_record_audio",
             f"{TEST_UID}_0_record_audio",
@@ -908,7 +917,7 @@ async def test_new_device_discovered(
     assert reolink_host.logout.call_count == 0
     reolink_host.new_devices = True
 
-    freezer.tick(DEVICE_UPDATE_INTERVAL)
+    freezer.tick(DEVICE_UPDATE_INTERVAL_MIN)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -979,7 +988,7 @@ async def test_LoginPrivacyModeError(
     reolink_host.baichuan.check_subscribe_events.reset_mock()
     assert reolink_host.baichuan.check_subscribe_events.call_count == 0
 
-    freezer.tick(DEVICE_UPDATE_INTERVAL)
+    freezer.tick(DEVICE_UPDATE_INTERVAL_MIN)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 

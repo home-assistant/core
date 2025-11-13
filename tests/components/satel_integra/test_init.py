@@ -26,6 +26,7 @@ from . import (
     MOCK_PARTITION_SUBENTRY,
     MOCK_SWITCHABLE_OUTPUT_SUBENTRY,
     MOCK_ZONE_SUBENTRY,
+    setup_integration,
 )
 
 from tests.common import MockConfigEntry
@@ -60,10 +61,7 @@ async def test_config_flow_migration_version_1_2(
     )
     config_entry.subentries = deepcopy({original.subentry_id: original})
 
-    config_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, config_entry)
 
     assert config_entry.version == 2
     assert config_entry.minor_version == 1
