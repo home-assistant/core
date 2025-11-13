@@ -16,7 +16,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 
-from .const import CLIENT_ID, CLIENT_SECRET
+from .const import CLIENT_ID, CLIENT_SECRET, ENTRY_UNIQUE_ID
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -205,12 +205,21 @@ async def test_reauth_flow(
 
 
 @pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.parametrize(
+    ("unique_id", "expected_result"),
+    [
+        (ENTRY_UNIQUE_ID, "reconfigure_successful"),
+        ("different_unique_id", "account_mismatch"),
+    ],
+)
 async def test_reconfiguration_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     mock_config_entry: MockConfigEntry,
     access_token: str,
+    unique_id: str,
+    expected_result: str,
     expires_at: float,
 ) -> None:
     """Test reconfigure step with correct params."""
@@ -267,6 +276,6 @@ async def test_reconfiguration_flow(
     await hass.async_block_till_done()
 
     assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "reconfigure_successful"
+    assert result.get("reason") == expected_result
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
