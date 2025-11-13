@@ -270,6 +270,7 @@ class DPCodeEnumWrapper(DPCodeTypeInformationWrapper[EnumTypeData]):
     """Simple wrapper for EnumTypeData values."""
 
     DPTYPE = DPType.ENUM
+    _strict = False
 
     def read_device_status(self, device: CustomerDevice) -> str | None:
         """Read the device value for the dpcode.
@@ -287,6 +288,8 @@ class DPCodeEnumWrapper(DPCodeTypeInformationWrapper[EnumTypeData]):
                 self.dpcode,
                 self.type_information.range,
             )
+            if self._strict:
+                return None
         return raw_value
 
     def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:

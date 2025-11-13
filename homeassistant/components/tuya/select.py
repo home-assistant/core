@@ -344,6 +344,12 @@ SELECTS[DeviceCategory.DGHSXJ] = SELECTS[DeviceCategory.SP]
 SELECTS[DeviceCategory.PC] = SELECTS[DeviceCategory.KG]
 
 
+class _DPCodeEnumStrictWrapper(DPCodeEnumWrapper):
+    """Strict validation of Tuya values."""
+
+    _strict = True
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TuyaConfigEntry,
@@ -365,7 +371,7 @@ async def async_setup_entry(
                     )
                     for description in descriptions
                     if (
-                        dpcode_wrapper := DPCodeEnumWrapper.find_dpcode(
+                        dpcode_wrapper := _DPCodeEnumStrictWrapper.find_dpcode(
                             device, description.key, prefer_function=True
                         )
                     )
@@ -388,7 +394,7 @@ class TuyaSelectEntity(TuyaEntity, SelectEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: SelectEntityDescription,
-        dpcode_wrapper: DPCodeEnumWrapper,
+        dpcode_wrapper: _DPCodeEnumStrictWrapper,
     ) -> None:
         """Init Tuya sensor."""
         super().__init__(device, device_manager)
