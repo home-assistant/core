@@ -215,9 +215,17 @@ async def test_select_entity_availability(
     appliance: HomeAppliance,
 ) -> None:
     """Test if select entities availability are based on the appliance connection state."""
-    entity_ids = [
-        "select.washer_active_program",
-    ]
+    entity_ids = ["select.washer_active_program", "select.washer_temperature"]
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            ProgramKey.UNKNOWN,
+            options=[
+                ProgramDefinitionOption(
+                    OptionKey.LAUNDRY_CARE_WASHER_TEMPERATURE, "Boolean"
+                )
+            ],
+        )
+    )
     assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
 
@@ -967,6 +975,67 @@ async def test_options_functionality(
     assert hass.states.is_state(
         entity_id, "laundry_care_washer_enum_type_temperature_ul_warm"
     )
+
+
+@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+async def test_options_unavailable_when_option_is_missing(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+) -> None:
+    """Test that option entities become unavailable when the option is missing."""
+    entity_id = "select.washer_temperature"
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            ProgramKey.UNKNOWN,
+            options=[
+                ProgramDefinitionOption(
+                    OptionKey.LAUNDRY_CARE_WASHER_TEMPERATURE, "Boolean"
+                )
+            ],
+        )
+    )
+
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            ProgramKey.LAUNDRY_CARE_WASHER_AUTO_30,
+            options=[],
+        )
+    )
+    await client.add_events(
+        [
+            EventMessage(
+                appliance.ha_id,
+                EventType.NOTIFY,
+                data=ArrayOfEvents(
+                    [
+                        Event(
+                            EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
+                            EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM.value,
+                            0,
+                            level="info",
+                            handling="auto",
+                            value=ProgramKey.LAUNDRY_CARE_WASHER_AUTO_30,
+                        )
+                    ]
+                ),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
