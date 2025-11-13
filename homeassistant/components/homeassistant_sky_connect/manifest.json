@@ -6,6 +6,12 @@
   "dependencies": ["hardware", "usb", "homeassistant_hardware"],
   "documentation": "https://www.home-assistant.io/integrations/homeassistant_sky_connect",
   "integration_type": "hardware",
+  "loggers": [
+    "bellows",
+    "universal_silabs_flasher",
+    "zigpy.serial",
+    "serial_asyncio_fast"
+  ],
   "usb": [
     {
       "description": "*skyconnect v1.0*",
