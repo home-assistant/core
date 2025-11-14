@@ -23,14 +23,11 @@ from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, DPType
 from .entity import TuyaEntity
 from .models import DPCodeIntegerWrapper, find_dpcode
-from .util import get_dpcode, remap_value
+from .util import get_dpcode
 
 
 class _DPCodePercentageMappingWrapper(DPCodeIntegerWrapper):
     """Wrapper for DPCode position values mapping to 0-100 range."""
-
-    min: int = 0
-    max: int = 100
 
     def _position_reversed(self, device: CustomerDevice) -> bool:
         """Check if the position and direction should be reversed."""
@@ -41,24 +38,20 @@ class _DPCodePercentageMappingWrapper(DPCodeIntegerWrapper):
             return None
 
         return round(
-            remap_value(
+            self.type_information.remap_value_to(
                 value,
-                self.type_information.min,
-                self.type_information.max,
-                self.min,
-                self.max,
+                0,
+                100,
                 self._position_reversed(device),
             )
         )
 
     def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
         return round(
-            remap_value(
+            self.type_information.remap_value_from(
                 value,
-                self.type_information.min,
-                self.type_information.max,
-                self.min,
-                self.max,
+                0,
+                100,
                 self._position_reversed(device),
             )
         )
