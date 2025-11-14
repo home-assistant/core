@@ -27,7 +27,7 @@ from .util import get_dpcode, remap_value
 
 
 class _DPCodePositionWrapper(DPCodeIntegerWrapper):
-    """Wrapper to map cover position to Home Assistant percentage."""
+    """Wrapper for DPCode position values with reversible mapping to 0-100 range."""
 
     def _position_reversed(self, device: CustomerDevice) -> bool:
         """Check if the position and direction should be reversed."""
@@ -63,11 +63,7 @@ class _DPCodePositionWrapper(DPCodeIntegerWrapper):
 
 
 class _DPCodePositionWithControlModeWrapper(_DPCodePositionWrapper):
-    """Wrapper to map cover position to Home Assistant percentage.
-
-    Takes into account the control mode DP code to determine if position is reversed.
-    """
-
+    """Wrapper for DPCode position values with control_back_mode support."""
     def _position_reversed(self, device: CustomerDevice) -> bool:
         """Check if the position and direction should be reversed."""
         return device.status.get(DPCode.CONTROL_BACK_MODE) != "back"
