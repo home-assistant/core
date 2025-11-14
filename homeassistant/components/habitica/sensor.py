@@ -55,6 +55,57 @@ SVG_CLASS = {
 PARALLEL_UPDATES = 1
 
 
+def get_daily_motivational_prompt(user: UserData, content: ContentData) -> str:
+    """Generate a daily motivational prompt based on user data."""
+    import random
+    from datetime import datetime
+    
+    # Seed random with current date to ensure same prompt per day
+    today = datetime.now().date()
+    random.seed(hash(f"{user.id}_{today}"))
+    
+    # Base motivational prompts
+    base_prompts = [
+        "🌟 Ready to tackle your habits today? You've got this!",
+        "💪 Every small step counts towards building better habits!",
+        "🎯 Focus on progress, not perfection!",
+        "🚀 Your future self will thank you for what you do today!",
+        "⭐ Consistency is the key to lasting change!",
+        "🌈 Make today amazing by completing your habits!",
+        "🔥 You're building unstoppable momentum!",
+        "💎 Turn your habits into your superpowers!",
+        "🏆 Champions are made through daily discipline!",
+        "✨ Small habits, big transformations!"
+    ]
+    
+    # Personalized prompts based on user stats
+    level = user.stats.lvl or 1
+    if level >= 50:
+        base_prompts.extend([
+            f"🎖️ Level {level} warrior, show those habits who's boss!",
+            "🗡️ Your high level shows your dedication - keep it up!"
+        ])
+    elif level >= 20:
+        base_prompts.extend([
+            f"⚔️ Level {level} adventurer, ready for today's quest?",
+            "🛡️ You're growing stronger with every habit!"
+        ])
+    
+    # Class-based prompts
+    if user.stats.Class:
+        class_name = user.stats.Class.value
+        class_prompts = {
+            "warrior": "⚔️ Channel your warrior spirit into your habits!",
+            "mage": "🔮 Use your magical focus to master your routines!",
+            "rogue": "🗡️ Strike swiftly and efficiently at your goals!",
+            "healer": "💚 Nurture yourself with positive habits today!"
+        }
+        if class_name.lower() in class_prompts:
+            base_prompts.append(class_prompts[class_name.lower()])
+    
+    return random.choice(base_prompts)
+
+
 @dataclass(kw_only=True, frozen=True)
 class HabiticaSensorEntityDescription(SensorEntityDescription):
     """Habitica Sensor Description."""
@@ -121,6 +172,10 @@ class HabiticaSensorEntity(StrEnum):
     BOSS_RAGE = "boss_rage"
     BOSS_RAGE_LIMIT = "boss_rage_limit"
     LAST_CHECKIN = "last_checkin"
+    HABITS_DAILY = "habits_daily"
+    HABITS_WEEKLY = "habits_weekly"
+    HABITS_MONTHLY = "habits_monthly"
+    MOTIVATIONAL_PROMPT = "motivational_prompt"
 
 
 SENSOR_DESCRIPTIONS_COMMON: tuple[HabiticaSensorEntityDescription, ...] = (
@@ -308,6 +363,44 @@ SENSOR_DESCRIPTIONS: tuple[HabiticaSensorEntityDescription, ...] = (
         key=HabiticaSensorEntity.HABITS,
         translation_key=HabiticaSensorEntity.HABITS,
         value_fn=lambda user, _: len([h for h in user.tasksOrder.habits if h]),
+    ),
+    HabiticaSensorEntityDescription(
+        key=HabiticaSensorEntity.HABITS_DAILY,
+        translation_key=HabiticaSensorEntity.HABITS_DAILY,
+        value_fn=lambda user, _: len([
+            h for h in user.tasksOrder.habits 
+            if h and getattr(h, 'frequency', 'daily') == 'daily'
+        ]),
+        native_unit_of_measurement="habits",
+    ),
+    HabiticaSensorEntityDescription(
+        key=HabiticaSensorEntity.HABITS_WEEKLY,
+        translation_key=HabiticaSensorEntity.HABITS_WEEKLY,
+        value_fn=lambda user, _: len([
+            h for h in user.tasksOrder.habits 
+            if h and getattr(h, 'frequency', 'daily') == 'weekly'
+        ]),
+        native_unit_of_measurement="habits",
+    ),
+    HabiticaSensorEntityDescription(
+        key=HabiticaSensorEntity.HABITS_MONTHLY,
+        translation_key=HabiticaSensorEntity.HABITS_MONTHLY,
+        value_fn=lambda user, _: len([
+            h for h in user.tasksOrder.habits 
+            if h and getattr(h, 'frequency', 'daily') == 'monthly'
+        ]),
+        native_unit_of_measurement="habits",
+    ),
+    HabiticaSensorEntityDescription(
+        key=HabiticaSensorEntity.MOTIVATIONAL_PROMPT,
+        translation_key=HabiticaSensorEntity.MOTIVATIONAL_PROMPT,
+        value_fn=get_daily_motivational_prompt,
+        attributes_fn=lambda user, _: {
+            "level": user.stats.lvl,
+            "class": user.stats.Class.value if user.stats.Class else None,
+            "total_habits": len([h for h in user.tasksOrder.habits if h]),
+            "updated_daily": "Updates once per day with personalized content",
+        },
     ),
 )
 

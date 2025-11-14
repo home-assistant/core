@@ -422,6 +422,35 @@
           }
         }
       },
+      "habits_daily": {
+        "name": "Daily habits",
+        "unit_of_measurement": "habits"
+      },
+      "habits_weekly": {
+        "name": "Weekly habits", 
+        "unit_of_measurement": "habits"
+      },
+      "habits_monthly": {
+        "name": "Monthly habits",
+        "unit_of_measurement": "habits"
+      },
+      "motivational_prompt": {
+        "name": "Daily motivation",
+        "state_attributes": {
+          "level": {
+            "name": "Character level"
+          },
+          "class": {
+            "name": "Character class"
+          },
+          "total_habits": {
+            "name": "Total habits"
+          },
+          "updated_daily": {
+            "name": "Update frequency"
+          }
+        }
+      },
       "intelligence": {
         "name": "Intelligence",
         "state_attributes": {
