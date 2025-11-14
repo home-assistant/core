@@ -14,8 +14,8 @@ rules:
   docs-actions:
     status: exempt
     comment: This integration does not provide any service actions.
-  docs-high-level-description: todo
-  docs-installation-instructions: todo
+  docs-high-level-description: done
+  docs-installation-instructions: done
   docs-removal-instructions: done
   entity-event-setup: done
   entity-unique-id: done
