@@ -21,11 +21,12 @@ async def async_setup_entry(
     """Set up entry."""
     gateway = config_entry.runtime_data.gateway
 
-    for entity_id, properties in gateway.switch_entities:
+    for entity_id in gateway.switch_entities:
         async_add_entities(
             [
                 EnOceanSwitch(
-                    entity_id, gateway=gateway, device_class=properties.device_class
+                    entity_id,
+                    gateway=gateway,
                 )
             ]
         )
@@ -43,7 +44,7 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
         """Initialize the EnOcean switch."""
         super().__init__(enocean_entity_id=entity_id, gateway=gateway)
         self._attr_device_class = device_class
-        self.gateway.register_switch_callback(self.entity_id, self.update)
+        self.gateway.register_switch_callback(self.enocean_entity_id, self.update)
 
     def update(self, is_on: bool) -> None:
         """Update the switch state."""
