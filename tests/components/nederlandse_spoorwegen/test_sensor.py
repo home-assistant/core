@@ -104,7 +104,7 @@ async def test_sensor_with_api_no_data_received_error(
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test sensor behavior when API connection fails."""
+    """Test sensor behavior when API returns no data."""
     # Make API calls fail from the start
     mock_nsapi.get_trips.side_effect = NoDataReceivedError("Connection failed")
 
