@@ -18,7 +18,7 @@ from .coordinator import PranaCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 # Keep platforms sorted alphabetically to satisfy lint rule
-PLATFORMS = [Platform.FAN, Platform.LIGHT, Platform.SENSOR, Platform.SWITCH]
+PLATFORMS = [Platform.SWITCH]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
