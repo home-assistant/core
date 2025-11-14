@@ -223,8 +223,11 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         # Beolink compatible sources
         self._beolink_sources: dict[str, bool] = {}
         self._remote_leader: BeolinkLeader | None = None
-        # Extra state attributes for showing Beolink: peer(s), listener(s), leader and self
+        # Extra state attributes:
+        # Beolink: peer(s), listener(s), leader and self
         self._beolink_attributes: dict[str, dict[str, dict[str, str]]] = {}
+        # Media ID: Currently playing Deezer, Tidal and radio station IDs
+        self._media_id_attribute: str | None = None
 
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
@@ -370,6 +373,9 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         """Update _playback_metadata and related."""
         self._playback_metadata = data
 
+        # Update media id attribute
+        self._media_id_attribute = data.source_internal_id
+
         # Update current artwork and remote_leader.
         self._media_image = get_highest_resolution_artwork(self._playback_metadata)
         await self._async_update_beolink()
@@ -435,7 +441,10 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         await self._async_update_beolink()
 
     async def _async_update_beolink(self) -> None:
-        """Update the current Beolink leader, listeners, peers and self."""
+        """Update the current Beolink leader, listeners, peers and self.
+
+        Updates Home Assistant state.
+        """
 
         self._beolink_attributes = {}
 
@@ -675,6 +684,10 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return information that is not returned anywhere else."""
         attributes: dict[str, Any] = {}
+
+        # Add media id attribute
+        if self._media_id_attribute:
+            attributes.update({"media_id": self._media_id_attribute})
 
         # Add Beolink attributes
         if self._beolink_attributes:

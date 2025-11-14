@@ -260,6 +260,7 @@ async def test_async_update_playback_metadata(
     assert ATTR_MEDIA_ALBUM_ARTIST not in states.attributes
     assert ATTR_MEDIA_TRACK not in states.attributes
     assert ATTR_MEDIA_CHANNEL not in states.attributes
+    assert "media_id" not in states.attributes
 
     # Send the WebSocket event dispatch
     playback_metadata_callback(TEST_PLAYBACK_METADATA)
@@ -276,6 +277,8 @@ async def test_async_update_playback_metadata(
     )
     assert states.attributes[ATTR_MEDIA_TRACK] == TEST_PLAYBACK_METADATA.track
     assert states.attributes[ATTR_MEDIA_CHANNEL] == TEST_PLAYBACK_METADATA.organization
+    assert states.attributes[ATTR_MEDIA_CHANNEL] == TEST_PLAYBACK_METADATA.organization
+    assert states.attributes["media_id"] == TEST_PLAYBACK_METADATA.source_internal_id
 
 
 async def test_async_update_playback_error(
