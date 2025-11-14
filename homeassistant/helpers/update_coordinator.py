@@ -267,7 +267,6 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             self._retry_after = None
 
         next_refresh = int(loop.time()) + self._microsecond + update_interval
-        self.logger.debug("Next update scheduled in %s seconds", update_interval)
         self._unsub_refresh = loop.call_at(
             next_refresh, self.__wrap_handle_refresh_interval
         ).cancel
