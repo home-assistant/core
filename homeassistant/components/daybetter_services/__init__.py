@@ -40,8 +40,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: DayBetterConfigEntry) ->
     runtime_data = DayBetterRuntimeData(coordinator=coordinator, client=client)
     entry.runtime_data = runtime_data
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = runtime_data
-
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -51,12 +49,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: DayBetterConfigEntry) -
     """Unload DayBetter config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        domain_data = hass.data.get(DOMAIN, {})
-        runtime_data = domain_data.pop(entry.entry_id, None)
-        if not domain_data:
-            hass.data.pop(DOMAIN, None)
-        if runtime_data is None:
-            runtime_data = getattr(entry, "runtime_data", None)
-        if runtime_data is not None:
-            await runtime_data.client.close()
+        await entry.runtime_data.client.close()
     return unload_ok

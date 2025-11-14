@@ -1,15 +1,15 @@
 """Test the DayBetter Services sensor platform."""
 
+from datetime import timedelta
 from unittest.mock import patch
 
-from homeassistant.components.daybetter_services.const import (
-    DOMAIN,
-    DayBetterRuntimeData,
-)
+from homeassistant.components.daybetter_services.const import DOMAIN
 from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_sensor_setup(hass: HomeAssistant) -> None:
@@ -41,16 +41,24 @@ async def test_sensor_setup(hass: HomeAssistant) -> None:
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        # Check that sensors were created
-        # Entity IDs are based on device group and name
-        states = hass.states.async_all()
-        temp_sensors = [s for s in states if "temperature" in s.entity_id]
-        humi_sensors = [s for s in states if "humidity" in s.entity_id]
+        entity_registry = er.async_get(hass)
+        temp_entity_id = entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, "test_device_1_temperature"
+        )
+        humi_entity_id = entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, "test_device_1_humidity"
+        )
 
-        assert len(temp_sensors) == 1
-        assert len(humi_sensors) == 1
-        assert temp_sensors[0].state == "22.5"
-        assert humi_sensors[0].state == "65.0"
+        assert temp_entity_id is not None
+        assert humi_entity_id is not None
+
+        temp_state = hass.states.get(temp_entity_id)
+        humi_state = hass.states.get(humi_entity_id)
+
+        assert temp_state is not None
+        assert humi_state is not None
+        assert temp_state.state == "22.5"
+        assert humi_state.state == "65.0"
 
 
 async def test_sensor_attributes(hass: HomeAssistant) -> None:
@@ -82,25 +90,32 @@ async def test_sensor_attributes(hass: HomeAssistant) -> None:
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        states = hass.states.async_all()
-        temp_sensors = [s for s in states if "temperature" in s.entity_id]
-        humi_sensors = [s for s in states if "humidity" in s.entity_id]
-
-        # Check temperature sensor attributes
-        assert len(temp_sensors) == 1
-        temp_sensor = temp_sensors[0]
-        assert (
-            temp_sensor.attributes["unit_of_measurement"] == UnitOfTemperature.CELSIUS
+        entity_registry = er.async_get(hass)
+        temp_entity_id = entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, "test_device_1_temperature"
         )
-        assert temp_sensor.attributes["device_class"] == "temperature"
-        assert temp_sensor.attributes["state_class"] == "measurement"
+        humi_entity_id = entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, "test_device_1_humidity"
+        )
 
-        # Check humidity sensor attributes
-        assert len(humi_sensors) == 1
-        humidity_sensor = humi_sensors[0]
-        assert humidity_sensor.attributes["unit_of_measurement"] == PERCENTAGE
-        assert humidity_sensor.attributes["device_class"] == "humidity"
-        assert humidity_sensor.attributes["state_class"] == "measurement"
+        assert temp_entity_id is not None
+        assert humi_entity_id is not None
+
+        temp_sensor_state = hass.states.get(temp_entity_id)
+        humidity_sensor_state = hass.states.get(humi_entity_id)
+
+        assert temp_sensor_state is not None
+        assert humidity_sensor_state is not None
+        assert (
+            temp_sensor_state.attributes["unit_of_measurement"]
+            == UnitOfTemperature.CELSIUS
+        )
+        assert temp_sensor_state.attributes["device_class"] == "temperature"
+        assert temp_sensor_state.attributes["state_class"] == "measurement"
+
+        assert humidity_sensor_state.attributes["unit_of_measurement"] == PERCENTAGE
+        assert humidity_sensor_state.attributes["device_class"] == "humidity"
+        assert humidity_sensor_state.attributes["state_class"] == "measurement"
 
 
 async def test_sensor_no_devices(hass: HomeAssistant) -> None:
@@ -123,10 +138,7 @@ async def test_sensor_no_devices(hass: HomeAssistant) -> None:
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        # No sensors should be created
-        states = hass.states.async_all()
-        sensor_states = [s for s in states if s.entity_id.startswith("sensor.")]
-        assert len(sensor_states) == 0
+        assert not hass.states.async_entity_ids("sensor")
 
 
 async def test_sensor_wrong_device_type(hass: HomeAssistant) -> None:
@@ -149,10 +161,7 @@ async def test_sensor_wrong_device_type(hass: HomeAssistant) -> None:
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        # No sensors should be created for non-sensor devices
-        states = hass.states.async_all()
-        sensor_states = [s for s in states if s.entity_id.startswith("sensor.")]
-        assert len(sensor_states) == 0
+        assert not hass.states.async_entity_ids("sensor")
 
 
 async def test_sensor_update(hass: HomeAssistant) -> None:
@@ -166,15 +175,28 @@ async def test_sensor_update(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.daybetter_services.DayBetterClient.fetch_sensor_data",
-            return_value=[
-                {
-                    "deviceId": "test_device_1",
-                    "deviceName": "test_sensor",
-                    "deviceGroupName": "Test Group",
-                    "deviceMoldPid": "pid1",
-                    "temp": 225,  # Raw value, will be divided by 10 to get 22.5
-                    "humi": 650,  # Raw value, will be divided by 10 to get 65.0
-                }
+            side_effect=[
+                [
+                    {
+                        "deviceId": "test_device_1",
+                        "deviceName": "test_sensor",
+                        "deviceGroupName": "Test Group",
+                        "deviceMoldPid": "pid1",
+                        "temp": 225,
+                        "humi": 650,
+                    }
+                ],
+                [
+                    {
+                        "deviceId": "test_device_1",
+                        "deviceName": "test_sensor",
+                        "deviceGroupName": "Test Group",
+                        "deviceMoldPid": "pid1",
+                        "type": 5,
+                        "temp": 250,
+                        "humi": 700,
+                    }
+                ],
             ],
         ) as mock_fetch,
         patch(
@@ -184,36 +206,32 @@ async def test_sensor_update(hass: HomeAssistant) -> None:
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        # Initial values
-        states = hass.states.async_all()
-        temp_sensors = [s for s in states if "temperature" in s.entity_id]
-        assert len(temp_sensors) == 1
-        assert temp_sensors[0].state == "22.5"
+        entity_registry = er.async_get(hass)
+        temp_entity_id = entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, "test_device_1_temperature"
+        )
+        humi_entity_id = entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, "test_device_1_humidity"
+        )
 
-        # Update with new values
-        mock_fetch.return_value = [
-            {
-                "deviceId": "test_device_1",
-                "deviceName": "test_sensor",
-                "deviceGroupName": "Test Group",
-                "deviceMoldPid": "pid1",
-                "type": 5,
-                "temp": 250,  # Raw value, will be divided by 10 to get 25.0
-                "humi": 700,  # Raw value, will be divided by 10 to get 70.0
-            }
-        ]
+        assert temp_entity_id is not None
+        assert humi_entity_id is not None
 
-        # Trigger coordinator refresh
-        runtime_data: DayBetterRuntimeData = hass.data[DOMAIN][entry.entry_id]
-        coordinator = runtime_data.coordinator
-        await coordinator.async_refresh()
+        temp_state = hass.states.get(temp_entity_id)
+        assert temp_state is not None
+        assert temp_state.state == "22.5"
+
+        async_fire_time_changed(
+            hass,
+            dt_util.utcnow() + timedelta(seconds=300),
+        )
         await hass.async_block_till_done()
 
-        # Check updated values
-        states = hass.states.async_all()
-        temp_sensors = [s for s in states if "temperature" in s.entity_id]
-        humi_sensors = [s for s in states if "humidity" in s.entity_id]
-        assert len(temp_sensors) == 1
-        assert len(humi_sensors) == 1
-        assert temp_sensors[0].state == "25.0"
-        assert humi_sensors[0].state == "70.0"
+        updated_temp_state = hass.states.get(temp_entity_id)
+        updated_humi_state = hass.states.get(humi_entity_id)
+
+        assert updated_temp_state is not None
+        assert updated_humi_state is not None
+        assert updated_temp_state.state == "25.0"
+        assert updated_humi_state.state == "70.0"
+        assert mock_fetch.call_count >= 2

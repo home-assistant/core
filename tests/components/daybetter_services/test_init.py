@@ -33,10 +33,9 @@ async def test_async_setup_entry(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         assert config_entry.state == ConfigEntryState.LOADED
-        assert DOMAIN in hass.data
-        runtime_data = hass.data[DOMAIN][config_entry.entry_id]
+        runtime_data = config_entry.runtime_data
         assert isinstance(runtime_data, DayBetterRuntimeData)
-        assert config_entry.runtime_data is runtime_data
+        assert runtime_data is not None
 
 
 async def test_async_setup_entry_no_token(hass: HomeAssistant) -> None:
@@ -77,5 +76,5 @@ async def test_async_unload_entry(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         assert config_entry.state == ConfigEntryState.NOT_LOADED
-        assert config_entry.entry_id not in hass.data.get(DOMAIN, {})
+        assert DOMAIN not in hass.data
         mock_close.assert_called()
