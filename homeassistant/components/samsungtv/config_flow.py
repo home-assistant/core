@@ -265,6 +265,7 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
         except socket.gaierror as err:
             LOGGER.debug("Failed to get IP for %s: %s", user_input[CONF_HOST], err)
             return False
+        assert self._host is not None
         self._title = self._host
         return True
 
