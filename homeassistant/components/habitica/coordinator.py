@@ -1,4 +1,32 @@
-"""DataUpdateCoordinator for from homeassistant.config_entries import ConfigEntry
+"""DataUpdateCoordinator for the Habitica integration."""
+from __future__ import annotations
+
+import logging
+from abc import abstractmethod
+from collections.abc import Callable
+from datetime import timedelta
+from io import BytesIO
+from typing import Any
+
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+from uuid import UUID
+
+from aiohttp import ClientError
+from habiticalib import (
+    Avatar,
+    ContentData,
+    GroupData,
+    Habitica,
+    HabiticaException,
+    NotAuthorizedError,
+    TaskData,
+    TaskFilter,
+    TooManyRequestsError,
+    UserData,
+)
+
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -18,56 +46,12 @@ _LOGGER = logging.getLogger(__name__)
 UNSCORED_TASK_ALERT_HOURS = 48
 
 
-from __future__ import annotations
-
-
-from abc import abstractmethod
-from collections.abc import Callable
-from dataclasses import dataclass
-from datetime import datetime, timedelta
-from io import BytesIO
-import logging
-from typing import Any
-from uuid import UUID
-
-import habitipy  # Make sure this is imported
-from aiohttp import ClientError
-from habiticalib import (
-    Avatar,
-    ContentData,
-    GroupData,
-    Habitica,
-    HabiticaException,
-    NotAuthorizedError,
-    TaskData,
-    TaskFilter,
-    TooManyRequestsError,
-    UserData,
-)
-
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
-    HomeAssistantError,
-    ServiceValidationError,
-)
-from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-
-from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
-
-
 @dataclass
 class HabiticaData:
     """Habitica data."""
 
     user: UserData
     tasks: list[TaskData]
-    habits: list[TaskData]  # Add habits specifically for sensor platform
     habits: list[TaskData]  # Add habits specifically for sensor platform
 
 
