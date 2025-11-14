@@ -186,7 +186,7 @@ class NSDepartureSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity
             route = [first_trip.departure]
             route.extend(k.destination for k in first_trip.trip_parts)
 
-        # The library parses the response from NS into an Enum, but if there is a value not in the Enum it returns a string of the value
+        # The library parses the response from NS into an enum, but if there is a value not in the enum, it returns a string of the value
         status: Any = first_trip.status
         status_value: str | None = None
         if isinstance(status, TripStatus):
