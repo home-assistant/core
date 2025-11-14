@@ -1,13 +1,13 @@
 {
   "config": {
     "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
       "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
-      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]"
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
@@ -65,9 +65,27 @@
         "name": "Following",
         "unit_of_measurement": "people"
       },
+      "free_storage": {
+        "name": "Free space - {name}"
+      },
+      "friends": {
+        "name": "Friends",
+        "unit_of_measurement": "[%key:component::xbox::entity::sensor::following::unit_of_measurement%]"
+      },
       "gamer_score": {
         "name": "Gamerscore",
         "unit_of_measurement": "points"
+      },
+      "in_party": {
+        "name": "In party",
+        "unit_of_measurement": "[%key:component::xbox::entity::sensor::following::unit_of_measurement%]"
+      },
+      "join_restrictions": {
+        "name": "Party join restrictions",
+        "state": {
+          "invite_only": "Invite-only",
+          "joinable": "Joinable"
+        }
       },
       "last_online": {
         "name": "Last online"
@@ -90,15 +108,30 @@
       },
       "status": {
         "name": "Status"
+      },
+      "total_storage": {
+        "name": "Total space - {name}"
       }
     }
   },
   "exceptions": {
+    "account_not_configured": {
+      "message": "The Xbox account is not configured."
+    },
+    "media_not_found": {
+      "message": "The requested media could not be found."
+    },
+    "oauth2_implementation_unavailable": {
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    },
     "request_exception": {
       "message": "Failed to connect to Xbox Network"
     },
     "timeout_exception": {
       "message": "Failed to connect to Xbox Network due to a connection timeout"
+    },
+    "xbox_not_configured": {
+      "message": "The Xbox integration is not configured."
     }
   }
 }

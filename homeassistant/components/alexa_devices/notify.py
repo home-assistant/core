@@ -6,8 +6,9 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any, Final
 
-from aioamazondevices.api import AmazonDevice, AmazonEchoApi
-from aioamazondevices.const import SPEAKER_GROUP_FAMILY
+from aioamazondevices.api import AmazonEchoApi
+from aioamazondevices.const.devices import SPEAKER_GROUP_FAMILY
+from aioamazondevices.structures import AmazonDevice
 
 from homeassistant.components.notify import NotifyEntity, NotifyEntityDescription
 from homeassistant.core import HomeAssistant

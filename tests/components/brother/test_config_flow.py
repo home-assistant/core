@@ -62,19 +62,41 @@ async def test_create_entry(
     assert result["data"][SECTION_ADVANCED_SETTINGS][CONF_COMMUNITY] == "public"
 
 
-async def test_invalid_hostname(hass: HomeAssistant) -> None:
+async def test_invalid_hostname(
+    hass: HomeAssistant, mock_brother_client: AsyncMock
+) -> None:
     """Test invalid hostname in user_input."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
             CONF_HOST: "invalid/hostname",
             CONF_TYPE: "laser",
             SECTION_ADVANCED_SETTINGS: {CONF_PORT: 161, CONF_COMMUNITY: "public"},
         },
     )
 
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {CONF_HOST: "wrong_host"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        CONFIG,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "HL-L2340DW 0123456789"
+    assert result["data"][CONF_HOST] == "127.0.0.1"
+    assert result["data"][CONF_TYPE] == "laser"
+    assert result["data"][SECTION_ADVANCED_SETTINGS][CONF_PORT] == 161
+    assert result["data"][SECTION_ADVANCED_SETTINGS][CONF_COMMUNITY] == "public"
 
 
 @pytest.mark.parametrize(
@@ -89,13 +111,37 @@ async def test_errors(
     hass: HomeAssistant, exc: Exception, base_error: str, mock_brother_client: AsyncMock
 ) -> None:
     """Test connection to host error."""
-    mock_brother_client.async_update.side_effect = exc
-
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    mock_brother_client.async_update.side_effect = exc
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        CONFIG,
+    )
+
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": base_error}
+
+    mock_brother_client.async_update.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        CONFIG,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "HL-L2340DW 0123456789"
+    assert result["data"][CONF_HOST] == "127.0.0.1"
+    assert result["data"][CONF_TYPE] == "laser"
+    assert result["data"][SECTION_ADVANCED_SETTINGS][CONF_PORT] == 161
+    assert result["data"][SECTION_ADVANCED_SETTINGS][CONF_COMMUNITY] == "public"
 
 
 async def test_unsupported_model_error(
@@ -382,6 +428,22 @@ async def test_reconfigure_invalid_hostname(
     assert result["step_id"] == "reconfigure"
     assert result["errors"] == {CONF_HOST: "wrong_host"}
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "10.10.10.10",
+            SECTION_ADVANCED_SETTINGS: {CONF_PORT: 161, CONF_COMMUNITY: "public"},
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {
+        CONF_HOST: "10.10.10.10",
+        CONF_TYPE: "laser",
+        SECTION_ADVANCED_SETTINGS: {CONF_PORT: 161, CONF_COMMUNITY: "public"},
+    }
+
 
 async def test_reconfigure_not_the_same_device(
     hass: HomeAssistant,
@@ -409,3 +471,21 @@ async def test_reconfigure_not_the_same_device(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
     assert result["errors"] == {"base": "another_device"}
+
+    mock_brother_client.serial = "0123456789"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "11.11.11.11",
+            SECTION_ADVANCED_SETTINGS: {CONF_PORT: 161, CONF_COMMUNITY: "public"},
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {
+        CONF_HOST: "11.11.11.11",
+        CONF_TYPE: "laser",
+        SECTION_ADVANCED_SETTINGS: {CONF_PORT: 161, CONF_COMMUNITY: "public"},
+    }

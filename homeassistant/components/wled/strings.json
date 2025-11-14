@@ -124,11 +124,25 @@
       }
     }
   },
+  "exceptions": {
+    "connection_error": {
+      "message": "Error communicating with WLED API: {error}"
+    },
+    "invalid_response_github_error": {
+      "message": "Invalid response from GitHub API: {error}"
+    },
+    "invalid_response_wled_error": {
+      "message": "Invalid response from WLED API: {error}"
+    }
+  },
   "options": {
     "step": {
       "init": {
         "data": {
           "keep_master_light": "Add 'Main' control even with single LED segment"
+        },
+        "data_description": {
+          "keep_master_light": "Ensures the main light control is always available when you are dynamically adding and removing segments through automation."
         }
       }
     }

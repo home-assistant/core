@@ -61,6 +61,16 @@ SENSOR_TYPES: tuple[IncomfortSensorEntityDescription, ...] = (
         value_key="tap_temp",
         entity_registry_enabled_default=False,
     ),
+    # A lower RSSI value is better
+    # A typical RSSI value is 28 for connection just in range
+    IncomfortSensorEntityDescription(
+        key="rf_message_rssi",
+        translation_key="rf_message_rssi",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_key="rf_message_rssi",
+        extra_key="rfstatus_cntr",
+        entity_registry_enabled_default=False,
+    ),
 )
 
 

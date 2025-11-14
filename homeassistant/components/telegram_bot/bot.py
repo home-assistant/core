@@ -108,8 +108,8 @@ from .const import (
     SERVICE_SEND_STICKER,
     SERVICE_SEND_VIDEO,
     SERVICE_SEND_VOICE,
-    SIGNAL_UPDATE_EVENT,
 )
+from .helpers import signal
 
 _FILE_TYPES = ("animation", "document", "photo", "sticker", "video", "voice")
 _LOGGER = logging.getLogger(__name__)
@@ -169,7 +169,7 @@ class BaseTelegramBot:
 
         _LOGGER.debug("Firing event %s: %s", event_type, event_data)
         self.hass.bus.async_fire(event_type, event_data, context=event_context)
-        async_dispatcher_send(self.hass, SIGNAL_UPDATE_EVENT, event_type, event_data)
+        async_dispatcher_send(self.hass, signal(self._bot), event_type, event_data)
         return True
 
     @staticmethod
@@ -551,7 +551,7 @@ class TelegramNotificationService:
                     EVENT_TELEGRAM_SENT, event_data, context=context
                 )
                 async_dispatcher_send(
-                    self.hass, SIGNAL_UPDATE_EVENT, EVENT_TELEGRAM_SENT, event_data
+                    self.hass, signal(self.bot), EVENT_TELEGRAM_SENT, event_data
                 )
         except TelegramError as exc:
             if not suppress_error:

@@ -7,7 +7,9 @@ import pytest
 
 from homeassistant.components.velux import DOMAIN
 from homeassistant.components.velux.binary_sensor import Window
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PASSWORD
+from homeassistant.components.velux.light import LighteningDevice
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PASSWORD, Platform
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -79,10 +81,20 @@ def mock_window() -> AsyncMock:
 
 
 @pytest.fixture
-def mock_pyvlx(mock_window: MagicMock) -> Generator[MagicMock]:
+def mock_light() -> AsyncMock:
+    """Create a mock Velux light."""
+    light = AsyncMock(spec=LighteningDevice, autospec=True)
+    light.name = "Test Light"
+    light.serial_number = "0815"
+    light.intensity = MagicMock()
+    return light
+
+
+@pytest.fixture
+def mock_pyvlx(mock_window: MagicMock, mock_light: MagicMock) -> Generator[MagicMock]:
     """Create the library mock and patch PyVLX."""
     pyvlx = MagicMock()
-    pyvlx.nodes = [mock_window]
+    pyvlx.nodes = [mock_window, mock_light]
     pyvlx.load_scenes = AsyncMock()
     pyvlx.load_nodes = AsyncMock()
     pyvlx.disconnect = AsyncMock()
@@ -95,9 +107,25 @@ def mock_pyvlx(mock_window: MagicMock) -> Generator[MagicMock]:
 def mock_config_entry() -> MockConfigEntry:
     """Return a mock config entry."""
     return MockConfigEntry(
+        entry_id="test_entry_id",
         domain=DOMAIN,
         data={
             CONF_HOST: "testhost",
             CONF_PASSWORD: "testpw",
         },
     )
+
+
+@pytest.fixture
+async def setup_integration(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pyvlx: MagicMock,
+    platform: Platform,
+) -> None:
+    """Set up the integration for testing."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.velux.PLATFORMS", [platform]):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
