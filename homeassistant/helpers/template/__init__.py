@@ -2454,6 +2454,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             "homeassistant.helpers.template.extensions.CollectionExtension"
         )
         self.add_extension("homeassistant.helpers.template.extensions.CryptoExtension")
+        self.add_extension("homeassistant.helpers.template.extensions.CurveExtension")
         self.add_extension("homeassistant.helpers.template.extensions.MathExtension")
         self.add_extension("homeassistant.helpers.template.extensions.RegexExtension")
         self.add_extension("homeassistant.helpers.template.extensions.StringExtension")

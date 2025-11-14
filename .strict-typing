@@ -151,6 +151,7 @@ homeassistant.components.counter.*
 homeassistant.components.cover.*
 homeassistant.components.cpuspeed.*
 homeassistant.components.crownstone.*
+homeassistant.components.curve.*
 homeassistant.components.date.*
 homeassistant.components.datetime.*
 homeassistant.components.deako.*

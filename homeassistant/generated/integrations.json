@@ -7822,6 +7822,11 @@
       "integration_type": "helper",
       "config_flow": false
     },
+    "curve": {
+      "integration_type": "helper",
+      "config_flow": true,
+      "iot_class": "calculated"
+    },
     "derivative": {
       "integration_type": "helper",
       "config_flow": true,
@@ -7953,6 +7958,7 @@
     "cert_expiry",
     "counter",
     "cpuspeed",
+    "curve",
     "demo",
     "derivative",
     "emulated_roku",

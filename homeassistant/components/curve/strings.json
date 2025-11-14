@@ -1,0 +1,42 @@
+{
+  "config": {
+    "error": {
+      "invalid_interpolation_type": "Interpolation type must be 'linear' or 'step'.",
+      "invalid_segment_structure": "Each segment must have x0, y0, x1, and y1 fields.",
+      "invalid_segment_values": "Segment coordinates must be numeric values.",
+      "invalid_segments_json": "Invalid JSON format for segments.",
+      "no_segments": "At least one segment is required.",
+      "overlapping_segments": "Segments should not overlap in x range."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "segments": "Curve segments (JSON)",
+          "source": "Source (optional)"
+        },
+        "data_description": {
+          "segments": "JSON array of segment objects (x0, y0, x1, y1, optionally type (linear or step).",
+          "source": "Optional sensor whose value will be transformed by the curve. If not specified, the curve can only be used via the curve() template function."
+        },
+        "description": "Create a helper with a piecewise curve. Optionally transform another sensor's values, or use in templates with the curve() function.",
+        "title": "Add curve helper"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "segments": "[%key:component::curve::config::step::user::data::segments%]",
+          "source": "[%key:component::curve::config::step::user::data::source%]"
+        },
+        "data_description": {
+          "segments": "[%key:component::curve::config::step::user::data_description::segments%]",
+          "source": "[%key:component::curve::config::step::user::data_description::source%]"
+        }
+      }
+    }
+  },
+  "title": "Curve"
+}
