@@ -334,7 +334,7 @@ class EntityPlatform:
                 if "custom_components" in self.platform.__file__:  # type: ignore[attr-defined]
                     self.logger.warning(
                         (
-                            "The %s platform module for the %s custom component does not implement"
+                            "The %s platform module for the %s custom integration does not implement"
                             " async_setup_platform or setup_platform."
                         ),
                         self.platform_name,
