@@ -47,6 +47,9 @@ async def test_constructor_loads_info_from_config(hass: HomeAssistant) -> None:
                     "accounts_server": "test-acounts-server",
                     "acme_server": "test-acme-server",
                     "remotestate_server": "test-remotestate-server",
+                    "discovery_service_actions": {
+                        "lorem_ipsum": "https://lorem.ipsum/test-url"
+                    },
                 },
             },
         )
@@ -63,6 +66,10 @@ async def test_constructor_loads_info_from_config(hass: HomeAssistant) -> None:
     assert cl.acme_server == "test-acme-server"
     assert cl.api_server == "test-api-server"
     assert cl.remotestate_server == "test-remotestate-server"
+    assert (
+        cl.service_discovery._action_overrides["lorem_ipsum"]
+        == "https://lorem.ipsum/test-url"
+    )
 
 
 @pytest.mark.usefixtures("mock_cloud_fixture")
