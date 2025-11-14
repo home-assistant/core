@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -46,13 +47,31 @@ async def test_platform_setup_and_discovery(
     "mock_device_code",
     ["kt_5wnlzekkstwcdsvm"],
 )
-async def test_set_temperature(
+@pytest.mark.parametrize(
+    ("service", "service_data", "expected_command"),
+    [
+        (
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_TEMPERATURE: 22.7},
+            {"code": "temp_set", "value": 23},
+        ),
+        (
+            SERVICE_SET_FAN_MODE,
+            {ATTR_FAN_MODE: 2},
+            {"code": "windspeed", "value": "2"},
+        ),
+    ],
+)
+async def test_action(
     hass: HomeAssistant,
     mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
+    service: str,
+    service_data: dict[str, Any],
+    expected_command: dict[str, Any],
 ) -> None:
-    """Test set temperature service."""
+    """Test service action."""
     entity_id = "climate.air_conditioner"
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
@@ -60,15 +79,15 @@ async def test_set_temperature(
     assert state is not None, f"{entity_id} does not exist"
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        service,
         {
             ATTR_ENTITY_ID: entity_id,
-            ATTR_TEMPERATURE: 22.7,
+            **service_data,
         },
         blocking=True,
     )
     mock_manager.send_commands.assert_called_once_with(
-        mock_device.id, [{"code": "temp_set", "value": 23}]
+        mock_device.id, [expected_command]
     )
 
 
@@ -76,44 +95,28 @@ async def test_set_temperature(
     "mock_device_code",
     ["kt_5wnlzekkstwcdsvm"],
 )
-async def test_fan_mode_windspeed(
-    hass: HomeAssistant,
-    mock_manager: Manager,
-    mock_config_entry: MockConfigEntry,
-    mock_device: CustomerDevice,
-) -> None:
-    """Test fan mode with windspeed."""
-    entity_id = "climate.air_conditioner"
-    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
-
-    state = hass.states.get(entity_id)
-    assert state is not None, f"{entity_id} does not exist"
-    assert state.attributes[ATTR_FAN_MODE] == 1
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_FAN_MODE,
-        {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_FAN_MODE: 2,
-        },
-        blocking=True,
-    )
-    mock_manager.send_commands.assert_called_once_with(
-        mock_device.id, [{"code": "windspeed", "value": "2"}]
-    )
-
-
 @pytest.mark.parametrize(
-    "mock_device_code",
-    ["kt_5wnlzekkstwcdsvm"],
+    ("service", "service_data"),
+    [
+        (
+            SERVICE_SET_FAN_MODE,
+            {ATTR_FAN_MODE: 2},
+        ),
+        (
+            SERVICE_SET_HUMIDITY,
+            {ATTR_HUMIDITY: 50},
+        ),
+    ],
 )
-async def test_fan_mode_no_valid_code(
+async def test_action_not_supported(
     hass: HomeAssistant,
     mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
+    service: str,
+    service_data: dict[str, Any],
 ) -> None:
-    """Test fan mode with no valid code."""
+    """Test service action not supported."""
     # Remove windspeed DPCode to simulate a device with no valid fan mode
     mock_device.function.pop("windspeed", None)
     mock_device.status_range.pop("windspeed", None)
@@ -128,38 +131,10 @@ async def test_fan_mode_no_valid_code(
     with pytest.raises(ServiceNotSupported):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_FAN_MODE,
+            service,
             {
                 ATTR_ENTITY_ID: entity_id,
-                ATTR_FAN_MODE: 2,
-            },
-            blocking=True,
-        )
-
-
-@pytest.mark.parametrize(
-    "mock_device_code",
-    ["kt_5wnlzekkstwcdsvm"],
-)
-async def test_set_humidity_not_supported(
-    hass: HomeAssistant,
-    mock_manager: Manager,
-    mock_config_entry: MockConfigEntry,
-    mock_device: CustomerDevice,
-) -> None:
-    """Test set humidity service (not available on this device)."""
-    entity_id = "climate.air_conditioner"
-    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
-
-    state = hass.states.get(entity_id)
-    assert state is not None, f"{entity_id} does not exist"
-    with pytest.raises(ServiceNotSupported):
-        await hass.services.async_call(
-            CLIMATE_DOMAIN,
-            SERVICE_SET_HUMIDITY,
-            {
-                ATTR_ENTITY_ID: entity_id,
-                ATTR_HUMIDITY: 50,
+                **service_data,
             },
             blocking=True,
         )
