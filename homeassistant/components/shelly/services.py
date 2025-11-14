@@ -1,11 +1,10 @@
 """Support for services."""
 
-from typing import TYPE_CHECKING
-
 from aioshelly.const import RPC_GENERATIONS
 from aioshelly.exceptions import DeviceConnectionError, RpcCallError
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import (
     HomeAssistant,
@@ -33,41 +32,59 @@ SERVICE_KVS_GET_SCHEMA = vol.Schema(
 )
 
 
+@callback
+def async_get_config_entry_for_service_call(
+    call: ServiceCall,
+) -> ShellyConfigEntry:
+    """Get the config entry related to a service call (by device ID)."""
+    device_registry = dr.async_get(call.hass)
+    device_id = call.data[ATTR_DEVICE_ID]
+
+    if (device_entry := device_registry.async_get(device_id)) is None:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_device_id",
+            translation_placeholders={"device_id": device_id},
+        )
+
+    for entry_id in device_entry.config_entries:
+        if (config_entry := call.hass.config_entries.async_get_entry(entry_id)) is None:
+            continue
+        if config_entry.domain != DOMAIN:
+            continue
+        if config_entry.state is not ConfigEntryState.LOADED:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="entry_not_loaded",
+                translation_placeholders={"device": config_entry.title},
+            )
+        if get_device_entry_gen(config_entry) not in RPC_GENERATIONS:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="not_rpc_device",
+                translation_placeholders={"device": config_entry.title},
+            )
+        return config_entry
+
+    raise ServiceValidationError(
+        translation_domain=DOMAIN,
+        translation_key="config_entry_not_found",
+        translation_placeholders={"device_id": device_id},
+    )
+
+
 async def async_kvs_get(call: ServiceCall) -> ServiceResponse:
     """Handle the kvs_get service call."""
     key = call.data[ATTR_KEY]
-    device_id = call.data["device_id"]
-
-    device_registry = dr.async_get(call.hass)
-    device = device_registry.async_get(device_id)
-
-    if TYPE_CHECKING:
-        assert device is not None
-
-    # Find the config entry for this device
-    config_entry: ShellyConfigEntry | None = None
-    for entry_id in device.config_entries:
-        entry = call.hass.config_entries.async_get_entry(entry_id)
-        if entry and entry.domain == DOMAIN:
-            config_entry = entry
-            break
-
-    if TYPE_CHECKING:
-        assert config_entry is not None
-
-    # Check if device is RPC (Gen2+) device
-    if get_device_entry_gen(config_entry) not in RPC_GENERATIONS:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="not_rpc_device",
-        )
+    config_entry = async_get_config_entry_for_service_call(call)
 
     runtime_data = config_entry.runtime_data
 
     if not runtime_data.rpc:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
-            translation_key="device_not_ready",
+            translation_key="device_not_initialized",
+            translation_placeholders={"device": config_entry.title},
         )
 
     try:
@@ -76,12 +93,13 @@ async def async_kvs_get(call: ServiceCall) -> ServiceResponse:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="rpc_call_error",
-            translation_placeholders={"error": str(err)},
+            translation_placeholders={"device": config_entry.title},
         ) from err
     except DeviceConnectionError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
-            translation_key="device_connection_error",
+            translation_key="device_communication_error",
+            translation_placeholders={"device": config_entry.title},
         ) from err
     else:
         result: dict[str, JsonValueType] = {}
