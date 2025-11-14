@@ -15,9 +15,7 @@ rules:
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
-  entity-event-setup:
-    status: todo
-    comment: subscribe is ok, unsubscribe needs to be added
+  entity-event-setup: done
   entity-unique-id: done
   has-entity-name:
     status: todo
