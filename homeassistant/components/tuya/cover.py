@@ -27,14 +27,14 @@ from .util import get_dpcode, remap_value
 
 
 class _DPCodePositionWrapper(DPCodeIntegerWrapper):
-    """Wrapper for DPCode position values with reversible mapping to 0-100 range."""
+    """Wrapper for DPCode position values mapping to 0-100 range."""
 
     def _position_reversed(self, device: CustomerDevice) -> bool:
         """Check if the position and direction should be reversed."""
         return True
 
     def read_device_status(self, device: CustomerDevice) -> float | None:
-        if (value := super().read_device_status(device)) is None:
+        if (value := self._read_device_status_raw(device)) is None:
             return None
 
         return round(
@@ -49,7 +49,6 @@ class _DPCodePositionWrapper(DPCodeIntegerWrapper):
         )
 
     def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
-        value = super()._convert_value_to_raw_value(device, value)
         return round(
             remap_value(
                 value,
@@ -64,6 +63,7 @@ class _DPCodePositionWrapper(DPCodeIntegerWrapper):
 
 class _DPCodePositionWithControlModeWrapper(_DPCodePositionWrapper):
     """Wrapper for DPCode position values with control_back_mode support."""
+
     def _position_reversed(self, device: CustomerDevice) -> bool:
         """Check if the position and direction should be reversed."""
         return device.status.get(DPCode.CONTROL_BACK_MODE) != "back"
