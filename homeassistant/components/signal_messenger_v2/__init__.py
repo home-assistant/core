@@ -19,10 +19,10 @@ type SignalConfigEntry = ConfigEntry[SignalCliRestApi]
 async def async_setup_entry(hass: HomeAssistant, entry: SignalConfigEntry) -> bool:
     """Set up Signal Messenger v2 from a config entry."""
 
-    api = get_api(entry.data.__dict__)
+    api = get_api(entry.data.copy())
 
     try:
-        api.about()
+        await hass.async_add_executor_job(api.about)
     except Exception as ex:
         raise ConfigEntryNotReady("Failed to connect to Signal CLI REST API") from ex
 
