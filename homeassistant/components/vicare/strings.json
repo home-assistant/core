@@ -244,11 +244,11 @@
       "compressor_starts": {
         "name": "Compressor starts"
       },
-      "condensor_liquid_temperature": {
-        "name": "Condensor liquid temperature"
+      "condenser_liquid_temperature": {
+        "name": "Condenser liquid temperature"
       },
-      "condensor_subcooling_temperature": {
-        "name": "Condensor subcooling temperature"
+      "condenser_subcooling_temperature": {
+        "name": "Condenser subcooling temperature"
       },
       "dhw_storage_bottom_temperature": {
         "name": "DHW storage bottom temperature"
