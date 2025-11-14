@@ -26,12 +26,15 @@ from .models import DPCodeIntegerWrapper, find_dpcode
 from .util import get_dpcode, remap_value
 
 
-class _DPCodePositionWrapper(DPCodeIntegerWrapper):
+class _DPCodePercentageMappingWrapper(DPCodeIntegerWrapper):
     """Wrapper for DPCode position values mapping to 0-100 range."""
+
+    min: int = 0
+    max: int = 100
 
     def _position_reversed(self, device: CustomerDevice) -> bool:
         """Check if the position and direction should be reversed."""
-        return True
+        return False
 
     def read_device_status(self, device: CustomerDevice) -> float | None:
         if (value := self._read_device_status_raw(device)) is None:
@@ -42,8 +45,8 @@ class _DPCodePositionWrapper(DPCodeIntegerWrapper):
                 value,
                 self.type_information.min,
                 self.type_information.max,
-                0,
-                100,
+                self.min,
+                self.max,
                 self._position_reversed(device),
             )
         )
@@ -54,14 +57,22 @@ class _DPCodePositionWrapper(DPCodeIntegerWrapper):
                 value,
                 self.type_information.min,
                 self.type_information.max,
-                0,
-                100,
+                self.min,
+                self.max,
                 self._position_reversed(device),
             )
         )
 
 
-class _DPCodePositionWithControlModeWrapper(_DPCodePositionWrapper):
+class _InvertedPercentageMappingWrapper(_DPCodePercentageMappingWrapper):
+    """Wrapper for DPCode position values mapping to 0-100 range."""
+
+    def _position_reversed(self, device: CustomerDevice) -> bool:
+        """Check if the position and direction should be reversed."""
+        return True
+
+
+class _ControlPercentageMappingWrapper(_DPCodePercentageMappingWrapper):
     """Wrapper for DPCode position values with control_back_mode support."""
 
     def _position_reversed(self, device: CustomerDevice) -> bool:
@@ -76,7 +87,9 @@ class TuyaCoverEntityDescription(CoverEntityDescription):
     current_state: DPCode | tuple[DPCode, ...] | None = None
     current_state_inverse: bool = False
     current_position: DPCode | tuple[DPCode, ...] | None = None
-    position_wrapper: type[_DPCodePositionWrapper] = _DPCodePositionWrapper
+    position_wrapper: type[_DPCodePercentageMappingWrapper] = (
+        _InvertedPercentageMappingWrapper
+    )
     set_position: DPCode | None = None
     open_instruction_value: str = "open"
     close_instruction_value: str = "close"
@@ -160,7 +173,7 @@ COVERS: dict[DeviceCategory, tuple[TuyaCoverEntityDescription, ...]] = {
             key=DPCode.CONTROL,
             translation_key="curtain",
             current_position=DPCode.PERCENT_CONTROL,
-            position_wrapper=_DPCodePositionWithControlModeWrapper,
+            position_wrapper=_ControlPercentageMappingWrapper,
             set_position=DPCode.PERCENT_CONTROL,
             device_class=CoverDeviceClass.CURTAIN,
         ),
@@ -169,7 +182,7 @@ COVERS: dict[DeviceCategory, tuple[TuyaCoverEntityDescription, ...]] = {
             translation_key="indexed_curtain",
             translation_placeholders={"index": "2"},
             current_position=DPCode.PERCENT_CONTROL_2,
-            position_wrapper=_DPCodePositionWithControlModeWrapper,
+            position_wrapper=_ControlPercentageMappingWrapper,
             set_position=DPCode.PERCENT_CONTROL_2,
             device_class=CoverDeviceClass.CURTAIN,
         ),
@@ -246,9 +259,9 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         device_manager: Manager,
         description: TuyaCoverEntityDescription,
         *,
-        current_position: _DPCodePositionWrapper | None = None,
-        set_position: _DPCodePositionWrapper | None = None,
-        tilt_position: _DPCodePositionWrapper | None = None,
+        current_position: _DPCodePercentageMappingWrapper | None = None,
+        set_position: _DPCodePercentageMappingWrapper | None = None,
+        tilt_position: _DPCodePercentageMappingWrapper | None = None,
     ) -> None:
         """Init Tuya Cover."""
         super().__init__(device, device_manager)
