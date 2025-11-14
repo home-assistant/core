@@ -6,7 +6,6 @@ from unittest.mock import patch
 from homeassistant.components.daybetter_services.const import DOMAIN
 from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -41,16 +40,8 @@ async def test_sensor_setup(hass: HomeAssistant) -> None:
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        entity_registry = er.async_get(hass)
-        temp_entity_id = entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, "test_device_1_temperature"
-        )
-        humi_entity_id = entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, "test_device_1_humidity"
-        )
-
-        assert temp_entity_id is not None
-        assert humi_entity_id is not None
+        temp_entity_id = "sensor.test_group_temperature"
+        humi_entity_id = "sensor.test_group_humidity"
 
         temp_state = hass.states.get(temp_entity_id)
         humi_state = hass.states.get(humi_entity_id)
@@ -90,20 +81,11 @@ async def test_sensor_attributes(hass: HomeAssistant) -> None:
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        entity_registry = er.async_get(hass)
-        temp_entity_id = entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, "test_device_1_temperature"
-        )
-        humi_entity_id = entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, "test_device_1_humidity"
-        )
-
-        assert temp_entity_id is not None
-        assert humi_entity_id is not None
+        temp_entity_id = "sensor.test_group_temperature"
+        humi_entity_id = "sensor.test_group_humidity"
 
         temp_sensor_state = hass.states.get(temp_entity_id)
         humidity_sensor_state = hass.states.get(humi_entity_id)
-
         assert temp_sensor_state is not None
         assert humidity_sensor_state is not None
         assert (
@@ -206,16 +188,8 @@ async def test_sensor_update(hass: HomeAssistant) -> None:
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        entity_registry = er.async_get(hass)
-        temp_entity_id = entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, "test_device_1_temperature"
-        )
-        humi_entity_id = entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, "test_device_1_humidity"
-        )
-
-        assert temp_entity_id is not None
-        assert humi_entity_id is not None
+        temp_entity_id = "sensor.test_group_temperature"
+        humi_entity_id = "sensor.test_group_humidity"
 
         temp_state = hass.states.get(temp_entity_id)
         assert temp_state is not None

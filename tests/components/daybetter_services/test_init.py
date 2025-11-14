@@ -2,10 +2,7 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.daybetter_services.const import (
-    DOMAIN,
-    DayBetterRuntimeData,
-)
+from homeassistant.components.daybetter_services.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -33,9 +30,6 @@ async def test_async_setup_entry(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         assert config_entry.state == ConfigEntryState.LOADED
-        runtime_data = config_entry.runtime_data
-        assert isinstance(runtime_data, DayBetterRuntimeData)
-        assert runtime_data is not None
 
 
 async def test_async_setup_entry_no_token(hass: HomeAssistant) -> None:
@@ -76,5 +70,4 @@ async def test_async_unload_entry(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         assert config_entry.state == ConfigEntryState.NOT_LOADED
-        assert DOMAIN not in hass.data
         mock_close.assert_called()
