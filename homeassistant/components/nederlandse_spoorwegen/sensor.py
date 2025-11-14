@@ -193,7 +193,7 @@ class NSDepartureSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity
             status_value = status.value.lower()
         elif isinstance(status, str):
             _LOGGER.warning(
-                "Status is a string value not in the Enum log a bug: %s", status
+                "Status is a string value not in the Enum, please report this: %s", status
             )
             status_value = status.lower()
 
