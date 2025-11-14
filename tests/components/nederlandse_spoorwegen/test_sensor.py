@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+from ns_api import NoDataReceivedError
 import pytest
 from requests.exceptions import ConnectionError as RequestsConnectionError
 from syrupy.assertion import SnapshotAssertion
@@ -94,6 +95,25 @@ async def test_sensor_with_api_connection_error(
     # Sensors should not be created at all if initial API call fails
     sensor_states = hass.states.async_all("sensor")
     assert len(sensor_states) == 0
+
+
+async def test_sensor_with_api_no_data_received_error(
+    hass: HomeAssistant,
+    mock_nsapi: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test sensor behavior when API connection fails."""
+    # Make API calls fail from the start
+    mock_nsapi.get_trips.side_effect = NoDataReceivedError("Connection failed")
+
+    await setup_integration(hass, mock_config_entry)
+    await hass.async_block_till_done()
+
+    sensor_states = hass.states.async_all("sensor")
+    assert len(sensor_states) == 2
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 @pytest.mark.parametrize(

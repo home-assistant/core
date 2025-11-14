@@ -6,6 +6,7 @@ from datetime import datetime
 import logging
 from typing import Any
 
+from ns_api import TripStatus
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -185,6 +186,16 @@ class NSDepartureSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity
             route = [first_trip.departure]
             route.extend(k.destination for k in first_trip.trip_parts)
 
+        status: Any = first_trip.status
+        status_value: str | None = None
+        if isinstance(status, TripStatus):
+            status_value = status.value.lower()
+        elif isinstance(status, str):
+            _LOGGER.warning(
+                "Status is a string value not in the Enum log a bug: %s", status
+            )
+            status_value = status.lower()
+
         # Static attributes
         attributes = {
             "going": first_trip.going,
@@ -199,7 +210,7 @@ class NSDepartureSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity
             "arrival_platform_planned": first_trip.arrival_platform_planned,
             "arrival_platform_actual": first_trip.arrival_platform_actual,
             "next": None,
-            "status": first_trip.status.lower() if first_trip.status else None,
+            "status": status_value,
             "transfers": first_trip.nr_transfers,
             "route": route,
             "remarks": None,

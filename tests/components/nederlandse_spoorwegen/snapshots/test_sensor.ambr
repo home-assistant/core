@@ -143,3 +143,105 @@
     'state': '2025-09-15T14:35:00+00:00',
   })
 # ---
+# name: test_sensor_with_api_no_data_received_error[sensor.to_home-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.to_home',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': 'mdi:train',
+    'original_name': 'To home',
+    'platform': 'nederlandse_spoorwegen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY9-actual_departure',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_with_api_no_data_received_error[sensor.to_home-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by NS',
+      'device_class': 'timestamp',
+      'friendly_name': 'To home',
+      'icon': 'mdi:train',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.to_home',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor_with_api_no_data_received_error[sensor.to_work-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.to_work',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': 'mdi:train',
+    'original_name': 'To work',
+    'platform': 'nederlandse_spoorwegen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '01K721DZPMEN39R5DK0ATBMSY8-actual_departure',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_with_api_no_data_received_error[sensor.to_work-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by NS',
+      'device_class': 'timestamp',
+      'friendly_name': 'To work',
+      'icon': 'mdi:train',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.to_work',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
