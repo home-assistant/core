@@ -1,4 +1,4 @@
-"""Config flow for the Signal Messenger v2 integration."""
+"""Config flow for the Signal Messenger integration."""
 
 from __future__ import annotations
 
@@ -55,7 +55,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
 
 class SignalNotificationConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for the Signal Messenger v2 integration."""
+    """Handle a config flow for the Signal Messenger integration."""
 
     VERSION = 1
 

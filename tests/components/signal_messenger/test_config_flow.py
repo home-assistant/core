@@ -1,4 +1,4 @@
-"""Test the Signal Messenger v2 config flow."""
+"""Test the Signal Messenger config flow."""
 
 import base64
 import json

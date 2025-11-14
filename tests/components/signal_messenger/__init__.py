@@ -1,1 +1,1 @@
-"""Tests for the signal_messenger component."""
+"""Tests for the Signal Messenger integration."""

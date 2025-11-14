@@ -1,6 +1,6 @@
-"""Constants for the Signal Messenger v2 integration."""
+"""Constants for the Signal Messenger integration."""
 
-DOMAIN = "signal_messenger_v2"
+DOMAIN = "signal_messenger"
 
 CONF_SENDER_NR = "number"
 CONF_RECP_NR = "recipients"

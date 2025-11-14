@@ -594,7 +594,7 @@ FLOWS = {
         "shelly",
         "shopping_list",
         "sia",
-        "signal_messenger_v2",
+        "signal_messenger",
         "simplefin",
         "simplepush",
         "simplisafe",

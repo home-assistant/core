@@ -5971,12 +5971,6 @@
     "signal_messenger": {
       "name": "Signal Messenger",
       "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_push"
-    },
-    "signal_messenger_v2": {
-      "name": "Signal Messenger v2",
-      "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_push"
     },
