@@ -4389,7 +4389,7 @@
     'state': 'power_on',
   })
 # ---
-# name: test_platform_setup_and_discovery[select.siren_alarm_state-entry]
+# name: test_platform_setup_and_discovery[select.siren_siren_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4409,7 +4409,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.siren_alarm_state',
+    'entity_id': 'select.siren_siren_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4421,20 +4421,20 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Alarm state',
+    'original_name': 'Siren mode',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'alarm_state',
+    'translation_key': 'siren_mode',
     'unique_id': 'tuya.okwwus27jhqqe2mijbgsalarm_state',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[select.siren_alarm_state-state]
+# name: test_platform_setup_and_discovery[select.siren_siren_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Siren Alarm state',
+      'friendly_name': 'Siren Siren mode',
       'options': list([
         'alarm_sound',
         'alarm_light',
@@ -4443,7 +4443,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.siren_alarm_state',
+    'entity_id': 'select.siren_siren_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
