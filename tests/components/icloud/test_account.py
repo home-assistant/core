@@ -14,6 +14,7 @@ from homeassistant.components.icloud.const import (
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.storage import Store
 
 from .const import MOCK_CONFIG, USER_INFO, USERNAME
 
@@ -33,6 +34,10 @@ def mock_icloud_service_fixture():
         service_mock.return_value = service_instance
         yield service_instance
 
+@pytest.fixture(name="mock_store")
+def mock_store_fixture(hass) -> Store:
+    """Return a Store instance for tests that writes to the test config dir."""
+    return Store(hass, version=1, key="icloud_account")
 
 async def test_setup_success_with_dict_devices(
     hass: HomeAssistant,
