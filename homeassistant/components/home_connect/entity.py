@@ -62,11 +62,7 @@ class HomeConnectEntity(CoordinatorEntity[HomeConnectCoordinator]):
         """Handle updated data from the coordinator."""
         self.update_native_value()
         self.async_write_ha_state()
-        _LOGGER.debug(
-            "Updated %s, new state: %s",
-            self.entity_id,
-            self._stringify_state(self.available),
-        )
+        _LOGGER.debug("Updated %s", self)
 
     @property
     def bsh_key(self) -> str:
@@ -81,7 +77,7 @@ class HomeConnectEntity(CoordinatorEntity[HomeConnectCoordinator]):
         as event updates should take precedence over the coordinator
         refresh.
         """
-        return self.appliance.info.connected
+        return self.appliance.info.connected and self._attr_available
 
 
 class HomeConnectOptionEntity(HomeConnectEntity):
