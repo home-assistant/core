@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import Any
 
 from homeassistant.const import CONF_STATE, CONF_VARIABLES
@@ -49,6 +50,19 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
             self._unique_id = f"{self.coordinator.unique_id}-{unique_id}"
         else:
             self._unique_id = unique_id
+
+    def setup_state_template(
+        self,
+        option: str,
+        attribute: str,
+        validator: Callable[[Any], Any] | None = None,
+        on_update: Callable[[Any], None] | None = None,
+    ) -> None:
+        """Set up a template that manages the main state of the entity."""
+        if self._config.get(option):
+            self._to_render_simple.append(CONF_STATE)
+            self._parse_result.add(CONF_STATE)
+            self.add_template(option, attribute, validator, on_update)
 
     @property
     def referenced_blueprint(self) -> str | None:
