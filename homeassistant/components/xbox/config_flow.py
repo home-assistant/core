@@ -56,11 +56,13 @@ class OAuth2FlowHandler(
         await self.async_set_unique_id(client.xuid)
 
         if self.source == SOURCE_REAUTH:
-            reauth_entry = self._get_reauth_entry()
             self._abort_if_unique_id_mismatch(
                 description_placeholders={"gamertag": me.people[0].gamertag}
             )
-            return self.async_update_reload_and_abort(reauth_entry, data=data)
+
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(), data=data
+            )
 
         self._abort_if_unique_id_configured()
         return self.async_create_entry(title=me.people[0].gamertag, data=data)
