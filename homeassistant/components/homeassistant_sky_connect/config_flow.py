@@ -275,17 +275,17 @@ class HomeAssistantSkyConnectOptionsFlowHandler(
         """Instantiate options flow."""
         super().__init__(*args, **kwargs)
 
-        self._usb_info = get_usb_service_info(self.config_entry)
+        self._usb_info = get_usb_service_info(self._config_entry)
         self._hw_variant = HardwareVariant.from_usb_product_name(
-            self.config_entry.data[PRODUCT]
+            self._config_entry.data[PRODUCT]
         )
         self._hardware_name = self._hw_variant.full_name
         self._device = self._usb_info.device
 
         self._probed_firmware_info = FirmwareInfo(
             device=self._device,
-            firmware_type=ApplicationType(self.config_entry.data[FIRMWARE]),
-            firmware_version=self.config_entry.data[FIRMWARE_VERSION],
+            firmware_type=ApplicationType(self._config_entry.data[FIRMWARE]),
+            firmware_version=self._config_entry.data[FIRMWARE_VERSION],
             source="guess",
             owners=[],
         )

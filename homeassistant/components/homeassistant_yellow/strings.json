@@ -1,5 +1,10 @@
 {
   "entity": {
+    "switch": {
+      "beta_firmware": {
+        "name": "Radio beta firmware updates"
+      }
+    },
     "update": {
       "radio_firmware": {
         "name": "Radio firmware"

@@ -22,6 +22,9 @@
       "cpu_total": {
         "default": "mdi:cpu-64-bit"
       },
+      "cpu_usage_total": {
+        "default": "mdi:cpu-64-bit"
+      },
       "docker_version": {
         "default": "mdi:docker"
       },
@@ -34,7 +37,16 @@
       "kernel_version": {
         "default": "mdi:memory"
       },
+      "memory_limit": {
+        "default": "mdi:memory"
+      },
       "memory_total": {
+        "default": "mdi:memory"
+      },
+      "memory_usage": {
+        "default": "mdi:memory"
+      },
+      "memory_usage_percentage": {
         "default": "mdi:memory"
       },
       "operating_system": {

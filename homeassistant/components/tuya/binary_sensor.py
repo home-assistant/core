@@ -222,6 +222,24 @@ BINARY_SENSORS: dict[DeviceCategory, tuple[TuyaBinarySensorEntityDescription, ..
             on_value={"AQAB"},
         ),
     ),
+    DeviceCategory.MSP: (
+        TuyaBinarySensorEntityDescription(
+            key=f"{DPCode.FAULT}_full_fault",
+            dpcode=DPCode.FAULT,
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            bitmap_key="full_fault",
+            translation_key="bag_full",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=f"{DPCode.FAULT}_box_out",
+            dpcode=DPCode.FAULT,
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            bitmap_key="box_out",
+            translation_key="cover_off",
+        ),
+    ),
     DeviceCategory.PIR: (
         TuyaBinarySensorEntityDescription(
             key=DPCode.PIR,

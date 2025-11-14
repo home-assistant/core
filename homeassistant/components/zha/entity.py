@@ -61,6 +61,9 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
         if meta.translation_key is not None:
             self._attr_translation_key = meta.translation_key
 
+        if meta.translation_placeholders is not None:
+            self._attr_translation_placeholders = meta.translation_placeholders
+
     @cached_property
     def name(self) -> str | UndefinedType | None:
         """Return the name of the entity."""

@@ -49,10 +49,23 @@ def setup_entry_fixture() -> Generator[AsyncMock]:
         yield mock_setup_entry
 
 
+@pytest.mark.parametrize(
+    ("country", "expected_tx_power"),
+    [
+        ("US", 8),
+        ("NL", 10),
+        ("JP", 8),
+        ("DE", 10),
+    ],
+)
 async def test_config_flow_zigbee(
     hass: HomeAssistant,
+    country: str,
+    expected_tx_power: int,
 ) -> None:
     """Test Zigbee config flow for Connect ZBT-2."""
+    hass.config.country = country
+
     fw_type = ApplicationType.EZSP
     fw_version = "7.4.4.0 build 0"
     model = "Home Assistant Connect ZBT-2"
@@ -127,6 +140,27 @@ async def test_config_flow_zigbee(
     assert zha_flow["handler"] == "zha"
     assert zha_flow["context"]["source"] == "hardware"
     assert zha_flow["step_id"] == "confirm"
+
+    progress_zha_flows = hass.config_entries.flow._async_progress_by_handler(
+        handler="zha",
+        match_context=None,
+    )
+
+    assert len(progress_zha_flows) == 1
+
+    # Ensure correct baudrate
+    progress_zha_flow = progress_zha_flows[0]
+    assert progress_zha_flow.init_data == {
+        "flow_strategy": "recommended",
+        "name": model,
+        "port": {
+            "path": usb_data.device,
+            "baudrate": 460800,
+            "flow_control": "hardware",
+        },
+        "radio_type": fw_type.value,
+        "tx_power": expected_tx_power,
+    }
 
 
 @pytest.mark.usefixtures("addon_installed", "supervisor")
@@ -334,6 +368,36 @@ async def test_options_flow(
     # Verify async_flash_silabs_firmware was called with ZBT-2's reset methods
     assert flash_mock.call_count == 1
     assert flash_mock.mock_calls[0].kwargs["bootloader_reset_methods"] == ["rts_dtr"]
+
+    flows = hass.config_entries.flow.async_progress()
+
+    # Ensure a ZHA discovery flow has been created
+    assert len(flows) == 1
+    zha_flow = flows[0]
+    assert zha_flow["handler"] == "zha"
+    assert zha_flow["context"]["source"] == "hardware"
+    assert zha_flow["step_id"] == "confirm"
+
+    progress_zha_flows = hass.config_entries.flow._async_progress_by_handler(
+        handler="zha",
+        match_context=None,
+    )
+
+    assert len(progress_zha_flows) == 1
+
+    # Ensure correct baudrate
+    progress_zha_flow = progress_zha_flows[0]
+    assert progress_zha_flow.init_data == {
+        "flow_strategy": "recommended",
+        "name": model,
+        "port": {
+            "path": usb_data.device,
+            "baudrate": 460800,
+            "flow_control": "hardware",
+        },
+        "radio_type": "ezsp",
+        "tx_power": 8,
+    }
 
 
 async def test_duplicate_discovery(hass: HomeAssistant) -> None:

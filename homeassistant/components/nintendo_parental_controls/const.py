@@ -8,4 +8,7 @@ BEDTIME_ALARM_MIN = "16:00"
 BEDTIME_ALARM_MAX = "23:00"
 BEDTIME_ALARM_DISABLE = "00:00"
 
+APP_SETUP_URL = (
+    "https://www.nintendo.com/my/support/switch/parentalcontrols/app/setup.html"
+)
 ATTR_BONUS_TIME = "bonus_time"

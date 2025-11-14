@@ -11,6 +11,7 @@ from homeassistant.core import (
     ServiceCall,
     ServiceResponse,
     SupportsResponse,
+    callback,
 )
 from homeassistant.exceptions import ServiceValidationError
 
@@ -51,7 +52,8 @@ def async_get_entry(
     return cast(StookwijzerConfigEntry, entry)
 
 
-def setup_services(hass: HomeAssistant) -> None:
+@callback
+def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the services for the Stookwijzer integration."""
 
     async def async_get_forecast(call: ServiceCall) -> ServiceResponse | None:
