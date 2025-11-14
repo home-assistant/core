@@ -65,7 +65,7 @@ class _InvertedPercentageMappingWrapper(_DPCodePercentageMappingWrapper):
         return True
 
 
-class _ControlPercentageMappingWrapper(_DPCodePercentageMappingWrapper):
+class _ControlBackModePercentageMappingWrapper(_DPCodePercentageMappingWrapper):
     """Wrapper for DPCode position values with control_back_mode support."""
 
     def _position_reversed(self, device: CustomerDevice) -> bool:
@@ -166,7 +166,7 @@ COVERS: dict[DeviceCategory, tuple[TuyaCoverEntityDescription, ...]] = {
             key=DPCode.CONTROL,
             translation_key="curtain",
             current_position=DPCode.PERCENT_CONTROL,
-            position_wrapper=_ControlPercentageMappingWrapper,
+            position_wrapper=_ControlBackModePercentageMappingWrapper,
             set_position=DPCode.PERCENT_CONTROL,
             device_class=CoverDeviceClass.CURTAIN,
         ),
@@ -175,7 +175,7 @@ COVERS: dict[DeviceCategory, tuple[TuyaCoverEntityDescription, ...]] = {
             translation_key="indexed_curtain",
             translation_placeholders={"index": "2"},
             current_position=DPCode.PERCENT_CONTROL_2,
-            position_wrapper=_ControlPercentageMappingWrapper,
+            position_wrapper=_ControlBackModePercentageMappingWrapper,
             set_position=DPCode.PERCENT_CONTROL_2,
             device_class=CoverDeviceClass.CURTAIN,
         ),
