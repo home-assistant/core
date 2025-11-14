@@ -1,6 +1,7 @@
 {
   "config": {
     "error": {
+      "failed_browse": "Failed to browse media: {error}",
       "invalid_media_selected": "The selected media has no usable images, please select a media directory with images."
     },
     "step": {

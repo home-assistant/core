@@ -126,3 +126,40 @@ async def test_config_flow_with_error(hass: HomeAssistant) -> None:
     assert result.get("data") is None
     assert result.get("errors") == {"media": "invalid_media_selected"}
     assert len(mock_setup_entry.mock_calls) == 0
+
+
+async def test_config_flow_with_exception(hass: HomeAssistant) -> None:
+    """Test the config flow with a browse failure."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("errors") == {}
+
+    with (
+        patch(
+            "homeassistant.components.photo_frame.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "name": "Random Photo",
+                "media": {
+                    "media_content_id": "media-source://mymedia",
+                    "media_content_type": "",
+                },
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("title") is None
+    assert result.get("data") is None
+    assert result.get("errors") == {"media": "failed_browse"}
+    assert result.get("description_placeholders") == {
+        "error": "Media Source not loaded"
+    }
+    assert len(mock_setup_entry.mock_calls) == 0

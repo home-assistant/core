@@ -8,8 +8,9 @@ from pathlib import Path
 import random
 
 from homeassistant.components.image import ImageEntity, ImageEntityDescription
-from homeassistant.components.media_player import MediaClass
+from homeassistant.components.media_player import BrowseError, MediaClass
 from homeassistant.components.media_source import (
+    Unresolvable,
     async_browse_media,
     async_resolve_media,
 )
@@ -77,28 +78,34 @@ class PhotoFrameImageEntity(ImageEntity):
 
     async def get_next_image(self) -> None:
         """Update the image entity with the next image from the source media."""
-        media = await async_browse_media(
-            self.hass, self.entity_description.media_content_id
-        )
-        if media.children:
-            filtered = [
-                item for item in media.children if item.media_class == MediaClass.IMAGE
-            ]
-            if filtered:
-                child = random.choice(filtered)
-                resolved = await async_resolve_media(
-                    self.hass, child.media_content_id, self.entity_id
-                )
-                self.path = resolved.path
-                self._attr_image_last_updated = dt_util.utcnow()
-                self.async_write_ha_state()
-                return
+        try:
+            media = await async_browse_media(
+                self.hass, self.entity_description.media_content_id
+            )
+            if media.children:
+                filtered = [
+                    item
+                    for item in media.children
+                    if item.media_class == MediaClass.IMAGE
+                ]
+                if filtered:
+                    child = random.choice(filtered)
+                    resolved = await async_resolve_media(
+                        self.hass, child.media_content_id, self.entity_id
+                    )
+                    self.path = resolved.path
+                    self._attr_image_last_updated = dt_util.utcnow()
+                    self.async_write_ha_state()
+                    return
 
-        _LOGGER.warning(
-            "%s: No valid images in %s",
-            self.entity_id,
-            self.entity_description.media_content_id,
-        )
+            _LOGGER.warning(
+                "%s: No valid images in %s",
+                self.entity_id,
+                self.entity_description.media_content_id,
+            )
+        except (BrowseError, Unresolvable) as err:
+            _LOGGER.error("%s: %s", self.entity_id, str(err))
+
         self.path = None
         self._attr_image_last_updated = dt_util.utcnow()
         self.async_write_ha_state()

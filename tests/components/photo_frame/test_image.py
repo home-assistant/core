@@ -224,3 +224,39 @@ async def test_no_images(
     client = await hass_client()
     resp = await client.get("/api/image_proxy/image.random_no_image")
     assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+
+
+async def test_media_error(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test when media browse throws an error."""
+    with freeze_time("2025-11-08T12:00:00.000"):
+        config_entry = MockConfigEntry(
+            data={
+                "name": "Random No Image",
+                "media": {
+                    "media_content_id": "media-source://badpath",
+                    "media_content_type": "",
+                },
+            },
+            domain=DOMAIN,
+            title="Random No Image",
+        )
+
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("image.random_no_image")
+
+    assert state and state.state == "2025-11-08T12:00:00+00:00"
+
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "image.random_no_image: Media Source not loaded" in caplog.text
+
+    client = await hass_client()
+    resp = await client.get("/api/image_proxy/image.random_no_image")
+    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
