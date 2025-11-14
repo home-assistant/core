@@ -2146,7 +2146,7 @@ async def test_ssdp_update_mac(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("remote_websocket")
-async def test_dhcp_while_user_flow_pending(hass):
+async def test_dhcp_while_user_flow_pending(hass: HomeAssistant) -> None:
     """Simulate user flow waiting for user submit, then trigger DHCP flow before submit."""
     with patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_device_info",
