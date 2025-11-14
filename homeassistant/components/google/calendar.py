@@ -38,7 +38,7 @@ from homeassistant.components.calendar import (
     is_offset_reached,
 )
 from homeassistant.const import CONF_DEVICE_ID, CONF_ENTITIES, CONF_NAME, CONF_OFFSET
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.helpers import entity_platform, entity_registry as er
 from homeassistant.helpers.entity import generate_entity_id
@@ -356,6 +356,7 @@ class GoogleCalendarEntity(
         self._ignore_availability = entity_description.ignore_availability
         self._offset = entity_description.offset
         self._event: CalendarEvent | None = None
+        self._event_color_id: str | None = None
         if entity_description.entity_id:
             self.entity_id = entity_description.entity_id
         self._attr_unique_id = unique_id
@@ -365,9 +366,12 @@ class GoogleCalendarEntity(
             )
 
     @property
-    def extra_state_attributes(self) -> dict[str, bool]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
-        return {"offset_reached": self.offset_reached}
+        attributes: dict[str, Any] = {"offset_reached": self.offset_reached}
+        if self._event_color_id is not None:
+            attributes["event_color_id"] = self._event_color_id
+        return attributes
 
     @property
     def offset_reached(self) -> bool:
@@ -419,6 +423,38 @@ class GoogleCalendarEntity(
             self.coordinator.async_request_refresh(),
             "google.calendar-refresh",
         )
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        super()._handle_coordinator_update()
+        
+        # Fetch color ID for the current event in the background
+        (event, _) = self._event_with_offset()
+        if event and event.uid:
+            self.coordinator.config_entry.async_create_background_task(
+                self.hass,
+                self._async_update_event_color(event.uid),
+                "google.calendar-color-fetch",
+            )
+    
+    async def _async_update_event_color(self, event_id: str) -> None:
+        """Update the color ID for the current event."""
+        try:
+            from urllib.request import pathname2url
+            
+            # Get raw event data to extract colorId
+            calendar_service = self.coordinator.config_entry.runtime_data.service
+            raw_event_data = await calendar_service._auth.get_json(
+                f"calendars/{pathname2url(self.calendar_id)}/events/{pathname2url(event_id)}",
+                params={"fields": "colorId"},
+            )
+            color_id = raw_event_data.get("colorId")
+            if color_id != self._event_color_id:
+                self._event_color_id = color_id
+                self.async_write_ha_state()
+        except Exception as err:
+            _LOGGER.debug("Failed to fetch event color for %s: %s", event_id, err)
 
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
