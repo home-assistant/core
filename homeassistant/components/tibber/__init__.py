@@ -53,6 +53,7 @@ class TibberDataAPIRuntimeData:
     """Runtime data for Tibber Data API entries."""
 
     session: OAuth2Session
+    _client: tibber_data_api.TibberDataAPI | None = None
 
     async def async_get_client(
         self, hass: HomeAssistant
@@ -63,10 +64,13 @@ class TibberDataAPIRuntimeData:
         access_token = token.get(CONF_ACCESS_TOKEN)
         if not access_token:
             raise ConfigEntryAuthFailed("Access token missing from OAuth session")
-        return tibber_data_api.TibberDataAPI(
-            access_token,
-            websession=async_get_clientsession(hass),
-        )
+        if self._client is None:
+            self._client = tibber_data_api.TibberDataAPI(
+                access_token,
+                websession=async_get_clientsession(hass),
+            )
+        self._client.set_access_token(access_token)
+        return self._client
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

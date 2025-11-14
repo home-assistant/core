@@ -205,10 +205,23 @@ class TibberDataAPICoordinator(DataUpdateCoordinator[dict[str, TibberDevice]]):
             hass,
             _LOGGER,
             name=f"{DOMAIN} Data API",
-            update_interval=timedelta(minutes=1),
+            update_interval=timedelta(minutes=10),
             config_entry=entry,
         )
         self._runtime_data = runtime_data
+
+    async def _async_setup(self) -> None:
+        """Setup the coordinator."""
+        try:
+            client: TibberDataAPI = await self._runtime_data.async_get_client(self.hass)
+        except ConfigEntryAuthFailed:
+            raise
+        except Exception as err:
+            raise UpdateFailed(
+                f"Unable to create Tibber Data API client: {err}"
+            ) from err
+
+        self.data = await client.get_all_devices()
 
     async def _async_update_data(self) -> dict[str, TibberDevice]:
         """Fetch the latest device capabilities from the Tibber Data API."""
@@ -221,5 +234,5 @@ class TibberDataAPICoordinator(DataUpdateCoordinator[dict[str, TibberDevice]]):
                 f"Unable to create Tibber Data API client: {err}"
             ) from err
 
-        devices: dict[str, TibberDevice] = await client.get_all_devices()
+        devices: dict[str, TibberDevice] = await client.update_devices()
         return devices

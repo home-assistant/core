@@ -32,11 +32,7 @@ from homeassistant.const import (
     UnitOfPower,
 )
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
-    PlatformNotReady,
-)
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -44,7 +40,6 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
-    UpdateFailed,
 )
 from homeassistant.util import Throttle, dt as dt_util
 
@@ -413,23 +408,7 @@ async def _async_setup_data_api_sensors(
 
     coordinator = TibberDataAPICoordinator(hass, entry, runtime)
 
-    try:
-        await coordinator.async_refresh()
-    except ConfigEntryAuthFailed:
-        raise
-    except ConfigEntryNotReady as err:
-        auth_err: BaseException | None = err.__cause__
-        while isinstance(auth_err, BaseException) and not isinstance(
-            auth_err, ConfigEntryAuthFailed
-        ):
-            auth_err = auth_err.__cause__
-        if isinstance(auth_err, ConfigEntryAuthFailed):
-            raise auth_err from err
-        raise PlatformNotReady from err
-    except UpdateFailed as err:
-        if isinstance(err.__cause__, ConfigEntryAuthFailed):
-            raise err.__cause__ from err
-        raise PlatformNotReady from err
+    await coordinator.async_config_entry_first_refresh()
 
     entities: list[TibberDataAPISensor] = []
     api_sensors = {sensor.key: sensor for sensor in DATA_API_SENSORS}
@@ -442,7 +421,7 @@ async def _async_setup_data_api_sensors(
                 continue
             entities.append(
                 TibberDataAPISensor(
-                    coordinator, device, description, sensor.description.capitalize()
+                    coordinator, device, description, sensor.description
                 )
             )
     async_add_entities(entities)
@@ -469,14 +448,11 @@ class TibberDataAPISensor(CoordinatorEntity[TibberDataAPICoordinator], SensorEnt
 
         self._attr_unique_id = f"{device.external_id}_{self.entity_description.key}"
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device_info of the device."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._device.external_id)},
-            name=self._device.name,
-            manufacturer=self._device.brand,
-            model=self._device.model,
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, device.external_id)},
+            name=device.name,
+            manufacturer=device.brand,
+            model=device.model,
         )
 
     @property
@@ -486,11 +462,12 @@ class TibberDataAPISensor(CoordinatorEntity[TibberDataAPICoordinator], SensorEnt
         """Return the value reported by the device."""
         device = self.coordinator.data.get(self._device.id)
         if device is None:
+            _LOGGER.error("Device %s not found", self._device.id)
             return None
 
-        for capability in self._device.sensors:
-            if capability.id == self.entity_description.key:
-                return capability.value
+        for sensor in self._device.sensors:
+            if sensor.id == self.entity_description.key:
+                return sensor.value
         return None
 
     @property
