@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import replace
-from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
 from pysaunum import SaunumException
@@ -20,12 +19,12 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
@@ -142,12 +141,10 @@ async def test_climate_temperature_edge_cases(
     """Test climate with edge case temperature values."""
     # Get the existing mock data and modify only what we need
     base_data = mock_saunum_client.async_get_data.return_value
-    mock_saunum_client.async_get_data = AsyncMock(
-        return_value=replace(
-            base_data,
-            current_temperature=current_temperature,
-            target_temperature=target_temperature,
-        )
+    mock_saunum_client.async_get_data.return_value = replace(
+        base_data,
+        current_temperature=current_temperature,
+        target_temperature=target_temperature,
     )
 
     mock_config_entry.add_to_hass(hass)
@@ -175,19 +172,20 @@ async def test_entity_unavailable_on_update_failure(
     # Verify entity is initially available
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.state != "unavailable"
+    assert state.state != STATE_UNAVAILABLE
 
     # Make the next update fail
     mock_saunum_client.async_get_data.side_effect = SaunumException("Read error")
 
     # Move time forward to trigger a coordinator update (60 seconds)
     freezer.tick(60)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Entity should now be unavailable
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.state == "unavailable"
+    assert state.state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize(
