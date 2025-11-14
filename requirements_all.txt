@@ -2339,6 +2339,9 @@ pysabnzbd==1.1.1
 # homeassistant.components.saj
 pysaj==0.0.16
 
+# homeassistant.components.saunum
+pysaunum==0.1.0
+
 # homeassistant.components.schlage
 pyschlage==2025.9.0
 
