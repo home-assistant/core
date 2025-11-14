@@ -1117,3 +1117,106 @@ async def test_listener_unsubscribe_releases_coordinator(hass: HomeAssistant) ->
 
     # Ensure the coordinator is released
     assert weak_ref() is None
+
+
+@pytest.mark.parametrize(
+    ("exc", "expected_exception", "message"),
+    [
+        *KNOWN_ERRORS,
+        (Exception(), Exception, "Unknown exception"),
+        (
+            update_coordinator.UpdateFailed(retry_after=60),
+            update_coordinator.UpdateFailed,
+            "Error fetching test data",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "method",
+    ["update_method", "setup_method"],
+)
+async def test_update_failed_retry_after(
+    hass: HomeAssistant,
+    exc: Exception,
+    expected_exception: type[Exception],
+    message: str,
+    method: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test async_config_entry_first_refresh raises ConfigEntryNotReady on failure.
+
+    Verify we do not log the exception since raising ConfigEntryNotReady
+    will be caught by config_entries.async_setup which will log it with
+    a decreasing level of logging once the first message is logged.
+    """
+    entry = MockConfigEntry()
+    entry.mock_state(
+        hass,
+        config_entries.ConfigEntryState.SETUP_IN_PROGRESS,
+    )
+    crd = get_crd(hass, DEFAULT_UPDATE_INTERVAL, entry)
+    setattr(crd, method, AsyncMock(side_effect=exc))
+
+    with pytest.raises(ConfigEntryNotReady):
+        await crd.async_config_entry_first_refresh()
+
+    assert crd.last_update_success is False
+    assert isinstance(crd.last_exception, expected_exception)
+    assert message not in caplog.text
+
+    # Only to check the retry_after wasn't hit
+    assert crd._retry_after is None
+
+
+@pytest.mark.parametrize(
+    ("exc", "expected_exception", "message"),
+    [
+        (
+            update_coordinator.UpdateFailed(retry_after=60),
+            update_coordinator.UpdateFailed,
+            "Error fetching test data",
+        ),
+    ],
+)
+async def test_refresh_known_errors_retry_after(
+    exc: update_coordinator.UpdateFailed,
+    expected_exception: type[Exception],
+    message: str,
+    crd: update_coordinator.DataUpdateCoordinator[int],
+    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant,
+) -> None:
+    """Test raising known errors, this time with retry_after."""
+    unsub = crd.async_add_listener(lambda: None)
+
+    crd.update_method = AsyncMock(side_effect=exc)
+
+    with (
+        patch.object(hass.loop, "time", return_value=1_000.0),
+        patch.object(hass.loop, "call_at") as mock_call_at,
+    ):
+        await crd.async_refresh()
+
+        assert crd.data is None
+        assert crd.last_update_success is False
+        assert isinstance(crd.last_exception, expected_exception)
+        assert message in caplog.text
+
+        when = mock_call_at.call_args[0][0]
+
+        expected = 1_000.0 + crd._microsecond + exc.retry_after
+        assert abs(when - expected) < 0.005, (when, expected)
+
+        assert crd._retry_after is None
+
+        # Next schedule should fall back to regular update_interval
+        mock_call_at.reset_mock()
+        crd._schedule_refresh()
+        when2 = mock_call_at.call_args[0][0]
+        expected_cancelled = (
+            1_000.0 + crd._microsecond + crd.update_interval.total_seconds()
+        )
+        assert abs(when2 - expected_cancelled) < 0.005, (when2, expected_cancelled)
+
+    unsub()
+    crd._unschedule_refresh()
