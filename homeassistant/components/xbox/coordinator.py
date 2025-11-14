@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import timedelta
+from datetime import datetime, timedelta
 from http import HTTPStatus
 import logging
 
@@ -237,7 +237,7 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
                         translation_key="request_exception",
                     ) from e
                 title_data[person.xuid] = title.titles[0]
-
+            person.last_seen_date_time_utc = self.last_seen_timestamp(person)
         if (
             self.current_friends - (new_friends := set(presence_data))
             or not self.current_friends
@@ -246,6 +246,22 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
         self.current_friends = new_friends
 
         return XboxData(new_console_data, presence_data, title_data)
+
+    def last_seen_timestamp(self, person: Person) -> datetime | None:
+        """Returns the most recent of two timestamps."""
+
+        # The Xbox API constantly fluctuates the "last seen" timestamp between two close values,
+        # causing unnecessary updates. We only accept the most recent one as valild to prevent this.
+        if not (prev_data := self.data.presence.get(person.xuid)):
+            return person.last_seen_date_time_utc
+
+        prev_dt = prev_data.last_seen_date_time_utc
+        cur_dt = person.last_seen_date_time_utc
+
+        if prev_dt and cur_dt:
+            return max(prev_dt, cur_dt)
+
+        return cur_dt
 
     def remove_stale_devices(self, xuids: set[str]) -> None:
         """Remove stale devices from registry."""
