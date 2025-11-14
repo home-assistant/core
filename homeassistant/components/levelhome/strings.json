@@ -10,6 +10,10 @@
           "partner_base_url": "Partner server base URL"
         }
       },
+      "verify": {
+        "title": "Verify on your mobile device",
+        "description": "A verification code has been sent to your Level Home mobile app. Please open the app and enter the code: **{user_code}**\n\nAfter entering the code in your mobile app, click Submit below to continue."
+      },
       "otp": {
         "title": "Enter verification code",
         "description": "We sent a verification code to your Level Home app. Enter the code in format ABCD-1234.",
@@ -22,6 +26,10 @@
       },
       "pick_implementation": {
         "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The Level Lock integration needs to re-authenticate your account"
       }
     },
     "abort": {

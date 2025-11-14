@@ -19,13 +19,13 @@ from homeassistant.components.levelhome.const import (
     CONF_PARTNER_BASE_URL,
     DEFAULT_OAUTH2_BASE_URL,
     DEFAULT_PARTNER_BASE_URL,
+    DEVICE_CODE_POLL_PATH,
     DOMAIN,
     OAUTH2_GRANT_PERMISSIONS_ACCEPT_PATH,
     OAUTH2_OTP_CONFIRM_PATH,
     OAUTH2_TOKEN_EXCHANGE_PATH,
     PARTNER_OTP_START_PATH,
 )
-from homeassistant.const import CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -38,6 +38,7 @@ FAKE_ACCESS_TOKEN = "test-access-token"
 FAKE_REFRESH_TOKEN = "test-refresh-token"
 FAKE_AUTH_IMPL = DOMAIN
 OAUTH2_TOKEN = f"{DEFAULT_OAUTH2_BASE_URL}{OAUTH2_TOKEN_EXCHANGE_PATH}"
+PARTNER_TOKEN_REFRESH = f"{DEFAULT_PARTNER_BASE_URL}{DEVICE_CODE_POLL_PATH}"
 
 # Server response for refresh token - differs from config entry token
 SERVER_ACCESS_TOKEN = {
@@ -96,15 +97,45 @@ async def setup_credentials(hass: HomeAssistant) -> None:
     )
 
 
-@pytest.fixture(name="mock_levelhome_api")
-def mock_levelhome_api(aioclient_mock: AiohttpClientMocker) -> None:
-    """Mock the Level Lock API endpoints."""
-    # Mock the locks endpoint that coordinator calls during first refresh
-    aioclient_mock.get(
-        "https://sidewalk-dev.level.co/v1/locks",
-        json={"locks": []},  # Empty list of locks wrapped in object
-        headers={"Content-Type": CONTENT_TYPE_JSON},
+@pytest.fixture(name="mock_device_code_endpoints", autouse=True)
+def mock_device_code_endpoints(aioclient_mock: AiohttpClientMocker) -> None:
+    """Mock device code flow endpoints (autouse to apply to all tests)."""
+    from homeassistant.components.levelhome.const import (
+        DEVICE_CODE_INITIATE_PATH,
+        DEVICE_CODE_POLL_PATH,
+        DEVICE_CODE_VERIFY_PATH,
     )
+    aioclient_mock.post(
+        f"{DEFAULT_PARTNER_BASE_URL}{DEVICE_CODE_INITIATE_PATH}",
+        json={
+            "device_code": "device-code-123",
+            "user_code": "123456",
+            "interval": 5,
+        },
+        status=200,
+    )
+    aioclient_mock.post(
+        f"{DEFAULT_PARTNER_BASE_URL}{DEVICE_CODE_VERIFY_PATH}",
+        json={
+            "expires_in": 600,
+        },
+        status=200,
+    )
+    aioclient_mock.post(
+        f"{DEFAULT_PARTNER_BASE_URL}{DEVICE_CODE_POLL_PATH}",
+        json={
+            "access_token": "at",
+            "refresh_token": "rt",
+            "expires_in": 3600,
+            "token_type": "Bearer",
+        },
+        status=200,
+    )
+
+
+@pytest.fixture(name="mock_levelhome_api")
+def mock_levelhome_api() -> None:
+    """Mock the Level Lock API endpoints (WebSocket only, no HTTP)."""
 
 
 @pytest.fixture(name="mock_websocket_manager")
@@ -117,6 +148,9 @@ def mock_websocket_manager() -> Generator[AsyncMock]:
         ws = mock_ws.return_value
         ws.async_start = AsyncMock(return_value=None)
         ws.async_stop = AsyncMock(return_value=None)
+        ws.async_get_devices = AsyncMock(return_value=[])
+        ws.async_get_device_state = AsyncMock(return_value=None)
+        ws.register_device_uuid = lambda lock_id, uuid: None
         yield mock_ws
 
 
@@ -169,30 +203,21 @@ def mock_oauth_patches(fake_oauth_impl: SimpleNamespace) -> Generator[None]:
 @pytest.fixture(name="mock_oauth_responses")
 def mock_oauth_responses(aioclient_mock: AiohttpClientMocker) -> None:
     """Fixture to mock successful OAuth2 and OTP responses."""
-    # Mock authorize HTML returning request_uuid
     aioclient_mock.get(
         "https://oauth.example/authorize",
         text='<html><input type="hidden" name="request_uuid" value="req-123"></html>',
     )
-
-    # OTP start on partner server
     aioclient_mock.post(
         f"{DEFAULT_PARTNER_BASE_URL}{PARTNER_OTP_START_PATH}", status=200
     )
-
-    # OTP confirm
     aioclient_mock.post(
         f"{DEFAULT_OAUTH2_BASE_URL}{OAUTH2_OTP_CONFIRM_PATH}", status=200
     )
-
-    # Grant accept returning redirect_uri with code
     aioclient_mock.post(
         f"{DEFAULT_OAUTH2_BASE_URL}{OAUTH2_GRANT_PERMISSIONS_ACCEPT_PATH}",
         json={"redirect_uri": "https://example.com/redirect?code=authcode-xyz"},
         status=200,
     )
-
-    # Token exchange
     aioclient_mock.post(
         f"{DEFAULT_OAUTH2_BASE_URL}{OAUTH2_TOKEN_EXCHANGE_PATH}",
         json={

@@ -1,9 +1,7 @@
-"""WebSocket push client for Level Lock.
+"""WebSocket push client for Level Lock using ws-partner-server protocol.
 
-This module provides a manager that maintains WebSocket connections to the
-partner server for each lock, sending commands and receiving state updates.
-
-It defines explicit message structures for clarity and type safety.
+This module provides a manager that maintains a single WebSocket connection
+to the ws-partner-server for all devices on an account.
 """
 
 from __future__ import annotations
@@ -11,7 +9,6 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Awaitable, Callable
 from contextlib import suppress
-from dataclasses import dataclass
 import json
 import logging
 import random
@@ -19,107 +16,15 @@ from typing import Any, Literal
 
 from aiohttp import ClientError, ClientSession, ClientWebSocketResponse, WSMsgType
 
-from .protocol import coerce_is_locked
-
 LOGGER = logging.getLogger(__name__)
 
-# Token provider callable type (async)
 TokenProvider = Callable[[], Awaitable[str]]
 
-
-# =========================
-# Message type definitions
-# =========================
-
 WsCommandType = Literal["lock", "unlock"]
-WsIncomingType = Literal["state", "ack", "error", "pong"]
-
-
-@dataclass(slots=True)
-class WsOutgoingCommand:
-    """Command message sent to the partner server over WebSocket.
-
-    Fields:
-    - type: always "command"
-    - command: "lock" | "unlock"
-    - request_id: optional client-generated identifier for correlation
-    """
-
-    type: Literal["command"]
-    command: WsCommandType
-    request_id: str | None = None
-
-
-@dataclass(slots=True)
-class WsIncomingAck:
-    """Acknowledgement for a previously sent command.
-
-    Fields:
-    - type: always "ack"
-    - command: echoed command name
-    - status: "accepted" | "rejected"
-    - reason: optional rejection reason when status == "rejected"
-    - request_id: correlates to WsOutgoingCommand.request_id when provided
-    """
-
-    type: Literal["ack"]
-    command: WsCommandType
-    status: Literal["accepted", "rejected"]
-    reason: str | None = None
-    request_id: str | None = None
-
-
-@dataclass(slots=True)
-class WsIncomingState:
-    """Push state update for a lock.
-
-    Fields:
-    - type: always "state"
-    - lock_id: identifier of the lock
-    - state: "locked" | "unlocked" | other vendor values
-    - source: optional origin of the change (e.g. "physical", "digital")
-    - updated_at: optional ISO-8601 timestamp
-    """
-
-    type: Literal["state"]
-    lock_id: str
-    state: str
-    source: str | None = None
-    updated_at: str | None = None
-
-
-@dataclass(slots=True)
-class WsIncomingError:
-    """Error message pushed by server.
-
-    Fields:
-    - type: always "error"
-    - code: vendor-specific error code
-    - message: human-readable description
-    """
-
-    type: Literal["error"]
-    code: str
-    message: str
-
-
-def _coerce_is_locked(state: Any) -> bool | None:
-    """Best-effort conversion of vendor state to boolean locked status."""
-    if state is None:
-        return None
-    if isinstance(state, str):
-        lowered = state.lower()
-        if lowered in ("locked", "lock", "secure"):
-            return True
-        if lowered in ("unlocked", "unlock", "insecure"):
-            return False
-    if isinstance(state, bool):
-        return state
-    return None
 
 
 class LevelWebsocketManager:
-    """Manage per-lock WebSocket connections and command dispatch."""
+    """Manage WebSocket connection to ws-partner-server."""
 
     def __init__(
         self,
@@ -134,70 +39,120 @@ class LevelWebsocketManager:
         self._base_url = base_url.rstrip("/")
         self._on_state_update = on_state_update
         self._session: ClientSession = session
-
-        # Runtime state
         self._stop_event = asyncio.Event()
-        self._tasks: dict[str, asyncio.Task[None]] = {}
-        self._sockets: dict[str, ClientWebSocketResponse] = {}
-        self._send_locks: dict[str, asyncio.Lock] = {}
+        self._task: asyncio.Task[None] | None = None
+        self._ws: ClientWebSocketResponse | None = None
+        self._send_lock = asyncio.Lock()
+        self._device_uuid_map: dict[str, str] = {}
+        self._devices_list: list[dict[str, Any]] = []
+        self._list_devices_event = asyncio.Event()
+        self._pending_state_requests: dict[str, tuple[asyncio.Event, dict[str, Any] | None]] = {}
 
-    async def async_start(self, lock_ids: list[str]) -> None:
-        """Start and maintain connections for the provided locks."""
-        for lock_id in lock_ids:
-            if lock_id in self._tasks:
-                continue
-            self._send_locks[lock_id] = asyncio.Lock()
-            task = asyncio.create_task(self._run_connection(lock_id))
-            self._tasks[lock_id] = task
+    async def async_start(self, lock_ids: list[str] | None = None) -> None:
+        """Start WebSocket connection."""
+        LOGGER.info("Starting WebSocket connection")
+        if self._task is None or self._task.done():
+            self._stop_event.clear()
+            self._list_devices_event.clear()
+            self._task = asyncio.create_task(self._run_connection())
+            LOGGER.info("WebSocket connection task created, waiting 0.5s for connection")
+            await asyncio.sleep(0.5)
+            LOGGER.info("Initial wait complete, WebSocket connected: %s", self._ws is not None and not (self._ws.closed if self._ws else True))
+        await self._fetch_device_list()
+
+    async def async_get_devices(self) -> list[dict[str, Any]]:
+        """Get list of devices via WebSocket."""
+        LOGGER.info("Requesting device list via WebSocket")
+        self._list_devices_event.clear()
+        await self._fetch_device_list()
+        try:
+            await asyncio.wait_for(self._list_devices_event.wait(), timeout=10.0)
+            LOGGER.info("Received device list with %d devices", len(self._devices_list))
+        except TimeoutError:
+            LOGGER.warning("Timeout waiting for device list response")
+        return self._devices_list
 
     async def async_stop(self) -> None:
-        """Stop all connections and background tasks."""
+        """Stop WebSocket connection and background task."""
         self._stop_event.set()
-        # Close sockets first to unblock receivers
-        for ws in list(self._sockets.values()):
+        if self._ws is not None and not self._ws.closed:
             with suppress(Exception):
-                await ws.close()
-        self._sockets.clear()
-        # Cancel tasks
-        for task in list(self._tasks.values()):
-            task.cancel()
-        self._tasks.clear()
+                await self._ws.close()
+        if self._task is not None:
+            self._task.cancel()
+            with suppress(asyncio.CancelledError):
+                await self._task
+            self._task = None
+
+    def register_device_uuid(self, lock_id: str, device_uuid: str) -> None:
+        """Register mapping from lock_id to device_uuid."""
+        self._device_uuid_map[lock_id] = device_uuid
 
     async def async_send_command(self, lock_id: str, command: WsCommandType) -> None:
-        """Send a command over the lock's WebSocket connection.
-
-        If the connection is not established yet, a best-effort attempt will be
-        made to connect and then send.
-        """
-
-        if lock_id not in self._tasks:
-            await self.async_start([lock_id])
-
-        # Ensure a connection is present or connecting
-        # Acquire per-lock send lock to serialize sends
-        send_lock = self._send_locks.setdefault(lock_id, asyncio.Lock())
-        async with send_lock:
-            ws = self._sockets.get(lock_id)
-            if ws is None or ws.closed:
-                # Give the connection loop a chance to connect
+        """Send a lock/unlock command via WebSocket."""
+        LOGGER.info("Sending %s command for lock %s", command, lock_id)
+        async with self._send_lock:
+            if self._ws is None or self._ws.closed:
+                LOGGER.info("WebSocket not connected, waiting for connection...")
                 for _ in range(10):
                     await asyncio.sleep(0.2)
-                    ws = self._sockets.get(lock_id)
-                    if ws is not None and not ws.closed:
+                    if self._ws is not None and not self._ws.closed:
                         break
-            if ws is None or ws.closed:
-                raise ConnectionError(f"WebSocket not connected for lock {lock_id}")
+                else:
+                    LOGGER.error("WebSocket not connected after waiting")
+                    raise ConnectionError("WebSocket not connected")
+            device_uuid = self._device_uuid_map.get(lock_id)
+            if device_uuid is None:
+                raise ValueError(f"Device UUID not found for lock_id {lock_id}")
+            message = {"type": command, "device_uuid": device_uuid}
+            LOGGER.info("Sending WebSocket message: %s", message)
+            await self._ws.send_json(message)
 
-            message = WsOutgoingCommand(type="command", command=command)
-            await ws.send_json(message.__dict__)
+    async def async_get_device_state(self, device_uuid: str) -> dict[str, Any] | None:
+        """Get device state via WebSocket."""
+        LOGGER.info("Requesting device state for %s", device_uuid)
+        event = asyncio.Event()
+        self._pending_state_requests[device_uuid] = (event, None)
+        try:
+            async with self._send_lock:
+                if self._ws is None or self._ws.closed:
+                    LOGGER.info("WebSocket not connected, waiting for connection...")
+                    for _ in range(10):
+                        await asyncio.sleep(0.2)
+                        if self._ws is not None and not self._ws.closed:
+                            LOGGER.info("WebSocket connected after waiting")
+                            break
+                    else:
+                        LOGGER.warning("WebSocket not connected for device state request %s", device_uuid)
+                        return None
+                LOGGER.info("Sending get_device_state request for %s", device_uuid)
+                await self._ws.send_json({"type": "get_device_state", "device_uuid": device_uuid})
+            LOGGER.info("Waiting for device state response for %s", device_uuid)
+            await asyncio.wait_for(event.wait(), timeout=5.0)
+            _, result = self._pending_state_requests.get(device_uuid, (None, None))
+            LOGGER.info("Received device state for %s: %s", device_uuid, result)
+            return result
+        except TimeoutError:
+            LOGGER.warning("Timeout getting state for device %s", device_uuid)
+            return None
+        finally:
+            self._pending_state_requests.pop(device_uuid, None)
 
-    async def _run_connection(self, lock_id: str) -> None:
-        """Background task to keep a lock WebSocket connected and process messages."""
+    async def _fetch_device_list(self) -> None:
+        """Fetch device list via WebSocket list_devices message."""
+        LOGGER.info("Fetching device list")
+        async with self._send_lock:
+            if self._ws is None or self._ws.closed:
+                LOGGER.warning("Cannot fetch device list - WebSocket not connected")
+                return
+            LOGGER.info("Sending list_devices request")
+            await self._ws.send_json({"type": "list_devices"})
 
+    async def _run_connection(self) -> None:
+        """Background task to keep WebSocket connected."""
         backoff_seconds = 1.0
         max_backoff = 30.0
-        url = f"{self._base_url}/v1/locks/{lock_id}/ws"
-
+        url = f"{self._base_url}/v1/ws"
         while not self._stop_event.is_set():
             try:
                 token = await self._get_token()
@@ -205,38 +160,31 @@ class LevelWebsocketManager:
                     "Authorization": f"Bearer {token}",
                     "Accept": "application/json",
                 }
-                LOGGER.debug("Connecting WebSocket for lock %s", lock_id)
+                LOGGER.debug("Connecting WebSocket to %s", url)
                 ws = await self._session.ws_connect(url, headers=headers, heartbeat=30)
-                self._sockets[lock_id] = ws
+                self._ws = ws
                 backoff_seconds = 1.0
-
+                LOGGER.info("WebSocket connected")
                 async for msg in ws:
                     if msg.type == WSMsgType.TEXT:
-                        await self._handle_text_message(lock_id, msg.data)
-                    elif msg.type == WSMsgType.BINARY:
-                        # Not expected; ignore
-                        continue
+                        await self._handle_text_message(msg.data)
                     elif msg.type in (WSMsgType.CLOSED, WSMsgType.ERROR):
                         break
             except asyncio.CancelledError:
                 break
             except ClientError as err:
-                LOGGER.warning("WebSocket error for lock %s: %s", lock_id, err)
+                LOGGER.warning("WebSocket error: %s", err)
             except Exception:
-                LOGGER.exception("Unexpected WebSocket error for lock %s", lock_id)
+                LOGGER.exception("Unexpected WebSocket error")
             finally:
-                ws_ref = self._sockets.pop(lock_id, None)
-                if ws_ref is not None and not ws_ref.closed:
+                if self._ws is not None and not self._ws.closed:
                     with suppress(Exception):
-                        await ws_ref.close()
-
-            # Reconnect with backoff
+                        await self._ws.close()
+                self._ws = None
             if self._stop_event.is_set():
                 break
             sleep_time = backoff_seconds + random.uniform(0, 0.5)
-            LOGGER.debug(
-                "Reconnecting WebSocket for lock %s in %.1fs", lock_id, sleep_time
-            )
+            LOGGER.debug("Reconnecting WebSocket in %.1fs", sleep_time)
             try:
                 await asyncio.wait_for(self._stop_event.wait(), timeout=sleep_time)
                 break
@@ -244,37 +192,80 @@ class LevelWebsocketManager:
                 pass
             backoff_seconds = min(max_backoff, backoff_seconds * 2.0)
 
-    async def _handle_text_message(self, lock_id: str, data: str) -> None:
+    async def _handle_text_message(self, data: str) -> None:
         """Handle a JSON text message from the server."""
         try:
             payload = json.loads(data)
-        except Exception:  # noqa: BLE001
-            LOGGER.debug("Non-JSON message for lock %s: %s", lock_id, data)
+        except Exception:
+            LOGGER.debug("Non-JSON message: %s", data)
             return
-
         msg_type: str | None = payload.get("type")
-        if msg_type == "state":
-            state = payload.get("state")
-            is_locked = coerce_is_locked(state)
-            # Pass through entire payload as metadata for future use
-            await self._on_state_update(lock_id, is_locked, payload)
+        LOGGER.info("Received WebSocket message type: %s", msg_type)
+        if msg_type == "list_devices_reply":
+            devices = payload.get("devices", [])
+            self._devices_list = devices
+            for device in devices:
+                device_uuid = device.get("device_uuid") or device.get("uuid")
+                if device_uuid:
+                    self._device_uuid_map[device_uuid] = device_uuid
+            LOGGER.info("Received device list with %d devices: %s", len(devices), devices)
+            self._list_devices_event.set()
             return
-
-        if msg_type == "ack":
-            # Acknowledgement to a previously sent command; no action required
-            LOGGER.debug("Ack for lock %s: %s", lock_id, payload)
+        if msg_type in ("lock_reply", "unlock_reply"):
+            success = payload.get("success")
+            device_uuid = payload.get("device_uuid")
+            error = payload.get("error")
+            LOGGER.info("Received %s: success=%s, device=%s, error=%s", msg_type, success, device_uuid, error)
+            if not success and error:
+                LOGGER.warning(
+                    "Command %s failed for device %s: %s", msg_type, device_uuid, error
+                )
+                return
+            if success and device_uuid:
+                is_locked = msg_type == "lock_reply"
+                state = "locked" if is_locked else "unlocked"
+                state_payload = {"state": state, "device_uuid": device_uuid}
+                LOGGER.info("Updating state for device %s to %s", device_uuid, state)
+                await self._on_state_update(device_uuid, is_locked, state_payload)
             return
-
-        if msg_type == "error":
-            # Server-issued error; log for diagnostics
-            code = payload.get("code")
-            message = payload.get("message")
-            LOGGER.warning(
-                "Server error for lock %s: code=%s message=%s", lock_id, code, message
-            )
-            return
-
         if msg_type == "pong":
             return
-
-        LOGGER.debug("Unhandled message for lock %s: %s", lock_id, payload)
+        if msg_type == "get_device_state_reply":
+            device_uuid = payload.get("device_uuid")
+            device_state = payload.get("device_state")
+            LOGGER.info("Received device state reply for %s: %s", device_uuid, device_state)
+            if device_uuid and device_uuid in self._pending_state_requests:
+                event, _ = self._pending_state_requests[device_uuid]
+                self._pending_state_requests[device_uuid] = (event, device_state)
+                event.set()
+                LOGGER.info("Device state event set for %s", device_uuid)
+            else:
+                LOGGER.warning("Received state reply for unknown or expired request: %s", device_uuid)
+            return
+        if msg_type == "device_state_changed":
+            device_uuid = payload.get("device_uuid")
+            device_state = payload.get("device_state")
+            device_name = payload.get("device_name")
+            LOGGER.info("Received device state change for %s (%s): %s", device_uuid, device_name, device_state)
+            if device_uuid and device_state:
+                bolt_state = device_state.get("bolt_state")
+                is_locked = None
+                state_str = None
+                if bolt_state == "Locked":
+                    is_locked = True
+                    state_str = "locked"
+                elif bolt_state == "Unlocked":
+                    is_locked = False
+                    state_str = "unlocked"
+                state_payload = {
+                    "state": state_str,
+                    "device_uuid": device_uuid,
+                    "device_name": device_name,
+                    "bolt_state": bolt_state,
+                    "battery_level": device_state.get("battery_level"),
+                    "reachable": device_state.get("reachable"),
+                }
+                LOGGER.info("Processing state change for device %s: bolt_state=%s, is_locked=%s, state=%s", device_uuid, bolt_state, is_locked, state_str)
+                await self._on_state_update(device_uuid, is_locked, state_payload)
+            return
+        LOGGER.info("Unhandled message type: %s, payload: %s", msg_type, payload)

@@ -16,11 +16,57 @@ from homeassistant.helpers import config_entry_oauth2_flow
 
 from .const import (
     CONF_OAUTH2_BASE_URL,
+    CONF_PARTNER_BASE_URL,
     DEFAULT_OAUTH2_BASE_URL,
+    DEFAULT_PARTNER_BASE_URL,
+    DEVICE_CODE_POLL_PATH,
     DOMAIN,
     OAUTH2_AUTHORIZE_PATH,
     OAUTH2_TOKEN_EXCHANGE_PATH,
 )
+
+
+class LevelOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2ImplementationWithPkce):
+    """Level Lock OAuth2 implementation with PKCE support for token refresh.
+    
+    Level uses the device code flow where token refresh happens via the
+    partner server's /oauth2/device-code/token endpoint with grant_type=refresh_token.
+    """
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        domain: str,
+        client_id: str,
+        authorize_url: str,
+        token_url: str,
+        client_secret: str,
+        partner_token_url: str,
+    ) -> None:
+        """Initialize with both OAuth2 and partner server token URLs."""
+        super().__init__(hass, domain, client_id, authorize_url, token_url, client_secret)
+        self._partner_token_url = partner_token_url
+
+    async def _async_refresh_token(self, token: dict) -> dict:
+        """Refresh tokens using the partner server's device code endpoint."""
+        data = {
+            "grant_type": "refresh_token",
+            "client_id": self.client_id,
+            "refresh_token": token["refresh_token"],
+        }
+        if code_verifier := token.get("code_verifier"):
+            data["code_verifier"] = code_verifier
+
+        original_token_url = self.token_url
+        self.token_url = self._partner_token_url
+        try:
+            new_token = await self._token_request(data)
+        finally:
+            self.token_url = original_token_url
+
+        if code_verifier:
+            new_token["code_verifier"] = code_verifier
+        return {**token, **new_token}
 
 
 async def async_get_authorization_server(hass: HomeAssistant) -> AuthorizationServer:
@@ -47,16 +93,23 @@ async def async_get_auth_implementation(
     """Return a PKCE-enabled OAuth implementation.
 
     We intentionally ignore any provided client secret and use the
-    LocalOAuth2ImplementationWithPkce which does not require a secret.
+    LevelOAuth2Implementation which includes code_verifier in token refresh.
+    Token refresh uses the partner server's device code endpoint.
     """
     auth_server = await async_get_authorization_server(hass)
-    return config_entry_oauth2_flow.LocalOAuth2ImplementationWithPkce(
+    partner_base = (hass.data.get(DOMAIN) or {}).get(
+        CONF_PARTNER_BASE_URL
+    ) or DEFAULT_PARTNER_BASE_URL
+    partner_token_url = f"{partner_base}{DEVICE_CODE_POLL_PATH}"
+
+    return LevelOAuth2Implementation(
         hass,
         auth_domain,
         credential.client_id,
         auth_server.authorize_url,
         auth_server.token_url,
         credential.client_secret or "",
+        partner_token_url,
     )
 
 

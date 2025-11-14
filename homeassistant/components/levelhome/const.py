@@ -8,7 +8,11 @@ CONF_PARTNER_BASE_URL = "partner_base_url"
 
 # Default base URLs (can be overridden via YAML options or other configuration)
 DEFAULT_OAUTH2_BASE_URL = "https://oauth2-dev.level.co"
-DEFAULT_PARTNER_BASE_URL = "https://sidewalk-dev.level.co"
+DEFAULT_PARTNER_BASE_URL = "https://ws-partner-server.dev-public.level.co"
+
+DEVICE_CODE_INITIATE_PATH = "/oauth2/device-code/initiate"
+DEVICE_CODE_VERIFY_PATH = "/oauth2/device-code/verify"
+DEVICE_CODE_POLL_PATH = "/oauth2/device-code/token"
 
 # API paths
 OAUTH2_AUTHORIZE_PATH = "/v1/authorize"
