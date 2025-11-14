@@ -364,33 +364,7 @@ SENSOR_DESCRIPTIONS: tuple[HabiticaSensorEntityDescription, ...] = (
         translation_key=HabiticaSensorEntity.HABITS,
         value_fn=lambda user, _: len([h for h in user.tasksOrder.habits if h]),
     ),
-    HabiticaSensorEntityDescription(
-        key=HabiticaSensorEntity.HABITS_DAILY,
-        translation_key=HabiticaSensorEntity.HABITS_DAILY,
-        value_fn=lambda user, _: len([
-            h for h in (user.tasks.habits.values() if hasattr(user.tasks, 'habits') else [])
-            if h and getattr(h, 'frequency', 'daily') == 'daily'
-        ]),
-        native_unit_of_measurement="habits",
-    ),
-    HabiticaSensorEntityDescription(
-        key=HabiticaSensorEntity.HABITS_WEEKLY,
-        translation_key=HabiticaSensorEntity.HABITS_WEEKLY,
-        value_fn=lambda user, _: len([
-            h for h in (user.tasks.habits.values() if hasattr(user.tasks, 'habits') else [])
-            if h and getattr(h, 'frequency', 'daily') == 'weekly'
-        ]),
-        native_unit_of_measurement="habits",
-    ),
-    HabiticaSensorEntityDescription(
-        key=HabiticaSensorEntity.HABITS_MONTHLY,
-        translation_key=HabiticaSensorEntity.HABITS_MONTHLY,
-        value_fn=lambda user, _: len([
-            h for h in (user.tasks.habits.values() if hasattr(user.tasks, 'habits') else [])
-            if h and getattr(h, 'frequency', 'daily') == 'monthly'
-        ]),
-        native_unit_of_measurement="habits",
-    ),
+
     HabiticaSensorEntityDescription(
         key=HabiticaSensorEntity.MOTIVATIONAL_PROMPT,
         translation_key=HabiticaSensorEntity.MOTIVATIONAL_PROMPT,
@@ -398,7 +372,7 @@ SENSOR_DESCRIPTIONS: tuple[HabiticaSensorEntityDescription, ...] = (
         attributes_fn=lambda user, _: {
             "level": user.stats.lvl,
             "class": user.stats.Class.value if user.stats.Class else None,
-            "total_habits": len([h for h in (user.tasks.habits.values() if hasattr(user.tasks, 'habits') else []) if h]),
+            "total_habits": len([h for h in user.tasksOrder.habits if h]),
             "updated_daily": "Updates once per day with personalized content",
         },
     ),
@@ -573,6 +547,12 @@ async def async_setup_entry(
                     ],
                     config_subentry_id=subentry_id,
                 )
+
+    # Add frequency sensors
+    async_add_entities(
+        HabiticaFrequencySensor(coordinator, frequency_type)
+        for frequency_type in ["daily", "weekly", "monthly"]
+    )
 
 
 class HabiticaSensor(HabiticaBase, SensorEntity):
@@ -798,3 +778,78 @@ class HabiticaPartySensor(HabiticaPartyBase, SensorEntity):
         if func := self.entity_description.attributes_fn:
             return func(self.coordinator.data.party, self.content)
         return None
+
+
+class HabiticaFrequencySensor(
+    CoordinatorEntity[HabiticaDataUpdateCoordinator], SensorEntity
+):
+    """Sensor for habit frequency analysis."""
+
+    _attr_has_entity_name = False
+
+    def __init__(
+        self,
+        coordinator: HabiticaDataUpdateCoordinator,
+        frequency_type: str,
+    ) -> None:
+        """Initialize the frequency sensor."""
+        super().__init__(coordinator)
+        self.frequency_type = frequency_type
+        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_habits_{frequency_type}"
+        self._attr_name = f"Habits {frequency_type.title()}"
+        self._attr_translation_key = f"habits_{frequency_type}"
+
+        # Set device info to link to the main Habitica device
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, coordinator.config_entry.unique_id)},
+        )
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the habit count for this frequency."""
+        if not self.coordinator.data or not self.coordinator.data.habits:
+            return 0
+
+        count = 0
+        for habit in self.coordinator.data.habits:
+            if habit and habit.frequency:
+                habit_frequency = habit.frequency.value.lower()
+                if habit_frequency == self.frequency_type:
+                    count += 1
+            elif self.frequency_type == "daily":
+                # Default frequency is daily if not specified
+                count += 1
+
+        return count
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return frequency specific attributes."""
+        if not self.coordinator.data or not self.coordinator.data.habits:
+            return {"habits": [], "total_habits": 0}
+
+        habits_list = []
+        total_habits = len(self.coordinator.data.habits)
+        
+        for habit in self.coordinator.data.habits:
+            if habit and habit.frequency:
+                habit_frequency = habit.frequency.value.lower()
+                if habit_frequency == self.frequency_type:
+                    habits_list.append({
+                        "id": str(habit.id),
+                        "text": habit.text,
+                        "value": round(habit.value, 2) if habit.value else 0,
+                    })
+            elif self.frequency_type == "daily" and habit:
+                # Default frequency is daily if not specified
+                habits_list.append({
+                    "id": str(habit.id),
+                    "text": habit.text,
+                    "value": round(habit.value, 2) if habit.value else 0,
+                })
+
+        return {
+            "habits": habits_list,
+            "total_habits": total_habits,
+            "frequency": self.frequency_type,
+        }
