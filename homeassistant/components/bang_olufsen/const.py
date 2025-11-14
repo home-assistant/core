@@ -74,6 +74,17 @@ class BangOlufsenModel(StrEnum):
     BEOSOUND_THEATRE = "Beosound Theatre"
 
 
+class BangOlufsenAttribute(StrEnum):
+    """Enum for extra_state_attribute keys."""
+
+    BEOLINK = "beolink"
+    BEOLINK_PEERS = "peers"
+    BEOLINK_SELF = "self"
+    BEOLINK_LEADER = "leader"
+    BEOLINK_LISTENERS = "listeners"
+    MEDIA_ID = "media_id"
+
+
 # Dispatcher events
 class WebsocketNotification(StrEnum):
     """Enum for WebSocket notification types."""

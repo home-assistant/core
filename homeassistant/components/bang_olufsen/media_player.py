@@ -81,6 +81,7 @@ from .const import (
     DOMAIN,
     FALLBACK_SOURCES,
     VALID_MEDIA_TYPES,
+    BangOlufsenAttribute,
     BangOlufsenMediaType,
     BangOlufsenSource,
     WebsocketNotification,
@@ -453,18 +454,24 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
 
         # Add Beolink self
         self._beolink_attributes = {
-            "beolink": {"self": {self.device_entry.name: self._beolink_jid}}
+            BangOlufsenAttribute.BEOLINK: {
+                BangOlufsenAttribute.BEOLINK_SELF: {
+                    self.device_entry.name: self._beolink_jid
+                }
+            }
         }
 
         # Add Beolink peers
         peers = await self._client.get_beolink_peers()
 
         if len(peers) > 0:
-            self._beolink_attributes["beolink"]["peers"] = {}
+            self._beolink_attributes[BangOlufsenAttribute.BEOLINK][
+                BangOlufsenAttribute.BEOLINK_PEERS
+            ] = {}
             for peer in peers:
-                self._beolink_attributes["beolink"]["peers"][peer.friendly_name] = (
-                    peer.jid
-                )
+                self._beolink_attributes[BangOlufsenAttribute.BEOLINK][
+                    BangOlufsenAttribute.BEOLINK_PEERS
+                ][peer.friendly_name] = peer.jid
 
         # Add Beolink listeners / leader
         self._remote_leader = self._playback_metadata.remote_leader
@@ -485,7 +492,9 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
             # Add self
             group_members.append(self.entity_id)
 
-            self._beolink_attributes["beolink"]["leader"] = {
+            self._beolink_attributes[BangOlufsenAttribute.BEOLINK][
+                BangOlufsenAttribute.BEOLINK_LEADER
+            ] = {
                 self._remote_leader.friendly_name: self._remote_leader.jid,
             }
 
@@ -522,9 +531,9 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
                                 beolink_listener.jid
                             )
                             break
-                self._beolink_attributes["beolink"]["listeners"] = (
-                    beolink_listeners_attribute
-                )
+                self._beolink_attributes[BangOlufsenAttribute.BEOLINK][
+                    BangOlufsenAttribute.BEOLINK_LISTENERS
+                ] = beolink_listeners_attribute
 
         self._attr_group_members = group_members
 
@@ -687,7 +696,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
 
         # Add media id attribute
         if self._media_id_attribute:
-            attributes.update({"media_id": self._media_id_attribute})
+            attributes.update({BangOlufsenAttribute.MEDIA_ID: self._media_id_attribute})
 
         # Add Beolink attributes
         if self._beolink_attributes:
