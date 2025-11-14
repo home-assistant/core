@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from roborock.containers import RoborockStateCode
+from roborock.data import RoborockStateCode
 from roborock.roborock_typing import DeviceProp
 
 from homeassistant.components.binary_sensor import (

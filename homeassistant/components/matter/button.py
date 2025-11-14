@@ -33,7 +33,7 @@ async def async_setup_entry(
     matter.register_platform_handler(Platform.BUTTON, async_add_entities)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class MatterButtonEntityDescription(ButtonEntityDescription, MatterEntityDescription):
     """Describe Matter Button entities."""
 
@@ -154,5 +154,19 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterCommandButton,
         required_attributes=(clusters.SmokeCoAlarm.Attributes.AcceptedCommandList,),
         value_contains=clusters.SmokeCoAlarm.Commands.SelfTestRequest.command_id,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BUTTON,
+        entity_description=MatterButtonEntityDescription(
+            key="WaterHeaterManagementCancelBoost",
+            translation_key="cancel_boost",
+            command=clusters.WaterHeaterManagement.Commands.CancelBoost,
+        ),
+        entity_class=MatterCommandButton,
+        required_attributes=(
+            clusters.WaterHeaterManagement.Attributes.AcceptedCommandList,
+        ),
+        value_contains=clusters.WaterHeaterManagement.Commands.CancelBoost.command_id,
+        allow_multi=True,  # Also used in water_heater
     ),
 ]

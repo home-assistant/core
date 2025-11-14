@@ -13,7 +13,7 @@ from tests.common import assert_setup_component
 
 COMPONENT = "comfoconnect"
 VALID_CONFIG = {
-    COMPONENT: {"host": "1.2.3.4"},
+    COMPONENT: {"host": "192.0.2.1"},
     SENSOR_DOMAIN: {
         "platform": COMPONENT,
         "resources": [
@@ -31,7 +31,10 @@ VALID_CONFIG = {
 def mock_bridge_discover() -> Generator[MagicMock]:
     """Mock the bridge discover method."""
     with patch("pycomfoconnect.bridge.Bridge.discover") as mock_bridge_discover:
-        mock_bridge_discover.return_value[0].uuid.hex.return_value = "00"
+        bridge = MagicMock()
+        bridge.uuid.hex.return_value = "00"
+        bridge.host = "192.0.2.1"
+        mock_bridge_discover.return_value = [bridge]
         yield mock_bridge_discover
 
 
@@ -45,10 +48,27 @@ def mock_comfoconnect_command() -> Generator[MagicMock]:
 
 
 @pytest.fixture
+def mock_comfoconnect_connect() -> Generator[MagicMock]:
+    """Mock the ComfoConnect connect method."""
+    with patch("pycomfoconnect.comfoconnect.ComfoConnect.connect") as mock_connect:
+        yield mock_connect
+
+
+@pytest.fixture(autouse=True)
+def mock_comfoconnect_disconnect() -> Generator[MagicMock]:
+    """Mock the ComfoConnect disconnect method, autouse=True to mock in teardown."""
+    with patch(
+        "pycomfoconnect.comfoconnect.ComfoConnect.disconnect"
+    ) as mock_disconnect:
+        yield mock_disconnect
+
+
+@pytest.fixture
 async def setup_sensor(
     hass: HomeAssistant,
     mock_bridge_discover: MagicMock,
     mock_comfoconnect_command: MagicMock,
+    mock_comfoconnect_connect: MagicMock,
 ) -> None:
     """Set up demo sensor component."""
     with assert_setup_component(1, SENSOR_DOMAIN):

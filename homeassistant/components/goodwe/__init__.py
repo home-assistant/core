@@ -1,13 +1,14 @@
 """The Goodwe inverter component."""
 
-from goodwe import InverterError, connect
-from goodwe.const import GOODWE_TCP_PORT, GOODWE_UDP_PORT
+from goodwe import Inverter, InverterError, connect
+from goodwe.const import GOODWE_UDP_PORT
 
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import DeviceInfo
 
+from .config_flow import GoodweFlowHandler
 from .const import CONF_MODEL_FAMILY, DOMAIN, PLATFORMS
 from .coordinator import GoodweConfigEntry, GoodweRuntimeData, GoodweUpdateCoordinator
 
@@ -15,28 +16,22 @@ from .coordinator import GoodweConfigEntry, GoodweRuntimeData, GoodweUpdateCoord
 async def async_setup_entry(hass: HomeAssistant, entry: GoodweConfigEntry) -> bool:
     """Set up the Goodwe components from a config entry."""
     host = entry.data[CONF_HOST]
+    port = entry.data.get(CONF_PORT, GOODWE_UDP_PORT)
     model_family = entry.data[CONF_MODEL_FAMILY]
 
     # Connect to Goodwe inverter
     try:
         inverter = await connect(
             host=host,
-            port=GOODWE_UDP_PORT,
+            port=port,
             family=model_family,
             retries=10,
         )
-    except InverterError as err_udp:
-        # First try with UDP failed, trying with the TCP port
+    except InverterError as err:
         try:
-            inverter = await connect(
-                host=host,
-                port=GOODWE_TCP_PORT,
-                family=model_family,
-                retries=10,
-            )
+            inverter = await async_check_port(hass, entry, host)
         except InverterError:
-            # Both ports are unavailable
-            raise ConfigEntryNotReady from err_udp
+            raise ConfigEntryNotReady from err
 
     device_info = DeviceInfo(
         configuration_url="https://www.semsportal.com",
@@ -66,6 +61,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoodweConfigEntry) -> bo
     return True
 
 
+async def async_check_port(
+    hass: HomeAssistant, entry: GoodweConfigEntry, host: str
+) -> Inverter:
+    """Check the communication port of the inverter, it may have changed after a firmware update."""
+    inverter, port = await GoodweFlowHandler.async_detect_inverter_port(host=host)
+    family = type(inverter).__name__
+    hass.config_entries.async_update_entry(
+        entry,
+        data={
+            CONF_HOST: host,
+            CONF_PORT: port,
+            CONF_MODEL_FAMILY: family,
+        },
+    )
+    return inverter
+
+
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: GoodweConfigEntry
 ) -> bool:
@@ -76,3 +88,31 @@ async def async_unload_entry(
 async def update_listener(hass: HomeAssistant, config_entry: GoodweConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(config_entry.entry_id)
+
+
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: GoodweConfigEntry
+) -> bool:
+    """Migrate old config entries."""
+
+    if config_entry.version > 2:
+        # This means the user has downgraded from a future version
+        return False
+
+    if config_entry.version == 1:
+        # Update from version 1 to version 2 adding the PROTOCOL to the config entry
+        host = config_entry.data[CONF_HOST]
+        try:
+            inverter, port = await GoodweFlowHandler.async_detect_inverter_port(
+                host=host
+            )
+        except InverterError as err:
+            raise ConfigEntryNotReady from err
+        new_data = {
+            CONF_HOST: host,
+            CONF_PORT: port,
+            CONF_MODEL_FAMILY: type(inverter).__name__,
+        }
+        hass.config_entries.async_update_entry(config_entry, data=new_data, version=2)
+
+    return True

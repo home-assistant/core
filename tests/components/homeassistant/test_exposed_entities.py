@@ -105,6 +105,7 @@ async def test_load_preferences(hass: HomeAssistant) -> None:
 
     exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
     assert exposed_entities._assistants == {}
+    assert exposed_entities.entities == {}
 
     exposed_entities.async_set_expose_new_entities("test1", True)
     exposed_entities.async_set_expose_new_entities("test2", False)

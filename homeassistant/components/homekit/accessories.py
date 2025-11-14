@@ -456,7 +456,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         return self._available
 
     @ha_callback
-    @pyhap_callback  # type: ignore[misc]
+    @pyhap_callback  # type: ignore[untyped-decorator]
     def run(self) -> None:
         """Handle accessory driver started event."""
         if state := self.hass.states.get(self.entity_id):
@@ -725,7 +725,7 @@ class HomeDriver(AccessoryDriver):  # type: ignore[misc]
         self._entry_title = entry_title
         self.iid_storage = iid_storage
 
-    @pyhap_callback  # type: ignore[misc]
+    @pyhap_callback  # type: ignore[untyped-decorator]
     def pair(
         self, client_username_bytes: bytes, client_public: str, client_permissions: int
     ) -> bool:
@@ -735,7 +735,7 @@ class HomeDriver(AccessoryDriver):  # type: ignore[misc]
             async_dismiss_setup_message(self.hass, self.entry_id)
         return cast(bool, success)
 
-    @pyhap_callback  # type: ignore[misc]
+    @pyhap_callback  # type: ignore[untyped-decorator]
     def unpair(self, client_uuid: UUID) -> None:
         """Override super function to show setup message if unpaired."""
         super().unpair(client_uuid)

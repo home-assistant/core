@@ -8,12 +8,8 @@ import pytest
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import template
 
-
-def render(hass: HomeAssistant, template_str: str) -> str:
-    """Render template and return result."""
-    return template.Template(template_str, hass).async_render()
+from tests.helpers.template.helpers import render
 
 
 def test_math_constants(hass: HomeAssistant) -> None:
@@ -32,29 +28,19 @@ def test_logarithm(hass: HomeAssistant) -> None:
     ]
 
     for value, base, expected in tests:
-        assert (
-            template.Template(
-                f"{{{{ {value} | log({base}) | round(1) }}}}", hass
-            ).async_render()
-            == expected
-        )
+        assert render(hass, f"{{{{ {value} | log({base}) | round(1) }}}}") == expected
 
-        assert (
-            template.Template(
-                f"{{{{ log({value}, {base}) | round(1) }}}}", hass
-            ).async_render()
-            == expected
-        )
+        assert render(hass, f"{{{{ log({value}, {base}) | round(1) }}}}") == expected
 
     # Test handling of invalid input
     with pytest.raises(TemplateError):
-        template.Template("{{ invalid | log(_) }}", hass).async_render()
+        render(hass, "{{ invalid | log(_) }}")
     with pytest.raises(TemplateError):
-        template.Template("{{ log(invalid, _) }}", hass).async_render()
+        render(hass, "{{ log(invalid, _) }}")
     with pytest.raises(TemplateError):
-        template.Template("{{ 10 | log(invalid) }}", hass).async_render()
+        render(hass, "{{ 10 | log(invalid) }}")
     with pytest.raises(TemplateError):
-        template.Template("{{ log(10, invalid) }}", hass).async_render()
+        render(hass, "{{ log(10, invalid) }}")
 
     # Test handling of default return value
     assert render(hass, "{{ 'no_number' | log(10, 1) }}") == 1
@@ -76,19 +62,14 @@ def test_sine(hass: HomeAssistant) -> None:
     ]
 
     for value, expected in tests:
-        assert (
-            template.Template(
-                f"{{{{ {value} | sin | round(3) }}}}", hass
-            ).async_render()
-            == expected
-        )
+        assert render(hass, f"{{{{ {value} | sin | round(3) }}}}") == expected
         assert render(hass, f"{{{{ sin({value}) | round(3) }}}}") == expected
 
     # Test handling of invalid input
     with pytest.raises(TemplateError):
-        template.Template("{{ 'duck' | sin }}", hass).async_render()
+        render(hass, "{{ 'duck' | sin }}")
     with pytest.raises(TemplateError):
-        template.Template("{{ invalid | sin('duck') }}", hass).async_render()
+        render(hass, "{{ invalid | sin('duck') }}")
 
     # Test handling of default return value
     assert render(hass, "{{ 'no_number' | sin(1) }}") == 1
@@ -108,17 +89,12 @@ def test_cosine(hass: HomeAssistant) -> None:
     ]
 
     for value, expected in tests:
-        assert (
-            template.Template(
-                f"{{{{ {value} | cos | round(3) }}}}", hass
-            ).async_render()
-            == expected
-        )
+        assert render(hass, f"{{{{ {value} | cos | round(3) }}}}") == expected
         assert render(hass, f"{{{{ cos({value}) | round(3) }}}}") == expected
 
     # Test handling of invalid input
     with pytest.raises(TemplateError):
-        template.Template("{{ 'duck' | cos }}", hass).async_render()
+        render(hass, "{{ 'duck' | cos }}")
 
     # Test handling of default return value
     assert render(hass, "{{ 'no_number' | cos(1) }}") == 1
@@ -137,17 +113,12 @@ def test_tangent(hass: HomeAssistant) -> None:
     ]
 
     for value, expected in tests:
-        assert (
-            template.Template(
-                f"{{{{ {value} | tan | round(3) }}}}", hass
-            ).async_render()
-            == expected
-        )
+        assert render(hass, f"{{{{ {value} | tan | round(3) }}}}") == expected
         assert render(hass, f"{{{{ tan({value}) | round(3) }}}}") == expected
 
     # Test handling of invalid input
     with pytest.raises(TemplateError):
-        template.Template("{{ 'duck' | tan }}", hass).async_render()
+        render(hass, "{{ 'duck' | tan }}")
 
     # Test handling of default return value
     assert render(hass, "{{ 'no_number' | tan(1) }}") == 1
@@ -168,17 +139,14 @@ def test_square_root(hass: HomeAssistant) -> None:
     ]
 
     for value, expected in tests:
-        assert (
-            template.Template(f"{{{{ {value} | sqrt }}}}", hass).async_render()
-            == expected
-        )
+        assert render(hass, f"{{{{ {value} | sqrt }}}}") == expected
         assert render(hass, f"{{{{ sqrt({value}) }}}}") == expected
 
     # Test handling of invalid input
     with pytest.raises(TemplateError):
-        template.Template("{{ 'duck' | sqrt }}", hass).async_render()
+        render(hass, "{{ 'duck' | sqrt }}")
     with pytest.raises(TemplateError):
-        template.Template("{{ -1 | sqrt }}", hass).async_render()
+        render(hass, "{{ -1 | sqrt }}")
 
     # Test handling of default return value
     assert render(hass, "{{ 'no_number' | sqrt(1) }}") == 1
@@ -220,114 +188,95 @@ def test_arc_functions(hass: HomeAssistant) -> None:
 
 def test_average(hass: HomeAssistant) -> None:
     """Test the average function."""
-    assert template.Template("{{ average([1, 2, 3]) }}", hass).async_render() == 2
-    assert template.Template("{{ average(1, 2, 3) }}", hass).async_render() == 2
+    assert render(hass, "{{ average([1, 2, 3]) }}") == 2
+    assert render(hass, "{{ average(1, 2, 3) }}") == 2
 
     # Testing of default values
-    assert template.Template("{{ average([1, 2, 3], -1) }}", hass).async_render() == 2
-    assert template.Template("{{ average([], -1) }}", hass).async_render() == -1
-    assert template.Template("{{ average([], default=-1) }}", hass).async_render() == -1
-    assert (
-        template.Template("{{ average([], 5, default=-1) }}", hass).async_render() == -1
-    )
-    assert (
-        template.Template("{{ average(1, 'a', 3, default=-1) }}", hass).async_render()
-        == -1
-    )
+    assert render(hass, "{{ average([1, 2, 3], -1) }}") == 2
+    assert render(hass, "{{ average([], -1) }}") == -1
+    assert render(hass, "{{ average([], default=-1) }}") == -1
+    assert render(hass, "{{ average([], 5, default=-1) }}") == -1
+    assert render(hass, "{{ average(1, 'a', 3, default=-1) }}") == -1
 
     with pytest.raises(TemplateError):
-        template.Template("{{ average() }}", hass).async_render()
+        render(hass, "{{ average() }}")
 
     with pytest.raises(TemplateError):
-        template.Template("{{ average([]) }}", hass).async_render()
+        render(hass, "{{ average([]) }}")
 
 
 def test_median(hass: HomeAssistant) -> None:
     """Test the median function."""
-    assert template.Template("{{ median([1, 2, 3]) }}", hass).async_render() == 2
-    assert template.Template("{{ median([1, 2, 3, 4]) }}", hass).async_render() == 2.5
-    assert template.Template("{{ median(1, 2, 3) }}", hass).async_render() == 2
+    assert render(hass, "{{ median([1, 2, 3]) }}") == 2
+    assert render(hass, "{{ median([1, 2, 3, 4]) }}") == 2.5
+    assert render(hass, "{{ median(1, 2, 3) }}") == 2
 
     # Testing of default values
-    assert template.Template("{{ median([1, 2, 3], -1) }}", hass).async_render() == 2
-    assert template.Template("{{ median([], -1) }}", hass).async_render() == -1
-    assert template.Template("{{ median([], default=-1) }}", hass).async_render() == -1
+    assert render(hass, "{{ median([1, 2, 3], -1) }}") == 2
+    assert render(hass, "{{ median([], -1) }}") == -1
+    assert render(hass, "{{ median([], default=-1) }}") == -1
 
     with pytest.raises(TemplateError):
-        template.Template("{{ median() }}", hass).async_render()
+        render(hass, "{{ median() }}")
 
     with pytest.raises(TemplateError):
-        template.Template("{{ median([]) }}", hass).async_render()
+        render(hass, "{{ median([]) }}")
 
 
 def test_statistical_mode(hass: HomeAssistant) -> None:
     """Test the statistical mode function."""
-    assert (
-        template.Template("{{ statistical_mode([1, 1, 2, 3]) }}", hass).async_render()
-        == 1
-    )
-    assert (
-        template.Template("{{ statistical_mode(1, 1, 2, 3) }}", hass).async_render()
-        == 1
-    )
+    assert render(hass, "{{ statistical_mode([1, 1, 2, 3]) }}") == 1
+    assert render(hass, "{{ statistical_mode(1, 1, 2, 3) }}") == 1
 
     # Testing of default values
-    assert (
-        template.Template("{{ statistical_mode([1, 1, 2], -1) }}", hass).async_render()
-        == 1
-    )
-    assert (
-        template.Template("{{ statistical_mode([], -1) }}", hass).async_render() == -1
-    )
-    assert (
-        template.Template("{{ statistical_mode([], default=-1) }}", hass).async_render()
-        == -1
-    )
+    assert render(hass, "{{ statistical_mode([1, 1, 2], -1) }}") == 1
+    assert render(hass, "{{ statistical_mode([], -1) }}") == -1
+    assert render(hass, "{{ statistical_mode([], default=-1) }}") == -1
 
     with pytest.raises(TemplateError):
-        template.Template("{{ statistical_mode() }}", hass).async_render()
+        render(hass, "{{ statistical_mode() }}")
 
     with pytest.raises(TemplateError):
-        template.Template("{{ statistical_mode([]) }}", hass).async_render()
+        render(hass, "{{ statistical_mode([]) }}")
 
 
 def test_min_max_functions(hass: HomeAssistant) -> None:
     """Test min and max functions."""
     # Test min function
-    assert template.Template("{{ min([1, 2, 3]) }}", hass).async_render() == 1
-    assert template.Template("{{ min(1, 2, 3) }}", hass).async_render() == 1
+    assert render(hass, "{{ min([1, 2, 3]) }}") == 1
+    assert render(hass, "{{ min(1, 2, 3) }}") == 1
 
     # Test max function
-    assert template.Template("{{ max([1, 2, 3]) }}", hass).async_render() == 3
-    assert template.Template("{{ max(1, 2, 3) }}", hass).async_render() == 3
+    assert render(hass, "{{ max([1, 2, 3]) }}") == 3
+    assert render(hass, "{{ max(1, 2, 3) }}") == 3
 
     # Test error handling
     with pytest.raises(TemplateError):
-        template.Template("{{ min() }}", hass).async_render()
+        render(hass, "{{ min() }}")
 
     with pytest.raises(TemplateError):
-        template.Template("{{ max() }}", hass).async_render()
+        render(hass, "{{ max() }}")
 
 
 def test_bitwise_and(hass: HomeAssistant) -> None:
     """Test bitwise and."""
-    assert template.Template("{{ bitwise_and(8, 2) }}", hass).async_render() == 0
-    assert template.Template("{{ bitwise_and(10, 2) }}", hass).async_render() == 2
-    assert template.Template("{{ bitwise_and(8, 8) }}", hass).async_render() == 8
+    assert render(hass, "{{ bitwise_and(8, 2) }}") == 0
+    assert render(hass, "{{ bitwise_and(10, 2) }}") == 2
+    assert render(hass, "{{ bitwise_and(8, 8) }}") == 8
 
 
 def test_bitwise_or(hass: HomeAssistant) -> None:
     """Test bitwise or."""
-    assert template.Template("{{ bitwise_or(8, 2) }}", hass).async_render() == 10
-    assert template.Template("{{ bitwise_or(8, 8) }}", hass).async_render() == 8
-    assert template.Template("{{ bitwise_or(10, 2) }}", hass).async_render() == 10
+    assert render(hass, "{{ bitwise_or(8, 2) }}") == 10
+    assert render(hass, "{{ bitwise_or(8, 8) }}") == 8
+    assert render(hass, "{{ bitwise_or(10, 2) }}") == 10
 
 
 def test_bitwise_xor(hass: HomeAssistant) -> None:
     """Test bitwise xor."""
-    assert template.Template("{{ bitwise_xor(8, 2) }}", hass).async_render() == 10
-    assert template.Template("{{ bitwise_xor(8, 8) }}", hass).async_render() == 0
-    assert template.Template("{{ bitwise_xor(10, 2) }}", hass).async_render() == 8
+    assert render(hass, "{{ bitwise_xor(8, 2) }}") == 10
+    assert render(hass, "{{ bitwise_xor(8, 8) }}") == 0
+    assert render(hass, "{{ bitwise_xor(10, 2) }}") == 8
 
 
 @pytest.mark.parametrize(
@@ -364,30 +313,30 @@ def test_min_max_attribute(hass: HomeAssistant, attribute) -> None:
         },
     )
     assert (
-        template.Template(
+        render(
+            hass,
             f"{{{{ (state_attr('test.object', 'objects') | min(attribute='{attribute}'))['{attribute}']}}}}",
-            hass,
-        ).async_render()
+        )
         == 1
     )
     assert (
-        template.Template(
+        render(
+            hass,
             f"{{{{ (min(state_attr('test.object', 'objects'), attribute='{attribute}'))['{attribute}']}}}}",
-            hass,
-        ).async_render()
+        )
         == 1
     )
     assert (
-        template.Template(
-            f"{{{{ (state_attr('test.object', 'objects') | max(attribute='{attribute}'))['{attribute}']}}}}",
+        render(
             hass,
-        ).async_render()
+            f"{{{{ (state_attr('test.object', 'objects') | max(attribute='{attribute}'))['{attribute}']}}}}",
+        )
         == 3
     )
     assert (
-        template.Template(
-            f"{{{{ (max(state_attr('test.object', 'objects'), attribute='{attribute}'))['{attribute}']}}}}",
+        render(
             hass,
-        ).async_render()
+            f"{{{{ (max(state_attr('test.object', 'objects'), attribute='{attribute}'))['{attribute}']}}}}",
+        )
         == 3
     )

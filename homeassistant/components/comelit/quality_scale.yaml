@@ -57,9 +57,7 @@ rules:
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: done
-  dynamic-devices:
-    status: todo
-    comment: missing implementation
+  dynamic-devices: done
   entity-category:
     status: exempt
     comment: no config or diagnostic entities

@@ -7,10 +7,10 @@
       "last_button_event": {
         "default": "mdi:clock"
       },
-      "last_motion_event": {
+      "last_check_in": {
         "default": "mdi:clock"
       },
-      "last_check_in": {
+      "last_motion_event": {
         "default": "mdi:clock"
       },
       "motion_threshold": {

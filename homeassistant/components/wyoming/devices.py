@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from homeassistant.components.assist_pipeline.vad import VadSensitivity
+from homeassistant.components.assist_pipeline import VadSensitivity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 

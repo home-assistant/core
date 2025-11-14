@@ -19,7 +19,14 @@ import wave
 import hass_nabucasa
 import voluptuous as vol
 
-from homeassistant.components import conversation, stt, tts, wake_word, websocket_api
+from homeassistant.components import (
+    conversation,
+    media_player,
+    stt,
+    tts,
+    wake_word,
+    websocket_api,
+)
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, MATCH_ALL
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -130,7 +137,10 @@ SAVE_DELAY = 10
 @callback
 def _async_local_fallback_intent_filter(result: RecognizeResult) -> bool:
     """Filter out intents that are not local fallback."""
-    return result.intent.name in (intent.INTENT_GET_STATE)
+    return result.intent.name in (
+        intent.INTENT_GET_STATE,
+        media_player.INTENT_MEDIA_SEARCH_AND_PLAY,
+    )
 
 
 @callback
@@ -1308,7 +1318,9 @@ class PipelineRun:
                     # instead of a full response.
                     all_targets_in_satellite_area = (
                         self._get_all_targets_in_satellite_area(
-                            conversation_result.response, self._device_id
+                            conversation_result.response,
+                            self._satellite_id,
+                            self._device_id,
                         )
                     )
 
@@ -1337,39 +1349,62 @@ class PipelineRun:
         return (speech, all_targets_in_satellite_area)
 
     def _get_all_targets_in_satellite_area(
-        self, intent_response: intent.IntentResponse, device_id: str | None
+        self,
+        intent_response: intent.IntentResponse,
+        satellite_id: str | None,
+        device_id: str | None,
     ) -> bool:
         """Return true if all targeted entities were in the same area as the device."""
         if (
-            (intent_response.response_type != intent.IntentResponseType.ACTION_DONE)
-            or (not intent_response.matched_states)
-            or (not device_id)
-        ):
-            return False
-
-        device_registry = dr.async_get(self.hass)
-
-        if (not (device := device_registry.async_get(device_id))) or (
-            not device.area_id
+            intent_response.response_type != intent.IntentResponseType.ACTION_DONE
+            or not intent_response.matched_states
         ):
             return False
 
         entity_registry = er.async_get(self.hass)
-        for state in intent_response.matched_states:
-            entity = entity_registry.async_get(state.entity_id)
-            if not entity:
+        device_registry = dr.async_get(self.hass)
+
+        area_id: str | None = None
+
+        if (
+            satellite_id is not None
+            and (target_entity_entry := entity_registry.async_get(satellite_id))
+            is not None
+        ):
+            area_id = target_entity_entry.area_id
+            device_id = target_entity_entry.device_id
+
+        if area_id is None:
+            if device_id is None:
                 return False
 
-            if (entity_area_id := entity.area_id) is None:
-                if (entity.device_id is None) or (
-                    (entity_device := device_registry.async_get(entity.device_id))
-                    is None
-                ):
+            device_entry = device_registry.async_get(device_id)
+            if device_entry is None:
+                return False
+
+            area_id = device_entry.area_id
+            if area_id is None:
+                return False
+
+        for state in intent_response.matched_states:
+            target_entity_entry = entity_registry.async_get(state.entity_id)
+            if target_entity_entry is None:
+                return False
+
+            target_area_id = target_entity_entry.area_id
+            if target_area_id is None:
+                if target_entity_entry.device_id is None:
                     return False
 
-                entity_area_id = entity_device.area_id
+                target_device_entry = device_registry.async_get(
+                    target_entity_entry.device_id
+                )
+                if target_device_entry is None:
+                    return False
 
-            if entity_area_id != device.area_id:
+                target_area_id = target_device_entry.area_id
+
+            if target_area_id != area_id:
                 return False
 
         return True

@@ -27,8 +27,8 @@ async def test_sensors(
     await setup_platform(hass, mock_bridge_v2, Platform.SENSOR)
     # there shouldn't have been any requests at this point
     assert len(mock_bridge_v2.mock_requests) == 0
-    # 6 entities should be created from test data
-    assert len(hass.states.async_all()) == 6
+    # 7 entities should be created from test data
+    assert len(hass.states.async_all()) == 7
 
     # test temperature sensor
     sensor = hass.states.get("sensor.hue_motion_sensor_temperature")
@@ -58,6 +58,16 @@ async def test_sensors(
     assert sensor.attributes["state_class"] == "measurement"
     assert sensor.attributes["unit_of_measurement"] == "%"
     assert sensor.attributes["battery_state"] == "normal"
+
+    # test grouped light level sensor
+    sensor = hass.states.get("sensor.sensor_group_illuminance")
+    assert sensor is not None
+    assert sensor.state == "0"
+    assert sensor.attributes["friendly_name"] == "Sensor group Illuminance"
+    assert sensor.attributes["device_class"] == "illuminance"
+    assert sensor.attributes["state_class"] == "measurement"
+    assert sensor.attributes["unit_of_measurement"] == "lx"
+    assert sensor.attributes["light_level"] == 0
 
     # test disabled zigbee_connectivity sensor
     entity_id = "sensor.wall_switch_with_2_controls_zigbee_connectivity"
@@ -139,3 +149,39 @@ async def test_sensor_add_update(hass: HomeAssistant, mock_bridge_v2: Mock) -> N
     test_entity = hass.states.get(test_entity_id)
     assert test_entity is not None
     assert test_entity.state == "22.5"
+
+
+async def test_grouped_light_level_sensor(
+    hass: HomeAssistant, mock_bridge_v2: Mock, v2_resources_test_data: JsonArrayType
+) -> None:
+    """Test HueGroupedLightLevelSensor functionality."""
+    await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
+    await setup_platform(hass, mock_bridge_v2, Platform.SENSOR)
+
+    # test grouped light level sensor exists and has correct state
+    sensor = hass.states.get("sensor.sensor_group_illuminance")
+    assert sensor is not None
+    assert (
+        sensor.state == "0"
+    )  # Light level 0 translates to 10^((0-1)/10000) ≈ 0 lux (rounded)
+    assert sensor.attributes["device_class"] == "illuminance"
+    assert sensor.attributes["light_level"] == 0
+
+    # test update of grouped light level sensor works on incoming event
+    updated_sensor = {
+        "id": "1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d",
+        "type": "grouped_light_level",
+        "light": {
+            "light_level": 30000,
+            "light_level_report": {
+                "changed": "2023-09-23T08:20:51.384Z",
+                "light_level": 30000,
+            },
+        },
+    }
+    mock_bridge_v2.api.emit_event("update", updated_sensor)
+    await hass.async_block_till_done()
+    sensor = hass.states.get("sensor.sensor_group_illuminance")
+    assert (
+        sensor.state == "999"
+    )  # Light level 30000 translates to 10^((30000-1)/10000) ≈ 999 lux

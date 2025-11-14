@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Literal
 
-from homeassistant.helpers.device_registry import DeviceInfo
+from pooldose.type_definitions import DeviceInfoDict, ValueDict
+
+from homeassistant.const import CONF_MAC
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -12,12 +15,14 @@ from .const import DOMAIN, MANUFACTURER
 from .coordinator import PooldoseCoordinator
 
 
-def device_info(info: dict | None, unique_id: str) -> DeviceInfo:
+def device_info(
+    info: DeviceInfoDict | None, unique_id: str, mac: str | None = None
+) -> DeviceInfo:
     """Create device info for PoolDose devices."""
     if info is None:
         info = {}
 
-    api_version = info.get("API_VERSION", "").removesuffix("/")
+    api_version = (info.get("API_VERSION") or "").removesuffix("/")
 
     return DeviceInfo(
         identifiers={(DOMAIN, unique_id)},
@@ -35,6 +40,7 @@ def device_info(info: dict | None, unique_id: str) -> DeviceInfo:
         configuration_url=(
             f"http://{info['IP']}/index.html" if info.get("IP") else None
         ),
+        connections={(CONNECTION_NETWORK_MAC, mac)} if mac else set(),
     )
 
 
@@ -47,29 +53,22 @@ class PooldoseEntity(CoordinatorEntity[PooldoseCoordinator]):
         self,
         coordinator: PooldoseCoordinator,
         serial_number: str,
-        device_properties: dict[str, Any],
+        device_properties: DeviceInfoDict,
         entity_description: EntityDescription,
-        platform_name: str,
+        platform_name: Literal["sensor", "switch", "number", "binary_sensor", "select"],
     ) -> None:
         """Initialize PoolDose entity."""
         super().__init__(coordinator)
         self.entity_description = entity_description
         self.platform_name = platform_name
         self._attr_unique_id = f"{serial_number}_{entity_description.key}"
-        self._attr_device_info = device_info(device_properties, serial_number)
+        self._attr_device_info = device_info(
+            device_properties,
+            serial_number,
+            coordinator.config_entry.data.get(CONF_MAC),
+        )
 
-    @property
-    def available(self) -> bool:
-        """Return True if the entity is available."""
-        if not super().available or self.coordinator.data is None:
-            return False
-        # Check if the entity type exists in coordinator data
-        platform_data = self.coordinator.data.get(self.platform_name, {})
-        return self.entity_description.key in platform_data
-
-    def get_data(self) -> dict | None:
+    def get_data(self) -> ValueDict | None:
         """Get data for this entity, only if available."""
-        if not self.available:
-            return None
-        platform_data = self.coordinator.data.get(self.platform_name, {})
+        platform_data = self.coordinator.data[self.platform_name]
         return platform_data.get(self.entity_description.key)

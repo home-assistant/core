@@ -40,4 +40,4 @@ class CompitDataUpdateCoordinator(DataUpdateCoordinator[dict[int, DeviceInstance
     async def _async_update_data(self) -> dict[int, DeviceInstance]:
         """Update data via library."""
         await self.connector.update_state(device_id=None)  # Update all devices
-        return self.connector.devices
+        return self.connector.all_devices

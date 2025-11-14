@@ -61,14 +61,11 @@ from homeassistant.helpers import (
     entity_registry as er,
     floor_registry as fr,
     issue_registry as ir,
-    label_registry as lr,
     location as loc_helper,
 )
-from homeassistant.helpers.deprecation import deprecated_function
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.translation import async_translate_state
 from homeassistant.helpers.typing import TemplateVarsType
-from homeassistant.loader import bind_hass
 from homeassistant.util import convert, dt as dt_util, location as location_util
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.hass_dict import HassKey
@@ -196,29 +193,6 @@ def async_setup(hass: HomeAssistant) -> bool:
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_adjust_lru_sizes)
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, callback(lambda _: cancel()))
     return True
-
-
-@bind_hass
-@deprecated_function(
-    "automatic setting of Template.hass introduced by HA Core PR #89242",
-    breaks_in_ha_version="2025.10",
-)
-def attach(hass: HomeAssistant, obj: Any) -> None:
-    """Recursively attach hass to all template instances in list and dict."""
-    return _attach(hass, obj)
-
-
-def _attach(hass: HomeAssistant, obj: Any) -> None:
-    """Recursively attach hass to all template instances in list and dict."""
-    if isinstance(obj, list):
-        for child in obj:
-            _attach(hass, child)
-    elif isinstance(obj, collections.abc.Mapping):
-        for child_key, child_value in obj.items():
-            _attach(hass, child_key)
-            _attach(hass, child_value)
-    elif isinstance(obj, Template):
-        obj.hass = hass
 
 
 def render_complex(
@@ -561,15 +535,16 @@ class Template:
             finally:
                 self.hass.loop.call_soon_threadsafe(finish_event.set)
 
+        template_render_thread = ThreadWithException(target=_render_template)
         try:
-            template_render_thread = ThreadWithException(target=_render_template)
             template_render_thread.start()
             async with asyncio.timeout(timeout):
                 await finish_event.wait()
             if self._exc_info:
                 raise TemplateError(self._exc_info[1].with_traceback(self._exc_info[2]))
         except TimeoutError:
-            template_render_thread.raise_exc(TimeoutError)
+            if template_render_thread.is_alive():
+                template_render_thread.raise_exc(TimeoutError)
             return True
         finally:
             template_render_thread.join()
@@ -1328,7 +1303,11 @@ def issues(hass: HomeAssistant) -> dict[tuple[str, str], dict[str, Any]]:
     """Return all open issues."""
     current_issues = ir.async_get(hass).issues
     # Use JSON for safe representation
-    return {k: v.to_json() for (k, v) in current_issues.items()}
+    return {
+        key: issue_entry.to_json()
+        for (key, issue_entry) in current_issues.items()
+        if issue_entry.active
+    }
 
 
 def issue(hass: HomeAssistant, domain: str, issue_id: str) -> dict[str, Any] | None:
@@ -1532,100 +1511,6 @@ def area_devices(hass: HomeAssistant, area_id_or_name: str) -> Iterable[str]:
     dev_reg = dr.async_get(hass)
     entries = dr.async_entries_for_area(dev_reg, _area_id)
     return [entry.id for entry in entries]
-
-
-def labels(hass: HomeAssistant, lookup_value: Any = None) -> Iterable[str | None]:
-    """Return all labels, or those from a area ID, device ID, or entity ID."""
-    label_reg = lr.async_get(hass)
-    if lookup_value is None:
-        return list(label_reg.labels)
-
-    ent_reg = er.async_get(hass)
-
-    # Import here, not at top-level to avoid circular import
-    from homeassistant.helpers import config_validation as cv  # noqa: PLC0415
-
-    lookup_value = str(lookup_value)
-
-    try:
-        cv.entity_id(lookup_value)
-    except vol.Invalid:
-        pass
-    else:
-        if entity := ent_reg.async_get(lookup_value):
-            return list(entity.labels)
-
-    # Check if this could be a device ID
-    dev_reg = dr.async_get(hass)
-    if device := dev_reg.async_get(lookup_value):
-        return list(device.labels)
-
-    # Check if this could be a area ID
-    area_reg = ar.async_get(hass)
-    if area := area_reg.async_get_area(lookup_value):
-        return list(area.labels)
-
-    return []
-
-
-def label_id(hass: HomeAssistant, lookup_value: Any) -> str | None:
-    """Get the label ID from a label name."""
-    label_reg = lr.async_get(hass)
-    if label := label_reg.async_get_label_by_name(str(lookup_value)):
-        return label.label_id
-    return None
-
-
-def label_name(hass: HomeAssistant, lookup_value: str) -> str | None:
-    """Get the label name from a label ID."""
-    label_reg = lr.async_get(hass)
-    if label := label_reg.async_get_label(lookup_value):
-        return label.name
-    return None
-
-
-def label_description(hass: HomeAssistant, lookup_value: str) -> str | None:
-    """Get the label description from a label ID."""
-    label_reg = lr.async_get(hass)
-    if label := label_reg.async_get_label(lookup_value):
-        return label.description
-    return None
-
-
-def _label_id_or_name(hass: HomeAssistant, label_id_or_name: str) -> str | None:
-    """Get the label ID from a label name or ID."""
-    # If label_name returns a value, we know the input was an ID, otherwise we
-    # assume it's a name, and if it's neither, we return early.
-    if label_name(hass, label_id_or_name) is not None:
-        return label_id_or_name
-    return label_id(hass, label_id_or_name)
-
-
-def label_areas(hass: HomeAssistant, label_id_or_name: str) -> Iterable[str]:
-    """Return areas for a given label ID or name."""
-    if (_label_id := _label_id_or_name(hass, label_id_or_name)) is None:
-        return []
-    area_reg = ar.async_get(hass)
-    entries = ar.async_entries_for_label(area_reg, _label_id)
-    return [entry.id for entry in entries]
-
-
-def label_devices(hass: HomeAssistant, label_id_or_name: str) -> Iterable[str]:
-    """Return device IDs for a given label ID or name."""
-    if (_label_id := _label_id_or_name(hass, label_id_or_name)) is None:
-        return []
-    dev_reg = dr.async_get(hass)
-    entries = dr.async_entries_for_label(dev_reg, _label_id)
-    return [entry.id for entry in entries]
-
-
-def label_entities(hass: HomeAssistant, label_id_or_name: str) -> Iterable[str]:
-    """Return entities for a given label ID or name."""
-    if (_label_id := _label_id_or_name(hass, label_id_or_name)) is None:
-        return []
-    ent_reg = er.async_get(hass)
-    entries = er.async_entries_for_label(ent_reg, _label_id)
-    return [entry.entity_id for entry in entries]
 
 
 def closest(hass: HomeAssistant, *args: Any) -> State | None:
@@ -2474,6 +2359,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             "homeassistant.helpers.template.extensions.CollectionExtension"
         )
         self.add_extension("homeassistant.helpers.template.extensions.CryptoExtension")
+        self.add_extension("homeassistant.helpers.template.extensions.LabelExtension")
         self.add_extension("homeassistant.helpers.template.extensions.MathExtension")
         self.add_extension("homeassistant.helpers.template.extensions.RegexExtension")
         self.add_extension("homeassistant.helpers.template.extensions.StringExtension")
@@ -2623,29 +2509,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["device_id"] = hassfunction(device_id)
         self.filters["device_id"] = self.globals["device_id"]
 
-        # Label extensions
-
-        self.globals["labels"] = hassfunction(labels)
-        self.filters["labels"] = self.globals["labels"]
-
-        self.globals["label_id"] = hassfunction(label_id)
-        self.filters["label_id"] = self.globals["label_id"]
-
-        self.globals["label_name"] = hassfunction(label_name)
-        self.filters["label_name"] = self.globals["label_name"]
-
-        self.globals["label_description"] = hassfunction(label_description)
-        self.filters["label_description"] = self.globals["label_description"]
-
-        self.globals["label_areas"] = hassfunction(label_areas)
-        self.filters["label_areas"] = self.globals["label_areas"]
-
-        self.globals["label_devices"] = hassfunction(label_devices)
-        self.filters["label_devices"] = self.globals["label_devices"]
-
-        self.globals["label_entities"] = hassfunction(label_entities)
-        self.filters["label_entities"] = self.globals["label_entities"]
-
         # Issue extensions
 
         self.globals["issues"] = hassfunction(issues)
@@ -2678,8 +2541,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 "is_hidden_entity",
                 "is_state_attr",
                 "is_state",
-                "label_id",
-                "label_name",
                 "now",
                 "relative_time",
                 "state_attr",
@@ -2699,8 +2560,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 "floor_id",
                 "floor_name",
                 "has_value",
-                "label_id",
-                "label_name",
             ]
             hass_tests = [
                 "has_value",

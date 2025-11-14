@@ -18,9 +18,9 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
-from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
+from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, DPType
 from .entity import TuyaEntity
-from .models import IntegerTypeData
+from .models import IntegerTypeData, find_dpcode
 from .util import ActionDPCodeNotFoundError, get_dpcode
 
 
@@ -49,19 +49,15 @@ def _has_a_valid_dpcode(
     return any(get_dpcode(device, code) for code in properties_to_check)
 
 
-HUMIDIFIERS: dict[str, TuyaHumidifierEntityDescription] = {
-    # Dehumidifier
-    # https://developer.tuya.com/en/docs/iot/categorycs?id=Kaiuz1vcz4dha
-    "cs": TuyaHumidifierEntityDescription(
+HUMIDIFIERS: dict[DeviceCategory, TuyaHumidifierEntityDescription] = {
+    DeviceCategory.CS: TuyaHumidifierEntityDescription(
         key=DPCode.SWITCH,
         dpcode=(DPCode.SWITCH, DPCode.SWITCH_SPRAY),
         current_humidity=DPCode.HUMIDITY_INDOOR,
         humidity=DPCode.DEHUMIDITY_SET_VALUE,
         device_class=HumidifierDeviceClass.DEHUMIDIFIER,
     ),
-    # Humidifier
-    # https://developer.tuya.com/en/docs/iot/categoryjsq?id=Kaiuz1smr440b
-    "jsq": TuyaHumidifierEntityDescription(
+    DeviceCategory.JSQ: TuyaHumidifierEntityDescription(
         key=DPCode.SWITCH,
         dpcode=(DPCode.SWITCH, DPCode.SWITCH_SPRAY),
         current_humidity=DPCode.HUMIDITY_CURRENT,
@@ -77,23 +73,21 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tuya (de)humidifier dynamically through Tuya discovery."""
-    hass_data = entry.runtime_data
+    manager = entry.runtime_data.manager
 
     @callback
     def async_discover_device(device_ids: list[str]) -> None:
         """Discover and add a discovered Tuya (de)humidifier."""
         entities: list[TuyaHumidifierEntity] = []
         for device_id in device_ids:
-            device = hass_data.manager.device_map[device_id]
+            device = manager.device_map[device_id]
             if (
                 description := HUMIDIFIERS.get(device.category)
             ) and _has_a_valid_dpcode(device, description):
-                entities.append(
-                    TuyaHumidifierEntity(device, hass_data.manager, description)
-                )
+                entities.append(TuyaHumidifierEntity(device, manager, description))
         async_add_entities(entities)
 
-    async_discover_device([*hass_data.manager.device_map])
+    async_discover_device([*manager.device_map])
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, TUYA_DISCOVERY_NEW, async_discover_device)
@@ -126,23 +120,27 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
         )
 
         # Determine humidity parameters
-        if int_type := self.find_dpcode(
-            description.humidity, dptype=DPType.INTEGER, prefer_function=True
+        if int_type := find_dpcode(
+            self.device,
+            description.humidity,
+            dptype=DPType.INTEGER,
+            prefer_function=True,
         ):
             self._set_humidity = int_type
             self._attr_min_humidity = int(int_type.min_scaled)
             self._attr_max_humidity = int(int_type.max_scaled)
 
         # Determine current humidity DPCode
-        if int_type := self.find_dpcode(
+        if int_type := find_dpcode(
+            self.device,
             description.current_humidity,
             dptype=DPType.INTEGER,
         ):
             self._current_humidity = int_type
 
         # Determine mode support and provided modes
-        if enum_type := self.find_dpcode(
-            DPCode.MODE, dptype=DPType.ENUM, prefer_function=True
+        if enum_type := find_dpcode(
+            self.device, DPCode.MODE, dptype=DPType.ENUM, prefer_function=True
         ):
             self._attr_supported_features |= HumidifierEntityFeature.MODES
             self._attr_available_modes = enum_type.range

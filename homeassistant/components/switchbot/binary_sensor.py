@@ -24,7 +24,6 @@ BINARY_SENSOR_TYPES: dict[str, BinarySensorEntityDescription] = {
     ),
     "motion_detected": BinarySensorEntityDescription(
         key="pir_state",
-        name=None,
         device_class=BinarySensorDeviceClass.MOTION,
     ),
     "contact_open": BinarySensorEntityDescription(

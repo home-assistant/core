@@ -107,6 +107,12 @@ async def test_async_get_device_diagnostics__single_fan(
                 "home_assistant.entities.6.state.last_changed": (str,),
                 "home_assistant.entities.6.state.last_reported": (str,),
                 "home_assistant.entities.6.state.last_updated": (str,),
+                "home_assistant.entities.7.state.last_changed": (str,),
+                "home_assistant.entities.7.state.last_reported": (str,),
+                "home_assistant.entities.7.state.last_updated": (str,),
+                "home_assistant.entities.8.state.last_updated": (str,),
+                "home_assistant.entities.8.state.last_changed": (str,),
+                "home_assistant.entities.8.state.last_reported": (str,),
             }
         )
     )

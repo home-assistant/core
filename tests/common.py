@@ -934,6 +934,7 @@ class MockModule:
     def mock_manifest(self):
         """Generate a mock manifest to represent this module."""
         return {
+            "integration_type": "hub",
             **loader.manifest_from_legacy_module(self.DOMAIN, self),
             **(self._partial_manifest or {}),
         }
