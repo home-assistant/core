@@ -618,7 +618,7 @@ async def test_rpc_update_entry_sleep_period(
         hass,
         SENSOR_DOMAIN,
         "test_name_temperature",
-        "temperature:0-temperature_0",
+        "temperature:0-temperature_tc",
         entry,
     )
 
@@ -652,7 +652,7 @@ async def test_rpc_sleeping_device_no_periodic_updates(
         hass,
         SENSOR_DOMAIN,
         "test_name_temperature",
-        "temperature:0-temperature_0",
+        "temperature:0-temperature_tc",
         entry,
     )
 
