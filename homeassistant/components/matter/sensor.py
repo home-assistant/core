@@ -1494,7 +1494,7 @@ DISCOVERY_SCHEMAS = [
             key="DoorLockDoorOpenEvents",
             translation_key="door_lock_door_open_events",
             entity_category=EntityCategory.DIAGNOSTIC,
-            state_class=SensorStateClass.TOTAL,
+            state_class=SensorStateClass.TOTAL_INCREASING
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.DoorLock.Attributes.DoorOpenEvents,),
@@ -1506,7 +1506,7 @@ DISCOVERY_SCHEMAS = [
             key="DoorLockDoorClosedEvents",
             translation_key="door_lock_door_closed_events",
             entity_category=EntityCategory.DIAGNOSTIC,
-            state_class=SensorStateClass.TOTAL,
+            state_class=SensorStateClass.TOTAL_INCREASING,
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.DoorLock.Attributes.DoorClosedEvents,),
