@@ -358,6 +358,7 @@ class GoogleCalendarEntity(
         self._offset = entity_description.offset
         self._event: CalendarEvent | None = None
         self._event_color_id: str | None = None
+        self._current_event_id: str | None = None
         if entity_description.entity_id:
             self.entity_id = entity_description.entity_id
         self._attr_unique_id = unique_id
@@ -431,11 +432,12 @@ class GoogleCalendarEntity(
         super()._handle_coordinator_update()
 
         # Fetch color ID for the current event in the background
+        # Note: _event_with_offset updates _current_event_id as a side effect
         (event, _) = self._event_with_offset()
-        if event and event.uid:
+        if event and self._current_event_id:
             self.coordinator.config_entry.async_create_background_task(
                 self.hass,
-                self._async_update_event_color(event.uid),
+                self._async_update_event_color(self._current_event_id),
                 "google.calendar-color-fetch",
             )
 
@@ -478,12 +480,15 @@ class GoogleCalendarEntity(
             ),
             None,
         ):
+            # Store the Google Calendar event ID for color fetching
+            self._current_event_id = api_event.id
             event = _get_calendar_event(api_event)
             if self._offset:
                 (event.summary, offset_value) = extract_offset(
                     event.summary, self._offset
                 )
             return event, offset_value
+        self._current_event_id = None
         return None, None
 
     async def async_create_event(self, **kwargs: Any) -> None:
