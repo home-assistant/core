@@ -88,6 +88,8 @@ class ModbusRegisterSensor(ModbusStructEntity, RestoreSensor, SensorEntity):
         self._attr_device_class = entry.get(CONF_DEVICE_CLASS)
         if self._precision > 0 or self._scale != int(self._scale):
             self._value_is_int = False
+        if self._precision > 0 and self._data_type not in ["string", "custom"]:
+            self._attr_suggested_display_precision = self._precision
 
     async def async_setup_slaves(
         self, hass: HomeAssistant, slave_count: int, entry: dict[str, Any]

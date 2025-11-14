@@ -39,7 +39,6 @@ class IntegerTypeData(TypeInformation):
     scale: float
     step: float
     unit: str | None = None
-    type: str | None = None
 
     @property
     def max_scaled(self) -> float:
@@ -62,7 +61,7 @@ class IntegerTypeData(TypeInformation):
 
     def scale_value_back(self, value: float) -> int:
         """Return raw value for scaled."""
-        return int(value * (10**self.scale))
+        return round(value * (10**self.scale))
 
     def remap_value_to(
         self,
@@ -97,7 +96,6 @@ class IntegerTypeData(TypeInformation):
             scale=float(parsed["scale"]),
             step=max(float(parsed["step"]), 1),
             unit=parsed.get("unit"),
-            type=parsed.get("type"),
         )
 
 
