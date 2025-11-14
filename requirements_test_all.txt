@@ -509,7 +509,7 @@ asusrouter==1.21.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.45.0
+async-upnp-client==0.46.0
 
 # homeassistant.components.arve
 asyncarve==0.1.1
