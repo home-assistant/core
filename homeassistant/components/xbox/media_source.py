@@ -112,7 +112,7 @@ class XboxSource(MediaSource):
                 translation_key="account_not_configured",
             ) from e
 
-        client = entry.runtime_data.client
+        client = entry.runtime_data.status.client
 
         if identifier.media_type in (ATTR_GAMECLIPS, ATTR_COMMUNITY_GAMECLIPS):
             try:
@@ -302,7 +302,7 @@ class XboxSource(MediaSource):
     async def _build_games(self, entry: XboxConfigEntry) -> list[BrowseMediaSource]:
         """List Xbox games for the selected account."""
 
-        client = entry.runtime_data.client
+        client = entry.runtime_data.status.client
         if TYPE_CHECKING:
             assert entry.unique_id
         fields = [
@@ -346,7 +346,7 @@ class XboxSource(MediaSource):
         self, entry: XboxConfigEntry, identifier: XboxMediaSourceIdentifier
     ) -> BrowseMediaSource:
         """Display game title."""
-        client = entry.runtime_data.client
+        client = entry.runtime_data.status.client
         try:
             game = (await client.titlehub.get_title_info(identifier.title_id)).titles[0]
         except TimeoutException as e:
@@ -402,7 +402,7 @@ class XboxSource(MediaSource):
         self, entry: XboxConfigEntry, identifier: XboxMediaSourceIdentifier
     ) -> BrowseMediaSource:
         """List game media."""
-        client = entry.runtime_data.client
+        client = entry.runtime_data.status.client
         try:
             game = (await client.titlehub.get_title_info(identifier.title_id)).titles[0]
         except TimeoutException as e:
@@ -439,7 +439,7 @@ class XboxSource(MediaSource):
         self, entry: XboxConfigEntry, identifier: XboxMediaSourceIdentifier
     ) -> list[BrowseMediaSource]:
         """List media items."""
-        client = entry.runtime_data.client
+        client = entry.runtime_data.status.client
 
         if identifier.media_type != ATTR_GAMECLIPS:
             return []
@@ -483,7 +483,7 @@ class XboxSource(MediaSource):
         self, entry: XboxConfigEntry, identifier: XboxMediaSourceIdentifier
     ) -> list[BrowseMediaSource]:
         """List media items."""
-        client = entry.runtime_data.client
+        client = entry.runtime_data.status.client
 
         if identifier.media_type != ATTR_COMMUNITY_GAMECLIPS:
             return []
@@ -527,7 +527,7 @@ class XboxSource(MediaSource):
         self, entry: XboxConfigEntry, identifier: XboxMediaSourceIdentifier
     ) -> list[BrowseMediaSource]:
         """List media items."""
-        client = entry.runtime_data.client
+        client = entry.runtime_data.status.client
 
         if identifier.media_type != ATTR_SCREENSHOTS:
             return []
@@ -571,7 +571,7 @@ class XboxSource(MediaSource):
         self, entry: XboxConfigEntry, identifier: XboxMediaSourceIdentifier
     ) -> list[BrowseMediaSource]:
         """List media items."""
-        client = entry.runtime_data.client
+        client = entry.runtime_data.status.client
 
         if identifier.media_type != ATTR_COMMUNITY_SCREENSHOTS:
             return []
@@ -640,7 +640,7 @@ class XboxSource(MediaSource):
 
 def gamerpic(config_entry: XboxConfigEntry) -> str | None:
     """Return gamerpic."""
-    coordinator = config_entry.runtime_data
+    coordinator = config_entry.runtime_data.status
     if TYPE_CHECKING:
         assert config_entry.unique_id
     person = coordinator.data.presence[coordinator.client.xuid]

@@ -15,13 +15,9 @@ rules:
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
-  entity-event-setup:
-    status: todo
-    comment: subscribe is ok, unsubscribe needs to be added
+  entity-event-setup: done
   entity-unique-id: done
-  has-entity-name:
-    status: todo
-    comment: scenes need fixing
+  has-entity-name: done
   runtime-data: done
   test-before-configure: done
   test-before-setup:
@@ -37,9 +33,7 @@ rules:
   entity-unavailable: todo
   integration-owner: done
   log-when-unavailable: todo
-  parallel-updates:
-    status: todo
-    comment: button still needs it
+  parallel-updates: done
   reauthentication-flow: todo
   test-coverage:
     status: todo
