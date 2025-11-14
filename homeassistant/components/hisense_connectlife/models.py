@@ -1,10 +1,9 @@
 """Data models for Hisense AC Plugin."""
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
 from dataclasses import dataclass
 import logging
-from typing import Any, Dict, List, Optional, Protocol
+from typing import Any, Dict, List, Optional
 
 from homeassistant.exceptions import HomeAssistantError
 
@@ -12,66 +11,6 @@ from .const import DeviceType, DEVICE_TYPES
 from connectlife_cloud.devices import get_device_parser, BaseDeviceParser
 
 _LOGGER = logging.getLogger(__name__)
-
-class ApiClientProtocol(Protocol):
-    """Protocol for API client."""
-    
-    @abstractmethod
-    async def _api_request(
-        self, 
-        method: str, 
-        path: str, 
-        data: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
-        """Make API request."""
-        ...
-
-    @property
-    @abstractmethod
-    def oauth_session(self) -> Any:
-        """Get OAuth session."""
-        ...
-
-
-@dataclass
-class PushChannel:
-    """Push channel information."""
-    push_channel: str
-
-    @classmethod
-    def from_json(cls, json_data: dict) -> "PushChannel":
-        """Create from JSON."""
-        return cls(
-            push_channel=json_data.get("pushChannel", "")
-        )
-
-
-@dataclass
-class NotificationInfo:
-    """Notification server information."""
-    push_channels: List[PushChannel]
-    push_server_ip: str
-    push_server_port: str
-    push_server_ssl_port: str
-    hb_interval: int
-    hb_fail_times: int
-    has_msg_unread: int
-    unread_msg_num: int
-
-    @classmethod
-    def from_json(cls, json_data: dict) -> "NotificationInfo":
-        """Create from JSON."""
-        return cls(
-            push_channels=[PushChannel.from_json(c) for c in json_data.get("pushChannels", [])],
-            push_server_ip=json_data.get("pushServerIp", ""),
-            push_server_port=json_data.get("pushServerPort", ""),
-            push_server_ssl_port=json_data.get("pushServerSslPort", ""),
-            hb_interval=json_data.get("hbInterval", 30),
-            hb_fail_times=json_data.get("hbFailTimes", 3),
-            has_msg_unread=json_data.get("hasMsgUnread", 0),
-            unread_msg_num=json_data.get("unreadMsgNum", 0)
-        )
-
 
 class DeviceInfo:
     """Device information class."""

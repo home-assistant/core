@@ -9,9 +9,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .api import HisenseApiClient, DeviceInfo
+from .api import HisenseApiClient
 from .const import UPDATE_INTERVAL
-from .websocket import HisenseWebSocket
+from .models import DeviceInfo
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,8 +34,6 @@ class HisenseACPluginDataUpdateCoordinator(DataUpdateCoordinator):
         self.api_client = api_client
         self.config_entry = config_entry
         self._devices: dict[str, DeviceInfo] = {}
-        self._websocket: HisenseWebSocket | None = None
-        self._websocket_connected = False
 
     async def async_setup(self) -> bool:
         """Set up the coordinator."""
@@ -50,14 +48,8 @@ class HisenseACPluginDataUpdateCoordinator(DataUpdateCoordinator):
             self._devices = devices
             self.data = devices  # Set initial data
             
-            # Set up WebSocket connection
-            self._websocket = HisenseWebSocket(
-                self.hass,
-                self.api_client,
-                self._handle_ws_message
-            )
-            await self._websocket.async_connect()
-            self._websocket_connected = True
+            # Set up WebSocket connection through the API client
+            await self.api_client.async_setup_websocket(self._handle_ws_message)
             _LOGGER.info("WebSocket connection established")
             
             # Update initial device statuses
@@ -175,12 +167,6 @@ class HisenseACPluginDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def async_unload(self) -> None:
         """Unload the coordinator."""
-        if self._websocket and self._websocket_connected:
-            await self._websocket.async_disconnect()
-            self._websocket = None
-            self._websocket_connected = False
-            _LOGGER.debug("WebSocket connection closed")
-            
         await self.api_client.async_cleanup()
         _LOGGER.debug("Coordinator unloaded")
 

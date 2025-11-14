@@ -31,12 +31,18 @@ rules:
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
-  reauthentication-flow: done
+  reauthentication-flow:
+    status: pending
+    comment: |
+      Reauth flow will return in a follow-up PR
   test-coverage: done
 
   # Gold
   devices: done
-  diagnostics: done
+  diagnostics:
+    status: pending
+    comment: |
+      Diagnostics support will return in a follow-up PR
   discovery-update-info: not_relevant
   discovery: not_relevant
   docs-data-update: pending
