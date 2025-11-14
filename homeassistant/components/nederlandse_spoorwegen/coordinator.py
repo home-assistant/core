@@ -139,7 +139,7 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[NSRouteResult]):
                 2,  # max_number_of_transfers
             )
         except NoDataReceivedError as e:
-            _LOGGER.error("Error fetching trips from NS API: %s", e)
+            _LOGGER.debug("No data received from NS API: %s", e)
             return []
 
         if not trips:
