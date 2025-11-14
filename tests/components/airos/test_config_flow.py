@@ -73,33 +73,6 @@ MOCK_DISC_EXISTS = {
 }
 
 
-@pytest.mark.parametrize(
-    ("source", "next_step", "flow_result"),
-    [
-        (SOURCE_USER, "discovery", FlowResultType.SHOW_PROGRESS),
-        (SOURCE_USER, "manual", FlowResultType.FORM),
-    ],
-)
-async def test_user_flow_menu(
-    hass: HomeAssistant,
-    source: str,
-    next_step: str,
-    flow_result: FlowResultType,
-) -> None:
-    """Test the initial user step shows the menu."""
-    flow_start = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": source}
-    )
-    assert flow_start["type"] is FlowResultType.MENU
-    assert sorted(flow_start["menu_options"]) == ["discovery", "manual"]
-
-    menu = await hass.config_entries.flow.async_configure(
-        flow_start["flow_id"], {"next_step_id": next_step}
-    )
-    assert menu["type"] is flow_result
-    assert menu["step_id"] == next_step
-
-
 async def test_manual_flow_creates_entry(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
@@ -112,9 +85,15 @@ async def test_manual_flow_creates_entry(
         context={"source": SOURCE_USER},
     )
 
+    assert flow_start["type"] is FlowResultType.MENU
+    assert "manual" in flow_start["menu_options"]
+
     menu = await hass.config_entries.flow.async_configure(
         flow_start["flow_id"], {"next_step_id": "manual"}
     )
+
+    assert menu["type"] is FlowResultType.FORM
+    assert menu["step_id"] == "manual"
 
     result = await hass.config_entries.flow.async_configure(
         menu["flow_id"], MOCK_CONFIG
@@ -547,9 +526,16 @@ async def test_discover_flow_multiple_devices_found(
     flow_start = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
+
+    assert flow_start["type"] is FlowResultType.MENU
+    assert "discovery" in flow_start["menu_options"]
+
     menu = await hass.config_entries.flow.async_configure(
         flow_start["flow_id"], {"next_step_id": "discovery"}
     )
+
+    assert menu["type"] is FlowResultType.SHOW_PROGRESS
+    assert menu["step_id"] == "discovery"
 
     discover_flow = await hass.config_entries.flow.async_configure(menu["flow_id"])
 
