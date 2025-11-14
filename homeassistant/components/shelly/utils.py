@@ -131,6 +131,24 @@ def get_block_entity_name(
     return channel_name
 
 
+def get_block_custom_name(device: BlockDevice, block: Block | None) -> str | None:
+    """Get custom name from device settings."""
+    if block and (mode := cast(str, block.type) + "s") and mode in device.settings:
+        assert block.channel
+
+        if name := device.settings[mode][int(block.channel)].get("name"):
+            return cast(str, name)
+
+    return None
+
+
+def get_block_channel(block: Block | None) -> str:
+    """Get block channel."""
+    assert block and block.channel
+
+    return chr(int(block.channel) + ord("1"))
+
+
 def get_block_channel_name(device: BlockDevice, block: Block | None) -> str | None:
     """Get name based on device and channel name."""
     if (
@@ -140,19 +158,10 @@ def get_block_channel_name(device: BlockDevice, block: Block | None) -> str | No
     ):
         return None
 
-    assert block.channel
+    if custom_name := get_block_custom_name(device, block):
+        return custom_name
 
-    channel_name: str | None = None
-    mode = cast(str, block.type) + "s"
-    if mode in device.settings:
-        channel_name = device.settings[mode][int(block.channel)].get("name")
-
-    if channel_name:
-        return channel_name
-
-    base = ord("1")
-
-    return f"Channel {chr(int(block.channel) + base)}"
+    return f"Channel {get_block_channel(block)}"
 
 
 def get_block_sub_device_name(device: BlockDevice, block: Block) -> str:
