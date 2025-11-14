@@ -183,6 +183,13 @@ PUMP_CONTROL_MODE_MAP = {
     clusters.PumpConfigurationAndControl.Enums.ControlModeEnum.kUnknownEnumValue: None,
 }
 
+SETPOINT_CHANGE_SOURCE_MAP = {
+    clusters.Thermostat.Enums.SetpointChangeSourceEnum.kManual: "manual",
+    clusters.Thermostat.Enums.SetpointChangeSourceEnum.kSchedule: "schedule",
+    clusters.Thermostat.Enums.SetpointChangeSourceEnum.kExternal: "external",
+    clusters.Thermostat.Enums.SetpointChangeSourceEnum.kUnknownEnumValue: None,
+}
+
 HUMIDITY_SCALING_FACTOR = 100
 TEMPERATURE_SCALING_FACTOR = 100
 
@@ -1487,5 +1494,17 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.ServiceArea.Attributes.EstimatedEndTime,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="SetpointChangeSource",
+            translation_key="setpoint_change_source",
+            device_class=SensorDeviceClass.ENUM,
+            options=[v for v in SETPOINT_CHANGE_SOURCE_MAP.values() if v is not None],
+            device_to_ha=SETPOINT_CHANGE_SOURCE_MAP.get,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.Thermostat.Attributes.SetpointChangeSource,),
     ),
 ]
