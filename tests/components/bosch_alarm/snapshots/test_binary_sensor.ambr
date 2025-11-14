@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_binary_sensor[None-amax_3000][binary_sensor.area1_area_ready_to_arm_away-entry]
+# name: test_binary_sensor[amax_3000-None][binary_sensor.area1_area_ready_to_arm_away-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -34,7 +34,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-amax_3000][binary_sensor.area1_area_ready_to_arm_away-state]
+# name: test_binary_sensor[amax_3000-None][binary_sensor.area1_area_ready_to_arm_away-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Area1 Area ready to arm away',
@@ -47,7 +47,7 @@
     'state': 'on',
   })
 # ---
-# name: test_binary_sensor[None-amax_3000][binary_sensor.area1_area_ready_to_arm_home-entry]
+# name: test_binary_sensor[amax_3000-None][binary_sensor.area1_area_ready_to_arm_home-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -82,7 +82,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-amax_3000][binary_sensor.area1_area_ready_to_arm_home-state]
+# name: test_binary_sensor[amax_3000-None][binary_sensor.area1_area_ready_to_arm_home-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Area1 Area ready to arm home',
@@ -95,7 +95,7 @@
     'state': 'on',
   })
 # ---
-# name: test_binary_sensor[None-amax_3000][binary_sensor.bedroom-entry]
+# name: test_binary_sensor[amax_3000-None][binary_sensor.bedroom-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -130,7 +130,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-amax_3000][binary_sensor.bedroom-state]
+# name: test_binary_sensor[amax_3000-None][binary_sensor.bedroom-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Bedroom',
@@ -143,7 +143,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[None-amax_3000][binary_sensor.bosch_amax_3000_ac_failure-entry]
+# name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_ac_failure-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -178,7 +178,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-amax_3000][binary_sensor.bosch_amax_3000_ac_failure-state]
+# name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_ac_failure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -192,7 +192,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[None-amax_3000][binary_sensor.bosch_amax_3000_battery-entry]
+# name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -227,7 +227,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-amax_3000][binary_sensor.bosch_amax_3000_battery-state]
+# name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -241,7 +241,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[None-amax_3000][binary_sensor.bosch_amax_3000_battery_missing-entry]
+# name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_battery_missing-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -276,7 +276,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-amax_3000][binary_sensor.bosch_amax_3000_battery_missing-state]
+# name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_battery_missing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -290,7 +290,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[None-amax_3000][binary_sensor.bosch_amax_3000_crc_failure_in_panel_configuration-entry]
+# name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_crc_failure_in_panel_configuration-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -325,7 +325,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-amax_3000][binary_sensor.bosch_amax_3000_crc_failure_in_panel_configuration-state]
+# name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_crc_failure_in_panel_configuration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -339,7 +339,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[None-amax_3000][binary_sensor.bosch_amax_3000_failure_to_call_rps_since_last_rps_connection-entry]
+# name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_failure_to_call_rps_since_last_rps_connection-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -374,7 +374,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-amax_3000][binary_sensor.bosch_amax_3000_failure_to_call_rps_since_last_rps_connection-state]
+# name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_failure_to_call_rps_since_last_rps_connection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Bosch AMAX 3000 Failure to call RPS since last RPS connection',
@@ -387,7 +387,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[None-amax_3000][binary_sensor.bosch_amax_3000_log_overflow-entry]
+# name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_log_overflow-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -422,7 +422,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-amax_3000][binary_sensor.bosch_amax_3000_log_overflow-state]
+# name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_log_overflow-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -436,7 +436,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[None-amax_3000][binary_sensor.bosch_amax_3000_log_threshold_reached-entry]
+# name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_log_threshold_reached-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -471,7 +471,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-amax_3000][binary_sensor.bosch_amax_3000_log_threshold_reached-state]
+# name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_log_threshold_reached-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -485,7 +485,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[None-amax_3000][binary_sensor.bosch_amax_3000_phone_line_failure-entry]
+# name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_phone_line_failure-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -520,7 +520,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-amax_3000][binary_sensor.bosch_amax_3000_phone_line_failure-state]
+# name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_phone_line_failure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'connectivity',
@@ -534,7 +534,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[None-amax_3000][binary_sensor.bosch_amax_3000_point_bus_failure_since_last_rps_connection-entry]
+# name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_point_bus_failure_since_last_rps_connection-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -569,7 +569,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-amax_3000][binary_sensor.bosch_amax_3000_point_bus_failure_since_last_rps_connection-state]
+# name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_point_bus_failure_since_last_rps_connection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -583,7 +583,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[None-amax_3000][binary_sensor.bosch_amax_3000_problem-entry]
+# name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_problem-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -618,7 +618,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-amax_3000][binary_sensor.bosch_amax_3000_problem-state]
+# name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_problem-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -632,7 +632,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[None-amax_3000][binary_sensor.bosch_amax_3000_sdi_failure_since_last_rps_connection-entry]
+# name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_sdi_failure_since_last_rps_connection-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -667,7 +667,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-amax_3000][binary_sensor.bosch_amax_3000_sdi_failure_since_last_rps_connection-state]
+# name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_sdi_failure_since_last_rps_connection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -681,7 +681,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[None-amax_3000][binary_sensor.bosch_amax_3000_user_code_tamper_since_last_rps_connection-entry]
+# name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_user_code_tamper_since_last_rps_connection-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -716,7 +716,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-amax_3000][binary_sensor.bosch_amax_3000_user_code_tamper_since_last_rps_connection-state]
+# name: test_binary_sensor[amax_3000-None][binary_sensor.bosch_amax_3000_user_code_tamper_since_last_rps_connection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -730,7 +730,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[None-amax_3000][binary_sensor.co_detector-entry]
+# name: test_binary_sensor[amax_3000-None][binary_sensor.co_detector-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -765,7 +765,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-amax_3000][binary_sensor.co_detector-state]
+# name: test_binary_sensor[amax_3000-None][binary_sensor.co_detector-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'CO Detector',
@@ -778,7 +778,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[None-amax_3000][binary_sensor.door-entry]
+# name: test_binary_sensor[amax_3000-None][binary_sensor.door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -813,7 +813,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-amax_3000][binary_sensor.door-state]
+# name: test_binary_sensor[amax_3000-None][binary_sensor.door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Door',
@@ -826,7 +826,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[None-amax_3000][binary_sensor.glassbreak_sensor-entry]
+# name: test_binary_sensor[amax_3000-None][binary_sensor.glassbreak_sensor-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -861,7 +861,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-amax_3000][binary_sensor.glassbreak_sensor-state]
+# name: test_binary_sensor[amax_3000-None][binary_sensor.glassbreak_sensor-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Glassbreak Sensor',
@@ -874,7 +874,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[None-amax_3000][binary_sensor.motion_detector-entry]
+# name: test_binary_sensor[amax_3000-None][binary_sensor.motion_detector-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -909,7 +909,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-amax_3000][binary_sensor.motion_detector-state]
+# name: test_binary_sensor[amax_3000-None][binary_sensor.motion_detector-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Motion Detector',
@@ -922,7 +922,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[None-amax_3000][binary_sensor.smoke_detector-entry]
+# name: test_binary_sensor[amax_3000-None][binary_sensor.smoke_detector-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -957,7 +957,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-amax_3000][binary_sensor.smoke_detector-state]
+# name: test_binary_sensor[amax_3000-None][binary_sensor.smoke_detector-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Smoke Detector',
@@ -970,7 +970,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[None-amax_3000][binary_sensor.window-entry]
+# name: test_binary_sensor[amax_3000-None][binary_sensor.window-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1005,7 +1005,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-amax_3000][binary_sensor.window-state]
+# name: test_binary_sensor[amax_3000-None][binary_sensor.window-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Window',
@@ -1018,7 +1018,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[None-b5512][binary_sensor.area1_area_ready_to_arm_away-entry]
+# name: test_binary_sensor[b5512-None][binary_sensor.area1_area_ready_to_arm_away-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1053,7 +1053,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-b5512][binary_sensor.area1_area_ready_to_arm_away-state]
+# name: test_binary_sensor[b5512-None][binary_sensor.area1_area_ready_to_arm_away-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Area1 Area ready to arm away',
@@ -1066,7 +1066,7 @@
     'state': 'on',
   })
 # ---
-# name: test_binary_sensor[None-b5512][binary_sensor.area1_area_ready_to_arm_home-entry]
+# name: test_binary_sensor[b5512-None][binary_sensor.area1_area_ready_to_arm_home-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1101,7 +1101,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-b5512][binary_sensor.area1_area_ready_to_arm_home-state]
+# name: test_binary_sensor[b5512-None][binary_sensor.area1_area_ready_to_arm_home-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Area1 Area ready to arm home',
@@ -1114,7 +1114,7 @@
     'state': 'on',
   })
 # ---
-# name: test_binary_sensor[None-b5512][binary_sensor.bedroom-entry]
+# name: test_binary_sensor[b5512-None][binary_sensor.bedroom-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1149,7 +1149,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-b5512][binary_sensor.bedroom-state]
+# name: test_binary_sensor[b5512-None][binary_sensor.bedroom-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Bedroom',
@@ -1162,7 +1162,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[None-b5512][binary_sensor.bosch_b5512_us1b_ac_failure-entry]
+# name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_ac_failure-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1197,7 +1197,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-b5512][binary_sensor.bosch_b5512_us1b_ac_failure-state]
+# name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_ac_failure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -1211,7 +1211,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[None-b5512][binary_sensor.bosch_b5512_us1b_battery-entry]
+# name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1246,7 +1246,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-b5512][binary_sensor.bosch_b5512_us1b_battery-state]
+# name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -1260,7 +1260,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[None-b5512][binary_sensor.bosch_b5512_us1b_battery_missing-entry]
+# name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_battery_missing-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1295,7 +1295,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-b5512][binary_sensor.bosch_b5512_us1b_battery_missing-state]
+# name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_battery_missing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -1309,7 +1309,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[None-b5512][binary_sensor.bosch_b5512_us1b_crc_failure_in_panel_configuration-entry]
+# name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_crc_failure_in_panel_configuration-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1344,7 +1344,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-b5512][binary_sensor.bosch_b5512_us1b_crc_failure_in_panel_configuration-state]
+# name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_crc_failure_in_panel_configuration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -1358,7 +1358,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[None-b5512][binary_sensor.bosch_b5512_us1b_failure_to_call_rps_since_last_rps_connection-entry]
+# name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_failure_to_call_rps_since_last_rps_connection-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1393,7 +1393,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-b5512][binary_sensor.bosch_b5512_us1b_failure_to_call_rps_since_last_rps_connection-state]
+# name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_failure_to_call_rps_since_last_rps_connection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Bosch B5512 (US1B) Failure to call RPS since last RPS connection',
@@ -1406,7 +1406,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[None-b5512][binary_sensor.bosch_b5512_us1b_log_overflow-entry]
+# name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_log_overflow-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1441,7 +1441,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-b5512][binary_sensor.bosch_b5512_us1b_log_overflow-state]
+# name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_log_overflow-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -1455,7 +1455,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[None-b5512][binary_sensor.bosch_b5512_us1b_log_threshold_reached-entry]
+# name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_log_threshold_reached-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1490,7 +1490,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-b5512][binary_sensor.bosch_b5512_us1b_log_threshold_reached-state]
+# name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_log_threshold_reached-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -1504,7 +1504,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[None-b5512][binary_sensor.bosch_b5512_us1b_phone_line_failure-entry]
+# name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_phone_line_failure-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1539,7 +1539,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-b5512][binary_sensor.bosch_b5512_us1b_phone_line_failure-state]
+# name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_phone_line_failure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'connectivity',
@@ -1553,7 +1553,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[None-b5512][binary_sensor.bosch_b5512_us1b_point_bus_failure_since_last_rps_connection-entry]
+# name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_point_bus_failure_since_last_rps_connection-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1588,7 +1588,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-b5512][binary_sensor.bosch_b5512_us1b_point_bus_failure_since_last_rps_connection-state]
+# name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_point_bus_failure_since_last_rps_connection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -1602,7 +1602,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[None-b5512][binary_sensor.bosch_b5512_us1b_problem-entry]
+# name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_problem-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1637,7 +1637,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-b5512][binary_sensor.bosch_b5512_us1b_problem-state]
+# name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_problem-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -1651,7 +1651,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[None-b5512][binary_sensor.bosch_b5512_us1b_sdi_failure_since_last_rps_connection-entry]
+# name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_sdi_failure_since_last_rps_connection-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1686,7 +1686,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-b5512][binary_sensor.bosch_b5512_us1b_sdi_failure_since_last_rps_connection-state]
+# name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_sdi_failure_since_last_rps_connection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -1700,7 +1700,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[None-b5512][binary_sensor.bosch_b5512_us1b_user_code_tamper_since_last_rps_connection-entry]
+# name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_user_code_tamper_since_last_rps_connection-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1735,7 +1735,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-b5512][binary_sensor.bosch_b5512_us1b_user_code_tamper_since_last_rps_connection-state]
+# name: test_binary_sensor[b5512-None][binary_sensor.bosch_b5512_us1b_user_code_tamper_since_last_rps_connection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -1749,7 +1749,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[None-b5512][binary_sensor.co_detector-entry]
+# name: test_binary_sensor[b5512-None][binary_sensor.co_detector-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1784,7 +1784,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-b5512][binary_sensor.co_detector-state]
+# name: test_binary_sensor[b5512-None][binary_sensor.co_detector-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'CO Detector',
@@ -1797,7 +1797,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[None-b5512][binary_sensor.door-entry]
+# name: test_binary_sensor[b5512-None][binary_sensor.door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1832,7 +1832,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-b5512][binary_sensor.door-state]
+# name: test_binary_sensor[b5512-None][binary_sensor.door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Door',
@@ -1845,7 +1845,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[None-b5512][binary_sensor.glassbreak_sensor-entry]
+# name: test_binary_sensor[b5512-None][binary_sensor.glassbreak_sensor-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1880,7 +1880,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-b5512][binary_sensor.glassbreak_sensor-state]
+# name: test_binary_sensor[b5512-None][binary_sensor.glassbreak_sensor-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Glassbreak Sensor',
@@ -1893,7 +1893,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[None-b5512][binary_sensor.motion_detector-entry]
+# name: test_binary_sensor[b5512-None][binary_sensor.motion_detector-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1928,7 +1928,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-b5512][binary_sensor.motion_detector-state]
+# name: test_binary_sensor[b5512-None][binary_sensor.motion_detector-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Motion Detector',
@@ -1941,7 +1941,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[None-b5512][binary_sensor.smoke_detector-entry]
+# name: test_binary_sensor[b5512-None][binary_sensor.smoke_detector-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1976,7 +1976,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-b5512][binary_sensor.smoke_detector-state]
+# name: test_binary_sensor[b5512-None][binary_sensor.smoke_detector-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Smoke Detector',
@@ -1989,7 +1989,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[None-b5512][binary_sensor.window-entry]
+# name: test_binary_sensor[b5512-None][binary_sensor.window-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2024,7 +2024,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-b5512][binary_sensor.window-state]
+# name: test_binary_sensor[b5512-None][binary_sensor.window-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Window',
@@ -2037,7 +2037,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[None-solution_3000][binary_sensor.area1_area_ready_to_arm_away-entry]
+# name: test_binary_sensor[solution_3000-None][binary_sensor.area1_area_ready_to_arm_away-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2072,7 +2072,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-solution_3000][binary_sensor.area1_area_ready_to_arm_away-state]
+# name: test_binary_sensor[solution_3000-None][binary_sensor.area1_area_ready_to_arm_away-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Area1 Area ready to arm away',
@@ -2085,7 +2085,7 @@
     'state': 'on',
   })
 # ---
-# name: test_binary_sensor[None-solution_3000][binary_sensor.area1_area_ready_to_arm_home-entry]
+# name: test_binary_sensor[solution_3000-None][binary_sensor.area1_area_ready_to_arm_home-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2120,7 +2120,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-solution_3000][binary_sensor.area1_area_ready_to_arm_home-state]
+# name: test_binary_sensor[solution_3000-None][binary_sensor.area1_area_ready_to_arm_home-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Area1 Area ready to arm home',
@@ -2133,7 +2133,7 @@
     'state': 'on',
   })
 # ---
-# name: test_binary_sensor[None-solution_3000][binary_sensor.bedroom-entry]
+# name: test_binary_sensor[solution_3000-None][binary_sensor.bedroom-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2168,7 +2168,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-solution_3000][binary_sensor.bedroom-state]
+# name: test_binary_sensor[solution_3000-None][binary_sensor.bedroom-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Bedroom',
@@ -2181,7 +2181,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[None-solution_3000][binary_sensor.bosch_solution_3000_ac_failure-entry]
+# name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_ac_failure-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2216,7 +2216,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-solution_3000][binary_sensor.bosch_solution_3000_ac_failure-state]
+# name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_ac_failure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -2230,7 +2230,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[None-solution_3000][binary_sensor.bosch_solution_3000_battery-entry]
+# name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2265,7 +2265,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-solution_3000][binary_sensor.bosch_solution_3000_battery-state]
+# name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -2279,7 +2279,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[None-solution_3000][binary_sensor.bosch_solution_3000_battery_missing-entry]
+# name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_battery_missing-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2314,7 +2314,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-solution_3000][binary_sensor.bosch_solution_3000_battery_missing-state]
+# name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_battery_missing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -2328,7 +2328,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[None-solution_3000][binary_sensor.bosch_solution_3000_crc_failure_in_panel_configuration-entry]
+# name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_crc_failure_in_panel_configuration-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2363,7 +2363,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-solution_3000][binary_sensor.bosch_solution_3000_crc_failure_in_panel_configuration-state]
+# name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_crc_failure_in_panel_configuration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -2377,7 +2377,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[None-solution_3000][binary_sensor.bosch_solution_3000_failure_to_call_rps_since_last_rps_connection-entry]
+# name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_failure_to_call_rps_since_last_rps_connection-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2412,7 +2412,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-solution_3000][binary_sensor.bosch_solution_3000_failure_to_call_rps_since_last_rps_connection-state]
+# name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_failure_to_call_rps_since_last_rps_connection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Bosch Solution 3000 Failure to call RPS since last RPS connection',
@@ -2425,7 +2425,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[None-solution_3000][binary_sensor.bosch_solution_3000_log_overflow-entry]
+# name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_log_overflow-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2460,7 +2460,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-solution_3000][binary_sensor.bosch_solution_3000_log_overflow-state]
+# name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_log_overflow-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -2474,7 +2474,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[None-solution_3000][binary_sensor.bosch_solution_3000_log_threshold_reached-entry]
+# name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_log_threshold_reached-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2509,7 +2509,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-solution_3000][binary_sensor.bosch_solution_3000_log_threshold_reached-state]
+# name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_log_threshold_reached-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -2523,7 +2523,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[None-solution_3000][binary_sensor.bosch_solution_3000_phone_line_failure-entry]
+# name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_phone_line_failure-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2558,7 +2558,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-solution_3000][binary_sensor.bosch_solution_3000_phone_line_failure-state]
+# name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_phone_line_failure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'connectivity',
@@ -2572,7 +2572,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[None-solution_3000][binary_sensor.bosch_solution_3000_point_bus_failure_since_last_rps_connection-entry]
+# name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_point_bus_failure_since_last_rps_connection-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2607,7 +2607,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-solution_3000][binary_sensor.bosch_solution_3000_point_bus_failure_since_last_rps_connection-state]
+# name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_point_bus_failure_since_last_rps_connection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -2621,7 +2621,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[None-solution_3000][binary_sensor.bosch_solution_3000_problem-entry]
+# name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_problem-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2656,7 +2656,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-solution_3000][binary_sensor.bosch_solution_3000_problem-state]
+# name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_problem-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -2670,7 +2670,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[None-solution_3000][binary_sensor.bosch_solution_3000_sdi_failure_since_last_rps_connection-entry]
+# name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_sdi_failure_since_last_rps_connection-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2705,7 +2705,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-solution_3000][binary_sensor.bosch_solution_3000_sdi_failure_since_last_rps_connection-state]
+# name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_sdi_failure_since_last_rps_connection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -2719,7 +2719,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[None-solution_3000][binary_sensor.bosch_solution_3000_user_code_tamper_since_last_rps_connection-entry]
+# name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_user_code_tamper_since_last_rps_connection-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2754,7 +2754,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-solution_3000][binary_sensor.bosch_solution_3000_user_code_tamper_since_last_rps_connection-state]
+# name: test_binary_sensor[solution_3000-None][binary_sensor.bosch_solution_3000_user_code_tamper_since_last_rps_connection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -2768,7 +2768,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[None-solution_3000][binary_sensor.co_detector-entry]
+# name: test_binary_sensor[solution_3000-None][binary_sensor.co_detector-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2803,7 +2803,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-solution_3000][binary_sensor.co_detector-state]
+# name: test_binary_sensor[solution_3000-None][binary_sensor.co_detector-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'CO Detector',
@@ -2816,7 +2816,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[None-solution_3000][binary_sensor.door-entry]
+# name: test_binary_sensor[solution_3000-None][binary_sensor.door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2851,7 +2851,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-solution_3000][binary_sensor.door-state]
+# name: test_binary_sensor[solution_3000-None][binary_sensor.door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Door',
@@ -2864,7 +2864,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[None-solution_3000][binary_sensor.glassbreak_sensor-entry]
+# name: test_binary_sensor[solution_3000-None][binary_sensor.glassbreak_sensor-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2899,7 +2899,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-solution_3000][binary_sensor.glassbreak_sensor-state]
+# name: test_binary_sensor[solution_3000-None][binary_sensor.glassbreak_sensor-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Glassbreak Sensor',
@@ -2912,7 +2912,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[None-solution_3000][binary_sensor.motion_detector-entry]
+# name: test_binary_sensor[solution_3000-None][binary_sensor.motion_detector-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2947,7 +2947,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-solution_3000][binary_sensor.motion_detector-state]
+# name: test_binary_sensor[solution_3000-None][binary_sensor.motion_detector-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Motion Detector',
@@ -2960,7 +2960,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[None-solution_3000][binary_sensor.smoke_detector-entry]
+# name: test_binary_sensor[solution_3000-None][binary_sensor.smoke_detector-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2995,7 +2995,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-solution_3000][binary_sensor.smoke_detector-state]
+# name: test_binary_sensor[solution_3000-None][binary_sensor.smoke_detector-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Smoke Detector',
@@ -3008,7 +3008,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[None-solution_3000][binary_sensor.window-entry]
+# name: test_binary_sensor[solution_3000-None][binary_sensor.window-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3043,7 +3043,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[None-solution_3000][binary_sensor.window-state]
+# name: test_binary_sensor[solution_3000-None][binary_sensor.window-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Window',

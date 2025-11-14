@@ -56,7 +56,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Xbox media_player from a config entry."""
 
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.status
 
     async_add_entities(
         [
@@ -98,6 +98,11 @@ class XboxMediaPlayer(XboxConsoleBaseEntity, MediaPlayerEntity):
         if app_details and app_details.product_family == "Games":
             return MediaType.GAME
         return MediaType.APP
+
+    @property
+    def media_content_id(self) -> str | None:
+        """Content ID of current playing media."""
+        return self.data.app_details.product_id if self.data.app_details else None
 
     @property
     def media_title(self) -> str | None:

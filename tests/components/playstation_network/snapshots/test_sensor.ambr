@@ -1,4 +1,102 @@
 # serializer version: 1
+# name: test_sensors[sensor.publicuniversalfriend_bronze_trophies-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.publicuniversalfriend_bronze_trophies',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Bronze trophies',
+    'platform': 'playstation_network',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <PlaystationNetworkSensor.EARNED_TROPHIES_BRONZE: 'earned_trophies_bronze'>,
+    'unique_id': 'fren-psn-id_earned_trophies_bronze',
+    'unit_of_measurement': 'trophies',
+  })
+# ---
+# name: test_sensors[sensor.publicuniversalfriend_bronze_trophies-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'PublicUniversalFriend Bronze trophies',
+      'unit_of_measurement': 'trophies',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.publicuniversalfriend_bronze_trophies',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4782',
+  })
+# ---
+# name: test_sensors[sensor.publicuniversalfriend_gold_trophies-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.publicuniversalfriend_gold_trophies',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Gold trophies',
+    'platform': 'playstation_network',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <PlaystationNetworkSensor.EARNED_TROPHIES_GOLD: 'earned_trophies_gold'>,
+    'unique_id': 'fren-psn-id_earned_trophies_gold',
+    'unit_of_measurement': 'trophies',
+  })
+# ---
+# name: test_sensors[sensor.publicuniversalfriend_gold_trophies-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'PublicUniversalFriend Gold trophies',
+      'unit_of_measurement': 'trophies',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.publicuniversalfriend_gold_trophies',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '437',
+  })
+# ---
 # name: test_sensors[sensor.publicuniversalfriend_last_online-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -46,6 +144,55 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2025-06-30T01:42:15+00:00',
+  })
+# ---
+# name: test_sensors[sensor.publicuniversalfriend_next_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.publicuniversalfriend_next_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Next level',
+    'platform': 'playstation_network',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <PlaystationNetworkSensor.TROPHY_LEVEL_PROGRESS: 'trophy_level_progress'>,
+    'unique_id': 'fren-psn-id_trophy_level_progress',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[sensor.publicuniversalfriend_next_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'PublicUniversalFriend Next level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.publicuniversalfriend_next_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20',
   })
 # ---
 # name: test_sensors[sensor.publicuniversalfriend_now_playing-entry]
@@ -204,6 +351,152 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'availabletoplay',
+  })
+# ---
+# name: test_sensors[sensor.publicuniversalfriend_platinum_trophies-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.publicuniversalfriend_platinum_trophies',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Platinum trophies',
+    'platform': 'playstation_network',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <PlaystationNetworkSensor.EARNED_TROPHIES_PLATINUM: 'earned_trophies_platinum'>,
+    'unique_id': 'fren-psn-id_earned_trophies_platinum',
+    'unit_of_measurement': 'trophies',
+  })
+# ---
+# name: test_sensors[sensor.publicuniversalfriend_platinum_trophies-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'PublicUniversalFriend Platinum trophies',
+      'unit_of_measurement': 'trophies',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.publicuniversalfriend_platinum_trophies',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '96',
+  })
+# ---
+# name: test_sensors[sensor.publicuniversalfriend_silver_trophies-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.publicuniversalfriend_silver_trophies',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Silver trophies',
+    'platform': 'playstation_network',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <PlaystationNetworkSensor.EARNED_TROPHIES_SILVER: 'earned_trophies_silver'>,
+    'unique_id': 'fren-psn-id_earned_trophies_silver',
+    'unit_of_measurement': 'trophies',
+  })
+# ---
+# name: test_sensors[sensor.publicuniversalfriend_silver_trophies-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'PublicUniversalFriend Silver trophies',
+      'unit_of_measurement': 'trophies',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.publicuniversalfriend_silver_trophies',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1245',
+  })
+# ---
+# name: test_sensors[sensor.publicuniversalfriend_trophy_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.publicuniversalfriend_trophy_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Trophy level',
+    'platform': 'playstation_network',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <PlaystationNetworkSensor.TROPHY_LEVEL: 'trophy_level'>,
+    'unique_id': 'fren-psn-id_trophy_level',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.publicuniversalfriend_trophy_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'PublicUniversalFriend Trophy level',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.publicuniversalfriend_trophy_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '420',
   })
 # ---
 # name: test_sensors[sensor.testuser_bronze_trophies-entry]

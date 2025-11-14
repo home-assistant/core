@@ -1619,9 +1619,10 @@ async def test_transitions_brightness_only(hass: HomeAssistant) -> None:
     bulb.get_color.reset_mock()
 
     # Ensure we force an update after the transition
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=5))
-    await hass.async_block_till_done()
-    assert len(bulb.get_color.calls) == 2
+    with _patch_discovery(device=bulb):
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=5))
+        await hass.async_block_till_done()
+        assert len(bulb.get_color.calls) == 2
 
 
 async def test_transitions_color_bulb(hass: HomeAssistant) -> None:
@@ -1714,9 +1715,10 @@ async def test_transitions_color_bulb(hass: HomeAssistant) -> None:
     bulb.get_color.reset_mock()
 
     # Ensure we force an update after the transition
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=5))
-    await hass.async_block_till_done()
-    assert len(bulb.get_color.calls) == 2
+    with _patch_discovery(device=bulb):
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=5))
+        await hass.async_block_till_done()
+        assert len(bulb.get_color.calls) == 2
 
     bulb.set_power.reset_mock()
     bulb.set_color.reset_mock()
