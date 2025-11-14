@@ -126,7 +126,6 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[NSRouteResult]):
 
         # Convert time to full date-time string if needed and default to Dutch local time if not provided
         time_str = self._get_time_from_route(departure_time)
-        trips = None
         try:
             trips = await self.hass.async_add_executor_job(
                 self.nsapi.get_trips,
