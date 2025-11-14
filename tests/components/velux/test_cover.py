@@ -64,7 +64,6 @@ async def test_cover_entity_setup(
 
 
 @pytest.mark.usefixtures("setup_integration")
-@pytest.mark.parametrize("mock_pyvlx", ["mock_window"], indirect=True)
 async def test_cover_device_association(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -76,24 +75,23 @@ async def test_cover_device_association(
     entity_entries = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
-    assert len(entity_entries) == 1
-    entry = entity_entries[0]
+    assert len(entity_entries) >= 1
 
-    assert entry.device_id is not None
-    device_entry = device_registry.async_get(entry.device_id)
-    assert device_entry is not None
-    assert (DOMAIN, entry.unique_id) in device_entry.identifiers
-    assert device_entry.via_device_id is not None
-    via_device_entry = device_registry.async_get(device_entry.via_device_id)
-    assert via_device_entry is not None
-    assert (
-        DOMAIN,
-        f"gateway_{mock_config_entry.entry_id}",
-    ) in via_device_entry.identifiers
+    for entry in entity_entries:
+        assert entry.device_id is not None
+        device_entry = device_registry.async_get(entry.device_id)
+        assert device_entry is not None
+        assert (DOMAIN, entry.unique_id) in device_entry.identifiers
+        assert device_entry.via_device_id is not None
+        via_device_entry = device_registry.async_get(device_entry.via_device_id)
+        assert via_device_entry is not None
+        assert (
+            DOMAIN,
+            f"gateway_{mock_config_entry.entry_id}",
+        ) in via_device_entry.identifiers
 
 
 @pytest.mark.usefixtures("setup_integration")
-@pytest.mark.parametrize("mock_pyvlx", ["mock_window"], indirect=True)
 async def test_cover_closed(
     hass: HomeAssistant,
     mock_window: AsyncMock,

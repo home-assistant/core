@@ -18,7 +18,6 @@ def platform() -> Platform:
 
 
 @pytest.mark.usefixtures("setup_integration")
-@pytest.mark.parametrize("mock_pyvlx", ["mock_light"], indirect=True)
 async def test_light_setup(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -47,7 +46,6 @@ async def test_light_setup(
 
 
 # This test is not light specific, it just uses the light platform to test the base entity class.
-@pytest.mark.parametrize("mock_pyvlx", ["mock_light"], indirect=True)
 @pytest.mark.usefixtures("setup_integration")
 async def test_entity_callbacks(
     hass: HomeAssistant,

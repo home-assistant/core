@@ -116,7 +116,11 @@ def mock_cover_type(request: pytest.FixtureRequest) -> AsyncMock:
 
 @pytest.fixture
 def mock_pyvlx(
-    mock_scene: AsyncMock, request: pytest.FixtureRequest
+    mock_scene: AsyncMock,
+    mock_light: AsyncMock,
+    mock_window: AsyncMock,
+    mock_blind: AsyncMock,
+    request: pytest.FixtureRequest,
 ) -> Generator[MagicMock]:
     """Create the library mock and patch PyVLX in both component and config_flow.
 
@@ -130,7 +134,7 @@ def mock_pyvlx(
     if hasattr(request, "param"):
         pyvlx.nodes = [request.getfixturevalue(request.param)]
     else:
-        pyvlx.nodes = []
+        pyvlx.nodes = [mock_light, mock_blind, mock_window, mock_cover_type]
 
     pyvlx.scenes = [mock_scene]
 

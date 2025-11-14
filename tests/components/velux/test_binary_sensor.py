@@ -24,11 +24,9 @@ def platform() -> Platform:
 
 @pytest.mark.usefixtures("setup_integration")
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-@pytest.mark.parametrize("mock_pyvlx", ["mock_window"], indirect=True)
 async def test_rain_sensor_state(
     hass: HomeAssistant,
     mock_window: MagicMock,
-    mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the rain sensor."""
@@ -65,7 +63,6 @@ async def test_rain_sensor_state(
 
 @pytest.mark.usefixtures("setup_integration")
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-@pytest.mark.parametrize("mock_pyvlx", ["mock_window"], indirect=True)
 async def test_rain_sensor_device_association(
     hass: HomeAssistant,
     mock_window: MagicMock,
