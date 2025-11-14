@@ -54,6 +54,14 @@
             "b1": {
                 "name": "B1"
             }
+        },
+        "sensor": {
+            "last_seen": {
+                "name": "Last seen"
+            },
+            "telegrams_received": {
+                "name": "Telegrams received"
+            }
         }
     },
     "options": {

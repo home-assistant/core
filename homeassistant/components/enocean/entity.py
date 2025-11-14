@@ -3,7 +3,12 @@
 from homeassistant_enocean.entity_id import EnOceanEntityID
 from homeassistant_enocean.gateway import EnOceanHomeAssistantGateway
 
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.cover import CoverDeviceClass
+from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.switch import SwitchDeviceClass
 from homeassistant.config_entries import _LOGGER
+from homeassistant.const import EntityCategory
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
@@ -17,6 +22,12 @@ class EnOceanEntity(Entity):
         self,
         enocean_entity_id: EnOceanEntityID,
         gateway: EnOceanHomeAssistantGateway,
+        device_class: SensorDeviceClass
+        | BinarySensorDeviceClass
+        | SwitchDeviceClass
+        | CoverDeviceClass
+        | None = None,
+        entity_category: str | None = None,
     ) -> None:
         """Initialize the entity."""
         super().__init__()
@@ -25,6 +36,10 @@ class EnOceanEntity(Entity):
         self._attr_translation_key = enocean_entity_id.unique_id
         self._attr_has_entity_name = True
         self._attr_should_poll = False
+        self._attr_device_class = device_class
+        self._attr_entity_category = (
+            EntityCategory(entity_category) if entity_category else None
+        )
 
         # define EnOcean-specific attributes
         self.__enocean_entity_id: EnOceanEntityID = enocean_entity_id

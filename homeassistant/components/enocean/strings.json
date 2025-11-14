@@ -108,6 +108,14 @@
       "a1b0": {
         "name": "A1B0"
       }
+    },
+    "sensor": {
+      "last_seen": {
+        "name": "Last seen"
+      },
+      "telegrams_received": {
+        "name": "Telegrams received"
+      }
     }
   }
 }

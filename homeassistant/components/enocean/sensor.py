@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+from datetime import datetime
+
 from homeassistant_enocean.entity_id import EnOceanEntityID
+from homeassistant_enocean.entity_properties import HomeAssistantEntityProperties
 from homeassistant_enocean.gateway import EnOceanHomeAssistantGateway
 
 from homeassistant.components.sensor import (
@@ -82,15 +85,25 @@ async def async_setup_entry(
     gateway = config_entry.runtime_data.gateway
 
     for entity_id in gateway.sensor_entities:
-        properties = gateway.sensor_entities[entity_id]
-        properties.native_unit_of_measurement = "dbM"
+        properties: HomeAssistantEntityProperties | None = gateway.sensor_entities[
+            entity_id
+        ]
+
+        if properties is None:
+            # should not happen
+            continue
+
+        assert properties is not None
+
         async_add_entities(
             [
                 EnOceanSensor(
                     entity_id,
                     gateway=gateway,
                     device_class=properties.device_class,
+                    state_class=properties.state_class,
                     native_unit_of_measurement=properties.native_unit_of_measurement,
+                    entity_category=properties.entity_category,
                 )
             ]
         )
@@ -103,16 +116,23 @@ class EnOceanSensor(EnOceanEntity, SensorEntity):
         self,
         entity_id: EnOceanEntityID,
         gateway: EnOceanHomeAssistantGateway,
-        device_class: SensorDeviceClass | None = SensorDeviceClass.TEMPERATURE,
+        device_class: SensorDeviceClass | None = None,
+        entity_category: str | None = None,
+        state_class: SensorStateClass | None = None,
         native_unit_of_measurement: str | None = None,
     ) -> None:
         """Initialize the EnOcean switch."""
-        super().__init__(enocean_entity_id=entity_id, gateway=gateway)
-        self._attr_device_class = device_class
+        super().__init__(
+            enocean_entity_id=entity_id,
+            gateway=gateway,
+            device_class=device_class,
+            entity_category=entity_category,
+        )
+        self._attr_state_class = state_class
         self._attr_native_unit_of_measurement = native_unit_of_measurement
         self.gateway.register_sensor_callback(self.enocean_entity_id, self.update)
 
-    def update(self, value: float) -> None:
+    def update(self, value: float | datetime) -> None:
         """Update the sensor state."""
         self._attr_native_value = value
         self.schedule_update_ha_state()
