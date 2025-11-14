@@ -256,6 +256,29 @@
         }
       }
     },
+    "number": {
+      "current_limit": {
+        "name": "Current limit"
+      },
+      "external_temperature": {
+        "name": "External temperature"
+      },
+      "left_slot_intensity": {
+        "name": "Left slot intensity"
+      },
+      "right_slot_intensity": {
+        "name": "Right slot intensity"
+      },
+      "target_humidity": {
+        "name": "Target humidity"
+      },
+      "target_temperature": {
+        "name": "Target temperature"
+      },
+      "valve_position": {
+        "name": "Valve position"
+      }
+    },
     "select": {
       "cury_mode": {
         "name": "Mode",
@@ -506,6 +529,41 @@
       },
       "water_temperature": {
         "name": "Water temperature"
+      }
+    },
+    "switch": {
+      "charging": {
+        "name": "Charging"
+      },
+      "child_lock": {
+        "name": "Child lock"
+      },
+      "frost_protection": {
+        "name": "[%key:component::shelly::entity::climate::thermostat::state_attributes::preset_mode::state::frost_protection%]"
+      },
+      "left_slot": {
+        "name": "Left slot"
+      },
+      "left_slot_boost": {
+        "name": "Left slot boost"
+      },
+      "motion_detection": {
+        "name": "Motion detection"
+      },
+      "right_slot": {
+        "name": "Right slot"
+      },
+      "right_slot_boost": {
+        "name": "Right slot boost"
+      },
+      "thermostat_enabled": {
+        "name": "Thermostat enabled"
+      },
+      "valve_opened": {
+        "name": "Valve opened"
+      },
+      "zone_with_number": {
+        "name": "Zone {zone_number}"
       }
     },
     "update": {
