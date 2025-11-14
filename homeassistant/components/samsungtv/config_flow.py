@@ -110,11 +110,11 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 2
     MINOR_VERSION = 2
 
+    _host: str
     _bridge: SamsungTVBridge
 
     def __init__(self) -> None:
         """Initialize flow."""
-        self._host: str | None = None
         self._mac: str | None = None
         self._udn: str | None = None
         self._upnp_udn: str | None = None
@@ -205,7 +205,6 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
             LOGGER.debug("No working config found for %s", self._host)
             raise AbortFlow(result)
         assert self._method is not None
-        assert self._host is not None
         self._bridge = SamsungTVBridge.get_bridge(
             self.hass, self._method, self._host, self._port
         )
@@ -215,7 +214,6 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> str:
         """Get device info and method only once."""
         if self._connect_result is None:
-            assert self._host is not None
             result, port, method, info = await async_get_device_info(
                 self.hass, self._host
             )
@@ -265,7 +263,6 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
         except socket.gaierror as err:
             LOGGER.debug("Failed to get IP for %s: %s", user_input[CONF_HOST], err)
             return False
-        assert self._host is not None
         self._title = self._host
         return True
 
@@ -317,7 +314,6 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a encrypted pairing."""
-        assert self._host is not None
         await self._async_start_encrypted_pairing(self._host)
         assert self._authenticator is not None
         errors: dict[str, str] = {}
@@ -445,13 +441,7 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def is_matching(self, other_flow: Self) -> bool:
         """Return True if other_flow is matching this flow."""
-        # Guard against None values for _host
-        return (
-            hasattr(other_flow, "_host")
-            and self._host is not None
-            and other_flow._host is not None  # noqa: SLF001
-            and other_flow._host == self._host  # noqa: SLF001
-        )
+        return getattr(other_flow, "_host", None) == self._host
 
     @callback
     def _abort_if_manufacturer_is_not_samsung(self) -> None:

@@ -2143,3 +2143,36 @@ async def test_ssdp_update_mac(hass: HomeAssistant) -> None:
         # ensure mac was updated with new wifiMac value
         assert entry.data[CONF_MAC] == "aa:bb:cc:dd:ee:ff"
         assert entry.unique_id == "123"
+
+
+@pytest.mark.usefixtures("remote_websocket")
+async def test_dhcp_while_user_flow_pending(hass):
+    """Simulate user flow waiting for user submit, then trigger DHCP flow before submit."""
+    with patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_device_info",
+        return_value=None,  # Simulate device not connectable
+    ):
+        # Start user flow, which will show form (cannot connect)
+        result_user = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+        )
+        assert result_user["type"] == FlowResultType.FORM
+        assert result_user["step_id"] == "user"
+
+        # While user flow is pending (form shown), trigger DHCP flow
+        dhcp_data = DhcpServiceInfo(
+            ip="10.10.12.34", macaddress="aabbccddeeff", hostname="fake_hostname"
+        )
+        with patch(
+            "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_device_info",
+            return_value={
+                "device": {"modelName": "fake_model", "wifiMac": "aa:bb:cc:dd:ee:ff"}
+            },
+        ):
+            result_dhcp = await hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": config_entries.SOURCE_DHCP},
+                data=dhcp_data,
+            )
+        assert result_dhcp["type"] in (FlowResultType.FORM, FlowResultType.ABORT)
