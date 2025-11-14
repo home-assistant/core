@@ -1,0 +1,22 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::ip%]"
+        },
+        "data_description": {
+          "host": "IP address of your Saunum Leil sauna control unit"
+        },
+        "description": "To find the IP address, navigate to Settings → Modbus Settings on your Leil touch panel"
+      }
+    }
+  }
+}
