@@ -2,6 +2,7 @@
 
 from enum import StrEnum
 from functools import partial
+import hashlib
 from typing import Any, cast
 
 from mastodon import Mastodon
@@ -15,10 +16,12 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from .const import (
     ATTR_CONTENT_WARNING,
+    ATTR_IDEMPOTENCY_KEY,
     ATTR_LANGUAGE,
     ATTR_MEDIA,
     ATTR_MEDIA_DESCRIPTION,
     ATTR_MEDIA_WARNING,
+    ATTR_PREVENT_DUPLICATE_POSTS,
     ATTR_STATUS,
     ATTR_VISIBILITY,
     DOMAIN,
@@ -42,6 +45,8 @@ SERVICE_POST_SCHEMA = vol.Schema(
         vol.Required(ATTR_CONFIG_ENTRY_ID): str,
         vol.Required(ATTR_STATUS): str,
         vol.Optional(ATTR_VISIBILITY): vol.In([x.lower() for x in StatusVisibility]),
+        vol.Optional(ATTR_PREVENT_DUPLICATE_POSTS): bool,
+        vol.Optional(ATTR_IDEMPOTENCY_KEY): str,
         vol.Optional(ATTR_CONTENT_WARNING): str,
         vol.Optional(ATTR_LANGUAGE): str,
         vol.Optional(ATTR_MEDIA): str,
@@ -77,18 +82,28 @@ def async_setup_services(hass: HomeAssistant) -> None:
         entry = async_get_entry(hass, call.data[ATTR_CONFIG_ENTRY_ID])
         client = entry.runtime_data.client
 
-        status = call.data[ATTR_STATUS]
+        status: str = call.data[ATTR_STATUS]
 
         visibility: str | None = (
             StatusVisibility(call.data[ATTR_VISIBILITY])
             if ATTR_VISIBILITY in call.data
             else None
         )
+        idempotency_key: str | None = call.data.get(ATTR_IDEMPOTENCY_KEY)
         spoiler_text: str | None = call.data.get(ATTR_CONTENT_WARNING)
         language: str | None = call.data.get(ATTR_LANGUAGE)
         media_path: str | None = call.data.get(ATTR_MEDIA)
         media_description: str | None = call.data.get(ATTR_MEDIA_DESCRIPTION)
         media_warning: str | None = call.data.get(ATTR_MEDIA_WARNING)
+
+        if not idempotency_key and call.data.get(ATTR_PREVENT_DUPLICATE_POSTS, False):
+            idempotency_key = hashlib.md5(status.encode()).hexdigest()
+
+        if idempotency_key and len(idempotency_key) < 4:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="idempotency_key_too_short",
+            )
 
         await hass.async_add_executor_job(
             partial(
@@ -96,6 +111,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 client=client,
                 status=status,
                 visibility=visibility,
+                idempotency_key=idempotency_key,
                 spoiler_text=spoiler_text,
                 language=language,
                 media_path=media_path,

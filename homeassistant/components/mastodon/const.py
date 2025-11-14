@@ -14,6 +14,8 @@ DEFAULT_NAME: Final = "Mastodon"
 
 ATTR_STATUS = "status"
 ATTR_VISIBILITY = "visibility"
+ATTR_PREVENT_DUPLICATE_POSTS = "prevent_duplicate_posts"
+ATTR_IDEMPOTENCY_KEY = "idempotency_key"
 ATTR_CONTENT_WARNING = "content_warning"
 ATTR_MEDIA_WARNING = "media_warning"
 ATTR_MEDIA = "media"

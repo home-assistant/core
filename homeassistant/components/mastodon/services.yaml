@@ -18,6 +18,13 @@ post:
             - private
             - direct
           translation_key: post_visibility
+    prevent_duplicate_posts:
+      selector:
+        boolean:
+      default: false
+    idempotency_key:
+      selector:
+        text:
     content_warning:
       selector:
         text:
