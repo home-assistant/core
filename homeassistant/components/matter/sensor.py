@@ -1492,7 +1492,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
             key="DoorLockDoorOpenEvents",
-            translation_key="door_lock_door_open_events",
+            translation_key="door_open_events",
             entity_category=EntityCategory.DIAGNOSTIC,
             state_class=SensorStateClass.TOTAL,
         ),
@@ -1504,7 +1504,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
             key="DoorLockDoorClosedEvents",
-            translation_key="door_lock_door_closed_events",
+            translation_key="door_closed_events",
             entity_category=EntityCategory.DIAGNOSTIC,
             state_class=SensorStateClass.TOTAL,
         ),

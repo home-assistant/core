@@ -365,10 +365,10 @@
       "current_phase": {
         "name": "Current phase"
       },
-      "door_lock_door_closed_events": {
+      "door_closed_events": {
         "name": "Door closed events"
       },
-      "door_lock_door_opened_events": {
+      "door_opened_events": {
         "name": "Door opened events"
       },
       "energy_exported": {
