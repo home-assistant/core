@@ -181,7 +181,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'left_slot_intensity',
     'unique_id': '123456789ABC-cury:0-left_slot_intensity',
     'unit_of_measurement': '%',
   })
@@ -239,7 +239,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'right_slot_intensity',
     'unique_id': '123456789ABC-cury:0-right_slot_intensity',
     'unit_of_measurement': '%',
   })
@@ -260,6 +260,73 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '45',
+  })
+# ---
+# name: test_device[cury_gen4][select.test_name_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'hall',
+        'bedroom',
+        'living_room',
+        'lavatory_room',
+        'none',
+        'reception',
+        'workplace',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.test_name_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Mode',
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cury_mode',
+    'unique_id': '123456789ABC-cury:0-cury_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_device[cury_gen4][select.test_name_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test name Mode',
+      'options': list([
+        'hall',
+        'bedroom',
+        'living_room',
+        'lavatory_room',
+        'none',
+        'reception',
+        'workplace',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_name_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'living_room',
   })
 # ---
 # name: test_device[cury_gen4][sensor.test_name_last_restart-entry]
@@ -292,7 +359,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'last_restart',
     'unique_id': '123456789ABC-sys-uptime',
     'unit_of_measurement': None,
   })
@@ -343,7 +410,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'vial_level',
+    'translation_key': 'left_slot_level',
     'unique_id': '123456789ABC-cury:0-cury_left_level',
     'unit_of_measurement': '%',
   })
@@ -393,7 +460,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'vial_name',
+    'translation_key': 'left_slot_vial',
     'unique_id': '123456789ABC-cury:0-cury_left_vial',
     'unit_of_measurement': None,
   })
@@ -443,7 +510,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'vial_level',
+    'translation_key': 'right_slot_level',
     'unique_id': '123456789ABC-cury:0-cury_right_level',
     'unit_of_measurement': '%',
   })
@@ -493,7 +560,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'vial_name',
+    'translation_key': 'right_slot_vial',
     'unique_id': '123456789ABC-cury:0-cury_right_vial',
     'unit_of_measurement': None,
   })
@@ -562,6 +629,54 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-49',
+  })
+# ---
+# name: test_device[cury_gen4][switch.test_name_away_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.test_name_away_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Away mode',
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cury_away_mode',
+    'unique_id': '123456789ABC-cury:0-cury_away_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_device[cury_gen4][switch.test_name_away_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test name Away mode',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.test_name_away_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
   })
 # ---
 # name: test_device[cury_gen4][switch.test_name_left_slot-entry]
@@ -786,7 +901,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <UpdateEntityFeature: 5>,
-    'translation_key': None,
+    'translation_key': 'beta_firmware',
     'unique_id': '123456789ABC-sys-fwupdate_beta',
     'unit_of_measurement': None,
   })
@@ -1126,7 +1241,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'last_restart',
     'unique_id': '123456789ABC-sys-uptime',
     'unit_of_measurement': None,
   })
@@ -1183,7 +1298,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'energy_with_channel_name',
     'unique_id': '123456789ABC-cct:0-energy_cct',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -1239,7 +1354,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'power_with_channel_name',
     'unique_id': '123456789ABC-cct:0-power_cct',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
@@ -1343,7 +1458,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <UpdateEntityFeature: 5>,
-    'translation_key': None,
+    'translation_key': 'beta_firmware',
     'unique_id': '123456789ABC-sys-fwupdate_beta',
     'unit_of_measurement': None,
   })
@@ -2576,7 +2691,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'energy_consumed',
     'unique_id': '123456789ABC-switch:1-consumed_energy_switch',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -2635,7 +2750,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'energy_returned',
     'unique_id': '123456789ABC-switch:1-ret_energy',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -2977,7 +3092,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'energy_consumed',
     'unique_id': '123456789ABC-switch:3-consumed_energy_switch',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -3036,7 +3151,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'energy_returned',
     'unique_id': '123456789ABC-switch:3-ret_energy',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -3255,7 +3370,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'last_restart',
     'unique_id': '123456789ABC-sys-uptime',
     'unit_of_measurement': None,
   })
@@ -3480,7 +3595,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'energy_consumed',
     'unique_id': '123456789ABC-switch:0-consumed_energy_switch',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -3539,7 +3654,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'energy_returned',
     'unique_id': '123456789ABC-switch:0-ret_energy',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -3881,7 +3996,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'energy_consumed',
     'unique_id': '123456789ABC-switch:2-consumed_energy_switch',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -3940,7 +4055,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'energy_returned',
     'unique_id': '123456789ABC-switch:2-ret_energy',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -4303,7 +4418,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <UpdateEntityFeature: 5>,
-    'translation_key': None,
+    'translation_key': 'beta_firmware',
     'unique_id': '123456789ABC-sys-fwupdate_beta',
     'unit_of_measurement': None,
   })
@@ -4779,7 +4894,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'last_restart',
     'unique_id': '123456789ABC-sys-uptime',
     'unit_of_measurement': None,
   })
@@ -4830,7 +4945,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'detected_objects',
+    'translation_key': 'detected_objects_with_channel_name',
     'unique_id': '123456789ABC-presencezone:201-presencezone_num_objects',
     'unit_of_measurement': 'objects',
   })
@@ -4882,7 +4997,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'detected_objects',
+    'translation_key': 'detected_objects_with_channel_name',
     'unique_id': '123456789ABC-presencezone:202-presencezone_num_objects',
     'unit_of_measurement': 'objects',
   })
@@ -4934,7 +5049,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'detected_objects',
+    'translation_key': 'detected_objects_with_channel_name',
     'unique_id': '123456789ABC-presencezone:200-presencezone_num_objects',
     'unit_of_measurement': 'objects',
   })
@@ -5037,7 +5152,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <UpdateEntityFeature: 5>,
-    'translation_key': None,
+    'translation_key': 'beta_firmware',
     'unique_id': '123456789ABC-sys-fwupdate_beta',
     'unit_of_measurement': None,
   })
@@ -5368,6 +5483,102 @@
     }),
     'context': <ANY>,
     'entity_id': 'button.test_name_restart',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_device[wall_display_xl][button.test_name_turn_off_the_screen-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.test_name_turn_off_the_screen',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Turn off the screen',
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'turn_off_the_screen',
+    'unique_id': '123456789ABC-turn_off_screen',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_device[wall_display_xl][button.test_name_turn_off_the_screen-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test name Turn off the screen',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_name_turn_off_the_screen',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_device[wall_display_xl][button.test_name_turn_on_the_screen-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.test_name_turn_on_the_screen',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Turn on the screen',
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'turn_on_the_screen',
+    'unique_id': '123456789ABC-turn_on_screen',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_device[wall_display_xl][button.test_name_turn_on_the_screen-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test name Turn on the screen',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_name_turn_on_the_screen',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -5750,7 +5961,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'last_restart',
     'unique_id': '123456789ABC-sys-uptime',
     'unit_of_measurement': None,
   })
@@ -5956,7 +6167,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <UpdateEntityFeature: 5>,
-    'translation_key': None,
+    'translation_key': 'beta_firmware',
     'unique_id': '123456789ABC-sys-fwupdate_beta',
     'unit_of_measurement': None,
   })
@@ -6740,7 +6951,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'last_restart',
     'unique_id': '123456789ABC-sys-uptime',
     'unit_of_measurement': None,
   })
@@ -7010,7 +7221,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <UpdateEntityFeature: 5>,
-    'translation_key': None,
+    'translation_key': 'beta_firmware',
     'unique_id': '123456789ABC-sys-fwupdate_beta',
     'unit_of_measurement': None,
   })
@@ -7769,7 +7980,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'last_restart',
     'unique_id': '123456789ABC-sys-uptime',
     'unit_of_measurement': None,
   })
@@ -7994,7 +8205,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'energy_consumed',
     'unique_id': '123456789ABC-switch:0-consumed_energy_switch',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -8053,7 +8264,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'energy_returned',
     'unique_id': '123456789ABC-switch:0-ret_energy',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -8451,7 +8662,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'energy_consumed',
     'unique_id': '123456789ABC-switch:1-consumed_energy_switch',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -8510,7 +8721,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'energy_returned',
     'unique_id': '123456789ABC-switch:1-ret_energy',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -8881,7 +9092,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <UpdateEntityFeature: 5>,
-    'translation_key': None,
+    'translation_key': 'beta_firmware',
     'unique_id': '123456789ABC-sys-fwupdate_beta',
     'unit_of_measurement': None,
   })
@@ -9329,7 +9540,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'energy_returned',
     'unique_id': '123456789ABC-emdata:0-total_act_ret',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -9380,7 +9591,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'last_restart',
     'unique_id': '123456789ABC-sys-uptime',
     'unit_of_measurement': None,
   })
@@ -9434,7 +9645,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'neutral_current',
     'unique_id': '123456789ABC-em:0-n_current',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
@@ -9664,7 +9875,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'energy_returned',
     'unique_id': '123456789ABC-emdata:0-a_total_act_ret_energy',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -10114,7 +10325,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'energy_returned',
     'unique_id': '123456789ABC-emdata:0-b_total_act_ret_energy',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -10564,7 +10775,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'energy_returned',
     'unique_id': '123456789ABC-emdata:0-c_total_act_ret_energy',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
@@ -11000,7 +11211,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <UpdateEntityFeature: 5>,
-    'translation_key': None,
+    'translation_key': 'beta_firmware',
     'unique_id': '123456789ABC-sys-fwupdate_beta',
     'unit_of_measurement': None,
   })

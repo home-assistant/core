@@ -21,7 +21,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -50,113 +50,54 @@ async def test_switch_entities(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
-async def test_turn_on_switch_success(
+@pytest.mark.parametrize(
+    ("service", "expected_value"),
+    [
+        (SERVICE_TURN_ON, 1),
+        (SERVICE_TURN_OFF, 0),
+    ],
+)
+async def test_switch_service_call_success(
     hass: HomeAssistant,
     mock_growatt_v1_api,
+    service: str,
+    expected_value: int,
 ) -> None:
-    """Test turning on a switch entity successfully."""
+    """Test switch service calls successfully."""
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
+        service,
         {ATTR_ENTITY_ID: "switch.min123456_charge_from_grid"},
         blocking=True,
     )
 
     # Verify API was called with correct parameters
     mock_growatt_v1_api.min_write_parameter.assert_called_once_with(
-        "MIN123456", "ac_charge", 1
+        "MIN123456", "ac_charge", expected_value
     )
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
-async def test_turn_off_switch_success(
+@pytest.mark.parametrize(
+    "service",
+    [SERVICE_TURN_ON, SERVICE_TURN_OFF],
+)
+async def test_switch_service_call_api_error(
     hass: HomeAssistant,
     mock_growatt_v1_api,
+    service: str,
 ) -> None:
-    """Test turning off a switch entity successfully."""
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {"entity_id": "switch.min123456_charge_from_grid"},
-        blocking=True,
-    )
-
-    # Verify API was called with correct parameters
-    mock_growatt_v1_api.min_write_parameter.assert_called_once_with(
-        "MIN123456", "ac_charge", 0
-    )
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
-async def test_turn_on_switch_api_error(
-    hass: HomeAssistant,
-    mock_growatt_v1_api,
-) -> None:
-    """Test handling API error when turning on switch."""
+    """Test handling API error when calling switch services."""
     # Mock API to raise error
     mock_growatt_v1_api.min_write_parameter.side_effect = GrowattV1ApiError("API Error")
 
     with pytest.raises(HomeAssistantError, match="Error while setting switch state"):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
+            service,
             {"entity_id": "switch.min123456_charge_from_grid"},
             blocking=True,
         )
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
-async def test_turn_off_switch_api_error(
-    hass: HomeAssistant,
-    mock_growatt_v1_api,
-) -> None:
-    """Test handling API error when turning off switch."""
-    # Mock API to raise error
-    mock_growatt_v1_api.min_write_parameter.side_effect = GrowattV1ApiError("API Error")
-
-    with pytest.raises(HomeAssistantError, match="Error while setting switch state"):
-        await hass.services.async_call(
-            SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {"entity_id": "switch.min123456_charge_from_grid"},
-            blocking=True,
-        )
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
-async def test_switch_entity_attributes(
-    hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test switch entity attributes."""
-    # Check entity registry attributes
-    entity_entry = entity_registry.async_get("switch.min123456_charge_from_grid")
-    assert entity_entry is not None
-    assert entity_entry == snapshot(name="entity_entry")
-
-    # Check state attributes
-    state = hass.states.get("switch.min123456_charge_from_grid")
-    assert state is not None
-    assert state == snapshot(name="state")
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
-async def test_switch_device_registry(
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test that switch entities are associated with the correct device."""
-    # Get the device from device registry
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "MIN123456")})
-    assert device is not None
-    assert device == snapshot
-
-    # Verify switch entity is associated with the device
-    entity_entry = entity_registry.async_get("switch.min123456_charge_from_grid")
-    assert entity_entry is not None
-    assert entity_entry.device_id == device.id
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

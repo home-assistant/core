@@ -17,21 +17,25 @@ from pythonxbox.api.provider.smartglass.models import (
     SmartglassConsoleStatus,
 )
 from pythonxbox.api.provider.titlehub.models import Title
-from pythonxbox.common.signed_session import SignedSession
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_entry_oauth2_flow, device_registry as dr
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
+    OAuth2Session,
+    async_get_config_entry_implementation,
+)
+from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util.ssl import get_default_context
 
 from . import api
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-type XboxConfigEntry = ConfigEntry[XboxUpdateCoordinator]
+type XboxConfigEntry = ConfigEntry[XboxCoordinators]
 
 
 @dataclass
@@ -51,17 +55,25 @@ class XboxData:
     title_info: dict[str, Title] = field(default_factory=dict)
 
 
+@dataclass
+class XboxCoordinators:
+    """Xbox coordinators."""
+
+    status: XboxUpdateCoordinator
+    consoles: XboxConsolesCoordinator
+
+
 class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
     """Store Xbox Console Status."""
 
-    config_entry: ConfigEntry
+    config_entry: XboxConfigEntry
     consoles: SmartglassConsoleList
     client: XboxLiveClient
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: XboxConfigEntry,
     ) -> None:
         """Initialize."""
         super().__init__(
@@ -77,22 +89,18 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
     async def _async_setup(self) -> None:
         """Set up coordinator."""
         try:
-            implementation = (
-                await config_entry_oauth2_flow.async_get_config_entry_implementation(
-                    self.hass, self.config_entry
-                )
+            implementation = await async_get_config_entry_implementation(
+                self.hass, self.config_entry
             )
-        except ValueError as e:
+        except ImplementationUnavailableError as e:
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
-                translation_key="request_exception",
+                translation_key="oauth2_implementation_unavailable",
             ) from e
 
-        session = config_entry_oauth2_flow.OAuth2Session(
-            self.hass, self.config_entry, implementation
-        )
-        signed_session = SignedSession(ssl_context=get_default_context())
-        auth = api.AsyncConfigEntryAuth(signed_session, session)
+        session = OAuth2Session(self.hass, self.config_entry, implementation)
+        async_session = get_async_client(self.hass)
+        auth = api.AsyncConfigEntryAuth(async_session, session)
         self.client = XboxLiveClient(auth)
 
         try:
@@ -280,3 +288,43 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
             for entry in self.hass.config_entries.async_entries(DOMAIN)
             if entry.unique_id is not None
         }
+
+
+class XboxConsolesCoordinator(DataUpdateCoordinator[SmartglassConsoleList]):
+    """Update list of Xbox consoles."""
+
+    config_entry: XboxConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: XboxConfigEntry,
+        coordinator: XboxUpdateCoordinator,
+    ) -> None:
+        """Initialize."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+            update_interval=timedelta(minutes=10),
+        )
+        self.client = coordinator.client
+        self.async_set_updated_data(coordinator.consoles)
+
+    async def _async_update_data(self) -> SmartglassConsoleList:
+        """Fetch console data."""
+
+        try:
+            return await self.client.smartglass.get_console_list()
+        except TimeoutException as e:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="timeout_exception",
+            ) from e
+        except (RequestError, HTTPStatusError) as e:
+            _LOGGER.debug("Xbox exception:", exc_info=True)
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="request_exception",
+            ) from e

@@ -1009,7 +1009,7 @@
           "cleaning_care_program": "Cleaning/care program",
           "maintenance_program": "Maintenance program",
           "normal_operation_mode": "Normal operation mode",
-          "own_program": "Own program"
+          "own_program": "Program"
         }
       },
       "remaining_time": {
@@ -1087,6 +1087,9 @@
     },
     "invalid_target": {
       "message": "Invalid device targeted."
+    },
+    "oauth2_implementation_unavailable": {
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     },
     "set_program_error": {
       "message": "'Set program' action failed: {status} / {message}"
