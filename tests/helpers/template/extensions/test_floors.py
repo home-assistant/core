@@ -218,7 +218,7 @@ async def test_floor_areas(
     assert_result_info(info, [area.id])
     assert info.rate_limit is None
 
-    # Get entities by floor name
+    # Get areas by floor name
     info = render_to_info(hass, f"{{{{ floor_areas('{floor.name}') }}}}")
     assert_result_info(info, [area.id])
     assert info.rate_limit is None
