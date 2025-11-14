@@ -1947,6 +1947,120 @@ async def test_create_entry_next_flow(
         }
 
 
+async def test_create_entry_next_flow_subentry(
+    hass: HomeAssistant, manager: config_entries.ConfigEntries
+) -> None:
+    """Test next_flow parameter for create entry with a subentry flow."""
+
+    async def mock_async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+        """Mock setup."""
+        return True
+
+    async_setup_entry = AsyncMock(return_value=True)
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup=mock_async_setup,
+            async_setup_entry=async_setup_entry,
+        ),
+    )
+    mock_platform(hass, "comp.config_flow", None)
+
+    class TestSubentryFlow(config_entries.ConfigSubentryFlow):
+        """Test subentry flow."""
+
+        async def async_step_user(self, user_input=None):
+            """Test user step."""
+            return self.async_show_form(step_id="user")
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        @classmethod
+        @callback
+        def async_get_supported_subentry_types(cls, config_entry):
+            """Return supported subentry types."""
+            return {"test_sub_type": TestSubentryFlow}
+
+        async def async_step_user(self, user_input=None):
+            """Test create entry with next_flow parameter."""
+            return self.async_create_entry(
+                title="user",
+                data={"flow": "user"},
+                next_flow=(
+                    config_entries.FlowType.CONFIG_SUBENTRIES_FLOW,
+                    "test_sub_type",
+                ),
+            )
+
+    with mock_config_flow("comp", TestFlow):
+        assert await async_setup_component(hass, "comp", {})
+
+        result = await hass.config_entries.flow.async_init(
+            "comp",
+            context={"source": config_entries.SOURCE_USER},
+        )
+        await hass.async_block_till_done()
+
+        # Check that one config entry has been created.
+        entries = hass.config_entries.async_entries("comp")
+        assert len(entries) == 1
+        entry = entries[0]
+        assert async_setup_entry.call_count == 1
+
+        # Check that a subentry flow is in progress
+        subentry_flows = hass.config_entries.subentries.async_progress()
+        assert len(subentry_flows) == 1
+        subentry_flow = subentry_flows[0]
+        assert subentry_flow["handler"] == (entry.entry_id, "test_sub_type")
+
+        # Check that the result from the main flow points to the subentry flow
+        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["result"] is entry
+        assert result["next_flow"] == (
+            config_entries.FlowType.CONFIG_SUBENTRIES_FLOW,
+            subentry_flow["flow_id"],
+        )
+
+
+async def test_create_entry_next_flow_invalid_subentry(
+    hass: HomeAssistant, manager: config_entries.ConfigEntries
+) -> None:
+    """Test next_flow parameter for create entry with an invalid subentry flow."""
+    async_setup_entry = AsyncMock(return_value=True)
+    mock_integration(
+        hass,
+        MockModule("comp", async_setup_entry=async_setup_entry),
+    )
+    mock_platform(hass, "comp.config_flow", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        # No supported subentry types defined
+
+        async def async_step_user(self, user_input=None):
+            """Test create entry with next_flow parameter."""
+            return self.async_create_entry(
+                title="user",
+                data={"flow": "user"},
+                next_flow=(
+                    config_entries.FlowType.CONFIG_SUBENTRIES_FLOW,
+                    "invalid_sub_type",
+                ),
+            )
+
+    with (
+        mock_config_flow("comp", TestFlow),
+        pytest.raises(data_entry_flow.UnknownHandler),
+    ):
+        await hass.config_entries.flow.async_init(
+            "comp",
+            context={"source": config_entries.SOURCE_USER},
+        )
+
+
 @pytest.mark.parametrize(
     ("invalid_next_flow", "error"),
     [
@@ -9675,6 +9789,44 @@ async def test_config_flow_abort_with_nonexistent_next_flow(
         await hass.config_entries.flow.async_init(
             "test", context={"source": config_entries.SOURCE_USER}
         )
+
+
+async def test_config_flow_abort_with_next_flow_subentry(hass: HomeAssistant) -> None:
+    """Test that ConfigFlow.async_abort() can include a subentry next_flow parameter."""
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 1
+
+        async def async_step_user(
+            self, user_input: dict[str, Any] | None = None
+        ) -> config_entries.ConfigFlowResult:
+            return self.async_abort(
+                reason="provision_successful",
+                next_flow=(
+                    config_entries.FlowType.CONFIG_SUBENTRIES_FLOW,
+                    "sub_flow_type",
+                ),
+            )
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.config_flow", None)
+
+    with mock_config_flow("test", TestFlow):
+        result = await hass.config_entries.flow.async_init(
+            "test", context={"source": config_entries.SOURCE_USER}
+        )
+
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "provision_successful"
+    assert "next_flow" in result
+    assert result["next_flow"] == (
+        config_entries.FlowType.CONFIG_SUBENTRIES_FLOW,
+        "sub_flow_type",
+    )
+    # No subentry flow should be created on abort.
+    assert not hass.config_entries.subentries.async_progress()
 
 
 async def test_config_flow_create_entry_with_next_flow(hass: HomeAssistant) -> None:

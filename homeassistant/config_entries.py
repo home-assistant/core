@@ -312,6 +312,7 @@ class FlowType(StrEnum):
     """Flow type."""
 
     CONFIG_FLOW = "config_flow"
+    CONFIG_SUBENTRIES_FLOW = "config_subentries_flow"
     # Add other flow types here as needed in the future,
     # if we want to support them in the `next_flow` parameter.
 
@@ -1704,6 +1705,21 @@ class ConfigEntriesFlowManager(
             # Clean up devices and entities belonging to the existing entry
             # which are not present in the new entry
             self.config_entries._async_clean_up(existing_entry)  # noqa: SLF001
+
+        if (next_flow := result.get("next_flow")) and next_flow[
+            0
+        ] == FlowType.CONFIG_SUBENTRIES_FLOW:
+            subentry_type = next_flow[1]
+            # Create the subentry flow
+            subentry_flow_result = await self.hass.config_entries.subentries.async_init(
+                (entry.entry_id, subentry_type),
+                context={"source": flow.context["source"]},
+            )
+            # Replace the next_flow tuple with the real one
+            result["next_flow"] = (
+                FlowType.CONFIG_SUBENTRIES_FLOW,
+                subentry_flow_result["flow_id"],
+            )
 
         result["result"] = entry
         return result
@@ -3178,10 +3194,14 @@ class ConfigFlow(ConfigEntryBaseFlow):
         if next_flow is None:
             return
         flow_type, flow_id = next_flow
-        if flow_type != FlowType.CONFIG_FLOW:
+        if flow_type == FlowType.CONFIG_FLOW:
+            # Raises UnknownFlow if the flow does not exist.
+            self.hass.config_entries.flow.async_get(flow_id)
+        elif flow_type == FlowType.CONFIG_SUBENTRIES_FLOW:
+            # We can't validate the subentry type string without the config entry.
+            pass
+        else:
             raise HomeAssistantError("Invalid next_flow type")
-        # Raises UnknownFlow if the flow does not exist.
-        self.hass.config_entries.flow.async_get(flow_id)
         result["next_flow"] = next_flow
 
     @callback
