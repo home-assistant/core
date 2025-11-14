@@ -33,6 +33,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
@@ -213,3 +214,151 @@ async def test_data_api_full_flow(
     assert result["data"]["auth_implementation"] == DOMAIN
     assert result["title"] == "mock-user@example.com"
     assert result["result"].unique_id == "mock-user@example.com"
+
+
+@pytest.mark.usefixtures("setup_credentials")
+async def test_data_api_abort_when_already_configured(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Ensure only a single Data API entry can be configured."""
+    existing_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_API_TYPE: API_TYPE_DATA_API,
+            "auth_implementation": DOMAIN,
+            CONF_TOKEN: {"access_token": "existing"},
+        },
+        unique_id="existing@example.com",
+        title="existing@example.com",
+    )
+    existing_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_TYPE: API_TYPE_DATA_API}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_graphql_reauth_updates_entry(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Test GraphQL reauth refreshes credentials."""
+    existing_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_API_TYPE: API_TYPE_GRAPHQL,
+            CONF_ACCESS_TOKEN: "old-token",
+        },
+        unique_id="user-123",
+        title="Old title",
+    )
+    existing_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": existing_entry.entry_id,
+        },
+        data=existing_entry.data,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "graphql"
+
+    tibber_mock = MagicMock()
+    type(tibber_mock).update_info = AsyncMock(return_value=True)
+    type(tibber_mock).user_id = PropertyMock(return_value="user-123")
+    type(tibber_mock).name = PropertyMock(return_value="New title")
+
+    with patch("tibber.Tibber", return_value=tibber_mock):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_ACCESS_TOKEN: "new-token"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    updated_entry = hass.config_entries.async_get_entry(existing_entry.entry_id)
+    assert updated_entry is not None
+    assert updated_entry.data[CONF_ACCESS_TOKEN] == "new-token"
+    assert updated_entry.data[CONF_API_TYPE] == API_TYPE_GRAPHQL
+    assert updated_entry.title == "New title"
+
+
+@pytest.mark.usefixtures("setup_credentials", "current_request_with_host")
+async def test_data_api_reauth_updates_entry(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test Data API reauth refreshes credentials."""
+    existing_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_API_TYPE: API_TYPE_DATA_API,
+            "auth_implementation": DOMAIN,
+            CONF_TOKEN: {
+                "access_token": "old-access-token",
+                "refresh_token": "old-refresh-token",
+            },
+        },
+        unique_id="old@example.com",
+        title="old@example.com",
+    )
+    existing_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": existing_entry.entry_id,
+        },
+        data=existing_entry.data,
+    )
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    authorize_url = result["url"]
+    state = parse_qs(urlparse(authorize_url).query)["state"][0]
+
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == HTTPStatus.OK
+
+    aioclient_mock.post(
+        TOKEN_URL,
+        json={
+            "access_token": "new-access-token",
+            "refresh_token": "new-refresh-token",
+            "token_type": "bearer",
+            "expires_in": 3600,
+        },
+    )
+
+    data_api_client = MagicMock()
+    data_api_client.get_userinfo = AsyncMock(
+        return_value={"email": "old@example.com"}
+    )
+
+    with patch(
+        "homeassistant.components.tibber.config_flow.TibberDataAPI",
+        return_value=data_api_client,
+        create=True,
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    updated_entry = hass.config_entries.async_get_entry(existing_entry.entry_id)
+    assert updated_entry is not None
+    assert updated_entry.data[CONF_TOKEN]["access_token"] == "new-access-token"
+    assert updated_entry.data["auth_implementation"] == DOMAIN
+    assert updated_entry.data[CONF_API_TYPE] == API_TYPE_DATA_API
+    assert updated_entry.title == "old@example.com"

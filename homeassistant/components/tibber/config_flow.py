@@ -147,6 +147,18 @@ class TibberConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
             unique_id = tibber_connection.user_id
             await self.async_set_unique_id(unique_id)
+
+            if self.source == SOURCE_REAUTH:
+                self._abort_if_unique_id_mismatch(reason="wrong_account")
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(),
+                    data_updates={
+                        CONF_API_TYPE: API_TYPE_GRAPHQL,
+                        CONF_ACCESS_TOKEN: access_token,
+                    },
+                    title=tibber_connection.name,
+                )
+
             self._abort_if_unique_id_configured()
 
             data = {
@@ -181,6 +193,13 @@ class TibberConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 },
             )
 
+        if self.source != SOURCE_REAUTH:
+            for entry in self._async_current_entries(include_ignore=False):
+                if entry.entry_id == self.context.get("entry_id"):
+                    continue
+                if entry.data.get(CONF_API_TYPE, API_TYPE_GRAPHQL) == API_TYPE_DATA_API:
+                    return self.async_abort(reason="already_configured")
+
         return await self.async_step_pick_implementation(user_input)
 
     async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
@@ -208,7 +227,23 @@ class TibberConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             return self.async_abort(reason="cannot_connect")
 
         unique_id = userinfo["email"]
+        title = userinfo["email"]
         await self.async_set_unique_id(unique_id)
+        if self.source == SOURCE_REAUTH:
+            reauth_entry = self._get_reauth_entry()
+            self._abort_if_unique_id_mismatch(
+                reason="wrong_account",
+                description_placeholders={"email": reauth_entry.unique_id or ""},
+            )
+            return self.async_update_reload_and_abort(
+                reauth_entry,
+                data_updates={
+                    CONF_API_TYPE: API_TYPE_DATA_API,
+                    "auth_implementation": data["auth_implementation"],
+                    CONF_TOKEN: token,
+                },
+                title=title,
+            )
         self._abort_if_unique_id_configured()
 
         entry_data: dict[str, Any] = {
@@ -216,8 +251,6 @@ class TibberConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             "auth_implementation": data["auth_implementation"],
             CONF_TOKEN: token,
         }
-
-        title = userinfo["email"]
         return self.async_create_entry(
             title=title,
             data=entry_data,
