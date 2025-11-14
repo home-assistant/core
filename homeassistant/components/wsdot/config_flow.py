@@ -4,7 +4,6 @@ import logging
 from types import MappingProxyType
 from typing import Any
 
-from aiohttp.client_exceptions import ClientError
 import voluptuous as vol
 import wsdot as wsdot_api
 
@@ -24,10 +23,6 @@ from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 from .const import CONF_TRAVEL_TIMES, DOMAIN, SUBENTRY_TRAVEL_TIMES
 
 _LOGGER = logging.getLogger(__name__)
-
-
-class InvalidApiKeyError(ClientError):
-    """Exception indicating the user entered an invalid API Key."""
 
 
 class WSDOTConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -52,7 +47,6 @@ class WSDOTConfigFlow(ConfigFlow, domain=DOMAIN):
                 else:
                     errors["base"] = "cannot_connect"
             else:
-                await self.async_set_unique_id(user_input[CONF_API_KEY])
                 data = {CONF_API_KEY: user_input[CONF_API_KEY]}
                 self._async_abort_entries_match(data)
                 return self.async_create_entry(
@@ -72,7 +66,6 @@ class WSDOTConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_info: dict[str, Any]) -> ConfigFlowResult:
         """Handle a flow initialized by import."""
-        await self.async_set_unique_id(import_info[CONF_API_KEY])
         self._async_abort_entries_match({CONF_API_KEY: import_info[CONF_API_KEY]})
         wsdot_travel_times = wsdot_api.WsdotTravelTimes(import_info[CONF_API_KEY])
         try:
@@ -126,27 +119,30 @@ class WSDOTConfigFlow(ConfigFlow, domain=DOMAIN):
 class TravelTimeSubentryFlowHandler(ConfigSubentryFlow):
     """Handle subentry flow for adding WSDOT Travel Times."""
 
+    def __init__(self, *args, **kwargs) -> None:
+        """Initialize TravelTimeSubentryFlowHandler."""
+        super().__init__(*args, **kwargs)
+        self.travel_times: dict[str, int] | None = None
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Add a new Travel Time subentry."""
-        client = self._get_entry().runtime_data
-        if client is None:
-            return self.async_abort(reason="no_travel_time")
-        travel_times = await client.wsdot_travel_times.get_all_travel_times()
+        if self.travel_times is None:
+            client = self._get_entry().runtime_data
+            travel_times = await client.get_all_travel_times()
+            self.travel_times = {tt.Name: tt.TravelTimeID for tt in travel_times}
+
         if user_input is not None:
-            route = [
-                {CONF_NAME: tt.Name, CONF_ID: tt.TravelTimeID}
-                for tt in travel_times
-                if tt.Name == user_input[CONF_NAME]
-            ][0]
-            name = route[CONF_NAME]
-            unique_id = "_".join(name.split())
-            return self.async_create_entry(title=name, unique_id=unique_id, data=route)
+            name = user_input[CONF_NAME]
+            tt_id = self.travel_times[name]
+            data = {CONF_NAME: name, CONF_ID: tt_id}
+            unique_id = str(tt_id)
+            return self.async_create_entry(title=name, unique_id=unique_id, data=data)
 
         names = SelectSelector(
             SelectSelectorConfig(
-                options=[tt.Name for tt in travel_times],
+                options=list(self.travel_times.keys()),
                 sort=True,
             )
         )

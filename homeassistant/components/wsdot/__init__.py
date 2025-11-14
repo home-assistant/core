@@ -1,7 +1,5 @@
 """The wsdot component."""
 
-from dataclasses import dataclass
-
 import wsdot as wsdot_api
 
 from homeassistant.config_entries import ConfigEntry
@@ -13,14 +11,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 PLATFORMS = [Platform.SENSOR]
 
 
-@dataclass
-class WsdotRuntimeData:
-    """WSDOT API handlers."""
-
-    wsdot_travel_times: wsdot_api.WsdotTravelTimes
-
-
-type WsdotConfigEntry = ConfigEntry[WsdotRuntimeData]
+type WsdotConfigEntry = ConfigEntry[wsdot_api.WsdotTravelTimes]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: WsdotConfigEntry) -> bool:
@@ -34,7 +25,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WsdotConfigEntry) -> boo
         await wsdot_travel_times.get_all_travel_times()
     except wsdot_api.WsdotTravelError as api_error:
         raise ConfigEntryAuthFailed from api_error
-    entry.runtime_data = WsdotRuntimeData(wsdot_travel_times=wsdot_travel_times)
+    entry.runtime_data = wsdot_travel_times
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

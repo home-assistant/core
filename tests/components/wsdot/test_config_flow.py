@@ -1,9 +1,10 @@
 """Define tests for the wsdot config flow."""
 
 from typing import Any
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 import pytest
+from wsdot import TravelTime, WsdotTravelError
 
 from homeassistant.components.configurator import ATTR_ERRORS
 from homeassistant.components.wsdot.const import (
@@ -39,8 +40,11 @@ VALID_USER_TRAVEL_TIME_CONFIG = {
 }
 
 
-async def test_show_form(hass: HomeAssistant) -> None:
-    """Test that the form is served with no input."""
+async def test_create_user_entry(
+    hass: HomeAssistant, mock_travel_time: AsyncMock
+) -> None:
+    """Test that the user step works."""
+    # No user data; form is being show for the first time
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}
     )
@@ -48,35 +52,7 @@ async def test_show_form(hass: HomeAssistant) -> None:
     assert result[CONF_TYPE] is FlowResultType.FORM
     assert result[CONF_STEP_ID] == SOURCE_USER
 
-
-@pytest.mark.parametrize(
-    "subentries",
-    [
-        [],
-    ],
-    ids=[""],
-)
-async def test_show_travel_time_form(
-    hass: HomeAssistant,
-    mock_travel_time: AsyncMock,
-    init_integration: MockConfigEntry,
-) -> None:
-    """Test that the Travel Time form is served with no input."""
-    entry = next(iter(hass.config_entries.async_entries(DOMAIN)), None)
-    assert entry
-
-    result = await hass.config_entries.subentries.async_init(
-        (entry.entry_id, SUBENTRY_TRAVEL_TIMES), context={CONF_SOURCE: SOURCE_USER}
-    )
-
-    assert result[CONF_TYPE] is FlowResultType.FORM
-    assert result[CONF_STEP_ID] == SOURCE_USER
-
-
-async def test_create_user_entry(
-    hass: HomeAssistant, mock_travel_time: AsyncMock
-) -> None:
-    """Test that the user step works."""
+    # User data; the user entered data and hit submit
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={CONF_SOURCE: SOURCE_USER},
@@ -104,6 +80,15 @@ async def test_create_travel_time_subentry(
     entry = next(iter(hass.config_entries.async_entries(DOMAIN)), None)
     assert entry
 
+    # No user data; form is being show for the first time
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, SUBENTRY_TRAVEL_TIMES), context={CONF_SOURCE: SOURCE_USER}
+    )
+
+    assert result[CONF_TYPE] is FlowResultType.FORM
+    assert result[CONF_STEP_ID] == SOURCE_USER
+
+    # User data; the user made a choice and hit submit
     result = await hass.config_entries.subentries.async_init(
         (entry.entry_id, SUBENTRY_TRAVEL_TIMES),
         context={CONF_SOURCE: SOURCE_USER},
@@ -179,14 +164,27 @@ async def test_integration_already_exists(
 
 async def test_api_not_valid(
     hass: HomeAssistant,
-    mock_no_auth_travel_time: None,
+    mock_travel_time: TravelTime,
 ) -> None:
     """Test that an auth error to the service returns the user an error flow."""
+    # put a patch on the patch to simulate the error
+    # the fixture patch protects this test from making any network requests
+    with patch("wsdot.WsdotTravelTimes") as mock:
+        client = mock.return_value
+        client.get_travel_time.side_effect = WsdotTravelError()
+        client.get_all_travel_times.side_effect = WsdotTravelError()
+        config_flow = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={CONF_SOURCE: SOURCE_USER},
+            data=VALID_USER_CONFIG,
+        )
+
+    assert config_flow[CONF_TYPE] is FlowResultType.FORM
+    assert config_flow[ATTR_ERRORS][CONF_BASE] == "cannot_connect"
+
     config_flow = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={CONF_SOURCE: SOURCE_USER},
         data=VALID_USER_CONFIG,
     )
-
-    assert config_flow[CONF_TYPE] is FlowResultType.FORM
-    assert config_flow[ATTR_ERRORS][CONF_BASE] == "cannot_connect"
+    assert config_flow[CONF_TYPE] is FlowResultType.CREATE_ENTRY

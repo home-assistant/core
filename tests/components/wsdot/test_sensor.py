@@ -16,12 +16,11 @@ from homeassistant.const import (
     CONF_PLATFORM,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry
 
 TRAVEL_TIME_SUBENTRY = {
     "subentry_type": "travel_time",
@@ -47,7 +46,6 @@ async def test_travel_sensor_details(
 ) -> None:
     """Test the wsdot Travel Time sensor details."""
     await hass.async_block_till_done()
-    async_fire_time_changed(hass, dt_util.utcnow() + wsdot_sensor.SCAN_INTERVAL)
     state = hass.states.get("sensor.seattle_bellevue_via_i_90_eb_am")
     assert state is not None
     assert state.name == "Seattle-Bellevue via I-90 (EB AM)"
@@ -80,7 +78,6 @@ async def test_travel_sensor_platform_setup(
         },
     )
     await hass.async_block_till_done()
-    async_fire_time_changed(hass, dt_util.utcnow() + wsdot_sensor.SCAN_INTERVAL)
     state = hass.states.get("sensor.seattle_bellevue_via_i_90_eb_am")
     assert state is not None
     assert state.name == "Seattle-Bellevue via I-90 (EB AM)"
@@ -198,24 +195,20 @@ async def test_travel_sensor_platform_setup_raises_issue(
         pytest.fail("mock_async_add_entities should never be called")
 
     await wsdot_sensor.async_setup_platform(
-        hass,
-        {
-            Platform.SENSOR: [
-                {
-                    CONF_PLATFORM: DOMAIN,
-                    CONF_TRAVEL_TIMES: [{CONF_ID: 96, CONF_NAME: "I90 EB"}],
-                    **mock_config_data,
-                }
-            ]
+        hass=hass,
+        config={
+            CONF_PLATFORM: DOMAIN,
+            CONF_TRAVEL_TIMES: [{CONF_ID: 96, CONF_NAME: "I90 EB"}],
+            **mock_config_data,
         },
-        mock_async_add_entities,
+        async_add_entities=mock_async_add_entities,
     )
     await hass.async_block_till_done()
 
     entries = list(hass.config_entries.async_entries(DOMAIN))
     assert len(entries) == 1
 
-    issue = issue_registry.async_get_issue(DOMAIN, "deprecated_platform_yaml")
+    issue = issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, "deprecated_yaml")
     assert issue
     assert issue.active is True
     assert issue.severity == ir.IssueSeverity.WARNING

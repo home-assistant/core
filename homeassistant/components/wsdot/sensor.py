@@ -14,16 +14,9 @@ from homeassistant.components.sensor import (
     SensorEntity,
 )
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_ID,
-    CONF_NAME,
-    CONF_PLATFORM,
-    CONF_SOURCE,
-    Platform,
-    UnitOfTime,
-)
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_API_KEY, CONF_ID, CONF_NAME, UnitOfTime
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -57,39 +50,39 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Migrate a platform-style wsdot to entry-style."""
-    entries = hass.config_entries.async_entries(DOMAIN)
-    if entries:
-        for entry in entries:
-            if entry.data[CONF_API_KEY] in [
-                config_entry[CONF_API_KEY]
-                for config_entry in config[Platform.SENSOR]
-                if config_entry[CONF_PLATFORM] == DOMAIN
-            ]:
-                ir.async_create_issue(
-                    hass,
-                    DOMAIN,
-                    "deprecated_platform_yaml",
-                    breaks_in_ha_version="2025.11.0",
-                    is_fixable=False,
-                    is_persistent=True,
-                    issue_domain=DOMAIN,
-                    severity=ir.IssueSeverity.WARNING,
-                    translation_key="deprecated_platform_yaml",
-                    translation_placeholders={
-                        "domain": DOMAIN,
-                    },
-                )
-                _LOGGER.info(
-                    "Found already-setup WSDOT entry. Skipping platform setup. Your "
-                    'configuration.yaml might contain a "wsdot" entry in `sensor.platform` '
-                    "that is no longer needed"
-                )
-        return
-
-    await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={CONF_SOURCE: SOURCE_IMPORT},
+        context={"source": SOURCE_IMPORT},
         data=config,
+    )
+    if (
+        result.get("type") is FlowResultType.ABORT
+        and result.get("reason") != "already_configured"
+    ):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_{result.get('reason')}",
+            breaks_in_ha_version="2026.4.0",
+            is_fixable=False,
+            is_persistent=True,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=f"deprecated_yaml_import_issue_{result.get('reason')}",
+            translation_placeholders={"domain": DOMAIN, "integration_title": "WSDOT"},
+        )
+        return
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        "deprecated_yaml",
+        breaks_in_ha_version="2026.4.0",
+        is_fixable=False,
+        is_persistent=True,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={"domain": DOMAIN, "integration_title": "WSDOT"},
     )
 
 
@@ -103,9 +96,11 @@ async def async_setup_entry(
         name = subentry.data[CONF_NAME]
         travel_time_id = subentry.data[CONF_ID]
         sensor = WashingtonStateTravelTimeSensor(
-            name, entry.runtime_data.wsdot_travel_times, travel_time_id
+            name, entry.runtime_data, travel_time_id
         )
-        async_add_entities([sensor], config_subentry_id=subentry_id)
+        async_add_entities(
+            [sensor], config_subentry_id=subentry_id, update_before_add=True
+        )
 
 
 class WashingtonStateTransportSensor(SensorEntity):
