@@ -18,6 +18,16 @@ WITH_FAMILY = True
 MAX_INTERVAL = 15
 GPS_ACCURACY_THRESHOLD = 250
 
+# Fakers
+FIRST_NAME = "user"
+LAST_NAME = "name"
+
+MEMBER_1_FIRST_NAME = "John"
+MEMBER_1_LAST_NAME = "TRAVOLTA"
+MEMBER_1_FULL_NAME = MEMBER_1_FIRST_NAME + " " + MEMBER_1_LAST_NAME
+MEMBER_1_PERSON_ID = (MEMBER_1_FIRST_NAME + MEMBER_1_LAST_NAME).lower()
+MEMBER_1_APPLE_ID = MEMBER_1_PERSON_ID + "@icloud.com"
+
 MOCK_CONFIG = {
     CONF_USERNAME: USERNAME,
     CONF_PASSWORD: PASSWORD,
@@ -29,3 +39,21 @@ MOCK_CONFIG = {
 TRUSTED_DEVICES = [
     {"deviceType": "SMS", "areaCode": "", "phoneNumber": "*******58", "deviceId": "1"}
 ]
+
+USER_INFO = {
+    "accountFormatter": 0,
+    "firstName": FIRST_NAME,
+    "lastName": LAST_NAME,
+    "membersInfo": {
+        MEMBER_1_PERSON_ID: {
+            "accountFormatter": 0,
+            "firstName": MEMBER_1_FIRST_NAME,
+            "lastName": MEMBER_1_LAST_NAME,
+            "deviceFetchStatus": "DONE",
+            "useAuthWidget": True,
+            "isHSA": True,
+            "appleId": MEMBER_1_APPLE_ID,
+        }
+    },
+    "hasMembers": True,
+}
