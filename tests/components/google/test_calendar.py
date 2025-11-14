@@ -1579,7 +1579,7 @@ async def test_event_color_id(
         "end": {"dateTime": end_event.isoformat()},
     }
     mock_events_list_items([event])
-    
+
     # Mock the API call to fetch event color
     aioclient_mock.get(
         f"{API_BASE_URL}calendars/{CALENDAR_ID}/events/{event['id']}?fields=colorId",

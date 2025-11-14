@@ -7,6 +7,7 @@ import dataclasses
 from datetime import datetime, timedelta
 import logging
 from typing import Any, cast
+from urllib.request import pathname2url
 
 from gcal_sync.api import Range, SyncEventsRequest
 from gcal_sync.exceptions import ApiException
@@ -428,7 +429,7 @@ class GoogleCalendarEntity(
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         super()._handle_coordinator_update()
-        
+
         # Fetch color ID for the current event in the background
         (event, _) = self._event_with_offset()
         if event and event.uid:
@@ -437,15 +438,15 @@ class GoogleCalendarEntity(
                 self._async_update_event_color(event.uid),
                 "google.calendar-color-fetch",
             )
-    
+
     async def _async_update_event_color(self, event_id: str) -> None:
         """Update the color ID for the current event."""
         try:
-            from urllib.request import pathname2url
-            
-            # Get raw event data to extract colorId
+            # Use the service's internal auth to fetch raw event data with colorId
+            # The gcal_sync Event model doesn't expose colorId, so we fetch it directly
             calendar_service = self.coordinator.config_entry.runtime_data.service
-            raw_event_data = await calendar_service._auth.get_json(
+            # Access the auth directly to get raw JSON with colorId field
+            raw_event_data = await calendar_service._auth.get_json(  # noqa: SLF001
                 f"calendars/{pathname2url(self.calendar_id)}/events/{pathname2url(event_id)}",
                 params={"fields": "colorId"},
             )
@@ -453,7 +454,7 @@ class GoogleCalendarEntity(
             if color_id != self._event_color_id:
                 self._event_color_id = color_id
                 self.async_write_ha_state()
-        except Exception as err:
+        except (ApiException, KeyError, ValueError) as err:
             _LOGGER.debug("Failed to fetch event color for %s: %s", event_id, err)
 
     async def async_get_events(
