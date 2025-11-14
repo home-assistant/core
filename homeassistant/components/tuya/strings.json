@@ -616,7 +616,6 @@
           "level": "Leveling",
           "sleep": "Sleeping",
           "standby": "[%key:common::state::standby%]",
-          "standly": "[%key:common::state::standby%]",
           "uv": "Sanitizing"
         }
       },
