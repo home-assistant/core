@@ -19,8 +19,8 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'HUSQVARNA',
-    'model': 'AUTOMOWER®',
+    'manufacturer': 'Husqvarna',
+    'model': 'Automower',
     'model_id': '450XH',
     'name': 'Test Mower 1',
     'name_by_user': None,
