@@ -49,6 +49,7 @@ class DeviceExtension(BaseTemplateExtension):
                     as_global=True,
                     as_filter=True,
                     requires_hass=True,
+                    limited_ok=False,
                 ),
                 TemplateFunction(
                     "device_attr",
@@ -56,6 +57,7 @@ class DeviceExtension(BaseTemplateExtension):
                     as_global=True,
                     as_filter=True,
                     requires_hass=True,
+                    limited_ok=False,
                 ),
                 TemplateFunction(
                     "is_device_attr",
@@ -63,6 +65,7 @@ class DeviceExtension(BaseTemplateExtension):
                     as_global=True,
                     as_test=True,
                     requires_hass=True,
+                    limited_ok=False,
                 ),
             ],
         )
