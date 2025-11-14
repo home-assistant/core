@@ -18,7 +18,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
-from .const import LOGGER, TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
+from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
 from .models import (
     DPCodeBase64Wrapper,
@@ -28,7 +28,7 @@ from .models import (
 )
 
 
-class _TuyaEventWrapper(DPCodeTypeInformationWrapper):
+class _DPCodeEventWrapper(DPCodeTypeInformationWrapper):
     """Base class for Tuya event wrappers."""
 
     @property
@@ -52,7 +52,7 @@ class _TuyaEventWrapper(DPCodeTypeInformationWrapper):
         return None
 
 
-class _EventEnumWrapper(DPCodeEnumWrapper, _TuyaEventWrapper):
+class _EventEnumWrapper(DPCodeEnumWrapper, _DPCodeEventWrapper):
     """Wrapper for event enum DP codes."""
 
     @property
@@ -72,18 +72,17 @@ class _EventEnumWrapper(DPCodeEnumWrapper, _TuyaEventWrapper):
         return self.read_device_status(device)
 
 
-class _AlarmMessageWrapper(DPCodeStringWrapper, _TuyaEventWrapper):
+class _AlarmMessageWrapper(DPCodeStringWrapper, _DPCodeEventWrapper):
     """Wrapper for a STRING message on DPCode.ALARM_MESSAGE."""
 
     def get_event_attributes(self, device: CustomerDevice) -> dict[str, Any] | None:
         """Return the event attributes for the enum."""
         if (raw_value := self._read_device_status_raw(device)) is None:
             return None
-        LOGGER.warning("_AlarmMessageWrapper: %s", raw_value)
         return {"message": b64decode(raw_value).decode("utf-8")}
 
 
-class _DoorbellPicWrapper(DPCodeBase64Wrapper, _TuyaEventWrapper):
+class _DoorbellPicWrapper(DPCodeBase64Wrapper, _DPCodeEventWrapper):
     """Wrapper for a RAW message on DPCode.DOORBELL_PIC.
 
     It is expected that the RAW data is base64/utf8 encoded URL of the picture.
@@ -93,7 +92,6 @@ class _DoorbellPicWrapper(DPCodeBase64Wrapper, _TuyaEventWrapper):
         """Return the event attributes for the enum."""
         if (raw_value := self._read_device_status_raw(device)) is None:
             return None
-        LOGGER.warning("_DoorbellPicWrapper: %s", raw_value)
         return {"message": b64decode(raw_value).decode("utf-8")}
 
 
@@ -101,7 +99,7 @@ class _DoorbellPicWrapper(DPCodeBase64Wrapper, _TuyaEventWrapper):
 class TuyaEventEntityDescription(EventEntityDescription):
     """Describe a Tuya Event entity."""
 
-    wrapper_class: type[_TuyaEventWrapper] = _EventEnumWrapper
+    wrapper_class: type[_DPCodeEventWrapper] = _EventEnumWrapper
 
 
 # All descriptions can be found here. Mostly the Enum data types in the
@@ -227,7 +225,7 @@ class TuyaEventEntity(TuyaEntity, EventEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: EventEntityDescription,
-        dpcode_wrapper: _TuyaEventWrapper,
+        dpcode_wrapper: _DPCodeEventWrapper,
     ) -> None:
         """Init Tuya event entity."""
         super().__init__(device, device_manager)
