@@ -73,7 +73,7 @@ class MieleDataUpdateCoordinator(DataUpdateCoordinator[MieleCoordinatorData]):
                     _LOGGER.debug(
                         "Error fetching actions for device %s: Status: %s, Message: %s",
                         device_id,
-                        err.status,
+                        str(err.status),
                         err.message,
                     )
                     actions_json = {}
