@@ -29,7 +29,12 @@ from homeassistant.util.json import json_loads_object
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, DPType, WorkMode
 from .entity import TuyaEntity
-from .models import DPCodeBooleanWrapper, IntegerTypeData, find_dpcode
+from .models import (
+    DPCodeBooleanWrapper,
+    DPCodeEnumWrapper,
+    IntegerTypeData,
+    find_dpcode,
+)
 from .util import get_dpcode, get_dptype, remap_value
 
 
@@ -429,7 +434,13 @@ async def async_setup_entry(
             if descriptions := LIGHTS.get(device.category):
                 entities.extend(
                     TuyaLightEntity(
-                        device, manager, description, switch_wrapper=switch_wrapper
+                        device,
+                        manager,
+                        description,
+                        color_mode_wrapper=DPCodeEnumWrapper.find_dpcode(
+                            device, description.color_mode, prefer_function=True
+                        ),
+                        switch_wrapper=switch_wrapper,
                     )
                     for description in descriptions
                     if (
@@ -458,7 +469,6 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
     _brightness: IntegerTypeData | None = None
     _color_data_dpcode: DPCode | None = None
     _color_data_type: ColorTypeData | None = None
-    _color_mode: DPCode | None = None
     _color_temp: IntegerTypeData | None = None
     _white_color_mode = ColorMode.COLOR_TEMP
     _fixed_color_mode: ColorMode | None = None
@@ -471,18 +481,17 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         device_manager: Manager,
         description: TuyaLightEntityDescription,
         *,
+        color_mode_wrapper: DPCodeEnumWrapper | None,
         switch_wrapper: DPCodeBooleanWrapper,
     ) -> None:
         """Init TuyaHaLight."""
         super().__init__(device, device_manager)
         self.entity_description = description
         self._attr_unique_id = f"{super().unique_id}{description.key}"
+        self._color_mode_wrapper = color_mode_wrapper
         self._switch_wrapper = switch_wrapper
 
         color_modes: set[ColorMode] = {ColorMode.ONOFF}
-
-        # Determine DPCodes
-        self._color_mode_dpcode = get_dpcode(self.device, description.color_mode)
 
         if int_type := find_dpcode(
             self.device,
@@ -566,14 +575,13 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
             self._switch_wrapper.get_update_command(self.device, True),
         ]
 
-        if self._color_mode_dpcode and (
+        if self._color_mode_wrapper and (
             ATTR_WHITE in kwargs or ATTR_COLOR_TEMP_KELVIN in kwargs
         ):
             commands += [
-                {
-                    "code": self._color_mode_dpcode,
-                    "value": WorkMode.WHITE,
-                },
+                self._color_mode_wrapper.get_update_command(
+                    self.device, WorkMode.WHITE
+                ),
             ]
 
         if self._color_temp and ATTR_COLOR_TEMP_KELVIN in kwargs:
@@ -602,12 +610,11 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
                 and ATTR_COLOR_TEMP_KELVIN not in kwargs
             )
         ):
-            if self._color_mode_dpcode:
+            if self._color_mode_wrapper:
                 commands += [
-                    {
-                        "code": self._color_mode_dpcode,
-                        "value": WorkMode.COLOUR,
-                    },
+                    self._color_mode_wrapper.get_update_command(
+                        self.device, WorkMode.COLOUR
+                    ),
                 ]
 
             if not (brightness := kwargs.get(ATTR_BRIGHTNESS)):
@@ -765,8 +772,9 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         # and HS, determine which mode the light is in. We consider it to be in HS color
         # mode, when work mode is anything else than "white".
         if (
-            self._color_mode_dpcode
-            and self.device.status.get(self._color_mode_dpcode) != WorkMode.WHITE
+            self._color_mode_wrapper
+            and self._color_mode_wrapper.read_device_status(self.device)
+            != WorkMode.WHITE
         ):
             return ColorMode.HS
         return self._white_color_mode
