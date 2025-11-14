@@ -8,6 +8,7 @@ import pytest
 from homeassistant.components.velux import DOMAIN
 from homeassistant.components.velux.binary_sensor import Window
 from homeassistant.components.velux.light import LighteningDevice
+from homeassistant.components.velux.scene import PyVLXScene as Scene
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 
@@ -91,10 +92,23 @@ def mock_light() -> AsyncMock:
 
 
 @pytest.fixture
-def mock_pyvlx(mock_window: MagicMock, mock_light: MagicMock) -> Generator[MagicMock]:
+def mock_scene() -> AsyncMock:
+    """Create a mock Velux scene."""
+    scene = AsyncMock(spec=Scene, autospec=True)
+    scene.name = "Test Scene"
+    scene.scene_id = "1234"
+    scene.scene = AsyncMock()
+    return scene
+
+
+@pytest.fixture
+def mock_pyvlx(
+    mock_window: MagicMock, mock_light: MagicMock, mock_scene: AsyncMock
+) -> Generator[MagicMock]:
     """Create the library mock and patch PyVLX."""
     pyvlx = MagicMock()
     pyvlx.nodes = [mock_window, mock_light]
+    pyvlx.scenes = [mock_scene]
     pyvlx.load_scenes = AsyncMock()
     pyvlx.load_nodes = AsyncMock()
     pyvlx.disconnect = AsyncMock()
