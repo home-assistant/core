@@ -45,9 +45,9 @@ def _task_api_data(item: TodoItem, api_data: Task | None = None) -> dict[str, An
     }
     if due := item.due:
         if isinstance(due, datetime.datetime):
-            item_data["due_datetime"] = due.isoformat()
+            item_data["due_datetime"] = due
         else:
-            item_data["due_date"] = due.isoformat()
+            item_data["due_date"] = due
         # In order to not lose any recurrence metadata for the task, we need to
         # ensure that we send the `due_string` param if the task has it set.
         # NOTE: It's ok to send stale data for non-recurring tasks. Any provided
@@ -89,38 +89,55 @@ class TodoistTodoListEntity(CoordinatorEntity[TodoistCoordinator], TodoListEntit
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        if self.coordinator.data is None:
+
+        if not self.coordinator.data:
             self._attr_todo_items = None
-        else:
-            items = []
-            for task in self.coordinator.data:
-                if task.project_id != self._project_id:
-                    continue
-                if task.parent_id is not None:
-                    # Filter out sub-tasks until they are supported by the UI.
-                    continue
-                if task.is_completed:
-                    status = TodoItemStatus.COMPLETED
-                else:
-                    status = TodoItemStatus.NEEDS_ACTION
-                due: datetime.date | datetime.datetime | None = None
-                if task_due := task.due:
-                    if task_due.datetime:
-                        due = dt_util.as_local(
-                            datetime.datetime.fromisoformat(task_due.datetime)
-                        )
-                    elif task_due.date:
-                        due = datetime.date.fromisoformat(task_due.date)
-                items.append(
-                    TodoItem(
-                        summary=task.content,
-                        uid=task.id,
-                        status=status,
-                        due=due,
-                        description=task.description or None,  # Don't use empty string
-                    )
+            super()._handle_coordinator_update()
+            return
+
+        def parse_due(task_due) -> datetime.date | datetime.datetime | None:
+            """Parse Todoist due field safely."""
+            if not task_due:
+                return None
+            raw_dt = getattr(task_due, "datetime", None)
+            if raw_dt:
+                if isinstance(raw_dt, datetime.datetime):
+                    return dt_util.as_local(raw_dt)
+                if isinstance(raw_dt, str):
+                    dt = dt_util.parse_datetime(raw_dt)
+                    if dt:
+                        return dt_util.as_local(dt)
+            raw_date = getattr(task_due, "date", None)
+            if isinstance(raw_date, datetime.date):
+                return raw_date
+            if isinstance(raw_date, str):
+                return dt_util.parse_date(raw_date)
+            return None
+
+        items: list[TodoItem] = []
+
+        for task in self.coordinator.data:
+            if task.project_id != self._project_id or task.parent_id is not None:
+                continue
+
+            status = (
+                TodoItemStatus.COMPLETED
+                if task.is_completed
+                else TodoItemStatus.NEEDS_ACTION
+            )
+            due = parse_due(task.due)
+
+            items.append(
+                TodoItem(
+                    summary=task.content,
+                    uid=task.id,
+                    status=status,
+                    due=due,
+                    description=task.description or None,
                 )
-            self._attr_todo_items = items
+            )
+
+        self._attr_todo_items = items
         super()._handle_coordinator_update()
 
     async def async_create_todo_item(self, item: TodoItem) -> None:
@@ -147,9 +164,10 @@ class TodoistTodoListEntity(CoordinatorEntity[TodoistCoordinator], TodoListEntit
 
                 if item.status != existing_item.status:
                     if item.status == TodoItemStatus.COMPLETED:
-                        await self.coordinator.api.close_task(task_id=uid)
+                        await self.coordinator.api.complete_task(task_id=uid)
                     else:
-                        await self.coordinator.api.reopen_task(task_id=uid)
+                        await self.coordinator.api.uncomplete_task(task_id=uid)
+
         await self.coordinator.async_refresh()
 
     async def async_delete_todo_items(self, uids: list[str]) -> None:

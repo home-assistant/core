@@ -5,12 +5,12 @@ from __future__ import annotations
 from datetime import date, datetime, timedelta
 import logging
 from typing import Any
-import uuid
 
 from todoist_api_python.api_async import TodoistAPIAsync
-from todoist_api_python.endpoints import get_sync_url
-from todoist_api_python.headers import create_headers
-from todoist_api_python.models import Due, Label, Task
+
+# from todoist_api_python.endpoints import get_sync_url
+# from todoist_api_python.headers import create_headers
+from todoist_api_python.models import Collaborator, Due, Label, Project, Task
 import voluptuous as vol
 
 from homeassistant.components.calendar import (
@@ -23,7 +23,8 @@ from homeassistant.const import CONF_ID, CONF_NAME, CONF_TOKEN, EVENT_HOMEASSIST
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+
+# from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -157,10 +158,14 @@ async def async_setup_platform(
 
     # Setup devices:
     # Grab all projects.
-    projects = await api.get_projects()
+    projects: list[Project] = []
+    async for project_batch in await api.get_projects():
+        projects.extend(project_batch)
 
     # Grab all labels
-    labels = await api.get_labels()
+    labels: list[Label] = []
+    async for label_batch in await api.get_labels():
+        labels.extend(label_batch)
 
     # Add all Todoist-defined projects.
     project_devices = []
@@ -208,7 +213,7 @@ async def async_setup_platform(
     async_register_services(hass, coordinator)
 
 
-def async_register_services(  # noqa: C901
+def async_register_services(
     hass: HomeAssistant, coordinator: TodoistCoordinator
 ) -> None:
     """Register services."""
@@ -216,9 +221,9 @@ def async_register_services(  # noqa: C901
     if hass.services.has_service(DOMAIN, SERVICE_NEW_TASK):
         return
 
-    session = async_get_clientsession(hass)
+    # session = async_get_clientsession(hass)
 
-    async def handle_new_task(call: ServiceCall) -> None:  # noqa: C901
+    async def handle_new_task(call: ServiceCall) -> None:
         """Call when a user creates a new Todoist Task from Home Assistant."""
         project_name = call.data[PROJECT_NAME]
         projects = await coordinator.async_get_projects()
@@ -256,7 +261,7 @@ def async_register_services(  # noqa: C901
                 )
 
         # Create the task
-        content = call.data[CONTENT]
+        # content = call.data[CONTENT]
         data: dict[str, Any] = {"project_id": project_id}
 
         if description := call.data.get(DESCRIPTION):
@@ -269,7 +274,10 @@ def async_register_services(  # noqa: C901
             data["labels"] = task_labels
 
         if ASSIGNEE in call.data:
-            collaborators = await coordinator.api.get_collaborators(project_id)
+            collaborators: list[Collaborator] = []
+            async for batch in await coordinator.api.get_collaborators(project_id):
+                collaborators.extend(batch)
+
             collaborator_id_lookup = {
                 collab.name.lower(): collab.id for collab in collaborators
             }
@@ -302,53 +310,57 @@ def async_register_services(  # noqa: C901
             date_format = "%Y-%m-%dT%H:%M:%S"
             data["due_datetime"] = datetime.strftime(due_date, date_format)
 
-        api_task = await coordinator.api.add_task(content, **data)
+        # api_task = await coordinator.api.add_task(content, **data)
 
         # @NOTE: The rest-api doesn't support reminders, this works manually using
         # the sync api, in order to keep functional parity with the component.
         # https://developer.todoist.com/sync/v9/#reminders
-        sync_url = get_sync_url("sync")
-        _reminder_due: dict = {}
-        if REMINDER_DATE_STRING in call.data:
-            _reminder_due["string"] = call.data[REMINDER_DATE_STRING]
+        # sync_url = get_sync_url("sync")
+        # _reminder_due: dict = {}
+        # if REMINDER_DATE_STRING in call.data:
+        #     _reminder_due["string"] = call.data[REMINDER_DATE_STRING]
 
-        if REMINDER_DATE_LANG in call.data:
-            _reminder_due["lang"] = call.data[REMINDER_DATE_LANG]
+        # if REMINDER_DATE_LANG in call.data:
+        #     _reminder_due["lang"] = call.data[REMINDER_DATE_LANG]
 
-        if REMINDER_DATE in call.data:
-            due_date = dt_util.parse_datetime(call.data[REMINDER_DATE])
-            if due_date is None:
-                due = dt_util.parse_date(call.data[REMINDER_DATE])
-                if due is None:
-                    raise ValueError(
-                        f"Invalid reminder_date: {call.data[REMINDER_DATE]}"
-                    )
-                due_date = datetime(due.year, due.month, due.day)
-            # Format it in the manner Todoist expects
-            due_date = dt_util.as_utc(due_date)
-            date_format = "%Y-%m-%dT%H:%M:%S"
-            _reminder_due["date"] = datetime.strftime(due_date, date_format)
+        # if REMINDER_DATE in call.data:
+        #     due_date = dt_util.parse_datetime(call.data[REMINDER_DATE])
+        #     if due_date is None:
+        #         due = dt_util.parse_date(call.data[REMINDER_DATE])
+        #         if due is None:
+        #             raise ValueError(
+        #                 f"Invalid reminder_date: {call.data[REMINDER_DATE]}"
+        #             )
+        #         due_date = datetime(due.year, due.month, due.day)
+        #     # Format it in the manner Todoist expects
+        #     due_date = dt_util.as_utc(due_date)
+        #     date_format = "%Y-%m-%dT%H:%M:%S"
+        #     _reminder_due["date"] = datetime.strftime(due_date, date_format)
 
-        async def add_reminder(reminder_due: dict):
-            reminder_data = {
-                "commands": [
-                    {
-                        "type": "reminder_add",
-                        "temp_id": str(uuid.uuid1()),
-                        "uuid": str(uuid.uuid1()),
-                        "args": {
-                            "item_id": api_task.id,
-                            "type": "absolute",
-                            "due": reminder_due,
-                        },
-                    }
-                ]
-            }
-            headers = create_headers(token=coordinator.token, with_content=True)
-            return await session.post(sync_url, headers=headers, json=reminder_data)
+        # async def add_reminder(reminder_due: dict):
+        #     reminder_data = {
+        #         "commands": [
+        #             {
+        #                 "type": "reminder_add",
+        #                 "temp_id": str(uuid.uuid1()),
+        #                 "uuid": str(uuid.uuid1()),
+        #                 "args": {
+        #                     "item_id": api_task.id,
+        #                     "type": "absolute",
+        #                     "due": reminder_due,
+        #                 },
+        #             }
+        #         ]
+        #     }
+        #     headers = create_headers(token=coordinator.token, with_content=True)
+        #     return await session.post(sync_url, headers=headers, json=reminder_data)
 
-        if _reminder_due:
-            await add_reminder(_reminder_due)
+        # if _reminder_due:
+        #     await add_reminder(_reminder_due)
+        # if any(k in call.data for k in [REMINDER_DATE, REMINDER_DATE_STRING]):
+        #     _LOGGER.warning(
+        #         "Todoist REST API no longer supports reminder creation via API."
+        #     )
 
         _LOGGER.debug("Created Todoist task: %s", call.data[CONTENT])
 
@@ -561,16 +573,29 @@ class TodoistProjectData:
         # complete the task.
         # Generally speaking, that means right now.
         if data.due is not None:
-            end = dt_util.parse_datetime(
-                data.due.datetime if data.due.datetime else data.due.date
+            due_value = getattr(data.due, "datetime", None) or getattr(
+                data.due, "date", None
             )
-            task[END] = dt_util.as_local(end) if end is not None else end
+            end: datetime | None
+            if isinstance(due_value, (datetime, date)):
+                end = (
+                    due_value
+                    if isinstance(due_value, datetime)
+                    else datetime.combine(due_value, datetime.min.time())
+                )
+            elif isinstance(due_value, str):
+                end = dt_util.parse_datetime(due_value)
+            else:
+                end = None
+
+            # Assign end safely without inline type hint
+            task[END] = dt_util.as_local(end) if end is not None else None
+
             if task[END] is not None:
                 if self._due_date_days is not None and (
                     task[END] > dt_util.now() + self._due_date_days
                 ):
-                    # This task is out of range of our due date;
-                    # it shouldn't be counted.
+                    # This task is out of range of our due date; it shouldn't be counted.
                     return None
 
                 task[DUE_TODAY] = task[END].date() == dt_util.now().date()
@@ -579,8 +604,6 @@ class TodoistProjectData:
                 if task[END] <= task[START]:
                     task[OVERDUE] = True
                     # Set end time to the current time plus 1 hour.
-                    # We're pretty much guaranteed to update within that 1 hour,
-                    # so it should be fine.
                     task[END] = task[START] + timedelta(hours=1)
                 else:
                     task[OVERDUE] = False
@@ -751,12 +774,17 @@ class TodoistProjectData:
 
 
 def get_start(due: Due) -> datetime | date | None:
-    """Return the task due date as a start date or date time."""
-    if due.datetime:
+    """Return the task due date as a start date or datetime."""
+    if hasattr(due, "datetime") and due.datetime:
         start = dt_util.parse_datetime(due.datetime)
         if not start:
             return None
         return dt_util.as_local(start)
-    if due.date:
-        return dt_util.parse_date(due.date)
+    if hasattr(due, "date") and due.date:
+        if isinstance(due.date, str):
+            return dt_util.parse_date(due.date)
+        if isinstance(due.date, date):
+            return due.date
+        return None
+
     return None
