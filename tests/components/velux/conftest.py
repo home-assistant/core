@@ -8,6 +8,7 @@ from pyvlx.lightening_device import LighteningDevice
 from pyvlx.opening_device import Blind, Window
 
 from homeassistant.components.velux import DOMAIN
+from homeassistant.components.velux.scene import PyVLXScene as Scene
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 
@@ -114,7 +115,9 @@ def mock_cover_type(request: pytest.FixtureRequest) -> AsyncMock:
 
 
 @pytest.fixture
-def mock_pyvlx(request: pytest.FixtureRequest) -> Generator[MagicMock]:
+def mock_pyvlx(
+    mock_scene: AsyncMock, request: pytest.FixtureRequest
+) -> Generator[MagicMock]:
     """Create the library mock and patch PyVLX in both component and config_flow.
 
     Tests can parameterize this fixture with the name of a node fixture to include
@@ -129,6 +132,8 @@ def mock_pyvlx(request: pytest.FixtureRequest) -> Generator[MagicMock]:
     else:
         pyvlx.nodes = []
 
+    pyvlx.scenes = [mock_scene]
+
     # Async methods invoked by the integration/config flow
     pyvlx.load_scenes = AsyncMock()
     pyvlx.load_nodes = AsyncMock()
@@ -140,6 +145,16 @@ def mock_pyvlx(request: pytest.FixtureRequest) -> Generator[MagicMock]:
         patch("homeassistant.components.velux.config_flow.PyVLX", return_value=pyvlx),
     ):
         yield pyvlx
+
+
+@pytest.fixture
+def mock_scene() -> AsyncMock:
+    """Create a mock Velux scene."""
+    scene = AsyncMock(spec=Scene, autospec=True)
+    scene.name = "Test Scene"
+    scene.scene_id = "1234"
+    scene.scene = AsyncMock()
+    return scene
 
 
 # Fixture to set up the integration for testing, needs platform fixture, to be defined in each test file
