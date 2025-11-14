@@ -76,7 +76,7 @@ class _AlarmMessageWrapper(DPCodeStringWrapper, _DPCodeEventWrapper):
     """Wrapper for a STRING message on DPCode.ALARM_MESSAGE."""
 
     def get_event_attributes(self, device: CustomerDevice) -> dict[str, Any] | None:
-        """Return the event attributes for the enum."""
+        """Return the event attributes for the alarm message."""
         if (raw_value := self._read_device_status_raw(device)) is None:
             return None
         return {"message": b64decode(raw_value).decode("utf-8")}
@@ -89,7 +89,7 @@ class _DoorbellPicWrapper(DPCodeBase64Wrapper, _DPCodeEventWrapper):
     """
 
     def get_event_attributes(self, device: CustomerDevice) -> dict[str, Any] | None:
-        """Return the event attributes for the enum."""
+        """Return the event attributes for the doorbell picture."""
         if (raw_value := self._read_device_status_raw(device)) is None:
             return None
         return {"message": b64decode(raw_value).decode("utf-8")}
