@@ -63,7 +63,7 @@ PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_SENDER_NR): cv.string,
         vol.Required(CONF_SIGNAL_CLI_REST_API): cv.string,
-        vol.Required(CONF_RECP_NR): vol.All(cv.ensure_list, [cv.string]),
+        vol.Required(CONF_RECP_NR): cv.string,
     }
 )
 
@@ -85,10 +85,14 @@ async def async_get_service(
 
     entry = hass.config_entries.async_get_entry(entry_id)
 
-    if entry is not None:
-        recp_nrs = entry.data[CONF_RECP_NR]
+    if entry is None:
+        return None
 
-        signal_cli_rest_api = get_api(entry.data.__dict__)
+    recp_str = entry.data[CONF_RECP_NR]
+
+    recp_nrs = recp_str.split(",")
+
+    signal_cli_rest_api = get_api(entry.data.copy())
 
     return SignalNotificationService(hass, recp_nrs, signal_cli_rest_api)
 
@@ -119,9 +123,9 @@ class SignalNotificationService(BaseNotificationService):
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to one or more recipients. Additionally a file can be attached."""
 
-        _LOGGER.debug("Sending signal message")
-
         recipients: list[str] = kwargs.get(ATTR_TARGET) or self._recp_nrs
+
+        _LOGGER.debug("Sending message to %s", recipients)
 
         data = kwargs.get(ATTR_DATA)
 
