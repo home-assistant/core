@@ -222,7 +222,7 @@ class AnalyticsData:
             data["preferences"],
             data["uuid"],
             data.get("submission_identifier"),
-            data.get("next_snapshot_submission"),
+            data.get("snapshot_submission_time"),
         )
 
 
