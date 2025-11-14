@@ -4,7 +4,7 @@
     'active_alarms': list([
     ]),
     'client_info': dict({
-      'connected': True
+      'connected': True,
     }),
     'config': dict({
       'host': '**REDACTED**',
@@ -32,6 +32,6 @@
       'last_exception': None,
       'last_update_success': True,
       'update_interval': '0:01:00',
-    })
+    }),
   })
 # ---
