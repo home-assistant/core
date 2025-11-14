@@ -106,7 +106,7 @@ def mock_light() -> AsyncMock:
 def mock_cover_type(request: pytest.FixtureRequest) -> AsyncMock:
     """Create a mock Velux cover of specified type."""
     cover = AsyncMock(spec=request.param, autospec=True)
-    cover.name = f"Test {cover.__class__}"
+    cover.name = f"Test {request.param.__name__}"
     cover.serial_number = f"serial_{request.param.__name__}"
     cover.is_opening = False
     cover.is_closing = False

@@ -54,7 +54,7 @@ async def test_cover_entity_setup(
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Snapshot the entity and validate registry metadata."""
+    """Snapshot the entity and validate entity metadata."""
     await snapshot_platform(
         hass,
         entity_registry,
@@ -82,7 +82,7 @@ async def test_cover_device_association(
     assert entry.device_id is not None
     device_entry = device_registry.async_get(entry.device_id)
     assert device_entry is not None
-    assert (DOMAIN, f"{entry.unique_id}") in device_entry.identifiers
+    assert (DOMAIN, entry.unique_id) in device_entry.identifiers
     assert device_entry.via_device_id is not None
     via_device_entry = device_registry.async_get(device_entry.via_device_id)
     assert via_device_entry is not None

@@ -51,7 +51,7 @@
     'state': 'open',
   })
 # ---
-# name: test_cover_entity_setup[mock_cover_type-Awning][cover.test_class_pyvlx_opening_device_awning-entry]
+# name: test_cover_entity_setup[mock_cover_type-Awning][cover.test_awning-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -64,7 +64,7 @@
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
-    'entity_id': 'cover.test_class_pyvlx_opening_device_awning',
+    'entity_id': 'cover.test_awning',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -86,23 +86,23 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_cover_entity_setup[mock_cover_type-Awning][cover.test_class_pyvlx_opening_device_awning-state]
+# name: test_cover_entity_setup[mock_cover_type-Awning][cover.test_awning-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_position': 70,
       'device_class': 'awning',
-      'friendly_name': "Test <class 'pyvlx.opening_device.Awning'>",
+      'friendly_name': 'Test Awning',
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
-    'entity_id': 'cover.test_class_pyvlx_opening_device_awning',
+    'entity_id': 'cover.test_awning',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'open',
   })
 # ---
-# name: test_cover_entity_setup[mock_cover_type-GarageDoor][cover.test_class_pyvlx_opening_device_garagedoor-entry]
+# name: test_cover_entity_setup[mock_cover_type-GarageDoor][cover.test_garagedoor-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -115,7 +115,7 @@
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
-    'entity_id': 'cover.test_class_pyvlx_opening_device_garagedoor',
+    'entity_id': 'cover.test_garagedoor',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -137,23 +137,23 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_cover_entity_setup[mock_cover_type-GarageDoor][cover.test_class_pyvlx_opening_device_garagedoor-state]
+# name: test_cover_entity_setup[mock_cover_type-GarageDoor][cover.test_garagedoor-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_position': 70,
       'device_class': 'garage',
-      'friendly_name': "Test <class 'pyvlx.opening_device.GarageDoor'>",
+      'friendly_name': 'Test GarageDoor',
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
-    'entity_id': 'cover.test_class_pyvlx_opening_device_garagedoor',
+    'entity_id': 'cover.test_garagedoor',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'open',
   })
 # ---
-# name: test_cover_entity_setup[mock_cover_type-Gate][cover.test_class_pyvlx_opening_device_gate-entry]
+# name: test_cover_entity_setup[mock_cover_type-Gate][cover.test_gate-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -166,7 +166,7 @@
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
-    'entity_id': 'cover.test_class_pyvlx_opening_device_gate',
+    'entity_id': 'cover.test_gate',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -188,23 +188,23 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_cover_entity_setup[mock_cover_type-Gate][cover.test_class_pyvlx_opening_device_gate-state]
+# name: test_cover_entity_setup[mock_cover_type-Gate][cover.test_gate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_position': 70,
       'device_class': 'gate',
-      'friendly_name': "Test <class 'pyvlx.opening_device.Gate'>",
+      'friendly_name': 'Test Gate',
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
-    'entity_id': 'cover.test_class_pyvlx_opening_device_gate',
+    'entity_id': 'cover.test_gate',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'open',
   })
 # ---
-# name: test_cover_entity_setup[mock_cover_type-RollerShutter][cover.test_class_pyvlx_opening_device_rollershutter-entry]
+# name: test_cover_entity_setup[mock_cover_type-RollerShutter][cover.test_rollershutter-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -217,7 +217,7 @@
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
-    'entity_id': 'cover.test_class_pyvlx_opening_device_rollershutter',
+    'entity_id': 'cover.test_rollershutter',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -239,23 +239,23 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_cover_entity_setup[mock_cover_type-RollerShutter][cover.test_class_pyvlx_opening_device_rollershutter-state]
+# name: test_cover_entity_setup[mock_cover_type-RollerShutter][cover.test_rollershutter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_position': 70,
       'device_class': 'shutter',
-      'friendly_name': "Test <class 'pyvlx.opening_device.RollerShutter'>",
+      'friendly_name': 'Test RollerShutter',
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
-    'entity_id': 'cover.test_class_pyvlx_opening_device_rollershutter',
+    'entity_id': 'cover.test_rollershutter',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'open',
   })
 # ---
-# name: test_cover_entity_setup[mock_cover_type-Window][cover.test_class_pyvlx_opening_device_window-entry]
+# name: test_cover_entity_setup[mock_cover_type-Window][cover.test_window-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -268,7 +268,7 @@
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
-    'entity_id': 'cover.test_class_pyvlx_opening_device_window',
+    'entity_id': 'cover.test_window',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -290,16 +290,16 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_cover_entity_setup[mock_cover_type-Window][cover.test_class_pyvlx_opening_device_window-state]
+# name: test_cover_entity_setup[mock_cover_type-Window][cover.test_window-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_position': 70,
       'device_class': 'window',
-      'friendly_name': "Test <class 'pyvlx.opening_device.Window'>",
+      'friendly_name': 'Test Window',
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
-    'entity_id': 'cover.test_class_pyvlx_opening_device_window',
+    'entity_id': 'cover.test_window',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
