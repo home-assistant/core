@@ -1,1 +1,1 @@
-"""Tests for the victron-mqtt integration."""
+"""Tests for the victron_gx_mqtt integration."""

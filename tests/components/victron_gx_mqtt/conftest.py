@@ -1,4 +1,4 @@
-"""Common fixtures for the victron-mqtt tests."""
+"""Common fixtures for the victron_gx_mqtt tests."""
 
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch

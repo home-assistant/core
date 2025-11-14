@@ -12,11 +12,15 @@ from victron_mqtt import (
 )
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
-from homeassistant.const import UnitOfTime
+from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
-from .const import ENTITY_PREFIX
+from .const import (
+    ENTITIES_CATEGORY_DIAGNOSTIC,
+    ENTITIES_DISABLE_BY_DEFAULT,
+    ENTITY_PREFIX,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,6 +59,16 @@ class VictronBaseEntity(Entity):
             "}", ""
         )  # same as in merge_topics.py
         self._attr_translation_placeholders = metric.key_values
+        # Specific changes related to HA
+        self._attr_entity_category = (
+            EntityCategory.DIAGNOSTIC
+            if metric.generic_short_id in ENTITIES_CATEGORY_DIAGNOSTIC
+            else None
+        )
+        self._attr_entity_registry_enabled_default = (
+            metric.generic_short_id not in ENTITIES_DISABLE_BY_DEFAULT
+        )
+
         _LOGGER.info("%s %s added. Based on: %s", type, self, repr(metric))
 
     def __repr__(self) -> str:
