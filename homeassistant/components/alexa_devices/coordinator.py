@@ -16,6 +16,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import _LOGGER, CONF_LOGIN_DATA, DOMAIN
@@ -43,6 +44,9 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
             name=entry.title,
             config_entry=entry,
             update_interval=timedelta(seconds=SCAN_INTERVAL),
+            request_refresh_debouncer=Debouncer(
+                hass, _LOGGER, cooldown=30, immediate=False
+            ),
         )
         self.api = AmazonEchoApi(
             session,
