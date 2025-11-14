@@ -1,6 +1,6 @@
 """Tests for the Velux binary sensor platform."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -16,21 +16,20 @@ from . import update_polled_entities
 from tests.common import MockConfigEntry
 
 
+@pytest.fixture
+def platform() -> Platform:
+    """Fixture to specify platform to test."""
+    return Platform.BINARY_SENSOR
+
+
+@pytest.mark.usefixtures("setup_integration")
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-@pytest.mark.usefixtures("mock_pyvlx")
 async def test_rain_sensor_state(
     hass: HomeAssistant,
     mock_window: MagicMock,
-    mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the rain sensor."""
-
-    mock_config_entry.add_to_hass(hass)
-    with patch("homeassistant.components.velux.PLATFORMS", [Platform.BINARY_SENSOR]):
-        # setup config entry
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
 
     test_entity_id = "binary_sensor.test_window_rain_sensor"
 
@@ -62,8 +61,8 @@ async def test_rain_sensor_state(
     assert state.state == STATE_OFF
 
 
+@pytest.mark.usefixtures("setup_integration")
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-@pytest.mark.usefixtures("mock_pyvlx")
 async def test_rain_sensor_device_association(
     hass: HomeAssistant,
     mock_window: MagicMock,
@@ -72,11 +71,6 @@ async def test_rain_sensor_device_association(
     device_registry: DeviceRegistry,
 ) -> None:
     """Test the rain sensor is properly associated with its device."""
-
-    mock_config_entry.add_to_hass(hass)
-    with patch("homeassistant.components.velux.PLATFORMS", [Platform.BINARY_SENSOR]):
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
 
     test_entity_id = "binary_sensor.test_window_rain_sensor"
 

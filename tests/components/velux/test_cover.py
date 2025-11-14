@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pyvlx.opening_device import Awning, GarageDoor, Gate, RollerShutter, Window
 
 from homeassistant.components.velux import DOMAIN
 from homeassistant.const import STATE_CLOSED, STATE_OPEN, Platform
@@ -21,14 +22,14 @@ def platform() -> Platform:
 
 
 @pytest.mark.usefixtures("setup_integration")
-async def test_cover_setup(
+@pytest.mark.parametrize("mock_pyvlx", ["mock_blind"], indirect=True)
+async def test_blind_entity_setup(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Snapshot the cover entity (registry + state)."""
+    """Snapshot the entity and validate registry metadata."""
     await snapshot_platform(
         hass,
         entity_registry,
@@ -36,31 +37,64 @@ async def test_cover_setup(
         mock_config_entry.entry_id,
     )
 
-    # Get the cover entity setup and test device association
+
+@pytest.mark.usefixtures("setup_integration")
+@pytest.mark.usefixtures("mock_cover_type")
+@pytest.mark.parametrize(
+    "mock_cover_type", [Awning, GarageDoor, Gate, RollerShutter, Window], indirect=True
+)
+@pytest.mark.parametrize(
+    "mock_pyvlx",
+    ["mock_cover_type"],
+    indirect=True,
+)
+async def test_cover_entity_setup(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Snapshot the entity and validate entity metadata."""
+    await snapshot_platform(
+        hass,
+        entity_registry,
+        snapshot,
+        mock_config_entry.entry_id,
+    )
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_cover_device_association(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the cover entity device association."""
+
     entity_entries = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
-    assert len(entity_entries) == 1
-    entry = entity_entries[0]
+    assert len(entity_entries) >= 1
 
-    assert entry.device_id is not None
-    device_entry = device_registry.async_get(entry.device_id)
-    assert device_entry is not None
-    assert (DOMAIN, f"{123456789}") in device_entry.identifiers
-    assert device_entry.via_device_id is not None
-    via_device_entry = device_registry.async_get(device_entry.via_device_id)
-    assert via_device_entry is not None
-    assert (
-        DOMAIN,
-        f"gateway_{mock_config_entry.entry_id}",
-    ) in via_device_entry.identifiers
+    for entry in entity_entries:
+        assert entry.device_id is not None
+        device_entry = device_registry.async_get(entry.device_id)
+        assert device_entry is not None
+        assert (DOMAIN, entry.unique_id) in device_entry.identifiers
+        assert device_entry.via_device_id is not None
+        via_device_entry = device_registry.async_get(device_entry.via_device_id)
+        assert via_device_entry is not None
+        assert (
+            DOMAIN,
+            f"gateway_{mock_config_entry.entry_id}",
+        ) in via_device_entry.identifiers
 
 
 @pytest.mark.usefixtures("setup_integration")
 async def test_cover_closed(
     hass: HomeAssistant,
     mock_window: AsyncMock,
-    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the cover closed state."""
 
