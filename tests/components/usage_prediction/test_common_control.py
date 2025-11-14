@@ -411,3 +411,128 @@ async def test_different_users_separated(hass: HomeAssistant) -> None:
         evening=[],
         night=["light.user2_light"],
     )
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_location_based_categorization(hass: HomeAssistant) -> None:
+    """Test that events are categorized by person state."""
+    user_id = str(uuid.uuid4())
+
+    # Create a person entity for the user
+    hass.states.async_set(
+        "person.test_user",
+        STATE_HOME,
+        attributes={"user_id": user_id},
+    )
+
+    # Create entities to control
+    hass.states.async_set("light.home_light", "off")
+    hass.states.async_set("light.work_light", "off")
+    hass.states.async_set("light.away_light", "off")
+
+    # Event when person is at home
+    with freeze_time("2023-07-01 10:00:00"):
+        hass.states.async_set(
+            "person.test_user",
+            STATE_HOME,
+            attributes={"user_id": user_id},
+        )
+        await hass.async_block_till_done()
+
+        hass.bus.async_fire(
+            EVENT_CALL_SERVICE,
+            {
+                "domain": "light",
+                "service": "turn_on",
+                "service_data": {"entity_id": "light.home_light"},
+            },
+            context=Context(user_id=user_id),
+        )
+        await hass.async_block_till_done()
+
+    # Event when person is at work
+    with freeze_time("2023-07-01 14:00:00"):
+        hass.states.async_set(
+            "person.test_user",
+            "work",
+            attributes={"user_id": user_id},
+        )
+        await hass.async_block_till_done()
+
+        hass.bus.async_fire(
+            EVENT_CALL_SERVICE,
+            {
+                "domain": "light",
+                "service": "turn_on",
+                "service_data": {"entity_id": "light.work_light"},
+            },
+            context=Context(user_id=user_id),
+        )
+        await hass.async_block_till_done()
+
+    # Event when person is not_home
+    with freeze_time("2023-07-01 19:00:00"):
+        hass.states.async_set(
+            "person.test_user",
+            "not_home",
+            attributes={"user_id": user_id},
+        )
+        await hass.async_block_till_done()
+
+        hass.bus.async_fire(
+            EVENT_CALL_SERVICE,
+            {
+                "domain": "light",
+                "service": "turn_on",
+                "service_data": {"entity_id": "light.away_light"},
+            },
+            context=Context(user_id=user_id),
+        )
+        await hass.async_block_till_done()
+
+    await async_wait_recording_done(hass)
+
+    with freeze_time("2023-07-02 10:00:00"):
+        results = await async_predict_common_control(hass, user_id)
+
+    # Verify events are categorized by location
+    # 10:00 UTC = 02:00 local = night
+    assert "home" in results.location_predictions
+    assert results.location_predictions["home"].night == ["light.home_light"]
+
+    # 14:00 UTC = 06:00 local = morning
+    assert "work" in results.location_predictions
+    assert results.location_predictions["work"].morning == ["light.work_light"]
+
+    # 19:00 UTC = 11:00 local = morning
+    assert "not_home" in results.location_predictions
+    assert results.location_predictions["not_home"].morning == ["light.away_light"]
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_no_person_entity_defaults_to_home(hass: HomeAssistant) -> None:
+    """Test that events default to home location when no person entity exists."""
+    user_id = str(uuid.uuid4())
+
+    hass.states.async_set("light.test_light", "off")
+
+    with freeze_time("2023-07-01 10:00:00"):
+        hass.bus.async_fire(
+            EVENT_CALL_SERVICE,
+            {
+                "domain": "light",
+                "service": "turn_on",
+                "service_data": {"entity_id": "light.test_light"},
+            },
+            context=Context(user_id=user_id),
+        )
+        await hass.async_block_till_done()
+
+    await async_wait_recording_done(hass)
+
+    with freeze_time("2023-07-02 10:00:00"):
+        results = await async_predict_common_control(hass, user_id)
+
+    # Should default to STATE_HOME
+    assert STATE_HOME in results.location_predictions
+    assert results.location_predictions[STATE_HOME].night == ["light.test_light"]
