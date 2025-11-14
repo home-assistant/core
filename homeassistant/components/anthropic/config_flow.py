@@ -401,17 +401,20 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
 
     async def _get_model_list(self) -> list[SelectOptionDict]:
         """Get list of available models."""
-        client = await self.hass.async_add_executor_job(
-            partial(
-                anthropic.AsyncAnthropic,
-                api_key=self._get_entry().data[CONF_API_KEY],
+        try:
+            client = await self.hass.async_add_executor_job(
+                partial(
+                    anthropic.AsyncAnthropic,
+                    api_key=self._get_entry().data[CONF_API_KEY],
+                )
             )
-        )
-        models = await client.models.list()
-        _LOGGER.debug("Available models: %s", models.data)
+            models = (await client.models.list()).data
+        except anthropic.AnthropicError:
+            models = []
+        _LOGGER.debug("Available models: %s", models)
         model_options: list[SelectOptionDict] = []
         short_form = re.compile(r"[^\d]-\d$")
-        for model_info in models.data:
+        for model_info in models:
             # Resolve alias from versioned model name:
             model_alias = (
                 model_info.id[:-9]
