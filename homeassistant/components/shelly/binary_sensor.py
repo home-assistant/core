@@ -87,7 +87,6 @@ class RpcBinarySensor(ShellyRpcAttributeEntity, BinarySensorEntity):
                 component_id = key.split(":")[-1]
                 if component.lower() == "input" and component_id.isnumeric():
                     self._attr_translation_placeholders = {"input_number": component_id}
-                    self._attr_translation_key = "input_with_number"
                 else:
                     return
 
@@ -234,6 +233,7 @@ RPC_SENSORS: Final = {
     "input": RpcBinarySensorDescription(
         key="input",
         sub_key="state",
+        translation_key="input",
         device_class=BinarySensorDeviceClass.POWER,
         removal_condition=is_rpc_momentary_input,
     ),
