@@ -368,7 +368,7 @@ SENSOR_DESCRIPTIONS: tuple[HabiticaSensorEntityDescription, ...] = (
         key=HabiticaSensorEntity.HABITS_DAILY,
         translation_key=HabiticaSensorEntity.HABITS_DAILY,
         value_fn=lambda user, _: len([
-            h for h in user.tasksOrder.habits 
+            h for h in (user.tasks.habits.values() if hasattr(user.tasks, 'habits') else [])
             if h and getattr(h, 'frequency', 'daily') == 'daily'
         ]),
         native_unit_of_measurement="habits",
@@ -377,7 +377,7 @@ SENSOR_DESCRIPTIONS: tuple[HabiticaSensorEntityDescription, ...] = (
         key=HabiticaSensorEntity.HABITS_WEEKLY,
         translation_key=HabiticaSensorEntity.HABITS_WEEKLY,
         value_fn=lambda user, _: len([
-            h for h in user.tasksOrder.habits 
+            h for h in (user.tasks.habits.values() if hasattr(user.tasks, 'habits') else [])
             if h and getattr(h, 'frequency', 'daily') == 'weekly'
         ]),
         native_unit_of_measurement="habits",
@@ -386,7 +386,7 @@ SENSOR_DESCRIPTIONS: tuple[HabiticaSensorEntityDescription, ...] = (
         key=HabiticaSensorEntity.HABITS_MONTHLY,
         translation_key=HabiticaSensorEntity.HABITS_MONTHLY,
         value_fn=lambda user, _: len([
-            h for h in user.tasksOrder.habits 
+            h for h in (user.tasks.habits.values() if hasattr(user.tasks, 'habits') else [])
             if h and getattr(h, 'frequency', 'daily') == 'monthly'
         ]),
         native_unit_of_measurement="habits",
@@ -398,7 +398,7 @@ SENSOR_DESCRIPTIONS: tuple[HabiticaSensorEntityDescription, ...] = (
         attributes_fn=lambda user, _: {
             "level": user.stats.lvl,
             "class": user.stats.Class.value if user.stats.Class else None,
-            "total_habits": len([h for h in user.tasksOrder.habits if h]),
+            "total_habits": len([h for h in (user.tasks.habits.values() if hasattr(user.tasks, 'habits') else []) if h]),
             "updated_daily": "Updates once per day with personalized content",
         },
     ),
