@@ -6468,7 +6468,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Remote controller (unsupported)',
+    'model': 'Remote controller',
     'model_id': 'bngwdjsr',
     'name': 'Télécommande lumières ZigBee',
     'name_by_user': None,
