@@ -128,7 +128,7 @@ async def test_action_unsupported(
     service_data: dict[str, Any],
     translation_placeholders: dict[str, Any],
 ) -> None:
-    """Test service action (not supported by this device)."""
+    """Test service actions when not supported by the device."""
     # Remove switch control and dehumidify_set_value - but keep other functionality
     mock_device.status.pop("switch")
     mock_device.function.pop("switch")
