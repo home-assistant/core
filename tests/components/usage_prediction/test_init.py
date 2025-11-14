@@ -6,7 +6,11 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.usage_prediction import get_cached_common_control
-from homeassistant.components.usage_prediction.models import EntityUsagePredictions
+from homeassistant.components.usage_prediction.models import (
+    EntityUsagePredictions,
+    LocationBasedPredictions,
+)
+from homeassistant.const import STATE_HOME
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -19,7 +23,7 @@ async def test_usage_prediction_caching(hass: HomeAssistant) -> None:
 
     finish_event = asyncio.Event()
 
-    async def mock_common_control_error(*args) -> EntityUsagePredictions:
+    async def mock_common_control_error(*args) -> LocationBasedPredictions:
         await finish_event.wait()
         raise Exception("Boom")  # noqa: TRY002
 
@@ -38,15 +42,19 @@ async def test_usage_prediction_caching(hass: HomeAssistant) -> None:
             await task1
 
     finish_event.clear()
-    results = EntityUsagePredictions(
-        morning=["light.kitchen"],
-        afternoon=["climate.thermostat"],
-        evening=["light.bedroom"],
-        night=["lock.front_door"],
+    results = LocationBasedPredictions(
+        location_predictions={
+            STATE_HOME: EntityUsagePredictions(
+                morning=["light.kitchen"],
+                afternoon=["climate.thermostat"],
+                evening=["light.bedroom"],
+                night=["lock.front_door"],
+            )
+        }
     )
 
     # The exception is not cached, we hit the method again.
-    async def mock_common_control(*args) -> EntityUsagePredictions:
+    async def mock_common_control(*args) -> LocationBasedPredictions:
         await finish_event.wait()
         return results
 

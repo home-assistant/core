@@ -8,7 +8,11 @@ from unittest.mock import Mock, patch
 from freezegun import freeze_time
 import pytest
 
-from homeassistant.components.usage_prediction.models import EntityUsagePredictions
+from homeassistant.components.usage_prediction.models import (
+    EntityUsagePredictions,
+    LocationBasedPredictions,
+)
+from homeassistant.const import STATE_HOME
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -24,11 +28,15 @@ def mock_predict_common_control() -> Generator[Mock]:
     """Return a mock result for common control."""
     with patch(
         "homeassistant.components.usage_prediction.common_control.async_predict_common_control",
-        return_value=EntityUsagePredictions(
-            morning=["light.kitchen"],
-            afternoon=["climate.thermostat"],
-            evening=["light.bedroom"],
-            night=["lock.front_door"],
+        return_value=LocationBasedPredictions(
+            location_predictions={
+                STATE_HOME: EntityUsagePredictions(
+                    morning=["light.kitchen"],
+                    afternoon=["climate.thermostat"],
+                    evening=["light.bedroom"],
+                    night=["lock.front_door"],
+                )
+            }
         ),
     ) as mock_predict:
         yield mock_predict
@@ -87,7 +95,7 @@ async def test_caching_behavior(
     assert mock_predict_common_control.call_count == 1
 
     new_result = deepcopy(mock_predict_common_control.return_value)
-    new_result.morning.append("light.bla")
+    new_result.location_predictions[STATE_HOME].morning.append("light.bla")
     mock_predict_common_control.return_value = new_result
 
     # Second call within 24 hours should use cache

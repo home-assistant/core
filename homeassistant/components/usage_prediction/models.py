@@ -17,8 +17,15 @@ class EntityUsagePredictions:
 
 
 @dataclass
+class LocationBasedPredictions:
+    """Predictions categorized by location state."""
+
+    location_predictions: dict[str, EntityUsagePredictions] = field(default_factory=dict)
+
+
+@dataclass
 class EntityUsageDataCache:
     """Data model for entity usage prediction."""
 
-    predictions: EntityUsagePredictions
+    predictions: LocationBasedPredictions
     timestamp: datetime = field(default_factory=dt_util.utcnow)

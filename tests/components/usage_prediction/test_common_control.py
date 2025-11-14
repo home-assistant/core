@@ -12,8 +12,11 @@ from homeassistant.components.usage_prediction.common_control import (
     async_predict_common_control,
     time_category,
 )
-from homeassistant.components.usage_prediction.models import EntityUsagePredictions
-from homeassistant.const import EVENT_CALL_SERVICE
+from homeassistant.components.usage_prediction.models import (
+    EntityUsagePredictions,
+    LocationBasedPredictions,
+)
+from homeassistant.const import EVENT_CALL_SERVICE, STATE_HOME
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -40,13 +43,8 @@ async def test_empty_database(hass: HomeAssistant) -> None:
     # Call the function with empty database
     results = await async_predict_common_control(hass, user_id)
 
-    # Should return empty lists for all time categories
-    assert results == EntityUsagePredictions(
-        morning=[],
-        afternoon=[],
-        evening=[],
-        night=[],
-    )
+    # Should return empty location predictions
+    assert results == LocationBasedPredictions(location_predictions={})
 
 
 @pytest.mark.usefixtures("recorder_mock")
@@ -129,7 +127,8 @@ async def test_with_service_calls(hass: HomeAssistant) -> None:
         results = await async_predict_common_control(hass, user_id)
 
     # Verify results contain the expected entities in the correct time periods
-    assert results == EntityUsagePredictions(
+    # Since no person entity exists, all events are categorized under STATE_HOME
+    assert results.location_predictions[STATE_HOME] == EntityUsagePredictions(
         morning=["climate.thermostat"],
         afternoon=["light.bedroom", "lock.front_door"],
         evening=[],
@@ -189,10 +188,11 @@ async def test_multiple_entities_in_one_call(hass: HomeAssistant) -> None:
 
     # Two lights should be counted (10:00 UTC = 02:00 local = night)
     # Living room is hidden via entity registry
-    assert results.night == ["light.kitchen", "light.hallway"]
-    assert results.morning == []
-    assert results.afternoon == []
-    assert results.evening == []
+    home_predictions = results.location_predictions[STATE_HOME]
+    assert home_predictions.night == ["light.kitchen", "light.hallway"]
+    assert home_predictions.morning == []
+    assert home_predictions.afternoon == []
+    assert home_predictions.evening == []
 
 
 @pytest.mark.usefixtures("recorder_mock")
@@ -234,7 +234,7 @@ async def test_context_deduplication(hass: HomeAssistant) -> None:
         results = await async_predict_common_control(hass, user_id)
 
     # Only the first event should be processed (10:00 UTC = 02:00 local = night)
-    assert results == EntityUsagePredictions(
+    assert results.location_predictions[STATE_HOME] == EntityUsagePredictions(
         morning=[],
         afternoon=[],
         evening=[],
@@ -283,7 +283,7 @@ async def test_old_events_excluded(hass: HomeAssistant) -> None:
         results = await async_predict_common_control(hass, user_id)
 
     # Only recent event should be included (10:00 UTC = 02:00 local = night)
-    assert results == EntityUsagePredictions(
+    assert results.location_predictions[STATE_HOME] == EntityUsagePredictions(
         morning=[],
         afternoon=[],
         evening=[],
@@ -343,16 +343,17 @@ async def test_entities_limit(hass: HomeAssistant) -> None:
         results = await async_predict_common_control(hass, user_id)
 
     # Should be the top 5 most used (08:00 UTC = 00:00 local = night)
-    assert results.night == [
+    home_predictions = results.location_predictions[STATE_HOME]
+    assert home_predictions.night == [
         "light.most_used",
         "light.second",
         "light.third",
         "light.fourth",
         "light.fifth",
     ]
-    assert results.morning == []
-    assert results.afternoon == []
-    assert results.evening == []
+    assert home_predictions.morning == []
+    assert home_predictions.afternoon == []
+    assert home_predictions.evening == []
 
 
 @pytest.mark.usefixtures("recorder_mock")
@@ -397,14 +398,14 @@ async def test_different_users_separated(hass: HomeAssistant) -> None:
         results_user2 = await async_predict_common_control(hass, user_id_2)
 
     # Each user should only see their own entities (10:00 UTC = 02:00 local = night)
-    assert results_user1 == EntityUsagePredictions(
+    assert results_user1.location_predictions[STATE_HOME] == EntityUsagePredictions(
         morning=[],
         afternoon=[],
         evening=[],
         night=["light.user1_light"],
     )
 
-    assert results_user2 == EntityUsagePredictions(
+    assert results_user2.location_predictions[STATE_HOME] == EntityUsagePredictions(
         morning=[],
         afternoon=[],
         evening=[],

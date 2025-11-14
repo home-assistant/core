@@ -4,10 +4,10 @@ import asyncio
 
 from homeassistant.util.hass_dict import HassKey
 
-from .models import EntityUsageDataCache, EntityUsagePredictions
+from .models import EntityUsageDataCache, LocationBasedPredictions
 
 DOMAIN = "usage_prediction"
 
 DATA_CACHE: HassKey[
-    dict[str, asyncio.Task[EntityUsagePredictions] | EntityUsageDataCache]
+    dict[str, asyncio.Task[LocationBasedPredictions] | EntityUsageDataCache]
 ] = HassKey("usage_prediction")
