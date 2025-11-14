@@ -13,6 +13,7 @@ from typing import Any
 from aiohttp import web
 from hyperion import client
 from hyperion.const import (
+    KEY_DATA,
     KEY_IMAGE,
     KEY_IMAGE_STREAM,
     KEY_LEDCOLORS,
@@ -155,7 +156,8 @@ class HyperionCamera(Camera):
         """Update Hyperion components."""
         if not img:
             return
-        img_data = img.get(KEY_RESULT, {}).get(KEY_IMAGE)
+        # Prefer KEY_DATA (Hyperion server >= 2.1.1); fall back to KEY_RESULT for older server versions
+        img_data = img.get(KEY_DATA, img.get(KEY_RESULT, {})).get(KEY_IMAGE)
         if not img_data or not img_data.startswith(IMAGE_STREAM_JPG_SENTINEL):
             return
         async with self._image_cond:

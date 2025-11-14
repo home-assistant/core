@@ -13,7 +13,15 @@ from typing import TYPE_CHECKING, Any, TypedDict, cast, final
 from uuid import UUID
 
 import sqlalchemy
-from sqlalchemy import ForeignKeyConstraint, MetaData, Table, func, text, update
+from sqlalchemy import (
+    ForeignKeyConstraint,
+    MetaData,
+    Table,
+    cast as cast_,
+    func,
+    text,
+    update,
+)
 from sqlalchemy.engine import CursorResult, Engine
 from sqlalchemy.exc import (
     DatabaseError,
@@ -26,8 +34,9 @@ from sqlalchemy.exc import (
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm.session import Session
 from sqlalchemy.schema import AddConstraint, CreateTable, DropConstraint
-from sqlalchemy.sql.expression import true
+from sqlalchemy.sql.expression import and_, true
 from sqlalchemy.sql.lambdas import StatementLambdaElement
+from sqlalchemy.types import BINARY
 
 from homeassistant.core import HomeAssistant
 from homeassistant.util.enum import try_parse_enum
@@ -2044,14 +2053,74 @@ class _SchemaVersion50Migrator(_SchemaVersionMigrator, target_version=50):
 class _SchemaVersion51Migrator(_SchemaVersionMigrator, target_version=51):
     def _apply_update(self) -> None:
         """Version specific update method."""
-        # Add unit class column to StatisticsMeta
+        # Replaced with version 52 which corrects issues with MySQL string comparisons.
+
+
+class _SchemaVersion52Migrator(_SchemaVersionMigrator, target_version=52):
+    def _apply_update(self) -> None:
+        """Version specific update method."""
+        if self.engine.dialect.name == SupportedDialect.MYSQL:
+            self._apply_update_mysql()
+        else:
+            self._apply_update_postgresql_sqlite()
+
+    def _apply_update_mysql(self) -> None:
+        """Version specific update method for mysql."""
         _add_columns(self.session_maker, "statistics_meta", ["unit_class VARCHAR(255)"])
         with session_scope(session=self.session_maker()) as session:
             connection = session.connection()
             for conv in _PRIMARY_UNIT_CONVERTERS:
+                case_sensitive_units = {
+                    u.encode("utf-8") if u else u for u in conv.VALID_UNITS
+                }
+                # Reset unit_class to None for entries that do not match
+                # the valid units (case sensitive) but matched before due to
+                # case insensitive comparisons.
                 connection.execute(
                     update(StatisticsMeta)
-                    .where(StatisticsMeta.unit_of_measurement.in_(conv.VALID_UNITS))
+                    .where(
+                        and_(
+                            StatisticsMeta.unit_of_measurement.in_(conv.VALID_UNITS),
+                            cast_(StatisticsMeta.unit_of_measurement, BINARY).not_in(
+                                case_sensitive_units
+                            ),
+                        )
+                    )
+                    .values(unit_class=None)
+                )
+                # Do an explicitly case sensitive match (actually binary) to set the
+                # correct unit_class. This is needed because we use the case sensitive
+                # utf8mb4_unicode_ci collation.
+                connection.execute(
+                    update(StatisticsMeta)
+                    .where(
+                        and_(
+                            cast_(StatisticsMeta.unit_of_measurement, BINARY).in_(
+                                case_sensitive_units
+                            ),
+                            StatisticsMeta.unit_class.is_(None),
+                        )
+                    )
+                    .values(unit_class=conv.UNIT_CLASS)
+                )
+
+    def _apply_update_postgresql_sqlite(self) -> None:
+        """Version specific update method for postgresql and sqlite."""
+        _add_columns(self.session_maker, "statistics_meta", ["unit_class VARCHAR(255)"])
+        with session_scope(session=self.session_maker()) as session:
+            connection = session.connection()
+            for conv in _PRIMARY_UNIT_CONVERTERS:
+                # Set the correct unit_class. Unlike MySQL, Postgres and SQLite
+                # have case sensitive string comparisons by default, so we
+                # can directly match on the valid units.
+                connection.execute(
+                    update(StatisticsMeta)
+                    .where(
+                        and_(
+                            StatisticsMeta.unit_of_measurement.in_(conv.VALID_UNITS),
+                            StatisticsMeta.unit_class.is_(None),
+                        )
+                    )
                     .values(unit_class=conv.UNIT_CLASS)
                 )
 

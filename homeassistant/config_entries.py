@@ -1473,16 +1473,18 @@ class ConfigEntriesFlowManager(
                 if not self._pending_import_flows[handler]:
                     del self._pending_import_flows[handler]
 
-        if (
-            result["type"] != data_entry_flow.FlowResultType.ABORT
-            and source in DISCOVERY_SOURCES
-        ):
+        # Flows can abort or create an entry in their initial step, we do not want to
+        # fire a discovery event if no flow is actually in progress
+        flow_completed = result["type"] in {
+            data_entry_flow.FlowResultType.ABORT,
+            data_entry_flow.FlowResultType.CREATE_ENTRY,
+        }
+
+        if not flow_completed and source in DISCOVERY_SOURCES:
             # Fire discovery event
             await self._discovery_event_debouncer.async_call()
 
-        if result["type"] != data_entry_flow.FlowResultType.ABORT and source in (
-            DISCOVERY_SOURCES | {SOURCE_REAUTH}
-        ):
+        if not flow_completed and source in DISCOVERY_SOURCES | {SOURCE_REAUTH}:
             # Notify listeners that a flow is created
             for subscription in self._flow_subscriptions:
                 subscription("added", flow.flow_id)
