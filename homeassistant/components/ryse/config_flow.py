@@ -43,7 +43,7 @@ class RyseBLEDeviceConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         discovery_info = self._discovery_info
         name = discovery_info.name or "RYSE device"
 
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             try:
