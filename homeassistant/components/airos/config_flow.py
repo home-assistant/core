@@ -364,6 +364,14 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             devices = await airos_discover_devices(DISCOVER_INTERVAL)
+        except AirOSEndpointError:
+            self.discovery_abort_reason = "discovery_detect_error"
+        except AirOSListenerError:
+            self.discovery_abort_reason = "discovery_listen_error"
+        except Exception:
+            self.discovery_abort_reason = "discovery_failed"
+            _LOGGER.exception("An error occurred during discovery")
+        else:
             self.discovered_devices = {
                 mac_addr: info
                 for mac_addr, info in devices.items()
@@ -373,15 +381,6 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
                 "Discovery task finished. Found %s new devices",
                 len(self.discovered_devices),
             )
-        except AirOSEndpointError:
-            self.discovery_abort_reason = "discovery_detect_error"
-            _LOGGER.exception("An error detected from airOS device broadcasts")
-        except AirOSListenerError:
-            self.discovery_abort_reason = "discovery_listen_error"
-            _LOGGER.exception("An error occurred trying to listen for airOS devices")
-        except Exception:
-            self.discovery_abort_reason = "discovery_failed"
-            _LOGGER.exception("An error occurred during discovery")
         finally:
             progress_bar.cancel()
 
