@@ -766,8 +766,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         # mode, when work mode is anything else than "white".
         if (
             self._color_mode_wrapper
-            and self._color_mode_wrapper.read_device_status(self.device)
-            != WorkMode.WHITE
+            and self._read_wrapper(self._color_mode_wrapper) != WorkMode.WHITE
         ):
             return ColorMode.HS
         return self._white_color_mode
