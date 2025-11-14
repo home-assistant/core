@@ -5757,6 +5757,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "saunum": {
+      "name": "Saunum Leil",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "schlage": {
       "name": "Schlage",
       "integration_type": "hub",
