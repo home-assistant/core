@@ -7,11 +7,18 @@ from typing import Any
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
 from aiohue.v2.controllers.scenes import ScenesController
-from aiohue.v2.models.scene import Scene as HueScene, ScenePut as HueScenePut
+from aiohue.v2.models.scene import (
+    Scene as HueScene,
+    SceneActiveStatus,
+    ScenePut as HueScenePut,
+)
 from aiohue.v2.models.smart_scene import SmartScene as HueSmartScene, SmartSceneState
 import voluptuous as vol
 
-from homeassistant.components.scene import ATTR_TRANSITION, Scene as SceneEntity
+from homeassistant.components.scene import (
+    ATTR_TRANSITION,
+    Scene as BaseScene,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
@@ -31,7 +38,7 @@ ATTR_BRIGHTNESS = "brightness"
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
+    _hass: HomeAssistant,
     config_entry: HueConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
@@ -45,9 +52,7 @@ async def async_setup_entry(
 
     # add entities for all scenes
     @callback
-    def async_add_entity(
-        event_type: EventType, resource: HueScene | HueSmartScene
-    ) -> None:
+    def async_add_entity(resource: HueScene | HueSmartScene) -> None:
         """Add entity from Hue resource."""
         if isinstance(resource, HueSmartScene):
             async_add_entities([HueSmartSceneEntity(bridge, api.scenes, resource)])
@@ -56,11 +61,15 @@ async def async_setup_entry(
 
     # add all current items in controller
     for item in api.scenes:
-        async_add_entity(EventType.RESOURCE_ADDED, item)
+        async_add_entity(item)
 
     # register listener for new items only
+    # (scene activation detection is handled by on_update() on existing entities)
     config_entry.async_on_unload(
-        api.scenes.subscribe(async_add_entity, event_filter=EventType.RESOURCE_ADDED)
+        api.scenes.subscribe(
+            async_add_entity,
+            event_filter=EventType.RESOURCE_ADDED,
+        )
     )
 
     # add platform service to turn_on/activate scene with advanced options
@@ -83,7 +92,7 @@ async def async_setup_entry(
     )
 
 
-class HueSceneEntityBase(HueBaseEntity, SceneEntity):
+class HueSceneEntityBase(HueBaseEntity, BaseScene):
     """Base Representation of a Scene entity from Hue Scenes."""
 
     _attr_has_entity_name = True
@@ -122,6 +131,21 @@ class HueSceneEntityBase(HueBaseEntity, SceneEntity):
         """Return name of the scene."""
         return self.resource.metadata.name
 
+    def on_update(self) -> None:
+        """Handle EventStream updates for scene activation detection.
+
+        This method is called when the bridge sends an update event for this scene.
+        When a scene is activated (from Hue app, physical buttons, or automations),
+        the scene status changes to active, allowing us to record the activation.
+        """
+        # Check if scene became active (activated externally or via HA)
+        if (
+            self.resource.status
+            and self.resource.status.active != SceneActiveStatus.INACTIVE
+        ):
+            self._async_record_activation()
+        super().on_update()
+
 
 class HueSceneEntity(HueSceneEntityBase):
     """Representation of a Scene entity from Hue Scenes."""
@@ -143,7 +167,7 @@ class HueSceneEntity(HueSceneEntityBase):
             return True
         return False
 
-    async def async_activate(self, **kwargs: Any) -> None:
+    async def _async_activate(self, **kwargs: Any) -> None:
         """Activate Hue scene."""
         transition = normalize_hue_transition(kwargs.get(ATTR_TRANSITION))
         # the options below are advanced only
@@ -202,9 +226,22 @@ class HueSmartSceneEntity(HueSceneEntityBase):
         """Return if this smart scene is currently active."""
         return self.resource.state == SmartSceneState.ACTIVE
 
-    async def async_activate(self, **kwargs: Any) -> None:
-        """Activate Hue Smart scene."""
+    def on_update(self) -> None:
+        """Handle EventStream updates for smart scene activation detection.
 
+        Smart scenes use .state instead of .status for activation tracking.
+        When a smart scene becomes active (from Hue app, automations, or schedules),
+        the scene state changes to ACTIVE, allowing us to record the activation.
+        """
+        # Check if smart scene became active (activated externally or via HA)
+        if self.resource.state == SmartSceneState.ACTIVE:
+            self._async_record_activation()
+        super().on_update()
+
+    async def _async_activate(self, **kwargs: Any) -> None:
+        """Activate Hue Smart scene."""
+        # kwargs accepted for BaseScene contract but not used for smart scenes
+        _ = kwargs
         await self.bridge.async_request_call(
             self.controller.smart_scene.recall,
             self.resource.id,
@@ -225,12 +262,15 @@ class HueSmartSceneEntity(HueSceneEntityBase):
             # lookup active scene in timeslot
             active_scene = None
             count = 0
+            target_id = self.resource.active_timeslot.timeslot_id
             for day_timeslot in self.resource.week_timeslots:
                 for timeslot in day_timeslot.timeslots:
-                    if count != self.resource.active_timeslot.timeslot_id:
-                        count += 1
-                        continue
-                    active_scene = self.controller.get(timeslot.target.rid)
+                    if count == target_id:
+                        active_scene = self.controller.get(timeslot.target.rid)
+                        break
+                    count += 1
+                # break outer loop if we found the target
+                if active_scene is not None:
                     break
             if active_scene is not None:
                 res["active_scene"] = active_scene.metadata.name
