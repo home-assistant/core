@@ -36,6 +36,7 @@ SWITCH_OFF = "Off"
 # Entity IDs which needs special treatment
 ENTITIES_CATEGORY_DIAGNOSTIC = ["system_heartbeat"]
 ENTITIES_DISABLE_BY_DEFAULT = [
+    "system_heartbeat",
     "vebus_energy_ac_in1_to_ac_out",
     "vebus_energy_ac_in1_to_inverter",
     "vebus_energy_ac_in2_to_ac_out",
