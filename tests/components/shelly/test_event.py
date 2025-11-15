@@ -1,7 +1,7 @@
 """Tests for Shelly button platform."""
 
 import copy
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import Mock
 
 from aioshelly.ble.const import BLE_SCRIPT_NAME
 from aioshelly.const import MODEL_I3
@@ -242,7 +242,6 @@ async def test_block_event_shix3_1(
         channel="0",
         type="input",
         description="input_0",
-        set_state=AsyncMock(side_effect=lambda turn: {"ison": turn == "on"}),
     )
     blocks[1] = Mock(
         sensor_ids={
@@ -252,7 +251,6 @@ async def test_block_event_shix3_1(
         channel="1",
         type="input",
         description="input_1",
-        set_state=AsyncMock(side_effect=lambda turn: {"ison": turn == "on"}),
     )
     blocks[2] = Mock(
         sensor_ids={
@@ -262,7 +260,6 @@ async def test_block_event_shix3_1(
         channel="2",
         type="input",
         description="input_2",
-        set_state=AsyncMock(side_effect=lambda turn: {"ison": turn == "on"}),
     )
     monkeypatch.setattr(mock_block_device, "blocks", blocks)
     monkeypatch.delitem(mock_block_device.settings, "relays")
