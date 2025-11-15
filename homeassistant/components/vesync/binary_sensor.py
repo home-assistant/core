@@ -7,6 +7,7 @@ from dataclasses import dataclass
 import logging
 
 from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
+from pyvesync.const import DeviceStatus
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -49,6 +50,15 @@ SENSOR_DESCRIPTIONS: tuple[VeSyncBinarySensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.PROBLEM,
         exists_fn=(
             lambda device: rgetattr(device, "state.water_tank_lifted") is not None
+        ),
+    ),
+    VeSyncBinarySensorEntityDescription(
+        key="details.drying_mode_state",
+        translation_key="drying_mode_state",
+        is_on=lambda device: device.state.drying_mode_state == DeviceStatus.ON,
+        device_class=BinarySensorDeviceClass.RUNNING,
+        exists_fn=(
+            lambda device: rgetattr(device, "state.drying_mode_state") is not None
         ),
     ),
 )
