@@ -78,8 +78,8 @@ async def test_step_user_connection_error(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": SOURCE_USER}, data=deepcopy(DUMMY_DATA)
         )
 
-        assert result["type"] is FlowResultType.FORM
-        assert result["errors"] == {"base": "cannot_connect"}
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "no_fetch"
 
 
 async def test_step_user_unexpected_exception(hass: HomeAssistant) -> None:
@@ -92,9 +92,8 @@ async def test_step_user_unexpected_exception(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": SOURCE_USER}, data=deepcopy(DUMMY_DATA)
         )
 
-        assert result["type"] is FlowResultType.FORM
-        assert result["errors"] == {"base": "unknown"}
-        hass.config_entries.flow.async_abort(result["flow_id"])
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "unknown"
 
 
 async def test_step_user(hass: HomeAssistant) -> None:
@@ -291,8 +290,8 @@ async def test_options_flow_connection_error(hass: HomeAssistant) -> None:
 
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-        assert result["type"] is FlowResultType.FORM
-        assert result["errors"] == {"base": "cannot_connect"}
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "no_fetch"
 
 
 async def test_options_flow_unexpected_exception(hass: HomeAssistant) -> None:
@@ -321,9 +320,8 @@ async def test_options_flow_unexpected_exception(hass: HomeAssistant) -> None:
 
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-        assert result["type"] is FlowResultType.FORM
-        assert result["errors"] == {"base": "unknown"}
-        hass.config_entries.options.async_abort(result["flow_id"])
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "unknown"
 
 
 async def test_options_flow_entity_removal(
