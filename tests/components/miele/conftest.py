@@ -5,6 +5,7 @@ import time
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from pymiele import MieleDevices
 import pytest
 
 from homeassistant.components.application_credentials import (
@@ -172,7 +173,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 async def push_data_and_actions(
     hass: HomeAssistant,
     mock_miele_client: MagicMock,
-    device_fixture: dict[str, Any],
+    device_fixture: MieleDevices,
 ) -> None:
     """Fixture to push data and actions through mock."""
 
