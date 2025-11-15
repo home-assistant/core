@@ -1396,7 +1396,7 @@ open-meteo==0.3.2
 
 # homeassistant.components.open_router
 # homeassistant.components.openai_conversation
-openai==2.2.0
+openai==2.8.0
 
 # homeassistant.components.openerz
 openerz-api==0.3.0
@@ -1950,6 +1950,9 @@ pyrympro==0.0.9
 # homeassistant.components.sabnzbd
 pysabnzbd==1.1.1
 
+# homeassistant.components.saunum
+pysaunum==0.1.0
+
 # homeassistant.components.schlage
 pyschlage==2025.9.0
 
@@ -2078,7 +2081,7 @@ python-mpd2==3.1.1
 python-mystrom==2.5.0
 
 # homeassistant.components.open_router
-python-open-router==0.3.2
+python-open-router==0.3.3
 
 # homeassistant.components.swiss_public_transport
 python-opendata-transport==0.5.0
@@ -2239,7 +2242,7 @@ renault-api==0.5.0
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.16.4
+reolink-aio==0.16.5
 
 # homeassistant.components.rflink
 rflink==0.0.67
@@ -2653,7 +2656,7 @@ yolink-api==0.5.8
 youless-api==2.2.0
 
 # homeassistant.components.youtube
-youtubeaio==2.0.0
+youtubeaio==2.1.0
 
 # homeassistant.components.media_extractor
 yt-dlp[default]==2025.10.22
@@ -2671,7 +2674,7 @@ zeroconf==0.148.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.78
+zha==0.0.79
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.67.1
