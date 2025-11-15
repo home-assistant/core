@@ -23,6 +23,7 @@ from .const import (
     CONF_HOT_TOLERANCE,
     CONF_MAX_TEMP,
     CONF_MIN_DUR,
+    CONF_KEEP_ALIVE,
     CONF_MIN_TEMP,
     CONF_PRESETS,
     CONF_SENSOR,
@@ -57,6 +58,9 @@ OPTIONS_SCHEMA = {
         )
     ),
     vol.Optional(CONF_MIN_DUR): selector.DurationSelector(
+        selector.DurationSelectorConfig(allow_negative=False)
+    ),
+    vol.Optional(CONF_KEEP_ALIVE): selector.DurationSelector(
         selector.DurationSelectorConfig(allow_negative=False)
     ),
     vol.Optional(CONF_MIN_TEMP): selector.NumberSelector(

@@ -64,6 +64,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, VolDictT
 from .const import (
     CONF_AC_MODE,
     CONF_COLD_TOLERANCE,
+    CONF_KEEP_ALIVE,
     CONF_HEATER,
     CONF_HOT_TOLERANCE,
     CONF_MAX_TEMP,
@@ -81,7 +82,6 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = "Generic Thermostat"
 
 CONF_INITIAL_HVAC_MODE = "initial_hvac_mode"
-CONF_KEEP_ALIVE = "keep_alive"
 CONF_PRECISION = "precision"
 CONF_TARGET_TEMP = "target_temp"
 CONF_TEMP_STEP = "target_temp_step"
