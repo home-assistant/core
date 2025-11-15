@@ -90,10 +90,11 @@ class DayBetterSensorBase(CoordinatorEntity[DayBetterCoordinator], SensorEntity)
 
     def _get_device(self) -> dict[str, Any] | None:
         """Get current device data from coordinator."""
-        if not isinstance(self.coordinator.data, list):
-            return None
+        data = self.coordinator.data
+        if not isinstance(data, list):
+            return None  # type: ignore[unreachable]
 
-        for device in self.coordinator.data:
+        for device in data:
             if (
                 isinstance(device, dict)
                 and device.get("deviceName") == self._device_name
