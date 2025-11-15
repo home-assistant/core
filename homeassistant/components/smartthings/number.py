@@ -2,9 +2,17 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
+
 from pysmartthings import Attribute, Capability, Command, SmartThings
 
-from homeassistant.components.number import NumberDeviceClass, NumberEntity, NumberMode
+from homeassistant.components.number import (
+    NumberDeviceClass,
+    NumberEntity,
+    NumberEntityDescription,
+    NumberMode,
+)
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -12,6 +20,53 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import FullDevice, SmartThingsConfigEntry
 from .const import MAIN, UNIT_MAP
 from .entity import SmartThingsEntity
+from .util import get_range_options_count
+
+
+@dataclass(frozen=True, kw_only=True)
+class SmartThingsNumberRangeEntityDescription(NumberEntityDescription):
+    """Describe a SmartThings number range entity."""
+
+    status_attribute: Attribute
+    range_attribute: Attribute
+    command: Command
+    component_translation_key: dict[str, str] | None = None
+    exists_fn: Callable[[FullDevice, str], bool] = lambda device, component: True
+
+
+CAPABILITY_TO_NUMBER_RANGE_DESCRIPTIONS: dict[
+    Capability, SmartThingsNumberRangeEntityDescription
+] = {
+    Capability.THERMOSTAT_COOLING_SETPOINT: SmartThingsNumberRangeEntityDescription(
+        key=Capability.THERMOSTAT_COOLING_SETPOINT,
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.TEMPERATURE,
+        status_attribute=Attribute.COOLING_SETPOINT,
+        range_attribute=Attribute.COOLING_SETPOINT_RANGE,
+        command=Command.SET_COOLING_SETPOINT,
+        exists_fn=lambda device, component: component in ("cooler", "freezer"),
+        component_translation_key={
+            "cooler": "cooler_temperature",
+            "freezer": "freezer_temperature",
+        },
+    ),
+    Capability.SAMSUNG_CE_AUDIO_VOLUME_LEVEL: SmartThingsNumberRangeEntityDescription(
+        key="audio_volume_level",
+        entity_category=EntityCategory.CONFIG,
+        status_attribute=Attribute.VOLUME_LEVEL,
+        range_attribute=Attribute.VOLUME_LEVEL_RANGE,
+        command=Command.SET_VOLUME_LEVEL,
+        exists_fn=lambda device, component: (
+            get_range_options_count(
+                device,
+                component,
+                Capability.SAMSUNG_CE_AUDIO_VOLUME_LEVEL,
+                Attribute.VOLUME_LEVEL_RANGE,
+            )
+            >= 2
+        ),
+    ),
+}
 
 
 async def async_setup_entry(
@@ -35,15 +90,22 @@ async def async_setup_entry(
             and Capability.SAMSUNG_CE_CONNECTION_STATE not in hood_component
         )
     )
+
     entities.extend(
-        SmartThingsRefrigeratorTemperatureNumberEntity(
-            entry_data.client, device, component
+        SmartThingsRangeNumberEntity(
+            entry_data.client,
+            device,
+            description,
+            capability,
+            component,
         )
         for device in entry_data.devices.values()
         for component in device.status
-        if component in ("cooler", "freezer")
-        and Capability.THERMOSTAT_COOLING_SETPOINT in device.status[component]
+        for capability, description in CAPABILITY_TO_NUMBER_RANGE_DESCRIPTIONS.items()
+        if capability in device.status[component]
+        and description.exists_fn(device, component)
     )
+
     async_add_entities(entities)
 
 
@@ -153,37 +215,45 @@ class SmartThingsHoodNumberEntity(SmartThingsEntity, NumberEntity):
         )
 
 
-class SmartThingsRefrigeratorTemperatureNumberEntity(SmartThingsEntity, NumberEntity):
+class SmartThingsRangeNumberEntity(SmartThingsEntity, NumberEntity):
     """Define a SmartThings number."""
 
-    _attr_entity_category = EntityCategory.CONFIG
-    _attr_device_class = NumberDeviceClass.TEMPERATURE
+    entity_description: SmartThingsNumberRangeEntityDescription
 
-    def __init__(self, client: SmartThings, device: FullDevice, component: str) -> None:
+    def __init__(
+        self,
+        client: SmartThings,
+        device: FullDevice,
+        description: SmartThingsNumberRangeEntityDescription,
+        capability: Capability,
+        component: str = MAIN,
+    ) -> None:
         """Initialize the instance."""
         super().__init__(
             client,
             device,
-            {Capability.THERMOSTAT_COOLING_SETPOINT},
+            {capability},
             component=component,
         )
-        self._attr_unique_id = f"{device.device.device_id}_{component}_{Capability.THERMOSTAT_COOLING_SETPOINT}_{Attribute.COOLING_SETPOINT}_{Attribute.COOLING_SETPOINT}"
-        unit = self._internal_state[Capability.THERMOSTAT_COOLING_SETPOINT][
-            Attribute.COOLING_SETPOINT
-        ].unit
-        assert unit is not None
-        self._attr_native_unit_of_measurement = UNIT_MAP[unit]
-        self._attr_translation_key = {
-            "cooler": "cooler_temperature",
-            "freezer": "freezer_temperature",
-        }[component]
+        self.entity_description = description
+        self._attr_unique_id = f"{device.device.device_id}_{component}_{description.key}_{description.status_attribute}_{description.status_attribute}"
+        unit = self._internal_state[capability][description.status_attribute].unit
+        if unit is not None:
+            self._attr_native_unit_of_measurement = UNIT_MAP[unit]
+        self.number_capability = capability
+        if description.component_translation_key:
+            self._attr_translation_key = description.component_translation_key.get(
+                component, description.key
+            )
+        else:
+            self._attr_translation_key = description.key
 
     @property
     def range(self) -> dict[str, int]:
         """Return the list of options."""
         return self.get_attribute_value(
-            Capability.THERMOSTAT_COOLING_SETPOINT,
-            Attribute.COOLING_SETPOINT_RANGE,
+            self.number_capability,
+            self.entity_description.range_attribute,
         )
 
     @property
@@ -191,7 +261,8 @@ class SmartThingsRefrigeratorTemperatureNumberEntity(SmartThingsEntity, NumberEn
         """Return the current value."""
         return int(
             self.get_attribute_value(
-                Capability.THERMOSTAT_COOLING_SETPOINT, Attribute.COOLING_SETPOINT
+                self.number_capability,
+                self.entity_description.status_attribute,
             )
         )
 
@@ -213,7 +284,7 @@ class SmartThingsRefrigeratorTemperatureNumberEntity(SmartThingsEntity, NumberEn
     async def async_set_native_value(self, value: float) -> None:
         """Set the value."""
         await self.execute_device_command(
-            Capability.THERMOSTAT_COOLING_SETPOINT,
-            Command.SET_COOLING_SETPOINT,
+            self.number_capability,
+            self.entity_description.command,
             int(value),
         )

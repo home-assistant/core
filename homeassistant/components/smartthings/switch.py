@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
@@ -19,8 +20,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FullDevice, SmartThingsConfigEntry
 from .const import INVALID_SWITCH_CATEGORIES, MAIN
-from .entity import SmartThingsEntity
-from .util import deprecate_entity
+from .entity import CommandArgument, SmartThingsEntity
+from .util import deprecate_entity, get_range_options_count
 
 CAPABILITIES = (
     Capability.SWITCH_LEVEL,
@@ -48,9 +49,12 @@ class SmartThingsSwitchEntityDescription(SwitchEntityDescription):
 
     status_attribute: Attribute
     component_translation_key: dict[str, str] | None = None
-    on_key: str = "on"
+    on_value: str | int = "on"
     on_command: Command = Command.ON
+    on_command_argument: CommandArgument = None
     off_command: Command = Command.OFF
+    off_command_argument: CommandArgument = None
+    exists_fn: Callable[[FullDevice, str], bool] | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -58,6 +62,8 @@ class SmartThingsCommandSwitchEntityDescription(SmartThingsSwitchEntityDescripti
     """Describe a SmartThings switch entity."""
 
     command: Command
+    on_command_argument: CommandArgument = "on"
+    off_command_argument: CommandArgument = "off"
 
 
 SWITCH = SmartThingsSwitchEntityDescription(
@@ -88,6 +94,27 @@ CAPABILITY_TO_COMMAND_SWITCHES: dict[
         status_attribute=Attribute.STEAM_CLOSET_AUTO_CYCLE_LINK,
         command=Command.SET_STEAM_CLOSET_AUTO_CYCLE_LINK,
         entity_category=EntityCategory.CONFIG,
+    ),
+    Capability.SAMSUNG_CE_AUDIO_VOLUME_LEVEL: SmartThingsCommandSwitchEntityDescription(
+        key=Capability.SAMSUNG_CE_AUDIO_VOLUME_LEVEL,
+        translation_key="mute",
+        status_attribute=Attribute.VOLUME_LEVEL,
+        command=Command.SET_VOLUME_LEVEL,
+        on_value=0,
+        on_command_argument=0,
+        off_command_argument=1,
+        entity_category=EntityCategory.CONFIG,
+        exists_fn=lambda device, component: (
+            # Only create mute switch if volume level has 2 options (muted and unmuted)
+            # For other cases, we rely on the volume level number entity to set volume
+            get_range_options_count(
+                device,
+                component,
+                Capability.SAMSUNG_CE_AUDIO_VOLUME_LEVEL,
+                Attribute.VOLUME_LEVEL_RANGE,
+            )
+            == 2
+        ),
     ),
 }
 CAPABILITY_TO_SWITCHES: dict[Capability | str, SmartThingsSwitchEntityDescription] = {
@@ -124,7 +151,7 @@ CAPABILITY_TO_SWITCHES: dict[Capability | str, SmartThingsSwitchEntityDescriptio
         key=Capability.SAMSUNG_CE_POWER_COOL,
         translation_key="power_cool",
         status_attribute=Attribute.ACTIVATED,
-        on_key="True",
+        on_value="True",
         on_command=Command.ACTIVATE,
         off_command=Command.DEACTIVATE,
         entity_category=EntityCategory.CONFIG,
@@ -133,7 +160,7 @@ CAPABILITY_TO_SWITCHES: dict[Capability | str, SmartThingsSwitchEntityDescriptio
         key=Capability.SAMSUNG_CE_POWER_FREEZE,
         translation_key="power_freeze",
         status_attribute=Attribute.ACTIVATED,
-        on_key="True",
+        on_value="True",
         on_command=Command.ACTIVATE,
         off_command=Command.DEACTIVATE,
         entity_category=EntityCategory.CONFIG,
@@ -170,6 +197,7 @@ async def async_setup_entry(
         for device in entry_data.devices.values()
         for capability, description in CAPABILITY_TO_COMMAND_SWITCHES.items()
         if capability in device.status[MAIN]
+        and (description.exists_fn is None or description.exists_fn(device, MAIN))
     ]
     entities.extend(
         SmartThingsSwitch(
@@ -190,6 +218,7 @@ async def async_setup_entry(
                 and component in description.component_translation_key
             )
         )
+        and (description.exists_fn is None or description.exists_fn(device, component))
     )
     entity_registry = er.async_get(hass)
     for device in entry_data.devices.values():
@@ -279,6 +308,7 @@ class SmartThingsSwitch(SmartThingsEntity, SwitchEntity):
         await self.execute_device_command(
             self.switch_capability,
             self.entity_description.off_command,
+            self.entity_description.off_command_argument,
         )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -286,6 +316,7 @@ class SmartThingsSwitch(SmartThingsEntity, SwitchEntity):
         await self.execute_device_command(
             self.switch_capability,
             self.entity_description.on_command,
+            self.entity_description.on_command_argument,
         )
 
     @property
@@ -295,7 +326,7 @@ class SmartThingsSwitch(SmartThingsEntity, SwitchEntity):
             self.get_attribute_value(
                 self.switch_capability, self.entity_description.status_attribute
             )
-            == self.entity_description.on_key
+            == self.entity_description.on_value
         )
 
 
@@ -309,7 +340,7 @@ class SmartThingsCommandSwitch(SmartThingsSwitch):
         await self.execute_device_command(
             self.switch_capability,
             self.entity_description.command,
-            "off",
+            self.entity_description.off_command_argument,
         )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -317,5 +348,5 @@ class SmartThingsCommandSwitch(SmartThingsSwitch):
         await self.execute_device_command(
             self.switch_capability,
             self.entity_description.command,
-            "on",
+            self.entity_description.on_command_argument,
         )

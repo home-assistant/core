@@ -410,6 +410,120 @@
     'state': '2.0',
   })
 # ---
+# name: test_all_entities[da_rvc_map_01011][number.robot_vacuum_audio_volume_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 3,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.robot_vacuum_audio_volume_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Audio volume level',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'audio_volume_level',
+    'unique_id': '05accb39-2017-c98b-a5ab-04a81f4d3d9a_main_audio_volume_level_volumeLevel_volumeLevel',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_rvc_map_01011][number.robot_vacuum_audio_volume_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Robot vacuum Audio volume level',
+      'max': 3,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.robot_vacuum_audio_volume_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_all_entities[da_wm_wd_01011][number.trockner_audio_volume_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 3,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.trockner_audio_volume_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Audio volume level',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'audio_volume_level',
+    'unique_id': '3d39866c-7716-5259-44f0-fd7025efd85f_main_audio_volume_level_volumeLevel_volumeLevel',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_wd_01011][number.trockner_audio_volume_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Trockner Audio volume level',
+      'max': 3,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.trockner_audio_volume_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
+  })
+# ---
 # name: test_all_entities[da_wm_wm_000001][number.washer_rinse_cycles-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -524,6 +638,63 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2',
+  })
+# ---
+# name: test_all_entities[da_wm_wm_01011][number.machine_a_laver_audio_volume_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 1,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.machine_a_laver_audio_volume_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Audio volume level',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'audio_volume_level',
+    'unique_id': 'b854ca5f-dc54-140d-6349-758b4d973c41_main_audio_volume_level_volumeLevel_volumeLevel',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_wm_01011][number.machine_a_laver_audio_volume_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Machine à Laver Audio volume level',
+      'max': 1,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.machine_a_laver_audio_volume_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
   })
 # ---
 # name: test_all_entities[da_wm_wm_01011][number.machine_a_laver_rinse_cycles-entry]
