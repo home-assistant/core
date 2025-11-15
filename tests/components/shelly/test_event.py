@@ -29,6 +29,10 @@ from .conftest import MOCK_BLOCKS
 
 DEVICE_BLOCK_ID = 4
 
+UNORDERED_EVENT_TYPES = unordered(
+    ["double", "long", "long_single", "single", "single_long", "triple"]
+)
+
 
 @pytest.fixture(autouse=True)
 def fixture_platforms():
@@ -240,10 +244,35 @@ async def test_block_event_shix3_1(
         description="input_0",
         set_state=AsyncMock(side_effect=lambda turn: {"ison": turn == "on"}),
     )
+    blocks[1] = Mock(
+        sensor_ids={
+            "inputEvent": "S",
+            "inputEventCnt": 2,
+        },
+        channel="1",
+        type="input",
+        description="input_1",
+        set_state=AsyncMock(side_effect=lambda turn: {"ison": turn == "on"}),
+    )
+    blocks[2] = Mock(
+        sensor_ids={
+            "inputEvent": "S",
+            "inputEventCnt": 2,
+        },
+        channel="2",
+        type="input",
+        description="input_2",
+        set_state=AsyncMock(side_effect=lambda turn: {"ison": turn == "on"}),
+    )
     monkeypatch.setattr(mock_block_device, "blocks", blocks)
+    monkeypatch.delitem(mock_block_device.settings, "relays")
     await init_integration(hass, 1, model=MODEL_I3)
 
     assert (state := hass.states.get("event.test_name_tv_leds"))
-    assert state.attributes.get(ATTR_EVENT_TYPES) == unordered(
-        ["double", "long", "long_single", "single", "single_long", "triple"]
-    )
+    assert state.attributes.get(ATTR_EVENT_TYPES) == UNORDERED_EVENT_TYPES
+
+    assert (state := hass.states.get("event.test_name_tv_spots"))
+    assert state.attributes.get(ATTR_EVENT_TYPES) == UNORDERED_EVENT_TYPES
+
+    assert (state := hass.states.get("event.test_name_input_3"))
+    assert state.attributes.get(ATTR_EVENT_TYPES) == UNORDERED_EVENT_TYPES
