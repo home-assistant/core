@@ -20,22 +20,26 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-  config-entry-unloading:
+  action-exceptions: todo
+  config-entry-unloading: done
   docs-configuration-parameters:
   docs-installation-parameters:
-  entity-unavailable:
-  integration-owner:
-  log-when-unavailable:
-  parallel-updates:
-  reauthentication-flow:
-  test-coverage:
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: todo
+  parallel-updates: todo
+  reauthentication-flow: done
+  test-coverage: todo
 
   # Gold
-  devices:
-  diagnostics:
+  devices: done
+  diagnostics: done
   discovery-update-info:
+    status: exempt
+    comment: Cloud based connection, no local discovery
   discovery:
+    status: exempt
+      comment: Cloud based connection, no local discovery
   docs-data-update:
   docs-examples:
   docs-known-limitations:
@@ -43,18 +47,18 @@ rules:
   docs-supported-functions:
   docs-troubleshooting:
   docs-use-cases:
-  dynamic-devices:
-  entity-category:
-  entity-device-class:
-  entity-disabled-by-default:
-  entity-translations:
-  exception-translations:
-  icon-translations:
-  reconfiguration-flow:
-  repair-issues:
-  stale-devices:
+  dynamic-devices: todo
+  entity-category: todo
+  entity-device-class: todo
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations: todo
+  icon-translations: todo
+  reconfiguration-flow: todo
+  repair-issues: done
+  stale-devices: todo
 
   # Platinum
-  async-dependency:
-  inject-websession:
-  strict-typing:
+  async-dependency: done
+  inject-websession: done
+  strict-typing: todo
