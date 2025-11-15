@@ -1,6 +1,7 @@
 """Tests for Shelly button platform."""
 
-from unittest.mock import Mock
+import copy
+from unittest.mock import AsyncMock, Mock
 
 from aioshelly.ble.const import BLE_SCRIPT_NAME
 from aioshelly.const import MODEL_I3
@@ -24,6 +25,7 @@ from . import (
     patch_platforms,
     register_entity,
 )
+from .conftest import MOCK_BLOCKS
 
 DEVICE_BLOCK_ID = 4
 
@@ -213,15 +215,35 @@ async def test_block_event(
     assert state.attributes.get(ATTR_EVENT_TYPE) == "long"
 
 
+async def test_block_event_single_output(
+    hass: HomeAssistant, mock_block_device: Mock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test block device event when num_outputs is 1."""
+    monkeypatch.setitem(mock_block_device.shelly, "num_outputs", 1)
+    await init_integration(hass, 1)
+
+    assert hass.states.get("event.test_name")
+
+
 async def test_block_event_shix3_1(
     hass: HomeAssistant, mock_block_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test block device event for SHIX3-1."""
-    monkeypatch.setitem(mock_block_device.shelly, "num_outputs", 1)
+    blocks = copy.deepcopy(MOCK_BLOCKS)
+    blocks[0] = Mock(
+        sensor_ids={
+            "inputEvent": "S",
+            "inputEventCnt": 2,
+        },
+        channel="0",
+        type="input",
+        description="input_0",
+        set_state=AsyncMock(side_effect=lambda turn: {"ison": turn == "on"}),
+    )
+    monkeypatch.setattr(mock_block_device, "blocks", blocks)
     await init_integration(hass, 1, model=MODEL_I3)
-    entity_id = "event.test_name"
 
-    assert (state := hass.states.get(entity_id))
+    assert (state := hass.states.get("event.test_name_input_1"))
     assert state.attributes.get(ATTR_EVENT_TYPES) == unordered(
         ["double", "long", "long_single", "single", "single_long", "triple"]
     )
