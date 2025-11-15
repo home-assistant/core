@@ -48,16 +48,13 @@ SENSOR_TYPES: tuple[GoogleWeatherSensorDescription, ...] = (
     GoogleWeatherSensorDescription(
         key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        entity_registry_enabled_default=True,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_fn=lambda data: data.temperature.degrees,
-        translation_key="temperature",
     ),
     GoogleWeatherSensorDescription(
         key="feelsLikeTemperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        entity_registry_enabled_default=True,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_fn=lambda data: data.feels_like_temperature.degrees,
@@ -93,11 +90,9 @@ SENSOR_TYPES: tuple[GoogleWeatherSensorDescription, ...] = (
     GoogleWeatherSensorDescription(
         key="relativeHumidity",
         device_class=SensorDeviceClass.HUMIDITY,
-        entity_registry_enabled_default=True,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda data: data.relative_humidity,
-        translation_key="humidity",
     ),
     GoogleWeatherSensorDescription(
         key="uvIndex",
@@ -118,11 +113,9 @@ SENSOR_TYPES: tuple[GoogleWeatherSensorDescription, ...] = (
     GoogleWeatherSensorDescription(
         key="precipitation_qpf",
         device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
-        entity_registry_enabled_default=True,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
         value_fn=lambda data: data.precipitation.qpf.quantity,
-        translation_key="precipitation_qpf",
     ),
     GoogleWeatherSensorDescription(
         key="thunderstormProbability",
@@ -140,7 +133,6 @@ SENSOR_TYPES: tuple[GoogleWeatherSensorDescription, ...] = (
         suggested_display_precision=0,
         native_unit_of_measurement=UnitOfPressure.HPA,
         value_fn=lambda data: data.air_pressure.mean_sea_level_millibars,
-        translation_key="pressure",
     ),
     GoogleWeatherSensorDescription(
         key="wind_direction",
@@ -149,7 +141,6 @@ SENSOR_TYPES: tuple[GoogleWeatherSensorDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT_ANGLE,
         native_unit_of_measurement=DEGREE,
         value_fn=lambda data: data.wind.direction.degrees,
-        translation_key="wind_direction",
     ),
     GoogleWeatherSensorDescription(
         key="wind_speed",
@@ -158,7 +149,6 @@ SENSOR_TYPES: tuple[GoogleWeatherSensorDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         value_fn=lambda data: data.wind.speed.value,
-        translation_key="wind_speed",
     ),
     GoogleWeatherSensorDescription(
         key="wind_gust",
@@ -180,7 +170,6 @@ SENSOR_TYPES: tuple[GoogleWeatherSensorDescription, ...] = (
     ),
     GoogleWeatherSensorDescription(
         key="cloudCover",
-        entity_registry_enabled_default=True,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda data: data.cloud_cover,

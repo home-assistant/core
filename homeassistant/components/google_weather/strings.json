@@ -3,9 +3,6 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     },
-    "create_entry": {
-      "default": "Some sensors are not enabled by default. You can enable them in the entity registry after the integration configuration."
-    },
     "error": {
       "cannot_connect": "Unable to connect to the Google Weather API:\n\n{error_message}",
       "unknown": "[%key:common::config_flow::error::unknown%]"
@@ -68,40 +65,28 @@
   "entity": {
     "sensor": {
       "apparent_temperature": {
-        "name": "[%key:component::weather::entity_component::_::state_attributes::apparent_temperature::name%]"
+        "name": "Apparent temperature"
       },
       "cloud_coverage": {
-        "name": "[%key:component::weather::entity_component::_::state_attributes::cloud_coverage::name%]"
+        "name": "Cloud coverage"
       },
       "dew_point": {
-        "name": "[%key:component::weather::entity_component::_::state_attributes::dew_point::name%]"
+        "name": "Dew point"
       },
       "heat_index": {
         "name": "Heat index temperature"
       },
-      "humidity": {
-        "name": "[%key:component::weather::entity_component::_::state_attributes::humidity::name%]"
-      },
       "precipitation_probability": {
         "name": "Precipitation probability"
-      },
-      "precipitation_qpf": {
-        "name": "Precipitation"
-      },
-      "pressure": {
-        "name": "[%key:component::weather::entity_component::_::state_attributes::pressure::name%]"
-      },
-      "temperature": {
-        "name": "[%key:component::weather::entity_component::_::state_attributes::temperature::name%]"
       },
       "thunderstorm_probability": {
         "name": "Thunderstorm probability"
       },
       "uv_index": {
-        "name": "[%key:component::weather::entity_component::_::state_attributes::uv_index::name%]"
+        "name": "UV index"
       },
       "visibility": {
-        "name": "[%key:component::weather::entity_component::_::state_attributes::visibility::name%]"
+        "name": "Visibility"
       },
       "weather_condition": {
         "name": "Weather condition"
@@ -109,14 +94,8 @@
       "wind_chill": {
         "name": "Wind chill temperature"
       },
-      "wind_direction": {
-        "name": "Wind direction"
-      },
       "wind_gust_speed": {
-        "name": "[%key:component::weather::entity_component::_::state_attributes::wind_gust_speed::name%]"
-      },
-      "wind_speed": {
-        "name": "[%key:component::weather::entity_component::_::state_attributes::wind_speed::name%]"
+        "name": "Wind gust speed"
       }
     }
   }
