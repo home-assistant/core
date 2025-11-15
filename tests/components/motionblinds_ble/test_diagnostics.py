@@ -24,4 +24,4 @@ async def test_diagnostics(
 
     assert await get_diagnostics_for_config_entry(
         hass, hass_client, mock_config_entry
-    ) == snapshot(exclude=props("created_at", "modified_at", "repr"))
+    ) == snapshot(exclude=props("created_at", "modified_at"))

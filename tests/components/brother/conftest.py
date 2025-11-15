@@ -2,7 +2,7 @@
 
 from collections.abc import Generator
 from datetime import UTC, datetime
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 from brother import BrotherSensors
 import pytest
@@ -100,23 +100,26 @@ def mock_unload_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_brother_client() -> Generator[MagicMock]:
-    """Mock Brother client."""
+def mock_brother() -> Generator[AsyncMock]:
+    """Mock the Brother class."""
     with (
-        patch("homeassistant.components.brother.Brother", autospec=True) as mock_client,
-        patch(
-            "homeassistant.components.brother.config_flow.Brother",
-            new=mock_client,
-        ),
+        patch("homeassistant.components.brother.Brother", autospec=True) as mock_class,
+        patch("homeassistant.components.brother.config_flow.Brother", new=mock_class),
     ):
-        client = mock_client.create.return_value
-        client.async_update.return_value = BROTHER_DATA
-        client.serial = "0123456789"
-        client.mac = "AA:BB:CC:DD:EE:FF"
-        client.model = "HL-L2340DW"
-        client.firmware = "1.2.3"
+        yield mock_class
 
-        yield client
+
+@pytest.fixture
+def mock_brother_client(mock_brother: AsyncMock) -> AsyncMock:
+    """Mock Brother client."""
+    client = mock_brother.create.return_value
+    client.async_update.return_value = BROTHER_DATA
+    client.serial = "0123456789"
+    client.mac = "AA:BB:CC:DD:EE:FF"
+    client.model = "HL-L2340DW"
+    client.firmware = "1.2.3"
+
+    return client
 
 
 @pytest.fixture

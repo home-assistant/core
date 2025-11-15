@@ -3,20 +3,20 @@
   "name": "ThermoPro",
   "bluetooth": [
     {
-      "local_name": "TP35*",
-      "connectable": false
+      "connectable": false,
+      "local_name": "TP35*"
     },
     {
-      "local_name": "TP39*",
-      "connectable": false
+      "connectable": false,
+      "local_name": "TP39*"
     },
     {
-      "local_name": "TP96*",
-      "connectable": false
+      "connectable": false,
+      "local_name": "TP96*"
     },
     {
-      "local_name": "TP97*",
-      "connectable": false
+      "connectable": false,
+      "local_name": "TP97*"
     }
   ],
   "codeowners": ["@bdraco", "@h3ss"],

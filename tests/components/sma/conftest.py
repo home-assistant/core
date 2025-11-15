@@ -8,7 +8,7 @@ from pysma.const import (
     GENERIC_SENSORS,
     OPTIMIZERS_VIA_INVERTER,
 )
-from pysma.definitions import sensor_map
+from pysma.definitions.webconnect import sensor_map
 from pysma.sensor import Sensors
 import pytest
 
@@ -26,8 +26,8 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
 
     return MockConfigEntry(
         domain=DOMAIN,
-        title=MOCK_DEVICE["name"],
-        unique_id=str(MOCK_DEVICE["serial"]),
+        title=MOCK_DEVICE.name,
+        unique_id=str(MOCK_DEVICE.serial),
         data=MOCK_USER_INPUT,
         minor_version=2,
         entry_id="sma_entry_123",
@@ -47,7 +47,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 def mock_sma_client() -> Generator[MagicMock]:
     """Mock the SMA client."""
     with patch(
-        "homeassistant.components.sma.coordinator.SMA", autospec=True
+        "homeassistant.components.sma.coordinator.SMAWebConnect", autospec=True
     ) as sma_cls:
         sma_instance: MagicMock = sma_cls.return_value
         sma_instance.device_info = AsyncMock(return_value=MOCK_DEVICE)
@@ -80,8 +80,11 @@ def mock_sma_client() -> Generator[MagicMock]:
         sma_instance.read = AsyncMock(side_effect=_async_mock_read)
 
         with (
-            patch("homeassistant.components.sma.config_flow.pysma.SMA", new=sma_cls),
-            patch("homeassistant.components.sma.SMA", new=sma_cls),
-            patch("pysma.SMA", new=sma_cls),
+            patch(
+                "homeassistant.components.sma.config_flow.SMAWebConnect",
+                new=sma_cls,
+            ),
+            patch("homeassistant.components.sma.SMAWebConnect", new=sma_cls),
+            patch("pysma.SMAWebConnect", new=sma_cls),
         ):
             yield sma_instance
