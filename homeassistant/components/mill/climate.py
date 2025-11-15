@@ -115,13 +115,13 @@ class MillHeater(MillBaseEntity, ClimateEntity):
         super().__init__(coordinator, device)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
-        """Set new target temperature."""
+        """Set new target temperature and optionally HVAC mode."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
         await self.coordinator.mill_data_connection.set_heater_temp(
             self._id, float(temperature)
         )
-        if hvac_mode := kwargs.get(ATTR_HVAC_MODE):
+        if (hvac_mode := kwargs.get(ATTR_HVAC_MODE)) is not None:
             if hvac_mode in self._attr_hvac_modes:
                 await self._do_set_hvac_mode(hvac_mode)
             else:
@@ -204,13 +204,13 @@ class LocalMillHeater(CoordinatorEntity[MillDataUpdateCoordinator], ClimateEntit
         self._update_attr()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
-        """Set new target temperature."""
+        """Set new target temperature and optionally HVAC mode."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
         await self.coordinator.mill_data_connection.set_target_temperature(
             float(temperature)
         )
-        if hvac_mode := kwargs.get(ATTR_HVAC_MODE):
+        if (hvac_mode := kwargs.get(ATTR_HVAC_MODE)) is not None:
             if hvac_mode in self._attr_hvac_modes:
                 await self._do_set_hvac_mode(hvac_mode)
             else:
