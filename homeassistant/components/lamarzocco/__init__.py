@@ -102,7 +102,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
     # initialize Bluetooth
     bluetooth_client: LaMarzoccoBluetoothClient | None = None
     if entry.options.get(CONF_USE_BLUETOOTH, True) and (
-        token := settings.ble_auth_token
+        token := (entry.data.get(CONF_TOKEN) or settings.ble_auth_token)
     ):
         if CONF_MAC not in entry.data:
             for discovery_info in async_discovered_service_info(hass):
@@ -120,16 +120,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
                             CONF_MAC: discovery_info.address,
                         },
                     )
-
-        if not entry.data[CONF_TOKEN]:
-            # update the token in the config entry
-            hass.config_entries.async_update_entry(
-                entry,
-                data={
-                    **entry.data,
-                    CONF_TOKEN: token,
-                },
-            )
 
         if CONF_MAC in entry.data:
             ble_device = async_ble_device_from_address(hass, entry.data[CONF_MAC])
