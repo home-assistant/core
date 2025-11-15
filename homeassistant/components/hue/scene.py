@@ -113,6 +113,12 @@ class HueSceneEntityBase(HueBaseEntity, BaseScene):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.group.id)},
         )
+        # Track last_recall timestamp for scene activation detection (regular scenes only)
+        self._previous_last_recall = (
+            resource.status.last_recall
+            if isinstance(resource, HueScene) and resource.status
+            else None
+        )
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
@@ -134,16 +140,31 @@ class HueSceneEntityBase(HueBaseEntity, BaseScene):
     def on_update(self) -> None:
         """Handle EventStream updates for scene activation detection.
 
-        This method is called when the bridge sends an update event for this scene.
-        When a scene is activated (from Hue app, physical buttons, or automations),
-        the scene status changes to active, allowing us to record the activation.
+        For regular scenes (HueScene), we track the last_recall timestamp to detect
+        actual scene activations (from Hue app, buttons, or automations) while
+        avoiding false activations when lights in an active scene are modified.
+
+        When a scene is recalled, the bridge updates last_recall timestamp.
+        When a light in an active scene is modified, last_recall stays unchanged.
+
+        SmartScenes override this method with their own activation logic.
         """
-        # Check if scene became active (activated externally or via HA)
-        if (
-            self.resource.status
-            and self.resource.status.active != SceneActiveStatus.INACTIVE
-        ):
-            self._async_record_activation()
+        # Only track activations for regular scenes (HueScene)
+        if isinstance(self.resource, HueScene):
+            current_last_recall = (
+                self.resource.status.last_recall if self.resource.status else None
+            )
+
+            # Only record activation if last_recall timestamp has changed
+            if (
+                current_last_recall is not None
+                and current_last_recall != self._previous_last_recall
+            ):
+                self._async_record_activation()
+
+            # Update tracked timestamp
+            self._previous_last_recall = current_last_recall
+
         super().on_update()
 
 
