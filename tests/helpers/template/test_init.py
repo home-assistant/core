@@ -36,8 +36,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import (
-    area_registry as ar,
-    device_registry as dr,
     entity,
     entity_registry as er,
     issue_registry as ir,
