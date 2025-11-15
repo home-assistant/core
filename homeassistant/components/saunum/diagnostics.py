@@ -46,16 +46,4 @@ async def async_get_config_entry_diagnostics(
         ]
         diagnostics_data["active_alarms"] = alarm_fields
 
-        # Add human-readable on_time if available
-        if coordinator.data.on_time is not None:
-            total_seconds = coordinator.data.on_time
-            days = total_seconds // 86400
-            remainder = total_seconds % 86400
-            hours = remainder // 3600
-            minutes = (remainder % 3600) // 60
-            seconds = remainder % 60
-            diagnostics_data["on_time_formatted"] = (
-                f"{days}d {hours}h {minutes}m {seconds}s"
-            )
-
     return diagnostics_data
