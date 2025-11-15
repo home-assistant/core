@@ -339,6 +339,99 @@ async def test_subentry_web_search_user_location(
     }
 
 
+async def test_model_list(
+    hass: HomeAssistant, mock_config_entry, mock_init_component
+) -> None:
+    """Test fetching and processing the list of models."""
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    options_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+
+    # Configure initial step
+    options = await hass.config_entries.subentries.async_configure(
+        options_flow["flow_id"],
+        {
+            "prompt": "You are a helpful assistant",
+            "recommended": False,
+        },
+    )
+    assert options["type"] == FlowResultType.FORM
+    assert options["step_id"] == "advanced"
+    assert options["data_schema"].schema["chat_model"].config["options"] == [
+        {
+            "label": "Claude Haiku 4.5",
+            "value": "claude-haiku-4-5",
+        },
+        {
+            "label": "Claude Sonnet 4.5",
+            "value": "claude-sonnet-4-5",
+        },
+        {
+            "label": "Claude Opus 4.1",
+            "value": "claude-opus-4-1",
+        },
+        {
+            "label": "Claude Opus 4",
+            "value": "claude-opus-4-0",
+        },
+        {
+            "label": "Claude Sonnet 4",
+            "value": "claude-sonnet-4-0",
+        },
+        {
+            "label": "Claude Sonnet 3.7",
+            "value": "claude-3-7-sonnet",
+        },
+        {
+            "label": "Claude Haiku 3.5",
+            "value": "claude-3-5-haiku",
+        },
+        {
+            "label": "Claude Haiku 3",
+            "value": "claude-3-haiku-20240307",
+        },
+        {
+            "label": "Claude Opus 3",
+            "value": "claude-3-opus-20240229",
+        },
+    ]
+
+
+async def test_model_list_error(
+    hass: HomeAssistant, mock_config_entry, mock_init_component
+) -> None:
+    """Test exception handling during fetching the list of models."""
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    options_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+
+    # Configure initial step
+    with patch(
+        "homeassistant.components.anthropic.config_flow.anthropic.resources.models.AsyncModels.list",
+        new_callable=AsyncMock,
+        side_effect=InternalServerError(
+            message=None,
+            response=Response(
+                status_code=500,
+                request=Request(method="POST", url=URL()),
+            ),
+            body=None,
+        ),
+    ):
+        options = await hass.config_entries.subentries.async_configure(
+            options_flow["flow_id"],
+            {
+                "prompt": "You are a helpful assistant",
+                "recommended": False,
+            },
+        )
+    assert options["type"] == FlowResultType.FORM
+    assert options["step_id"] == "advanced"
+    assert options["data_schema"].schema["chat_model"].config["options"] == []
+
+
 @pytest.mark.parametrize(
     ("current_options", "new_options", "expected_options"),
     [
