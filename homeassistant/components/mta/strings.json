@@ -1,0 +1,40 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_stops": "No stops found for this line. The line may not be currently running."
+    },
+    "step": {
+      "user": {
+        "title": "Select subway line",
+        "description": "Choose the subway line you want to track.",
+        "data": {
+          "line": "Line"
+        },
+        "data_description": {
+          "line": "The subway line to track"
+        }
+      },
+      "stop": {
+        "title": "Select stop and direction",
+        "description": "Choose a stop on the {line} line. The direction is included with each stop.",
+        "data": {
+          "stop_id": "Stop and direction"
+        },
+        "data_description": {
+          "stop_id": "Select the stop and direction you want to track"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "next_arrival": {
+        "name": "Next arrival"
+      }
+    }
+  }
+}
