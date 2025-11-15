@@ -8,7 +8,7 @@
           "host": "IP Address"
         },
         "data_description": {
-          "host": "The IP address of your TheSilentWave device"
+          "host": "The IP address or hostname of your TheSilentWave device"
         }
       }
     },

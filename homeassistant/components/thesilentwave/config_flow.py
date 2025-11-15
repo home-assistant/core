@@ -1,6 +1,5 @@
 """Config flow for TheSilentWave integration."""
 
-import ipaddress
 import logging
 from typing import Any
 
@@ -12,7 +11,6 @@ from pysilentwave.exceptions import SilentWaveError
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
@@ -34,26 +32,22 @@ class TheSilentWaveConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(user_input[CONF_HOST])
             self._abort_if_unique_id_configured()
 
+            # Check if device is reachable.
+            websession = async_get_clientsession(self.hass)
+            client = SilentWaveClient(user_input[CONF_HOST], session=websession)
+
             try:
-                # Validate IP address.
-                ipaddress.ip_address(user_input[CONF_HOST])
-
-                # Check if device is reachable.
-                await self._async_check_device(user_input[CONF_HOST])
-
+                await client.get_status()
+            except SilentWaveError as err:
+                _LOGGER.debug("Device connection check failed: %s", err)
+                errors[CONF_HOST] = "cannot_connect"
+            else:
                 return self.async_create_entry(
-                    title=f"TheSilentWave",
+                    title="TheSilentWave",
                     data={
                         CONF_HOST: user_input[CONF_HOST],
                     },
                 )
-
-            except ValueError:
-                _LOGGER.warning("Invalid IP address entered: %s", user_input[CONF_HOST])
-                errors[CONF_HOST] = "invalid_ip"
-            except ConfigEntryNotReady:
-                _LOGGER.warning("Cannot connect to device")
-                errors[CONF_HOST] = "cannot_connect"
 
         return self.async_show_form(
             step_id="user",
@@ -64,13 +58,3 @@ class TheSilentWaveConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
-
-    async def _async_check_device(self, host: str) -> None:
-        """Check if the device is reachable."""
-        websession = async_get_clientsession(self.hass)
-        client = SilentWaveClient(host, session=websession)
-        try:
-            await client.get_status()
-        except SilentWaveError as err:
-            _LOGGER.debug("Device connection check failed: %s", err)
-            raise ConfigEntryNotReady("Cannot connect to device") from err
