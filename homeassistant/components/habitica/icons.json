@@ -138,6 +138,18 @@
       "habits": {
         "default": "mdi:checkbox-multiple-marked-circle-outline"
       },
+      "habits_daily": {
+        "default": "mdi:calendar-today"
+      },
+      "habits_weekly": {
+        "default": "mdi:calendar-week"
+      },
+      "habits_monthly": {
+        "default": "mdi:calendar-month"
+      },
+      "motivational_prompt": {
+        "default": "mdi:lightbulb-on"
+      },
       "hatching_potions_total": {
         "default": "mdi:flask-round-bottom"
       },

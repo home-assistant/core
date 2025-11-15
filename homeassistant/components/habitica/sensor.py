@@ -553,6 +553,9 @@ async def async_setup_entry(
         HabiticaFrequencySensor(coordinator, frequency_type)
         for frequency_type in ["daily", "weekly", "monthly"]
     )
+    
+    # Add motivational prompt sensor
+    async_add_entities([HabiticaMotivationalSensor(coordinator)])
 
 
 class HabiticaSensor(HabiticaBase, SensorEntity):
@@ -852,4 +855,50 @@ class HabiticaFrequencySensor(
             "habits": habits_list,
             "total_habits": total_habits,
             "frequency": self.frequency_type,
+        }
+
+
+class HabiticaMotivationalSensor(
+    CoordinatorEntity[HabiticaDataUpdateCoordinator], SensorEntity
+):
+    """Sensor for daily motivational messages."""
+
+    _attr_has_entity_name = False
+
+    def __init__(
+        self,
+        coordinator: HabiticaDataUpdateCoordinator,
+    ) -> None:
+        """Initialize the motivational sensor."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_daily_motivation"
+        self._attr_name = "Habitica Daily Motivation"
+        self._attr_translation_key = "motivational_prompt"
+
+        # Set device info to link to the main Habitica device
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, coordinator.config_entry.unique_id)},
+        )
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the motivational message."""
+        if not self.coordinator.data or not self.coordinator.data.user:
+            return "Ready to build great habits today!"
+        
+        return get_daily_motivational_prompt(
+            self.coordinator.data.user,
+            self.coordinator.content
+        )
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return user stats for context."""
+        if not self.coordinator.data or not self.coordinator.data.user:
+            return {}
+        
+        user = self.coordinator.data.user
+        return {
+            "level": user.stats.lvl,
+            "class": user.stats.Class.value if user.stats.Class else None,
         }

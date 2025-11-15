@@ -1,0 +1,20 @@
+alias: "Habitica Unscored Task Alert"
+description: "Get notified about unscored Habitica tasks"
+trigger:
+  - platform: event
+    event_type: habitica_unscored_task_alert
+    id: unscored_task
+condition: []
+action:
+  - service: persistent_notification.create
+    data:
+      title: "Habitica Reminder"
+      message: |
+        Task needs attention!
+        Task ID: {{ trigger.event.data.task_id }}
+        Name: {{ trigger.event.data.task_text }}
+        Type: {{ trigger.event.data.task_type }}
+        Hours since update: {{ trigger.event.data.hours_since_update }}
+      notification_id: "habitica_{{ trigger.event.data.task_id }}"
+mode: queued
+max: 10
