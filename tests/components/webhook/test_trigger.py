@@ -379,7 +379,7 @@ async def test_webhook_template(
     assert events[0].data["hello"] == "yo world"
 
 
-async def test_webhook_get_query_json_header_no_payload(
+async def test_webhook_query_json_header_no_payload(
     hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
 ) -> None:
     """Test requests with application/json header but no payload."""
