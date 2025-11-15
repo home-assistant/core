@@ -9,7 +9,6 @@ from aiohue.v2.controllers.events import EventType
 from aiohue.v2.controllers.scenes import ScenesController
 from aiohue.v2.models.scene import (
     Scene as HueScene,
-    SceneActiveStatus,
     ScenePut as HueScenePut,
 )
 from aiohue.v2.models.smart_scene import SmartScene as HueSmartScene, SmartSceneState
