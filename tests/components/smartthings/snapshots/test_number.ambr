@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_setting_1031-entry]
+# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_1031_target_water_outlet_upper_limit_heating-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -17,7 +17,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heat_pump_fsv_setting_1031',
+    'entity_id': 'number.heat_pump_fsv_1031_target_water_outlet_upper_limit_heating',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -29,21 +29,21 @@
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'FSV Setting 1031',
+    'original_name': 'FSV 1031: Target Water Outlet Upper Limit (Heating)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_1031',
     'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_1031',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_setting_1031-state]
+# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_1031_target_water_outlet_upper_limit_heating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Heat pump FSV Setting 1031',
+      'friendly_name': 'Heat pump FSV 1031: Target Water Outlet Upper Limit (Heating)',
       'max': 75,
       'min': 37,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -51,14 +51,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heat_pump_fsv_setting_1031',
+    'entity_id': 'number.heat_pump_fsv_1031_target_water_outlet_upper_limit_heating',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '65',
   })
 # ---
-# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_setting_1032-entry]
+# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_1032_target_water_outlet_lower_limit_heating-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -76,7 +76,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heat_pump_fsv_setting_1032',
+    'entity_id': 'number.heat_pump_fsv_1032_target_water_outlet_lower_limit_heating',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -88,21 +88,21 @@
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'FSV Setting 1032',
+    'original_name': 'FSV 1032: Target Water Outlet Lower Limit (Heating)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_1032',
     'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_1032',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_setting_1032-state]
+# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_1032_target_water_outlet_lower_limit_heating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Heat pump FSV Setting 1032',
+      'friendly_name': 'Heat pump FSV 1032: Target Water Outlet Lower Limit (Heating)',
       'max': 37,
       'min': 15,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -110,14 +110,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heat_pump_fsv_setting_1032',
+    'entity_id': 'number.heat_pump_fsv_1032_target_water_outlet_lower_limit_heating',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '26',
   })
 # ---
-# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_setting_1051-entry]
+# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_1051_maximum_dhw_tank_temperature_user_limit-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -135,7 +135,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heat_pump_fsv_setting_1051',
+    'entity_id': 'number.heat_pump_fsv_1051_maximum_dhw_tank_temperature_user_limit',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -147,21 +147,21 @@
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'FSV Setting 1051',
+    'original_name': 'FSV 1051: Maximum DHW Tank Temperature (User Limit)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_1051',
     'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_1051',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_setting_1051-state]
+# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_1051_maximum_dhw_tank_temperature_user_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Heat pump FSV Setting 1051',
+      'friendly_name': 'Heat pump FSV 1051: Maximum DHW Tank Temperature (User Limit)',
       'max': 70,
       'min': 50,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -169,14 +169,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heat_pump_fsv_setting_1051',
+    'entity_id': 'number.heat_pump_fsv_1051_maximum_dhw_tank_temperature_user_limit',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '69',
   })
 # ---
-# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_setting_1052-entry]
+# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_1052_target_dhw_tank_temperature_lower_limit_user_limit-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -194,7 +194,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heat_pump_fsv_setting_1052',
+    'entity_id': 'number.heat_pump_fsv_1052_target_dhw_tank_temperature_lower_limit_user_limit',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -206,21 +206,21 @@
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'FSV Setting 1052',
+    'original_name': 'FSV 1052: Target DHW Tank Temperature Lower Limit (User Limit)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_1052',
     'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_1052',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_setting_1052-state]
+# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_1052_target_dhw_tank_temperature_lower_limit_user_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Heat pump FSV Setting 1052',
+      'friendly_name': 'Heat pump FSV 1052: Target DHW Tank Temperature Lower Limit (User Limit)',
       'max': 40,
       'min': 30,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -228,14 +228,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heat_pump_fsv_setting_1052',
+    'entity_id': 'number.heat_pump_fsv_1052_target_dhw_tank_temperature_lower_limit_user_limit',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '38',
   })
 # ---
-# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_setting_2011-entry]
+# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_2011_water_law_low_ambient_outdoor_temp_setpoint-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -253,7 +253,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heat_pump_fsv_setting_2011',
+    'entity_id': 'number.heat_pump_fsv_2011_water_law_low_ambient_outdoor_temp_setpoint',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -265,21 +265,21 @@
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'FSV Setting 2011',
+    'original_name': 'FSV 2011: Water Law: Low Ambient Outdoor Temp Setpoint',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_2011',
     'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_2011',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_setting_2011-state]
+# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_2011_water_law_low_ambient_outdoor_temp_setpoint-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Heat pump FSV Setting 2011',
+      'friendly_name': 'Heat pump FSV 2011: Water Law: Low Ambient Outdoor Temp Setpoint',
       'max': 5,
       'min': -20,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -287,14 +287,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heat_pump_fsv_setting_2011',
+    'entity_id': 'number.heat_pump_fsv_2011_water_law_low_ambient_outdoor_temp_setpoint',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-5',
   })
 # ---
-# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_setting_2012-entry]
+# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_2012_water_law_high_ambient_outdoor_temp_setpoint-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -312,7 +312,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heat_pump_fsv_setting_2012',
+    'entity_id': 'number.heat_pump_fsv_2012_water_law_high_ambient_outdoor_temp_setpoint',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -324,21 +324,21 @@
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'FSV Setting 2012',
+    'original_name': 'FSV 2012: Water Law: High Ambient Outdoor Temp Setpoint',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_2012',
     'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_2012',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_setting_2012-state]
+# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_2012_water_law_high_ambient_outdoor_temp_setpoint-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Heat pump FSV Setting 2012',
+      'friendly_name': 'Heat pump FSV 2012: Water Law: High Ambient Outdoor Temp Setpoint',
       'max': 20,
       'min': 10,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -346,14 +346,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heat_pump_fsv_setting_2012',
+    'entity_id': 'number.heat_pump_fsv_2012_water_law_high_ambient_outdoor_temp_setpoint',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '10',
   })
 # ---
-# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_setting_2021-entry]
+# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_2021_water_law_flow_temp_at_low_ambient_zone_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -371,7 +371,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heat_pump_fsv_setting_2021',
+    'entity_id': 'number.heat_pump_fsv_2021_water_law_flow_temp_at_low_ambient_zone_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -383,21 +383,21 @@
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'FSV Setting 2021',
+    'original_name': 'FSV 2021: Water Law: Flow Temp at Low Ambient (Zone 1)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_2021',
     'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_2021',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_setting_2021-state]
+# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_2021_water_law_flow_temp_at_low_ambient_zone_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Heat pump FSV Setting 2021',
+      'friendly_name': 'Heat pump FSV 2021: Water Law: Flow Temp at Low Ambient (Zone 1)',
       'max': 75,
       'min': 17,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -405,14 +405,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heat_pump_fsv_setting_2021',
+    'entity_id': 'number.heat_pump_fsv_2021_water_law_flow_temp_at_low_ambient_zone_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '70',
   })
 # ---
-# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_setting_2022-entry]
+# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_2022_water_law_flow_temp_at_high_ambient_zone_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -430,7 +430,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heat_pump_fsv_setting_2022',
+    'entity_id': 'number.heat_pump_fsv_2022_water_law_flow_temp_at_high_ambient_zone_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -442,21 +442,21 @@
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'FSV Setting 2022',
+    'original_name': 'FSV 2022: Water Law: Flow Temp at High Ambient (Zone 1)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_2022',
     'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_2022',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_setting_2022-state]
+# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_2022_water_law_flow_temp_at_high_ambient_zone_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Heat pump FSV Setting 2022',
+      'friendly_name': 'Heat pump FSV 2022: Water Law: Flow Temp at High Ambient (Zone 1)',
       'max': 75,
       'min': 17,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -464,14 +464,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heat_pump_fsv_setting_2022',
+    'entity_id': 'number.heat_pump_fsv_2022_water_law_flow_temp_at_high_ambient_zone_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '45',
   })
 # ---
-# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_setting_2031-entry]
+# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_2031_water_law_flow_temp_at_low_ambient_zone_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -489,7 +489,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heat_pump_fsv_setting_2031',
+    'entity_id': 'number.heat_pump_fsv_2031_water_law_flow_temp_at_low_ambient_zone_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -501,21 +501,21 @@
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'FSV Setting 2031',
+    'original_name': 'FSV 2031: Water Law: Flow Temp at Low Ambient (Zone 2)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_2031',
     'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_2031',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_setting_2031-state]
+# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_2031_water_law_flow_temp_at_low_ambient_zone_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Heat pump FSV Setting 2031',
+      'friendly_name': 'Heat pump FSV 2031: Water Law: Flow Temp at Low Ambient (Zone 2)',
       'max': 75,
       'min': 17,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -523,14 +523,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heat_pump_fsv_setting_2031',
+    'entity_id': 'number.heat_pump_fsv_2031_water_law_flow_temp_at_low_ambient_zone_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '70',
   })
 # ---
-# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_setting_2032-entry]
+# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_2032_water_law_flow_temp_at_high_ambient_zone_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -548,7 +548,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heat_pump_fsv_setting_2032',
+    'entity_id': 'number.heat_pump_fsv_2032_water_law_flow_temp_at_high_ambient_zone_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -560,21 +560,21 @@
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'FSV Setting 2032',
+    'original_name': 'FSV 2032: Water Law: Flow Temp at High Ambient (Zone 2)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_2032',
     'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_2032',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_setting_2032-state]
+# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_2032_water_law_flow_temp_at_high_ambient_zone_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Heat pump FSV Setting 2032',
+      'friendly_name': 'Heat pump FSV 2032: Water Law: Flow Temp at High Ambient (Zone 2)',
       'max': 75,
       'min': 17,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -582,14 +582,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heat_pump_fsv_setting_2032',
+    'entity_id': 'number.heat_pump_fsv_2032_water_law_flow_temp_at_high_ambient_zone_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '40',
   })
 # ---
-# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_setting_2091-entry]
+# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_2091_external_run_input_for_zone_1_3rd_party_thermostat-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -607,7 +607,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heat_pump_fsv_setting_2091',
+    'entity_id': 'number.heat_pump_fsv_2091_external_run_input_for_zone_1_3rd_party_thermostat',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -619,34 +619,34 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'FSV Setting 2091',
+    'original_name': 'FSV 2091: External Run Input for Zone 1 (3rd Party Thermostat)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_2091',
     'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_2091',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_setting_2091-state]
+# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_2091_external_run_input_for_zone_1_3rd_party_thermostat-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Heat pump FSV Setting 2091',
+      'friendly_name': 'Heat pump FSV 2091: External Run Input for Zone 1 (3rd Party Thermostat)',
       'max': 4,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1.0,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heat_pump_fsv_setting_2091',
+    'entity_id': 'number.heat_pump_fsv_2091_external_run_input_for_zone_1_3rd_party_thermostat',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_setting_2092-entry]
+# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_2092_external_run_input_for_zone_2_3rd_party_thermostat-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -664,7 +664,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heat_pump_fsv_setting_2092',
+    'entity_id': 'number.heat_pump_fsv_2092_external_run_input_for_zone_2_3rd_party_thermostat',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -676,34 +676,34 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'FSV Setting 2092',
+    'original_name': 'FSV 2092: External Run Input for Zone 2 (3rd Party Thermostat)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_2092',
     'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_2092',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_setting_2092-state]
+# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_2092_external_run_input_for_zone_2_3rd_party_thermostat-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Heat pump FSV Setting 2092',
+      'friendly_name': 'Heat pump FSV 2092: External Run Input for Zone 2 (3rd Party Thermostat)',
       'max': 4,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1.0,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heat_pump_fsv_setting_2092',
+    'entity_id': 'number.heat_pump_fsv_2092_external_run_input_for_zone_2_3rd_party_thermostat',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_setting_2093-entry]
+# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_2093_remote_controller_room_temp_control_internal_sensor-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -721,7 +721,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heat_pump_fsv_setting_2093',
+    'entity_id': 'number.heat_pump_fsv_2093_remote_controller_room_temp_control_internal_sensor',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -733,34 +733,34 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'FSV Setting 2093',
+    'original_name': 'FSV 2093: Remote Controller Room Temp Control (Internal Sensor)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_2093',
     'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_2093',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_setting_2093-state]
+# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_2093_remote_controller_room_temp_control_internal_sensor-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Heat pump FSV Setting 2093',
+      'friendly_name': 'Heat pump FSV 2093: Remote Controller Room Temp Control (Internal Sensor)',
       'max': 4,
       'min': 1,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1.0,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heat_pump_fsv_setting_2093',
+    'entity_id': 'number.heat_pump_fsv_2093_remote_controller_room_temp_control_internal_sensor',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2',
   })
 # ---
-# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_setting_3011-entry]
+# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_3011_enable_disable_dhw_tank_function-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -778,7 +778,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heat_pump_fsv_setting_3011',
+    'entity_id': 'number.heat_pump_fsv_3011_enable_disable_dhw_tank_function',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -790,34 +790,34 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'FSV Setting 3011',
+    'original_name': 'FSV 3011: Enable / Disable DHW Tank Function',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_3011',
     'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_3011',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_setting_3011-state]
+# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_3011_enable_disable_dhw_tank_function-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Heat pump FSV Setting 3011',
+      'friendly_name': 'Heat pump FSV 3011: Enable / Disable DHW Tank Function',
       'max': 2,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1.0,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heat_pump_fsv_setting_3011',
+    'entity_id': 'number.heat_pump_fsv_3011_enable_disable_dhw_tank_function',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1',
   })
 # ---
-# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_setting_3071-entry]
+# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_3071_3_way_valve_direction_0_room_default_1_tank-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -835,7 +835,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heat_pump_fsv_setting_3071',
+    'entity_id': 'number.heat_pump_fsv_3071_3_way_valve_direction_0_room_default_1_tank',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -847,34 +847,34 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'FSV Setting 3071',
+    'original_name': 'FSV 3071: 3-Way Valve Direction (0=Room Default, 1=Tank)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_3071',
     'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_3071',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_setting_3071-state]
+# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_3071_3_way_valve_direction_0_room_default_1_tank-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Heat pump FSV Setting 3071',
+      'friendly_name': 'Heat pump FSV 3071: 3-Way Valve Direction (0=Room Default, 1=Tank)',
       'max': 1,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 0.1,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heat_pump_fsv_setting_3071',
+    'entity_id': 'number.heat_pump_fsv_3071_3_way_valve_direction_0_room_default_1_tank',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_setting_4011-entry]
+# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_4011_dhw_space_heating_priority_setting-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -892,7 +892,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heat_pump_fsv_setting_4011',
+    'entity_id': 'number.heat_pump_fsv_4011_dhw_space_heating_priority_setting',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -904,34 +904,34 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'FSV Setting 4011',
+    'original_name': 'FSV 4011: DHW / Space Heating Priority Setting',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_4011',
     'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_4011',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_setting_4011-state]
+# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_4011_dhw_space_heating_priority_setting-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Heat pump FSV Setting 4011',
+      'friendly_name': 'Heat pump FSV 4011: DHW / Space Heating Priority Setting',
       'max': 1,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 0.1,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heat_pump_fsv_setting_4011',
+    'entity_id': 'number.heat_pump_fsv_4011_dhw_space_heating_priority_setting',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1',
   })
 # ---
-# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_setting_4012-entry]
+# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_4012_outdoor_temperature_for_priority_changeover-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -949,7 +949,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heat_pump_fsv_setting_4012',
+    'entity_id': 'number.heat_pump_fsv_4012_outdoor_temperature_for_priority_changeover',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -961,21 +961,21 @@
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'FSV Setting 4012',
+    'original_name': 'FSV 4012: Outdoor temperature for priority changeover',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_4012',
     'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_4012',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_setting_4012-state]
+# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_4012_outdoor_temperature_for_priority_changeover-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Heat pump FSV Setting 4012',
+      'friendly_name': 'Heat pump FSV 4012: Outdoor temperature for priority changeover',
       'max': 20,
       'min': -15,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -983,14 +983,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heat_pump_fsv_setting_4012',
+    'entity_id': 'number.heat_pump_fsv_4012_outdoor_temperature_for_priority_changeover',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_setting_4021-entry]
+# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_4021_backup_heater_application_enable_disable-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1008,7 +1008,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heat_pump_fsv_setting_4021',
+    'entity_id': 'number.heat_pump_fsv_4021_backup_heater_application_enable_disable',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1020,34 +1020,34 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'FSV Setting 4021',
+    'original_name': 'FSV 4021: Backup Heater Application (Enable/Disable)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_4021',
     'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_4021',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_setting_4021-state]
+# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_4021_backup_heater_application_enable_disable-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Heat pump FSV Setting 4021',
+      'friendly_name': 'Heat pump FSV 4021: Backup Heater Application (Enable/Disable)',
       'max': 2,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1.0,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heat_pump_fsv_setting_4021',
+    'entity_id': 'number.heat_pump_fsv_4021_backup_heater_application_enable_disable',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_setting_4042-entry]
+# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_4042_mixing_valve_target_temperature_difference_heating-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1065,7 +1065,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heat_pump_fsv_setting_4042',
+    'entity_id': 'number.heat_pump_fsv_4042_mixing_valve_target_temperature_difference_heating',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1077,21 +1077,21 @@
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'FSV Setting 4042',
+    'original_name': 'FSV 4042: Mixing Valve Target Temperature Difference (Heating)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_4042',
     'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_4042',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_setting_4042-state]
+# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_4042_mixing_valve_target_temperature_difference_heating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Heat pump FSV Setting 4042',
+      'friendly_name': 'Heat pump FSV 4042: Mixing Valve Target Temperature Difference (Heating)',
       'max': 15,
       'min': 5,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -1099,14 +1099,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heat_pump_fsv_setting_4042',
+    'entity_id': 'number.heat_pump_fsv_4042_mixing_valve_target_temperature_difference_heating',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '10',
   })
 # ---
-# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_setting_4061-entry]
+# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_4061_2_zone_control_application_enable-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1124,7 +1124,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heat_pump_fsv_setting_4061',
+    'entity_id': 'number.heat_pump_fsv_4061_2_zone_control_application_enable',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1136,27 +1136,27 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'FSV Setting 4061',
+    'original_name': 'FSV 4061: 2-Zone Control (Application / Enable)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_4061',
     'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_4061',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_setting_4061-state]
+# name: test_all_entities[da_ac_ehs_01001][number.heat_pump_fsv_4061_2_zone_control_application_enable-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Heat pump FSV Setting 4061',
+      'friendly_name': 'Heat pump FSV 4061: 2-Zone Control (Application / Enable)',
       'max': 1,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 0.1,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heat_pump_fsv_setting_4061',
+    'entity_id': 'number.heat_pump_fsv_4061_2_zone_control_application_enable',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1574,7 +1574,7 @@
     'state': '2.0',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_setting_1031-entry]
+# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_1031_target_water_outlet_upper_limit_heating-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1592,7 +1592,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.eco_heating_system_fsv_setting_1031',
+    'entity_id': 'number.eco_heating_system_fsv_1031_target_water_outlet_upper_limit_heating',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1604,21 +1604,21 @@
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'FSV Setting 1031',
+    'original_name': 'FSV 1031: Target Water Outlet Upper Limit (Heating)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_1031',
     'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_1031',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_setting_1031-state]
+# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_1031_target_water_outlet_upper_limit_heating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Eco Heating System FSV Setting 1031',
+      'friendly_name': 'Eco Heating System FSV 1031: Target Water Outlet Upper Limit (Heating)',
       'max': 70,
       'min': 37,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -1626,14 +1626,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.eco_heating_system_fsv_setting_1031',
+    'entity_id': 'number.eco_heating_system_fsv_1031_target_water_outlet_upper_limit_heating',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '70',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_setting_1032-entry]
+# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_1032_target_water_outlet_lower_limit_heating-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1651,7 +1651,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.eco_heating_system_fsv_setting_1032',
+    'entity_id': 'number.eco_heating_system_fsv_1032_target_water_outlet_lower_limit_heating',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1663,21 +1663,21 @@
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'FSV Setting 1032',
+    'original_name': 'FSV 1032: Target Water Outlet Lower Limit (Heating)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_1032',
     'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_1032',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_setting_1032-state]
+# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_1032_target_water_outlet_lower_limit_heating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Eco Heating System FSV Setting 1032',
+      'friendly_name': 'Eco Heating System FSV 1032: Target Water Outlet Lower Limit (Heating)',
       'max': 37,
       'min': 15,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -1685,14 +1685,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.eco_heating_system_fsv_setting_1032',
+    'entity_id': 'number.eco_heating_system_fsv_1032_target_water_outlet_lower_limit_heating',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '25',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_setting_1051-entry]
+# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_1051_maximum_dhw_tank_temperature_user_limit-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1710,7 +1710,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.eco_heating_system_fsv_setting_1051',
+    'entity_id': 'number.eco_heating_system_fsv_1051_maximum_dhw_tank_temperature_user_limit',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1722,21 +1722,21 @@
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'FSV Setting 1051',
+    'original_name': 'FSV 1051: Maximum DHW Tank Temperature (User Limit)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_1051',
     'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_1051',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_setting_1051-state]
+# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_1051_maximum_dhw_tank_temperature_user_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Eco Heating System FSV Setting 1051',
+      'friendly_name': 'Eco Heating System FSV 1051: Maximum DHW Tank Temperature (User Limit)',
       'max': 70,
       'min': 50,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -1744,14 +1744,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.eco_heating_system_fsv_setting_1051',
+    'entity_id': 'number.eco_heating_system_fsv_1051_maximum_dhw_tank_temperature_user_limit',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '55',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_setting_1052-entry]
+# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_1052_target_dhw_tank_temperature_lower_limit_user_limit-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1769,7 +1769,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.eco_heating_system_fsv_setting_1052',
+    'entity_id': 'number.eco_heating_system_fsv_1052_target_dhw_tank_temperature_lower_limit_user_limit',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1781,21 +1781,21 @@
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'FSV Setting 1052',
+    'original_name': 'FSV 1052: Target DHW Tank Temperature Lower Limit (User Limit)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_1052',
     'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_1052',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_setting_1052-state]
+# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_1052_target_dhw_tank_temperature_lower_limit_user_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Eco Heating System FSV Setting 1052',
+      'friendly_name': 'Eco Heating System FSV 1052: Target DHW Tank Temperature Lower Limit (User Limit)',
       'max': 40,
       'min': 30,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -1803,14 +1803,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.eco_heating_system_fsv_setting_1052',
+    'entity_id': 'number.eco_heating_system_fsv_1052_target_dhw_tank_temperature_lower_limit_user_limit',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '40',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_setting_2011-entry]
+# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_2011_water_law_low_ambient_outdoor_temp_setpoint-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1828,7 +1828,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.eco_heating_system_fsv_setting_2011',
+    'entity_id': 'number.eco_heating_system_fsv_2011_water_law_low_ambient_outdoor_temp_setpoint',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1840,21 +1840,21 @@
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'FSV Setting 2011',
+    'original_name': 'FSV 2011: Water Law: Low Ambient Outdoor Temp Setpoint',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_2011',
     'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_2011',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_setting_2011-state]
+# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_2011_water_law_low_ambient_outdoor_temp_setpoint-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Eco Heating System FSV Setting 2011',
+      'friendly_name': 'Eco Heating System FSV 2011: Water Law: Low Ambient Outdoor Temp Setpoint',
       'max': 5,
       'min': -20,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -1862,14 +1862,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.eco_heating_system_fsv_setting_2011',
+    'entity_id': 'number.eco_heating_system_fsv_2011_water_law_low_ambient_outdoor_temp_setpoint',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-3',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_setting_2012-entry]
+# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_2012_water_law_high_ambient_outdoor_temp_setpoint-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1887,7 +1887,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.eco_heating_system_fsv_setting_2012',
+    'entity_id': 'number.eco_heating_system_fsv_2012_water_law_high_ambient_outdoor_temp_setpoint',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1899,21 +1899,21 @@
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'FSV Setting 2012',
+    'original_name': 'FSV 2012: Water Law: High Ambient Outdoor Temp Setpoint',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_2012',
     'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_2012',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_setting_2012-state]
+# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_2012_water_law_high_ambient_outdoor_temp_setpoint-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Eco Heating System FSV Setting 2012',
+      'friendly_name': 'Eco Heating System FSV 2012: Water Law: High Ambient Outdoor Temp Setpoint',
       'max': 20,
       'min': 10,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -1921,14 +1921,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.eco_heating_system_fsv_setting_2012',
+    'entity_id': 'number.eco_heating_system_fsv_2012_water_law_high_ambient_outdoor_temp_setpoint',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '15',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_setting_2021-entry]
+# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_2021_water_law_flow_temp_at_low_ambient_zone_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1946,7 +1946,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.eco_heating_system_fsv_setting_2021',
+    'entity_id': 'number.eco_heating_system_fsv_2021_water_law_flow_temp_at_low_ambient_zone_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1958,21 +1958,21 @@
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'FSV Setting 2021',
+    'original_name': 'FSV 2021: Water Law: Flow Temp at Low Ambient (Zone 1)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_2021',
     'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_2021',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_setting_2021-state]
+# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_2021_water_law_flow_temp_at_low_ambient_zone_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Eco Heating System FSV Setting 2021',
+      'friendly_name': 'Eco Heating System FSV 2021: Water Law: Flow Temp at Low Ambient (Zone 1)',
       'max': 70,
       'min': 17,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -1980,14 +1980,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.eco_heating_system_fsv_setting_2021',
+    'entity_id': 'number.eco_heating_system_fsv_2021_water_law_flow_temp_at_low_ambient_zone_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '50',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_setting_2022-entry]
+# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_2022_water_law_flow_temp_at_high_ambient_zone_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2005,7 +2005,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.eco_heating_system_fsv_setting_2022',
+    'entity_id': 'number.eco_heating_system_fsv_2022_water_law_flow_temp_at_high_ambient_zone_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2017,21 +2017,21 @@
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'FSV Setting 2022',
+    'original_name': 'FSV 2022: Water Law: Flow Temp at High Ambient (Zone 1)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_2022',
     'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_2022',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_setting_2022-state]
+# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_2022_water_law_flow_temp_at_high_ambient_zone_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Eco Heating System FSV Setting 2022',
+      'friendly_name': 'Eco Heating System FSV 2022: Water Law: Flow Temp at High Ambient (Zone 1)',
       'max': 70,
       'min': 17,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -2039,14 +2039,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.eco_heating_system_fsv_setting_2022',
+    'entity_id': 'number.eco_heating_system_fsv_2022_water_law_flow_temp_at_high_ambient_zone_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '32',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_setting_2031-entry]
+# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_2031_water_law_flow_temp_at_low_ambient_zone_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2064,7 +2064,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.eco_heating_system_fsv_setting_2031',
+    'entity_id': 'number.eco_heating_system_fsv_2031_water_law_flow_temp_at_low_ambient_zone_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2076,21 +2076,21 @@
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'FSV Setting 2031',
+    'original_name': 'FSV 2031: Water Law: Flow Temp at Low Ambient (Zone 2)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_2031',
     'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_2031',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_setting_2031-state]
+# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_2031_water_law_flow_temp_at_low_ambient_zone_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Eco Heating System FSV Setting 2031',
+      'friendly_name': 'Eco Heating System FSV 2031: Water Law: Flow Temp at Low Ambient (Zone 2)',
       'max': 70,
       'min': 17,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -2098,14 +2098,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.eco_heating_system_fsv_setting_2031',
+    'entity_id': 'number.eco_heating_system_fsv_2031_water_law_flow_temp_at_low_ambient_zone_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '50',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_setting_2032-entry]
+# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_2032_water_law_flow_temp_at_high_ambient_zone_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2123,7 +2123,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.eco_heating_system_fsv_setting_2032',
+    'entity_id': 'number.eco_heating_system_fsv_2032_water_law_flow_temp_at_high_ambient_zone_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2135,21 +2135,21 @@
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'FSV Setting 2032',
+    'original_name': 'FSV 2032: Water Law: Flow Temp at High Ambient (Zone 2)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_2032',
     'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_2032',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_setting_2032-state]
+# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_2032_water_law_flow_temp_at_high_ambient_zone_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Eco Heating System FSV Setting 2032',
+      'friendly_name': 'Eco Heating System FSV 2032: Water Law: Flow Temp at High Ambient (Zone 2)',
       'max': 70,
       'min': 17,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -2157,14 +2157,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.eco_heating_system_fsv_setting_2032',
+    'entity_id': 'number.eco_heating_system_fsv_2032_water_law_flow_temp_at_high_ambient_zone_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '38',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_setting_2091-entry]
+# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_2091_external_run_input_for_zone_1_3rd_party_thermostat-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2182,7 +2182,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.eco_heating_system_fsv_setting_2091',
+    'entity_id': 'number.eco_heating_system_fsv_2091_external_run_input_for_zone_1_3rd_party_thermostat',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2194,34 +2194,34 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'FSV Setting 2091',
+    'original_name': 'FSV 2091: External Run Input for Zone 1 (3rd Party Thermostat)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_2091',
     'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_2091',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_setting_2091-state]
+# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_2091_external_run_input_for_zone_1_3rd_party_thermostat-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Eco Heating System FSV Setting 2091',
+      'friendly_name': 'Eco Heating System FSV 2091: External Run Input for Zone 1 (3rd Party Thermostat)',
       'max': 4,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1.0,
     }),
     'context': <ANY>,
-    'entity_id': 'number.eco_heating_system_fsv_setting_2091',
+    'entity_id': 'number.eco_heating_system_fsv_2091_external_run_input_for_zone_1_3rd_party_thermostat',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_setting_2092-entry]
+# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_2092_external_run_input_for_zone_2_3rd_party_thermostat-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2239,7 +2239,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.eco_heating_system_fsv_setting_2092',
+    'entity_id': 'number.eco_heating_system_fsv_2092_external_run_input_for_zone_2_3rd_party_thermostat',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2251,34 +2251,34 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'FSV Setting 2092',
+    'original_name': 'FSV 2092: External Run Input for Zone 2 (3rd Party Thermostat)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_2092',
     'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_2092',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_setting_2092-state]
+# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_2092_external_run_input_for_zone_2_3rd_party_thermostat-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Eco Heating System FSV Setting 2092',
+      'friendly_name': 'Eco Heating System FSV 2092: External Run Input for Zone 2 (3rd Party Thermostat)',
       'max': 4,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1.0,
     }),
     'context': <ANY>,
-    'entity_id': 'number.eco_heating_system_fsv_setting_2092',
+    'entity_id': 'number.eco_heating_system_fsv_2092_external_run_input_for_zone_2_3rd_party_thermostat',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_setting_2093-entry]
+# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_2093_remote_controller_room_temp_control_internal_sensor-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2296,7 +2296,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.eco_heating_system_fsv_setting_2093',
+    'entity_id': 'number.eco_heating_system_fsv_2093_remote_controller_room_temp_control_internal_sensor',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2308,34 +2308,34 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'FSV Setting 2093',
+    'original_name': 'FSV 2093: Remote Controller Room Temp Control (Internal Sensor)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_2093',
     'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_2093',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_setting_2093-state]
+# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_2093_remote_controller_room_temp_control_internal_sensor-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Eco Heating System FSV Setting 2093',
+      'friendly_name': 'Eco Heating System FSV 2093: Remote Controller Room Temp Control (Internal Sensor)',
       'max': 4,
       'min': 1,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1.0,
     }),
     'context': <ANY>,
-    'entity_id': 'number.eco_heating_system_fsv_setting_2093',
+    'entity_id': 'number.eco_heating_system_fsv_2093_remote_controller_room_temp_control_internal_sensor',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '4',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_setting_3011-entry]
+# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_3011_enable_disable_dhw_tank_function-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2353,7 +2353,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.eco_heating_system_fsv_setting_3011',
+    'entity_id': 'number.eco_heating_system_fsv_3011_enable_disable_dhw_tank_function',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2365,34 +2365,34 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'FSV Setting 3011',
+    'original_name': 'FSV 3011: Enable / Disable DHW Tank Function',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_3011',
     'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_3011',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_setting_3011-state]
+# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_3011_enable_disable_dhw_tank_function-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Eco Heating System FSV Setting 3011',
+      'friendly_name': 'Eco Heating System FSV 3011: Enable / Disable DHW Tank Function',
       'max': 2,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1.0,
     }),
     'context': <ANY>,
-    'entity_id': 'number.eco_heating_system_fsv_setting_3011',
+    'entity_id': 'number.eco_heating_system_fsv_3011_enable_disable_dhw_tank_function',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_setting_3071-entry]
+# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_3071_3_way_valve_direction_0_room_default_1_tank-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2410,7 +2410,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.eco_heating_system_fsv_setting_3071',
+    'entity_id': 'number.eco_heating_system_fsv_3071_3_way_valve_direction_0_room_default_1_tank',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2422,34 +2422,34 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'FSV Setting 3071',
+    'original_name': 'FSV 3071: 3-Way Valve Direction (0=Room Default, 1=Tank)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_3071',
     'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_3071',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_setting_3071-state]
+# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_3071_3_way_valve_direction_0_room_default_1_tank-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Eco Heating System FSV Setting 3071',
+      'friendly_name': 'Eco Heating System FSV 3071: 3-Way Valve Direction (0=Room Default, 1=Tank)',
       'max': 1,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 0.1,
     }),
     'context': <ANY>,
-    'entity_id': 'number.eco_heating_system_fsv_setting_3071',
+    'entity_id': 'number.eco_heating_system_fsv_3071_3_way_valve_direction_0_room_default_1_tank',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_setting_4011-entry]
+# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_4011_dhw_space_heating_priority_setting-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2467,7 +2467,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.eco_heating_system_fsv_setting_4011',
+    'entity_id': 'number.eco_heating_system_fsv_4011_dhw_space_heating_priority_setting',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2479,34 +2479,34 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'FSV Setting 4011',
+    'original_name': 'FSV 4011: DHW / Space Heating Priority Setting',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_4011',
     'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_4011',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_setting_4011-state]
+# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_4011_dhw_space_heating_priority_setting-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Eco Heating System FSV Setting 4011',
+      'friendly_name': 'Eco Heating System FSV 4011: DHW / Space Heating Priority Setting',
       'max': 1,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 0.1,
     }),
     'context': <ANY>,
-    'entity_id': 'number.eco_heating_system_fsv_setting_4011',
+    'entity_id': 'number.eco_heating_system_fsv_4011_dhw_space_heating_priority_setting',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_setting_4012-entry]
+# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_4012_outdoor_temperature_for_priority_changeover-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2524,7 +2524,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.eco_heating_system_fsv_setting_4012',
+    'entity_id': 'number.eco_heating_system_fsv_4012_outdoor_temperature_for_priority_changeover',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2536,21 +2536,21 @@
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'FSV Setting 4012',
+    'original_name': 'FSV 4012: Outdoor temperature for priority changeover',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_4012',
     'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_4012',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_setting_4012-state]
+# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_4012_outdoor_temperature_for_priority_changeover-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Eco Heating System FSV Setting 4012',
+      'friendly_name': 'Eco Heating System FSV 4012: Outdoor temperature for priority changeover',
       'max': 20,
       'min': -15,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -2558,14 +2558,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.eco_heating_system_fsv_setting_4012',
+    'entity_id': 'number.eco_heating_system_fsv_4012_outdoor_temperature_for_priority_changeover',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_setting_4021-entry]
+# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_4021_backup_heater_application_enable_disable-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2583,7 +2583,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.eco_heating_system_fsv_setting_4021',
+    'entity_id': 'number.eco_heating_system_fsv_4021_backup_heater_application_enable_disable',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2595,34 +2595,34 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'FSV Setting 4021',
+    'original_name': 'FSV 4021: Backup Heater Application (Enable/Disable)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_4021',
     'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_4021',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_setting_4021-state]
+# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_4021_backup_heater_application_enable_disable-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Eco Heating System FSV Setting 4021',
+      'friendly_name': 'Eco Heating System FSV 4021: Backup Heater Application (Enable/Disable)',
       'max': 2,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1.0,
     }),
     'context': <ANY>,
-    'entity_id': 'number.eco_heating_system_fsv_setting_4021',
+    'entity_id': 'number.eco_heating_system_fsv_4021_backup_heater_application_enable_disable',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_setting_4042-entry]
+# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_4042_mixing_valve_target_temperature_difference_heating-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2640,7 +2640,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.eco_heating_system_fsv_setting_4042',
+    'entity_id': 'number.eco_heating_system_fsv_4042_mixing_valve_target_temperature_difference_heating',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2652,21 +2652,21 @@
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'FSV Setting 4042',
+    'original_name': 'FSV 4042: Mixing Valve Target Temperature Difference (Heating)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_4042',
     'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_4042',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_setting_4042-state]
+# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_4042_mixing_valve_target_temperature_difference_heating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Eco Heating System FSV Setting 4042',
+      'friendly_name': 'Eco Heating System FSV 4042: Mixing Valve Target Temperature Difference (Heating)',
       'max': 15,
       'min': 5,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -2674,14 +2674,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.eco_heating_system_fsv_setting_4042',
+    'entity_id': 'number.eco_heating_system_fsv_4042_mixing_valve_target_temperature_difference_heating',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '10',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_setting_4061-entry]
+# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_4061_2_zone_control_application_enable-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2699,7 +2699,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.eco_heating_system_fsv_setting_4061',
+    'entity_id': 'number.eco_heating_system_fsv_4061_2_zone_control_application_enable',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2711,34 +2711,34 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'FSV Setting 4061',
+    'original_name': 'FSV 4061: 2-Zone Control (Application / Enable)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_4061',
     'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_4061',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_setting_4061-state]
+# name: test_all_entities[da_sac_ehs_000001_sub][number.eco_heating_system_fsv_4061_2_zone_control_application_enable-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Eco Heating System FSV Setting 4061',
+      'friendly_name': 'Eco Heating System FSV 4061: 2-Zone Control (Application / Enable)',
       'max': 1,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 0.1,
     }),
     'context': <ANY>,
-    'entity_id': 'number.eco_heating_system_fsv_setting_4061',
+    'entity_id': 'number.eco_heating_system_fsv_4061_2_zone_control_application_enable',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_setting_1031-entry]
+# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_1031_target_water_outlet_upper_limit_heating-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2756,7 +2756,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heat_pump_main_fsv_setting_1031',
+    'entity_id': 'number.heat_pump_main_fsv_1031_target_water_outlet_upper_limit_heating',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2768,21 +2768,21 @@
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'FSV Setting 1031',
+    'original_name': 'FSV 1031: Target Water Outlet Upper Limit (Heating)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_1031',
     'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_1031',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_setting_1031-state]
+# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_1031_target_water_outlet_upper_limit_heating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Heat Pump Main FSV Setting 1031',
+      'friendly_name': 'Heat Pump Main FSV 1031: Target Water Outlet Upper Limit (Heating)',
       'max': 75,
       'min': 37,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -2790,14 +2790,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heat_pump_main_fsv_setting_1031',
+    'entity_id': 'number.heat_pump_main_fsv_1031_target_water_outlet_upper_limit_heating',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '75',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_setting_1032-entry]
+# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_1032_target_water_outlet_lower_limit_heating-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2815,7 +2815,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heat_pump_main_fsv_setting_1032',
+    'entity_id': 'number.heat_pump_main_fsv_1032_target_water_outlet_lower_limit_heating',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2827,21 +2827,21 @@
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'FSV Setting 1032',
+    'original_name': 'FSV 1032: Target Water Outlet Lower Limit (Heating)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_1032',
     'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_1032',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_setting_1032-state]
+# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_1032_target_water_outlet_lower_limit_heating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Heat Pump Main FSV Setting 1032',
+      'friendly_name': 'Heat Pump Main FSV 1032: Target Water Outlet Lower Limit (Heating)',
       'max': 37,
       'min': 15,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -2849,14 +2849,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heat_pump_main_fsv_setting_1032',
+    'entity_id': 'number.heat_pump_main_fsv_1032_target_water_outlet_lower_limit_heating',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '25',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_setting_1051-entry]
+# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_1051_maximum_dhw_tank_temperature_user_limit-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2874,7 +2874,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heat_pump_main_fsv_setting_1051',
+    'entity_id': 'number.heat_pump_main_fsv_1051_maximum_dhw_tank_temperature_user_limit',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2886,21 +2886,21 @@
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'FSV Setting 1051',
+    'original_name': 'FSV 1051: Maximum DHW Tank Temperature (User Limit)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_1051',
     'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_1051',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_setting_1051-state]
+# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_1051_maximum_dhw_tank_temperature_user_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Heat Pump Main FSV Setting 1051',
+      'friendly_name': 'Heat Pump Main FSV 1051: Maximum DHW Tank Temperature (User Limit)',
       'max': 70,
       'min': 50,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -2908,14 +2908,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heat_pump_main_fsv_setting_1051',
+    'entity_id': 'number.heat_pump_main_fsv_1051_maximum_dhw_tank_temperature_user_limit',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '60',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_setting_1052-entry]
+# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_1052_target_dhw_tank_temperature_lower_limit_user_limit-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2933,7 +2933,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heat_pump_main_fsv_setting_1052',
+    'entity_id': 'number.heat_pump_main_fsv_1052_target_dhw_tank_temperature_lower_limit_user_limit',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2945,21 +2945,21 @@
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'FSV Setting 1052',
+    'original_name': 'FSV 1052: Target DHW Tank Temperature Lower Limit (User Limit)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_1052',
     'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_1052',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_setting_1052-state]
+# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_1052_target_dhw_tank_temperature_lower_limit_user_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Heat Pump Main FSV Setting 1052',
+      'friendly_name': 'Heat Pump Main FSV 1052: Target DHW Tank Temperature Lower Limit (User Limit)',
       'max': 40,
       'min': 30,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -2967,14 +2967,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heat_pump_main_fsv_setting_1052',
+    'entity_id': 'number.heat_pump_main_fsv_1052_target_dhw_tank_temperature_lower_limit_user_limit',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '40',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_setting_2011-entry]
+# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_2011_water_law_low_ambient_outdoor_temp_setpoint-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2992,7 +2992,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heat_pump_main_fsv_setting_2011',
+    'entity_id': 'number.heat_pump_main_fsv_2011_water_law_low_ambient_outdoor_temp_setpoint',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3004,21 +3004,21 @@
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'FSV Setting 2011',
+    'original_name': 'FSV 2011: Water Law: Low Ambient Outdoor Temp Setpoint',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_2011',
     'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_2011',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_setting_2011-state]
+# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_2011_water_law_low_ambient_outdoor_temp_setpoint-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Heat Pump Main FSV Setting 2011',
+      'friendly_name': 'Heat Pump Main FSV 2011: Water Law: Low Ambient Outdoor Temp Setpoint',
       'max': 5,
       'min': -20,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -3026,14 +3026,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heat_pump_main_fsv_setting_2011',
+    'entity_id': 'number.heat_pump_main_fsv_2011_water_law_low_ambient_outdoor_temp_setpoint',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-2',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_setting_2012-entry]
+# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_2012_water_law_high_ambient_outdoor_temp_setpoint-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3051,7 +3051,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heat_pump_main_fsv_setting_2012',
+    'entity_id': 'number.heat_pump_main_fsv_2012_water_law_high_ambient_outdoor_temp_setpoint',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3063,21 +3063,21 @@
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'FSV Setting 2012',
+    'original_name': 'FSV 2012: Water Law: High Ambient Outdoor Temp Setpoint',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_2012',
     'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_2012',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_setting_2012-state]
+# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_2012_water_law_high_ambient_outdoor_temp_setpoint-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Heat Pump Main FSV Setting 2012',
+      'friendly_name': 'Heat Pump Main FSV 2012: Water Law: High Ambient Outdoor Temp Setpoint',
       'max': 20,
       'min': 10,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -3085,14 +3085,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heat_pump_main_fsv_setting_2012',
+    'entity_id': 'number.heat_pump_main_fsv_2012_water_law_high_ambient_outdoor_temp_setpoint',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '15',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_setting_2021-entry]
+# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_2021_water_law_flow_temp_at_low_ambient_zone_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3110,7 +3110,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heat_pump_main_fsv_setting_2021',
+    'entity_id': 'number.heat_pump_main_fsv_2021_water_law_flow_temp_at_low_ambient_zone_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3122,21 +3122,21 @@
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'FSV Setting 2021',
+    'original_name': 'FSV 2021: Water Law: Flow Temp at Low Ambient (Zone 1)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_2021',
     'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_2021',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_setting_2021-state]
+# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_2021_water_law_flow_temp_at_low_ambient_zone_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Heat Pump Main FSV Setting 2021',
+      'friendly_name': 'Heat Pump Main FSV 2021: Water Law: Flow Temp at Low Ambient (Zone 1)',
       'max': 75,
       'min': 17,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -3144,14 +3144,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heat_pump_main_fsv_setting_2021',
+    'entity_id': 'number.heat_pump_main_fsv_2021_water_law_flow_temp_at_low_ambient_zone_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '60',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_setting_2022-entry]
+# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_2022_water_law_flow_temp_at_high_ambient_zone_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3169,7 +3169,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heat_pump_main_fsv_setting_2022',
+    'entity_id': 'number.heat_pump_main_fsv_2022_water_law_flow_temp_at_high_ambient_zone_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3181,21 +3181,21 @@
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'FSV Setting 2022',
+    'original_name': 'FSV 2022: Water Law: Flow Temp at High Ambient (Zone 1)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_2022',
     'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_2022',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_setting_2022-state]
+# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_2022_water_law_flow_temp_at_high_ambient_zone_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Heat Pump Main FSV Setting 2022',
+      'friendly_name': 'Heat Pump Main FSV 2022: Water Law: Flow Temp at High Ambient (Zone 1)',
       'max': 75,
       'min': 17,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -3203,14 +3203,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heat_pump_main_fsv_setting_2022',
+    'entity_id': 'number.heat_pump_main_fsv_2022_water_law_flow_temp_at_high_ambient_zone_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '40',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_setting_2031-entry]
+# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_2031_water_law_flow_temp_at_low_ambient_zone_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3228,7 +3228,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heat_pump_main_fsv_setting_2031',
+    'entity_id': 'number.heat_pump_main_fsv_2031_water_law_flow_temp_at_low_ambient_zone_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3240,21 +3240,21 @@
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'FSV Setting 2031',
+    'original_name': 'FSV 2031: Water Law: Flow Temp at Low Ambient (Zone 2)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_2031',
     'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_2031',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_setting_2031-state]
+# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_2031_water_law_flow_temp_at_low_ambient_zone_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Heat Pump Main FSV Setting 2031',
+      'friendly_name': 'Heat Pump Main FSV 2031: Water Law: Flow Temp at Low Ambient (Zone 2)',
       'max': 75,
       'min': 17,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -3262,14 +3262,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heat_pump_main_fsv_setting_2031',
+    'entity_id': 'number.heat_pump_main_fsv_2031_water_law_flow_temp_at_low_ambient_zone_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '60',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_setting_2032-entry]
+# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_2032_water_law_flow_temp_at_high_ambient_zone_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3287,7 +3287,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heat_pump_main_fsv_setting_2032',
+    'entity_id': 'number.heat_pump_main_fsv_2032_water_law_flow_temp_at_high_ambient_zone_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3299,21 +3299,21 @@
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'FSV Setting 2032',
+    'original_name': 'FSV 2032: Water Law: Flow Temp at High Ambient (Zone 2)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_2032',
     'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_2032',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_setting_2032-state]
+# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_2032_water_law_flow_temp_at_high_ambient_zone_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Heat Pump Main FSV Setting 2032',
+      'friendly_name': 'Heat Pump Main FSV 2032: Water Law: Flow Temp at High Ambient (Zone 2)',
       'max': 75,
       'min': 17,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -3321,14 +3321,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heat_pump_main_fsv_setting_2032',
+    'entity_id': 'number.heat_pump_main_fsv_2032_water_law_flow_temp_at_high_ambient_zone_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '40',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_setting_2091-entry]
+# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_2091_external_run_input_for_zone_1_3rd_party_thermostat-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3346,7 +3346,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heat_pump_main_fsv_setting_2091',
+    'entity_id': 'number.heat_pump_main_fsv_2091_external_run_input_for_zone_1_3rd_party_thermostat',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3358,34 +3358,34 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'FSV Setting 2091',
+    'original_name': 'FSV 2091: External Run Input for Zone 1 (3rd Party Thermostat)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_2091',
     'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_2091',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_setting_2091-state]
+# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_2091_external_run_input_for_zone_1_3rd_party_thermostat-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Heat Pump Main FSV Setting 2091',
+      'friendly_name': 'Heat Pump Main FSV 2091: External Run Input for Zone 1 (3rd Party Thermostat)',
       'max': 4,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1.0,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heat_pump_main_fsv_setting_2091',
+    'entity_id': 'number.heat_pump_main_fsv_2091_external_run_input_for_zone_1_3rd_party_thermostat',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_setting_2092-entry]
+# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_2092_external_run_input_for_zone_2_3rd_party_thermostat-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3403,7 +3403,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heat_pump_main_fsv_setting_2092',
+    'entity_id': 'number.heat_pump_main_fsv_2092_external_run_input_for_zone_2_3rd_party_thermostat',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3415,34 +3415,34 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'FSV Setting 2092',
+    'original_name': 'FSV 2092: External Run Input for Zone 2 (3rd Party Thermostat)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_2092',
     'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_2092',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_setting_2092-state]
+# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_2092_external_run_input_for_zone_2_3rd_party_thermostat-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Heat Pump Main FSV Setting 2092',
+      'friendly_name': 'Heat Pump Main FSV 2092: External Run Input for Zone 2 (3rd Party Thermostat)',
       'max': 4,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1.0,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heat_pump_main_fsv_setting_2092',
+    'entity_id': 'number.heat_pump_main_fsv_2092_external_run_input_for_zone_2_3rd_party_thermostat',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_setting_2093-entry]
+# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_2093_remote_controller_room_temp_control_internal_sensor-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3460,7 +3460,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heat_pump_main_fsv_setting_2093',
+    'entity_id': 'number.heat_pump_main_fsv_2093_remote_controller_room_temp_control_internal_sensor',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3472,34 +3472,34 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'FSV Setting 2093',
+    'original_name': 'FSV 2093: Remote Controller Room Temp Control (Internal Sensor)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_2093',
     'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_2093',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_setting_2093-state]
+# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_2093_remote_controller_room_temp_control_internal_sensor-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Heat Pump Main FSV Setting 2093',
+      'friendly_name': 'Heat Pump Main FSV 2093: Remote Controller Room Temp Control (Internal Sensor)',
       'max': 4,
       'min': 1,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1.0,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heat_pump_main_fsv_setting_2093',
+    'entity_id': 'number.heat_pump_main_fsv_2093_remote_controller_room_temp_control_internal_sensor',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '4',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_setting_3011-entry]
+# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_3011_enable_disable_dhw_tank_function-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3517,7 +3517,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heat_pump_main_fsv_setting_3011',
+    'entity_id': 'number.heat_pump_main_fsv_3011_enable_disable_dhw_tank_function',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3529,34 +3529,34 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'FSV Setting 3011',
+    'original_name': 'FSV 3011: Enable / Disable DHW Tank Function',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_3011',
     'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_3011',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_setting_3011-state]
+# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_3011_enable_disable_dhw_tank_function-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Heat Pump Main FSV Setting 3011',
+      'friendly_name': 'Heat Pump Main FSV 3011: Enable / Disable DHW Tank Function',
       'max': 2,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1.0,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heat_pump_main_fsv_setting_3011',
+    'entity_id': 'number.heat_pump_main_fsv_3011_enable_disable_dhw_tank_function',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_setting_3071-entry]
+# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_3071_3_way_valve_direction_0_room_default_1_tank-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3574,7 +3574,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heat_pump_main_fsv_setting_3071',
+    'entity_id': 'number.heat_pump_main_fsv_3071_3_way_valve_direction_0_room_default_1_tank',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3586,34 +3586,34 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'FSV Setting 3071',
+    'original_name': 'FSV 3071: 3-Way Valve Direction (0=Room Default, 1=Tank)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_3071',
     'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_3071',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_setting_3071-state]
+# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_3071_3_way_valve_direction_0_room_default_1_tank-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Heat Pump Main FSV Setting 3071',
+      'friendly_name': 'Heat Pump Main FSV 3071: 3-Way Valve Direction (0=Room Default, 1=Tank)',
       'max': 1,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 0.1,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heat_pump_main_fsv_setting_3071',
+    'entity_id': 'number.heat_pump_main_fsv_3071_3_way_valve_direction_0_room_default_1_tank',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_setting_4011-entry]
+# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_4011_dhw_space_heating_priority_setting-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3631,7 +3631,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heat_pump_main_fsv_setting_4011',
+    'entity_id': 'number.heat_pump_main_fsv_4011_dhw_space_heating_priority_setting',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3643,34 +3643,34 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'FSV Setting 4011',
+    'original_name': 'FSV 4011: DHW / Space Heating Priority Setting',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_4011',
     'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_4011',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_setting_4011-state]
+# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_4011_dhw_space_heating_priority_setting-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Heat Pump Main FSV Setting 4011',
+      'friendly_name': 'Heat Pump Main FSV 4011: DHW / Space Heating Priority Setting',
       'max': 1,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 0.1,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heat_pump_main_fsv_setting_4011',
+    'entity_id': 'number.heat_pump_main_fsv_4011_dhw_space_heating_priority_setting',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_setting_4012-entry]
+# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_4012_outdoor_temperature_for_priority_changeover-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3688,7 +3688,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heat_pump_main_fsv_setting_4012',
+    'entity_id': 'number.heat_pump_main_fsv_4012_outdoor_temperature_for_priority_changeover',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3700,21 +3700,21 @@
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'FSV Setting 4012',
+    'original_name': 'FSV 4012: Outdoor temperature for priority changeover',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_4012',
     'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_4012',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_setting_4012-state]
+# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_4012_outdoor_temperature_for_priority_changeover-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Heat Pump Main FSV Setting 4012',
+      'friendly_name': 'Heat Pump Main FSV 4012: Outdoor temperature for priority changeover',
       'max': 20,
       'min': -15,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -3722,14 +3722,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heat_pump_main_fsv_setting_4012',
+    'entity_id': 'number.heat_pump_main_fsv_4012_outdoor_temperature_for_priority_changeover',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_setting_4021-entry]
+# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_4021_backup_heater_application_enable_disable-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3747,7 +3747,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heat_pump_main_fsv_setting_4021',
+    'entity_id': 'number.heat_pump_main_fsv_4021_backup_heater_application_enable_disable',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3759,34 +3759,34 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'FSV Setting 4021',
+    'original_name': 'FSV 4021: Backup Heater Application (Enable/Disable)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_4021',
     'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_4021',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_setting_4021-state]
+# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_4021_backup_heater_application_enable_disable-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Heat Pump Main FSV Setting 4021',
+      'friendly_name': 'Heat Pump Main FSV 4021: Backup Heater Application (Enable/Disable)',
       'max': 2,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1.0,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heat_pump_main_fsv_setting_4021',
+    'entity_id': 'number.heat_pump_main_fsv_4021_backup_heater_application_enable_disable',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_setting_4042-entry]
+# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_4042_mixing_valve_target_temperature_difference_heating-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3804,7 +3804,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heat_pump_main_fsv_setting_4042',
+    'entity_id': 'number.heat_pump_main_fsv_4042_mixing_valve_target_temperature_difference_heating',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3816,21 +3816,21 @@
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'FSV Setting 4042',
+    'original_name': 'FSV 4042: Mixing Valve Target Temperature Difference (Heating)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_4042',
     'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_4042',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_setting_4042-state]
+# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_4042_mixing_valve_target_temperature_difference_heating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Heat Pump Main FSV Setting 4042',
+      'friendly_name': 'Heat Pump Main FSV 4042: Mixing Valve Target Temperature Difference (Heating)',
       'max': 15,
       'min': 5,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -3838,14 +3838,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heat_pump_main_fsv_setting_4042',
+    'entity_id': 'number.heat_pump_main_fsv_4042_mixing_valve_target_temperature_difference_heating',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '10',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_setting_4061-entry]
+# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_4061_2_zone_control_application_enable-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3863,7 +3863,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.heat_pump_main_fsv_setting_4061',
+    'entity_id': 'number.heat_pump_main_fsv_4061_2_zone_control_application_enable',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3875,34 +3875,34 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'FSV Setting 4061',
+    'original_name': 'FSV 4061: 2-Zone Control (Application / Enable)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_4061',
     'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_4061',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_setting_4061-state]
+# name: test_all_entities[da_sac_ehs_000001_sub_1][number.heat_pump_main_fsv_4061_2_zone_control_application_enable-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Heat Pump Main FSV Setting 4061',
+      'friendly_name': 'Heat Pump Main FSV 4061: 2-Zone Control (Application / Enable)',
       'max': 1,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 0.1,
     }),
     'context': <ANY>,
-    'entity_id': 'number.heat_pump_main_fsv_setting_4061',
+    'entity_id': 'number.heat_pump_main_fsv_4061_2_zone_control_application_enable',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_setting_1031-entry]
+# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_1031_target_water_outlet_upper_limit_heating-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3920,7 +3920,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.warmepumpe_fsv_setting_1031',
+    'entity_id': 'number.warmepumpe_fsv_1031_target_water_outlet_upper_limit_heating',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3932,21 +3932,21 @@
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'FSV Setting 1031',
+    'original_name': 'FSV 1031: Target Water Outlet Upper Limit (Heating)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_1031',
     'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_1031',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_setting_1031-state]
+# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_1031_target_water_outlet_upper_limit_heating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Wärmepumpe FSV Setting 1031',
+      'friendly_name': 'Wärmepumpe FSV 1031: Target Water Outlet Upper Limit (Heating)',
       'max': 65,
       'min': 37,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -3954,14 +3954,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.warmepumpe_fsv_setting_1031',
+    'entity_id': 'number.warmepumpe_fsv_1031_target_water_outlet_upper_limit_heating',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '43',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_setting_1032-entry]
+# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_1032_target_water_outlet_lower_limit_heating-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3979,7 +3979,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.warmepumpe_fsv_setting_1032',
+    'entity_id': 'number.warmepumpe_fsv_1032_target_water_outlet_lower_limit_heating',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3991,21 +3991,21 @@
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'FSV Setting 1032',
+    'original_name': 'FSV 1032: Target Water Outlet Lower Limit (Heating)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_1032',
     'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_1032',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_setting_1032-state]
+# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_1032_target_water_outlet_lower_limit_heating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Wärmepumpe FSV Setting 1032',
+      'friendly_name': 'Wärmepumpe FSV 1032: Target Water Outlet Lower Limit (Heating)',
       'max': 37,
       'min': 15,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -4013,14 +4013,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.warmepumpe_fsv_setting_1032',
+    'entity_id': 'number.warmepumpe_fsv_1032_target_water_outlet_lower_limit_heating',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '25',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_setting_1051-entry]
+# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_1051_maximum_dhw_tank_temperature_user_limit-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4038,7 +4038,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.warmepumpe_fsv_setting_1051',
+    'entity_id': 'number.warmepumpe_fsv_1051_maximum_dhw_tank_temperature_user_limit',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4050,21 +4050,21 @@
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'FSV Setting 1051',
+    'original_name': 'FSV 1051: Maximum DHW Tank Temperature (User Limit)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_1051',
     'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_1051',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_setting_1051-state]
+# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_1051_maximum_dhw_tank_temperature_user_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Wärmepumpe FSV Setting 1051',
+      'friendly_name': 'Wärmepumpe FSV 1051: Maximum DHW Tank Temperature (User Limit)',
       'max': 70,
       'min': 50,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -4072,14 +4072,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.warmepumpe_fsv_setting_1051',
+    'entity_id': 'number.warmepumpe_fsv_1051_maximum_dhw_tank_temperature_user_limit',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '57',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_setting_1052-entry]
+# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_1052_target_dhw_tank_temperature_lower_limit_user_limit-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4097,7 +4097,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.warmepumpe_fsv_setting_1052',
+    'entity_id': 'number.warmepumpe_fsv_1052_target_dhw_tank_temperature_lower_limit_user_limit',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4109,21 +4109,21 @@
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'FSV Setting 1052',
+    'original_name': 'FSV 1052: Target DHW Tank Temperature Lower Limit (User Limit)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_1052',
     'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_1052',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_setting_1052-state]
+# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_1052_target_dhw_tank_temperature_lower_limit_user_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Wärmepumpe FSV Setting 1052',
+      'friendly_name': 'Wärmepumpe FSV 1052: Target DHW Tank Temperature Lower Limit (User Limit)',
       'max': 40,
       'min': 30,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -4131,14 +4131,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.warmepumpe_fsv_setting_1052',
+    'entity_id': 'number.warmepumpe_fsv_1052_target_dhw_tank_temperature_lower_limit_user_limit',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '40',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_setting_2011-entry]
+# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_2011_water_law_low_ambient_outdoor_temp_setpoint-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4156,7 +4156,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.warmepumpe_fsv_setting_2011',
+    'entity_id': 'number.warmepumpe_fsv_2011_water_law_low_ambient_outdoor_temp_setpoint',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4168,21 +4168,21 @@
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'FSV Setting 2011',
+    'original_name': 'FSV 2011: Water Law: Low Ambient Outdoor Temp Setpoint',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_2011',
     'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_2011',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_setting_2011-state]
+# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_2011_water_law_low_ambient_outdoor_temp_setpoint-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Wärmepumpe FSV Setting 2011',
+      'friendly_name': 'Wärmepumpe FSV 2011: Water Law: Low Ambient Outdoor Temp Setpoint',
       'max': 5,
       'min': -20,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -4190,14 +4190,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.warmepumpe_fsv_setting_2011',
+    'entity_id': 'number.warmepumpe_fsv_2011_water_law_low_ambient_outdoor_temp_setpoint',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-10',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_setting_2012-entry]
+# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_2012_water_law_high_ambient_outdoor_temp_setpoint-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4215,7 +4215,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.warmepumpe_fsv_setting_2012',
+    'entity_id': 'number.warmepumpe_fsv_2012_water_law_high_ambient_outdoor_temp_setpoint',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4227,21 +4227,21 @@
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'FSV Setting 2012',
+    'original_name': 'FSV 2012: Water Law: High Ambient Outdoor Temp Setpoint',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_2012',
     'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_2012',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_setting_2012-state]
+# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_2012_water_law_high_ambient_outdoor_temp_setpoint-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Wärmepumpe FSV Setting 2012',
+      'friendly_name': 'Wärmepumpe FSV 2012: Water Law: High Ambient Outdoor Temp Setpoint',
       'max': 20,
       'min': 10,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -4249,14 +4249,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.warmepumpe_fsv_setting_2012',
+    'entity_id': 'number.warmepumpe_fsv_2012_water_law_high_ambient_outdoor_temp_setpoint',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '20',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_setting_2021-entry]
+# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_2021_water_law_flow_temp_at_low_ambient_zone_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4274,7 +4274,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.warmepumpe_fsv_setting_2021',
+    'entity_id': 'number.warmepumpe_fsv_2021_water_law_flow_temp_at_low_ambient_zone_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4286,21 +4286,21 @@
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'FSV Setting 2021',
+    'original_name': 'FSV 2021: Water Law: Flow Temp at Low Ambient (Zone 1)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_2021',
     'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_2021',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_setting_2021-state]
+# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_2021_water_law_flow_temp_at_low_ambient_zone_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Wärmepumpe FSV Setting 2021',
+      'friendly_name': 'Wärmepumpe FSV 2021: Water Law: Flow Temp at Low Ambient (Zone 1)',
       'max': 65,
       'min': 17,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -4308,14 +4308,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.warmepumpe_fsv_setting_2021',
+    'entity_id': 'number.warmepumpe_fsv_2021_water_law_flow_temp_at_low_ambient_zone_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '37',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_setting_2022-entry]
+# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_2022_water_law_flow_temp_at_high_ambient_zone_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4333,7 +4333,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.warmepumpe_fsv_setting_2022',
+    'entity_id': 'number.warmepumpe_fsv_2022_water_law_flow_temp_at_high_ambient_zone_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4345,21 +4345,21 @@
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'FSV Setting 2022',
+    'original_name': 'FSV 2022: Water Law: Flow Temp at High Ambient (Zone 1)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_2022',
     'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_2022',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_setting_2022-state]
+# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_2022_water_law_flow_temp_at_high_ambient_zone_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Wärmepumpe FSV Setting 2022',
+      'friendly_name': 'Wärmepumpe FSV 2022: Water Law: Flow Temp at High Ambient (Zone 1)',
       'max': 65,
       'min': 17,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -4367,14 +4367,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.warmepumpe_fsv_setting_2022',
+    'entity_id': 'number.warmepumpe_fsv_2022_water_law_flow_temp_at_high_ambient_zone_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '25',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_setting_2031-entry]
+# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_2031_water_law_flow_temp_at_low_ambient_zone_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4392,7 +4392,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.warmepumpe_fsv_setting_2031',
+    'entity_id': 'number.warmepumpe_fsv_2031_water_law_flow_temp_at_low_ambient_zone_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4404,21 +4404,21 @@
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'FSV Setting 2031',
+    'original_name': 'FSV 2031: Water Law: Flow Temp at Low Ambient (Zone 2)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_2031',
     'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_2031',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_setting_2031-state]
+# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_2031_water_law_flow_temp_at_low_ambient_zone_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Wärmepumpe FSV Setting 2031',
+      'friendly_name': 'Wärmepumpe FSV 2031: Water Law: Flow Temp at Low Ambient (Zone 2)',
       'max': 65,
       'min': 17,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -4426,14 +4426,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.warmepumpe_fsv_setting_2031',
+    'entity_id': 'number.warmepumpe_fsv_2031_water_law_flow_temp_at_low_ambient_zone_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '40',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_setting_2032-entry]
+# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_2032_water_law_flow_temp_at_high_ambient_zone_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4451,7 +4451,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.warmepumpe_fsv_setting_2032',
+    'entity_id': 'number.warmepumpe_fsv_2032_water_law_flow_temp_at_high_ambient_zone_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4463,21 +4463,21 @@
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'FSV Setting 2032',
+    'original_name': 'FSV 2032: Water Law: Flow Temp at High Ambient (Zone 2)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_2032',
     'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_2032',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_setting_2032-state]
+# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_2032_water_law_flow_temp_at_high_ambient_zone_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Wärmepumpe FSV Setting 2032',
+      'friendly_name': 'Wärmepumpe FSV 2032: Water Law: Flow Temp at High Ambient (Zone 2)',
       'max': 65,
       'min': 17,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -4485,14 +4485,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.warmepumpe_fsv_setting_2032',
+    'entity_id': 'number.warmepumpe_fsv_2032_water_law_flow_temp_at_high_ambient_zone_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '25',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_setting_2091-entry]
+# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_2091_external_run_input_for_zone_1_3rd_party_thermostat-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4510,7 +4510,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.warmepumpe_fsv_setting_2091',
+    'entity_id': 'number.warmepumpe_fsv_2091_external_run_input_for_zone_1_3rd_party_thermostat',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4522,34 +4522,34 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'FSV Setting 2091',
+    'original_name': 'FSV 2091: External Run Input for Zone 1 (3rd Party Thermostat)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_2091',
     'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_2091',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_setting_2091-state]
+# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_2091_external_run_input_for_zone_1_3rd_party_thermostat-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Wärmepumpe FSV Setting 2091',
+      'friendly_name': 'Wärmepumpe FSV 2091: External Run Input for Zone 1 (3rd Party Thermostat)',
       'max': 4,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1.0,
     }),
     'context': <ANY>,
-    'entity_id': 'number.warmepumpe_fsv_setting_2091',
+    'entity_id': 'number.warmepumpe_fsv_2091_external_run_input_for_zone_1_3rd_party_thermostat',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_setting_2092-entry]
+# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_2092_external_run_input_for_zone_2_3rd_party_thermostat-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4567,7 +4567,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.warmepumpe_fsv_setting_2092',
+    'entity_id': 'number.warmepumpe_fsv_2092_external_run_input_for_zone_2_3rd_party_thermostat',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4579,34 +4579,34 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'FSV Setting 2092',
+    'original_name': 'FSV 2092: External Run Input for Zone 2 (3rd Party Thermostat)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_2092',
     'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_2092',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_setting_2092-state]
+# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_2092_external_run_input_for_zone_2_3rd_party_thermostat-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Wärmepumpe FSV Setting 2092',
+      'friendly_name': 'Wärmepumpe FSV 2092: External Run Input for Zone 2 (3rd Party Thermostat)',
       'max': 4,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1.0,
     }),
     'context': <ANY>,
-    'entity_id': 'number.warmepumpe_fsv_setting_2092',
+    'entity_id': 'number.warmepumpe_fsv_2092_external_run_input_for_zone_2_3rd_party_thermostat',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_setting_2093-entry]
+# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_2093_remote_controller_room_temp_control_internal_sensor-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4624,7 +4624,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.warmepumpe_fsv_setting_2093',
+    'entity_id': 'number.warmepumpe_fsv_2093_remote_controller_room_temp_control_internal_sensor',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4636,34 +4636,34 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'FSV Setting 2093',
+    'original_name': 'FSV 2093: Remote Controller Room Temp Control (Internal Sensor)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_2093',
     'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_2093',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_setting_2093-state]
+# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_2093_remote_controller_room_temp_control_internal_sensor-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Wärmepumpe FSV Setting 2093',
+      'friendly_name': 'Wärmepumpe FSV 2093: Remote Controller Room Temp Control (Internal Sensor)',
       'max': 4,
       'min': 1,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1.0,
     }),
     'context': <ANY>,
-    'entity_id': 'number.warmepumpe_fsv_setting_2093',
+    'entity_id': 'number.warmepumpe_fsv_2093_remote_controller_room_temp_control_internal_sensor',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '4',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_setting_3011-entry]
+# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_3011_enable_disable_dhw_tank_function-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4681,7 +4681,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.warmepumpe_fsv_setting_3011',
+    'entity_id': 'number.warmepumpe_fsv_3011_enable_disable_dhw_tank_function',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4693,34 +4693,34 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'FSV Setting 3011',
+    'original_name': 'FSV 3011: Enable / Disable DHW Tank Function',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_3011',
     'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_3011',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_setting_3011-state]
+# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_3011_enable_disable_dhw_tank_function-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Wärmepumpe FSV Setting 3011',
+      'friendly_name': 'Wärmepumpe FSV 3011: Enable / Disable DHW Tank Function',
       'max': 2,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1.0,
     }),
     'context': <ANY>,
-    'entity_id': 'number.warmepumpe_fsv_setting_3011',
+    'entity_id': 'number.warmepumpe_fsv_3011_enable_disable_dhw_tank_function',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_setting_3071-entry]
+# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_3071_3_way_valve_direction_0_room_default_1_tank-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4738,7 +4738,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.warmepumpe_fsv_setting_3071',
+    'entity_id': 'number.warmepumpe_fsv_3071_3_way_valve_direction_0_room_default_1_tank',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4750,34 +4750,34 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'FSV Setting 3071',
+    'original_name': 'FSV 3071: 3-Way Valve Direction (0=Room Default, 1=Tank)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_3071',
     'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_3071',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_setting_3071-state]
+# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_3071_3_way_valve_direction_0_room_default_1_tank-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Wärmepumpe FSV Setting 3071',
+      'friendly_name': 'Wärmepumpe FSV 3071: 3-Way Valve Direction (0=Room Default, 1=Tank)',
       'max': 1,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 0.1,
     }),
     'context': <ANY>,
-    'entity_id': 'number.warmepumpe_fsv_setting_3071',
+    'entity_id': 'number.warmepumpe_fsv_3071_3_way_valve_direction_0_room_default_1_tank',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_setting_4011-entry]
+# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_4011_dhw_space_heating_priority_setting-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4795,7 +4795,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.warmepumpe_fsv_setting_4011',
+    'entity_id': 'number.warmepumpe_fsv_4011_dhw_space_heating_priority_setting',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4807,34 +4807,34 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'FSV Setting 4011',
+    'original_name': 'FSV 4011: DHW / Space Heating Priority Setting',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_4011',
     'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_4011',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_setting_4011-state]
+# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_4011_dhw_space_heating_priority_setting-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Wärmepumpe FSV Setting 4011',
+      'friendly_name': 'Wärmepumpe FSV 4011: DHW / Space Heating Priority Setting',
       'max': 1,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 0.1,
     }),
     'context': <ANY>,
-    'entity_id': 'number.warmepumpe_fsv_setting_4011',
+    'entity_id': 'number.warmepumpe_fsv_4011_dhw_space_heating_priority_setting',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_setting_4012-entry]
+# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_4012_outdoor_temperature_for_priority_changeover-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4852,7 +4852,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.warmepumpe_fsv_setting_4012',
+    'entity_id': 'number.warmepumpe_fsv_4012_outdoor_temperature_for_priority_changeover',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4864,21 +4864,21 @@
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'FSV Setting 4012',
+    'original_name': 'FSV 4012: Outdoor temperature for priority changeover',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_4012',
     'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_4012',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_setting_4012-state]
+# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_4012_outdoor_temperature_for_priority_changeover-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Wärmepumpe FSV Setting 4012',
+      'friendly_name': 'Wärmepumpe FSV 4012: Outdoor temperature for priority changeover',
       'max': 20,
       'min': -15,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -4886,14 +4886,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.warmepumpe_fsv_setting_4012',
+    'entity_id': 'number.warmepumpe_fsv_4012_outdoor_temperature_for_priority_changeover',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_setting_4021-entry]
+# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_4021_backup_heater_application_enable_disable-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4911,7 +4911,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.warmepumpe_fsv_setting_4021',
+    'entity_id': 'number.warmepumpe_fsv_4021_backup_heater_application_enable_disable',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4923,34 +4923,34 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'FSV Setting 4021',
+    'original_name': 'FSV 4021: Backup Heater Application (Enable/Disable)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_4021',
     'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_4021',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_setting_4021-state]
+# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_4021_backup_heater_application_enable_disable-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Wärmepumpe FSV Setting 4021',
+      'friendly_name': 'Wärmepumpe FSV 4021: Backup Heater Application (Enable/Disable)',
       'max': 2,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1.0,
     }),
     'context': <ANY>,
-    'entity_id': 'number.warmepumpe_fsv_setting_4021',
+    'entity_id': 'number.warmepumpe_fsv_4021_backup_heater_application_enable_disable',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_setting_4042-entry]
+# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_4042_mixing_valve_target_temperature_difference_heating-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4968,7 +4968,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.warmepumpe_fsv_setting_4042',
+    'entity_id': 'number.warmepumpe_fsv_4042_mixing_valve_target_temperature_difference_heating',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4980,21 +4980,21 @@
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'FSV Setting 4042',
+    'original_name': 'FSV 4042: Mixing Valve Target Temperature Difference (Heating)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_4042',
     'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_4042',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_setting_4042-state]
+# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_4042_mixing_valve_target_temperature_difference_heating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Wärmepumpe FSV Setting 4042',
+      'friendly_name': 'Wärmepumpe FSV 4042: Mixing Valve Target Temperature Difference (Heating)',
       'max': 15,
       'min': 5,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -5002,14 +5002,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.warmepumpe_fsv_setting_4042',
+    'entity_id': 'number.warmepumpe_fsv_4042_mixing_valve_target_temperature_difference_heating',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '10',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_setting_4061-entry]
+# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_4061_2_zone_control_application_enable-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5027,7 +5027,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.warmepumpe_fsv_setting_4061',
+    'entity_id': 'number.warmepumpe_fsv_4061_2_zone_control_application_enable',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -5039,27 +5039,27 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'FSV Setting 4061',
+    'original_name': 'FSV 4061: 2-Zone Control (Application / Enable)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fsv_setting',
+    'translation_key': 'fsv_setting_4061',
     'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_4061',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_setting_4061-state]
+# name: test_all_entities[da_sac_ehs_000002_sub][number.warmepumpe_fsv_4061_2_zone_control_application_enable-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Wärmepumpe FSV Setting 4061',
+      'friendly_name': 'Wärmepumpe FSV 4061: 2-Zone Control (Application / Enable)',
       'max': 1,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 0.1,
     }),
     'context': <ANY>,
-    'entity_id': 'number.warmepumpe_fsv_setting_4061',
+    'entity_id': 'number.warmepumpe_fsv_4061_2_zone_control_application_enable',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

@@ -14,6 +14,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import FullDevice, SmartThingsConfigEntry
 from .const import MAIN, UNIT_MAP
 from .entity import SmartThingsEntity
+from .fsv_labels import FSV_LABEL_MAP
 
 
 class FsvSettingProperty(StrEnum):
@@ -274,8 +275,11 @@ class SmartThingsFsvSettings(SmartThingsEntity, NumberEntity):
             ]
             self._attr_device_class = NumberDeviceClass.TEMPERATURE
 
-        self._attr_translation_key = "fsv_setting"
-        self._attr_translation_placeholders = {"fsv_id": str(self._fsv_id)}
+        if self._fsv_id in FSV_LABEL_MAP:
+            self._attr_translation_key = f"fsv_setting_{self._fsv_id}"
+        else:
+            self._attr_translation_key = "fsv_setting"
+            self._attr_translation_placeholders = {"fsv_id": str(self._fsv_id)}
         self._attr_native_min_value = fsv_setting[FsvSettingProperty.MIN_VALUE]
         self._attr_native_max_value = fsv_setting[FsvSettingProperty.MAX_VALUE]
         self._attr_step = fsv_setting[FsvSettingProperty.RESOLUTION]
