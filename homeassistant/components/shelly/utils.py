@@ -120,15 +120,33 @@ def get_number_of_channels(device: BlockDevice, block: Block) -> int:
 def get_block_entity_name(
     device: BlockDevice,
     block: Block | None,
-    description: str | UndefinedType | None = None,
+    name: str | UndefinedType | None = None,
 ) -> str | None:
     """Naming for block based switch and sensors."""
     channel_name = get_block_channel_name(device, block)
 
-    if description is not UNDEFINED and description:
-        return f"{channel_name} {description.lower()}" if channel_name else description
+    if name is not UNDEFINED and name:
+        return f"{channel_name} {name.lower()}" if channel_name else name
 
     return channel_name
+
+
+def get_block_custom_name(device: BlockDevice, block: Block | None) -> str | None:
+    """Get custom name from device settings."""
+    if block and (key := cast(str, block.type) + "s") and key in device.settings:
+        assert block.channel
+
+        if name := device.settings[key][int(block.channel)].get("name"):
+            return cast(str, name)
+
+    return None
+
+
+def get_block_channel(block: Block | None, base: str = "1") -> str:
+    """Get block channel."""
+    assert block and block.channel
+
+    return chr(int(block.channel) + ord(base))
 
 
 def get_block_channel_name(device: BlockDevice, block: Block | None) -> str | None:
@@ -140,19 +158,10 @@ def get_block_channel_name(device: BlockDevice, block: Block | None) -> str | No
     ):
         return None
 
-    assert block.channel
+    if custom_name := get_block_custom_name(device, block):
+        return custom_name
 
-    channel_name: str | None = None
-    mode = cast(str, block.type) + "s"
-    if mode in device.settings:
-        channel_name = device.settings[mode][int(block.channel)].get("name")
-
-    if channel_name:
-        return channel_name
-
-    base = ord("1")
-
-    return f"Channel {chr(int(block.channel) + base)}"
+    return f"Channel {get_block_channel(block)}"
 
 
 def get_block_sub_device_name(device: BlockDevice, block: Block) -> str:
@@ -160,18 +169,13 @@ def get_block_sub_device_name(device: BlockDevice, block: Block) -> str:
     if TYPE_CHECKING:
         assert block.channel
 
-    mode = cast(str, block.type) + "s"
-    if mode in device.settings:
-        if channel_name := device.settings[mode][int(block.channel)].get("name"):
-            return cast(str, channel_name)
+    if custom_name := get_block_custom_name(device, block):
+        return custom_name
 
     if device.settings["device"]["type"] == MODEL_EM3:
-        base = ord("A")
-        return f"{device.name} Phase {chr(int(block.channel) + base)}"
+        return f"{device.name} Phase {get_block_channel(block, 'A')}"
 
-    base = ord("1")
-
-    return f"{device.name} Channel {chr(int(block.channel) + base)}"
+    return f"{device.name} Channel {get_block_channel(block)}"
 
 
 def is_block_momentary_input(

@@ -239,6 +239,7 @@
     },
     "event": {
       "input": {
+        "name": "Input {input_number}",
         "state_attributes": {
           "event_type": {
             "state": {

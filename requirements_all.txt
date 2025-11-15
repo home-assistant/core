@@ -145,7 +145,7 @@ adb-shell[async]==0.4.4
 adext==0.4.4
 
 # homeassistant.components.adguard
-adguardhome==0.7.0
+adguardhome==0.8.0
 
 # homeassistant.components.advantage_air
 advantage-air==0.4.4
@@ -541,7 +541,7 @@ asusrouter==1.21.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.45.0
+async-upnp-client==0.46.0
 
 # homeassistant.components.arve
 asyncarve==0.1.1
@@ -1625,7 +1625,7 @@ open-meteo==0.3.2
 
 # homeassistant.components.open_router
 # homeassistant.components.openai_conversation
-openai==2.2.0
+openai==2.8.0
 
 # homeassistant.components.openerz
 openerz-api==0.3.0
@@ -2339,6 +2339,9 @@ pysabnzbd==1.1.1
 # homeassistant.components.saj
 pysaj==0.0.16
 
+# homeassistant.components.saunum
+pysaunum==0.1.0
+
 # homeassistant.components.schlage
 pyschlage==2025.9.0
 
@@ -2469,6 +2472,9 @@ python-gitlab==1.6.0
 # homeassistant.components.google_drive
 python-google-drive-api==0.1.0
 
+# homeassistant.components.google_weather
+python-google-weather-api==0.0.4
+
 # homeassistant.components.analytics_insights
 python-homeassistant-analytics==0.9.0
 
@@ -2564,7 +2570,7 @@ python-xbox==0.1.1
 pythonegardia==1.0.52
 
 # homeassistant.components.uptime_kuma
-pythonkuma==0.3.1
+pythonkuma==0.3.2
 
 # homeassistant.components.tile
 pytile==2024.12.0
@@ -2999,7 +3005,7 @@ total-connect-client==2025.5
 tp-connected==0.0.4
 
 # homeassistant.components.tplink_omada
-tplink-omada-client==1.4.4
+tplink-omada-client==1.5.3
 
 # homeassistant.components.transmission
 transmission-rpc==7.0.3
@@ -3204,7 +3210,7 @@ yolink-api==0.5.8
 youless-api==2.2.0
 
 # homeassistant.components.youtube
-youtubeaio==2.0.0
+youtubeaio==2.1.0
 
 # homeassistant.components.media_extractor
 yt-dlp[default]==2025.10.22
