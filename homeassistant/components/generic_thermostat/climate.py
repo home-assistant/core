@@ -64,9 +64,9 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, VolDictT
 from .const import (
     CONF_AC_MODE,
     CONF_COLD_TOLERANCE,
-    CONF_KEEP_ALIVE,
     CONF_HEATER,
     CONF_HOT_TOLERANCE,
+    CONF_KEEP_ALIVE,
     CONF_MAX_TEMP,
     CONF_MIN_DUR,
     CONF_MIN_TEMP,
