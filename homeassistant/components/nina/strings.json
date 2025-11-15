@@ -51,9 +51,7 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "no_selection": "[%key:component::nina::config::error::no_selection%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "no_selection": "[%key:component::nina::config::error::no_selection%]"
     },
     "step": {
       "init": {
