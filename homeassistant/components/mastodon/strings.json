@@ -84,7 +84,7 @@
           "name": "Content warning"
         },
         "idempotency_key": {
-          "description": "A unique key for this post. If specified then subsequent posts with the same key within one hour will be ignored by your Mastodon instance (default: no idempotency key, which allows duplication).",
+          "description": "A unique key for this post. If specified then subsequent posts with the same key will be ignored by your Mastodon instance, Mastodon holds keys for up to one hour (default: no idempotency key, which allows duplication).",
           "name": "Idempotency key"
         },
         "language": {
