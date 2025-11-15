@@ -505,7 +505,7 @@ asusrouter==1.21.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.45.0
+async-upnp-client==0.46.0
 
 # homeassistant.components.arve
 asyncarve==0.1.1
@@ -2130,7 +2130,7 @@ python-telegram-bot[socks]==22.1
 python-xbox==0.1.1
 
 # homeassistant.components.uptime_kuma
-pythonkuma==0.3.1
+pythonkuma==0.3.2
 
 # homeassistant.components.tile
 pytile==2024.12.0
