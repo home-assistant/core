@@ -39,7 +39,7 @@ rules:
     comment: Cloud based connection, no local discovery
   discovery:
     status: exempt
-      comment: Cloud based connection, no local discovery
+    comment: Cloud based connection, no local discovery
   docs-data-update:
   docs-examples:
   docs-known-limitations:
