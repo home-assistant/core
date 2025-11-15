@@ -121,6 +121,10 @@ class HueSceneEntityBase(HueBaseEntity, BaseScene):
             if isinstance(resource, HueScene) and resource.status
             else None
         )
+        # Track state for smart scene activation detection (smart scenes only)
+        self._previous_state = (
+            resource.state if isinstance(resource, HueSmartScene) else None
+        )
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
@@ -252,13 +256,25 @@ class HueSmartSceneEntity(HueSceneEntityBase):
     def on_update(self) -> None:
         """Handle EventStream updates for smart scene activation detection.
 
-        Smart scenes use .state instead of .status for activation tracking.
-        When a smart scene becomes active (from Hue app, automations, or schedules),
-        the scene state changes to ACTIVE, allowing us to record the activation.
+        Smart scenes use state transition detection to avoid false activations.
+        We only record activation when the state transitions TO active (not while
+        staying active), preventing false activations when lights are modified.
+
+        When a scene is activated, the state changes to ACTIVE.
+        When a light in an active scene is modified, the state stays ACTIVE.
         """
-        # Check if smart scene became active (activated externally or via HA)
-        if self.resource.state == SmartSceneState.ACTIVE:
+        current_state = self.resource.state
+
+        # Only record activation on state transition TO active
+        if (
+            current_state == SmartSceneState.ACTIVE
+            and self._previous_state != SmartSceneState.ACTIVE
+        ):
             self._async_record_activation()
+
+        # Update tracked state
+        self._previous_state = current_state
+
         super().on_update()
 
     async def _async_activate(self, **kwargs: Any) -> None:
