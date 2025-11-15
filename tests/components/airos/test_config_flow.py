@@ -80,23 +80,23 @@ async def test_manual_flow_creates_entry(
     ap_fixture: dict[str, Any],
 ) -> None:
     """Test we get the user form and create the appropriate entry."""
-    flow_start = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
     )
 
-    assert flow_start["type"] is FlowResultType.MENU
-    assert "manual" in flow_start["menu_options"]
-
-    menu = await hass.config_entries.flow.async_configure(
-        flow_start["flow_id"], {"next_step_id": "manual"}
-    )
-
-    assert menu["type"] is FlowResultType.FORM
-    assert menu["step_id"] == "manual"
+    assert result["type"] is FlowResultType.MENU
+    assert "manual" in result["menu_options"]
 
     result = await hass.config_entries.flow.async_configure(
-        menu["flow_id"], MOCK_CONFIG
+        result["flow_id"], {"next_step_id": "manual"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "manual"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], MOCK_CONFIG
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -456,20 +456,20 @@ async def test_discover_flow_no_devices_found(
     """Test discovery flow aborts when no devices are found."""
     mock_discovery_method.return_value = {}
 
-    flow_start = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    menu = await hass.config_entries.flow.async_configure(
-        flow_start["flow_id"], {"next_step_id": "discovery"}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "discovery"}
     )
 
-    assert menu["type"] is FlowResultType.SHOW_PROGRESS
-    assert menu["step_id"] == "discovery"
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "discovery"
 
-    discover_flow = await hass.config_entries.flow.async_configure(menu["flow_id"])
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert discover_flow["type"] is FlowResultType.ABORT
-    assert discover_flow["reason"] == "no_devices_found"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_devices_found"
 
 
 async def test_discover_flow_one_device_found(
@@ -478,30 +478,27 @@ async def test_discover_flow_one_device_found(
     """Test discovery flow goes straight to credentials when one device is found."""
     mock_discovery_method.return_value = {MOCK_DISC_DEV1[MAC_ADDRESS]: MOCK_DISC_DEV1}
 
-    flow_start = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    menu = await hass.config_entries.flow.async_configure(
-        flow_start["flow_id"], {"next_step_id": "discovery"}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "discovery"}
     )
 
-    discover_flow = await hass.config_entries.flow.async_configure(menu["flow_id"])
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     # With only one device, the flow should skip the select step and
     # go directly to configure_device.
-    assert discover_flow["type"] is FlowResultType.FORM
-    assert discover_flow["step_id"] == "configure_device"
-    assert (
-        discover_flow["description_placeholders"]["device_name"]
-        == MOCK_DISC_DEV1[HOSTNAME]
-    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "configure_device"
+    assert result["description_placeholders"]["device_name"] == MOCK_DISC_DEV1[HOSTNAME]
 
     # Provide credentials and complete the flow
     mock_airos_client.status.return_value.derived.mac = MOCK_DISC_DEV1[MAC_ADDRESS]
     mock_airos_client.status.return_value.host.hostname = MOCK_DISC_DEV1[HOSTNAME]
 
-    credentials_flow = await hass.config_entries.flow.async_configure(
-        menu["flow_id"],
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
         {
             CONF_USERNAME: DEFAULT_USERNAME,
             CONF_PASSWORD: "test-password",
@@ -509,9 +506,9 @@ async def test_discover_flow_one_device_found(
         },
     )
 
-    assert credentials_flow["type"] is FlowResultType.CREATE_ENTRY
-    assert credentials_flow["title"] == MOCK_DISC_DEV1[HOSTNAME]
-    assert credentials_flow["data"][CONF_HOST] == MOCK_DISC_DEV1[IP_ADDRESS]
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == MOCK_DISC_DEV1[HOSTNAME]
+    assert result["data"][CONF_HOST] == MOCK_DISC_DEV1[IP_ADDRESS]
 
 
 async def test_discover_flow_multiple_devices_found(
@@ -523,24 +520,24 @@ async def test_discover_flow_multiple_devices_found(
         MOCK_DISC_DEV2[MAC_ADDRESS]: MOCK_DISC_DEV2,
     }
 
-    flow_start = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert flow_start["type"] is FlowResultType.MENU
-    assert "discovery" in flow_start["menu_options"]
+    assert result["type"] is FlowResultType.MENU
+    assert "discovery" in result["menu_options"]
 
-    menu = await hass.config_entries.flow.async_configure(
-        flow_start["flow_id"], {"next_step_id": "discovery"}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "discovery"}
     )
 
-    assert menu["type"] is FlowResultType.SHOW_PROGRESS
-    assert menu["step_id"] == "discovery"
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "discovery"
 
-    discover_flow = await hass.config_entries.flow.async_configure(menu["flow_id"])
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert discover_flow["type"] is FlowResultType.FORM
-    assert discover_flow["step_id"] == "select_device"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "select_device"
 
     expected_options = {
         MOCK_DISC_DEV1[MAC_ADDRESS]: (
@@ -550,29 +547,24 @@ async def test_discover_flow_multiple_devices_found(
             f"{MOCK_DISC_DEV2[HOSTNAME]} ({MOCK_DISC_DEV2[IP_ADDRESS]})"
         ),
     }
-    actual_options = (
-        discover_flow["data_schema"].schema[vol.Required(MAC_ADDRESS)].container
-    )
+    actual_options = result["data_schema"].schema[vol.Required(MAC_ADDRESS)].container
     assert actual_options == expected_options
 
     # Select one of the devices
-    select_flow = await hass.config_entries.flow.async_configure(
-        discover_flow["flow_id"], {MAC_ADDRESS: MOCK_DISC_DEV1[MAC_ADDRESS]}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {MAC_ADDRESS: MOCK_DISC_DEV1[MAC_ADDRESS]}
     )
 
-    assert select_flow["type"] is FlowResultType.FORM
-    assert select_flow["step_id"] == "configure_device"
-    assert (
-        select_flow["description_placeholders"]["device_name"]
-        == MOCK_DISC_DEV1[HOSTNAME]
-    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "configure_device"
+    assert result["description_placeholders"]["device_name"] == MOCK_DISC_DEV1[HOSTNAME]
 
     # Provide credentials and complete the flow
     mock_airos_client.status.return_value.derived.mac = MOCK_DISC_DEV1[MAC_ADDRESS]
     mock_airos_client.status.return_value.host.hostname = MOCK_DISC_DEV1[HOSTNAME]
 
-    credentials_flow = await hass.config_entries.flow.async_configure(
-        select_flow["flow_id"],
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
         {
             CONF_USERNAME: DEFAULT_USERNAME,
             CONF_PASSWORD: "test-password",
@@ -580,9 +572,9 @@ async def test_discover_flow_multiple_devices_found(
         },
     )
 
-    assert credentials_flow["type"] is FlowResultType.CREATE_ENTRY
-    assert credentials_flow["title"] == MOCK_DISC_DEV1[HOSTNAME]
-    assert credentials_flow["data"][CONF_HOST] == MOCK_DISC_DEV1[IP_ADDRESS]
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == MOCK_DISC_DEV1[HOSTNAME]
+    assert result["data"][CONF_HOST] == MOCK_DISC_DEV1[IP_ADDRESS]
 
 
 async def test_discover_flow_with_existing_device(
@@ -603,22 +595,19 @@ async def test_discover_flow_with_existing_device(
         MOCK_DISC_EXISTS[MAC_ADDRESS]: MOCK_DISC_EXISTS,
     }
 
-    flow_start = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    menu = await hass.config_entries.flow.async_configure(
-        flow_start["flow_id"], {"next_step_id": "discovery"}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "discovery"}
     )
 
-    discover_flow = await hass.config_entries.flow.async_configure(menu["flow_id"])
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     # The flow should proceed with only the new device
-    assert discover_flow["type"] is FlowResultType.FORM
-    assert discover_flow["step_id"] == "configure_device"
-    assert (
-        discover_flow["description_placeholders"]["device_name"]
-        == MOCK_DISC_DEV1[HOSTNAME]
-    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "configure_device"
+    assert result["description_placeholders"]["device_name"] == MOCK_DISC_DEV1[HOSTNAME]
 
 
 @pytest.mark.parametrize(
@@ -638,17 +627,17 @@ async def test_discover_flow_discovery_exceptions(
     """Test discovery flow aborts on various discovery exceptions."""
     mock_discovery_method.side_effect = exception
 
-    flow_start = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    menu = await hass.config_entries.flow.async_configure(
-        flow_start["flow_id"], {"next_step_id": "discovery"}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "discovery"}
     )
 
-    discover_flow = await hass.config_entries.flow.async_configure(menu["flow_id"])
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert discover_flow["type"] is FlowResultType.ABORT
-    assert discover_flow["reason"] == reason
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
 
 
 async def test_configure_device_flow_exceptions(
@@ -657,17 +646,17 @@ async def test_configure_device_flow_exceptions(
     """Test configure_device step handles authentication and connection exceptions."""
     mock_discovery_method.return_value = {MOCK_DISC_DEV1[MAC_ADDRESS]: MOCK_DISC_DEV1}
 
-    flow_start = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    menu = await hass.config_entries.flow.async_configure(
-        flow_start["flow_id"], {"next_step_id": "discovery"}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "discovery"}
     )
 
     mock_airos_client.login.side_effect = AirOSConnectionAuthenticationError
 
-    select_flow = await hass.config_entries.flow.async_configure(
-        menu["flow_id"],
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
         {
             CONF_USERNAME: "wrong-user",
             CONF_PASSWORD: "wrong-password",
@@ -675,13 +664,13 @@ async def test_configure_device_flow_exceptions(
         },
     )
 
-    assert select_flow["type"] is FlowResultType.FORM
-    assert select_flow["errors"] == {"base": "invalid_auth"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_auth"}
 
     mock_airos_client.login.side_effect = AirOSDeviceConnectionError
 
-    credentials_flow = await hass.config_entries.flow.async_configure(
-        select_flow["flow_id"],
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
         {
             CONF_USERNAME: DEFAULT_USERNAME,
             CONF_PASSWORD: "some-password",
@@ -689,5 +678,5 @@ async def test_configure_device_flow_exceptions(
         },
     )
 
-    assert credentials_flow["type"] is FlowResultType.FORM
-    assert credentials_flow["errors"] == {"base": "cannot_connect"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
