@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock
 
-from aiohttp import ClientError
+from aiohttp import ClientResponseError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -84,7 +84,7 @@ async def test_api_failure(
     service: str,
 ) -> None:
     """Test handling of exception from API."""
-    mock_miele_client.send_action.side_effect = ClientError
+    mock_miele_client.send_action.side_effect = ClientResponseError("test", "Test")
 
     with pytest.raises(
         HomeAssistantError, match=f"Failed to set state for {ENTITY_ID}"

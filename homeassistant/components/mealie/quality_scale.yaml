@@ -49,11 +49,11 @@ rules:
       The integration will discover a Mealie addon posting a discovery message.
   docs-data-update: done
   docs-examples: done
-  docs-known-limitations: todo
-  docs-supported-devices: todo
+  docs-known-limitations: done
+  docs-supported-devices: done
   docs-supported-functions: done
-  docs-troubleshooting: todo
-  docs-use-cases: todo
+  docs-troubleshooting: done
+  docs-use-cases: done
   dynamic-devices:
     status: done
     comment: |

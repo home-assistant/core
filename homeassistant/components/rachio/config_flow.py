@@ -91,7 +91,12 @@ class RachioConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
 
         return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=DATA_SCHEMA,
+            errors=errors,
+            description_placeholders={
+                "api_key_url": "https://app.rach.io/",
+            },
         )
 
     async def async_step_homekit(

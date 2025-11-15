@@ -10,6 +10,7 @@ from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from . import WorkdayConfigEntry
 from .const import CONF_EXCLUDES, CONF_OFFSET, CONF_WORKDAYS
@@ -87,11 +88,12 @@ class WorkdayCalendarEntity(BaseWorkdayEntity, CalendarEntity):
     @property
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
-        return (
-            sorted(self.event_list, key=lambda e: e.start)[0]
-            if self.event_list
-            else None
+        sorted_list: list[CalendarEvent] | None = (
+            sorted(self.event_list, key=lambda e: e.start) if self.event_list else None
         )
+        if not sorted_list:
+            return None
+        return [d for d in sorted_list if d.start >= dt_util.utcnow().date()][0]
 
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime

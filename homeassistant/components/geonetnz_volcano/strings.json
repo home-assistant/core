@@ -1,13 +1,13 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "title": "Fill in your filter details.",
-        "data": { "radius": "Radius" }
-      }
-    },
     "error": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
+    },
+    "step": {
+      "user": {
+        "data": { "radius": "Radius" },
+        "title": "Fill in your filter details."
+      }
     }
   }
 }

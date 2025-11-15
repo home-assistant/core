@@ -58,7 +58,6 @@ from . import (
     selector,
     target as target_helpers,
     template,
-    translation,
 )
 from .deprecation import deprecated_class, deprecated_function, deprecated_hass_argument
 from .selector import TargetSelector
@@ -586,11 +585,6 @@ async def async_get_all_descriptions(
                 _load_services_files, integrations
             )
 
-    # Load translations for all service domains
-    translations = await translation.async_get_translations(
-        hass, "en", "services", services
-    )
-
     # Build response
     descriptions: dict[str, dict[str, Any]] = {}
     for domain, services_map in services.items():
@@ -617,40 +611,11 @@ async def async_get_all_descriptions(
 
             # Don't warn for missing services, because it triggers false
             # positives for things like scripts, that register as a service
-            #
-            # When name & description are in the translations use those;
-            # otherwise fallback to backwards compatible behavior from
-            # the time when we didn't have translations for descriptions yet.
-            # This mimics the behavior of the frontend.
-            description = {
-                "name": translations.get(
-                    f"component.{domain}.services.{service_name}.name",
-                    yaml_description.get("name", ""),
-                ),
-                "description": translations.get(
-                    f"component.{domain}.services.{service_name}.description",
-                    yaml_description.get("description", ""),
-                ),
-                "fields": dict(yaml_description.get("fields", {})),
-            }
+            description = {"fields": yaml_description.get("fields", {})}
 
-            # Translate fields names & descriptions as well
-            for field_name, field_schema in description["fields"].items():
-                if name := translations.get(
-                    f"component.{domain}.services.{service_name}.fields.{field_name}.name"
-                ):
-                    field_schema["name"] = name
-                if desc := translations.get(
-                    f"component.{domain}.services.{service_name}.fields.{field_name}.description"
-                ):
-                    field_schema["description"] = desc
-                if example := translations.get(
-                    f"component.{domain}.services.{service_name}.fields.{field_name}.example"
-                ):
-                    field_schema["example"] = example
-
-            if "target" in yaml_description:
-                description["target"] = yaml_description["target"]
+            for item in ("description", "name", "target"):
+                if item in yaml_description:
+                    description[item] = yaml_description[item]
 
             response = service.supports_response
             if response is not SupportsResponse.NONE:

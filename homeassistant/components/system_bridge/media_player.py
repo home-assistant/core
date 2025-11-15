@@ -57,7 +57,6 @@ MEDIA_PLAYER_DESCRIPTION: Final[MediaPlayerEntityDescription] = (
     MediaPlayerEntityDescription(
         key="media",
         translation_key="media",
-        icon="mdi:volume-high",
         device_class=MediaPlayerDeviceClass.RECEIVER,
     )
 )

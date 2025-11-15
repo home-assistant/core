@@ -9,7 +9,7 @@ import pytest
 
 from homeassistant.components import camera, ffmpeg
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.components.camera.img_util import TurboJPEGSingleton
+from homeassistant.components.camera import TurboJPEGSingleton
 from homeassistant.components.event import EventDeviceClass
 from homeassistant.components.homekit.accessories import HomeBridge
 from homeassistant.components.homekit.const import (
