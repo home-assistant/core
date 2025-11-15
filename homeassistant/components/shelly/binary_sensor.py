@@ -90,6 +90,7 @@ class RpcBinarySensor(ShellyRpcAttributeEntity, BinarySensorEntity):
                     component.lower() == "input" and component_id.isnumeric()
                 ):
                     self._attr_translation_placeholders = {"input_number": component_id}
+                    self._attr_translation_key = "input_with_number"
                 else:
                     return
 
@@ -197,16 +198,19 @@ SENSORS: dict[tuple[str, str], BlockBinarySensorDescription] = {
     ),
     ("input", "input"): BlockBinarySensorDescription(
         key="input|input",
+        translation_key="input",
         device_class=BinarySensorDeviceClass.POWER,
         removal_condition=is_block_momentary_input,
     ),
     ("relay", "input"): BlockBinarySensorDescription(
         key="relay|input",
+        translation_key="input",
         device_class=BinarySensorDeviceClass.POWER,
         removal_condition=is_block_momentary_input,
     ),
     ("device", "input"): BlockBinarySensorDescription(
         key="device|input",
+        translation_key="input",
         device_class=BinarySensorDeviceClass.POWER,
         removal_condition=is_block_momentary_input,
     ),

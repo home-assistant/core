@@ -158,6 +158,9 @@
         "name": "{channel_name} flood"
       },
       "input": {
+        "name": "Input"
+      },
+      "input_with_number": {
         "name": "Input {input_number}"
       },
       "mute": {
