@@ -11,7 +11,6 @@ from homeassistant.components.mastodon.const import (
     ATTR_LANGUAGE,
     ATTR_MEDIA,
     ATTR_MEDIA_DESCRIPTION,
-    ATTR_PREVENT_DUPLICATE_POSTS,
     ATTR_STATUS,
     ATTR_VISIBILITY,
     DOMAIN,
@@ -123,18 +122,6 @@ from tests.common import MockConfigEntry
             {
                 "status": "test toot",
                 "idempotency_key": "post_once_only",
-                "language": None,
-                "spoiler_text": None,
-                "visibility": None,
-                "media_ids": None,
-                "sensitive": None,
-            },
-        ),
-        (
-            {ATTR_STATUS: "test toot", ATTR_PREVENT_DUPLICATE_POSTS: True},
-            {
-                "status": "test toot",
-                "idempotency_key": "e9ff9d1082874d05a411240e323f9a56",
                 "language": None,
                 "spoiler_text": None,
                 "visibility": None,

@@ -84,7 +84,7 @@
           "name": "Content warning"
         },
         "idempotency_key": {
-          "description": "A unique key for this post. If specified then subsequent posts with the same key within one hour will be ignored by your Mastodon instance. (default: no idempotency key, which allows duplication). Useful if you want more control over idempotency than prevent duplicate posts.",
+          "description": "A unique key for this post. If specified then subsequent posts with the same key within one hour will be ignored by your Mastodon instance. (default: no idempotency key, which allows duplication).",
           "name": "Idempotency key"
         },
         "language": {
@@ -102,10 +102,6 @@
         "media_warning": {
           "description": "If an image or video is attached, will mark the media as sensitive (default: no media warning).",
           "name": "Media warning"
-        },
-        "prevent_duplicate_posts": {
-          "description": "If enabled, an idempotency key with a hash of your status will be calculated and added to prevent duplicate posts within one hour.",
-          "name": "Prevent duplicate posts"
         },
         "status": {
           "description": "The status to post.",
