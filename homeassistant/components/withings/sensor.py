@@ -163,6 +163,7 @@ MEASUREMENT_SENSORS: dict[
         measurement_type=MeasurementType.DIASTOLIC_BLOOD_PRESSURE,
         translation_key="diastolic_blood_pressure",
         native_unit_of_measurement=UOM_MMHG,
+        device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     MeasurementType.SYSTOLIC_BLOOD_PRESSURE: WithingsMeasurementSensorEntityDescription(
@@ -170,6 +171,7 @@ MEASUREMENT_SENSORS: dict[
         measurement_type=MeasurementType.SYSTOLIC_BLOOD_PRESSURE,
         translation_key="systolic_blood_pressure",
         native_unit_of_measurement=UOM_MMHG,
+        device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     MeasurementType.HEART_RATE: WithingsMeasurementSensorEntityDescription(
