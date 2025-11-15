@@ -1,0 +1,60 @@
+rules:
+  # Bronze
+  action-setup: todo
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage:
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+  docs-high-level-description:
+  docs-installation-instructions:
+  docs-removal-instructions:
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: todo
+  test-before-configure: done
+  test-before-setup: todo
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+  config-entry-unloading:
+  docs-configuration-parameters:
+  docs-installation-parameters:
+  entity-unavailable:
+  integration-owner:
+  log-when-unavailable:
+  parallel-updates:
+  reauthentication-flow:
+  test-coverage:
+
+  # Gold
+  devices:
+  diagnostics:
+  discovery-update-info:
+  discovery:
+  docs-data-update:
+  docs-examples:
+  docs-known-limitations:
+  docs-supported-devices:
+  docs-supported-functions:
+  docs-troubleshooting:
+  docs-use-cases:
+  dynamic-devices:
+  entity-category:
+  entity-device-class:
+  entity-disabled-by-default:
+  entity-translations:
+  exception-translations:
+  icon-translations:
+  reconfiguration-flow:
+  repair-issues:
+  stale-devices:
+
+  # Platinum
+  async-dependency:
+  inject-websession:
+  strict-typing:
