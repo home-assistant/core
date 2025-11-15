@@ -111,7 +111,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
                     and name.startswith(BT_MODEL_PREFIXES)
                     and name.split("_")[1] == serial
                 ):
-                    _LOGGER.debug("Found Bluetooth device, configuring with Bluetooth")
+                    _LOGGER.info("Found lamarzocco Bluetooth device, adding to entry")
                     # found a device, add MAC address to config entry
                     hass.config_entries.async_update_entry(
                         entry,
@@ -124,7 +124,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
         if CONF_MAC in entry.data:
             ble_device = async_ble_device_from_address(hass, entry.data[CONF_MAC])
             if ble_device:
-                _LOGGER.info("Configuring lamarzocco with Bluetooth")
+                _LOGGER.info("Setting up lamarzocco with Bluetooth")
                 bluetooth_client = LaMarzoccoBluetoothClient(
                     ble_device=ble_device,
                     ble_token=token,
