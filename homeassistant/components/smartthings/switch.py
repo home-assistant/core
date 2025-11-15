@@ -49,7 +49,7 @@ class SmartThingsSwitchEntityDescription(SwitchEntityDescription):
 
     status_attribute: Attribute
     component_translation_key: dict[str, str] | None = None
-    on_value: str | int = "on"
+    on_key: str | int = "on"
     on_command: Command = Command.ON
     on_command_argument: CommandArgument = None
     off_command: Command = Command.OFF
@@ -100,7 +100,7 @@ CAPABILITY_TO_COMMAND_SWITCHES: dict[
         translation_key="mute",
         status_attribute=Attribute.VOLUME_LEVEL,
         command=Command.SET_VOLUME_LEVEL,
-        on_value=0,
+        on_key=0,
         on_command_argument=0,
         off_command_argument=1,
         entity_category=EntityCategory.CONFIG,
@@ -151,7 +151,7 @@ CAPABILITY_TO_SWITCHES: dict[Capability | str, SmartThingsSwitchEntityDescriptio
         key=Capability.SAMSUNG_CE_POWER_COOL,
         translation_key="power_cool",
         status_attribute=Attribute.ACTIVATED,
-        on_value="True",
+        on_key="True",
         on_command=Command.ACTIVATE,
         off_command=Command.DEACTIVATE,
         entity_category=EntityCategory.CONFIG,
@@ -160,7 +160,7 @@ CAPABILITY_TO_SWITCHES: dict[Capability | str, SmartThingsSwitchEntityDescriptio
         key=Capability.SAMSUNG_CE_POWER_FREEZE,
         translation_key="power_freeze",
         status_attribute=Attribute.ACTIVATED,
-        on_value="True",
+        on_key="True",
         on_command=Command.ACTIVATE,
         off_command=Command.DEACTIVATE,
         entity_category=EntityCategory.CONFIG,
@@ -326,7 +326,7 @@ class SmartThingsSwitch(SmartThingsEntity, SwitchEntity):
             self.get_attribute_value(
                 self.switch_capability, self.entity_description.status_attribute
             )
-            == self.entity_description.on_value
+            == self.entity_description.on_key
         )
 
 
