@@ -364,10 +364,9 @@ MODULES: dict[str, ModuleType] = {
 PLATFORMS: list[Platform] = [Platform.EVENT, Platform.NOTIFY]
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Telegram bot component."""
+def _import_yaml(hass: HomeAssistant, config: ConfigType) -> None:
+    """Import the last YAML config since existing behavior only works with the last config."""
 
-    # import the last YAML config since existing behavior only works with the last config
     domain_config: list[dict[str, Any]] | None = config.get(DOMAIN)
     if domain_config:
         trusted_networks: list[IPv4Network] = domain_config[-1].get(
@@ -395,19 +394,26 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
         )
 
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Telegram bot component."""
+
+    # import the last YAML config since existing behavior only works with the last config
+    _import_yaml(hass, config)
+
     async def async_send_telegram_message(service: ServiceCall) -> ServiceResponse:
         """Handle sending Telegram Bot message service calls."""
 
         # this is the list of targets to send the message to
-        targets: list[tuple[TelegramBotConfigEntry, int]] = _build_targets(
+        targets: list[tuple[TelegramBotConfigEntry, int, str | None]] = _build_targets(
             hass, service
         )
 
-        service_responses: list[dict[str, int]] = []
-        errors: list[HomeAssistantError] = []
+        service_responses: list[dict[str, Any]] = []
+        errors: list[tuple[HomeAssistantError, str]] = []
 
         # invoke the service for each target
-        for target_config_entry, target_chat_id in targets:
+        for target_config_entry, target_chat_id, target_notify_entity_id in targets:
             if not hasattr(target_config_entry, "runtime_data"):
                 raise ServiceValidationError(
                     "No config entries found or setup failed. Please set up the Telegram Bot first.",
@@ -420,19 +426,41 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     service, target_config_entry.runtime_data, target_chat_id
                 )
                 if service_response is not None:
-                    formatted_response = [
-                        {ATTR_CHAT_ID: chat_id, ATTR_MESSAGEID: message_id}
+                    formatted_response: list[dict[str, Any]] = [
+                        {
+                            ATTR_CHAT_ID: chat_id,
+                            ATTR_MESSAGEID: message_id,
+                            ATTR_ENTITY_ID: target_notify_entity_id,
+                        }
+                        if target_notify_entity_id
+                        else {
+                            ATTR_CHAT_ID: chat_id,
+                            ATTR_MESSAGEID: message_id,
+                        }
                         for chat_id, message_id in service_response.items()
                     ]
                     service_responses.extend(formatted_response)
             except HomeAssistantError as ex:
-                _LOGGER.error(ex)
-                errors.append(ex)
+                target = (
+                    target_notify_entity_id
+                    if target_notify_entity_id
+                    else str(target_chat_id)
+                )
+                errors.append((ex, target))
 
         if len(errors) == 1:
-            raise errors[0]
+            raise errors[0][0]
 
-        # we should handle errors
+        if len(errors) > 1:
+            for error in errors:
+                _LOGGER.error(error)
+
+            failed_targets = [target for _, target in errors]
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="failed_targets",
+                translation_placeholders={"failed_targets": ", ".join(failed_targets)},
+            )
 
         if service.return_response:
             # return is correct, but mypy cannot infer it
@@ -530,25 +558,28 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 def _build_targets(
     hass: HomeAssistant, service: ServiceCall
-) -> list[tuple[TelegramBotConfigEntry, int]]:
-    """Build list of targets where each target is represented by its corresponding config entry and chat ID."""
+) -> list[tuple[TelegramBotConfigEntry, int, str | None]]:
+    """Build list of targets where each target is represented by its corresponding config entry, chat ID and notify entity id (if target is a notify entity)."""
 
-    targets: list[tuple[TelegramBotConfigEntry, int]] = []
+    targets: list[tuple[TelegramBotConfigEntry, int, str | None]] = []
 
     # build target list from notify entities using service data: `entity_id`
+
     if ATTR_ENTITY_ID in service.data:
         notify_entity_ids: list[str] = service.data[ATTR_ENTITY_ID]
         entity_registry = er.async_get(hass)
 
-        # parse entity IDs to get config entries and chat IDs
+        # parse entity IDs
         for notify_entity_id in notify_entity_ids:
             # get config entry from notify entity
             registry_entry = entity_registry.async_get(notify_entity_id)
             if not registry_entry:
                 raise ServiceValidationError(
-                    f"Notify entity not found: {notify_entity_id}",
                     translation_domain=DOMAIN,
                     translation_key="action_failed",
+                    translation_placeholders={
+                        "error": f"Notify entity not found: {notify_entity_id}"
+                    },
                 )
             notify_config_entry = hass.config_entries.async_get_known_entry(
                 str(registry_entry.config_entry_id)
@@ -560,51 +591,57 @@ def _build_targets(
             ]
             notify_chat_id: int = notify_config_subentry.data[ATTR_CHAT_ID]
 
-            targets.append((notify_config_entry, notify_chat_id))
+            targets.append((notify_config_entry, notify_chat_id, notify_entity_id))
 
     # build target list using service data: `config_entry_id` and `target`
 
-    config_entries: list[TelegramBotConfigEntry] = (
-        service.hass.config_entries.async_entries(DOMAIN)
-    )
-    config_entry = config_entries[0]
-
-    # parse config entry from service data if provided
+    config_entry: TelegramBotConfigEntry | None = None
     if CONF_CONFIG_ENTRY_ID in service.data:
+        # parse config entry from service data
         config_entry_id: str = service.data[CONF_CONFIG_ENTRY_ID]
         config_entry = hass.config_entries.async_get_known_entry(config_entry_id)
+    else:
+        # config entry not provided so we try to determine the default
+        config_entries: list[TelegramBotConfigEntry] = (
+            service.hass.config_entries.async_entries(DOMAIN)
+        )
+        if len(config_entries) == 1:
+            config_entry = config_entries[0]
 
-    # parse chat IDs from service data
-    if ATTR_TARGET in service.data:
-        target: int | list[int] = service.data[ATTR_TARGET]
-        chat_ids = [target] if isinstance(target, int) else target
+    # parse chat IDs from service data: `target`
+    if config_entry is not None:
+        chat_ids: list[int] = []
+        if ATTR_TARGET in service.data:
+            target: int | list[int] = service.data[ATTR_TARGET]
+            chat_ids = [target] if isinstance(target, int) else target
+        else:
+            # no targets from service data, so we default to the first allowed chat IDs of the config entry
+            subentries = list(config_entry.subentries.values())
+            if len(subentries) == 0:
+                raise HomeAssistantError(
+                    "No allowed chat IDs found for bot",
+                    translation_domain=DOMAIN,
+                    translation_key="missing_allowed_chat_ids",
+                    translation_placeholders={
+                        "bot_name": config_entry.title,
+                    },
+                )
 
-        targets.extend([(config_entry, chat_id) for chat_id in chat_ids])
+            default_chat_id: int = subentries[0].data[ATTR_CHAT_ID]
+            _LOGGER.debug(
+                "Defaulting to chat ID %s for bot %s",
+                default_chat_id,
+                config_entry.title,
+            )
+            chat_ids = [default_chat_id]
+
+        targets.extend([(config_entry, chat_id, None) for chat_id in chat_ids])
 
     # we're done building targets from service data
     if len(targets) > 0:
         return targets
 
-    # there's no targets so we try to find a default target
-
-    if len(config_entries) == 1:
-        subentries = list(config_entry.subentries.values())
-
-        if len(subentries) == 0:
-            raise ServiceValidationError(
-                "No allowed chat IDs found for bot",
-                translation_domain=DOMAIN,
-                translation_key="missing_allowed_chat_ids",
-                translation_placeholders={
-                    "bot_name": config_entry.title,
-                },
-            )
-
-        if len(subentries) > 0:
-            default_chat_id: int = subentries[0].data[ATTR_CHAT_ID]
-            return [(config_entries[0], default_chat_id)]
-
-    # can't determine default since multiple config entries or multiple subentries exist
+    # can't determine default since multiple config entries exist
     raise ServiceValidationError(
         translation_domain=DOMAIN,
         translation_key="no_targets_found",

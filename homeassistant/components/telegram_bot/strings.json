@@ -179,8 +179,8 @@
     "allowlist_external_dirs_error": {
       "message": "File path has not been configured in allowlist_external_dirs."
     },
-    "failed_chat_ids": {
-      "message": "Failed targets: {chat_ids}. Please verify that the chat IDs for {bot_name} have been configured."
+    "failed_targets": {
+      "message": "Failed targets: {failed_targets}. Please check logs for details."
     },
     "failed_to_load_file": {
       "message": "Failed to load file: {error}"

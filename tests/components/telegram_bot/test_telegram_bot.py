@@ -319,10 +319,10 @@ async def test_send_sticker_partial_error(
 
     await hass.async_block_till_done()
 
-    assert mock_load_data.call_count == 1
+    assert mock_load_data.call_count == 2
     assert mock_send_sticker.call_count == 2
-    assert err.value.translation_key == "failed_chat_ids"
-    assert err.value.args[0] == "Failed targets: [123456, 654321]"
+    assert err.value.translation_key == "failed_targets"
+    assert err.value.translation_placeholders == {"failed_targets": "123456, 654321"}
 
 
 async def test_send_sticker_error(hass: HomeAssistant, webhook_platform) -> None:
@@ -887,9 +887,10 @@ async def test_send_message_with_config_entry(
     await hass.async_block_till_done()
 
     assert err.value.translation_key == "invalid_chat_ids"
-    assert err.value.translation_placeholders is not None
-    assert err.value.translation_placeholders["chat_ids"] == "1"
-    assert err.value.translation_placeholders["bot_name"] == "Mock Title"
+    assert err.value.translation_placeholders == {
+        "chat_ids": "1",
+        "bot_name": "Mock Title",
+    }
 
     # test: send message to valid chat id
 
@@ -929,7 +930,7 @@ async def test_send_message_no_chat_id_error(
 
         assert result.get("type") is FlowResultType.CREATE_ENTRY
 
-    with pytest.raises(ServiceValidationError) as err:
+    with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SEND_MESSAGE,
@@ -942,8 +943,7 @@ async def test_send_message_no_chat_id_error(
         )
 
     assert err.value.translation_key == "missing_allowed_chat_ids"
-    assert err.value.translation_placeholders is not None
-    assert err.value.translation_placeholders["bot_name"] == "Testbot mock last name"
+    assert err.value.translation_placeholders == {"bot_name": "Testbot mock last name"}
 
 
 async def test_send_message_config_entry_error(
@@ -997,9 +997,10 @@ async def test_delete_message(
     await hass.async_block_till_done()
 
     assert err.value.translation_key == "invalid_chat_ids"
-    assert err.value.translation_placeholders is not None
-    assert err.value.translation_placeholders["chat_ids"] == "1"
-    assert err.value.translation_placeholders["bot_name"] == "Mock Title"
+    assert err.value.translation_placeholders == {
+        "chat_ids": "1",
+        "bot_name": "Mock Title",
+    }
 
     # test: delete message with valid chat id
 
