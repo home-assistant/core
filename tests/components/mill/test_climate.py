@@ -84,6 +84,9 @@ async def create_local_heater(
     return LocalMillHeater(coordinator=coordinator)
 
 
+### CLOUD
+
+
 async def test_set_hvac_mode_heat(
     hass: HomeAssistant,
 ) -> None:
@@ -108,6 +111,17 @@ async def test_set_hvac_mode_off(
     mill_heater.coordinator.mill_data_connection.heater_control.assert_called_once_with(
         mill_heater._id, power_status=False
     )
+
+
+async def test_set_bad_hvac_mode(
+    hass: HomeAssistant,
+) -> None:
+    """Tests setting the HVAC mode to an unsupported value."""
+    mill_heater = await create_heater(hass)
+
+    await mill_heater.async_set_hvac_mode(hvac_mode=HVACMode.COOL)
+
+    mill_heater.coordinator.mill_data_connection.heater_control.assert_not_called()
 
 
 async def test_set_temperature_hvac_heat(
@@ -162,6 +176,27 @@ async def test_set_temperature_no_hvac(
     mill.heater_control.assert_not_called()
 
 
+async def test_set_temperature_bad_hvac(
+    hass: HomeAssistant,
+) -> None:
+    """Tests setting a temperature with no HVAC mode."""
+    mill_heater = await create_heater(hass)
+
+    temperature = 25
+
+    await mill_heater.async_set_temperature(
+        temperature=temperature, hvac_mode=HVACMode.COOL
+    )
+
+    mill = mill_heater.coordinator.mill_data_connection
+
+    mill.set_heater_temp.assert_called_once_with(mill_heater._id, float(temperature))
+    mill.heater_control.assert_not_called()
+
+
+### LOCAL
+
+
 async def test_local_set_hvac_mode_heat(
     hass: HomeAssistant,
 ) -> None:
@@ -188,6 +223,20 @@ async def test_local_set_hvac_mode_off(
 
     mill.set_operation_mode_control_individually.assert_not_called()
     mill.set_operation_mode_off.assert_called_once_with()
+
+
+async def test_local_set_bad_hvac_mode(
+    hass: HomeAssistant,
+) -> None:
+    """Tests locally setting the HVAC mode to an unsupported value."""
+    local_heater = await create_local_heater(hass)
+
+    await local_heater.async_set_hvac_mode(HVACMode.COOL)
+
+    mill = local_heater.coordinator.mill_data_connection
+
+    mill.set_operation_mode_control_individually.assert_not_called()
+    mill.set_operation_mode_off.assert_not_called()
 
 
 async def test_local_set_temperature_hvac_heat(
@@ -237,6 +286,25 @@ async def test_local_set_temperature_no_hvac(
     temperature = 25
 
     await local_heater.async_set_temperature(temperature=temperature)
+
+    mill = local_heater.coordinator.mill_data_connection
+
+    mill.set_target_temperature.assert_called_once_with(float(temperature))
+    mill.set_operation_mode_control_individually.assert_not_called()
+    mill.set_operation_mode_off.assert_not_called()
+
+
+async def test_local_set_temperature_bad_hvac(
+    hass: HomeAssistant,
+) -> None:
+    """Tests locally setting a temperature with an unsupported HVAC mode."""
+    local_heater = await create_local_heater(hass)
+
+    temperature = 25
+
+    await local_heater.async_set_temperature(
+        temperature=temperature, hvac_mode=HVACMode.COOL
+    )
 
     mill = local_heater.coordinator.mill_data_connection
 
