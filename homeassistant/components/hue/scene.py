@@ -52,7 +52,9 @@ async def async_setup_entry(
 
     # add entities for all scenes
     @callback
-    def async_add_entity(resource: HueScene | HueSmartScene) -> None:
+    def async_add_entity(
+        event_type: EventType, resource: HueScene | HueSmartScene
+    ) -> None:
         """Add entity from Hue resource."""
         if isinstance(resource, HueSmartScene):
             async_add_entities([HueSmartSceneEntity(bridge, api.scenes, resource)])
@@ -61,7 +63,7 @@ async def async_setup_entry(
 
     # add all current items in controller
     for item in api.scenes:
-        async_add_entity(item)
+        async_add_entity(EventType.RESOURCE_ADDED, item)
 
     # register listener for new items only
     # (scene activation detection is handled by on_update() on existing entities)
