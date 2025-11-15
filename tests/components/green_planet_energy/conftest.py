@@ -44,6 +44,27 @@ def mock_api() -> Generator[MagicMock]:
 
     mock_api_instance.get_electricity_prices.return_value = all_prices
 
+    # Mock the calculation methods to return actual values (not coroutines)
+    # Highest price today: 0.20 + (23 * 0.01) = 0.43 at hour 23
+    mock_api_instance.get_highest_price_today.return_value = 0.43
+    mock_api_instance.get_highest_price_today_with_hour.return_value = (0.43, 23)
+
+    # Lowest price day (6-22): 0.20 + (6 * 0.01) = 0.26 at hour 6
+    mock_api_instance.get_lowest_price_day.return_value = 0.26
+    mock_api_instance.get_lowest_price_day_with_hour.return_value = (0.26, 6)
+
+    # Lowest price night (22-6): 0.20 + (0 * 0.01) = 0.20 at hour 0
+    mock_api_instance.get_lowest_price_night.return_value = 0.20
+    mock_api_instance.get_lowest_price_night_with_hour.return_value = (0.20, 0)
+
+    # Current price depends on the hour passed to the method
+    # Mock get_current_price to return the price for the requested hour
+    def get_current_price_mock(data, hour):
+        """Return price for a specific hour."""
+        return 0.20 + (hour * 0.01)
+
+    mock_api_instance.get_current_price.side_effect = get_current_price_mock
+
     with patch(
         "homeassistant.components.green_planet_energy.coordinator.GreenPlanetEnergyAPI",
         return_value=mock_api_instance,
