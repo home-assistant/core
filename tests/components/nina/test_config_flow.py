@@ -49,7 +49,7 @@ DUMMY_DATA: dict[str, Any] = {
 DUMMY_RESPONSE_REGIONS: dict[str, Any] = json.loads(
     load_fixture("sample_regions.json", "nina")
 )
-DUMMY_RESPONSE_WARNIGNS: dict[str, Any] = json.loads(
+DUMMY_RESPONSE_WARNINGS: dict[str, Any] = json.loads(
     load_fixture("sample_warnings.json", "nina")
 )
 
