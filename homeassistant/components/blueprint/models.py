@@ -28,6 +28,7 @@ from homeassistant.util import yaml as yaml_util
 from .const import (
     BLUEPRINT_FOLDER,
     CONF_BLUEPRINT,
+    CONF_DISCOVERY,
     CONF_HOMEASSISTANT,
     CONF_INPUT,
     CONF_MIN_VERSION,
@@ -104,6 +105,11 @@ class Blueprint:
             else:
                 inputs[key] = value
         return inputs
+
+    @property
+    def discovery(self) -> list[dict[str, Any]]:
+        """Return blueprint discovery selectors."""
+        return self.data[CONF_BLUEPRINT].get(CONF_DISCOVERY, [])  # type: ignore[no-any-return]
 
     @property
     def metadata(self) -> dict[str, Any]:

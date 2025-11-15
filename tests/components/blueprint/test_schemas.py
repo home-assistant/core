@@ -70,6 +70,25 @@ _LOGGER = logging.getLogger(__name__)
                 },
             }
         },
+        # With discovery selectors
+        {
+            "blueprint": {
+                "name": "Test Name",
+                "domain": "automation",
+                "discovery": [
+                    {"device": {"filter": {"integration": "mobile_app"}}},
+                    {"entity": {"filter": {"domain": "binary_sensor"}}},
+                ],
+            }
+        },
+        # With empty discovery
+        {
+            "blueprint": {
+                "name": "Test Name",
+                "domain": "automation",
+                "discovery": [],
+            }
+        },
     ],
 )
 def test_blueprint_schema(blueprint) -> None:

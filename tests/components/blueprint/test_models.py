@@ -131,6 +131,40 @@ def test_blueprint_update_metadata() -> None:
     assert bp.metadata["source_url"] == "http://bla.com"
 
 
+def test_blueprint_discovery() -> None:
+    """Test blueprint discovery property."""
+    # Test blueprint with discovery selectors
+    bp_with_discovery = models.Blueprint(
+        {
+            "blueprint": {
+                "name": "Hello",
+                "domain": "automation",
+                "discovery": [
+                    {"device": {"filter": {"integration": "mobile_app"}}},
+                    {"entity": {"filter": {"domain": "binary_sensor"}}},
+                ],
+            },
+        },
+        schema=BLUEPRINT_SCHEMA,
+    )
+    assert bp_with_discovery.discovery == [
+        {"device": {"filter": {"integration": "mobile_app"}}},
+        {"entity": {"filter": {"domain": "binary_sensor"}}},
+    ]
+
+    # Test blueprint without discovery selectors
+    bp_without_discovery = models.Blueprint(
+        {
+            "blueprint": {
+                "name": "Hello",
+                "domain": "automation",
+            },
+        },
+        schema=BLUEPRINT_SCHEMA,
+    )
+    assert bp_without_discovery.discovery == []
+
+
 def test_blueprint_validate() -> None:
     """Test validate blueprint."""
     assert (

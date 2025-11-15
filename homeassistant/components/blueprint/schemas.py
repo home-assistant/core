@@ -20,6 +20,7 @@ from .const import (
     CONF_AUTHOR,
     CONF_BLUEPRINT,
     CONF_COLLAPSED,
+    CONF_DISCOVERY,
     CONF_HOMEASSISTANT,
     CONF_INPUT,
     CONF_MIN_VERSION,
@@ -123,6 +124,7 @@ BLUEPRINT_SCHEMA = vol.Schema(
                     },
                     unique_input_validator,
                 ),
+                vol.Optional(CONF_DISCOVERY): [selector.validate_selector],
             }
         ),
     },
