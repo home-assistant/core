@@ -14,7 +14,12 @@ from tplink_omada_client.exceptions import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+    ServiceValidationError,
+)
 from homeassistant.helpers import device_registry as dr
 
 from .config_flow import CONF_SITE, create_omada_client
@@ -61,12 +66,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> boo
     entry.runtime_data = controller
 
     async def handle_reconnect_client(call: ServiceCall) -> None:
-        """Handle the service action call."""
+        """Handle the service action to force reconnection of a network client."""
         mac: str | None = call.data.get("mac")
         if not mac:
-            return
+            raise ServiceValidationError("MAC address is required")
 
-        await site_client.reconnect_client(mac)
+        try:
+            await site_client.reconnect_client(mac)
+        except OmadaClientException as ex:
+            raise HomeAssistantError("Failed to reconnect client") from ex
 
     hass.services.async_register(DOMAIN, "reconnect_client", handle_reconnect_client)
 
