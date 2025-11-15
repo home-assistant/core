@@ -116,10 +116,10 @@ class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
                     await nina.getAllRegionalCodes()
                 )
             except ApiError:
-                errors["base"] = "cannot_connect"
+                return self.async_abort(reason="no_fetch")
             except Exception as err:  # noqa: BLE001
                 _LOGGER.exception("Unexpected exception: %s", err)
-                errors["base"] = "unknown"
+                return self.async_abort(reason="unknown")
 
             self.regions = split_regions(self._all_region_codes_sorted, self.regions)
 
@@ -209,10 +209,10 @@ class OptionsFlowHandler(OptionsFlowWithReload):
                     await nina.getAllRegionalCodes()
                 )
             except ApiError:
-                errors["base"] = "cannot_connect"
+                return self.async_abort(reason="no_fetch")
             except Exception as err:  # noqa: BLE001
                 _LOGGER.exception("Unexpected exception: %s", err)
-                errors["base"] = "unknown"
+                return self.async_abort(reason="unknown")
 
             self.regions = split_regions(self._all_region_codes_sorted, self.regions)
 

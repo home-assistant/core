@@ -1,9 +1,11 @@
 {
   "config": {
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "no_selection": "Please select at least one city/county",
+    "abort": {
+      "no_fetch": "Cannot fetch city or counties",
       "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "error": {
+      "no_selection": "Please select at least one city/county"
     },
     "step": {
       "user": {
@@ -44,6 +46,10 @@
     }
   },
   "options": {
+    "abort": {
+      "no_fetch": "[%key:component::nina::config::abort::no_fetch%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "no_selection": "[%key:component::nina::config::error::no_selection%]",
