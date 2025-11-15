@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from bleak.backends.device import BLEDevice
 from pylamarzocco.const import FirmwareType, ModelName
 from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
 from pylamarzocco.models import WebSocketDetails
@@ -194,11 +195,27 @@ async def test_config_flow_entry_migration_downgrade(
     assert not await hass.config_entries.async_setup(entry.entry_id)
 
 
+@pytest.mark.parametrize(
+    ("ble_device", "has_client"),
+    [
+        (None, False),
+        (
+            BLEDevice(
+                address="aa:bb:cc:dd:ee:ff",
+                name="name",
+                details={},
+            ),
+            True,
+        ),
+    ],
+)
 async def test_bluetooth_is_set_from_discovery(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_lamarzocco: MagicMock,
     mock_cloud_client: MagicMock,
+    ble_device: BLEDevice | None,
+    has_client: bool,
 ) -> None:
     """Check we can fill a device from discovery info."""
 
@@ -214,13 +231,17 @@ async def test_bluetooth_is_set_from_discovery(
         patch(
             "homeassistant.components.lamarzocco.LaMarzoccoMachine"
         ) as mock_machine_class,
+        patch(
+            "homeassistant.components.lamarzocco.async_ble_device_from_address",
+            return_value=ble_device,
+        ),
     ):
         mock_machine_class.return_value = mock_lamarzocco
         await async_init_integration(hass, mock_config_entry)
     discovery.assert_called_once()
     assert mock_machine_class.call_count == 1
     _, kwargs = mock_machine_class.call_args
-    assert kwargs["bluetooth_client"] is not None
+    assert (kwargs["bluetooth_client"] is not None) == has_client
 
     assert mock_config_entry.data[CONF_MAC] == service_info.address
     assert mock_config_entry.data[CONF_TOKEN] == "token"

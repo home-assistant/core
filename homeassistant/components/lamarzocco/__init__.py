@@ -15,7 +15,10 @@ from pylamarzocco.const import FirmwareType
 from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
 from pylamarzocco.util import InstallationKey, generate_installation_key
 
-from homeassistant.components.bluetooth import async_discovered_service_info
+from homeassistant.components.bluetooth import (
+    async_ble_device_from_address,
+    async_discovered_service_info,
+)
 from homeassistant.const import (
     CONF_MAC,
     CONF_PASSWORD,
@@ -129,11 +132,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
             )
 
         if CONF_MAC in entry.data:
-            _LOGGER.debug("Initializing Bluetooth device")
-            bluetooth_client = LaMarzoccoBluetoothClient(
-                address_or_ble_device=entry.data[CONF_MAC],
-                ble_token=token,
-            )
+            ble_device = async_ble_device_from_address(hass, entry.data[CONF_MAC])
+            if ble_device:
+                _LOGGER.info("Configuring lamarzocco with Bluetooth")
+                bluetooth_client = LaMarzoccoBluetoothClient(
+                    ble_device=ble_device,
+                    ble_token=token,
+                )
+            else:
+                _LOGGER.info(
+                    "Bluetooth device not found during lamarzocco setup, continuing with cloud only"
+                )
 
     device = LaMarzoccoMachine(
         serial_number=entry.unique_id,
