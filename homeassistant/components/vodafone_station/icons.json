@@ -9,17 +9,17 @@
       }
     },
     "sensor": {
+      "active_connection": {
+        "default": "mdi:wan"
+      },
+      "external_ip_key": {
+        "default": "mdi:earth"
+      },
       "external_ipv4": {
         "default": "mdi:earth"
       },
       "external_ipv6": {
         "default": "mdi:earth"
-      },
-      "external_ip_key": {
-        "default": "mdi:earth"
-      },
-      "active_connection": {
-        "default": "mdi:wan"
       },
       "fw_version": {
         "default": "mdi:new-box"

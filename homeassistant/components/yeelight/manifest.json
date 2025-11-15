@@ -19,8 +19,8 @@
   "requirements": ["yeelight==0.7.16", "async-upnp-client==0.45.0"],
   "zeroconf": [
     {
-      "type": "_miio._udp.local.",
-      "name": "yeelink-*"
+      "name": "yeelink-*",
+      "type": "_miio._udp.local."
     }
   ]
 }

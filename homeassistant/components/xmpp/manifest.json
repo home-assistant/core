@@ -6,8 +6,5 @@
   "iot_class": "cloud_push",
   "loggers": ["pyasn1", "slixmpp"],
   "quality_scale": "legacy",
-  "requirements": [
-    "slixmpp==1.10.0;python_version<'3.14'",
-    "emoji==2.8.0;python_version<'3.14'"
-  ]
+  "requirements": ["slixmpp==1.12.0", "emoji==2.8.0"]
 }

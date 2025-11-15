@@ -7,6 +7,9 @@ import pytest
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
+)
 
 from tests.common import MockConfigEntry
 
@@ -56,11 +59,41 @@ async def test_config_implementation_not_available(
     """Test implementation not available."""
     config_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.xbox.coordinator.config_entry_oauth2_flow.async_get_config_entry_implementation",
-        side_effect=ValueError("Implementation not available"),
+        "homeassistant.components.xbox.coordinator.async_get_config_entry_implementation",
+        side_effect=ImplementationUnavailableError,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
 
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize("exception", [ConnectTimeout, HTTPStatusError, ProtocolError])
+@pytest.mark.parametrize(
+    ("provider", "method"),
+    [
+        ("smartglass", "get_console_status"),
+        ("catalog", "get_product_from_alternate_id"),
+        ("people", "get_friends_by_xuid"),
+        ("people", "get_friends_own"),
+    ],
+)
+async def test_coordinator_update_failed(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    xbox_live_client: AsyncMock,
+    exception: Exception,
+    provider: str,
+    method: str,
+) -> None:
+    """Test coordinator update failed."""
+
+    provider = getattr(xbox_live_client, provider)
+    getattr(provider, method).side_effect = exception
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY

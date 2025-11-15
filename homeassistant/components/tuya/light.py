@@ -24,11 +24,12 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import color as color_util
+from homeassistant.util.json import json_loads_object
 
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, DPType, WorkMode
 from .entity import TuyaEntity
-from .models import IntegerTypeData
+from .models import DPCodeBooleanWrapper, IntegerTypeData, find_dpcode
 from .util import get_dpcode, get_dptype, remap_value
 
 
@@ -240,6 +241,13 @@ LIGHTS: dict[DeviceCategory, tuple[TuyaLightEntityDescription, ...]] = {
             color_data=DPCode.COLOUR_DATA,
         ),
     ),
+    DeviceCategory.MSP: (
+        TuyaLightEntityDescription(
+            key=DPCode.LIGHT,
+            translation_key="light",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     DeviceCategory.QJDCZ: (
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED,
@@ -420,9 +428,15 @@ async def async_setup_entry(
             device = manager.device_map[device_id]
             if descriptions := LIGHTS.get(device.category):
                 entities.extend(
-                    TuyaLightEntity(device, manager, description)
+                    TuyaLightEntity(
+                        device, manager, description, switch_wrapper=switch_wrapper
+                    )
                     for description in descriptions
-                    if description.key in device.status
+                    if (
+                        switch_wrapper := DPCodeBooleanWrapper.find_dpcode(
+                            device, description.key, prefer_function=True
+                        )
+                    )
                 )
 
         async_add_entities(entities)
@@ -456,26 +470,33 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: TuyaLightEntityDescription,
+        *,
+        switch_wrapper: DPCodeBooleanWrapper,
     ) -> None:
         """Init TuyaHaLight."""
         super().__init__(device, device_manager)
         self.entity_description = description
         self._attr_unique_id = f"{super().unique_id}{description.key}"
+        self._switch_wrapper = switch_wrapper
+
         color_modes: set[ColorMode] = {ColorMode.ONOFF}
 
         # Determine DPCodes
         self._color_mode_dpcode = get_dpcode(self.device, description.color_mode)
 
-        if int_type := self.find_dpcode(
-            description.brightness, dptype=DPType.INTEGER, prefer_function=True
+        if int_type := find_dpcode(
+            self.device,
+            description.brightness,
+            dptype=DPType.INTEGER,
+            prefer_function=True,
         ):
             self._brightness = int_type
             color_modes.add(ColorMode.BRIGHTNESS)
-            self._brightness_max = self.find_dpcode(
-                description.brightness_max, dptype=DPType.INTEGER
+            self._brightness_max = find_dpcode(
+                self.device, description.brightness_max, dptype=DPType.INTEGER
             )
-            self._brightness_min = self.find_dpcode(
-                description.brightness_min, dptype=DPType.INTEGER
+            self._brightness_min = find_dpcode(
+                self.device, description.brightness_min, dptype=DPType.INTEGER
             )
 
         if (dpcode := get_dpcode(self.device, description.color_data)) and (
@@ -489,11 +510,11 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
                 values = self.device.status_range[dpcode].values
 
             # Fetch color data type information
-            if function_data := json.loads(values):
+            if function_data := json_loads_object(values):
                 self._color_data_type = ColorTypeData(
-                    h_type=IntegerTypeData(dpcode, **function_data["h"]),
-                    s_type=IntegerTypeData(dpcode, **function_data["s"]),
-                    v_type=IntegerTypeData(dpcode, **function_data["v"]),
+                    h_type=IntegerTypeData(dpcode, **cast(dict, function_data["h"])),
+                    s_type=IntegerTypeData(dpcode, **cast(dict, function_data["s"])),
+                    v_type=IntegerTypeData(dpcode, **cast(dict, function_data["v"])),
                 )
             else:
                 # If no type is found, use a default one
@@ -504,8 +525,11 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
                     self._color_data_type = DEFAULT_COLOR_TYPE_DATA_V2
 
         # Check if the light has color temperature
-        if int_type := self.find_dpcode(
-            description.color_temp, dptype=DPType.INTEGER, prefer_function=True
+        if int_type := find_dpcode(
+            self.device,
+            description.color_temp,
+            dptype=DPType.INTEGER,
+            prefer_function=True,
         ):
             self._color_temp = int_type
             color_modes.add(ColorMode.COLOR_TEMP)
@@ -514,8 +538,11 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         elif (
             color_supported(color_modes)
             and (
-                color_mode_enum := self.find_dpcode(
-                    description.color_mode, dptype=DPType.ENUM, prefer_function=True
+                color_mode_enum := find_dpcode(
+                    self.device,
+                    description.color_mode,
+                    dptype=DPType.ENUM,
+                    prefer_function=True,
                 )
             )
             and WorkMode.WHITE.value in color_mode_enum.range
@@ -529,13 +556,15 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
             self._fixed_color_mode = next(iter(self._attr_supported_color_modes))
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if light is on."""
-        return self.device.status.get(self.entity_description.key, False)
+        return self._read_wrapper(self._switch_wrapper)
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on or control the light."""
-        commands = [{"code": self.entity_description.key, "value": True}]
+        commands = [
+            self._switch_wrapper.get_update_command(self.device, True),
+        ]
 
         if self._color_mode_dpcode and (
             ATTR_WHITE in kwargs or ATTR_COLOR_TEMP_KELVIN in kwargs
@@ -656,9 +685,9 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
 
         self._send_command(commands)
 
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
-        self._send_command([{"code": self.entity_description.key, "value": False}])
+        await self._async_send_dpcode_update(self._switch_wrapper, False)
 
     @property
     def brightness(self) -> int | None:
@@ -754,12 +783,12 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         if not (status_data := self.device.status[self._color_data_dpcode]):
             return None
 
-        if not (status := json.loads(status_data)):
+        if not (status := json_loads_object(status_data)):
             return None
 
         return ColorData(
             type_data=self._color_data_type,
-            h_value=status["h"],
-            s_value=status["s"],
-            v_value=status["v"],
+            h_value=cast(int, status["h"]),
+            s_value=cast(int, status["s"]),
+            v_value=cast(int, status["v"]),
         )

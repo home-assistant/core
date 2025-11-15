@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from roborock.code_mappings import RoborockStateCode
+from roborock.data import RoborockStateCode
 from roborock.roborock_message import RoborockDataProtocol
 from roborock.roborock_typing import RoborockCommand
 import voluptuous as vol

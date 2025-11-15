@@ -1,5 +1,4 @@
 {
-  "title": "Random",
   "config": {
     "step": {
       "binary_sensor": {
@@ -12,9 +11,9 @@
       "sensor": {
         "data": {
           "device_class": "Device class",
-          "name": "[%key:common::config_flow::data::name%]",
-          "minimum": "Minimum",
           "maximum": "Maximum",
+          "minimum": "Minimum",
+          "name": "[%key:common::config_flow::data::name%]",
           "unit_of_measurement": "Unit of measurement"
         },
         "title": "Random sensor"
@@ -32,14 +31,14 @@
   "options": {
     "step": {
       "binary_sensor": {
-        "title": "[%key:component::random::config::step::binary_sensor::title%]",
-        "description": "This helper does not have any options."
+        "description": "This helper does not have any options.",
+        "title": "[%key:component::random::config::step::binary_sensor::title%]"
       },
       "sensor": {
         "data": {
           "device_class": "[%key:component::random::config::step::sensor::data::device_class%]",
-          "minimum": "[%key:component::random::config::step::sensor::data::minimum%]",
           "maximum": "[%key:component::random::config::step::sensor::data::maximum%]",
+          "minimum": "[%key:component::random::config::step::sensor::data::minimum%]",
           "unit_of_measurement": "[%key:component::random::config::step::sensor::data::unit_of_measurement%]"
         },
         "title": "[%key:component::random::config::step::sensor::title%]"
@@ -53,8 +52,8 @@
         "battery": "[%key:component::binary_sensor::entity_component::battery::name%]",
         "battery_charging": "[%key:component::binary_sensor::entity_component::battery_charging::name%]",
         "carbon_monoxide": "[%key:component::binary_sensor::entity_component::carbon_monoxide::name%]",
-        "connectivity": "[%key:component::binary_sensor::entity_component::connectivity::name%]",
         "cold": "[%key:component::binary_sensor::entity_component::cold::name%]",
+        "connectivity": "[%key:component::binary_sensor::entity_component::connectivity::name%]",
         "door": "[%key:component::binary_sensor::entity_component::door::name%]",
         "garage_door": "[%key:component::binary_sensor::entity_component::garage_door::name%]",
         "gas": "[%key:component::binary_sensor::entity_component::gas::name%]",
@@ -114,9 +113,9 @@
         "ozone": "[%key:component::sensor::entity_component::ozone::name%]",
         "ph": "[%key:component::sensor::entity_component::ph::name%]",
         "pm1": "[%key:component::sensor::entity_component::pm1::name%]",
-        "pm4": "[%key:component::sensor::entity_component::pm4::name%]",
         "pm10": "[%key:component::sensor::entity_component::pm10::name%]",
         "pm25": "[%key:component::sensor::entity_component::pm25::name%]",
+        "pm4": "[%key:component::sensor::entity_component::pm4::name%]",
         "power": "[%key:component::sensor::entity_component::power::name%]",
         "power_factor": "[%key:component::sensor::entity_component::power_factor::name%]",
         "precipitation": "[%key:component::sensor::entity_component::precipitation::name%]",
@@ -142,5 +141,6 @@
         "wind_speed": "[%key:component::sensor::entity_component::wind_speed::name%]"
       }
     }
-  }
+  },
+  "title": "Random"
 }

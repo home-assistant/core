@@ -37,10 +37,10 @@ on:
         type: boolean
 
 env:
-  CACHE_VERSION: 9
+  CACHE_VERSION: 2
   UV_CACHE_VERSION: 1
   MYPY_CACHE_VERSION: 1
-  HA_SHORT_VERSION: "2025.11"
+  HA_SHORT_VERSION: "2025.12"
   DEFAULT_PYTHON: "3.13"
   ALL_PYTHON_VERSIONS: "['3.13', '3.14']"
   # 10.3 is the oldest supported version
@@ -364,13 +364,13 @@ jobs:
       - name: Run check-json
         run: |
           . venv/bin/activate
-          pre-commit run --hook-stage manual check-json --all-files
+          pre-commit run --hook-stage manual check-json --all-files --show-diff-on-failure
 
       - name: Run prettier (fully)
         if: needs.info.outputs.test_full_suite == 'true'
         run: |
           . venv/bin/activate
-          pre-commit run --hook-stage manual prettier --all-files
+          pre-commit run --hook-stage manual prettier --all-files --show-diff-on-failure
 
       - name: Run prettier (partially)
         if: needs.info.outputs.test_full_suite == 'false'
@@ -378,7 +378,7 @@ jobs:
         run: |
           . venv/bin/activate
           shopt -s globstar
-          pre-commit run --hook-stage manual prettier --files {homeassistant,tests}/components/${{ needs.info.outputs.integrations_glob }}/{*,**/*}
+          pre-commit run --hook-stage manual prettier --show-diff-on-failure --files {homeassistant,tests}/components/${{ needs.info.outputs.integrations_glob }}/{*,**/*}
 
       - name: Register check executables problem matcher
         run: |
@@ -386,7 +386,7 @@ jobs:
       - name: Run executables check
         run: |
           . venv/bin/activate
-          pre-commit run --hook-stage manual check-executables-have-shebangs --all-files
+          pre-commit run --hook-stage manual check-executables-have-shebangs --all-files --show-diff-on-failure
 
       - name: Register codespell problem matcher
         run: |
@@ -502,7 +502,6 @@ jobs:
             libavfilter-dev \
             libavformat-dev \
             libavutil-dev \
-            libgammu-dev \
             libswresample-dev \
             libswscale-dev \
             libudev-dev
@@ -535,7 +534,7 @@ jobs:
           python --version
           uv pip freeze >> pip_freeze.txt
       - name: Upload pip_freeze artifact
-        uses: &actions-upload-artifact actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: &actions-upload-artifact actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
           name: pip-freeze-${{ matrix.python-version }}
           path: pip_freeze.txt
@@ -623,7 +622,7 @@ jobs:
     steps:
       - *checkout
       - name: Dependency review
-        uses: actions/dependency-review-action@40c09b7dc99638e5ddb0bfd91c1673effc064d8a # v4.8.1
+        uses: actions/dependency-review-action@3c4e3dcb1aa7874d2c16be7d79418e9b7efd6261 # v4.8.2
         with:
           license-check: false # We use our own license audit checks
 
@@ -801,8 +800,7 @@ jobs:
             -o Dir::State::Lists=${{ env.APT_LIST_CACHE_DIR }} \
             bluez \
             ffmpeg \
-            libturbojpeg \
-            libgammu-dev
+            libturbojpeg
       - *checkout
       - *setup-python-default
       - *cache-restore-python-default
@@ -853,7 +851,6 @@ jobs:
             bluez \
             ffmpeg \
             libturbojpeg \
-            libgammu-dev \
             libxml2-utils
       - *checkout
       - *setup-python-matrix
@@ -867,7 +864,7 @@ jobs:
         run: |
           echo "::add-matcher::.github/workflows/matchers/pytest-slow.json"
       - name: Download pytest_buckets
-        uses: &actions-download-artifact actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        uses: &actions-download-artifact actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
         with:
           name: pytest_buckets
       - &compile-english-translations
@@ -1233,7 +1230,6 @@ jobs:
             bluez \
             ffmpeg \
             libturbojpeg \
-            libgammu-dev \
             libxml2-utils
       - *checkout
       - *setup-python-matrix
