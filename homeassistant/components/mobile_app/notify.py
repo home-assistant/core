@@ -15,7 +15,6 @@ from homeassistant.components.notify import (
     ATTR_TARGET,
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
-    DOMAIN as NOTIFY_DOMAIN,
     BaseNotificationService,
     NotifyEntity,
     NotifyEntityFeature,
@@ -24,7 +23,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_UNIQUE_ID, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -111,20 +109,10 @@ async def async_setup_entry(
     if not supports_push(hass, config_entry.data[CONF_WEBHOOK_ID]):
         return
 
-    entity_registry = er.async_get(hass)
-    entries = er.async_entries_for_config_entry(entity_registry, config_entry.entry_id)
-    notifiers = list(filter(lambda x: x.domain == NOTIFY_DOMAIN, entries))
-
-    if not notifiers:
-        config = {
-            CONF_UNIQUE_ID: f"{config_entry.unique_id}_notify",
-            CONF_NAME: "Notify",
-        }
-    else:
-        config = {
-            CONF_UNIQUE_ID: f"{config_entry.unique_id}_notify",
-            CONF_NAME: "Notify",
-        }
+    config = {
+        CONF_UNIQUE_ID: f"{config_entry.unique_id}_notify",
+        CONF_NAME: "Notify",
+    }
 
     async_add_entities([MobileAppNotifyEntity(config, config_entry)])
     return
