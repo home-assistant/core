@@ -243,7 +243,7 @@ async def test_block_event_shix3_1(
     monkeypatch.setattr(mock_block_device, "blocks", blocks)
     await init_integration(hass, 1, model=MODEL_I3)
 
-    assert (state := hass.states.get("event.test_name_input_1"))
+    assert (state := hass.states.get("event.test_name_tv_leds"))
     assert state.attributes.get(ATTR_EVENT_TYPES) == unordered(
         ["double", "long", "long_single", "single", "single_long", "triple"]
     )

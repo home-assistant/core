@@ -120,13 +120,13 @@ def get_number_of_channels(device: BlockDevice, block: Block) -> int:
 def get_block_entity_name(
     device: BlockDevice,
     block: Block | None,
-    description: str | UndefinedType | None = None,
+    name: str | UndefinedType | None = None,
 ) -> str | None:
     """Naming for block based switch and sensors."""
     channel_name = get_block_channel_name(device, block)
 
-    if description is not UNDEFINED and description:
-        return f"{channel_name} {description.lower()}" if channel_name else description
+    if name is not UNDEFINED and name:
+        return f"{channel_name} {name.lower()}" if channel_name else name
 
     return channel_name
 

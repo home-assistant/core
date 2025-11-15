@@ -42,9 +42,21 @@ MOCK_SETTINGS = {
     "coiot": {"update_period": 15},
     "fw": "20201124-092159/v1.9.0@57ac4ad8",
     "inputs": [
-        {"btn_type": "momentary"},
-        {"name": "Test input 1", "btn_type": "momentary"},
-        {"name": "Test input 2", "btn_type": "momentary"},
+        {
+            "name": "TV LEDs",
+            "btn_type": "momentary",
+            "btn_reverse": 0,
+        },
+        {
+            "name": "TV Spots",
+            "btn_type": "momentary",
+            "btn_reverse": 0,
+        },
+        {
+            "name": None,
+            "btn_type": "momentary",
+            "btn_reverse": 0,
+        },
     ],
     "relays": [{"btn_type": "momentary"}, {"btn_type": "toggle"}],
     "rollers": [{"positioning": True}],
