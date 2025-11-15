@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 from typing import TYPE_CHECKING
 
 from tplink_omada_client import OmadaSiteClient
-from tplink_omada_client.devices import OmadaSwitch
+from tplink_omada_client.devices import OmadaListDevice, OmadaSwitch
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 if TYPE_CHECKING:
     from . import OmadaConfigEntry
@@ -57,6 +60,55 @@ class OmadaSiteController:
             await self._gateway_coordinator.async_config_entry_first_refresh()
 
         await self.clients_coordinator.async_config_entry_first_refresh()
+
+    async def async_register_device_entities(
+        self,
+        add_entities: AddConfigEntryEntitiesCallback,
+        device_filter: Callable[[OmadaListDevice], bool],
+        entity_callback: Callable[[OmadaListDevice], Awaitable[list[Entity]]],
+    ) -> None:
+        """Register entities for devices matching the given filter.
+
+        Allows us to handle newly commissioned devices, and devices that aren't
+        currently in a queryable state.
+
+        Args:
+            add_entities: Callback to add entities to Home Assistant.
+            device_filter: Function that returns True if a device should be processed.
+            entity_callback: Given an Omada device, returns a list of entities to create.
+        """
+        # Track which devices have been processed already
+        processed_devices: set[str] = set()
+
+        async def _async_register_entities() -> None:
+            """Register entities for devices that match the filter."""
+            devices_to_process = [
+                device
+                for device in self._devices_coordinator.data.values()
+                if device_filter(device) and device.mac not in processed_devices
+            ]
+
+            if not devices_to_process:
+                return
+
+            entities: list = []
+            for device in devices_to_process:
+                processed_devices.add(device.mac)
+                device_entities = await entity_callback(device)
+                entities.extend(device_entities)
+
+            add_entities(entities)
+
+        @callback
+        def _handle_devices_update() -> None:
+            self._config_entry.async_create_task(self._hass, _async_register_entities())
+
+        self._config_entry.async_on_unload(
+            self._devices_coordinator.async_add_listener(_handle_devices_update)
+        )
+
+        # Call once on initial setup
+        await _async_register_entities()
 
     @property
     def omada_client(self) -> OmadaSiteClient:

@@ -16,6 +16,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
@@ -64,11 +65,20 @@ async def async_setup_entry(
 
     devices_coordinator = controller.devices_coordinator
 
-    async_add_entities(
-        OmadaDeviceSensor(devices_coordinator, device, desc)
-        for device in devices_coordinator.data.values()
-        for desc in OMADA_DEVICE_SENSORS
-        if desc.exists_func(device)
+    async def _create_device_sensor_entities(
+        device: OmadaListDevice,
+    ) -> list[Entity]:
+        """Create sensor entities for a device."""
+        return [
+            OmadaDeviceSensor(devices_coordinator, device, desc)
+            for desc in OMADA_DEVICE_SENSORS
+            if desc.exists_func(device)
+        ]
+
+    await controller.async_register_device_entities(
+        async_add_entities,
+        lambda _: True,
+        _create_device_sensor_entities,
     )
 
 
