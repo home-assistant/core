@@ -1,7 +1,4 @@
 {
-  "common": {
-    "cavity_01": "Second cavity"
-  },
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
@@ -67,7 +64,7 @@
         "name": "Keep fresh mode active"
       },
       "oven_cavity_status": {
-        "name": "[%key:component::smartthings::common::cavity_01%] status"
+        "name": "Second cavity status"
       },
       "remote_control": {
         "name": "Remote control"
@@ -472,7 +469,7 @@
         "name": "Odor sensor"
       },
       "oven_completion_time_cavity_01": {
-        "name": "[%key:component::smartthings::common::cavity_01%] [%key:component::smartthings::entity::sensor::completion_time::name%]"
+        "name": "Second cavity completion time"
       },
       "oven_job_state": {
         "name": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::name%]",
@@ -497,7 +494,7 @@
         }
       },
       "oven_job_state_cavity_01": {
-        "name": "[%key:component::smartthings::common::cavity_01%] [%key:component::smartthings::entity::sensor::oven_job_state::name%]",
+        "name": "Second cavity job state",
         "state": {
           "cleaning": "[%key:component::smartthings::entity::sensor::oven_job_state::state::cleaning%]",
           "cooking": "[%key:component::smartthings::entity::sensor::oven_job_state::state::cooking%]",
@@ -527,11 +524,11 @@
         }
       },
       "oven_machine_state_cavity_01": {
-        "name": "[%key:component::smartthings::common::cavity_01%] [%key:component::smartthings::entity::sensor::oven_machine_state::name%]",
+        "name": "Second cavity machine state",
         "state": {
-          "paused": "[%key:component::smartthings::entity::sensor::oven_machine_state::state::paused%]",
+          "paused": "[%key:common::state::paused%]",
           "ready": "[%key:component::smartthings::entity::sensor::oven_machine_state::state::ready%]",
-          "running": "[%key:component::smartthings::entity::sensor::oven_machine_state::state::running%]"
+          "running": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::state::run%]"
         }
       },
       "oven_mode": {
@@ -569,7 +566,7 @@
         }
       },
       "oven_mode_cavity_01": {
-        "name": "[%key:component::smartthings::common::cavity_01%] [%key:component::smartthings::entity::sensor::oven_mode::name%]",
+        "name": "Second cavity oven mode",
         "state": {
           "bake": "[%key:component::smartthings::entity::sensor::oven_mode::state::bake%]",
           "bottom_heat": "[%key:component::smartthings::entity::sensor::oven_mode::state::bottom_heat%]",
@@ -606,10 +603,10 @@
         "name": "Setpoint"
       },
       "oven_setpoint_cavity_01": {
-        "name": "[%key:component::smartthings::common::cavity_01%] [%key:component::smartthings::entity::sensor::oven_setpoint::name%]"
+        "name": "Second cavity setpoint"
       },
       "oven_temperature_cavity_01": {
-        "name": "[%key:component::smartthings::common::cavity_01%] Temperature"
+        "name": "Second cavity temperature"
       },
       "power_energy": {
         "name": "Power energy"
