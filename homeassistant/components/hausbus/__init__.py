@@ -12,7 +12,6 @@ from homeassistant.helpers import config_validation as cv
 from .const import DOMAIN
 from .gateway import HausbusGateway
 
-CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 PLATFORMS: list[Platform] = [
     Platform.COVER,
