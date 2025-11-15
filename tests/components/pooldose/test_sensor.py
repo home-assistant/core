@@ -243,8 +243,8 @@ async def test_device_unit_change_behavior(
     changed_data = coordinator.data.copy()
     changed_data["sensor"]["temperature"]["unit"] = "°F"
     changed_data["sensor"]["temperature"]["value"] = 77.0  # 25°C in °F
-    changed_data["sensor"]["flow_rate"]["unit"] = "L/min"
-    changed_data["sensor"]["flow_rate"]["value"] = 9000.0
+    changed_data["sensor"]["flow_rate"]["unit"] = "m3/h"
+    changed_data["sensor"]["flow_rate"]["value"] = 540.0
 
     mock_pooldose_client.instant_values_structured.return_value = (
         RequestStatus.SUCCESS,
@@ -267,5 +267,5 @@ async def test_device_unit_change_behavior(
     assert float(temp_state_after.state) == 25.0
 
     # Flow rate changes both value and unit
-    assert float(flow_state_after.state) == 9000.0
-    assert flow_state_after.attributes["unit_of_measurement"] == "L/min"
+    assert float(flow_state_after.state) == 540.0
+    assert flow_state_after.attributes["unit_of_measurement"] == "m³/h"

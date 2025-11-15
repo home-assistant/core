@@ -203,7 +203,7 @@
     'supported_features': 0,
     'translation_key': 'flow_rate',
     'unique_id': 'TEST123456789_flow_rate',
-    'unit_of_measurement': 'L/s',
+    'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_SECOND: 'L/s'>,
   })
 # ---
 # name: test_all_sensors[sensor.pool_device_flow_rate-state]
@@ -211,7 +211,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'volume_flow_rate',
       'friendly_name': 'Pool Device Flow rate',
-      'unit_of_measurement': 'L/s',
+      'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_SECOND: 'L/s'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.pool_device_flow_rate',
