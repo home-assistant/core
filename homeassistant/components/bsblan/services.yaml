@@ -1,0 +1,7 @@
+sync_time:
+  fields:
+    config_entry_id:
+      example: "abc123def456"
+      selector:
+        config_entry:
+          integration: bsblan
