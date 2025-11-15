@@ -124,11 +124,11 @@
     "account_not_configured": {
       "message": "The Xbox account is not configured."
     },
-    "media_not_found": {
-      "message": "The requested media could not be found."
-    },
     "auth_exception": {
       "message": "Xbox Network authentication failed, re-authentication required"
+    },
+    "media_not_found": {
+      "message": "The requested media could not be found."
     },
     "oauth2_implementation_unavailable": {
       "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
