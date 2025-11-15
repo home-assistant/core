@@ -29,7 +29,8 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture
 def mock_api() -> Generator[MagicMock]:
     """Create a mocked Green Planet Energy API."""
-    mock_api_instance = AsyncMock()
+    # Use MagicMock instead of AsyncMock for sync methods
+    mock_api_instance = MagicMock()
 
     # Mock the API response data
     # Today's prices: 0.20 + (hour * 0.01)
@@ -42,7 +43,8 @@ def mock_api() -> Generator[MagicMock]:
     # Combine all prices
     all_prices = {**today_prices, **tomorrow_prices}
 
-    mock_api_instance.get_electricity_prices.return_value = all_prices
+    # Make get_electricity_prices async since coordinator uses it
+    mock_api_instance.get_electricity_prices = AsyncMock(return_value=all_prices)
 
     # Mock the calculation methods to return actual values (not coroutines)
     # Highest price today: 0.20 + (23 * 0.01) = 0.43 at hour 23
