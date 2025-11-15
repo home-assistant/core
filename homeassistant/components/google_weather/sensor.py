@@ -201,20 +201,19 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add Google Weather entities from a config_entry."""
-    entities = []
     for subentry in entry.subentries.values():
         subentry_runtime_data = entry.runtime_data.subentries_runtime_data[
             subentry.subentry_id
         ]
         coordinator = subentry_runtime_data.coordinator_observation
-        sensors = [
-            GoogleWeatherSensor(coordinator, subentry, description)
-            for description in SENSOR_TYPES
-            if description.value_fn(coordinator.data) is not None
-        ]
-        entities.extend(sensors)
-
-    async_add_entities(entities)
+        async_add_entities(
+            (
+                GoogleWeatherSensor(coordinator, subentry, description)
+                for description in SENSOR_TYPES
+                if description.value_fn(coordinator.data) is not None
+            ),
+            config_subentry_id=subentry.subentry_id,
+        )
 
 
 class GoogleWeatherSensor(
