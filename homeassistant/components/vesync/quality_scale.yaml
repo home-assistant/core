@@ -7,10 +7,10 @@ rules:
   config-flow-test-coverage:
   config-flow: done
   dependency-transparency: done
-  docs-actions:
-  docs-high-level-description:
-  docs-installation-instructions:
-  docs-removal-instructions:
+  docs-actions: done
+  docs-high-level-description: todo
+  docs-installation-instructions: todo
+  docs-removal-instructions: todo
   entity-event-setup:
     status: exempt
     comment: No events used.
@@ -25,7 +25,11 @@ rules:
   action-exceptions: todo
   config-entry-unloading: done
   docs-configuration-parameters:
+    status: exempt
+    comment: No configuration parameters.
   docs-installation-parameters:
+    status: exempt
+    comment: No installation parameters beyond username password.
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: todo
@@ -42,13 +46,13 @@ rules:
   discovery:
     status: exempt
     comment: Cloud based connection, no local discovery
-  docs-data-update:
-  docs-examples:
-  docs-known-limitations:
-  docs-supported-devices:
-  docs-supported-functions:
-  docs-troubleshooting:
-  docs-use-cases:
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
   dynamic-devices: todo
   entity-category: todo
   entity-device-class: todo
