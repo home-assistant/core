@@ -11,7 +11,9 @@ rules:
   docs-high-level-description:
   docs-installation-instructions:
   docs-removal-instructions:
-  entity-event-setup: done
+  entity-event-setup:
+    status: exempt
+    comment: No events used.
   entity-unique-id: done
   has-entity-name: done
   runtime-data: todo
