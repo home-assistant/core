@@ -91,5 +91,17 @@
     "setup_general_error": {
       "message": "An unknown error occurred while retrieving static device data"
     }
+  },
+  "services": {
+    "sync_time": {
+      "description": "Synchronize Home Assistant time to the BSB-Lan device. Only updates if device time differs from Home Assistant time.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The config entry ID of the BSB-Lan device. If not specified, syncs time for all BSB-Lan devices.",
+          "name": "Config entry"
+        }
+      },
+      "name": "Sync time"
+    }
   }
 }
