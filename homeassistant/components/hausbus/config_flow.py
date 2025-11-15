@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_SCHEMA = vol.Schema({})
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class HausBusConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for hausbus."""
 
     def __init__(self) -> None:
