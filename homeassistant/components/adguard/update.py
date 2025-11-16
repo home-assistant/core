@@ -35,6 +35,7 @@ class AdGuardHomeUpdate(AdGuardHomeEntity, UpdateEntity):
     """Defines a AdGuard Home update."""
 
     _attr_supported_features = UpdateEntityFeature.INSTALL
+    _attr_name = None
 
     def __init__(
         self,
