@@ -128,6 +128,9 @@
       "sms_messages_sim": {
         "default": "mdi:email-arrow-left"
       },
+      "sms_new": {
+        "default": "mdi:email-arrow-left"
+      },
       "sms_outbox_device": {
         "default": "mdi:email-arrow-right"
       },

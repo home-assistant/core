@@ -34,6 +34,19 @@
   },
   "entity": {
     "sensor": {
+      "cl": {
+        "name": "Chlorine"
+      },
+      "cl_type_dosing": {
+        "name": "Chlorine dosing type",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]"
+        }
+      },
+      "flow_rate": {
+        "name": "Flow rate"
+      },
       "ofa_orp_time": {
         "name": "ORP overfeed alert time"
       },
@@ -62,6 +75,15 @@
         "state": {
           "high": "[%key:common::state::high%]",
           "low": "[%key:common::state::low%]"
+        }
+      },
+      "peristaltic_cl_dosing": {
+        "name": "Chlorine peristaltic dosing",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on_off": "[%key:component::pooldose::entity::sensor::peristaltic_ph_dosing::state::on_off%]",
+          "proportional": "[%key:component::pooldose::entity::sensor::peristaltic_ph_dosing::state::proportional%]",
+          "timed": "[%key:component::pooldose::entity::sensor::peristaltic_ph_dosing::state::timed%]"
         }
       },
       "peristaltic_orp_dosing": {
