@@ -9,7 +9,7 @@ from typing import Any
 from pyhausbus.HomeServer import HomeServer
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN

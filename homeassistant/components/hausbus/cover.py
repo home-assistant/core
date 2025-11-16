@@ -43,14 +43,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up a cover from a config entry."""
 
-    gateway = config_entry.runtime_data
-
-    async def async_add_cover(channel: HausbusEntity) -> None:
-        """Add cover entity."""
-        if isinstance(channel, HausbusCover):
-            async_add_entities([channel])
-
-    gateway.register_platform_add_channel_callback(async_add_cover, COVER_DOMAIN)
+    LOGGER.debug("async_setup_entry cover")
+    HausbusEntity.add_add_entities_callback(COVER_DOMAIN, async_add_entities)
 
 
 class HausbusCover(HausbusEntity, CoverEntity):
@@ -58,7 +52,8 @@ class HausbusCover(HausbusEntity, CoverEntity):
 
     def __init__(self, channel: Rollladen, device_info: DeviceInfo) -> None:
         """Set up cover."""
-        super().__init__(channel, device_info)
+
+        super().__init__(channel, COVER_DOMAIN, device_info)
 
         self._attr_device_class = CoverDeviceClass.SHUTTER
         self._attr_supported_features = (
@@ -96,23 +91,25 @@ class HausbusCover(HausbusEntity, CoverEntity):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Opens the cover."""
-        LOGGER.debug("%s: opening cover", self.name)
+        LOGGER.debug("opening cover %s", self._debug_identifier)
         self._channel.start(EDirection.TO_OPEN)
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Closes the cover."""
-        LOGGER.debug("%s: closing cover", self.name)
+        LOGGER.debug("closing cover %s", self._debug_identifier)
         self._channel.start(EDirection.TO_CLOSE)
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stops the actual cover movevent."""
-        LOGGER.debug("%s: stop cover", self.name)
+        LOGGER.debug("stop cover %s", self._debug_identifier)
         self._channel.stop()
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Moves cover to the given position."""
         position = kwargs.get("position")
-        LOGGER.debug("%s: set cover position to %s", self.name, position)
+        LOGGER.debug(
+            "set cover position to %s for %s", position, self._debug_identifier
+        )
 
         if position is None:
             return
@@ -123,6 +120,9 @@ class HausbusCover(HausbusEntity, CoverEntity):
 
     def handle_event(self, data: Any) -> None:
         """Handle haus-bus cover events."""
+
+        super().handle_event(data)
+
         if isinstance(data, EvStart):
             direction = data.getDirection()
             if direction is EDirection.TO_OPEN:
@@ -134,18 +134,22 @@ class HausbusCover(HausbusEntity, CoverEntity):
             else:
                 LOGGER.debug("unexpected direction %s", direction)
             self.schedule_update_ha_state()
+
         elif isinstance(data, EvClosed):
             self._is_opening = False
             self._is_closing = False
             self._position = 100 - data.getPosition()
             self.schedule_update_ha_state()
+
         elif isinstance(data, EvOpen):
             self._is_opening = False
             self._is_closing = False
             self._position = 100
             self.schedule_update_ha_state()
+
         elif isinstance(data, Status):
             self._position = 100 - data.getPosition()
             self.schedule_update_ha_state()
+
         elif isinstance(data, Configuration):
             self._configuration = data

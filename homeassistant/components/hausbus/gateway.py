@@ -3,9 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine
 import logging
-from typing import Any
 
 from pyhausbus.ABusFeature import ABusFeature
 from pyhausbus.BusDataMessage import BusDataMessage
@@ -17,11 +15,11 @@ from pyhausbus.HomeServer import HomeServer
 from pyhausbus.IBusDataListener import IBusDataListener
 from pyhausbus.ObjectId import ObjectId
 
-from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import DOMAIN
 from .cover import HausbusCover, Rollladen
@@ -38,16 +36,13 @@ class HausbusGateway(IBusDataListener):
 
         self.hass = hass
         self.config_entry = config_entry
-        self.channels: dict[int, HausbusEntity] = {}  # maps object_id and entities
 
         self.home_server = HomeServer()
         self.home_server.addBusEventListener(self)
         self.home_server.addBusDeviceListener(self)
 
-        # callbacks to dynamically register new entities discovered by this gateway
-        self._new_channel_listeners: dict[
-            str, Callable[[HausbusEntity], Coroutine[Any, Any, None]]
-        ] = {}
+        # to prevent duplicate channels but to allow to add channels even if it was registered before
+        self.registered_channels: set[int] = set()
 
     async def start_discovery(self):
         """Starts device discovery."""
@@ -88,43 +83,29 @@ class HausbusGateway(IBusDataListener):
             hw_version=module_id.getName(),
         )
 
-        # register device
         asyncio.run_coroutine_threadsafe(
-            self.async_create_device_registry(device_id, device_info), self.hass.loop
+            self.async_register_device(device_id, device_info), self.hass.loop
         ).result()
 
         for channel in channels:
-            LOGGER.debug(
-                "device %s reported channel %s",
-                device_id,
-                channel.getName(),
-            )
-            self.add_channel(channel, device_info)
+            object_id = channel.getObjectId()
+            if object_id not in self.registered_channels:
+                self.registered_channels.add(object_id)
 
-    def add_channel(self, instance: ABusFeature, device_info: DeviceInfo) -> None:
-        """Create HA entity for provided device channel."""
+                new_entity = None
 
-        object_id = instance.getObjectId()
+                # COVER
+                if isinstance(channel, Rollladen):
+                    new_entity = HausbusCover(channel, device_info)
 
-        if object_id not in self.channels:
-            new_channel = None
-
-            # COVER
-            if isinstance(instance, Rollladen):
-                new_channel = HausbusCover(instance, device_info)
-                new_domain = COVER_DOMAIN
-            else:
-                return
-
-            if new_channel is not None:
-                LOGGER.debug("create %s channel for %s", new_domain, instance)
-                self.channels[object_id] = new_channel
-                asyncio.run_coroutine_threadsafe(
-                    self._new_channel_listeners[new_domain](new_channel), self.hass.loop
-                ).result()
-                new_channel.get_hardware_status()
-            else:
-                LOGGER.debug("no entity created for %s", instance)
+                if new_entity is not None:
+                    asyncio.run_coroutine_threadsafe(
+                        HausbusEntity.register_entity(new_entity), self.hass.loop
+                    ).result()
+                    new_entity.get_hardware_status()
+                    LOGGER.debug("created %s for %s", new_entity.get_domain(), channel)
+                else:
+                    LOGGER.debug("no entity created for %s", channel)
 
     def busDataReceived(self, busDataMessage: BusDataMessage) -> None:
         """Handle Haus-Bus messages."""
@@ -140,28 +121,26 @@ class HausbusGateway(IBusDataListener):
         LOGGER.debug("busDataReceived: data %s from %s", data, object_id)
 
         # pass events to corresponding channel
-        channel = self.channels.get(object_id.getValue())
+        self.hass.loop.call_soon_threadsafe(
+            async_dispatcher_send,
+            self.hass,
+            f"hausbus_update_{object_id.getValue()}",
+            data,
+        )
 
-        if isinstance(channel, HausbusEntity):
-            LOGGER.debug("handle_event %s %s", channel, data)
-            channel.handle_event(data)
-        else:
-            LOGGER.debug("no corresponding channel")
-
-    def register_platform_add_channel_callback(
-        self,
-        add_channel_callback: Callable[[HausbusEntity], Coroutine[Any, Any, None]],
-        platform: str,
-    ) -> None:
-        """Register add channel callbacks."""
-        self._new_channel_listeners[platform] = add_channel_callback
-
-    async def async_create_device_registry(
-        self, device_id: int, device_info: DeviceInfo
-    ):
+    async def async_register_device(self, device_id: int, device_info: DeviceInfo):
         """Creates a device in the hass registry."""
 
         device_registry = dr.async_get(self.hass)
+
+        device = device_registry.async_get_device(
+            identifiers={(DOMAIN, str(device_id))},
+            connections=None,
+        )
+
+        if device is not None:
+            LOGGER.debug("device %s already registered", device_id)
+            return
 
         device_entry = device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
