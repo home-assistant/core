@@ -30,6 +30,7 @@ from homeassistant.components.telegram_bot.const import (
     ATTR_CHAT_ID,
     ATTR_DISABLE_NOTIF,
     ATTR_DISABLE_WEB_PREV,
+    ATTR_ENTITY_ID,
     ATTR_FILE,
     ATTR_KEYBOARD,
     ATTR_KEYBOARD_INLINE,
@@ -75,7 +76,7 @@ from homeassistant.components.telegram_bot.const import (
     SERVICE_SEND_VOICE,
 )
 from homeassistant.components.telegram_bot.webhooks import TELEGRAM_WEBHOOK_URL
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER, ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_PLATFORM,
@@ -183,14 +184,14 @@ async def test_send_message(
     config_entry = hass.config_entries.async_entry_for_domain_unique_id(
         DOMAIN, "1234567890:ABC"
     )
+    assert config_entry is not None
     assert events[0].data["bot"]["config_entry_id"] == config_entry.entry_id
     assert events[0].data["bot"]["id"] == 123456
     assert events[0].data["bot"]["first_name"] == "Testbot"
     assert events[0].data["bot"]["last_name"] == "mock last name"
     assert events[0].data["bot"]["username"] == "mock username"
 
-    assert len(response["chats"]) == 1
-    assert (response["chats"][0]["message_id"]) == 12345
+    assert response == {"chats": [{"chat_id": 12345678, "message_id": 12345}]}
 
 
 @pytest.mark.parametrize(
@@ -280,8 +281,7 @@ async def test_send_message_with_inline_keyboard(
     assert len(events) == 1
     assert events[0].context == context
 
-    assert len(response["chats"]) == 1
-    assert (response["chats"][0]["message_id"]) == 12345
+    assert response == {"chats": [{"chat_id": 12345678, "message_id": 12345}]}
 
 
 async def test_send_sticker_partial_error(
@@ -462,8 +462,7 @@ async def test_send_file(hass: HomeAssistant, webhook_platform, service: str) ->
     assert len(events) == 1
     assert events[0].context == context
 
-    assert len(response["chats"]) == 1
-    assert (response["chats"][0]["message_id"]) == 12345
+    assert response == {"chats": [{"chat_id": 12345678, "message_id": 12345}]}
 
 
 async def test_send_message_thread(hass: HomeAssistant, webhook_platform) -> None:
@@ -662,6 +661,7 @@ async def test_polling_platform_message_text_update(
     config_entry = hass.config_entries.async_entry_for_domain_unique_id(
         DOMAIN, "1234567890:ABC"
     )
+    assert config_entry is not None
     assert events[0].data["bot"]["config_entry_id"] == config_entry.entry_id
     assert events[0].data["bot"]["id"] == 123456
     assert events[0].data["bot"]["first_name"] == "Testbot"
@@ -906,7 +906,7 @@ async def test_send_message_with_config_entry(
         return_response=True,
     )
 
-    assert response["chats"][0]["message_id"] == 12345
+    assert response == {"chats": [{"chat_id": 123456, "message_id": 12345}]}
 
 
 async def test_send_message_no_chat_id_error(
@@ -930,12 +930,14 @@ async def test_send_message_no_chat_id_error(
 
         assert result.get("type") is FlowResultType.CREATE_ENTRY
 
-    with pytest.raises(HomeAssistantError) as err:
+    config_entry: ConfigEntry | None = result.get("result")
+    assert config_entry is not None
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SEND_MESSAGE,
             {
-                CONF_CONFIG_ENTRY_ID: result["result"].entry_id,
+                CONF_CONFIG_ENTRY_ID: config_entry.entry_id,
                 ATTR_MESSAGE: "mock message",
             },
             blocking=True,
@@ -1011,7 +1013,7 @@ async def test_delete_message(
         blocking=True,
         return_response=True,
     )
-    assert response["chats"][0]["message_id"] == 12345
+    assert response == {"chats": [{"chat_id": 123456, "message_id": 12345}]}
 
     with patch(
         "homeassistant.components.telegram_bot.bot.Bot.delete_message",
@@ -1388,7 +1390,7 @@ async def test_send_video(
     )
 
     await hass.async_block_till_done()
-    assert response["chats"][0]["message_id"] == 12345
+    assert response == {"chats": [{"chat_id": 123456, "message_id": 12345}]}
 
     # test: success with url
 
@@ -1412,7 +1414,7 @@ async def test_send_video(
 
     await hass.async_block_till_done()
     assert mock_get.call_count > 0
-    assert response["chats"][0]["message_id"] == 12345
+    assert response == {"chats": [{"chat_id": 123456, "message_id": 12345}]}
 
 
 async def test_set_message_reaction(
@@ -1475,5 +1477,64 @@ async def test_send_message_multi_target(
     )
 
     await hass.async_block_till_done()
-    assert response["chats"][0]["chat_id"] == 654321
-    assert response["chats"][0]["message_id"] == 12345
+
+    assert response == {"chats": [{"chat_id": 654321, "message_id": 12345}]}
+
+
+async def test_notify_entity_send_message(
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+) -> None:
+    """Test send message using notify entity as target."""
+
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEND_MESSAGE,
+        {ATTR_ENTITY_ID: "notify.mock_title_mock_chat_2", ATTR_MESSAGE: "test_message"},
+        blocking=True,
+        return_response=True,
+    )
+
+    assert response == {
+        "chats": [
+            {
+                ATTR_CHAT_ID: 654321,
+                ATTR_MESSAGEID: 12345,
+                ATTR_ENTITY_ID: "notify.mock_title_mock_chat_2",
+            }
+        ]
+    }
+
+
+async def test_notify_entity_not_found(
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+) -> None:
+    """Test send message using notify entity as target."""
+
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEND_MESSAGE,
+            {
+                ATTR_ENTITY_ID: "notify.non_existent_entity",
+                ATTR_MESSAGE: "test_message",
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    assert err.value.translation_key == "action_failed"
+    assert err.value.translation_placeholders == {
+        "error": "Notify entity not found: notify.non_existent_entity"
+    }

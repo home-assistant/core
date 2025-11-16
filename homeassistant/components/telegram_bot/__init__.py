@@ -593,6 +593,8 @@ def _build_targets(
 
             targets.append((notify_config_entry, notify_chat_id, notify_entity_id))
 
+    has_notify_targets = len(targets) > 0
+
     # build target list using service data: `config_entry_id` and `target`
 
     config_entry: TelegramBotConfigEntry | None = None
@@ -614,12 +616,11 @@ def _build_targets(
         if ATTR_TARGET in service.data:
             target: int | list[int] = service.data[ATTR_TARGET]
             chat_ids = [target] if isinstance(target, int) else target
-        else:
+        elif not has_notify_targets:
             # no targets from service data, so we default to the first allowed chat IDs of the config entry
             subentries = list(config_entry.subentries.values())
             if len(subentries) == 0:
-                raise HomeAssistantError(
-                    "No allowed chat IDs found for bot",
+                raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="missing_allowed_chat_ids",
                     translation_placeholders={
