@@ -146,4 +146,3 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
         pilot = _async_pilot_builder(**kwargs)
         await self._device.turn_on(pilot)
         await self.coordinator.async_request_refresh()
-
