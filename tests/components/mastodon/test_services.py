@@ -282,7 +282,8 @@ async def test_idempotency_key_too_short(
     payload = {"status": "test toot", "idempotency_key": "abc"}
 
     with pytest.raises(
-        HomeAssistantError, match="Idempotency key must be at least 4 characters long"
+        ServiceValidationError,
+        match="Idempotency key must be at least 4 characters long",
     ):
         await hass.services.async_call(
             DOMAIN,
