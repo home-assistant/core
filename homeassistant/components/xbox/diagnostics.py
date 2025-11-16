@@ -14,7 +14,6 @@ TO_REDACT = {
     "display_name",
     "display_pic_raw",
     "gamertag",
-    "gamertagmodern_gamertag",
     "linked_accounts",
     "location",
     "modern_gamertag_suffix",
