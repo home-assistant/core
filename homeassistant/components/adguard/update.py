@@ -1,4 +1,4 @@
-"""AdGurad Home Update platform."""
+"""AdGuard Home Update platform."""
 
 from __future__ import annotations
 
@@ -32,7 +32,7 @@ async def async_setup_entry(
 
 
 class AdGuardHomeUpdate(AdGuardHomeEntity, UpdateEntity):
-    """Defines a AdGuard Home update."""
+    """Defines an AdGuard Home update."""
 
     _attr_supported_features = UpdateEntityFeature.INSTALL
     _attr_name = None
