@@ -262,7 +262,8 @@ async def test_created_column(
 
         mock_worksheet.append_rows.assert_called_once()
         rows_data = mock_worksheet.append_rows.call_args[0][0]
-        assert rows_data[0][1] == utcnow
+        created_ts = utcnow.strftime("%Y-%m-%d %H:%M:%S.%f")
+        assert rows_data[0][1] == created_ts
 
 
 async def test_get_sheet(
