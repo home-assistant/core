@@ -53,6 +53,44 @@
       "terminate_apps": {
         "name": "Terminate apps"
       }
+    },
+    "number": {
+      "auto_local_dimming": {
+        "name": "Auto local dimming"
+      },
+      "auto_picture_mode": {
+        "name": "Auto picture mode"
+      },
+      "brightness": {
+        "name": "Picture brightness"
+      },
+      "color": {
+        "name": "Picture color"
+      },
+      "color_space": {
+        "name": "Color space"
+      },
+      "color_temperature": {
+        "name": "Color temperature"
+      },
+      "contrast": {
+        "name": "Picture contrast"
+      },
+      "hdr_mode": {
+        "name": "HDR mode"
+      },
+      "light_sensor": {
+        "name": "Light sensor"
+      },
+      "picture_mode": {
+        "name": "Picture mode"
+      },
+      "sharpness": {
+        "name": "Picture sharpness"
+      },
+      "xtended_dynamic_range": {
+        "name": "X-tended Dynamic Range"
+      }
     }
   }
 }

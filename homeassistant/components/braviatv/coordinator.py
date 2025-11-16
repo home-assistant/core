@@ -99,6 +99,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         self.is_on = False
         self.connected = False
         self.skipped_updates = 0
+        self.picture_settings: list[dict[str, Any]] | None = None
 
         super().__init__(
             hass,
@@ -161,6 +162,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
                 await self.async_update_sources()
             await self.async_update_volume()
             await self.async_update_playing()
+            await self.async_update_picture_settings()
         except BraviaNotFound as err:
             if self.skipped_updates < 10:
                 self.connected = False
@@ -233,6 +235,19 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
 
         channels = await self.client.get_content_list_all("tv")
         self._sources_extend(channels, SourceType.CHANNEL)
+
+    async def async_update_picture_settings(self) -> None:
+        """Update picture settings."""
+        try:
+            self.picture_settings = await self.client.get_picture_setting()
+        except BraviaError:
+            _LOGGER.debug("Failed to update picture settings")
+            self.picture_settings = None
+
+    @catch_braviatv_errors
+    async def async_set_picture_setting(self, target: str, value: str) -> None:
+        """Set a picture quality setting."""
+        await self.client.set_picture_setting(target, value)
 
     async def async_source_start(self, uri: str, source_type: SourceType | str) -> None:
         """Select source by uri."""

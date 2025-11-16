@@ -16,6 +16,7 @@ from .coordinator import BraviaTVConfigEntry, BraviaTVCoordinator
 PLATFORMS: Final[list[Platform]] = [
     Platform.BUTTON,
     Platform.MEDIA_PLAYER,
+    Platform.NUMBER,
     Platform.REMOTE,
 ]
 
