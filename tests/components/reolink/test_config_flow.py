@@ -16,7 +16,7 @@ from reolink_aio.exceptions import (
 )
 
 from homeassistant import config_entries
-from homeassistant.components.reolink import DEVICE_UPDATE_INTERVAL
+from homeassistant.components.reolink import DEVICE_UPDATE_INTERVAL_MIN
 from homeassistant.components.reolink.config_flow import DEFAULT_PROTOCOL
 from homeassistant.components.reolink.const import (
     CONF_BC_ONLY,
@@ -564,7 +564,7 @@ async def test_dhcp_ip_update_aborted_if_wrong_mac(
 
     # ensure the last_update_succes is False for the device_coordinator.
     reolink_host.get_states.side_effect = ReolinkError("Test error")
-    freezer.tick(DEVICE_UPDATE_INTERVAL)
+    freezer.tick(DEVICE_UPDATE_INTERVAL_MIN)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -661,7 +661,7 @@ async def test_dhcp_ip_update(
 
     # ensure the last_update_succes is False for the device_coordinator.
     reolink_host.get_states.side_effect = ReolinkError("Test error")
-    freezer.tick(DEVICE_UPDATE_INTERVAL)
+    freezer.tick(DEVICE_UPDATE_INTERVAL_MIN)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 

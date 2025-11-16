@@ -11,16 +11,16 @@
   "requirements": ["py-synologydsm-api==2.7.3"],
   "ssdp": [
     {
-      "manufacturer": "Synology",
-      "deviceType": "urn:schemas-upnp-org:device:Basic:1"
+      "deviceType": "urn:schemas-upnp-org:device:Basic:1",
+      "manufacturer": "Synology"
     }
   ],
   "zeroconf": [
     {
-      "type": "_http._tcp.local.",
       "properties": {
         "vendor": "synology*"
-      }
+      },
+      "type": "_http._tcp.local."
     }
   ]
 }

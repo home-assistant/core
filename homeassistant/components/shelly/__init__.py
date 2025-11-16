@@ -98,6 +98,7 @@ BLOCK_SLEEPING_PLATFORMS: Final = [
 ]
 RPC_SLEEPING_PLATFORMS: Final = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.SENSOR,
     Platform.UPDATE,
 ]
