@@ -206,7 +206,7 @@ class TibberDataAPICoordinator(DataUpdateCoordinator[dict[str, TibberDevice]]):
             hass,
             _LOGGER,
             name=f"{DOMAIN} Data API",
-            update_interval=timedelta(minutes=10),
+            update_interval=timedelta(minutes=1),
             config_entry=entry,
         )
         self._runtime_data = runtime_data
