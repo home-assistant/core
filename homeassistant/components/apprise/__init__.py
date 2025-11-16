@@ -4,12 +4,12 @@ import apprise
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, CONF_URL, Platform
+from homeassistant.const import CONF_URL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_FILE_URL, DATA_HASS_CONFIG, DEFAULT_NAME, DOMAIN
+from .const import CONF_FILE_URL, DATA_HASS_CONFIG, DOMAIN
 
 type AppriseConfigEntry = ConfigEntry[apprise.AppriseConfig]
 
@@ -19,7 +19,6 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
-                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
                 vol.Optional(CONF_FILE_URL): cv.string,
                 vol.Optional(CONF_URL): cv.string,
             }
@@ -38,8 +37,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: AppriseConfigEntry) -> bool:
     """Set up Apprise from a config entry."""
-
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = entry.data
 
     hass.async_create_task(
         discovery.async_load_platform(

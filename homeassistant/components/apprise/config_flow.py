@@ -1,8 +1,9 @@
-"""Config flow for DEFAULT_NAME."""
+"""Config flow for Apprise."""
 
 import logging
 from typing import Any
 
+import aiohttp
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -11,11 +12,11 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_NAME, CONF_URL
+from homeassistant.const import CONF_URL
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
-from .const import CONF_FILE_URL, DEFAULT_NAME, DOMAIN
+from .const import CONF_FILE_URL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,18 +36,15 @@ class AppriseConfigFlow(ConfigFlow, domain=DOMAIN):
             if user_input.get(CONF_FILE_URL):
                 if user_input.get(CONF_URL):
                     input_options = {
-                        CONF_NAME: user_input.get(CONF_NAME, DEFAULT_NAME),
                         CONF_FILE_URL: user_input[CONF_FILE_URL],
                         CONF_URL: user_input[CONF_URL],
                     }
                 else:
                     input_options = {
-                        CONF_NAME: user_input.get(CONF_NAME, DEFAULT_NAME),
                         CONF_FILE_URL: user_input[CONF_FILE_URL],
                     }
             elif user_input.get(CONF_URL):
                 input_options = {
-                    CONF_NAME: user_input.get(CONF_NAME, DEFAULT_NAME),
                     CONF_URL: user_input[CONF_URL],
                 }
             else:
@@ -54,24 +52,30 @@ class AppriseConfigFlow(ConfigFlow, domain=DOMAIN):
                     step_id="user",
                     data_schema=vol.Schema(
                         {
-                            vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
                             vol.Optional(CONF_FILE_URL): str,
                             vol.Optional(CONF_URL): str,
                         }
                     ),
                     errors=errors,
                 )
-            return self.async_create_entry(
-                title=user_input.get(CONF_NAME, DEFAULT_NAME),
-                data={},
-                options=input_options,
+            # Validate connection to Apprise
+            success = await validate_apprise_connection(
+                self.hass,
+                user_input,
             )
+            if not success:
+                errors["base"] = "cannot_connect"
+            else:
+                return self.async_create_entry(
+                    title="Apprise",
+                    data={},
+                    options=input_options,
+                )
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
                     vol.Optional(CONF_FILE_URL): str,
                     vol.Optional(CONF_URL): str,
                 }
@@ -100,26 +104,28 @@ class AppriseOptionsFlowHandler(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the Apprise options."""
+        errors: dict[str, str] = {}
         options = self.config_entry.options
 
         if user_input:
             new_options = {
-                CONF_NAME: user_input.get(
-                    CONF_NAME, options.get(CONF_NAME, DEFAULT_NAME)
-                ),
                 CONF_FILE_URL: user_input.get(CONF_FILE_URL, ""),
                 CONF_URL: user_input.get(CONF_URL, ""),
             }
+
+        success = await validate_apprise_connection(
+            self.hass,
+            user_input,
+        )
+        if success:
             return self.async_create_entry(title="", data=new_options)
+
+        errors["base"] = "cannot_connect"
 
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema(
                 {
-                    vol.Optional(
-                        CONF_NAME,
-                        default=options.get(CONF_NAME, DEFAULT_NAME),
-                    ): str,
                     vol.Optional(
                         CONF_FILE_URL, default=options.get(CONF_FILE_URL, "")
                     ): str,
@@ -127,6 +133,36 @@ class AppriseOptionsFlowHandler(OptionsFlow):
                 }
             ),
         )
+
+
+async def validate_apprise_connection(
+    hass: HomeAssistant, user_input: dict[str, Any] | None
+) -> bool:
+    """Attempt to send a test message to Apprise."""
+
+    if not user_input:
+        return False
+
+    file_url = user_input.get(CONF_FILE_URL)
+    plain_url = user_input.get(CONF_URL)
+
+    if file_url:
+        url = f"{file_url}/notify/apprise"
+    elif plain_url:
+        url = plain_url
+    else:
+        return False
+
+    data = {"body": "Home Assistant connection test"}
+
+    try:
+        async with (
+            aiohttp.ClientSession() as session,
+            session.post(url, data=data) as resp,
+        ):
+            return resp.status == 200
+    except (TimeoutError, aiohttp.ClientError):
+        return False
 
 
 async def deprecate_yaml_issue(
@@ -146,6 +182,6 @@ async def deprecate_yaml_issue(
             translation_key="deprecated_yaml",
             translation_placeholders={
                 "domain": DOMAIN,
-                "integration_title": DEFAULT_NAME,
+                "integration_title": "Apprise",
             },
         )
