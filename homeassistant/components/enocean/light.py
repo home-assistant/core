@@ -41,7 +41,7 @@ class EnOceanLight(EnOceanEntity, LightEntity):
         self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
         self._attr_brightness: int | None = None
         self._attr_is_on: bool | None = None
-        self.gateway.register_light_callback(self.entity_id, self.update)
+        self.gateway.register_light_callback(self.enocean_entity_id, self.update)
 
     def update(
         self, is_on: bool, brightness: int | None, color_temp_kelvin: int | None
