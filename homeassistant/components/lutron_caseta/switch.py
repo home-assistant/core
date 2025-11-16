@@ -64,11 +64,13 @@ class LutronCasetaLight(LutronCasetaUpdatableEntity, SwitchEntity):
         """Return true if device is on."""
         return self._device["current_state"] > 0
 
+
 class LutronCasetaSmartAwaySwitch(LutronCasetaEntity, SwitchEntity):
     """Representation of Lutron Caseta Smart Away."""
 
     _attr_has_entity_name = True
     _attr_translation_key = "smart_away"
+
     def __init__(self, data):
         """Init a switch entity."""
         device = {
@@ -86,9 +88,8 @@ class LutronCasetaSmartAwaySwitch(LutronCasetaEntity, SwitchEntity):
         self._attr_unique_id = f"{data.bridge_device['serial']}_smart_away"
 
     async def async_added_to_hass(self):
-        self._smartbridge.add_smart_away_subscriber(
-            self._handle_bridge_update
-        )
+        self._smartbridge.add_smart_away_subscriber(self._handle_bridge_update)
+
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn Smart Away on."""
         await self._smartbridge.activate_smart_away()
