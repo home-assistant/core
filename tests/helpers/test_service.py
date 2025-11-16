@@ -469,6 +469,7 @@ async def test_service_call(hass: HomeAssistant) -> None:
         "floor_id": ["test-floor-id"],
     }
 
+    # Templated strings in target fields
     config = {
         "action": "{{ 'test_domain.test_service' }}",
         "target": {
@@ -489,6 +490,7 @@ async def test_service_call(hass: HomeAssistant) -> None:
         "floor_id": ["floor-first", "floor-second"],
     }
 
+    # Templated dict as target
     config = {
         "action": "{{ 'test_domain.test_service' }}",
         "target": "{{ var_target }}",
@@ -509,6 +511,27 @@ async def test_service_call(hass: HomeAssistant) -> None:
     assert dict(calls[2].data) == {
         "area_id": ["area-42", "area-51"],
         "entity_id": ["light.static"],
+    }
+
+    # Templated lists as target fields
+    config = {
+        "action": "{{ 'test_domain.test_service' }}",
+        "target": {
+            "area_id": "{{ ['area-42', 'area-51'] }}",
+            "device_id": "{{ ['abcdef', 'fedcba'] }}",
+            "entity_id": "{{ ['light.static', 'light.dynamic'] }}",
+            "floor_id": "{{ ['floor-first', 'floor-second'] }}",
+        },
+    }
+
+    await service.async_call_from_config(hass, config)
+    await hass.async_block_till_done()
+
+    assert dict(calls[3].data) == {
+        "area_id": ["area-42", "area-51"],
+        "device_id": ["abcdef", "fedcba"],
+        "entity_id": ["light.static", "light.dynamic"],
+        "floor_id": ["floor-first", "floor-second"],
     }
 
 

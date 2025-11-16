@@ -13,6 +13,10 @@
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "The password for accessing your SFR box's web interface, the default is the WiFi security key found on the device label",
+          "username": "The username for accessing your SFR box's web interface, the default is 'admin'"
         }
       },
       "choose_auth": {
@@ -52,25 +56,25 @@
       "dsl_attenuation_up": {
         "name": "DSL attenuation up"
       },
-      "dsl_crc": {
-        "name": "DSL CRC"
-      },
       "dsl_counter": {
         "name": "DSL counter"
       },
-      "dsl_linemode": {
-        "name": "DSL line mode"
+      "dsl_crc": {
+        "name": "DSL CRC"
       },
       "dsl_line_status": {
         "name": "DSL line status",
         "state": {
-          "no_defect": "No defect",
           "loss_of_frame": "Loss of frame",
-          "loss_of_signal": "Loss of signal",
           "loss_of_power": "Loss of power",
+          "loss_of_signal": "Loss of signal",
           "loss_of_signal_quality": "Loss of signal quality",
+          "no_defect": "No defect",
           "unknown": "Unknown"
         }
+      },
+      "dsl_linemode": {
+        "name": "DSL line mode"
       },
       "dsl_noise_down": {
         "name": "DSL noise down"
@@ -87,14 +91,14 @@
       "dsl_training": {
         "name": "DSL training",
         "state": {
-          "idle": "[%key:common::state::idle%]",
-          "g_994_training": "G.994 Training",
-          "g_992_started": "G.992 Started",
           "g_922_channel_analysis": "G.922 Channel Analysis",
           "g_992_message_exchange": "G.992 Message Exchange",
-          "g_993_started": "G.993 Started",
+          "g_992_started": "G.992 Started",
           "g_993_channel_analysis": "G.993 Channel Analysis",
           "g_993_message_exchange": "G.993 Message Exchange",
+          "g_993_started": "G.993 Started",
+          "g_994_training": "G.994 Training",
+          "idle": "[%key:common::state::idle%]",
           "showtime": "Showtime",
           "unknown": "Unknown"
         }

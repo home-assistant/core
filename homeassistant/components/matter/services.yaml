@@ -2,6 +2,7 @@ water_heater_boost:
   target:
     entity:
       domain: water_heater
+      integration: matter
   fields:
     duration:
       selector:
