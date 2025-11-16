@@ -1,0 +1,61 @@
+# serializer version: 1
+# name: test_update[update.adguard_home-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'update',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'update.adguard_home',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'adguard',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <UpdateEntityFeature: 1>,
+    'translation_key': None,
+    'unique_id': 'adguard_127.0.0.1_3000_update',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_update[update.adguard_home-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'auto_update': False,
+      'display_precision': 0,
+      'entity_picture': 'https://brands.home-assistant.io/_/adguard/icon.png',
+      'friendly_name': 'AdGuard Home',
+      'in_progress': False,
+      'installed_version': 'v0.107.50',
+      'latest_version': 'v0.107.59',
+      'release_summary': 'AdGuard Home v0.107.59 is now available!',
+      'release_url': 'https://github.com/AdguardTeam/AdGuardHome/releases/tag/v0.107.59',
+      'skipped_version': None,
+      'supported_features': <UpdateEntityFeature: 1>,
+      'title': None,
+      'update_percentage': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'update.adguard_home',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
