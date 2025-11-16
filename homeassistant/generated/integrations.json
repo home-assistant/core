@@ -7191,6 +7191,11 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "vagner_pool": {
+      "name": "V\u00c1GNER POOL",
+      "integration_type": "virtual",
+      "supported_by": "pooldose"
+    },
     "vallox": {
       "name": "Vallox",
       "integration_type": "hub",
