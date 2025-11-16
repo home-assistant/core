@@ -265,7 +265,7 @@ class AddonSelector(Selector[AddonSelectorConfig]):
 
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
-        addon: str = vol.Schema(str)(data)
+        addon: str = vol.Schema(vol.All(cv.string, vol.Length(min=1)))(data)
         return addon
 
 

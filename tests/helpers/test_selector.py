@@ -480,11 +480,15 @@ def test_number_selector_schema_error(schema) -> None:
 
 @pytest.mark.parametrize(
     ("schema", "valid_selections", "invalid_selections"),
-    [({}, ("abc123",), (None,))],
+    [
+        ({}, ("abc123", "local_addon", 123), (None, "", [], {})),
+        ({"name": "test"}, ("abc123",), (None, "", [])),
+        ({"slug": "test_slug"}, ("addon_123",), (None, "", {})),
+    ],
 )
 def test_addon_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test add-on selector."""
-    _test_selector("addon", schema, valid_selections, invalid_selections)
+    _test_selector("addon", schema, valid_selections, invalid_selections, str)
 
 
 @pytest.mark.parametrize(
