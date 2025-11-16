@@ -23,6 +23,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_PIN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -112,6 +113,16 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
             ),
         )
 
+    def _has_enabled_number_entities(self) -> bool:
+        """Check if any number entities are enabled."""
+        entity_registry = er.async_get(self.hass)
+        entries = er.async_entries_for_config_entry(
+            entity_registry, self.config_entry.entry_id
+        )
+        return any(
+            entry.domain == "number" and entry.disabled_by is None for entry in entries
+        )
+
     def _sources_extend(
         self,
         sources: list[dict],
@@ -162,7 +173,10 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
                 await self.async_update_sources()
             await self.async_update_volume()
             await self.async_update_playing()
-            await self.async_update_picture_settings()
+            # Only fetch picture settings if number entities are enabled or if we haven't
+            # fetched them yet (to allow initial entity creation)
+            if self.picture_settings is None or self._has_enabled_number_entities():
+                await self.async_update_picture_settings()
         except BraviaNotFound as err:
             if self.skipped_updates < 10:
                 self.connected = False
