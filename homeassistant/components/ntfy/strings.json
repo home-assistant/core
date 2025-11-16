@@ -334,7 +334,7 @@
           "name": "Attachment URL"
         },
         "attach_file": {
-          "description": "Attach images or other files by uploading from a local file, camera, or image media source. When selecting a camera feed, the current snapshot will be uploaded and attached to the notification.",
+          "description": "Attach images or other files by uploading from a local file, camera, or image media source. When selecting a camera entity, a snapshot of the current view will be captured and attached to the notification.",
           "name": "Attach local file"
         },
         "call": {
