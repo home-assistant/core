@@ -3770,6 +3770,10 @@ async def test_subentry_configflow(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "entity"
     assert result["errors"] == {}
+    assert "description_placeholders" in result
+    for placeholder, translation in TRANSLATION_DESCRIPTION_PLACEHOLDERS.items():
+        assert placeholder in result["description_placeholders"]
+        assert result["description_placeholders"][placeholder] == translation
 
     # Process entity flow (initial step)
 
