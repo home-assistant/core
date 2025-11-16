@@ -56,37 +56,32 @@ class VeluxCover(VeluxEntity, CoverEntity):
     def __init__(self, node: OpeningDevice, config_entry_id: str) -> None:
         """Initialize VeluxCover."""
         super().__init__(node, config_entry_id)
+        # Features common to all covers
+        self._attr_supported_features = (
+            CoverEntityFeature.OPEN
+            | CoverEntityFeature.CLOSE
+            | CoverEntityFeature.SET_POSITION
+            | CoverEntityFeature.STOP
+        )
         # Window is the default device class for covers
         self._attr_device_class = CoverDeviceClass.WINDOW
         if isinstance(node, Awning):
             self._attr_device_class = CoverDeviceClass.AWNING
-        if isinstance(node, Blind):
-            self._attr_device_class = CoverDeviceClass.BLIND
-            self._is_blind = True
         if isinstance(node, GarageDoor):
             self._attr_device_class = CoverDeviceClass.GARAGE
         if isinstance(node, Gate):
             self._attr_device_class = CoverDeviceClass.GATE
         if isinstance(node, RollerShutter):
             self._attr_device_class = CoverDeviceClass.SHUTTER
-
-    @property
-    def supported_features(self) -> CoverEntityFeature:
-        """Flag supported features."""
-        supported_features = (
-            CoverEntityFeature.OPEN
-            | CoverEntityFeature.CLOSE
-            | CoverEntityFeature.SET_POSITION
-            | CoverEntityFeature.STOP
-        )
-        if self.current_cover_tilt_position is not None:
-            supported_features |= (
+        if isinstance(node, Blind):
+            self._attr_device_class = CoverDeviceClass.BLIND
+            self._is_blind = True
+            self._attr_supported_features |= (
                 CoverEntityFeature.OPEN_TILT
                 | CoverEntityFeature.CLOSE_TILT
                 | CoverEntityFeature.SET_TILT_POSITION
                 | CoverEntityFeature.STOP_TILT
             )
-        return supported_features
 
     @property
     def current_cover_position(self) -> int:
