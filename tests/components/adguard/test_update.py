@@ -1,4 +1,4 @@
-"""Tests for the AdGuard Home config flow."""
+"""Tests for the AdGuard Home update entity."""
 
 from unittest.mock import patch
 
