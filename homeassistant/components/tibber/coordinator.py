@@ -6,6 +6,7 @@ from datetime import timedelta
 import logging
 from typing import Any, cast
 
+from aiohttp.client_exceptions import ClientError
 import tibber
 from tibber.data_api import TibberDataAPI, TibberDevice
 
@@ -211,12 +212,12 @@ class TibberDataAPICoordinator(DataUpdateCoordinator[dict[str, TibberDevice]]):
         self._runtime_data = runtime_data
 
     async def _async_setup(self) -> None:
-        """Setup the coordinator."""
+        """Initial load of Tibber Data API devices."""
         try:
             client: TibberDataAPI = await self._runtime_data.async_get_client(self.hass)
         except ConfigEntryAuthFailed:
             raise
-        except Exception as err:
+        except (ClientError, TimeoutError, tibber.UserAgentMissingError) as err:
             raise UpdateFailed(
                 f"Unable to create Tibber Data API client: {err}"
             ) from err
@@ -229,7 +230,7 @@ class TibberDataAPICoordinator(DataUpdateCoordinator[dict[str, TibberDevice]]):
             client: TibberDataAPI = await self._runtime_data.async_get_client(self.hass)
         except ConfigEntryAuthFailed:
             raise
-        except Exception as err:
+        except (ClientError, TimeoutError, tibber.UserAgentMissingError) as err:
             raise UpdateFailed(
                 f"Unable to create Tibber Data API client: {err}"
             ) from err

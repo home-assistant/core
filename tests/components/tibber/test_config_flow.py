@@ -343,9 +343,7 @@ async def test_data_api_reauth_updates_entry(
     )
 
     data_api_client = MagicMock()
-    data_api_client.get_userinfo = AsyncMock(
-        return_value={"email": "old@example.com"}
-    )
+    data_api_client.get_userinfo = AsyncMock(return_value={"email": "old@example.com"})
 
     with patch(
         "homeassistant.components.tibber.config_flow.TibberDataAPI",

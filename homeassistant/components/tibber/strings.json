@@ -3,7 +3,7 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
-      "missing_credentials": "Add Tibber Data API application credentials under Application Credentials before continuing. See {application_credentials_url} for guidance and {data_api_url} for API documentation.",
+      "missing_credentials": "Add Tibber Data API application credentials under application credentials before continuing. See {application_credentials_url} for guidance and {data_api_url} for API documentation.",
       "oauth_invalid_token": "[%key:common::config_flow::abort::oauth2_error%]"
     },
     "error": {
@@ -195,14 +195,14 @@
     }
   },
   "exceptions": {
-    "oauth2_implementation_unavailable": {
-      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
-    },
     "graphql_required": {
       "message": "Configure the Tibber GraphQL API before calling this service."
     },
     "invalid_date": {
       "message": "Invalid datetime provided {date}"
+    },
+    "oauth2_implementation_unavailable": {
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     },
     "send_message_timeout": {
       "message": "Timeout sending message with Tibber"

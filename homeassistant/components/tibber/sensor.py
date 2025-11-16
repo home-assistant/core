@@ -442,7 +442,7 @@ class TibberDataAPISensor(CoordinatorEntity[TibberDataAPICoordinator], SensorEnt
         """Initialize the sensor."""
         super().__init__(coordinator)
 
-        self._device: TibberDevice = device
+        self._device_id: str = device.id
         self.entity_description = entity_description
         self._attr_name = name
 
@@ -460,12 +460,12 @@ class TibberDataAPISensor(CoordinatorEntity[TibberDataAPICoordinator], SensorEnt
         self,
     ) -> StateType:
         """Return the value reported by the device."""
-        device = self.coordinator.data.get(self._device.id)
+        device = self.coordinator.data.get(self._device_id)
         if device is None:
-            _LOGGER.error("Device %s not found", self._device.id)
+            _LOGGER.error("Device %s not found", self._device_id)
             return None
 
-        for sensor in self._device.sensors:
+        for sensor in device.sensors:
             if sensor.id == self.entity_description.key:
                 return sensor.value
         return None
@@ -473,7 +473,7 @@ class TibberDataAPISensor(CoordinatorEntity[TibberDataAPICoordinator], SensorEnt
     @property
     def available(self) -> bool:
         """Return whether the sensor is available."""
-        device = self.coordinator.data.get(self._device.id)
+        device = self.coordinator.data.get(self._device_id)
         if device is None:
             return False
         return self.native_value is not None
