@@ -643,13 +643,37 @@ def test_target_selector_schema(schema, valid_selections, invalid_selections) ->
     _test_selector("target", schema, valid_selections, invalid_selections)
 
 
-@pytest.mark.parametrize(
-    ("schema", "valid_selections", "invalid_selections"),
-    [({}, ("abc123",), ())],
-)
-def test_action_selector_schema(schema, valid_selections, invalid_selections) -> None:
+def test_action_selector_schema() -> None:
     """Test action sequence selector."""
-    _test_selector("action", schema, valid_selections, invalid_selections)
+    config = {"action": {}}
+    selector.validate_selector(config)
+    selector_instance = selector.selector(config)
+
+    # Valid action sequences
+    valid_selections = [
+        [{"action": "test.automation"}],
+        [{"action": "test.automation", "data": {"hello": "world"}}],
+        [{"service": "test.service"}],
+        [{"service": "test.service", "data": {"key": "value"}}],
+    ]
+
+    vol_schema = vol.Schema({"selection": selector_instance})
+    for selection in valid_selections:
+        vol_schema({"selection": selection})
+
+    # Invalid action sequences
+    invalid_selections = [
+        "abc123",
+        123,
+        {"invalid": "action"},
+        [{"invalid": "action"}],
+        [123],
+        ["string"],
+    ]
+
+    for selection in invalid_selections:
+        with pytest.raises(vol.Invalid):
+            vol_schema({"selection": selection})
 
 
 @pytest.mark.parametrize(

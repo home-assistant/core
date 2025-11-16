@@ -236,7 +236,7 @@ class ActionSelector(Selector[ActionSelectorConfig]):
 
     def __call__(self, data: Any) -> Any:
         """Validate the passed selection."""
-        return data
+        return vol.Schema(cv.SCRIPT_SCHEMA)(data)
 
 
 class AddonSelectorConfig(BaseSelectorConfig, total=False):
