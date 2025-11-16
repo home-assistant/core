@@ -406,8 +406,8 @@ def test_area_selector_schema(schema, valid_selections, invalid_selections) -> N
     [
         (
             {},
-            ("23ouih2iu23ou2", "2j4hp3uy4p87wyrpiuhk34"),
-            (None, True, 1),
+            ("23ouih2iu23ou2", "2j4hp3uy4p87wyrpiuhk34", 123, True),
+            (None, "", [], {}),
         ),
     ],
 )
@@ -415,7 +415,7 @@ def test_assist_pipeline_selector_schema(
     schema, valid_selections, invalid_selections
 ) -> None:
     """Test assist pipeline selector."""
-    _test_selector("assist_pipeline", schema, valid_selections, invalid_selections)
+    _test_selector("assist_pipeline", schema, valid_selections, invalid_selections, str)
 
 
 @pytest.mark.parametrize(

@@ -329,7 +329,7 @@ class AssistPipelineSelector(Selector[AssistPipelineSelectorConfig]):
 
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
-        pipeline: str = vol.Schema(str)(data)
+        pipeline: str = vol.Schema(vol.All(cv.string, vol.Length(min=1)))(data)
         return pipeline
 
 
