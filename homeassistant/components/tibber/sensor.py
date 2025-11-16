@@ -417,7 +417,7 @@ async def _async_setup_data_api_sensors(
         for sensor in device.sensors:
             description: SensorEntityDescription | None = api_sensors.get(sensor.id)
             if description is None:
-                _LOGGER.error("Sensor %s not found", sensor.id)
+                _LOGGER.error("Sensor %s not found", sensor)
                 continue
             entities.append(
                 TibberDataAPISensor(
