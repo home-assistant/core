@@ -5,8 +5,11 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Any
 
+from adguardhome import AdGuardHomeError
+
 from homeassistant.components.update import UpdateEntity, UpdateEntityFeature
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AdGuardConfigEntry, AdGuardData
@@ -61,5 +64,8 @@ class AdGuardHomeUpdate(AdGuardHomeEntity, UpdateEntity):
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install latest update."""
-        await self.adguard.update.begin_update()
+        try:
+            await self.adguard.update.begin_update()
+        except AdGuardHomeError as err:
+            raise HomeAssistantError(f"Failed to install update: {err}") from err
         self.hass.config_entries.async_schedule_reload(self._entry.entry_id)
