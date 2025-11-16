@@ -6,6 +6,7 @@ import time
 from typing import Any
 from unittest.mock import patch
 
+from freezegun import freeze_time
 from gspread.exceptions import APIError
 import pytest
 from requests.models import Response
@@ -29,6 +30,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -222,6 +224,45 @@ async def test_append_sheet(
             blocking=True,
         )
     assert len(mock_client.mock_calls) == 8
+
+
+async def test_created_column(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test created column added to a sheet."""
+    await setup_integration()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].state is ConfigEntryState.LOADED
+
+    utcnow = dt_util.utcnow()
+
+    with (
+        patch("homeassistant.components.google_sheets.services.Client") as mock_client,
+        freeze_time(utcnow),
+    ):
+        mock_worksheet = (
+            mock_client.return_value.open_by_key.return_value.worksheet.return_value
+        )
+        mock_worksheet.get_values.return_value = [["foo", "created"]]
+
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_APPEND_SHEET,
+            {
+                DATA_CONFIG_ENTRY: config_entry.entry_id,
+                WORKSHEET: "Sheet1",
+                DATA: {"foo": "bar"},
+            },
+            blocking=True,
+        )
+
+        mock_worksheet.append_rows.assert_called_once()
+        rows_data = mock_worksheet.append_rows.call_args[0][0]
+        assert rows_data[0][1] == utcnow
 
 
 async def test_get_sheet(
