@@ -3,12 +3,10 @@
 import logging
 from typing import Any
 
-import voluptuous as vol
-
 from pysilentwave import SilentWaveClient
 from pysilentwave.exceptions import SilentWaveError
+import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers.aiohttp_client import async_get_clientsession

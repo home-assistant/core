@@ -1,13 +1,17 @@
 """Support for TheSilentWave sensors."""
 
+import logging
+
+from pysilentwave.exceptions import SilentWaveError
+
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .coordinator import TheSilentWaveCoordinator, TheSilentWaveConfigEntry
+from .coordinator import TheSilentWaveConfigEntry, TheSilentWaveCoordinator
 from .entity import TheSilentWaveEntity
-from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -80,8 +84,9 @@ class TheSilentWaveBinarySensor(TheSilentWaveEntity, BinarySensorEntity):
             self.async_on_remove(
                 lambda: self._handle_unsubscribe(unsubscribe_callback)
             )
-        except Exception:
+        except SilentWaveError as err:
             # If subscription fails, we'll retry on the next coordinator update
+            _LOGGER.debug("Failed to subscribe to events: %s", err)
             self._subscription_active = False
 
     def _handle_unsubscribe(self, unsubscribe_callback) -> None:
