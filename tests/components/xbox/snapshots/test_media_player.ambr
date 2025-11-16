@@ -93,17 +93,6 @@
         'title': 'Home',
       }),
       dict({
-        'can_expand': False,
-        'can_play': True,
-        'can_search': False,
-        'children_media_class': None,
-        'media_class': 'app',
-        'media_content_id': 'TV',
-        'media_content_type': 'app',
-        'thumbnail': 'https://store-images.s-microsoft.com/image/apps.51598.9007199266246365.9538e419-4ced-4bb5-b027-e23a78887cd2.c4963fa6-7627-4a17-b2a8-fb1321b226d0',
-        'title': 'Live TV',
-      }),
-      dict({
         'can_expand': True,
         'can_play': False,
         'can_search': False,
