@@ -89,7 +89,7 @@ async def async_setup_entry(
                 vol.Coerce(int), vol.Range(min=1, max=255)
             ),
         },
-        "_async_activate",
+        "async_activate",
     )
 
 
@@ -193,7 +193,7 @@ class HueSceneEntity(HueSceneEntityBase):
             return True
         return False
 
-    async def _async_activate(self, **kwargs: Any) -> None:
+    async def async_activate(self, **kwargs: Any) -> None:
         """Activate Hue scene."""
         transition = normalize_hue_transition(kwargs.get(ATTR_TRANSITION))
         # the options below are advanced only
@@ -276,7 +276,7 @@ class HueSmartSceneEntity(HueSceneEntityBase):
 
         super().on_update()
 
-    async def _async_activate(self, **kwargs: Any) -> None:
+    async def async_activate(self, **kwargs: Any) -> None:
         """Activate Hue Smart scene."""
         # kwargs accepted for BaseScene contract but not used for smart scenes
         _ = kwargs
