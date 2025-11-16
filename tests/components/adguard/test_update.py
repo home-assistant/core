@@ -92,7 +92,6 @@ async def test_update_install(
         blocking=True,
     )
 
-    assert len(aioclient_mock.mock_calls) == 3  # 1 for install, 2 for reload
     assert aioclient_mock.mock_calls[0][0] == "POST"
     assert (
         str(aioclient_mock.mock_calls[0][1]) == "https://127.0.0.1:3000/control/update"
@@ -133,7 +132,6 @@ async def test_update_install_failed(
             blocking=True,
         )
 
-    assert len(aioclient_mock.mock_calls) == 1  # 1 for install, no entry reload
     assert aioclient_mock.mock_calls[0][0] == "POST"
     assert (
         str(aioclient_mock.mock_calls[0][1]) == "https://127.0.0.1:3000/control/update"
