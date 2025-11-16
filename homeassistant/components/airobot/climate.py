@@ -1,0 +1,145 @@
+"""Climate platform for Airobot thermostat."""
+
+from __future__ import annotations
+
+import logging
+from typing import Any
+
+from pyairobotrest.const import (
+    MODE_AWAY,
+    MODE_HOME,
+    SETPOINT_TEMP_MAX,
+    SETPOINT_TEMP_MIN,
+)
+from pyairobotrest.exceptions import AirobotError
+from pyairobotrest.models import ThermostatSettings, ThermostatStatus
+
+from homeassistant.components.climate import (
+    PRESET_AWAY,
+    PRESET_BOOST,
+    PRESET_HOME,
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
+)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from .entity import AirobotEntity
+
+_LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 1
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up Airobot climate platform."""
+    coordinator = entry.runtime_data
+    async_add_entities([AirobotClimate(coordinator)])
+
+
+class AirobotClimate(AirobotEntity, ClimateEntity):
+    """Representation of an Airobot thermostat."""
+
+    _attr_name = None
+    _attr_translation_key = "thermostat"
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_hvac_modes = [HVACMode.HEAT]
+    _attr_preset_modes = [PRESET_HOME, PRESET_AWAY, PRESET_BOOST]
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+    )
+    _attr_min_temp = SETPOINT_TEMP_MIN
+    _attr_max_temp = SETPOINT_TEMP_MAX
+
+    @property
+    def _status(self) -> ThermostatStatus:
+        """Get status from coordinator data."""
+        return self.coordinator.data["status"]
+
+    @property
+    def _settings(self) -> ThermostatSettings:
+        """Get settings from coordinator data."""
+        return self.coordinator.data["settings"]
+
+    @property
+    def current_temperature(self) -> float | None:
+        """Return the current temperature."""
+        return self._status.temp_air
+
+    @property
+    def target_temperature(self) -> float | None:
+        """Return the target temperature."""
+        if self._settings.is_home_mode:
+            return self._settings.setpoint_temp
+        return self._settings.setpoint_temp_away
+
+    @property
+    def hvac_mode(self) -> HVACMode:
+        """Return current HVAC mode."""
+        return HVACMode.HEAT
+
+    @property
+    def hvac_action(self) -> HVACAction:
+        """Return current HVAC action."""
+        if self._status.is_heating:
+            return HVACAction.HEATING
+        return HVACAction.IDLE
+
+    @property
+    def preset_mode(self) -> str | None:
+        """Return current preset mode."""
+        if self._settings.setting_flags.boost_enabled:
+            return PRESET_BOOST
+        if self._settings.is_home_mode:
+            return PRESET_HOME
+        return PRESET_AWAY
+
+    async def async_set_temperature(self, **kwargs: Any) -> None:
+        """Set new target temperature."""
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
+            return
+
+        try:
+            if self._settings.is_home_mode:
+                await self.coordinator.client.set_home_temperature(float(temperature))
+            else:
+                await self.coordinator.client.set_away_temperature(float(temperature))
+        except AirobotError as err:
+            raise HomeAssistantError(
+                f"Failed to set temperature to {temperature}°C: {err}"
+            ) from err
+
+        await self.coordinator.async_request_refresh()
+
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set new preset mode."""
+        try:
+            if preset_mode == PRESET_BOOST:
+                # Enable boost mode
+                if not self._settings.setting_flags.boost_enabled:
+                    await self.coordinator.client.set_boost_mode(True)
+            else:
+                # Disable boost mode if it's enabled
+                if self._settings.setting_flags.boost_enabled:
+                    await self.coordinator.client.set_boost_mode(False)
+
+                # Set the mode (HOME or AWAY)
+                if preset_mode == PRESET_HOME:
+                    await self.coordinator.client.set_mode(MODE_HOME)
+                elif preset_mode == PRESET_AWAY:
+                    await self.coordinator.client.set_mode(MODE_AWAY)
+        except AirobotError as err:
+            raise HomeAssistantError(
+                f"Failed to set preset mode to {preset_mode}: {err}"
+            ) from err
+
+        await self.coordinator.async_request_refresh()

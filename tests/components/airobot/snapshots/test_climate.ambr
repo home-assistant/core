@@ -1,0 +1,29 @@
+# serializer version: 1
+# name: test_climate_entity_state
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 22.0,
+      'friendly_name': 'Test Thermostat',
+      'hvac_action': <HVACAction.IDLE: 'idle'>,
+      'hvac_modes': list([
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'preset_mode': 'home',
+      'preset_modes': list([
+        'home',
+        'away',
+        'boost',
+      ]),
+      'supported_features': <ClimateEntityFeature: 17>,
+      'temperature': 22.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.test_thermostat',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
