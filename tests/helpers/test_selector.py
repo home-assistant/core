@@ -385,13 +385,20 @@ def test_entity_selector_schema_error(schema) -> None:
         (
             {"multiple": True},
             ((["abc123", "def456"],)),
-            (None, "abc123", ["abc123", None]),
+            (None, "abc123", ["abc123", None], ["abc123", ""]),
         ),
     ],
 )
 def test_area_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test area selector."""
-    _test_selector("area", schema, valid_selections, invalid_selections)
+
+    def converter(val):
+        """Convert to str or list[str]."""
+        if isinstance(val, list):
+            return [str(v) for v in val]
+        return str(val)
+
+    _test_selector("area", schema, valid_selections, invalid_selections, converter)
 
 
 @pytest.mark.parametrize(

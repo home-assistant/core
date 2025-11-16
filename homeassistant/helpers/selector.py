@@ -304,11 +304,11 @@ class AreaSelector(Selector[AreaSelectorConfig]):
     def __call__(self, data: Any) -> str | list[str]:
         """Validate the passed selection."""
         if not self.config["multiple"]:
-            area_id: str = vol.Schema(str)(data)
+            area_id: str = vol.Schema(vol.All(cv.string, vol.Length(min=1)))(data)
             return area_id
         if not isinstance(data, list):
             raise vol.Invalid("Value should be a list")
-        return [vol.Schema(str)(val) for val in data]
+        return [vol.Schema(vol.All(cv.string, vol.Length(min=1)))(val) for val in data]
 
 
 class AssistPipelineSelectorConfig(BaseSelectorConfig, total=False):
