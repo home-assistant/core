@@ -8,7 +8,7 @@ from typing import Any
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import BraviaTVConfigEntry, BraviaTVCoordinator
@@ -298,6 +298,22 @@ class BraviaTVNumber(BraviaTVEntity, NumberEntity):
 
     entity_description: BraviaTVNumberDescription
 
+    # Map entity key to API target name
+    TARGET_MAP = {
+        "brightness": "brightness",
+        "contrast": "contrast",
+        "color": "color",
+        "sharpness": "sharpness",
+        "color_temperature": "colorTemperature",
+        "picture_mode": "pictureMode",
+        "color_space": "colorSpace",
+        "light_sensor": "lightSensor",
+        "auto_picture_mode": "autoPictureMode",
+        "hdr_mode": "hdrMode",
+        "auto_local_dimming": "autoLocalDimming",
+        "xtended_dynamic_range": "xtendedDynamicRange",
+    }
+
     def __init__(
         self,
         coordinator: BraviaTVCoordinator,
@@ -322,22 +338,7 @@ class BraviaTVNumber(BraviaTVEntity, NumberEntity):
 
         # Find the setting for this entity
         target_key = self.entity_description.key
-        # Map entity key to API target name
-        target_map = {
-            "brightness": "brightness",
-            "contrast": "contrast",
-            "color": "color",
-            "sharpness": "sharpness",
-            "color_temperature": "colorTemperature",
-            "picture_mode": "pictureMode",
-            "color_space": "colorSpace",
-            "light_sensor": "lightSensor",
-            "auto_picture_mode": "autoPictureMode",
-            "hdr_mode": "hdrMode",
-            "auto_local_dimming": "autoLocalDimming",
-            "xtended_dynamic_range": "xtendedDynamicRange",
-        }
-        target = target_map.get(target_key, target_key)
+        target = self.TARGET_MAP.get(target_key, target_key)
 
         for setting in self.coordinator.picture_settings:
             if setting.get("target") == target:
@@ -351,6 +352,12 @@ class BraviaTVNumber(BraviaTVEntity, NumberEntity):
                     self._attr_native_step = candidate.get("step", 1)
                 break
 
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._update_dynamic_attributes()
+        super()._handle_coordinator_update()
+
     @property
     def native_value(self) -> int | None:
         """Return the current value."""
@@ -359,19 +366,16 @@ class BraviaTVNumber(BraviaTVEntity, NumberEntity):
     @property
     def native_min_value(self) -> float:
         """Return the minimum value."""
-        self._update_dynamic_attributes()
         return self._attr_native_min_value
 
     @property
     def native_max_value(self) -> float:
         """Return the maximum value."""
-        self._update_dynamic_attributes()
         return self._attr_native_max_value
 
     @property
     def native_step(self) -> float:
         """Return the step value."""
-        self._update_dynamic_attributes()
         return self._attr_native_step
 
     async def async_set_native_value(self, value: float) -> None:
