@@ -23,27 +23,40 @@ def platforms() -> list[Platform]:
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "trait_fn"),
+    ("entity_id"),
     [
-        ("switch.roborock_s7_maxv_dock_child_lock", lambda trait: trait.child_lock),
-        (
-            "switch.roborock_s7_maxv_dock_status_indicator_light",
-            lambda trait: trait.flow_led_status,
-        ),
-        ("switch.roborock_s7_maxv_do_not_disturb", lambda trait: trait.dnd),
+        ("switch.roborock_s7_maxv_dock_child_lock"),
+        ("switch.roborock_s7_maxv_dock_status_indicator_light"),
+        ("switch.roborock_s7_maxv_do_not_disturb"),
     ],
 )
 async def test_update_success(
     hass: HomeAssistant,
     setup_entry: MockConfigEntry,
     entity_id: str,
-    fake_vacuum: FakeDevice,
-    trait_fn: Callable[[Any], Any],
 ) -> None:
     """Test turning switch entities on and off."""
-    trait = trait_fn(fake_vacuum.v1_properties)
+    # The entity fixture in conftest.py starts with the switch on and will
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "on"
 
-    # Ensure that the entity exist, as these test can pass even if there is no entity.
+    # Turn off the switch and verify the entity state is updated properly with
+    # the latest information from the trait.
+    assert hass.states.get(entity_id) is not None
+    await hass.services.async_call(
+        "switch",
+        SERVICE_TURN_OFF,
+        service_data=None,
+        blocking=True,
+        target={"entity_id": entity_id},
+    )
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "off"
+
+    # Turn back on and verify the entity state is updated properly with the
+    # latest information from the trait
     assert hass.states.get(entity_id) is not None
     await hass.services.async_call(
         "switch",
@@ -52,19 +65,9 @@ async def test_update_success(
         blocking=True,
         target={"entity_id": entity_id},
     )
-    assert len(trait.enable.mock_calls) == 1
-    assert len(trait.disable.mock_calls) == 0
-    trait.enable.reset_mock()
-
-    await hass.services.async_call(
-        "switch",
-        SERVICE_TURN_OFF,
-        service_data=None,
-        blocking=True,
-        target={"entity_id": entity_id},
-    )
-    assert len(trait.enable.mock_calls) == 0
-    assert len(trait.disable.mock_calls) == 1
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "on"
 
 
 @pytest.mark.parametrize(

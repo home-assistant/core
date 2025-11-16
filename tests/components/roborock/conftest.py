@@ -1,7 +1,7 @@
 """Global fixtures for Roborock integration."""
 
 import asyncio
-from collections.abc import Generator
+from collections.abc import Awaitable, Callable, Generator
 from copy import deepcopy
 import logging
 import pathlib
@@ -130,17 +130,38 @@ class FakeDeviceManager:
         return self._devices
 
 
+def make_fake_switch(obj: Any) -> Any:
+    """Update the fake object to emulate the switch trait behavior."""
+    obj.is_on = True
+    obj.enable = AsyncMock()
+    obj.enable.side_effect = lambda: setattr(obj, "is_on", True)
+    obj.disable = AsyncMock()
+    obj.disable.side_effect = lambda: setattr(obj, "is_on", False)
+    obj.refresh = AsyncMock()
+    return obj
+
+
+def set_timer_fn(obj: Any) -> Callable[[Any], Awaitable[None]]:
+    """Make a function for the fake timer trait that emulates the real behavior."""
+
+    async def update_timer_attributes(timer: Any) -> None:
+        setattr(obj, "start_hour", timer.start_hour)
+        setattr(obj, "start_minute", timer.start_minute)
+        setattr(obj, "end_hour", timer.end_hour)
+        setattr(obj, "end_minute", timer.end_minute)
+        setattr(obj, "enabled", timer.enabled)
+
+    return update_timer_attributes
+
+
 def create_v1_properties(network_info: NetworkInfo) -> Mock:
     """Create v1 properties for each fake device."""
     v1_properties = Mock()
     v1_properties.status: Any = deepcopy(STATUS)
     v1_properties.status.refresh = AsyncMock()
-    v1_properties.dnd: Any = deepcopy(DND_TIMER)
-    v1_properties.dnd.is_on = True
-    v1_properties.dnd.refresh = AsyncMock()
-    v1_properties.dnd.enable = AsyncMock()
-    v1_properties.dnd.disable = AsyncMock()
+    v1_properties.dnd: Any = make_fake_switch(deepcopy(DND_TIMER))
     v1_properties.dnd.set_dnd_timer = AsyncMock()
+    v1_properties.dnd.set_dnd_timer.side_effect = set_timer_fn(v1_properties.dnd)
     v1_properties.clean_summary: Any = deepcopy(CLEAN_SUMMARY)
     v1_properties.clean_summary.last_clean_record = deepcopy(CLEAN_RECORD)
     v1_properties.clean_summary.refresh = AsyncMock()
@@ -149,6 +170,9 @@ def create_v1_properties(network_info: NetworkInfo) -> Mock:
     v1_properties.consumables.reset_consumable = AsyncMock()
     v1_properties.sound_volume = SoundVolume(volume=50)
     v1_properties.sound_volume.set_volume = AsyncMock()
+    v1_properties.sound_volume.set_volume.side_effect = lambda vol: setattr(
+        v1_properties.sound_volume, "volume", vol
+    )
     v1_properties.sound_volume.refresh = AsyncMock()
     v1_properties.command = AsyncMock()
     v1_properties.command.send = AsyncMock()
@@ -160,26 +184,10 @@ def create_v1_properties(network_info: NetworkInfo) -> Mock:
     v1_properties.map_content.image_content = b"\x89PNG-001"
     v1_properties.map_content.map_data = deepcopy(MAP_DATA)
     v1_properties.map_content.refresh = AsyncMock()
-    v1_properties.child_lock = AsyncMock()
-    v1_properties.child_lock.is_on = True
-    v1_properties.child_lock.enable = AsyncMock()
-    v1_properties.child_lock.disable = AsyncMock()
-    v1_properties.child_lock.refresh = AsyncMock()
-    v1_properties.led_status = AsyncMock()
-    v1_properties.led_status.is_on = True
-    v1_properties.led_status.enable = AsyncMock()
-    v1_properties.led_status.disable = AsyncMock()
-    v1_properties.led_status.refresh = AsyncMock()
-    v1_properties.flow_led_status = AsyncMock()
-    v1_properties.flow_led_status.is_on = True
-    v1_properties.flow_led_status.enable = AsyncMock()
-    v1_properties.flow_led_status.disable = AsyncMock()
-    v1_properties.flow_led_status.refresh = AsyncMock()
-    v1_properties.valley_electricity_timer = AsyncMock()
-    v1_properties.valley_electricity_timer.is_on = True
-    v1_properties.valley_electricity_timer.enable = AsyncMock()
-    v1_properties.valley_electricity_timer.disable = AsyncMock()
-    v1_properties.valley_electricity_timer.refresh = AsyncMock()
+    v1_properties.child_lock = make_fake_switch(AsyncMock())
+    v1_properties.led_status = make_fake_switch(AsyncMock())
+    v1_properties.flow_led_status = make_fake_switch(AsyncMock())
+    v1_properties.valley_electricity_timer = make_fake_switch(AsyncMock())
     v1_properties.dust_collection_mode = AsyncMock()
     v1_properties.dust_collection_mode.refresh = AsyncMock()
     v1_properties.wash_towel_mode = AsyncMock()
