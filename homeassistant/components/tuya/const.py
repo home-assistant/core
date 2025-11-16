@@ -704,10 +704,12 @@ class DPCode(StrEnum):
     DECIBEL_SWITCH = "decibel_switch"
     DEHUMIDITY_SET_ENUM = "dehumidify_set_enum"
     DEHUMIDITY_SET_VALUE = "dehumidify_set_value"
+    DELAY_CLEAN_TIME = "delay_clean_time"
     DELAY_SET = "delay_set"
     DEW_POINT_TEMP = "dew_point_temp"
     DISINFECTION = "disinfection"
     DO_NOT_DISTURB = "do_not_disturb"
+    DOORBELL_PIC = "doorbell_pic"
     DOORCONTACT_STATE = "doorcontact_state"  # Status of door window sensor
     DOORCONTACT_STATE_2 = "doorcontact_state_2"
     DOORCONTACT_STATE_3 = "doorcontact_state_3"

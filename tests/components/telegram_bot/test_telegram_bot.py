@@ -91,7 +91,6 @@ from homeassistant.exceptions import (
     HomeAssistantError,
     ServiceValidationError,
 )
-from homeassistant.setup import async_setup_component
 from homeassistant.util import json as json_util
 from homeassistant.util.file import write_utf8_file
 
@@ -104,8 +103,14 @@ async def test_webhook_platform_init(hass: HomeAssistant, webhook_platform) -> N
     assert hass.services.has_service(DOMAIN, SERVICE_SEND_MESSAGE) is True
 
 
-async def test_polling_platform_init(hass: HomeAssistant, polling_platform) -> None:
+async def test_polling_platform_init(
+    hass: HomeAssistant, mock_polling_config_entry: MockConfigEntry
+) -> None:
     """Test initialization of the polling platform."""
+    mock_polling_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_polling_config_entry.entry_id)
+    await hass.async_block_till_done()
+
     assert hass.services.has_service(DOMAIN, SERVICE_SEND_MESSAGE) is True
 
 
@@ -613,7 +618,7 @@ async def test_webhook_endpoint_generates_telegram_attachment_event(
 
 async def test_polling_platform_message_text_update(
     hass: HomeAssistant,
-    config_polling,
+    mock_polling_config_entry: MockConfigEntry,
     update_message_text,
     mock_external_calls: None,
 ) -> None:
@@ -634,11 +639,8 @@ async def test_polling_platform_message_text_update(
         application.stop = AsyncMock()
         application.shutdown = AsyncMock()
 
-        await async_setup_component(
-            hass,
-            DOMAIN,
-            config_polling,
-        )
+        mock_polling_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_polling_config_entry.entry_id)
         await hass.async_block_till_done()
 
         # Then call the callback and assert events fired.
@@ -657,12 +659,9 @@ async def test_polling_platform_message_text_update(
 
     assert len(events) == 1
     assert events[0].data["text"] == update_message_text["message"]["text"]
-
-    config_entry = hass.config_entries.async_entry_for_domain_unique_id(
-        DOMAIN, "1234567890:ABC"
+    assert (
+        events[0].data["bot"]["config_entry_id"] == mock_polling_config_entry.entry_id
     )
-    assert config_entry is not None
-    assert events[0].data["bot"]["config_entry_id"] == config_entry.entry_id
     assert events[0].data["bot"]["id"] == 123456
     assert events[0].data["bot"]["first_name"] == "Testbot"
     assert events[0].data["bot"]["last_name"] == "mock last name"
@@ -685,7 +684,7 @@ async def test_polling_platform_message_text_update(
 )
 async def test_polling_platform_add_error_handler(
     hass: HomeAssistant,
-    config_polling: dict[str, Any],
+    mock_polling_config_entry: MockConfigEntry,
     update_message_text: dict[str, Any],
     mock_external_calls: None,
     caplog: pytest.LogCaptureFixture,
@@ -707,11 +706,8 @@ async def test_polling_platform_add_error_handler(
         application.shutdown = AsyncMock()
         application.bot.defaults.tzinfo = None
 
-        await async_setup_component(
-            hass,
-            DOMAIN,
-            config_polling,
-        )
+        mock_polling_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_polling_config_entry.entry_id)
         await hass.async_block_till_done()
 
         update = Update.de_json(update_message_text, application.bot)
@@ -735,7 +731,7 @@ async def test_polling_platform_add_error_handler(
 )
 async def test_polling_platform_start_polling_error_callback(
     hass: HomeAssistant,
-    config_polling: dict[str, Any],
+    mock_polling_config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
     mock_external_calls: None,
     error: Exception,
@@ -755,13 +751,10 @@ async def test_polling_platform_start_polling_error_callback(
         application.stop = AsyncMock()
         application.shutdown = AsyncMock()
 
-        await async_setup_component(
-            hass,
-            DOMAIN,
-            config_polling,
-        )
-
+        mock_polling_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_polling_config_entry.entry_id)
         await hass.async_block_till_done()
+
         error_callback = application.updater.start_polling.call_args.kwargs[
             "error_callback"
         ]
@@ -834,13 +827,19 @@ async def test_webhook_endpoint_invalid_secret_token_is_denied(
 
 async def test_multiple_config_entries_error(
     hass: HomeAssistant,
+    mock_polling_config_entry: MockConfigEntry,
     mock_broadcast_config_entry: MockConfigEntry,
-    polling_platform,
     mock_external_calls: None,
+    mock_polling_calls: None,
 ) -> None:
     """Test multiple config entries error."""
 
-    # setup the second entry (polling_platform is first entry)
+    # setup the first entry
+    mock_polling_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_polling_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # setup the second entry
     mock_broadcast_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
     await hass.async_block_till_done()
