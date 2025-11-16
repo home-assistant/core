@@ -22,6 +22,9 @@ from . import config_validation as cv
 
 SELECTORS: decorator.Registry[str, type[Selector]] = decorator.Registry()
 
+# Reusable validator for non-empty strings
+NON_EMPTY_STRING = vol.All(cv.string, vol.Length(min=1))
+
 
 def _get_selector_type_and_class(config: Any) -> tuple[str, type[Selector]]:
     """Get selector type and class."""
@@ -265,7 +268,7 @@ class AddonSelector(Selector[AddonSelectorConfig]):
 
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
-        addon: str = vol.Schema(vol.All(cv.string, vol.Length(min=1)))(data)
+        addon: str = vol.Schema(NON_EMPTY_STRING)(data)
         return addon
 
 
@@ -304,11 +307,11 @@ class AreaSelector(Selector[AreaSelectorConfig]):
     def __call__(self, data: Any) -> str | list[str]:
         """Validate the passed selection."""
         if not self.config["multiple"]:
-            area_id: str = vol.Schema(vol.All(cv.string, vol.Length(min=1)))(data)
+            area_id: str = vol.Schema(NON_EMPTY_STRING)(data)
             return area_id
         if not isinstance(data, list):
             raise vol.Invalid("Value should be a list")
-        return [vol.Schema(vol.All(cv.string, vol.Length(min=1)))(val) for val in data]
+        return [vol.Schema(NON_EMPTY_STRING)(val) for val in data]
 
 
 class AssistPipelineSelectorConfig(BaseSelectorConfig, total=False):
@@ -329,7 +332,7 @@ class AssistPipelineSelector(Selector[AssistPipelineSelectorConfig]):
 
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
-        pipeline: str = vol.Schema(vol.All(cv.string, vol.Length(min=1)))(data)
+        pipeline: str = vol.Schema(NON_EMPTY_STRING)(data)
         return pipeline
 
 
@@ -361,7 +364,7 @@ class AttributeSelector(Selector[AttributeSelectorConfig]):
 
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
-        attribute: str = vol.Schema(vol.All(cv.string, vol.Length(min=1)))(data)
+        attribute: str = vol.Schema(NON_EMPTY_STRING)(data)
         return attribute
 
 
@@ -536,7 +539,7 @@ class ConfigEntrySelector(Selector[ConfigEntrySelectorConfig]):
 
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
-        config: str = vol.Schema(vol.All(cv.string, vol.Length(min=1)))(data)
+        config: str = vol.Schema(NON_EMPTY_STRING)(data)
         return config
 
 
@@ -596,7 +599,7 @@ class ConversationAgentSelector(Selector[ConversationAgentSelectorConfig]):
 
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
-        agent: str = vol.Schema(vol.All(cv.string, vol.Length(min=1)))(data)
+        agent: str = vol.Schema(NON_EMPTY_STRING)(data)
         return agent
 
 
@@ -922,7 +925,7 @@ class IconSelector(Selector[IconSelectorConfig]):
 
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
-        icon: str = vol.Schema(vol.All(cv.string, vol.Length(min=1)))(data)
+        icon: str = vol.Schema(NON_EMPTY_STRING)(data)
         return icon
 
 
@@ -1595,7 +1598,7 @@ class ThemeSelector(Selector[ThemeSelectorConfig]):
 
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
-        theme: str = vol.Schema(vol.All(cv.string, vol.Length(min=1)))(data)
+        theme: str = vol.Schema(NON_EMPTY_STRING)(data)
         return theme
 
 
