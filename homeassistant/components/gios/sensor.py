@@ -231,23 +231,18 @@ class GiosSensor(CoordinatorEntity[GiosDataUpdateCoordinator], SensorEntity):
         station_id = coordinator.gios.station_id
         assert station_id is not None
         station_name = coordinator.gios.measurement_stations[station_id].name
+        device_info_kwargs = {
+            "entry_type": DeviceEntryType.SERVICE,
+            "identifiers": {(DOMAIN, str(station_id))},
+            "manufacturer": MANUFACTURER,
+            "configuration_url": URL.format(station_id=station_id),
+        }
         if name:
-            self._attr_device_info = DeviceInfo(
-                entry_type=DeviceEntryType.SERVICE,
-                identifiers={(DOMAIN, str(station_id))},
-                manufacturer=MANUFACTURER,
-                configuration_url=URL.format(station_id=station_id),
-                name=name,
-            )
+            device_info_kwargs["name"] = name
         else:
-            self._attr_device_info = DeviceInfo(
-                entry_type=DeviceEntryType.SERVICE,
-                identifiers={(DOMAIN, str(station_id))},
-                manufacturer=MANUFACTURER,
-                configuration_url=URL.format(station_id=station_id),
-                translation_key="station",
-                translation_placeholders={"station_name": station_name},
-            )
+            device_info_kwargs["translation_key"] = "station"
+            device_info_kwargs["translation_placeholders"] = {"station_name": station_name}
+        self._attr_device_info = DeviceInfo(**device_info_kwargs)
         if description.subkey:
             self._attr_unique_id = (
                 f"{coordinator.gios.station_id}-{description.key}-{description.subkey}"
