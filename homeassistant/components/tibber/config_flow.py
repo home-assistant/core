@@ -67,6 +67,7 @@ class TibberConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         self._api_type: str | None = None
         self._data_api_home_ids: list[str] = []
         self._data_api_user_sub: str | None = None
+        self._reauth_confirmed: bool = False
 
     @property
     def logger(self) -> logging.Logger:
@@ -277,7 +278,8 @@ class TibberConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm the reauth dialog for GraphQL entries."""
-        if user_input is None:
+        if user_input is None and not self._reauth_confirmed:
+            self._reauth_confirmed = True
             return self.async_show_form(step_id="reauth_confirm")
 
         return await self.async_step_graphql()

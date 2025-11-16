@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 from homeassistant.components.recorder import Recorder
+from homeassistant.components.tibber.const import API_TYPE_GRAPHQL
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -34,6 +35,7 @@ async def test_entry_diagnostics(
         result = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
 
     assert result == {
+        "api_type": API_TYPE_GRAPHQL,
         "homes": [],
     }
 
@@ -44,6 +46,7 @@ async def test_entry_diagnostics(
         result = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
 
     assert result == {
+        "api_type": API_TYPE_GRAPHQL,
         "homes": [
             {
                 "last_data_timestamp": "2016-01-01T12:48:57",
