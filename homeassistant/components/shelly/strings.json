@@ -198,6 +198,9 @@
       },
       "restart_required": {
         "name": "Restart required"
+      },
+      "smoke_with_channel_name": {
+        "name": "{channel_name} smoke"
       }
     },
     "button": {
