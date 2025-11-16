@@ -133,7 +133,7 @@ adb-shell[async]==0.4.4
 adext==0.4.4
 
 # homeassistant.components.adguard
-adguardhome==0.7.0
+adguardhome==0.8.1
 
 # homeassistant.components.advantage_air
 advantage-air==0.4.4
@@ -2451,7 +2451,7 @@ tessie-api==0.1.1
 thermobeacon-ble==0.10.0
 
 # homeassistant.components.thermopro
-thermopro-ble==0.13.1
+thermopro-ble==1.1.2
 
 # homeassistant.components.lg_thinq
 thinqconnect==1.0.8
@@ -2478,7 +2478,7 @@ toonapi==0.3.0
 total-connect-client==2025.5
 
 # homeassistant.components.tplink_omada
-tplink-omada-client==1.4.4
+tplink-omada-client==1.5.3
 
 # homeassistant.components.transmission
 transmission-rpc==7.0.3
