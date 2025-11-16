@@ -7172,11 +7172,11 @@ async def test_reconfigure_subentry_create_subentry(hass: HomeAssistant) -> None
     }
 
 
-@pytest.mark.parametrize("unique_id", [["blah", "bleh"], {"key": "value"}])
-async def test_unhashable_unique_id_fails(
+@pytest.mark.parametrize("unique_id", [["blah", "bleh"], {"key": "value"}, 123, 2.3])
+async def test_non_string_unique_id_fails(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, unique_id: Any
 ) -> None:
-    """Test the ConfigEntryItems user dict fails unhashable unique_id."""
+    """Test the ConfigEntryItems user dict fails non string unique_id."""
     entries = config_entries.ConfigEntryItems(hass)
     entry = config_entries.ConfigEntry(
         data={},
@@ -7193,11 +7193,8 @@ async def test_unhashable_unique_id_fails(
     )
 
     unique_id_string = re.escape(str(unique_id))
-    with pytest.raises(
-        HomeAssistantError,
-        match=f"The entry unique id {unique_id_string} is not a string.",
-    ):
-        entries[entry.entry_id] = entry
+    entries[entry.entry_id] = entry
+    assert f"The entry title unique id {unique_id} is not a string" in caplog.text
 
     assert entry.entry_id not in entries
 
@@ -7208,11 +7205,11 @@ async def test_unhashable_unique_id_fails(
         entries.get_entry_by_domain_and_unique_id("test", unique_id)
 
 
-@pytest.mark.parametrize("unique_id", [["blah", "bleh"], {"key": "value"}])
-async def test_unhashable_unique_id_fails_on_update(
+@pytest.mark.parametrize("unique_id", [["blah", "bleh"], {"key": "value"}, 123, 2.3])
+async def test_non_string_unique_id_fails_on_update(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, unique_id: Any
 ) -> None:
-    """Test the ConfigEntryItems user dict fails non-hashable unique_id on update."""
+    """Test the ConfigEntryItems user dict fails non-string unique_id on update."""
     entries = config_entries.ConfigEntryItems(hass)
     entry = config_entries.ConfigEntry(
         data={},
@@ -7234,7 +7231,7 @@ async def test_unhashable_unique_id_fails_on_update(
     unique_id_string = re.escape(str(unique_id))
     with pytest.raises(
         HomeAssistantError,
-        match=f"The entry unique id {unique_id_string} is not a string.",
+        match=f"Cannot update unique id to {unique_id_string} as it's not a string value.",
     ):
         entries.update_unique_id(entry, unique_id)
 
@@ -7273,48 +7270,33 @@ async def test_string_unique_id_no_warning(
     assert entries.get_entry_by_domain_and_unique_id("test", "123") is None
 
 
-@pytest.mark.parametrize(
-    ("unique_id", "type_name"),
-    [
-        (123, "int"),
-        (2.3, "float"),
-    ],
-)
-async def test_hashable_unique_id(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-    unique_id: Any,
-    type_name: str,
+async def test_loading_incorrect_unique_silently_ignored(
+    hass: HomeAssistant, hass_storage: dict[str, Any], caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test the ConfigEntryItems user dict handles hashable non string unique_id."""
-    entries = config_entries.ConfigEntryItems(hass)
-    entry = config_entries.ConfigEntry(
-        data={},
-        discovery_keys={},
-        domain="test",
-        entry_id="mock_id",
-        minor_version=1,
-        options={},
-        source="test",
-        subentries_data=(),
-        title="title",
-        unique_id=unique_id,
-        version=1,
-    )
+    """Test entry with incorrect unique id silently is ignored."""
+    hass_storage[config_entries.STORAGE_KEY] = {
+        "version": 1,
+        "data": {
+            "entries": [
+                {
+                    "version": 5,
+                    "domain": "my_domain",
+                    "entry_id": "mock-id",
+                    "data": {"my": "data"},
+                    "source": "user",
+                    "title": "Mock title",
+                    "unique_id": 123,
+                    "system_options": {"disable_new_entities": True},
+                }
+            ]
+        },
+    }
+    manager = config_entries.ConfigEntries(hass, {})
+    await manager.async_initialize()
 
-    entries[entry.entry_id] = entry
-
-    assert (
-        "Config entry 'title' from integration test has an invalid unique_id"
-        f" '{unique_id}' of type {type_name} when a string is expected"
-    ) in caplog.text
-
-    assert entry.entry_id in entries
-    assert entries[entry.entry_id] is entry
-    assert entries.get_entry_by_domain_and_unique_id("test", unique_id) == entry
-    del entries[entry.entry_id]
-    assert not entries
-    assert entries.get_entry_by_domain_and_unique_id("test", unique_id) is None
+    entries = manager.async_entries()
+    assert len(entries) == 0
+    assert "The entry unique id 123 is not a string" not in caplog.text
 
 
 async def test_no_unique_id_no_warning(

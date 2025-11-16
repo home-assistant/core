@@ -510,8 +510,8 @@ async def test_camera_content_type(
         "framerate": 2,
         "verify_ssl": True,
     }
-    await help_setup_mock_config_entry(hass, cam_config_jpg, unique_id=12345)
-    await help_setup_mock_config_entry(hass, cam_config_svg, unique_id=54321)
+    await help_setup_mock_config_entry(hass, cam_config_jpg, unique_id="12345")
+    await help_setup_mock_config_entry(hass, cam_config_svg, unique_id="54321")
 
     client = await hass_client()
 

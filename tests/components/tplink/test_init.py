@@ -5,7 +5,7 @@ from __future__ import annotations
 import copy
 from datetime import timedelta
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
+from unittest.mock import AsyncMock, PropertyMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from kasa import (
@@ -85,7 +85,7 @@ async def test_configuring_tplink_causes_discovery(
         patch("homeassistant.components.tplink.Discover.discover_single"),
         patch("homeassistant.components.tplink.Device.connect"),
     ):
-        discover.return_value = {MagicMock(): MagicMock()}
+        discover.return_value = {}
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done(wait_background_tasks=True)
         # call_count will differ based on number of broadcast addresses

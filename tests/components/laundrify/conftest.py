@@ -38,7 +38,7 @@ async def laundrify_setup_config_entry(
     """Create laundrify entry in Home Assistant."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id=VALID_ACCOUNT_ID,
+        unique_id=str(VALID_ACCOUNT_ID),
         data={CONF_ACCESS_TOKEN: access_token},
         minor_version=2,
     )
