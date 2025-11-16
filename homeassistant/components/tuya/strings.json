@@ -494,6 +494,15 @@
           "power_on": "[%key:common::state::on%]"
         }
       },
+      "siren_mode": {
+        "name": "Siren mode",
+        "state": {
+          "alarm_light": "Light",
+          "alarm_sound": "Sound",
+          "alarm_sound_light": "Sound & light",
+          "normal": "[%key:common::state::normal%]"
+        }
+      },
       "target_humidity": {
         "name": "Target humidity"
       },
