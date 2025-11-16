@@ -253,3 +253,129 @@ async def test_number_entity_values(
     state = hass.states.get("number.bravia_tv_model_color_temperature")
     assert state
     assert state.state == "40"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_dynamic_attributes_from_api(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that min/max/step are dynamically read from API candidate data."""
+    # Picture settings with candidate structure containing custom min/max/step
+    picture_settings_with_candidates = [
+        {
+            "target": "brightness",
+            "currentValue": "25",
+            "candidate": [{"min": 10, "max": 50, "step": 5}],
+        },
+        {
+            "target": "contrast",
+            "currentValue": "60",
+            "candidate": [{"min": 20, "max": 80, "step": 2}],
+        },
+    ]
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="BRAVIA TV-Model",
+        data={
+            CONF_HOST: "localhost",
+            CONF_MAC: "AA:BB:CC:DD:EE:FF",
+            CONF_USE_PSK: True,
+            CONF_PIN: "12345qwerty",
+        },
+        unique_id="very_unique_string_dynamic",
+    )
+    config_entry.add_to_hass(hass)
+
+    with (
+        patch("homeassistant.components.braviatv.PLATFORMS", [Platform.NUMBER]),
+        patch("pybravia.BraviaClient.connect"),
+        patch("pybravia.BraviaClient.pair"),
+        patch("pybravia.BraviaClient.set_wol_mode"),
+        patch("pybravia.BraviaClient.get_system_info", return_value=BRAVIA_SYSTEM_INFO),
+        patch("pybravia.BraviaClient.get_power_status", return_value="active"),
+        patch("pybravia.BraviaClient.get_external_status", return_value=[]),
+        patch("pybravia.BraviaClient.get_volume_info", return_value={}),
+        patch("pybravia.BraviaClient.get_playing_info", return_value={}),
+        patch("pybravia.BraviaClient.get_app_list", return_value=[]),
+        patch("pybravia.BraviaClient.get_content_list_all", return_value=[]),
+        patch(
+            "pybravia.BraviaClient.get_picture_setting",
+            return_value=picture_settings_with_candidates,
+        ),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Test brightness entity has custom min/max/step from candidate data
+    state = hass.states.get("number.bravia_tv_model_picture_brightness")
+    assert state
+    assert state.state == "25"
+    assert state.attributes["min"] == 10
+    assert state.attributes["max"] == 50
+    assert state.attributes["step"] == 5
+
+    # Test contrast entity has custom min/max/step from candidate data
+    state = hass.states.get("number.bravia_tv_model_picture_contrast")
+    assert state
+    assert state.state == "60"
+    assert state.attributes["min"] == 20
+    assert state.attributes["max"] == 80
+    assert state.attributes["step"] == 2
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_default_attributes_without_candidate_data(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that default min/max/step are used when API doesn't provide candidate data."""
+    # Picture settings without candidate structure - should use defaults
+    picture_settings_without_candidates = [
+        {
+            "target": "brightness",
+            "currentValue": "50",
+        },
+    ]
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="BRAVIA TV-Model",
+        data={
+            CONF_HOST: "localhost",
+            CONF_MAC: "AA:BB:CC:DD:EE:FF",
+            CONF_USE_PSK: True,
+            CONF_PIN: "12345qwerty",
+        },
+        unique_id="very_unique_string_defaults",
+    )
+    config_entry.add_to_hass(hass)
+
+    with (
+        patch("homeassistant.components.braviatv.PLATFORMS", [Platform.NUMBER]),
+        patch("pybravia.BraviaClient.connect"),
+        patch("pybravia.BraviaClient.pair"),
+        patch("pybravia.BraviaClient.set_wol_mode"),
+        patch("pybravia.BraviaClient.get_system_info", return_value=BRAVIA_SYSTEM_INFO),
+        patch("pybravia.BraviaClient.get_power_status", return_value="active"),
+        patch("pybravia.BraviaClient.get_external_status", return_value=[]),
+        patch("pybravia.BraviaClient.get_volume_info", return_value={}),
+        patch("pybravia.BraviaClient.get_playing_info", return_value={}),
+        patch("pybravia.BraviaClient.get_app_list", return_value=[]),
+        patch("pybravia.BraviaClient.get_content_list_all", return_value=[]),
+        patch(
+            "pybravia.BraviaClient.get_picture_setting",
+            return_value=picture_settings_without_candidates,
+        ),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Test brightness entity uses default min/max/step values
+    state = hass.states.get("number.bravia_tv_model_picture_brightness")
+    assert state
+    assert state.state == "50"
+    assert state.attributes["min"] == 0  # Default
+    assert state.attributes["max"] == 100  # Default
+    assert state.attributes["step"] == 1  # Default
