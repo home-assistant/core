@@ -361,7 +361,7 @@ class AttributeSelector(Selector[AttributeSelectorConfig]):
 
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
-        attribute: str = vol.Schema(str)(data)
+        attribute: str = vol.Schema(vol.All(cv.string, vol.Length(min=1)))(data)
         return attribute
 
 
@@ -536,7 +536,7 @@ class ConfigEntrySelector(Selector[ConfigEntrySelectorConfig]):
 
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
-        config: str = vol.Schema(str)(data)
+        config: str = vol.Schema(vol.All(cv.string, vol.Length(min=1)))(data)
         return config
 
 
@@ -596,7 +596,7 @@ class ConversationAgentSelector(Selector[ConversationAgentSelectorConfig]):
 
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
-        agent: str = vol.Schema(str)(data)
+        agent: str = vol.Schema(vol.All(cv.string, vol.Length(min=1)))(data)
         return agent
 
 
@@ -922,7 +922,7 @@ class IconSelector(Selector[IconSelectorConfig]):
 
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
-        icon: str = vol.Schema(str)(data)
+        icon: str = vol.Schema(vol.All(cv.string, vol.Length(min=1)))(data)
         return icon
 
 
@@ -1595,7 +1595,7 @@ class ThemeSelector(Selector[ThemeSelectorConfig]):
 
     def __call__(self, data: Any) -> str:
         """Validate the passed selection."""
-        theme: str = vol.Schema(str)(data)
+        theme: str = vol.Schema(vol.All(cv.string, vol.Length(min=1)))(data)
         return theme
 
 
