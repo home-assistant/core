@@ -392,7 +392,7 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                     type="tool_use",
                     id=response.content_block.id,
                     name=response.content_block.name,
-                    input="",
+                    input={},
                 )
                 current_tool_args = ""
                 if response.content_block.name == output_tool:
@@ -459,7 +459,7 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                     type="server_tool_use",
                     id=response.content_block.id,
                     name=response.content_block.name,
-                    input="",
+                    input={},
                 )
                 current_tool_args = ""
             elif isinstance(response.content_block, WebSearchToolResultBlock):
