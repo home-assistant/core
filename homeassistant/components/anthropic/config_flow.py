@@ -6,7 +6,7 @@ from functools import partial
 import json
 import logging
 import re
-from typing import Any
+from typing import Any, cast
 
 import anthropic
 import voluptuous as vol
@@ -58,13 +58,7 @@ from .const import (
     DEFAULT_CONVERSATION_NAME,
     DOMAIN,
     NON_THINKING_MODELS,
-    RECOMMENDED_CHAT_MODEL,
-    RECOMMENDED_MAX_TOKENS,
-    RECOMMENDED_TEMPERATURE,
-    RECOMMENDED_THINKING_BUDGET,
-    RECOMMENDED_WEB_SEARCH,
-    RECOMMENDED_WEB_SEARCH_MAX_USES,
-    RECOMMENDED_WEB_SEARCH_USER_LOCATION,
+    RECOMMENDED,
     WEB_SEARCH_UNSUPPORTED_MODELS,
 )
 
@@ -283,7 +277,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         step_schema: VolDictType = {
             vol.Optional(
                 CONF_CHAT_MODEL,
-                default=RECOMMENDED_CHAT_MODEL,
+                default=RECOMMENDED[CONF_CHAT_MODEL],
             ): SelectSelector(
                 SelectSelectorConfig(
                     options=await self._get_model_list(), custom_value=True
@@ -291,11 +285,11 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
             ),
             vol.Optional(
                 CONF_MAX_TOKENS,
-                default=RECOMMENDED_MAX_TOKENS,
+                default=RECOMMENDED[CONF_MAX_TOKENS],
             ): int,
             vol.Optional(
                 CONF_TEMPERATURE,
-                default=RECOMMENDED_TEMPERATURE,
+                default=RECOMMENDED[CONF_TEMPERATURE],
             ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
         }
 
@@ -325,12 +319,16 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
 
         if not model.startswith(tuple(NON_THINKING_MODELS)):
             step_schema[
-                vol.Optional(CONF_THINKING_BUDGET, default=RECOMMENDED_THINKING_BUDGET)
+                vol.Optional(
+                    CONF_THINKING_BUDGET, default=RECOMMENDED[CONF_THINKING_BUDGET]
+                )
             ] = vol.All(
                 NumberSelector(
                     NumberSelectorConfig(
                         min=0,
-                        max=self.options.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS),
+                        max=self.options.get(
+                            CONF_MAX_TOKENS, RECOMMENDED[CONF_MAX_TOKENS]
+                        ),
                     )
                 ),
                 vol.Coerce(int),
@@ -343,15 +341,15 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                 {
                     vol.Optional(
                         CONF_WEB_SEARCH,
-                        default=RECOMMENDED_WEB_SEARCH,
+                        default=RECOMMENDED[CONF_WEB_SEARCH],
                     ): bool,
                     vol.Optional(
                         CONF_WEB_SEARCH_MAX_USES,
-                        default=RECOMMENDED_WEB_SEARCH_MAX_USES,
+                        default=RECOMMENDED[CONF_WEB_SEARCH_MAX_USES],
                     ): int,
                     vol.Optional(
                         CONF_WEB_SEARCH_USER_LOCATION,
-                        default=RECOMMENDED_WEB_SEARCH_USER_LOCATION,
+                        default=RECOMMENDED[CONF_WEB_SEARCH_USER_LOCATION],
                     ): bool,
                 }
             )
@@ -369,9 +367,13 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
             user_input = {}
 
         if user_input is not None:
-            if user_input.get(CONF_WEB_SEARCH, RECOMMENDED_WEB_SEARCH) and not errors:
+            if (
+                user_input.get(CONF_WEB_SEARCH, RECOMMENDED[CONF_WEB_SEARCH])
+                and not errors
+            ):
                 if user_input.get(
-                    CONF_WEB_SEARCH_USER_LOCATION, RECOMMENDED_WEB_SEARCH_USER_LOCATION
+                    CONF_WEB_SEARCH_USER_LOCATION,
+                    RECOMMENDED[CONF_WEB_SEARCH_USER_LOCATION],
                 ):
                     user_input.update(await self._get_location_data())
 
@@ -456,7 +458,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                 }
             )
             response = await client.messages.create(
-                model=RECOMMENDED_CHAT_MODEL,
+                model=cast(str, RECOMMENDED[CONF_CHAT_MODEL]),
                 messages=[
                     {
                         "role": "user",
@@ -471,7 +473,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                         "content": "{",  # hints the model to skip any preamble
                     },
                 ],
-                max_tokens=RECOMMENDED_MAX_TOKENS,
+                max_tokens=cast(int, RECOMMENDED[CONF_MAX_TOKENS]),
             )
             _LOGGER.debug("Model response: %s", response.content)
             location_data = location_schema(
