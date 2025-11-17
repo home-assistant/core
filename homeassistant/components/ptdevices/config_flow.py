@@ -8,16 +8,17 @@ import logging
 from typing import Any
 
 import aioptdevices
-from aioptdevices.interface import PTDevicesResponse
+from aioptdevices.configuration import Configuration
+from aioptdevices.interface import Interface, PTDevicesResponse
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_TOKEN, CONF_DEVICE_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
-from .device import ptdevices_get_data
+from .const import DEFAULT_URL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,12 +36,20 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> str:
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
 
+    session = async_get_clientsession(hass)
+    ptdevices_interface = Interface(
+        Configuration(
+            auth_token=data[CONF_API_TOKEN],
+            device_id=data[CONF_DEVICE_ID],
+            url=DEFAULT_URL,
+            session=session,
+        )
+    )
+
     # Test Connection
     try:
         async with asyncio.timeout(10):
-            response: PTDevicesResponse = await ptdevices_get_data(
-                hass, data[CONF_API_TOKEN], data[CONF_DEVICE_ID]
-            )
+            response: PTDevicesResponse = await ptdevices_interface.get_data()
 
     # Catch any errors
     except aioptdevices.PTDevicesRequestError as err:

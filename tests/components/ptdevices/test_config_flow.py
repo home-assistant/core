@@ -32,7 +32,7 @@ async def test_flow_success(
     assert result["step_id"] == "user"
     with (
         patch(
-            "homeassistant.components.ptdevices.device.device.Interface.get_data",
+            "aioptdevices.interface.Interface.get_data",
             return_value=mock_ptdevices_level,
         ),
         patch(
@@ -72,7 +72,7 @@ async def test_flow_duplicate_device(
     assert result1["step_id"] == "user"
     with (
         patch(
-            "homeassistant.components.ptdevices.device.device.Interface.get_data",
+            "aioptdevices.interface.Interface.get_data",
             return_value=mock_ptdevices_level,
         ),
         patch(
@@ -104,7 +104,7 @@ async def test_flow_duplicate_device(
     assert result2["step_id"] == "user"
     with (
         patch(
-            "homeassistant.components.ptdevices.device.device.Interface.get_data",
+            "aioptdevices.interface.Interface.get_data",
             return_value=mock_ptdevices_level,
         ),
         patch(
@@ -136,7 +136,7 @@ async def test_flow_invalid_auth(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.ptdevices.device.device.Interface.get_data",
+            "aioptdevices.interface.Interface.get_data",
             side_effect=PTDevicesUnauthorizedError,
         ),
         patch(
@@ -170,7 +170,7 @@ async def test_flow_cannot_connect(
     assert result["step_id"] == "user"
     with (
         patch(
-            "homeassistant.components.ptdevices.device.device.Interface.get_data",
+            "aioptdevices.interface.Interface.get_data",
             side_effect=PTDevicesRequestError,
         ),
         patch(
@@ -202,7 +202,7 @@ async def test_flow_resp_forbidden_error(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.ptdevices.device.device.Interface.get_data",
+            "aioptdevices.interface.Interface.get_data",
             side_effect=PTDevicesForbiddenError,
         ),
         patch(
@@ -237,7 +237,7 @@ async def test_flow_missing_title(
     assert result["step_id"] == "user"
     with (
         patch(
-            "homeassistant.components.ptdevices.device.device.Interface.get_data",
+            "aioptdevices.interface.Interface.get_data",
             return_value=mock_ptdevices_level_missing_title,
         ),
         patch(
@@ -422,7 +422,7 @@ async def test_flow_reauth_malformed_response(
     # Try reauthorizing the device but getting an unauthorized error
     with (
         patch(
-            "homeassistant.components.ptdevices.device.device.Interface.get_data",
+            "aioptdevices.interface.Interface.get_data",
             return_value=mock_ptdevices_level_missing_title,
         ),
         patch(

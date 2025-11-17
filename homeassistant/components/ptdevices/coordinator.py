@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
+from asyncio import timeout
 from datetime import timedelta
 import logging
 from typing import Any, Final
 
 import aioptdevices
-from aioptdevices.interface import PTDevicesResponse
+from aioptdevices.interface import Interface, PTDevicesResponse
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -21,7 +22,6 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import DOMAIN
-from .device import ptdevices_get_data
 
 _LOGGER = logging.getLogger(__name__)
 REFRESH_COOLDOWN: Final = 30
@@ -40,8 +40,7 @@ class PTDevicesCoordinator(DataUpdateCoordinator[PTDevicesResponse]):
         self,
         hass: HomeAssistant,
         config_entry: PTDevicesConfigEntry,
-        device_id: str,
-        auth_token: str,
+        ptdevices_interface: Interface,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -58,9 +57,7 @@ class PTDevicesCoordinator(DataUpdateCoordinator[PTDevicesResponse]):
             ),
         )
 
-        self._hass = hass
-        self._auth_token = auth_token
-        self._device_id = device_id
+        self.interface = ptdevices_interface
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -82,10 +79,8 @@ class PTDevicesCoordinator(DataUpdateCoordinator[PTDevicesResponse]):
 
     async def _async_update_data(self) -> PTDevicesResponse:
         try:
-            data = await ptdevices_get_data(
-                self._hass, self._auth_token, self._device_id
-            )
-
+            async with timeout(10):
+                data: PTDevicesResponse = await self.interface.get_data()
         except aioptdevices.PTDevicesRequestError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
