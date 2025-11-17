@@ -2,6 +2,7 @@
   "domain": "yandextts",
   "name": "Yandex TTS",
   "codeowners": [],
+  "dependencies": ["tts"],
   "documentation": "https://www.home-assistant.io/integrations/yandextts",
   "iot_class": "cloud_push",
   "quality_scale": "legacy"
