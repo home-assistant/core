@@ -49,7 +49,7 @@
           "project_id": "Device Access Project ID"
         },
         "data_description": {
-          "project_id": "The Device Access Project ID which can be obtainedfrom the Device Access Console"
+          "project_id": "The Device Access Project ID which can be obtained from the Device Access Console"
         },
         "description": "Create a Nest Device Access project which **requires paying Google a US $5 fee** to set up.\n1. Go to the [Device Access Console]({device_access_console_url}), and through the payment flow.\n1. Select on **Create project**\n1. Give your Device Access project a name and select **Next**.\n1. Enter your OAuth Client ID\n1. Skip enabling events for now and select **Create project**.\n\nEnter your Device Access Project ID below ([more info]({more_info_url})).",
         "title": "Nest: Create a Device Access Project"
