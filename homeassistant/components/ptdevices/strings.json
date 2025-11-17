@@ -45,101 +45,32 @@
       "battery_voltage": {
         "name": "Battery Voltage"
       },
-      "device_addr": {
-        "name": "Installation Address"
-      },
-      "device_created": {
-        "name": "Creation Date"
-      },
-      "device_delivery_notes": {
-        "name": "Delivery Notes"
-      },
-      "device_id": {
-        "name": "ID"
-      },
-      "device_loc": {
-        "name": "Location"
-      },
-      "device_mac": {
-        "name": "MAC Address"
-      },
-      "device_reported": {
-        "name": "Last RX Report"
-      },
-      "device_share_id": {
-        "name": "Share ID"
-      },
-      "device_status": {
-        "name": "Status"
-      },
-      "device_title": {
-        "name": "Title"
-      },
-      "device_tx_signal": {
-        "name": "LoRa Signal Strength"
-      },
-      "device_type": {
-        "name": "Type"
-      },
-      "device_units": {
-        "name": "Units"
-      },
-      "device_version": {
-        "name": "Receiver Firmware Version"
-      },
-      "device_wifi_signal": {
-        "name": "WiFi Signal Strength"
-      },
-      "enclosure_temp": {
-        "name": "Device Temperature"
-      },
-      "level_depth": {
+      "inch_level": {
         "name": "Level Depth"
       },
-      "level_percent": {
+      "percent_level": {
         "name": "Level Percent"
       },
-      "level_volume": {
-        "name": "Level Volume"
-      },
-      "power_x": {
-        "name": "Sleep Time"
-      },
-      "power_y": {
-        "name": "Max Level Change"
-      },
-      "power_z": {
-        "name": "Max Sleep Count"
-      },
-      "rx_updated_on": {
-        "name": "Last RX Firmware Updated"
-      },
-      "tank_depth": {
-        "name": "Tank Depth"
-      },
-      "tank_diameter": {
-        "name": "Tank Diameter"
-      },
-      "tank_length": {
-        "name": "Tank Length"
-      },
-      "tank_shape": {
-        "name": "Tank Shape"
-      },
-      "tank_width": {
-        "name": "Tank Width"
-      },
-      "temp_units": {
-        "name": "Temperature Units"
-      },
-      "temperature_probe": {
+      "probe_temperature": {
         "name": "Probe Temperature"
+      },
+      "reported": {
+        "name": "Last RX Report"
+      },
+      "status": {
+        "name": "Status"
       },
       "tx_reported": {
         "name": "Last TX Report"
       },
-      "user_id": {
-        "name": "User ID"
+      "tx_signal": {
+        "name": "LoRa Signal Strength"
+      },
+      "volume_level": {
+        "name": "Level Volume"
+      },
+      "wifi_signal": {
+        "name": "WiFi Signal Strength"
       }
     }
   },

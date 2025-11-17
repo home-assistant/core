@@ -1,67 +1,37 @@
 {
   "entity": {
     "sensor": {
-      "level_percent": {
+      "battery_status": {
+        "default": "mdi:battery"
+      },
+      "battery_voltage": {
+        "default": "mdi:battery"
+      },
+      "inch_level": {
+        "default": "mdi:water"
+      },
+      "percent_level": {
         "default": "mdi:water-percent"
       },
-      "level_volume": {
-        "default": "mdi:water"
-      },
-      "level_depth": {
-        "default": "mdi:water"
-      },
-      "temperature_probe": {
+      "probe_temperature": {
         "default": "mdi:thermometer"
       },
-      "device_title": {
-        "default": "mdi:information-outline"
-      },
-      "device_id": {
-        "default": "mdi:identifier"
-      },
-      "device_mac": {
-        "default": "mdi:identifier"
-      },
-      "device_share_id": {
-        "default": "mdi:share-variant"
-      },
-      "device_created": {
+      "reported": {
         "default": "mdi:calendar-clock"
       },
-      "user_id": {
-        "default": "mdi:identifier"
-      },
-      "device_type": {
+      "status": {
         "default": "mdi:information-outline"
       },
-      "device_version": {
-        "default": "mdi:information-outline"
-      },
-      "device_addr": {
-        "default": "mdi:map"
-      },
-      "device_status": {
-        "default": "mdi:information-outline"
-      },
-      "device_delivery_notes": {
-        "default": "mdi:truck-delivery"
-      },
-      "device_units": {
-        "default": "mdi:information-outline"
-      },
-      "device_reported": {
+      "tx_reported": {
         "default": "mdi:calendar-clock"
       },
-      "tx_reported_on": {
-        "default": "mdi:calendar-clock"
-      },
-      "rx_updated_on": {
-        "default": "mdi:calendar-clock"
-      },
-      "device_wifi_signal": {
+      "tx_signal": {
         "default": "mdi:wifi"
       },
-      "device_tx_signal": {
+      "volume_level": {
+        "default": "mdi:water"
+      },
+      "wifi_signal": {
         "default": "mdi:wifi"
       }
     }
