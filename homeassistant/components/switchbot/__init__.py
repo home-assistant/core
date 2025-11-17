@@ -229,6 +229,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) ->
 
     return True
 
+
 async def async_migrate_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) -> bool:
     """Migrate SwitchBot config entries to the latest format."""
 
@@ -242,7 +243,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) 
     new_data: dict[str, Any] = {**entry.data}
 
     if version == 1 and minor_version == 1:
-
         if CONF_RETRY_COUNT not in new_data:
             new_data[CONF_RETRY_COUNT] = DEFAULT_RETRY_COUNT
 
@@ -258,6 +258,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) 
         _LOGGER.debug("Migration to version %s.%s successful", version, 2)
 
     return True
+
 
 async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
