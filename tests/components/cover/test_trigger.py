@@ -72,7 +72,13 @@ def parametrize_opened_closed_trigger_states(
     target_state: tuple[str, dict],
     other_state: tuple[str, dict],
 ) -> list[
-    tuple[str, tuple[str | None, dict], list[tuple[tuple[str | None, dict], int]]]
+    tuple[
+        str,
+        dict,
+        str,
+        tuple[str | None, dict],
+        list[tuple[tuple[str | None, dict], int]],
+    ]
 ]:
     """Parametrize states and expected service call counts.
 
@@ -150,7 +156,13 @@ def parametrize_opened_closed_trigger_states(
 def parametrize_opened_trigger_states(
     trigger: str, device_class: str
 ) -> list[
-    tuple[str, tuple[str | None, dict], list[tuple[tuple[str | None, dict], int]]]
+    tuple[
+        str,
+        dict,
+        str,
+        tuple[str | None, dict],
+        list[tuple[tuple[str | None, dict], int]],
+    ]
 ]:
     """Parametrize states and expected service call counts.
 
@@ -263,7 +275,10 @@ async def test_cover_state_attribute_trigger_behavior_any(
     # Set all covers, including the tested cover, to the initial state
     for eid in target_covers:
         set_or_remove_state(
-            hass, eid, initial_state[0], initial_state[1] | {"device_class": "garage"}
+            hass,
+            eid,
+            initial_state[0],
+            initial_state[1] | {"device_class": device_class},
         )
         await hass.async_block_till_done()
 
@@ -271,7 +286,7 @@ async def test_cover_state_attribute_trigger_behavior_any(
 
     for state, expected_calls in states:
         set_or_remove_state(
-            hass, entity_id, state[0], state[1] | {"device_class": "garage"}
+            hass, entity_id, state[0], state[1] | {"device_class": device_class}
         )
         await hass.async_block_till_done()
         assert len(service_calls) == expected_calls
@@ -282,7 +297,10 @@ async def test_cover_state_attribute_trigger_behavior_any(
         # Check if changing other covers also triggers
         for other_entity_id in other_entity_ids:
             set_or_remove_state(
-                hass, other_entity_id, state[0], state[1] | {"device_class": "garage"}
+                hass,
+                other_entity_id,
+                state[0],
+                state[1] | {"device_class": device_class},
             )
             await hass.async_block_till_done()
         assert len(service_calls) == (entities_in_target - 1) * expected_calls
@@ -320,7 +338,10 @@ async def test_cover_state_attribute_trigger_behavior_first(
     # Set all covers, including the tested cover, to the initial state
     for eid in target_covers:
         set_or_remove_state(
-            hass, eid, initial_state[0], initial_state[1] | {"device_class": "garage"}
+            hass,
+            eid,
+            initial_state[0],
+            initial_state[1] | {"device_class": device_class},
         )
         await hass.async_block_till_done()
 
@@ -333,7 +354,7 @@ async def test_cover_state_attribute_trigger_behavior_first(
 
     for state, expected_calls in states:
         set_or_remove_state(
-            hass, entity_id, state[0], state[1] | {"device_class": "garage"}
+            hass, entity_id, state[0], state[1] | {"device_class": device_class}
         )
         await hass.async_block_till_done()
         assert len(service_calls) == expected_calls
@@ -344,7 +365,10 @@ async def test_cover_state_attribute_trigger_behavior_first(
         # Triggering other covers should not cause the trigger to fire again
         for other_entity_id in other_entity_ids:
             set_or_remove_state(
-                hass, other_entity_id, state[0], state[1] | {"device_class": "garage"}
+                hass,
+                other_entity_id,
+                state[0],
+                state[1] | {"device_class": device_class},
             )
             await hass.async_block_till_done()
         assert len(service_calls) == 0
@@ -381,7 +405,10 @@ async def test_cover_state_attribute_trigger_behavior_last(
     # Set all covers, including the tested cover, to the initial state
     for eid in target_covers:
         set_or_remove_state(
-            hass, eid, initial_state[0], initial_state[1] | {"device_class": "garage"}
+            hass,
+            eid,
+            initial_state[0],
+            initial_state[1] | {"device_class": device_class},
         )
         await hass.async_block_till_done()
 
@@ -392,13 +419,16 @@ async def test_cover_state_attribute_trigger_behavior_last(
     for state, expected_calls in states:
         for other_entity_id in other_entity_ids:
             set_or_remove_state(
-                hass, other_entity_id, state[0], state[1] | {"device_class": "garage"}
+                hass,
+                other_entity_id,
+                state[0],
+                state[1] | {"device_class": device_class},
             )
             await hass.async_block_till_done()
         assert len(service_calls) == 0
 
         set_or_remove_state(
-            hass, entity_id, state[0], state[1] | {"device_class": "garage"}
+            hass, entity_id, state[0], state[1] | {"device_class": device_class}
         )
         await hass.async_block_till_done()
         assert len(service_calls) == expected_calls
