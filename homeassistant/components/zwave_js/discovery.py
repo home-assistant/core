@@ -66,6 +66,7 @@ from .discovery_data_template import (
     NumericSensorDataTemplate,
 )
 from .entity import NewZwaveDiscoveryInfo
+from .event import DISCOVERY_SCHEMAS as EVENT_SCHEMAS
 from .models import (
     FirmwareVersionRange,
     NewZWaveDiscoverySchema,
@@ -77,6 +78,7 @@ from .models import (
 
 NEW_DISCOVERY_SCHEMAS: dict[Platform, list[NewZWaveDiscoverySchema]] = {
     Platform.BINARY_SENSOR: BINARY_SENSOR_SCHEMAS,
+    Platform.EVENT: EVENT_SCHEMAS,
 }
 SUPPORTED_PLATFORMS = tuple(NEW_DISCOVERY_SCHEMAS)
 
@@ -1163,15 +1165,6 @@ DISCOVERY_SCHEMAS = [
         ),
         allow_multi=True,
         entity_registry_enabled_default=False,
-    ),
-    # event
-    # stateful = False
-    ZWaveDiscoverySchema(
-        platform=Platform.EVENT,
-        hint="stateless",
-        primary_value=ZWaveValueDiscoverySchema(
-            stateful=False,
-        ),
     ),
     # button
     # Meter CC idle
