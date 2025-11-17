@@ -628,18 +628,10 @@ async def test_rpc_sleeping_sensor_with_channel_name(
     )
     monkeypatch.setattr(mock_rpc_device, "connected", False)
     monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
-    entry = await init_integration(hass, 2, sleep_period=1000)
+    await init_integration(hass, 2, sleep_period=1000)
 
     # Sensor should be created when device is online
     assert hass.states.get(entity_id) is None
-
-    register_entity(
-        hass,
-        SENSOR_DOMAIN,
-        suffix,
-        "temperature:0-temperature_0",
-        entry,
-    )
 
     # Make device online
     mock_rpc_device.mock_online()
