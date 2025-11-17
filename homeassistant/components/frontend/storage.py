@@ -117,7 +117,7 @@ class SystemStore:
     async def async_set_item(self, key: str, value: Any) -> None:
         """Set an item and save the store."""
         self.data[key] = value
-        await self._store.async_save(self.data)
+        self._store.async_delay_save(lambda: self.data, 1.0)
         for cb in self.subscriptions.get(key, []):
             cb()
 
