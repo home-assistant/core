@@ -21,6 +21,10 @@ _LOGGER = logging.getLogger(__name__)
 
 SERVER_LOCATOR = LocalServerLocator()
 
+NO_SERVERS_FOUND_MESSAGE = (
+    "No local Minecraft servers found. Please enter the server address manually."
+)
+
 
 class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Minecraft Server."""
@@ -81,9 +85,9 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
 
         schema_entries: dict[vol.Marker, Any] = {}
 
-        servers = ["No local servers found when searching."]
-        if len(self.SUGGESTED_SERVERS) > 0:
-            servers = self.SUGGESTED_SERVERS
+        if len(self.SUGGESTED_SERVERS) <= 0:
+            self.SUGGESTED_SERVERS.append(NO_SERVERS_FOUND_MESSAGE)
+
         schema_entries[
             vol.Required(
                 CONF_ADDRESS,
@@ -92,7 +96,7 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
         ] = selector(
             {
                 "select": {
-                    "options": servers,
+                    "options": self.SUGGESTED_SERVERS,
                     "custom_value": True,
                 }
             }
