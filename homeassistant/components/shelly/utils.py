@@ -93,8 +93,8 @@ def async_remove_shelly_entity(
         entity_reg.async_remove(entity_id)
 
 
-def get_number_of_channels(device: BlockDevice, block: Block) -> int:
-    """Get number of channels for block type."""
+def get_block_number_of_channels(device: BlockDevice, block: Block) -> int:
+    """Get number of channels."""
     channels = None
 
     if block.type == "input":
@@ -154,7 +154,7 @@ def get_block_channel_name(device: BlockDevice, block: Block | None) -> str | No
     if (
         not block
         or block.type in ("device", "light", "relay", "emeter")
-        or get_number_of_channels(device, block) == 1
+        or get_block_number_of_channels(device, block) == 1
     ):
         return None
 
@@ -253,7 +253,7 @@ def get_block_input_triggers(
     if not is_block_momentary_input(device.settings, block, True):
         return []
 
-    if block.type == "device" or get_number_of_channels(device, block) == 1:
+    if block.type == "device" or get_block_number_of_channels(device, block) == 1:
         subtype = "button"
     else:
         assert block.channel
@@ -414,20 +414,24 @@ def get_rpc_custom_name(device: RpcDevice, key: str) -> str | None:
     return None
 
 
+def get_rpc_number_of_channels(device: RpcDevice, component: str) -> int:
+    """Get number of channels."""
+    return len(get_rpc_key_instances(device.status, component, all_lights=True))
+
+
 def get_rpc_channel_name(device: RpcDevice, key: str) -> str | None:
     """Get name based on device and channel name."""
     if BLU_TRV_IDENTIFIER in key:
         return None
 
-    instances = len(
-        get_rpc_key_instances(device.status, key.split(":")[0], all_lights=True)
-    )
     component = key.split(":")[0]
     component_id = key.split(":")[-1]
 
     if custom_name := get_rpc_custom_name(device, key):
         if component in (*VIRTUAL_COMPONENTS, "input", "presencezone", "script"):
             return custom_name
+
+        instances = get_rpc_number_of_channels(device, component)
 
         return custom_name if instances == 1 else None
 
@@ -937,7 +941,7 @@ def get_block_device_info(
         block is None
         or block.type not in ("light", "relay", "emeter")
         or device.settings.get("mode") == "roller"
-        or get_number_of_channels(device, block) < 2
+        or get_block_number_of_channels(device, block) < 2
     ):
         return DeviceInfo(connections={(CONNECTION_NETWORK_MAC, mac)})
 

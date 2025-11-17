@@ -32,12 +32,14 @@ from .utils import (
     async_remove_shelly_entity,
     get_block_channel,
     get_block_custom_name,
+    get_block_number_of_channels,
     get_device_entry_gen,
     get_rpc_custom_name,
     get_rpc_entity_name,
     get_rpc_key,
     get_rpc_key_id,
     get_rpc_key_instances,
+    get_rpc_number_of_channels,
     is_block_momentary_input,
     is_rpc_momentary_input,
 )
@@ -199,13 +201,13 @@ class ShellyBlockEvent(ShellyBlockEntity, EventEntity):
             self._attr_event_types = list(BASIC_INPUTS_EVENTS_TYPES)
         self.entity_description = description
 
-        if (
-            hasattr(self, "_attr_name")
-            and self._attr_name
-            and not get_block_custom_name(coordinator.device, block)
+        if hasattr(self, "_attr_name") and not get_block_custom_name(
+            coordinator.device, block
         ):
             self._attr_translation_placeholders = {
                 "input_number": get_block_channel(block)
+                if get_block_number_of_channels(coordinator.device, block) > 1
+                else ""
             }
 
             delattr(self, "_attr_name")
@@ -248,7 +250,11 @@ class ShellyRpcEvent(CoordinatorEntity[ShellyRpcCoordinator], EventEntity):
             if not get_rpc_custom_name(coordinator.device, key) and (
                 component.lower() == "input" and component_id.isnumeric()
             ):
-                self._attr_translation_placeholders = {"input_number": component_id}
+                self._attr_translation_placeholders = {
+                    "input_number": component_id
+                    if get_rpc_number_of_channels(coordinator.device, component) > 1
+                    else ""
+                }
             else:
                 self._attr_name = get_rpc_entity_name(coordinator.device, key)
             self.event_id = int(component_id)

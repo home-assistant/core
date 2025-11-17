@@ -195,7 +195,7 @@ async def test_block_event(
     """Test block device event."""
     await init_integration(hass, 1)
     # num_outputs is 2, device name and channel name is used
-    entity_id = "event.test_name_channel_1"
+    entity_id = "event.test_name_channel_1_input_1"
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNKNOWN
@@ -226,7 +226,7 @@ async def test_block_event_single_output(
     monkeypatch.setitem(mock_block_device.shelly, "num_outputs", 1)
     await init_integration(hass, 1)
 
-    assert hass.states.get("event.test_name")
+    assert hass.states.get("event.test_name_input")
 
 
 async def test_block_event_shix3_1(
