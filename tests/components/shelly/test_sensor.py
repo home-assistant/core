@@ -645,6 +645,9 @@ async def test_rpc_sleeping_sensor_with_channel_name(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (state := hass.states.get(entity_id))
+    assert (
+        state.attributes["friendly_name"] == "Test name test temperature_0 temperature"
+    )
     assert state.state == "22.9"
 
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "temperature:0", "tC", 23.4)
