@@ -950,6 +950,9 @@ def get_block_device_info(
     if is_block_single_device(device, block):
         return DeviceInfo(connections={(CONNECTION_NETWORK_MAC, mac)})
 
+    if TYPE_CHECKING:
+        assert block
+
     return DeviceInfo(
         identifiers={(DOMAIN, f"{mac}-{block.description}")},
         name=get_block_sub_device_name(device, block),
