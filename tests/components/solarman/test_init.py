@@ -17,13 +17,10 @@ async def test_load_unload(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test setting up and removing a config entry."""
-    # Patch the fetch_data method of the Solarman component to prevent actual network calls
-    """Test setting up and removing a config entry."""
 
     # Add the mock config entry to Home Assistant
     mock_config_entry.add_to_hass(hass)
     
-    # 首先确保设备注册表中有对应的设备
     device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
@@ -35,7 +32,7 @@ async def test_load_unload(
         new_callable=AsyncMock,
         return_value={"current": 0, "voltage": 0},
     ), patch(
-        "homeassistant.components.solarman.coordinator.get_config",
+        "homeassistant.components.solarman.config_flow.Solarman.get_config",
         new_callable=AsyncMock,
         return_value=load_json_object_fixture("SP-2W-EU/config.json", DOMAIN)
     ):
@@ -66,7 +63,7 @@ async def test_load_failure(
     """Test setup failure."""
     # Patch the get_config function to simulate a timeout error
     with patch(
-        "homeassistant.components.solarman.coordinator.get_config",
+        "homeassistant.components.solarman.config_flow.Solarman.get_config",
         side_effect=TimeoutError,
     ):
         mock_config_entry.add_to_hass(hass)

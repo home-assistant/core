@@ -6,13 +6,11 @@
         "description": "Enter the IP address of Solarman device to integrate with Home Assistant.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "port": "[%key:common::config_flow::data::port%]",
-          "scan_interval": "Scan Interval"
+          "port": "[%key:common::config_flow::data::port%]"
         },
         "data_description": {
           "host": "The IP address or hostname of the Solarman device.",
-          "port": "The TCP port of the Solarman device (default: 8080).",
-          "scan_interval": "The polling interval in seconds."
+          "port": "The TCP port of the Solarman device (default: 8080)."
         }
       },
       "discovery_confirm": {
@@ -23,13 +21,11 @@
         "description": "Update configuration for {title}.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "port": "[%key:common::config_flow::data::port%]",
-          "scan_interval": "Scan Interval"
+          "port": "[%key:common::config_flow::data::port%]"
         },
         "data_description": {
           "host": "[%key:component::solarman::config::step::user::data_description::host%]",
-          "port": "The TCP port of the Solarman device (default: 8080).",
-          "scan_interval": "[%key:component::solarman::config::step::user::data_description::scan_interval%]"
+          "port": "The TCP port of the Solarman device (default: 8080)."
         }
       }
     },
@@ -46,15 +42,6 @@
   },
   "entity": {
     "sensor": {
-      "voltage": {
-        "name": "Voltage"
-      },
-      "electric_current": {
-        "name": "Current"
-      },
-      "power": {
-        "name": "Power"
-      },
       "positive_active_energy": {
         "name": "Positive active energy"
       },
@@ -138,9 +125,6 @@
       },
       "power_factor": {
         "name": "Power factor"
-      },
-      "frequency": {
-        "name": "Frequency"
       },
       "total_act_energy": {
         "name": "Total actual energy"

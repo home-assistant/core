@@ -3,14 +3,23 @@
 import logging
 from typing import Any
 
-from solarman_opendata.utils import get_config
+from solarman_opendata.solarman import Solarman
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, SOURCE_RECONFIGURE
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MODEL, CONF_PORT, CONF_TYPE
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import (
+    CONF_FW,
+    CONF_FW_VERSION,
+    CONF_PRODUCT_TYPE,
+    CONF_SERIAL,
+    CONF_SN,
+    DEFAULT_PORT,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,25 +34,29 @@ class SolarmanConfigFlow(ConfigFlow, domain=DOMAIN):
     device_sn = ""
     fw_version = ""
 
+    def __init__(self) -> None:
+        """Initialize the config flow."""
+        self.client: Solarman
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step via user interface."""
         errors = {}
         if user_input is not None:
-            self.host = user_input["host"]
-            port = user_input.get("port", DEFAULT_PORT)
+            self.host = user_input[CONF_HOST]
+            port = user_input.get(CONF_PORT, DEFAULT_PORT)
+
+            self.client = Solarman(async_get_clientsession(self.hass), self.host, port)
 
             try:
-                config_data = await get_config(
-                    async_get_clientsession(self.hass), self.host
-                )
+                config_data = await self.client.get_config()
 
-                device_info = config_data.get("device", config_data)
+                device_info = config_data.get(CONF_DEVICE, config_data)
 
-                self.device_sn = device_info.get("sn", "unknown")
-                self.fw_version = device_info.get("fw", "unknown")
-                self.model = device_info.get("type", "unknown")
+                self.device_sn = device_info.get(CONF_SN, None)
+                self.fw_version = device_info.get(CONF_FW, None)
+                self.model = device_info.get(CONF_TYPE, None)
 
             except TimeoutError:
                 errors["base"] = "timeout"
@@ -53,31 +66,18 @@ class SolarmanConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unknown error occurred while verifying device")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(f"{self.model}_{self.device_sn}")
+                await self.async_set_unique_id(self.device_sn)
+                self._abort_if_unique_id_configured()
 
                 if not errors:
-                    if self.source == SOURCE_RECONFIGURE:
-                        self._abort_if_unique_id_mismatch(reason="another_device")
-                        reconfigure_entry = self._get_reconfigure_entry()
-
-                        self.host = reconfigure_entry.data.get("host")
-                        return self.async_update_reload_and_abort(
-                            reconfigure_entry,
-                            data_updates=reconfigure_entry.data,
-                        )
-                    
-                    self._abort_if_unique_id_configured()
                     return self.async_create_entry(
                         title=f"{self.model} ({self.host})",
                         data={
-                            "host": self.host,
-                            "port": port,
-                            "scan_interval": user_input.get(
-                                "scan_interval", DEFAULT_SCAN_INTERVAL
-                            ),
-                            "sn": self.device_sn,
-                            "fw_version": self.fw_version,
-                            "model": self.model,
+                            CONF_HOST: self.host,
+                            CONF_PORT: port,
+                            CONF_SN: self.device_sn,
+                            CONF_FW_VERSION: self.fw_version,
+                            CONF_MODEL: self.model,
                         },
                     )
 
@@ -85,9 +85,8 @@ class SolarmanConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required("host", default=self.host): str,
-                    vol.Optional("port", default=DEFAULT_PORT): int,
-                    vol.Optional("scan_interval", default=DEFAULT_SCAN_INTERVAL): int,
+                    vol.Required(CONF_HOST): str,
+                    vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
                 }
             ),
             errors=errors,
@@ -97,26 +96,93 @@ class SolarmanConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle reconfiguration of the integration."""
-        return await self.async_step_user(user_input) 
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            self.host = user_input[CONF_HOST]
+            port = user_input.get(CONF_PORT, DEFAULT_PORT)
+
+            self.client = Solarman(async_get_clientsession(self.hass), self.host, port)
+
+            try:
+                config_data = await self.client.get_config()
+
+                device_info = config_data.get(CONF_DEVICE, config_data)
+
+                self.device_sn = device_info.get(CONF_SN, None)
+                self.fw_version = device_info.get(CONF_FW, None)
+                self.model = device_info.get(CONF_TYPE, None)
+
+            except TimeoutError:
+                errors["base"] = "timeout"
+            except ConnectionError:
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unknown error occurred while verifying device")
+                errors["base"] = "unknown"
+            else:
+                await self.async_set_unique_id(self.device_sn)
+                self._abort_if_unique_id_mismatch(reason="another_device")
+                return self.async_update_reload_and_abort(
+                    self._get_reconfigure_entry(),
+                    data_updates={
+                        CONF_HOST: self.host,
+                        CONF_PORT: port,
+                    },
+                )
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_HOST, default=reconfigure_entry.data.get(CONF_HOST)
+                    ): str,
+                    vol.Optional(
+                        CONF_PORT,
+                        default=reconfigure_entry.data.get(CONF_PORT),
+                    ): int,
+                }
+            ),
+            description_placeholders={
+                "title": reconfigure_entry.title,
+            },
+            errors=errors,
+        )
 
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         if (
-            "product_type" not in discovery_info.properties
-            or "serial" not in discovery_info.properties
-            or "fw_version" not in discovery_info.properties
+            CONF_PRODUCT_TYPE not in discovery_info.properties
+            or CONF_SERIAL not in discovery_info.properties
+            or CONF_FW_VERSION not in discovery_info.properties
         ):
             return self.async_abort(reason="invalid_discovery_parameters")
 
         self.host = discovery_info.host
-        self.model = discovery_info.properties["product_type"]
-        self.device_sn = discovery_info.properties["serial"]
-        self.fw_version = discovery_info.properties["fw_version"]
 
-        await self.async_set_unique_id(f"{self.model}_{self.device_sn}")
-        self._abort_if_unique_id_configured(updates={"host": discovery_info.host})
+        self.client = Solarman(
+            async_get_clientsession(self.hass), self.host, DEFAULT_PORT
+        )
+
+        try:
+            await self.client.get_config()
+        except TimeoutError:
+            return self.async_abort(reason="timeout")
+        except ConnectionError:
+            return self.async_abort(reason="cannot_connect")
+        except Exception:
+            _LOGGER.exception("Unknown error occurred while verifying device")
+            return self.async_abort(reason="unknown")
+
+        self.model = discovery_info.properties[CONF_PRODUCT_TYPE]
+        self.device_sn = discovery_info.properties[CONF_SERIAL]
+        self.fw_version = discovery_info.properties[CONF_FW_VERSION]
+
+        await self.async_set_unique_id(self.device_sn)
+        self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.host})
 
         return await self.async_step_discovery_confirm()
 
@@ -128,30 +194,17 @@ class SolarmanConfigFlow(ConfigFlow, domain=DOMAIN):
         assert self.model
         assert self.device_sn
 
-        errors: dict[str, str] = {}
         if user_input is not None:
-            try:
-                await get_config(async_get_clientsession(self.hass), self.host)
-
-            except TimeoutError:
-                errors["base"] = "timeout"
-            except ConnectionError:
-                errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception("Unknown error occurred while verifying device")
-                errors["base"] = "unknown"
-            else:
-                return self.async_create_entry(
-                    title=f"{self.model} ({self.host})",
-                    data={
-                        "host": self.host,
-                        "port": DEFAULT_PORT,
-                        "scan_interval": DEFAULT_SCAN_INTERVAL,
-                        "sn": self.device_sn,
-                        "fw_version": self.fw_version,
-                        "model": self.model,
-                    },
-                )
+            return self.async_create_entry(
+                title=f"{self.model} ({self.host})",
+                data={
+                    CONF_HOST: self.host,
+                    CONF_PORT: DEFAULT_PORT,
+                    CONF_SN: self.device_sn,
+                    CONF_FW_VERSION: self.fw_version,
+                    CONF_MODEL: self.model,
+                },
+            )
 
         self._set_confirm_only()
 
@@ -161,9 +214,8 @@ class SolarmanConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="discovery_confirm",
             description_placeholders={
-                "model": self.model,
-                "sn": self.device_sn,
-                "host": self.host,
+                CONF_MODEL: self.model,
+                CONF_SN: self.device_sn,
+                CONF_HOST: self.host,
             },
-            errors=errors,
         )

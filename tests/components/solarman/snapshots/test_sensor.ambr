@@ -35,7 +35,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'a_current',
-    'unique_id': 'solarman_P1-2W_SN1234567890_a_current',
+    'unique_id': 'SN1234567890_a_current',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -91,7 +91,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'a_voltage',
-    'unique_id': 'solarman_P1-2W_SN1234567890_a_voltage',
+    'unique_id': 'SN1234567890_a_voltage',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -147,7 +147,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'b_current',
-    'unique_id': 'solarman_P1-2W_SN1234567890_b_current',
+    'unique_id': 'SN1234567890_b_current',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -203,7 +203,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'b_voltage',
-    'unique_id': 'solarman_P1-2W_SN1234567890_b_voltage',
+    'unique_id': 'SN1234567890_b_voltage',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -259,7 +259,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'c_current',
-    'unique_id': 'solarman_P1-2W_SN1234567890_c_current',
+    'unique_id': 'SN1234567890_c_current',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -315,7 +315,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'c_voltage',
-    'unique_id': 'solarman_P1-2W_SN1234567890_c_voltage',
+    'unique_id': 'SN1234567890_c_voltage',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -371,7 +371,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'a_act_power',
-    'unique_id': 'solarman_P1-2W_SN1234567890_a_act_power',
+    'unique_id': 'SN1234567890_a_act_power',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -427,7 +427,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'b_act_power',
-    'unique_id': 'solarman_P1-2W_SN1234567890_b_act_power',
+    'unique_id': 'SN1234567890_b_act_power',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -483,7 +483,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'c_act_power',
-    'unique_id': 'solarman_P1-2W_SN1234567890_c_act_power',
+    'unique_id': 'SN1234567890_c_act_power',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -539,7 +539,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'a_act_ret_power',
-    'unique_id': 'solarman_P1-2W_SN1234567890_a_act_ret_power',
+    'unique_id': 'SN1234567890_a_act_ret_power',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -595,7 +595,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'b_act_ret_power',
-    'unique_id': 'solarman_P1-2W_SN1234567890_b_act_ret_power',
+    'unique_id': 'SN1234567890_b_act_ret_power',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -651,7 +651,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'c_act_ret_power',
-    'unique_id': 'solarman_P1-2W_SN1234567890_c_act_ret_power',
+    'unique_id': 'SN1234567890_c_act_ret_power',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -702,7 +702,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sn',
-    'unique_id': 'solarman_P1-2W_SN1234567890_SN',
+    'unique_id': 'SN1234567890_SN',
     'unit_of_measurement': None,
   })
 # ---
@@ -755,7 +755,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_act_energy_lt',
-    'unique_id': 'solarman_P1-2W_SN1234567890_total_act_energy_LT',
+    'unique_id': 'SN1234567890_total_act_energy_LT',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -811,7 +811,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_act_energy_nt',
-    'unique_id': 'solarman_P1-2W_SN1234567890_total_act_energy_NT',
+    'unique_id': 'SN1234567890_total_act_energy_NT',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -867,7 +867,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_act_power',
-    'unique_id': 'solarman_P1-2W_SN1234567890_total_act_power',
+    'unique_id': 'SN1234567890_total_act_power',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -923,7 +923,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_act_ret_energy_lt',
-    'unique_id': 'solarman_P1-2W_SN1234567890_total_act_ret_energy_LT',
+    'unique_id': 'SN1234567890_total_act_ret_energy_LT',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -979,7 +979,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_act_ret_energy_nt',
-    'unique_id': 'solarman_P1-2W_SN1234567890_total_act_ret_energy_NT',
+    'unique_id': 'SN1234567890_total_act_ret_energy_NT',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -1035,7 +1035,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_act_ret_power',
-    'unique_id': 'solarman_P1-2W_SN1234567890_total_act_ret_power',
+    'unique_id': 'SN1234567890_total_act_ret_power',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -1091,7 +1091,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_gas',
-    'unique_id': 'solarman_P1-2W_SN1234567890_total_gas',
+    'unique_id': 'SN1234567890_total_gas',
     'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
   })
 # ---
@@ -1146,8 +1146,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'electric_current',
-    'unique_id': 'solarman_SP-2W-EU_SN1234567890_electric_current',
+    'translation_key': None,
+    'unique_id': 'SN1234567890_electric_current',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -1203,7 +1203,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'positive_active_energy',
-    'unique_id': 'solarman_SP-2W-EU_SN1234567890_positive_active_energy',
+    'unique_id': 'SN1234567890_positive_active_energy',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -1258,8 +1258,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'power',
-    'unique_id': 'solarman_SP-2W-EU_SN1234567890_power',
+    'translation_key': None,
+    'unique_id': 'SN1234567890_power',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -1315,7 +1315,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'reverse_active_energy',
-    'unique_id': 'solarman_SP-2W-EU_SN1234567890_reverse_active_energy',
+    'unique_id': 'SN1234567890_reverse_active_energy',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -1370,8 +1370,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'voltage',
-    'unique_id': 'solarman_SP-2W-EU_SN1234567890_voltage',
+    'translation_key': None,
+    'unique_id': 'SN1234567890_voltage',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -1427,7 +1427,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power',
-    'unique_id': 'solarman_gl meter_SN1234567890_active power',
+    'unique_id': 'SN1234567890_active power',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -1471,11 +1471,8 @@
     }),
     'name': None,
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_device_class': <SensorDeviceClass.APPARENT_POWER: 'apparent_power'>,
     'original_icon': None,
     'original_name': 'Apparent power',
     'platform': 'solarman',
@@ -1483,14 +1480,14 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'apparent_power',
-    'unique_id': 'solarman_gl meter_SN1234567890_apparent power',
+    'unique_id': 'SN1234567890_apparent power',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
 # name: test_sensor[gl meter][sensor.smart_meter_apparent_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
+      'device_class': 'apparent_power',
       'friendly_name': 'Smart Meter Apparent power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
@@ -1539,7 +1536,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current',
-    'unique_id': 'solarman_gl meter_SN1234567890_current',
+    'unique_id': 'SN1234567890_current',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -1594,8 +1591,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'frequency',
-    'unique_id': 'solarman_gl meter_SN1234567890_frequency',
+    'translation_key': None,
+    'unique_id': 'SN1234567890_frequency',
     'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
   })
 # ---
@@ -1646,7 +1643,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sn',
-    'unique_id': 'solarman_gl meter_SN1234567890_SN',
+    'unique_id': 'SN1234567890_SN',
     'unit_of_measurement': None,
   })
 # ---
@@ -1696,8 +1693,8 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_factor',
-    'unique_id': 'solarman_gl meter_SN1234567890_power factor',
-    'unit_of_measurement': None,
+    'unique_id': 'SN1234567890_power factor',
+    'unit_of_measurement': '%',
   })
 # ---
 # name: test_sensor[gl meter][sensor.smart_meter_power_factor-state]
@@ -1706,6 +1703,7 @@
       'device_class': 'power_factor',
       'friendly_name': 'Smart Meter Power factor',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_power_factor',
@@ -1739,11 +1737,8 @@
     }),
     'name': None,
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_device_class': <SensorDeviceClass.REACTIVE_POWER: 'reactive_power'>,
     'original_icon': None,
     'original_name': 'Reactive power',
     'platform': 'solarman',
@@ -1751,14 +1746,14 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'reactive_power',
-    'unique_id': 'solarman_gl meter_SN1234567890_reactive power',
+    'unique_id': 'SN1234567890_reactive power',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
 # name: test_sensor[gl meter][sensor.smart_meter_reactive_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
+      'device_class': 'reactive_power',
       'friendly_name': 'Smart Meter Reactive power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
@@ -1807,7 +1802,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_act_energy',
-    'unique_id': 'solarman_gl meter_SN1234567890_total_act_energy',
+    'unique_id': 'SN1234567890_total_act_energy',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -1863,7 +1858,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_act_ret_energy',
-    'unique_id': 'solarman_gl meter_SN1234567890_total_act_ret_energy',
+    'unique_id': 'SN1234567890_total_act_ret_energy',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -1918,8 +1913,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'voltage',
-    'unique_id': 'solarman_gl meter_SN1234567890_voltage',
+    'translation_key': None,
+    'unique_id': 'SN1234567890_voltage',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---

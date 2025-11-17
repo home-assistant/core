@@ -1,5 +1,4 @@
 from unittest.mock import AsyncMock, patch
-from datetime import timedelta
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -8,8 +7,10 @@ from homeassistant.const import Platform, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
+from homeassistant.helpers import device_registry as dr
 
-from homeassistant.components.solarman.const import DEFAULT_SCAN_INTERVAL
+
+from homeassistant.components.solarman.const import UPDATE_INTERVAL
 
 
 from .conftest import setup_integration
@@ -24,7 +25,8 @@ async def test_sensor(
     entity_registry: er.EntityRegistry,
     mock_solarman: AsyncMock,
     snapshot: SnapshotAssertion,
-    mock_config_entry: MockConfigEntry
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     with patch("homeassistant.components.solarman.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
@@ -47,7 +49,7 @@ async def test_sensor_availability(
     assert state.state == "230"
 
     mock_solarman.fetch_data.side_effect = ConnectionError
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=DEFAULT_SCAN_INTERVAL))
+    async_fire_time_changed(hass, utcnow() + UPDATE_INTERVAL)
     await hass.async_block_till_done()
 
     assert (state := hass.states.get("sensor.smart_plug_voltage"))

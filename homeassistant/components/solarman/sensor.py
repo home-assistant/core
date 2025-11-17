@@ -1,6 +1,5 @@
 """Sensor platform for Solarman."""
 
-from dataclasses import dataclass
 from typing import Final
 
 from homeassistant.components.sensor import (
@@ -11,6 +10,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    PERCENTAGE,
     EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -23,246 +23,237 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN
 from .coordinator import SolarmanDeviceUpdateCoordinator
 from .entity import SolarmanEntity
 
 PARALLEL_UPDATES = 1
 
 
-@dataclass(frozen=True, kw_only=True)
-class SolarmanSensorEntityDescription(SensorEntityDescription):
-    """Class to describe a sensor entity."""
-
-
 SENSORS: Final = (
-    SolarmanSensorEntityDescription(
+    SensorEntityDescription(
         key="voltage",
-        translation_key="voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SolarmanSensorEntityDescription(
+    SensorEntityDescription(
         key="electric_current",
-        translation_key="electric_current",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SolarmanSensorEntityDescription(
+    SensorEntityDescription(
         key="power",
-        translation_key="power",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SolarmanSensorEntityDescription(
+    SensorEntityDescription(
         key="positive_active_energy",
         translation_key="positive_active_energy",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
-    SolarmanSensorEntityDescription(
+    SensorEntityDescription(
         key="reverse_active_energy",
         translation_key="reverse_active_energy",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
-    SolarmanSensorEntityDescription(
+    SensorEntityDescription(
         key="SN",
         translation_key="sn",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    SolarmanSensorEntityDescription(
+    SensorEntityDescription(
         key="device_version",
         translation_key="device_version",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    SolarmanSensorEntityDescription(
+    SensorEntityDescription(
         key="total_act_energy_LT",
         translation_key="total_act_energy_lt",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
-    SolarmanSensorEntityDescription(
+    SensorEntityDescription(
         key="total_act_energy_NT",
         translation_key="total_act_energy_nt",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
-    SolarmanSensorEntityDescription(
+    SensorEntityDescription(
         key="total_act_ret_energy_LT",
         translation_key="total_act_ret_energy_lt",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
-    SolarmanSensorEntityDescription(
+    SensorEntityDescription(
         key="total_act_ret_energy_NT",
         translation_key="total_act_ret_energy_nt",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
-    SolarmanSensorEntityDescription(
+    SensorEntityDescription(
         key="a_current",
         translation_key="a_current",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SolarmanSensorEntityDescription(
+    SensorEntityDescription(
         key="b_current",
         translation_key="b_current",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SolarmanSensorEntityDescription(
+    SensorEntityDescription(
         key="c_current",
         translation_key="c_current",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SolarmanSensorEntityDescription(
+    SensorEntityDescription(
         key="a_voltage",
         translation_key="a_voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SolarmanSensorEntityDescription(
+    SensorEntityDescription(
         key="b_voltage",
         translation_key="b_voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SolarmanSensorEntityDescription(
+    SensorEntityDescription(
         key="c_voltage",
         translation_key="c_voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SolarmanSensorEntityDescription(
+    SensorEntityDescription(
         key="total_act_power",
         translation_key="total_act_power",
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SolarmanSensorEntityDescription(
+    SensorEntityDescription(
         key="total_act_ret_power",
         translation_key="total_act_ret_power",
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SolarmanSensorEntityDescription(
+    SensorEntityDescription(
         key="a_act_power",
         translation_key="a_act_power",
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SolarmanSensorEntityDescription(
+    SensorEntityDescription(
         key="b_act_power",
         translation_key="b_act_power",
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SolarmanSensorEntityDescription(
+    SensorEntityDescription(
         key="c_act_power",
         translation_key="c_act_power",
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SolarmanSensorEntityDescription(
+    SensorEntityDescription(
         key="a_act_ret_power",
         translation_key="a_act_ret_power",
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SolarmanSensorEntityDescription(
+    SensorEntityDescription(
         key="b_act_ret_power",
         translation_key="b_act_ret_power",
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SolarmanSensorEntityDescription(
+    SensorEntityDescription(
         key="c_act_ret_power",
         translation_key="c_act_ret_power",
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SolarmanSensorEntityDescription(
+    SensorEntityDescription(
         key="total_gas",
         translation_key="total_gas",
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         device_class=SensorDeviceClass.GAS,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
-    SolarmanSensorEntityDescription(
+    SensorEntityDescription(
         key="current",
         translation_key="current",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SolarmanSensorEntityDescription(
+    SensorEntityDescription(
         key="active power",
         translation_key="active_power",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SolarmanSensorEntityDescription(
+    SensorEntityDescription(
         key="apparent power",
         translation_key="apparent_power",
         native_unit_of_measurement=UnitOfPower.WATT,
-        device_class=SensorDeviceClass.POWER,
+        device_class=SensorDeviceClass.APPARENT_POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SolarmanSensorEntityDescription(
+    SensorEntityDescription(
         key="reactive power",
         translation_key="reactive_power",
         native_unit_of_measurement=UnitOfPower.WATT,
-        device_class=SensorDeviceClass.POWER,
+        device_class=SensorDeviceClass.REACTIVE_POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SolarmanSensorEntityDescription(
+    SensorEntityDescription(
         key="power factor",
         translation_key="power_factor",
+        native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SolarmanSensorEntityDescription(
+    SensorEntityDescription(
         key="frequency",
-        translation_key="frequency",
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
         device_class=SensorDeviceClass.FREQUENCY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SolarmanSensorEntityDescription(
+    SensorEntityDescription(
         key="total_act_energy",
         translation_key="total_act_energy",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
-    SolarmanSensorEntityDescription(
+    SensorEntityDescription(
         key="total_act_ret_energy",
         translation_key="total_act_ret_energy",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -278,13 +269,13 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensors from a config entry."""
-    entities = [
-        SolarmanSensorEntity(entry.runtime_data, description)
-        for description in SENSORS
-        if entry.runtime_data.data.get(description.key) is not None
-    ]
-
-    async_add_entities(entities)
+    async_add_entities(
+        [
+            SolarmanSensorEntity(entry.runtime_data, description)
+            for description in SENSORS
+            if entry.runtime_data.data.get(description.key) is not None
+        ]
+    )
 
 
 class SolarmanSensorEntity(SolarmanEntity, SensorEntity):
@@ -293,15 +284,13 @@ class SolarmanSensorEntity(SolarmanEntity, SensorEntity):
     def __init__(
         self,
         coordinator: SolarmanDeviceUpdateCoordinator,
-        description: SolarmanSensorEntityDescription,
+        description: SensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         assert coordinator.config_entry
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = (
-            f"{DOMAIN}_{coordinator.config_entry.unique_id}_{description.key}"
-        )
+        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{description.key}"
 
     @property
     def native_value(self) -> StateType:

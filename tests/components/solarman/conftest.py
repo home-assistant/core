@@ -13,9 +13,8 @@ from tests.common import MockConfigEntry, load_json_object_fixture
 
 TEST_HOST = "192.168.1.100"
 TEST_PORT = 8080
-TEST_SCAN_INTERVAL = 30
 TEST_DEVICE_SN = "SN1234567890"
-TEST_FW_VERSION = "1.2.3"
+TEST_FW_VERSION = "LSW3_01_E030_SS_00_00.00.00.03"
 TEST_MODEL = "SP-2W-EU"
 
 @pytest.fixture
@@ -32,13 +31,12 @@ def mock_config_entry(device_fixture: str) -> MockConfigEntry:
         data={
             "host": TEST_HOST,
             "port": TEST_PORT,
-            "scan_interval": TEST_SCAN_INTERVAL,
             "sn": TEST_DEVICE_SN,
             "fw_version": TEST_FW_VERSION,
             "model": device_fixture,
         },
         source="user",
-        unique_id=f"{device_fixture}_{TEST_DEVICE_SN}",
+        unique_id=TEST_DEVICE_SN,
     )
 
 @pytest.fixture
@@ -46,21 +44,17 @@ def mock_solarman(device_fixture: str) -> Generator[AsyncMock]:
     """Mock a solarman client."""
     with (
         patch(
-            "homeassistant.components.solarman.coordinator.Solarman",
+            "homeassistant.components.solarman.Solarman",
             autospec=True,
         ) as mock_client,
         patch(
-            "homeassistant.components.solarman.config_flow.get_config",
+            "homeassistant.components.solarman.config_flow.Solarman.get_config",
             new_callable=AsyncMock,
             return_value=load_json_object_fixture(f"{device_fixture}/config.json", DOMAIN)
-        ),
-        patch(
-            "homeassistant.components.solarman.coordinator.get_config",
-            new_callable=AsyncMock,
-            return_value=load_json_object_fixture(f"{device_fixture}/config.json", DOMAIN)
-        ),
+        )
     ):
         client = mock_client.return_value
+        client.get_config.return_value = load_json_object_fixture(f"{device_fixture}/config.json", DOMAIN)
         client.fetch_data.return_value = load_json_object_fixture(f"{device_fixture}/data.json", DOMAIN)
         yield client
 
@@ -71,11 +65,5 @@ async def setup_integration(
 ) -> None:
     """Set up the integration for testing."""
     mock_config_entry.add_to_hass(hass)
-    device_registry = dr.async_get(hass)
-    device_entry = device_registry.async_get_or_create(
-        config_entry_id=mock_config_entry.entry_id,
-        identifiers={(DOMAIN, mock_config_entry.data["sn"])}
-    )
-
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
