@@ -5,28 +5,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import storage
 
 
-async def test_energy_preferences_migration(hass: HomeAssistant) -> None:
-    """Test migration from old data format without device_consumption_water."""
-    # Test the migration function directly by creating a store instance
-    # and calling its migration method
-    manager = EnergyManager(hass)
-
-    # Old data without device_consumption_water field
-    old_data = {
-        "energy_sources": [],
-        "device_consumption": [],
-    }
-
-    # Call the migration function directly
-    migrated_data = await manager._store._async_migrate_func(1, 1, old_data)
-
-    # Verify the migrated data includes device_consumption_water
-    assert "device_consumption_water" in migrated_data
-    assert migrated_data["device_consumption_water"] == []
-    assert "energy_sources" in migrated_data
-    assert "device_consumption" in migrated_data
-
-
 async def test_energy_preferences_no_migration_needed(hass: HomeAssistant) -> None:
     """Test that new data format doesn't get migrated."""
     # Create new format data (already has device_consumption_water field)
@@ -70,3 +48,27 @@ async def test_energy_preferences_empty_store(hass: HomeAssistant) -> None:
 
     # Verify data is None when no existing data
     assert manager.data is None
+
+
+async def test_energy_preferences_migration_from_old_version(
+    hass: HomeAssistant,
+) -> None:
+    """Test that device_consumption_water is added when migrating from v1.1 to v1.2."""
+    # Create version 1.1 data without device_consumption_water (old version)
+    old_data = {
+        "energy_sources": [],
+        "device_consumption": [],
+    }
+
+    # Save with old version (1.1) - migration will run to upgrade to 1.2
+    old_store = storage.Store(hass, 1, "energy", minor_version=1)
+    await old_store.async_save(old_data)
+
+    # Load with manager - should trigger migration
+    manager = EnergyManager(hass)
+    await manager.async_initialize()
+
+    # Verify the field was added by migration
+    assert manager.data is not None
+    assert "device_consumption_water" in manager.data
+    assert manager.data["device_consumption_water"] == []

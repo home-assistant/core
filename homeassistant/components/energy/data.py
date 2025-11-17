@@ -15,6 +15,7 @@ from homeassistant.helpers import config_validation as cv, singleton, storage
 from .const import DOMAIN
 
 STORAGE_VERSION = 1
+STORAGE_MINOR_VERSION = 2
 STORAGE_KEY = DOMAIN
 
 
@@ -164,7 +165,7 @@ class EnergyPreferences(TypedDict):
 
     energy_sources: list[SourceType]
     device_consumption: list[DeviceConsumption]
-    device_consumption_water: list[DeviceConsumption]
+    device_consumption_water: NotRequired[list[DeviceConsumption]]
 
 
 class EnergyPreferencesUpdate(EnergyPreferences, total=False):
@@ -352,7 +353,9 @@ class EnergyManager:
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize energy manager."""
         self._hass = hass
-        self._store = _EnergyPreferencesStore(hass, STORAGE_VERSION, STORAGE_KEY)
+        self._store = _EnergyPreferencesStore(
+            hass, STORAGE_VERSION, STORAGE_KEY, minor_version=STORAGE_MINOR_VERSION
+        )
         self.data: EnergyPreferences | None = None
         self._update_listeners: list[Callable[[], Awaitable]] = []
 
