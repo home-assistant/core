@@ -596,18 +596,21 @@ async def test_sensor_name(
     # For them, the fallback name should be used instead.
     (
         QuirkBuilder("Test Manf", "Test Model")
+        # This should use the fallback name:
         .sensor(
             "sw_build_id",
             general.Basic.cluster_id,
             translation_key="this_translation_key_is_not_translated",
             fallback_name="Software build",
         )
+        # This should use the translated string:
         .sensor(
             "date_code",
             general.Basic.cluster_id,
             translation_key="device_status",  # existing translation key
             fallback_name="I should not be used",
         )
+        # This should use the fallback name:
         .sensor(
             "product_url",
             general.Basic.cluster_id,
@@ -616,6 +619,7 @@ async def test_sensor_name(
             translation_key="this_translation_key_is_not_translated",
             fallback_name="Product url",
         )
+        # This should use the translated string:
         .sensor(
             "product_label",
             general.Basic.cluster_id,
@@ -623,6 +627,14 @@ async def test_sensor_name(
             unit=UnitOfTemperature.CELSIUS,
             translation_key="device_temperature",  # existing translation key
             fallback_name="I should not be used",
+        )
+        # This should use the device class name:
+        .sensor(
+            "location_desc",
+            general.Basic.cluster_id,
+            device_class=SensorDeviceClass.BATTERY,  # with device class
+            unit=PERCENTAGE,
+            fallback_name="I should not be used",  # no translation key
         )
         .add_to_registry()
     )
@@ -693,6 +705,16 @@ async def test_sensor_name(
     assert (
         hass_state_translation_device_class.attributes.get("friendly_name")
         == "Test Manf Test Model Device temperature"
+    )
+
+    entity_id_device_class_name = "sensor.test_manf_test_model_battery"
+    hass_state_device_class_name = hass.states.get(entity_id_device_class_name)
+    assert hass_state_device_class_name is not None
+
+    # Check that the friendly name uses the device class name.
+    assert (
+        hass_state_device_class_name.attributes.get("friendly_name")
+        == "Test Manf Test Model Battery"
     )
 
 
