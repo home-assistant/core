@@ -66,6 +66,10 @@ class TuyaEntity(Entity):
         LOGGER.debug("Sending commands for device %s: %s", self.device.id, commands)
         self.device_manager.send_commands(self.device.id, commands)
 
+    async def _async_send_commands(self, commands: list[dict[str, Any]]) -> None:
+        """Send command to the device."""
+        await self.hass.async_add_executor_job(self._send_command, commands)
+
     def _read_wrapper(self, dpcode_wrapper: DPCodeWrapper | None) -> Any | None:
         """Read the wrapper device status."""
         if dpcode_wrapper is None:
