@@ -805,6 +805,8 @@ async def async_get_all_descriptions(
             continue
 
         description = {"fields": yaml_description.get("fields", {})}
+        if target := yaml_description.get("target"):
+            description["target"] = target
 
         new_descriptions_cache[missing_trigger] = description
 

@@ -37,6 +37,7 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import (
     config_validation as cv,
     entity,
+    entity_registry as er,
     target as target_helpers,
     template,
 )
@@ -107,6 +108,7 @@ def async_register_commands(
     async_reg(hass, handle_entity_source)
     async_reg(hass, handle_execute_script)
     async_reg(hass, handle_extract_from_target)
+    async_reg(hass, handle_get_triggers_for_target)
     async_reg(hass, handle_fire_event)
     async_reg(hass, handle_get_config)
     async_reg(hass, handle_get_services)
@@ -875,6 +877,55 @@ def handle_extract_from_target(
     }
 
     connection.send_result(msg["id"], extracted_dict)
+
+
+@decorators.websocket_command(
+    {
+        vol.Required("type"): "get_triggers_for_target",
+        vol.Required("target"): cv.TARGET_FIELDS,
+        vol.Optional("expand_group", default=False): bool,
+    }
+)
+@decorators.async_response
+async def handle_get_triggers_for_target(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle get triggers for target command.
+
+    This command returns all triggers that can be used on any entity that are currently
+    part of a target.
+    """
+    selector_data = target_helpers.TargetSelectorData(msg["target"])
+    extracted = target_helpers.async_extract_referenced_entity_ids(
+        hass, selector_data, expand_group=msg["expand_group"]
+    )
+    _LOGGER.debug("Extracted entities for trigger lookup: %s", extracted)
+
+    descriptions = await async_get_all_trigger_descriptions(hass)
+    target_triggers = [
+        trigger
+        for trigger, description in descriptions.items()
+        if description and "target" in description
+    ]
+    _LOGGER.debug("Available target triggers: %s", target_triggers)
+
+    # Collect both platform domains and integrations from all entities in target
+    entity_domains: set[str] = set()
+    entity_registry = er.async_get(hass)
+    for entity_id in extracted.referenced.union(extracted.indirectly_referenced):
+        entity_domains.add(entity_id.split(".")[0])
+
+        if entity_entry := entity_registry.async_get(entity_id):
+            entity_domains.add(entity_entry.platform)
+
+    _LOGGER.debug("Relevant domains: %s", entity_domains)
+
+    triggers_for_target = {
+        trigger
+        for trigger in target_triggers
+        if trigger.split(".")[0] in entity_domains
+    }
+    connection.send_result(msg["id"], triggers_for_target)
 
 
 @decorators.websocket_command(
