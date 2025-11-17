@@ -32,10 +32,77 @@ from .entity import TuyaEntity
 from .models import (
     DPCodeBooleanWrapper,
     DPCodeEnumWrapper,
+    DPCodeIntegerWrapper,
     IntegerTypeData,
     find_dpcode,
 )
 from .util import get_dpcode, get_dptype, remap_value
+
+
+class _BrightnessWrapper(DPCodeIntegerWrapper):
+    """Wrapper for brightness DP code."""
+
+    brightness_min: DPCodeIntegerWrapper | None = None
+    brightness_max: DPCodeIntegerWrapper | None = None
+
+    def read_device_status(self, device: CustomerDevice) -> Any | None:
+        """Read the device value for the dpcode."""
+        if (brightness := self._read_device_status_raw(device)) is None:
+            return None
+
+        # Remap value to our scale
+        brightness = self.type_information.remap_value_to(brightness)
+
+        # If there is a min/max value, the brightness is actually limited.
+        # Meaning it is actually not on a 0-255 scale.
+        if (
+            self.brightness_max is not None
+            and self.brightness_min is not None
+            and (brightness_max := device.status.get(self.brightness_max.dpcode))
+            is not None
+            and (brightness_min := device.status.get(self.brightness_min.dpcode))
+            is not None
+        ):
+            # Remap values onto our scale
+            brightness_max = self.brightness_max.type_information.remap_value_to(
+                brightness_max
+            )
+            brightness_min = self.brightness_min.type_information.remap_value_to(
+                brightness_min
+            )
+
+            # Remap the brightness value from their min-max to our 0-255 scale
+            brightness = remap_value(
+                brightness,
+                from_min=brightness_min,
+                from_max=brightness_max,
+            )
+
+        return round(brightness)
+
+    def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
+        """Convert a Home Assistant value back to a raw device value."""
+        # If there is a min/max value, the brightness is actually limited.
+        # Meaning it is actually not on a 0-255 scale.
+        if (
+            self.brightness_max is not None
+            and self.brightness_min is not None
+            and (brightness_max := device.status.get(self.brightness_max.dpcode))
+            is not None
+            and (brightness_min := device.status.get(self.brightness_min.dpcode))
+            is not None
+        ):
+            # Remap values onto our scale
+            brightness_max = self.brightness_max.type_information.remap_value_to(
+                brightness_max
+            )
+            brightness_min = self.brightness_min.type_information.remap_value_to(
+                brightness_min
+            )
+
+            # Remap the brightness value from their min-max to our 0-255 scale
+            value = remap_value(value, to_min=brightness_min, to_max=brightness_max)
+        return round(self.type_information.remap_value_from(value))
 
 
 @dataclass
@@ -417,6 +484,24 @@ class ColorData:
         return round(self.type_data.v_type.remap_value_to(self.v_value, 0, 255))
 
 
+def _get_brightness_wrapper(
+    device: CustomerDevice, description: TuyaLightEntityDescription
+) -> _BrightnessWrapper | None:
+    if (
+        brightness_wrapper := _BrightnessWrapper.find_dpcode(
+            device, description.brightness, prefer_function=True
+        )
+    ) is None:
+        return None
+    brightness_wrapper.brightness_max = DPCodeIntegerWrapper.find_dpcode(
+        device, description.brightness_max, prefer_function=True
+    )
+    brightness_wrapper.brightness_min = DPCodeIntegerWrapper.find_dpcode(
+        device, description.brightness_min, prefer_function=True
+    )
+    return brightness_wrapper
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TuyaConfigEntry,
@@ -437,6 +522,7 @@ async def async_setup_entry(
                         device,
                         manager,
                         description,
+                        brightness_wrapper=_get_brightness_wrapper(device, description),
                         color_mode_wrapper=DPCodeEnumWrapper.find_dpcode(
                             device, description.color_mode, prefer_function=True
                         ),
@@ -464,9 +550,6 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
 
     entity_description: TuyaLightEntityDescription
 
-    _brightness_max: IntegerTypeData | None = None
-    _brightness_min: IntegerTypeData | None = None
-    _brightness: IntegerTypeData | None = None
     _color_data_dpcode: DPCode | None = None
     _color_data_type: ColorTypeData | None = None
     _color_temp: IntegerTypeData | None = None
@@ -481,6 +564,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         device_manager: Manager,
         description: TuyaLightEntityDescription,
         *,
+        brightness_wrapper: DPCodeIntegerWrapper | None,
         color_mode_wrapper: DPCodeEnumWrapper | None,
         switch_wrapper: DPCodeBooleanWrapper,
     ) -> None:
@@ -488,25 +572,14 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         super().__init__(device, device_manager)
         self.entity_description = description
         self._attr_unique_id = f"{super().unique_id}{description.key}"
+        self._brightness_wrapper = brightness_wrapper
         self._color_mode_wrapper = color_mode_wrapper
         self._switch_wrapper = switch_wrapper
 
         color_modes: set[ColorMode] = {ColorMode.ONOFF}
 
-        if int_type := find_dpcode(
-            self.device,
-            description.brightness,
-            dptype=DPType.INTEGER,
-            prefer_function=True,
-        ):
-            self._brightness = int_type
+        if brightness_wrapper:
             color_modes.add(ColorMode.BRIGHTNESS)
-            self._brightness_max = find_dpcode(
-                self.device, description.brightness_max, dptype=DPType.INTEGER
-            )
-            self._brightness_min = find_dpcode(
-                self.device, description.brightness_min, dptype=DPType.INTEGER
-            )
 
         if (dpcode := get_dpcode(self.device, description.color_data)) and (
             get_dptype(self.device, dpcode, prefer_function=True) == DPType.JSON
@@ -529,7 +602,8 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
                 # If no type is found, use a default one
                 self._color_data_type = self.entity_description.default_color_type
                 if self._color_data_dpcode == DPCode.COLOUR_DATA_V2 or (
-                    self._brightness and self._brightness.max > 255
+                    self._brightness_wrapper
+                    and self._brightness_wrapper.type_information.max > 255
                 ):
                     self._color_data_type = DEFAULT_COLOR_TYPE_DATA_V2
 
@@ -641,46 +715,16 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
                 },
             ]
 
-        elif self._brightness and (ATTR_BRIGHTNESS in kwargs or ATTR_WHITE in kwargs):
+        elif self._brightness_wrapper and (
+            ATTR_BRIGHTNESS in kwargs or ATTR_WHITE in kwargs
+        ):
             if ATTR_BRIGHTNESS in kwargs:
                 brightness = kwargs[ATTR_BRIGHTNESS]
             else:
                 brightness = kwargs[ATTR_WHITE]
 
-            # If there is a min/max value, the brightness is actually limited.
-            # Meaning it is actually not on a 0-255 scale.
-            if (
-                self._brightness_max is not None
-                and self._brightness_min is not None
-                and (
-                    brightness_max := self.device.status.get(
-                        self._brightness_max.dpcode
-                    )
-                )
-                is not None
-                and (
-                    brightness_min := self.device.status.get(
-                        self._brightness_min.dpcode
-                    )
-                )
-                is not None
-            ):
-                # Remap values onto our scale
-                brightness_max = self._brightness_max.remap_value_to(brightness_max)
-                brightness_min = self._brightness_min.remap_value_to(brightness_min)
-
-                # Remap the brightness value from their min-max to our 0-255 scale
-                brightness = remap_value(
-                    brightness,
-                    to_min=brightness_min,
-                    to_max=brightness_max,
-                )
-
             commands += [
-                {
-                    "code": self._brightness.dpcode,
-                    "value": round(self._brightness.remap_value_from(brightness)),
-                },
+                self._brightness_wrapper.get_update_command(self.device, brightness),
             ]
 
         self._send_command(commands)
@@ -696,38 +740,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         if self.color_mode == ColorMode.HS and (color_data := self._get_color_data()):
             return color_data.brightness
 
-        if not self._brightness:
-            return None
-
-        brightness = self.device.status.get(self._brightness.dpcode)
-        if brightness is None:
-            return None
-
-        # Remap value to our scale
-        brightness = self._brightness.remap_value_to(brightness)
-
-        # If there is a min/max value, the brightness is actually limited.
-        # Meaning it is actually not on a 0-255 scale.
-        if (
-            self._brightness_max is not None
-            and self._brightness_min is not None
-            and (brightness_max := self.device.status.get(self._brightness_max.dpcode))
-            is not None
-            and (brightness_min := self.device.status.get(self._brightness_min.dpcode))
-            is not None
-        ):
-            # Remap values onto our scale
-            brightness_max = self._brightness_max.remap_value_to(brightness_max)
-            brightness_min = self._brightness_min.remap_value_to(brightness_min)
-
-            # Remap the brightness value from their min-max to our 0-255 scale
-            brightness = remap_value(
-                brightness,
-                from_min=brightness_min,
-                from_max=brightness_max,
-            )
-
-        return round(brightness)
+        return self._read_wrapper(self._brightness_wrapper)
 
     @property
     def color_temp_kelvin(self) -> int | None:
