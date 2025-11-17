@@ -38,8 +38,8 @@ class PTDevicesCoordinator(DataUpdateCoordinator[PTDevicesResponse]):
         self,
         hass: HomeAssistant,
         config_entry: PTDevicesConfigEntry,
-        deviceId: str,
-        authToken: str,
+        device_id: str,
+        auth_token: str,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -57,8 +57,8 @@ class PTDevicesCoordinator(DataUpdateCoordinator[PTDevicesResponse]):
         )
 
         self._hass = hass
-        self._authToken = authToken
-        self._deviceId = deviceId
+        self._auth_token = auth_token
+        self._device_id = device_id
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -80,7 +80,9 @@ class PTDevicesCoordinator(DataUpdateCoordinator[PTDevicesResponse]):
 
     async def _async_update_data(self) -> PTDevicesResponse:
         try:
-            data = await ptdevices_get_data(self._hass, self._authToken, self._deviceId)
+            data = await ptdevices_get_data(
+                self._hass, self._auth_token, self._device_id
+            )
 
         except aioptdevices.PTDevicesRequestError as err:
             raise UpdateFailed(
