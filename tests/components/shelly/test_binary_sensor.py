@@ -339,7 +339,7 @@ async def test_rpc_sleeping_binary_sensor_with_channel_name(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC online sleeping binary sensor with channel name."""
-    suffix = "test_name_test_smoke_0_smoke"
+    suffix = "test_name_test_channel_name_smoke"
     entity_id = f"{BINARY_SENSOR_DOMAIN}.{suffix}"
     monkeypatch.setattr(mock_rpc_device, "connected", False)
     monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
@@ -353,7 +353,7 @@ async def test_rpc_sleeping_binary_sensor_with_channel_name(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (state := hass.states.get(entity_id))
-    assert state.attributes["friendly_name"] == "Test name test smoke_0 smoke"
+    assert state.attributes["friendly_name"] == "Test name test channel name smoke"
     assert state.state == STATE_OFF
 
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "smoke:0", "alarm", True)

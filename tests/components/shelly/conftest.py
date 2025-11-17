@@ -247,7 +247,7 @@ MOCK_CONFIG = {
     "wifi": {"sta": {"enable": True}, "sta1": {"enable": False}},
     "ws": {"enable": False, "server": None},
     "voltmeter:100": {"xvoltage": {"unit": "ppm"}},
-    "smoke:0": {"id": 0, "name": "test smoke_0"},
+    "smoke:0": {"id": 0, "name": "test channel name"},
     "script:1": {"id": 1, "name": "test_script.js", "enable": True},
     "script:2": {"id": 2, "name": "test_script_2.js", "enable": False},
     "script:3": {"id": 3, "name": BLE_SCRIPT_NAME, "enable": False},
