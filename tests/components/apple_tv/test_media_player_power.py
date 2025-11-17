@@ -1,69 +1,113 @@
-"""Tests for Apple TV media-player power state."""
+"""Tests for Apple TV media-player power and listener-driven regressions."""
 
-from __future__ import annotations
+from pyatv.const import DeviceState, FeatureName, FeatureState
+import pytest
 
-from types import SimpleNamespace
+from homeassistant.components import media_player
+from homeassistant.core import HomeAssistant
 
-from pyatv.const import DeviceState, FeatureName, FeatureState, PowerState
-
-from homeassistant.components.apple_tv import media_player as mp
+pytestmark = pytest.mark.asyncio
 
 
-def _player(
-    *, power_state: PowerState, feature_available: bool, playing
-) -> mp.AppleTvMediaPlayer:
-    # Bypass __init__ to avoid pulling in manager/pyatv; set only what `state` needs.
-    player: mp.AppleTvMediaPlayer = object.__new__(mp.AppleTvMediaPlayer)
-    player.manager = SimpleNamespace(is_connecting=False)
+async def _one_media_player(hass: HomeAssistant) -> str:
+    """Return the single Apple TV media player entity id."""
+    entities = hass.states.async_entity_ids(media_player.DOMAIN)
+    assert entities, "Media player entity was not created"
+    return entities[0]
 
-    def in_state(states, feature):
-        if feature != FeatureName.PowerState:
-            return False
-        # `states` can be a FeatureState or an iterable
-        if isinstance(states, (list, tuple, set)):
-            return feature_available and FeatureState.Available in states
-        return feature_available and states == FeatureState.Available
 
-    player.atv = SimpleNamespace(
-        features=SimpleNamespace(in_state=in_state),
-        power=SimpleNamespace(power_state=power_state),
+@pytest.mark.parametrize("setup_runtime_integration", [True, False], indirect=True)
+async def test_power_state_from_remote(
+    hass: HomeAssistant, setup_runtime_integration
+) -> None:
+    """Test power on/off updates media_player state changing via remote. (e.g. by the Apple TV itself)."""
+    _, atv = setup_runtime_integration
+    entity_id = await _one_media_player(hass)
+
+    # Turn off
+    await atv.power.turn_off()
+    await hass.async_block_till_done()
+    state_off = hass.states.get(entity_id).state
+
+    powerstate_supported = atv.features.in_state(
+        FeatureState.Available, FeatureName.PowerState
     )
-    player._playing = playing
-    return player
+    if powerstate_supported:
+        assert state_off == media_player.MediaPlayerState.OFF
+    else:
+        assert state_off == "unknown"
+
+    # Turn on
+    await atv.power.turn_on()
+    await hass.async_block_till_done()
+    state_on = hass.states.get(entity_id).state
+
+    if powerstate_supported:
+        assert state_on == media_player.MediaPlayerState.ON
+    else:
+        # Without powerstate feature we cannot know real power its only updated when playing
+        assert state_on == "unknown"
 
 
-def test_state_off_when_power_off_and_not_playing() -> None:
-    """Test state is OFF when power is off and not playing."""
-    p = _player(power_state=PowerState.Off, feature_available=True, playing=None)
-    assert p.state == mp.MediaPlayerState.OFF
+@pytest.mark.parametrize("setup_runtime_integration", [True, False], indirect=True)
+async def test_power_state_using_services(
+    hass: HomeAssistant, setup_runtime_integration
+) -> None:
+    """Test power on/off using media_player services."""
+    _, atv = setup_runtime_integration
+    entity_id = await _one_media_player(hass)
+    powerstate_supported = atv.features.in_state(
+        FeatureState.Available, FeatureName.PowerState
+    )
+    await hass.services.async_call(
+        "media_player",
+        "media_play",
+        {"entity_id": entity_id},
+        blocking=True,
+    )
+    assert hass.states.get(entity_id).state == media_player.MediaPlayerState.PLAYING
+
+    await hass.services.async_call(
+        "media_player",
+        "turn_off",
+        {"entity_id": entity_id},
+        blocking=True,
+    )
+    state = hass.states.get(entity_id).state
+    if powerstate_supported:
+        assert state == media_player.MediaPlayerState.OFF
+    else:  # Without powerstate feature player remains PLAYING
+        assert state == media_player.MediaPlayerState.PLAYING
+
+    await hass.services.async_call(
+        "media_player",
+        "turn_on",
+        {"entity_id": entity_id},
+        blocking=True,
+    )
+    state = hass.states.get(entity_id).state
+    if powerstate_supported:
+        assert state == media_player.MediaPlayerState.PLAYING
+    else:  # Without powerstate feature player remains PLAYING
+        assert state == media_player.MediaPlayerState.PLAYING
 
 
-def test_state_on_when_power_on_and_not_playing() -> None:
-    """Test state is ON when power is on and not playing."""
-    p = _player(power_state=PowerState.On, feature_available=True, playing=None)
-    assert p.state == mp.MediaPlayerState.ON
+@pytest.mark.parametrize("setup_runtime_integration", [True, False], indirect=True)
+async def test_listener_playing_state_update(
+    hass: HomeAssistant, setup_runtime_integration
+) -> None:
+    """Test that playing state updates via listener work."""
+    _, atv = setup_runtime_integration
+    entity_id = await _one_media_player(hass)
 
+    await atv.push_updater.trigger_playing(DeviceState.Idle)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == media_player.MediaPlayerState.IDLE
 
-def test_playing_state_takes_precedence_over_power_on() -> None:
-    """Test that playing state takes precedence over power on."""
-    playing = SimpleNamespace(device_state=DeviceState.Playing)
-    p = _player(power_state=PowerState.On, feature_available=True, playing=playing)
-    assert p.state == mp.MediaPlayerState.PLAYING
+    await atv.push_updater.trigger_playing(DeviceState.Playing)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == media_player.MediaPlayerState.PLAYING
 
-
-# If the power feature is not available, playback still determines state.
-
-
-def test_state_comes_from_playback_when_power_feature_unavailable() -> None:
-    """If the power feature is not available, playback still determines state."""
-    playing = SimpleNamespace(device_state=DeviceState.Playing)
-    p = _player(power_state=PowerState.Off, feature_available=False, playing=playing)
-    assert p.state == mp.MediaPlayerState.PLAYING
-
-
-def test_state_unknown_when_power_feature_unavailable_and_not_playing() -> None:
-    """If there is no playback and no power feature, state falls back to None (unknown)."""
-    p = _player(power_state=PowerState.On, feature_available=False, playing=None)
-    # The `state` property returns None here; HA will display this as "unknown".
-    # This matches the PR's final return path when power feature is not usable.
-    assert p.state is None
+    await atv.push_updater.trigger_playing(DeviceState.Paused)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == media_player.MediaPlayerState.PAUSED

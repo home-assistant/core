@@ -1,10 +1,21 @@
 """Fixtures for component."""
 
+import asyncio
 from collections.abc import Generator
+from dataclasses import dataclass
 import sys
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from pyatv.const import DeviceState, FeatureName, FeatureState, PowerState
+from pyatv.interface import Playing
 import pytest
+
+from homeassistant.components.apple_tv.const import DOMAIN
+from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
+
+from tests.common import MockConfigEntry
 
 if sys.version_info < (3, 14):
     from pyatv import conf
@@ -216,3 +227,145 @@ def dmap_with_requirement(
         )
     )
     return mock_scan
+
+
+@dataclass
+class FakeFeatures:
+    """Simulate pyatv.features with in_state method."""
+
+    power_feature_available: bool = True
+
+    def in_state(self, state: FeatureState, feature: FeatureName) -> bool:
+        """Return if a feature is in a given state."""
+        if feature is FeatureName.PowerState and state is FeatureState.Available:
+            return self.power_feature_available
+        return True
+
+    def all_features(self) -> dict[FeatureName, SimpleNamespace]:
+        """Return all features as available."""
+        return {f: SimpleNamespace(state=FeatureState.Available) for f in FeatureName}
+
+
+@dataclass
+class DummyPower:
+    """Simulate pyatv.power with listener callbacks and async on/off."""
+
+    def __init__(self) -> None:
+        """Initialize power state and listener."""
+        self.listener = None
+        self.power_state = PowerState.On
+
+    async def _notify(self, old: PowerState, new: PowerState) -> None:
+        """Notify all listeners asynchronously."""
+        if self.listener and hasattr(self.listener, "powerstate_update"):
+            self.listener.powerstate_update(old, new)
+        # Yield control so hass can process state updates
+        await asyncio.sleep(0)
+
+    async def turn_off(self) -> None:
+        """Simulate turning off the device."""
+        old = self.power_state
+        self.power_state = PowerState.Off
+        await self._notify(old, self.power_state)
+
+    async def turn_on(self) -> None:
+        """Simulate turning on the device."""
+        old = self.power_state
+        self.power_state = PowerState.On
+        await self._notify(old, self.power_state)
+
+
+@dataclass
+class DummyPushUpdater:
+    """Simulate pyatv.push_updater with listener behavior."""
+
+    def __init__(self) -> None:
+        """Initialize push updater state and listener."""
+        self.listener = None
+        self.is_active = True
+        self.playing_state = Playing(device_state=DeviceState.Paused)
+
+    def start(self) -> None:
+        """Start the push updater."""
+        self.is_active = True
+
+    def stop(self) -> None:
+        """Stop the push updater."""
+        self.is_active = False
+
+    async def trigger_playing(self, new_state: DeviceState) -> None:
+        """Simulate a playstatus update event."""
+        self.playing_state = Playing(device_state=new_state)
+        if self.listener and hasattr(self.listener, "playstatus_update"):
+            self.listener.playstatus_update(self, self.playing_state)
+
+
+@pytest.fixture
+def dummy_atv_runtime() -> AsyncMock:
+    """Unified dummy Apple TV device mock with runtime listener-capable subsystems."""
+    atv = AsyncMock()
+    atv.power = DummyPower()
+    atv.apps = AsyncMock()
+    atv.features = FakeFeatures()
+    atv.push_updater = DummyPushUpdater()
+
+    async def play():
+        await atv.push_updater.trigger_playing(DeviceState.Playing)
+
+    atv.remote_control.play = AsyncMock(side_effect=play)
+    atv.close = lambda: None
+    return atv
+
+
+@pytest.fixture
+async def setup_runtime_integration(
+    hass: HomeAssistant, dummy_atv_runtime, request: pytest.FixtureRequest
+) -> tuple[MockConfigEntry, AsyncMock]:
+    """Set up Apple TV integration using runtime dummy (for media_player tests)."""
+
+    power_feature_available = getattr(request, "param", True)
+    # Modify dummy to simulate missing PowerState feature
+    dummy_atv_runtime.features.power_feature_available = power_feature_available
+
+    async def _fake_setup_component(
+        hass: HomeAssistant, domain: str, config: dict
+    ) -> bool:
+        """Intercept setup_component calls."""
+        if domain == "zeroconf":
+            return True
+        return await async_setup_component(hass, domain, config)
+
+    async def _fake_connect_once(self, raise_missing_credentials=True):
+        """Simulate Apple TV connecting successfully."""
+        atv = dummy_atv_runtime
+        self.atv = atv
+        return True
+
+    with (
+        patch(
+            "homeassistant.components.apple_tv.AppleTVManager._connect_once",
+            new=_fake_connect_once,
+        ),
+        patch(
+            "homeassistant.setup.async_setup_component",
+            side_effect=_fake_setup_component,
+        ),
+    ):
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            title="Dummy TV",
+            data={
+                "address": "127.0.0.1",
+                "host": "127.0.0.1",
+                "identifier": "dummyid",
+                "name": "Dummy TV",
+                "credentials": {"3": "abc123", "1": "xyz789"},
+            },
+            unique_id="dummyid_runtime"
+            + ("_nopower" if not power_feature_available else ""),
+        )
+        entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        return entry, dummy_atv_runtime
