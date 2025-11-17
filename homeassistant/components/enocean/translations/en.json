@@ -55,9 +55,17 @@
                 "name": "B1"
             }
         },
+        "button": {
+            "query_state": {
+                "name": "Query state"
+            }
+        },
         "sensor": {
             "last_seen": {
                 "name": "Last seen"
+            },
+            "supply_voltage": {
+                "name": "Supply voltage"
             },
             "telegrams_received": {
                 "name": "Telegrams received"

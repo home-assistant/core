@@ -396,13 +396,8 @@ class OptionsFlowHandler(OptionsFlow):
                 vol.Optional(
                     CONF_ENOCEAN_SENDER_ID, default=sender_id
                 ): selector.SelectSelector(
-                    # For now, the list of sender_ids will be empty. For a
-                    # later version, it shall be pre-filled with the dongle's
-                    # chip ID and its base IDs. (FUTURE WORK, requires update
-                    # of enocean lib).
-                    # Hence the use of a SelectSelector.
                     selector.SelectSelectorConfig(
-                        options=self.config_entry.runtime_data.gateway.valid_sender_ids(),
+                        options=self.config_entry.runtime_data.gateway.valid_sender_ids,
                         custom_value=False,
                     )
                 ),

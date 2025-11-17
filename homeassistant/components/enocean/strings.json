@@ -109,12 +109,20 @@
         "name": "A1B0"
       }
     },
+    "button": {
+      "query_state": {
+        "name": "Query state"
+      }
+    },
     "sensor": {
       "last_seen": {
         "name": "Last seen"
       },
       "telegrams_received": {
         "name": "Telegrams received"
+      },
+      "supply_voltage": {
+        "name": "Supply voltage"
       }
     },
     "switch": {
