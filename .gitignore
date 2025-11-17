@@ -144,3 +144,4 @@ pytest_buckets.txt
 .serena/
 
 .pre-commit/
+.pre-commit/
