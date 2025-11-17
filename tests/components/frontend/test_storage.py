@@ -353,21 +353,11 @@ async def test_get_system_data(
     assert res["success"], res
     assert res["result"]["value"][0]["foo"] == "bar"
 
-    # Get all data (no key)
-
-    await client.send_json({"id": 8, "type": "frontend/get_system_data"})
-
-    res = await client.receive_json()
-    assert res["success"], res
-    assert res["result"]["value"]["test-key"] == "test-value"
-    assert res["result"]["value"]["test-complex"][0]["foo"] == "bar"
-
 
 @pytest.mark.parametrize(
     ("subscriptions", "events"),
     [
         ([], []),
-        ([(1, {}, {})], [(1, {"test-key": "test-value"})]),
         ([(1, {"key": "test-key"}, None)], [(1, "test-value")]),
         ([(1, {"key": "other-key"}, None)], []),
     ],
@@ -444,31 +434,6 @@ async def test_set_system_data_empty(
         (
             [],
             [[], []],
-        ),
-        (
-            [(1, {}, {"test-key": "test-value", "test-complex": "string"})],
-            [
-                [
-                    (
-                        1,
-                        {
-                            "test-complex": "string",
-                            "test-key": "test-value",
-                            "test-non-existent-key": "test-value-new",
-                        },
-                    )
-                ],
-                [
-                    (
-                        1,
-                        {
-                            "test-complex": [{"foo": "bar"}],
-                            "test-key": "test-value",
-                            "test-non-existent-key": "test-value-new",
-                        },
-                    )
-                ],
-            ],
         ),
         (
             [(1, {"key": "test-key"}, "test-value")],

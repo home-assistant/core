@@ -102,9 +102,13 @@ class SystemStore:
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the system store."""
-        self._store = _SystemStore(hass)
+        self._store: Store[dict[str, Any]] = Store(
+            hass,
+            STORAGE_VERSION_SYSTEM_DATA,
+            "frontend.system_data",
+        )
         self.data: dict[str, Any] = {}
-        self.subscriptions: dict[str | None, list[Callable[[], None]]] = {}
+        self.subscriptions: dict[str, list[Callable[[], None]]] = {}
 
     async def async_load(self) -> None:
         """Load the data from the store."""
@@ -114,14 +118,12 @@ class SystemStore:
         """Set an item and save the store."""
         self.data[key] = value
         await self._store.async_save(self.data)
-        for cb in self.subscriptions.get(None, []):
-            cb()
         for cb in self.subscriptions.get(key, []):
             cb()
 
     @callback
     def async_subscribe(
-        self, key: str | None, on_update_callback: Callable[[], None]
+        self, key: str, on_update_callback: Callable[[], None]
     ) -> Callable[[], None]:
         """Subscribe to store updates."""
         self.subscriptions.setdefault(key, []).append(on_update_callback)
@@ -131,18 +133,6 @@ class SystemStore:
             self.subscriptions[key].remove(on_update_callback)
 
         return unsubscribe
-
-
-class _SystemStore(Store[dict[str, Any]]):
-    """System store for frontend data."""
-
-    def __init__(self, hass: HomeAssistant) -> None:
-        """Initialize the system store."""
-        super().__init__(
-            hass,
-            STORAGE_VERSION_SYSTEM_DATA,
-            "frontend.system_data",
-        )
 
 
 def with_user_store(
@@ -277,7 +267,7 @@ async def websocket_set_system_data(
 
 
 @websocket_api.websocket_command(
-    {vol.Required("type"): "frontend/get_system_data", vol.Optional("key"): str}
+    {vol.Required("type"): "frontend/get_system_data", vol.Required("key"): str}
 )
 @websocket_api.async_response
 @with_system_store
@@ -288,16 +278,13 @@ async def websocket_get_system_data(
     store: SystemStore,
 ) -> None:
     """Handle get system data command."""
-    data = store.data
-    connection.send_result(
-        msg["id"], {"value": data.get(msg["key"]) if "key" in msg else data}
-    )
+    connection.send_result(msg["id"], {"value": store.data.get(msg["key"])})
 
 
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "frontend/subscribe_system_data",
-        vol.Optional("key"): str,
+        vol.Required("key"): str,
     }
 )
 @websocket_api.async_response
@@ -309,14 +296,11 @@ async def websocket_subscribe_system_data(
     store: SystemStore,
 ) -> None:
     """Handle subscribe to system data command."""
-    key: str | None = msg.get("key")
+    key: str = msg["key"]
 
     def on_data_update() -> None:
         """Handle system data update."""
-        data = store.data
-        connection.send_event(
-            msg["id"], {"value": data.get(key) if key is not None else data}
-        )
+        connection.send_event(msg["id"], {"value": store.data.get(key)})
 
     connection.subscriptions[msg["id"]] = store.async_subscribe(key, on_data_update)
     on_data_update()
