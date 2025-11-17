@@ -23,7 +23,7 @@ from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import UndefinedType
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
 from .const import DOMAIN
 from .helpers import SIGNAL_REMOVE_ENTITIES, EntityData, convert_zha_error_to_ha_error
@@ -72,15 +72,19 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
             self._attr_name = None
             return super().name
 
-        # This is to allow local development and to register niche devices, since
-        # their translation_key will probably never be added to `zha/strings.json`.
-        # The fallback name takes priority over the device class name.
-        if meta.fallback_name is not None and (
-            (translation_key := self._name_translation_key) is None
-            or translation_key not in self.platform_data.platform_translations
-        ):
-            self._attr_name = meta.fallback_name
+        if meta.translation_key is not None or super().name in (UNDEFINED, None):
+            # if we have a translation for this key, use it
+            if (
+                (translation_key := self._name_translation_key) is not None
+                and translation_key in self.platform_data.platform_translations
+            ):
+                return super().name
+            # a translation won't be available for custom quirks, so use fallback_name
+            if meta.fallback_name is not None:
+                self._attr_name = meta.fallback_name
+                return super().name
 
+        # we should only reach this for the device class name at this point
         return super().name
 
     @property
