@@ -77,6 +77,7 @@ class MatterEntityDescription(EntityDescription):
     device_to_ha: Callable[[Any], Any] | None = None
     ha_to_device: Callable[[Any], Any] | None = None
     command_timeout: int | None = None
+    entity_registry_enabled_default: bool = True
 
 
 class MatterEntity(Entity):
