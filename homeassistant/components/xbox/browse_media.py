@@ -130,7 +130,7 @@ async def build_item_response(
     )
 
 
-def item_payload(item: InstalledPackage, images: dict[str, list[Image]]):
+def item_payload(item: InstalledPackage, images: dict[str, list[Image]]) -> BrowseMedia:
     """Create response payload for a single media item."""
     thumbnail = None
     image = _find_media_image(images.get(item.one_store_product_id, []))  # type: ignore[arg-type]
