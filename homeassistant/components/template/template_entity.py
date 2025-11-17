@@ -200,7 +200,13 @@ class TemplateEntity(AbstractTemplateEntity):
                 """Name of this state."""
                 return "<None>"
 
-        variables = {"this": DummyState()}
+        # Render the current variables and add a dummy this variable to them.
+        variables = (
+            self._run_variables
+            if isinstance(self._run_variables, dict)
+            else self._run_variables.async_render(self.hass, {})
+        )
+        variables = {"this": DummyState(), **variables}
 
         # Try to render the name as it can influence the entity ID
         self._attr_name = None
@@ -338,14 +344,21 @@ class TemplateEntity(AbstractTemplateEntity):
                 )
             return
 
+        errors = []
         for update in updates:
             for template_attr in self._template_attrs[update.template]:
                 template_attr.handle_result(
                     event, update.template, update.last_result, update.result
                 )
+                if isinstance(update.result, TemplateError):
+                    errors.append(update.result)
 
         if not self._preview_callback:
             self.async_write_ha_state()
+            return
+
+        if errors:
+            self._preview_callback(None, None, None, str(errors[-1]))
             return
 
         try:
@@ -445,13 +458,19 @@ class TemplateEntity(AbstractTemplateEntity):
     ) -> CALLBACK_TYPE:
         """Render a preview."""
 
-        def log_template_error(level: int, msg: str) -> None:
-            preview_callback(None, None, None, msg)
+        def suppress_preview_errors(level: int, msg: str) -> None:
+            """Suppress redundant template render errors.
+
+            Preview entities render templates at least 3 times before the preview entity
+            is created. If template contains an error, each render will produce an error.
+            Instead of overwhelming the client with errors, suppress them and raise
+            a single error through the self._handle_results method.
+            """
 
         self._preview_callback = preview_callback
         self._async_setup_templates()
         try:
-            self._async_template_startup(None, log_template_error)
+            self._async_template_startup(None, suppress_preview_errors)
         except Exception as err:  # noqa: BLE001
             preview_callback(None, None, None, str(err))
         return self._call_on_remove_callbacks

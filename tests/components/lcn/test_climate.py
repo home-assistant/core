@@ -52,8 +52,15 @@ async def test_set_hvac_mode_heat(hass: HomeAssistant, entry: MockConfigEntry) -
     await init_integration(hass, entry)
 
     with patch.object(MockModuleConnection, "lock_regulator") as lock_regulator:
-        state = hass.states.get("climate.testmodule_climate1")
-        state.state = HVACMode.OFF
+        await hass.services.async_call(
+            DOMAIN_CLIMATE,
+            SERVICE_SET_HVAC_MODE,
+            {
+                ATTR_ENTITY_ID: "climate.testmodule_climate1",
+                ATTR_HVAC_MODE: HVACMode.OFF,
+            },
+            blocking=True,
+        )
 
         # command failed
         lock_regulator.return_value = False

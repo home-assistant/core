@@ -456,6 +456,7 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
         """Initialize the agent."""
         self.entry = entry
         self.subentry = subentry
+        self.default_model = default_model
         self._attr_name = subentry.title
         self._genai_client = entry.runtime_data
         self._attr_unique_id = subentry.subentry_id
@@ -471,6 +472,7 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
         self,
         chat_log: conversation.ChatLog,
         structure: vol.Schema | None = None,
+        default_max_tokens: int | None = None,
     ) -> None:
         """Generate an answer for the chat log."""
         options = self.subentry.data
@@ -489,7 +491,7 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
             tools = tools or []
             tools.append(Tool(google_search=GoogleSearch()))
 
-        model_name = options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
+        model_name = options.get(CONF_CHAT_MODEL, self.default_model)
         # Avoid INVALID_ARGUMENT Developer instruction is not enabled for <model>
         supports_system_instruction = (
             "gemma" not in model_name
@@ -617,10 +619,12 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
             if not chat_log.unresponded_tool_results:
                 break
 
-    def create_generate_content_config(self) -> GenerateContentConfig:
+    def create_generate_content_config(
+        self, default_max_tokens: int | None = None
+    ) -> GenerateContentConfig:
         """Create the GenerateContentConfig for the LLM."""
         options = self.subentry.data
-        model = options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
+        model = options.get(CONF_CHAT_MODEL, self.default_model)
         thinking_config: ThinkingConfig | None = None
         if model.startswith("models/gemini-2.5") and not model.endswith(
             ("tts", "image", "image-preview")
@@ -631,7 +635,12 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
             temperature=options.get(CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE),
             top_k=options.get(CONF_TOP_K, RECOMMENDED_TOP_K),
             top_p=options.get(CONF_TOP_P, RECOMMENDED_TOP_P),
-            max_output_tokens=options.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS),
+            max_output_tokens=options.get(
+                CONF_MAX_TOKENS,
+                default_max_tokens
+                if default_max_tokens is not None
+                else RECOMMENDED_MAX_TOKENS,
+            ),
             safety_settings=[
                 SafetySetting(
                     category=HarmCategory.HARM_CATEGORY_HATE_SPEECH,

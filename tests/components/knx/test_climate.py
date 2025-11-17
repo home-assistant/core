@@ -3,16 +3,19 @@
 import pytest
 
 from homeassistant.components.climate import HVACMode
+from homeassistant.components.knx.const import ClimateConf
 from homeassistant.components.knx.schema import ClimateSchema
-from homeassistant.const import CONF_NAME, STATE_IDLE
+from homeassistant.const import CONF_NAME, STATE_IDLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
+from . import KnxEntityGenerator
 from .conftest import KNXTestKit
 
 from tests.common import async_capture_events
 
+RAW_FLOAT_MINUS_1_0 = (0x87, 0x9C)
 RAW_FLOAT_20_0 = (0x07, 0xD0)
 RAW_FLOAT_21_0 = (0x0C, 0x1A)
 RAW_FLOAT_22_0 = (0x0C, 0x4C)
@@ -158,7 +161,7 @@ async def test_climate_hvac_mode(
                 ClimateSchema.CONF_TARGET_TEMPERATURE_STATE_ADDRESS: "1/2/5",
                 ClimateSchema.CONF_CONTROLLER_MODE_ADDRESS: controller_mode_ga,
                 ClimateSchema.CONF_CONTROLLER_MODE_STATE_ADDRESS: "1/2/7",
-                ClimateSchema.CONF_OPERATION_MODES: ["Auto"],
+                ClimateConf.OPERATION_MODES: ["Auto"],
             }
             | (
                 {
@@ -452,8 +455,8 @@ async def test_fan_speed_3_steps(hass: HomeAssistant, knx: KNXTestKit) -> None:
                 ClimateSchema.CONF_TARGET_TEMPERATURE_STATE_ADDRESS: "1/2/5",
                 ClimateSchema.CONF_FAN_SPEED_ADDRESS: "1/2/6",
                 ClimateSchema.CONF_FAN_SPEED_STATE_ADDRESS: "1/2/7",
-                ClimateSchema.CONF_FAN_SPEED_MODE: "step",
-                ClimateSchema.CONF_FAN_MAX_STEP: 3,
+                ClimateConf.FAN_SPEED_MODE: "step",
+                ClimateConf.FAN_MAX_STEP: 3,
             }
         }
     )
@@ -508,8 +511,8 @@ async def test_fan_speed_2_steps(hass: HomeAssistant, knx: KNXTestKit) -> None:
                 ClimateSchema.CONF_TARGET_TEMPERATURE_STATE_ADDRESS: "1/2/5",
                 ClimateSchema.CONF_FAN_SPEED_ADDRESS: "1/2/6",
                 ClimateSchema.CONF_FAN_SPEED_STATE_ADDRESS: "1/2/7",
-                ClimateSchema.CONF_FAN_SPEED_MODE: "step",
-                ClimateSchema.CONF_FAN_MAX_STEP: 2,
+                ClimateConf.FAN_SPEED_MODE: "step",
+                ClimateConf.FAN_MAX_STEP: 2,
             }
         }
     )
@@ -561,8 +564,8 @@ async def test_fan_speed_1_step(hass: HomeAssistant, knx: KNXTestKit) -> None:
                 ClimateSchema.CONF_TARGET_TEMPERATURE_STATE_ADDRESS: "1/2/5",
                 ClimateSchema.CONF_FAN_SPEED_ADDRESS: "1/2/6",
                 ClimateSchema.CONF_FAN_SPEED_STATE_ADDRESS: "1/2/7",
-                ClimateSchema.CONF_FAN_SPEED_MODE: "step",
-                ClimateSchema.CONF_FAN_MAX_STEP: 1,
+                ClimateConf.FAN_SPEED_MODE: "step",
+                ClimateConf.FAN_MAX_STEP: 1,
             }
         }
     )
@@ -604,8 +607,8 @@ async def test_fan_speed_5_steps(hass: HomeAssistant, knx: KNXTestKit) -> None:
                 ClimateSchema.CONF_TARGET_TEMPERATURE_STATE_ADDRESS: "1/2/5",
                 ClimateSchema.CONF_FAN_SPEED_ADDRESS: "1/2/6",
                 ClimateSchema.CONF_FAN_SPEED_STATE_ADDRESS: "1/2/7",
-                ClimateSchema.CONF_FAN_SPEED_MODE: "step",
-                ClimateSchema.CONF_FAN_MAX_STEP: 5,
+                ClimateConf.FAN_SPEED_MODE: "step",
+                ClimateConf.FAN_MAX_STEP: 5,
             }
         }
     )
@@ -660,7 +663,7 @@ async def test_fan_speed_percentage(hass: HomeAssistant, knx: KNXTestKit) -> Non
                 ClimateSchema.CONF_TARGET_TEMPERATURE_STATE_ADDRESS: "1/2/5",
                 ClimateSchema.CONF_FAN_SPEED_ADDRESS: "1/2/6",
                 ClimateSchema.CONF_FAN_SPEED_STATE_ADDRESS: "1/2/7",
-                ClimateSchema.CONF_FAN_SPEED_MODE: "percent",
+                ClimateConf.FAN_SPEED_MODE: "percent",
             }
         }
     )
@@ -725,8 +728,8 @@ async def test_fan_speed_percentage_4_steps(
                 ClimateSchema.CONF_TARGET_TEMPERATURE_STATE_ADDRESS: "1/2/5",
                 ClimateSchema.CONF_FAN_SPEED_ADDRESS: "1/2/6",
                 ClimateSchema.CONF_FAN_SPEED_STATE_ADDRESS: "1/2/7",
-                ClimateSchema.CONF_FAN_SPEED_MODE: "percent",
-                ClimateSchema.CONF_FAN_MAX_STEP: 4,
+                ClimateConf.FAN_SPEED_MODE: "percent",
+                ClimateConf.FAN_MAX_STEP: 4,
             }
         }
     )
@@ -785,9 +788,9 @@ async def test_fan_speed_zero_mode_auto(hass: HomeAssistant, knx: KNXTestKit) ->
                 ClimateSchema.CONF_TARGET_TEMPERATURE_STATE_ADDRESS: "1/2/5",
                 ClimateSchema.CONF_FAN_SPEED_ADDRESS: "1/2/6",
                 ClimateSchema.CONF_FAN_SPEED_STATE_ADDRESS: "1/2/7",
-                ClimateSchema.CONF_FAN_MAX_STEP: 3,
-                ClimateSchema.CONF_FAN_SPEED_MODE: "step",
-                ClimateSchema.CONF_FAN_ZERO_MODE: "auto",
+                ClimateConf.FAN_MAX_STEP: 3,
+                ClimateConf.FAN_SPEED_MODE: "step",
+                ClimateConf.FAN_ZERO_MODE: "auto",
             }
         }
     )
@@ -938,3 +941,103 @@ async def test_horizontal_swing(hass: HomeAssistant, knx: KNXTestKit) -> None:
     )
     await knx.assert_write("1/2/6", False)
     knx.assert_state("climate.test", HVACMode.HEAT, swing_horizontal_mode="off")
+
+
+async def test_climate_ui_create(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    create_ui_entity: KnxEntityGenerator,
+) -> None:
+    """Test creating a climate entity."""
+    await knx.setup_integration()
+    await create_ui_entity(
+        platform=Platform.CLIMATE,
+        entity_data={"name": "test"},
+        knx_data={
+            "ga_temperature_current": {"state": "0/0/1"},
+            "target_temperature": {
+                "ga_temperature_target": {"write": "1/1/1", "state": "1/1/2"},
+            },
+            "sync_state": True,
+        },
+    )
+    # created entity sends read-request to KNX bus
+    await knx.assert_read("0/0/1", response=RAW_FLOAT_20_0)
+    await knx.assert_read("1/1/2", response=RAW_FLOAT_20_0)
+    knx.assert_state("climate.test", HVACMode.HEAT)
+
+
+async def test_climate_ui_load(knx: KNXTestKit) -> None:
+    """Test loading climate entities from storage."""
+    await knx.setup_integration(config_store_fixture="config_store_climate.json")
+    # direct_indi-op_heat-cool
+    await knx.assert_read(
+        "0/0/1", response=RAW_FLOAT_20_0, ignore_order=True
+    )  # current
+    await knx.assert_read("0/1/2", response=RAW_FLOAT_20_0, ignore_order=True)  # target
+    await knx.assert_read(
+        "0/4/2", response=False, ignore_order=True
+    )  # on_off - inverted
+    await knx.assert_read("0/3/2", response=True, ignore_order=True)  # heat-cool
+    await knx.assert_read("0/2/1", response=True, ignore_order=True)  # comfort
+    await knx.assert_read("0/2/2", response=False, ignore_order=True)  # eco
+    await knx.assert_read("0/2/3", response=False, ignore_order=True)  # standby
+    await knx.assert_read("0/2/4", response=False, ignore_order=True)  # protection
+
+    # sps_op-mode_contr-mode
+    await knx.assert_read(
+        "1/0/1", response=RAW_FLOAT_20_0, ignore_order=True
+    )  # current
+    await knx.assert_read("1/1/0", response=RAW_FLOAT_21_0, ignore_order=True)  # target
+    await knx.assert_read(
+        "1/1/2", response=RAW_FLOAT_MINUS_1_0, ignore_order=True
+    )  # shift
+    await knx.assert_read("1/1/3", response=True, ignore_order=True)  # active
+    await knx.assert_read("1/1/4", response=(0x22,), ignore_order=True)  # valve
+    await knx.assert_read("1/4/2", response=(0x22,), ignore_order=True)  # fan speed
+    await knx.assert_read("1/4/4", response=False, ignore_order=True)  # swing vertical
+    await knx.assert_read(
+        "1/4/6", response=False, ignore_order=True
+    )  # swing horizontal
+    await knx.assert_read(
+        "1/0/2", response=RAW_FLOAT_20_0, ignore_order=True
+    )  # humidity
+    await knx.assert_read(
+        "1/2/2",  # operation mode
+        response=(0x01,),  # comfort
+        ignore_order=True,
+    )
+    await knx.assert_read(
+        "1/3/2",  # controller mode
+        response=(0x03,),  # cool
+        ignore_order=True,
+    )
+
+    knx.assert_state(
+        "climate.direct_indi_op_heat_cool",
+        HVACMode.HEAT,
+        current_temperature=20.0,
+        command_value=None,
+        min_temp=10.0,
+        max_temp=24.0,
+        target_temp_step=0.1,
+        preset_modes=["comfort", "standby", "economy", "building_protection"],
+        preset_mode="comfort",
+        hvac_modes=["cool", "heat", "off"],
+        hvac_action="heating",
+        supported_features=401,
+    )
+    knx.assert_state(
+        "climate.sps_op_mode_contr_mode",
+        HVACMode.COOL,
+        current_temperature=20.0,
+        command_value=13,
+        min_temp=14.0,
+        max_temp=30.0,
+        target_temp_step=0.5,
+        preset_modes=["comfort", "standby", "economy", "building_protection"],
+        preset_mode="comfort",
+        hvac_modes=["auto", "cool", "dry", "fan_only", "heat", "off"],
+        hvac_action="cooling",
+        supported_features=953,
+    )

@@ -21,13 +21,21 @@ from homeassistant.const import (
     SERVICE_CLOSE_VALVE,
     SERVICE_OPEN_VALVE,
     SERVICE_SET_VALVE_POSITION,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from . import init_integration
+from . import init_integration, patch_platforms
 
 GAS_VALVE_BLOCK_ID = 6
+
+
+@pytest.fixture(autouse=True)
+def fixture_platforms():
+    """Limit platforms under test."""
+    with patch_platforms([Platform.VALVE]):
+        yield
 
 
 async def test_block_device_gas_valve(
