@@ -3035,7 +3035,7 @@ tilt-pi==0.2.1
 tmb==0.0.4
 
 # homeassistant.components.todoist
-todoist-api-python==2.1.7
+todoist-api-python==3.1.0
 
 # homeassistant.components.togrill
 togrill-bluetooth==0.8.1
