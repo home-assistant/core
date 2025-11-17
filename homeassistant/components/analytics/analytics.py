@@ -33,7 +33,14 @@ from homeassistant.const import (
     BASE_PLATFORMS,
     __version__ as HA_VERSION,
 )
-from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    HassJob,
+    HomeAssistant,
+    ReleaseChannel,
+    callback,
+    get_release_channel,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -201,7 +208,7 @@ def gen_uuid() -> str:
     return uuid.uuid4().hex
 
 
-_IS_HA_DEV_VERSION = HA_VERSION.endswith("0.dev0")
+RELEASE_CHANNEL = get_release_channel()
 
 
 @dataclass
@@ -263,7 +270,7 @@ class Analytics:
     @property
     def endpoint(self) -> str:
         """Return the endpoint that will receive the payload."""
-        if _IS_HA_DEV_VERSION:
+        if RELEASE_CHANNEL is ReleaseChannel.DEV:
             # dev installations will contact the dev analytics environment
             return ANALYTICS_ENDPOINT_URL_DEV
         return ANALYTICS_ENDPOINT_URL
@@ -624,7 +631,10 @@ class Analytics:
                 ),
             )
 
-        if not self.preferences.get(ATTR_SNAPSHOTS, False) or not _IS_HA_DEV_VERSION:
+        if not self.preferences.get(ATTR_SNAPSHOTS, False) or RELEASE_CHANNEL not in (
+            ReleaseChannel.DEV,
+            ReleaseChannel.NIGHTLY,
+        ):
             LOGGER.debug("Snapshot analytics not scheduled")
             if self._snapshot_scheduled:
                 self._snapshot_scheduled()

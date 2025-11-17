@@ -34,7 +34,7 @@ from homeassistant.components.number import NumberDeviceClass
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import ATTR_ASSUMED_STATE, EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ReleaseChannel
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.loader import IntegrationNotFound
@@ -75,8 +75,8 @@ def ha_version_mock() -> Generator[None]:
             MOCK_VERSION,
         ),
         patch(
-            "homeassistant.components.analytics.analytics._IS_HA_DEV_VERSION",
-            False,
+            "homeassistant.components.analytics.analytics.RELEASE_CHANNEL",
+            ReleaseChannel.STABLE,
         ),
     ):
         yield
@@ -91,8 +91,8 @@ def ha_dev_version_mock() -> Generator[None]:
             MOCK_VERSION_DEV,
         ),
         patch(
-            "homeassistant.components.analytics.analytics._IS_HA_DEV_VERSION",
-            True,
+            "homeassistant.components.analytics.analytics.RELEASE_CHANNEL",
+            ReleaseChannel.DEV,
         ),
     ):
         yield
