@@ -40,13 +40,18 @@ from .util import get_dpcode, get_dptype, remap_value
 
 
 class _BrightnessWrapper(DPCodeIntegerWrapper):
-    """Wrapper for brightness DP code."""
+    """Wrapper for brightness DP code.
+
+    Handles brightness value conversion between device scale and Home Assistant's
+    0-255 scale. Supports optional dynamic brightness_min and brightness_max
+    wrappers that allow the device to specify runtime brightness range limits.
+    """
 
     brightness_min: DPCodeIntegerWrapper | None = None
     brightness_max: DPCodeIntegerWrapper | None = None
 
     def read_device_status(self, device: CustomerDevice) -> Any | None:
-        """Read the device value for the dpcode."""
+        """Return the brightness of this light between 0..255."""
         if (brightness := self._read_device_status_raw(device)) is None:
             return None
 
@@ -73,15 +78,13 @@ class _BrightnessWrapper(DPCodeIntegerWrapper):
 
             # Remap the brightness value from their min-max to our 0-255 scale
             brightness = remap_value(
-                brightness,
-                from_min=brightness_min,
-                from_max=brightness_max,
+                brightness, from_min=brightness_min, from_max=brightness_max
             )
 
         return round(brightness)
 
     def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
-        """Convert a Home Assistant value back to a raw device value."""
+        """Convert a Home Assistant value (0..255) back to a raw device value."""
         # If there is a min/max value, the brightness is actually limited.
         # Meaning it is actually not on a 0-255 scale.
         if (
@@ -100,7 +103,7 @@ class _BrightnessWrapper(DPCodeIntegerWrapper):
                 brightness_min
             )
 
-            # Remap the brightness value from their min-max to our 0-255 scale
+            # Remap the brightness value from our 0-255 scale to their min-max
             value = remap_value(value, to_min=brightness_min, to_max=brightness_max)
         return round(self.type_information.remap_value_from(value))
 
@@ -735,7 +738,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
 
     @property
     def brightness(self) -> int | None:
-        """Return the brightness of the light."""
+        """Return the brightness of this light between 0..255."""
         # If the light is currently in color mode, extract the brightness from the color data
         if self.color_mode == ColorMode.HS and (color_data := self._get_color_data()):
             return color_data.brightness
