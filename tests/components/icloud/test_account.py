@@ -2,7 +2,6 @@
 
 from unittest.mock import MagicMock, Mock, patch
 
-from const import MOCK_CONFIG, USER_INFO, USERNAME
 import pytest
 
 from homeassistant.components.icloud.account import IcloudAccount
@@ -16,6 +15,8 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.storage import Store
+
+from .const import MOCK_CONFIG, USER_INFO, USERNAME
 
 from tests.common import MockConfigEntry
 
