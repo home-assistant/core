@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections import Counter
 from collections.abc import Awaitable, Callable
-from typing import Literal, NotRequired, TypedDict
+from typing import Any, Literal, NotRequired, TypedDict
 
 import voluptuous as vol
 
@@ -329,30 +329,36 @@ DEVICE_CONSUMPTION_SCHEMA = vol.Schema(
 )
 
 
+class _EnergyPreferencesStore(storage.Store[EnergyPreferences]):
+    """Energy preferences store with migration support."""
+
+    async def _async_migrate_func(
+        self,
+        old_major_version: int,
+        old_minor_version: int,
+        old_data: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Migrate to the new version."""
+        data = old_data
+        if old_major_version == 1:
+            # Add device_consumption_water field if it doesn't exist
+            data.setdefault("device_consumption_water", [])
+        return data
+
+
 class EnergyManager:
     """Manage the instance energy prefs."""
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize energy manager."""
         self._hass = hass
-        self._store = storage.Store[EnergyPreferences](
-            hass, STORAGE_VERSION, STORAGE_KEY
-        )
+        self._store = _EnergyPreferencesStore(hass, STORAGE_VERSION, STORAGE_KEY)
         self.data: EnergyPreferences | None = None
         self._update_listeners: list[Callable[[], Awaitable]] = []
 
     async def async_initialize(self) -> None:
         """Initialize the energy integration."""
-        data = await self._store.async_load()
-
-        # Migrate old data to include new fields
-        if data is not None:
-            # Cast to dict to allow checking for and adding missing keys
-            data_dict: dict = data  # type: ignore[assignment]
-            if "device_consumption_water" not in data_dict:
-                data_dict["device_consumption_water"] = []
-
-        self.data = data
+        self.data = await self._store.async_load()
 
     @staticmethod
     def default_preferences() -> EnergyPreferences:
