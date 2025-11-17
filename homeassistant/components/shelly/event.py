@@ -32,7 +32,6 @@ from .utils import (
     async_remove_shelly_entity,
     get_block_channel,
     get_block_custom_name,
-    get_block_number_of_channels,
     get_device_entry_gen,
     get_rpc_custom_name,
     get_rpc_entity_name,
@@ -41,6 +40,7 @@ from .utils import (
     get_rpc_key_instances,
     get_rpc_number_of_channels,
     is_block_momentary_input,
+    is_block_single_device,
     is_rpc_momentary_input,
 )
 
@@ -206,7 +206,7 @@ class ShellyBlockEvent(ShellyBlockEntity, EventEntity):
         ):
             self._attr_translation_placeholders = {
                 "input_number": get_block_channel(block)
-                if get_block_number_of_channels(coordinator.device, block) > 1
+                if is_block_single_device(coordinator.device, block)
                 else ""
             }
 

@@ -927,6 +927,16 @@ def get_blu_trv_device_info(
     )
 
 
+def is_block_single_device(device: BlockDevice, block: Block | None = None) -> bool:
+    """Return true if block is single device."""
+    return (
+        block is None
+        or block.type not in ("light", "relay", "emeter")
+        or device.settings.get("mode") == "roller"
+        or get_block_number_of_channels(device, block) < 2
+    )
+
+
 def get_block_device_info(
     device: BlockDevice,
     mac: str,
@@ -937,12 +947,7 @@ def get_block_device_info(
     suggested_area: str | None = None,
 ) -> DeviceInfo:
     """Return device info for Block device."""
-    if (
-        block is None
-        or block.type not in ("light", "relay", "emeter")
-        or device.settings.get("mode") == "roller"
-        or get_block_number_of_channels(device, block) < 2
-    ):
+    if is_block_single_device(device, block):
         return DeviceInfo(connections={(CONNECTION_NETWORK_MAC, mac)})
 
     return DeviceInfo(

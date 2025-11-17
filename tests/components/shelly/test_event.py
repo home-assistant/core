@@ -195,7 +195,7 @@ async def test_block_event(
     """Test block device event."""
     await init_integration(hass, 1)
     # num_outputs is 2, device name and channel name is used
-    entity_id = "event.test_name_channel_1_input_1"
+    entity_id = "event.test_name_channel_1_input"
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNKNOWN
