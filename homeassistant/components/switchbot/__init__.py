@@ -1,6 +1,9 @@
 """Support for Switchbot devices."""
 
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 import switchbot
 
@@ -235,14 +238,14 @@ async def async_migrate_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) 
 
     if version > 1:
         return False
-    
-    new_data: dict[str] = { **entry.data }
+
+    new_data: dict[str, Any] = {**entry.data}
 
     if version == 1 and minor_version == 1:
 
         if CONF_RETRY_COUNT not in new_data:
             new_data[CONF_RETRY_COUNT] = DEFAULT_RETRY_COUNT
-        
+
         if CONF_CURTAIN_SPEED not in new_data:
             new_data[CONF_CURTAIN_SPEED] = DEFAULT_CURTAIN_SPEED
 
