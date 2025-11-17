@@ -6,6 +6,7 @@ from unittest.mock import patch
 import pytest
 from zigpy.device import Device
 from zigpy.profiles import zha
+from zigpy.quirks.v2 import QuirkBuilder
 from zigpy.zcl import Cluster
 from zigpy.zcl.clusters import general, homeautomation, hvac, measurement, smartenergy
 from zigpy.zcl.clusters.hvac import Thermostat
@@ -581,6 +582,118 @@ async def test_sensor(
 
     # test sensor associated logic
     await test_func(hass, cluster, entity_id)
+
+
+async def test_sensor_name(
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
+) -> None:
+    """Test ZHA entity name generation."""
+    # Set up some v2 quirk sensors with translation keys and fallback names.
+    # For all built-in quirks, the translation keys will be translated in HA.
+    # For quirks loaded as custom quirks, the translation keys will not be translated.
+    # For them, the fallback name should be used instead.
+    (
+        QuirkBuilder("Test Manf", "Test Model")
+        .sensor(
+            "sw_build_id",
+            general.Basic.cluster_id,
+            translation_key="this_translation_key_is_not_translated",
+            fallback_name="Software build",
+        )
+        .sensor(
+            "date_code",
+            general.Basic.cluster_id,
+            translation_key="device_status",  # existing translation key
+            fallback_name="I should not be used",
+        )
+        .sensor(
+            "product_url",
+            general.Basic.cluster_id,
+            device_class=SensorDeviceClass.TEMPERATURE,  # with device class
+            unit=UnitOfTemperature.CELSIUS,
+            translation_key="this_translation_key_is_not_translated",
+            fallback_name="Product url",
+        )
+        .sensor(
+            "product_label",
+            general.Basic.cluster_id,
+            device_class=SensorDeviceClass.TEMPERATURE,  # with device class
+            unit=UnitOfTemperature.CELSIUS,
+            translation_key="device_temperature",  # existing translation key
+            fallback_name="I should not be used",
+        )
+        .add_to_registry()
+    )
+
+    await setup_zha()
+    gateway = get_zha_gateway(hass)
+
+    zigpy_device = zigpy_device_mock(
+        {
+            1: {
+                SIG_EP_INPUT: [general.Basic.cluster_id],
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zha.DeviceType.ON_OFF_SWITCH,
+                SIG_EP_PROFILE: zha.PROFILE_ID,
+            }
+        },
+        manufacturer="Test Manf",
+        model="Test Model",
+    )
+
+    gateway.get_or_create_device(zigpy_device)
+    await gateway.async_device_initialized(zigpy_device)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_id_fallback = "sensor.test_manf_test_model_software_build"
+    hass_state_fallback = hass.states.get(entity_id_fallback)
+    assert hass_state_fallback is not None
+
+    # Check that the friendly name falls back to the provided fallback name,
+    # since the translation key is not translated.
+    assert (
+        hass_state_fallback.attributes.get("friendly_name")
+        == "Test Manf Test Model Software build"
+    )
+
+    entity_id_translation = "sensor.test_manf_test_model_device_status"
+    hass_state_translation = hass.states.get(entity_id_translation)
+    assert hass_state_translation is not None
+
+    # Check that the friendly name uses the translated string for the
+    # existing translation key.
+    assert (
+        hass_state_translation.attributes.get("friendly_name")
+        == "Test Manf Test Model Device status"
+    )
+
+    entity_id_fallback_device_class = "sensor.test_manf_test_model_product_url"
+    hass_state_fallback_device_class = hass.states.get(entity_id_fallback_device_class)
+    assert hass_state_fallback_device_class is not None
+
+    # Check that the friendly name falls back to the provided fallback name,
+    # since the translation key is not translated.
+    assert (
+        hass_state_fallback_device_class.attributes.get("friendly_name")
+        == "Test Manf Test Model Product url"
+    )
+
+    entity_id_translation_device_class = (
+        "sensor.test_manf_test_model_device_temperature"
+    )
+    hass_state_translation_device_class = hass.states.get(
+        entity_id_translation_device_class
+    )
+    assert hass_state_translation_device_class is not None
+
+    # Check that the friendly name uses the translated string for the
+    # existing translation key.
+    assert (
+        hass_state_translation_device_class.attributes.get("friendly_name")
+        == "Test Manf Test Model Device temperature"
+    )
 
 
 def assert_state(hass: HomeAssistant, entity_id, state, unit_of_measurement):
