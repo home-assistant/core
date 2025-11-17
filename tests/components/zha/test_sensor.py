@@ -647,12 +647,18 @@ async def test_sensor_name(
     entity_id_suffix,
     expected_friendly_name_suffix,
 ) -> None:
-    """Test ZHA entity name generation."""
-    # Set up a v2 quirk sensor with translation key and fallback name.
-    # For built-in quirks, the translation keys exist in HA, so the translation is used.
-    # For quirks loaded as custom quirks, new translation keys won't be in HA.
-    # For them, the fallback name should be used instead.
-    # If a device class is set but no translation key, the device class name is used.
+    """Test ZHA entity name generation.
+
+    This test sets up a v2 quirks sensor with various combinations of
+    translation key, fallback name, and device class to verify that the
+    entity's friendly name is generated correctly.
+
+    Built-in quirks have translations in HA, so those are used.
+    Custom quirks with new translation keys won't have translations.
+    For them, the fallback name should be used instead.
+    If a device class is set but no translation key,
+    the device class name is used.
+    """
     (
         QuirkBuilder("Test Manf", "Test Model")
         .sensor(
