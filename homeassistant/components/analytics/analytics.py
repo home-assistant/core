@@ -511,16 +511,10 @@ class Analytics:
 
     async def send_snapshot(self, _: datetime | None = None) -> None:
         """Send a snapshot."""
-        if (
-            not self.onboarded
-            or not self.preferences.get(ATTR_BASE, False)
-            or not self.preferences.get(ATTR_SNAPSHOTS, False)
-        ):
+        if not self.onboarded or not self.preferences.get(ATTR_SNAPSHOTS, False):
             return
 
-        hass = self.hass
-
-        payload = await async_devices_payload(hass, include_version=False)
+        payload = await _async_snapshot_payload(self.hass)
 
         headers = {
             "Content-Type": "application/json",
@@ -531,12 +525,10 @@ class Analytics:
                 self._data.submission_identifier
             )
 
-        snapshot_endpoint = ANALYTICS_SNAPSHOT_ENDPOINT_URL
-
         try:
             async with timeout(30):
                 response = await self.session.post(
-                    snapshot_endpoint, json=payload, headers=headers
+                    ANALYTICS_SNAPSHOT_ENDPOINT_URL, json=payload, headers=headers
                 )
 
                 if response.status == 200:  # OK
@@ -563,7 +555,7 @@ class Analytics:
                         # Clear the invalid identifier and retry on next cycle
                         LOGGER.warning(
                             "Invalid submission identifier to %s, clearing: %s",
-                            snapshot_endpoint,
+                            ANALYTICS_SNAPSHOT_ENDPOINT_URL,
                             error_message,
                         )
                         self._data.submission_identifier = None
@@ -572,7 +564,7 @@ class Analytics:
                         LOGGER.warning(
                             "Malformed snapshot analytics submission (%s) to %s: %s",
                             error_kind,
-                            snapshot_endpoint,
+                            ANALYTICS_SNAPSHOT_ENDPOINT_URL,
                             error_message,
                         )
 
@@ -580,7 +572,7 @@ class Analytics:
                     response_text = await response.text()
                     LOGGER.warning(
                         "Snapshot analytics service %s unavailable: %s",
-                        snapshot_endpoint,
+                        ANALYTICS_SNAPSHOT_ENDPOINT_URL,
                         response_text,
                     )
 
@@ -588,14 +580,19 @@ class Analytics:
                     LOGGER.warning(
                         "Unexpected status code %s when submitting snapshot analytics to %s",
                         response.status,
-                        snapshot_endpoint,
+                        ANALYTICS_SNAPSHOT_ENDPOINT_URL,
                     )
 
         except TimeoutError:
-            LOGGER.error("Timeout sending snapshot analytics to %s", snapshot_endpoint)
+            LOGGER.error(
+                "Timeout sending snapshot analytics to %s",
+                ANALYTICS_SNAPSHOT_ENDPOINT_URL,
+            )
         except aiohttp.ClientError as err:
             LOGGER.error(
-                "Error sending snapshot analytics to %s: %r", snapshot_endpoint, err
+                "Error sending snapshot analytics to %s: %r",
+                ANALYTICS_SNAPSHOT_ENDPOINT_URL,
+                err,
             )
 
     async def async_schedule(self) -> None:
@@ -632,35 +629,32 @@ class Analytics:
             if self._snapshot_scheduled:
                 self._snapshot_scheduled()
                 self._snapshot_scheduled = None
-            return
+        elif self._snapshot_scheduled is None:
+            snapshot_submission_time = self._data.snapshot_submission_time
 
-        if self._snapshot_scheduled is not None:
-            return
+            if snapshot_submission_time is None:
+                # Randomize the submission time within the 24 hours
+                snapshot_submission_time = random.uniform(0, 86400)
+                self._data.snapshot_submission_time = snapshot_submission_time
+                await self._save()
+                LOGGER.debug(
+                    "Initialized snapshot submission time to %s",
+                    snapshot_submission_time,
+                )
 
-        snapshot_submission_time = self._data.snapshot_submission_time
+            # Calculate delay until next submission
+            current_time = time.time()
+            delay = (snapshot_submission_time - current_time) % 86400
 
-        if snapshot_submission_time is None:
-            # Randomize the submission time within the 24 hours
-            snapshot_submission_time = random.uniform(0, 86400)
-            self._data.snapshot_submission_time = snapshot_submission_time
-            await self._save()
-            LOGGER.debug(
-                "Initialized snapshot submission time to %s", snapshot_submission_time
+            self._snapshot_scheduled = async_call_later(
+                self.hass,
+                delay,
+                HassJob(
+                    self._async_schedule_snapshots,
+                    name="snapshot analytics schedule",
+                    cancel_on_shutdown=True,
+                ),
             )
-
-        # Calculate delay until next submission
-        current_time = time.time()
-        delay = (snapshot_submission_time - current_time) % 86400
-
-        self._snapshot_scheduled = async_call_later(
-            self.hass,
-            delay,
-            HassJob(
-                self._async_schedule_snapshots,
-                name="snapshot analytics schedule",
-                cancel_on_shutdown=True,
-            ),
-        )
 
     async def _async_schedule_basic(self, _: datetime | None = None) -> None:
         """Schedule basic analytics."""
@@ -704,10 +698,8 @@ DEFAULT_DEVICE_ANALYTICS_CONFIG = DeviceAnalyticsModifications()
 DEFAULT_ENTITY_ANALYTICS_CONFIG = EntityAnalyticsModifications()
 
 
-async def async_devices_payload(  # noqa: C901
-    hass: HomeAssistant, include_version: bool = True
-) -> dict:
-    """Return detailed information about entities and devices."""
+async def _async_snapshot_payload(hass: HomeAssistant) -> dict:  # noqa: C901
+    """Return detailed information about entities and devices for a snapshot."""
     dev_reg = dr.async_get(hass)
     ent_reg = er.async_get(hass)
 
@@ -912,11 +904,13 @@ async def async_devices_payload(  # noqa: C901
 
             entities_info.append(entity_info)
 
-    if not include_version:
-        return integrations_info
+    return integrations_info
 
+
+async def async_devices_payload(hass: HomeAssistant) -> dict:
+    """Return detailed information about entities and devices for a direct download."""
     return {
         "version": f"home-assistant:{SNAPSHOT_VERSION}",
         "home_assistant": HA_VERSION,
-        "integrations": integrations_info,
+        "integrations": await _async_snapshot_payload(hass),
     }
