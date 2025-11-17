@@ -31,10 +31,12 @@ class AppleTVKeyboardFocused(AppleTVEntity, BinarySensorEntity, KeyboardListener
     """Binary sensor for Text input focused."""
 
     _attr_translation_key = "keyboard_focused"
+    _attr_available = True
 
     @callback
     def async_device_connected(self, atv: AppleTV) -> None:
         """Handle when connection is made to device."""
+        self._attr_available = True
         # Listen to keyboard updates
         atv.keyboard.listener = self
         # Set initial state based on current focus state
@@ -43,7 +45,7 @@ class AppleTVKeyboardFocused(AppleTVEntity, BinarySensorEntity, KeyboardListener
     @callback
     def async_device_disconnected(self) -> None:
         """Handle when connection was lost to device."""
-        self._attr_is_on = False
+        self._attr_available = False
         self._update_state(False)
 
     def focusstate_update(
