@@ -355,6 +355,7 @@ async def test_rpc_sleeping_binary_sensor_with_channel_name(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (state := hass.states.get(entity_id))
+    assert state.attributes["friendly_name"] == "Test name test smoke_0 smoke"
     assert state.state == STATE_OFF
 
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "smoke:0", "alarm", True)
