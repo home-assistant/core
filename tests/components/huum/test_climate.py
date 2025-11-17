@@ -6,9 +6,11 @@ from huum.const import SaunaStatus
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
+    ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_TEMPERATURE,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.components.huum.const import (
@@ -58,6 +60,25 @@ async def test_set_hvac_mode(
     assert state.state == HVACMode.HEAT
 
     mock_huum.turn_on.assert_called_once()
+
+
+async def test_hvac_action(
+    hass: HomeAssistant,
+    mock_huum: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test HVAC action."""
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes.get(ATTR_HVAC_ACTION) == HVACAction.OFF
+
+    mock_huum.status = SaunaStatus.ONLINE_HEATING
+    await mock_config_entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes.get(ATTR_HVAC_ACTION) == HVACAction.HEATING
 
 
 async def test_set_temperature(

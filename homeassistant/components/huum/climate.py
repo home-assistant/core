@@ -11,6 +11,7 @@ from huum.exceptions import SafetyException
 from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityFeature,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
@@ -69,6 +70,13 @@ class HuumDevice(HuumBaseEntity, ClimateEntity):
         if self.coordinator.data.status == SaunaStatus.ONLINE_HEATING:
             return HVACMode.HEAT
         return HVACMode.OFF
+
+    @property
+    def hvac_action(self) -> HVACAction:
+        """Return hvac action. heating, off."""
+        if self.coordinator.data.status == SaunaStatus.ONLINE_HEATING:
+            return HVACAction.HEATING
+        return HVACAction.OFF
 
     @property
     def icon(self) -> str:

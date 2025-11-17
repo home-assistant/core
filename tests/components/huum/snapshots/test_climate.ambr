@@ -47,6 +47,7 @@
     'attributes': ReadOnlyDict({
       'current_temperature': 30,
       'friendly_name': 'Huum sauna',
+      'hvac_action': <HVACAction.OFF: 'off'>,
       'hvac_modes': list([
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,
