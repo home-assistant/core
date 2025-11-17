@@ -36,6 +36,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
@@ -81,7 +82,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Switchbot."""
 
     VERSION = 1
-    MINOR_VERSION = 3
+    MINOR_VERSION = 2
 
     @staticmethod
     @callback
@@ -482,9 +483,13 @@ class SwitchbotOptionsFlowHandler(OptionsFlow):
                         default=self.config_entry.options.get(
                             CONF_CURTAIN_SPEED, DEFAULT_CURTAIN_SPEED
                         ),
-                    ): vol.All(
-                        vol.Coerce(int),
-                        vol.Range(min=CURTAIN_SPEED_MIN, max=CURTAIN_SPEED_MAX),
+                    ): selector.NumberSelector(
+                        selector.NumberSelectorConfig(
+                            min=CURTAIN_SPEED_MIN,
+                            max=CURTAIN_SPEED_MAX,
+                            step=1,
+                            mode=selector.NumberSelectorMode.SLIDER,
+                        )
                     )
                 }
             )
