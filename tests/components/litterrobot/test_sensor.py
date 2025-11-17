@@ -12,6 +12,8 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import PERCENTAGE, STATE_UNKNOWN, UnitOfMass
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from .conftest import setup_integration
 
@@ -156,3 +158,55 @@ async def test_litterhopper_sensor(
     await setup_integration(hass, mock_account_with_litterhopper, PLATFORM_DOMAIN)
     sensor = hass.states.get("sensor.test_hopper_status")
     assert sensor.state == "enabled"
+
+
+async def test_last_api_update_sensor(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    mock_account: MagicMock,
+) -> None:
+    """Tests the last API update sensor entity."""
+    entry = await setup_integration(hass, mock_account, PLATFORM_DOMAIN)
+
+    # Verify the Whisker API service device was created
+    device = device_registry.async_get_device(
+        identifiers={("litterrobot", entry.entry_id)}
+    )
+    assert device is not None
+    assert device.name == "Whisker API"
+    assert device.entry_type == dr.DeviceEntryType.SERVICE
+
+    # Find the entity by unique_id
+    unique_id = f"{entry.entry_id}-last_api_update"
+    entity_entry = entity_registry.async_get_entity_id(
+        PLATFORM_DOMAIN, "litterrobot", unique_id
+    )
+    assert entity_entry is not None
+
+    # Verify the entity is associated with the service device
+    entity = entity_registry.async_get(entity_entry)
+    assert entity is not None
+    assert entity.device_id == device.id
+
+    # Initially, the sensor should be unknown (no update has occurred yet)
+    sensor = hass.states.get(entity_entry)
+    assert sensor
+    assert sensor.state == STATE_UNKNOWN
+    assert sensor.attributes["device_class"] == SensorDeviceClass.TIMESTAMP
+    assert sensor.attributes["entity_category"] == "diagnostic"
+
+    # Trigger a coordinator update
+    coordinator = entry.runtime_data
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    # After update, the sensor should have a timestamp
+    sensor = hass.states.get(entity_entry)
+    assert sensor
+    assert sensor.state != STATE_UNKNOWN
+    # Verify it's a valid ISO timestamp
+    timestamp = dt_util.parse_datetime(sensor.state)
+    assert timestamp is not None
+    # Verify it's recent (within last minute)
+    assert (dt_util.utcnow() - timestamp).total_seconds() < 60
