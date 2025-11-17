@@ -2148,7 +2148,6 @@ async def test_ssdp_update_mac(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("remote_websocket")
 async def test_dhcp_while_user_flow_pending(hass: HomeAssistant) -> None:
     """Simulate pending user flow, then trigger DHCP before submit.
-    
     Covers https://github.com/home-assistant/core/issues/156591.
     """
     with patch(
