@@ -2900,7 +2900,6 @@ stookwijzer==1.6.1
 streamlabswater==1.0.1
 
 # homeassistant.components.huawei_lte
-# homeassistant.components.solaredge
 # homeassistant.components.traccar
 stringcase==1.2.0
 
