@@ -32,6 +32,7 @@ from .utils import (
     async_remove_shelly_entity,
     get_block_channel,
     get_block_custom_name,
+    get_block_number_of_channels,
     get_device_entry_gen,
     get_rpc_custom_name,
     get_rpc_entity_name,
@@ -207,6 +208,7 @@ class ShellyBlockEvent(ShellyBlockEntity, EventEntity):
             self._attr_translation_placeholders = {
                 "input_number": get_block_channel(block)
                 if is_block_single_device(coordinator.device, block)
+                and get_block_number_of_channels(coordinator.device, block) > 1
                 else ""
             }
 
