@@ -80,6 +80,9 @@ async def async_setup_entry(
                         mode_wrapper=DPCodeEnumWrapper.find_dpcode(
                             device, DPCode.MODE, prefer_function=True
                         ),
+                        status_wrapper=DPCodeEnumWrapper.find_dpcode(
+                            device, DPCode.STATUS
+                        ),
                         switch_wrapper=DPCodeBooleanWrapper.find_dpcode(
                             device, DPCode.POWER_GO, prefer_function=True
                         ),
@@ -108,6 +111,7 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
         fan_speed_wrapper: DPCodeEnumWrapper | None,
         locate_wrapper: DPCodeBooleanWrapper | None,
         mode_wrapper: DPCodeEnumWrapper | None,
+        status_wrapper: DPCodeEnumWrapper | None,
         switch_wrapper: DPCodeBooleanWrapper | None,
     ) -> None:
         """Init Tuya vacuum."""
@@ -116,6 +120,7 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
         self._fan_speed_wrapper = fan_speed_wrapper
         self._locate_wrapper = locate_wrapper
         self._mode_wrapper = mode_wrapper
+        self._status_wrapper = status_wrapper
         self._switch_wrapper = switch_wrapper
 
         self._attr_fan_speed_list = []
@@ -151,13 +156,12 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
     @property
     def activity(self) -> VacuumActivity | None:
         """Return Tuya vacuum device state."""
-        if self.device.status.get(DPCode.PAUSE) and not (
-            self.device.status.get(DPCode.STATUS)
-        ):
+        if (status := self._read_wrapper(self._status_wrapper)) is not None:
+            return TUYA_STATUS_TO_HA.get(status)
+
+        if self.device.status.get(DPCode.PAUSE):
             return VacuumActivity.PAUSED
-        if not (status := self.device.status.get(DPCode.STATUS)):
-            return None
-        return TUYA_STATUS_TO_HA.get(status)
+        return None
 
     async def async_start(self, **kwargs: Any) -> None:
         """Start the device."""
