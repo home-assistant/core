@@ -95,7 +95,6 @@ async def integration_fixture(
         "eve_energy_20ecn4101",
         "eve_energy_plug",
         "eve_energy_plug_patched",
-        "eve_shutter",
         "eve_thermo",
         "eve_shutter",
         "eve_weather_sensor",
