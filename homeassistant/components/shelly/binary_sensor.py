@@ -41,7 +41,8 @@ from .utils import (
     get_device_entry_gen,
     get_entity_translation_attributes,
     get_rpc_channel_name,
-    get_rpc_component_name,
+    get_rpc_custom_name,
+    get_rpc_key,
     is_block_momentary_input,
     is_rpc_momentary_input,
     is_view_for_platform,
@@ -84,9 +85,8 @@ class RpcBinarySensor(ShellyRpcAttributeEntity, BinarySensorEntity):
 
         if hasattr(self, "_attr_name") and description.role != ROLE_GENERIC:
             if not description.role and description.key == "input":
-                component = key.split(":")[0]
-                component_id = key.split(":")[-1]
-                if not get_rpc_component_name(coordinator.device, key) and (
+                _, component, component_id = get_rpc_key(key)
+                if not get_rpc_custom_name(coordinator.device, key) and (
                     component.lower() == "input" and component_id.isnumeric()
                 ):
                     self._attr_translation_placeholders = {"input_number": component_id}
