@@ -79,7 +79,8 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
             self._attr_name = None
             return super().name
 
-        # if we have a translation key or no device class name, use translation/fallback
+        # if we have a translation key or no (device class) name,
+        # use translation or fallback name
         if meta.translation_key is not None or super().name in (UNDEFINED, None):
             # if we have a translation for this key, use it
             if (
