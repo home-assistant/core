@@ -490,17 +490,14 @@ async def test_rpc_smoke_mute_alarm_button(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC smoke mute alarm button."""
-    suffix = "test_name_mute_alarm"
-    entity_id = f"{BUTTON_DOMAIN}.{suffix}"
+    entity_id = f"{BUTTON_DOMAIN}.test_name_mute_alarm"
     monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
     monkeypatch.setattr(mock_rpc_device, "config", {"smoke:0": {"id": 0, "name": None}})
     monkeypatch.setattr(mock_rpc_device, "connected", False)
-    entry = await init_integration(hass, 2, sleep_period=1000, model=MODEL_PLUS_SMOKE)
+    await init_integration(hass, 2, sleep_period=1000, model=MODEL_PLUS_SMOKE)
 
     # Sensor should be created when device is online
     assert hass.states.get(entity_id) is None
-
-    register_entity(hass, BUTTON_DOMAIN, suffix, "smoke:0-smoke_mute", entry)
 
     # Make device online
     mock_rpc_device.mock_online()

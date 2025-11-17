@@ -339,8 +339,7 @@ async def test_rpc_sleeping_binary_sensor_with_channel_name(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC online sleeping binary sensor with channel name."""
-    suffix = "test_name_test_channel_name_smoke"
-    entity_id = f"{BINARY_SENSOR_DOMAIN}.{suffix}"
+    entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_test_channel_name_smoke"
     monkeypatch.setattr(mock_rpc_device, "connected", False)
     monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
     await init_integration(hass, 2, sleep_period=1000, model=MODEL_PLUS_SMOKE)
