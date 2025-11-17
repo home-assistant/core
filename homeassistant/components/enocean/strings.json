@@ -112,6 +112,9 @@
     "button": {
       "query_state": {
         "name": "Query state"
+      },
+      "learn": {
+        "name": "Activate learn mode"
       }
     },
     "sensor": {

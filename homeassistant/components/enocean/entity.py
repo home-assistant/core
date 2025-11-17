@@ -80,6 +80,22 @@ class EnOceanEntity(Entity):
             self.enocean_entity_id.device_address
         )
 
+        if self.gateway.chip_id == self.enocean_entity_id.device_address:
+            # don't create a device info for the gateway itself
+            return DeviceInfo(
+                {
+                    "identifiers": {
+                        (DOMAIN, self.enocean_entity_id.device_address.to_string())
+                    },
+                    "name": device_properties.device_name,
+                    "manufacturer": device_properties.device_type.manufacturer,
+                    "model": device_properties.device_type.model,
+                    "serial_number": self.enocean_entity_id.device_address.to_string(),
+                    "sw_version": self.gateway.sw_version,
+                    "hw_version": self.gateway.chip_version,
+                }
+            )
+
         return DeviceInfo(
             {
                 "identifiers": {

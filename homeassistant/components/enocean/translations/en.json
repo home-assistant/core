@@ -56,6 +56,9 @@
             }
         },
         "button": {
+            "learn": {
+                "name": "Activate learn mode"
+            },
             "query_state": {
                 "name": "Query state"
             }
