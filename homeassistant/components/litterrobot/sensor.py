@@ -17,10 +17,13 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfMass
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from .coordinator import LitterRobotConfigEntry
+from .const import DOMAIN
+from .coordinator import LitterRobotConfigEntry, LitterRobotDataUpdateCoordinator
 from .entity import LitterRobotEntity, _WhiskerEntityT
 
 
@@ -226,7 +229,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Litter-Robot sensors using config entry."""
     coordinator = entry.runtime_data
-    entities: list[LitterRobotSensorEntity] = [
+    entities: list[LitterRobotSensorEntity | LitterRobotLastUpdateSensorEntity] = [
         LitterRobotSensorEntity(
             robot=robot, coordinator=coordinator, description=description
         )
@@ -242,6 +245,7 @@ async def async_setup_entry(
         for pet in coordinator.account.pets
         for description in PET_SENSORS
     )
+    entities.append(LitterRobotLastUpdateSensorEntity(coordinator))
     async_add_entities(entities)
 
 
@@ -266,3 +270,29 @@ class LitterRobotSensorEntity(LitterRobotEntity[_WhiskerEntityT], SensorEntity):
     def last_reset(self) -> datetime | None:
         """Return the time when the sensor was last reset, if any."""
         return self.entity_description.last_reset_fn() or super().last_reset
+
+
+class LitterRobotLastUpdateSensorEntity(
+    CoordinatorEntity[LitterRobotDataUpdateCoordinator], SensorEntity
+):
+    """Sensor entity for tracking the last API update time."""
+
+    _attr_has_entity_name = True
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_translation_key = "last_whisker_api_update"
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+
+    def __init__(self, coordinator: LitterRobotDataUpdateCoordinator) -> None:
+        """Initialize the last API update sensor."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}-last_api_update"
+
+        # Associate with the Whisker API service device
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
+        )
+
+    @property
+    def native_value(self) -> datetime | None:
+        """Return the last API update time."""
+        return self.coordinator.last_update

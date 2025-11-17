@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Generator
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 
 from pylitterbot import Account, FeederRobot, LitterRobot
@@ -15,6 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 
@@ -43,6 +44,7 @@ class LitterRobotDataUpdateCoordinator(DataUpdateCoordinator[None]):
         )
 
         self.account = Account(websession=async_get_clientsession(hass))
+        self.last_update: datetime | None = None
 
     async def _async_update_data(self) -> None:
         """Update all device states from the Litter-Robot API."""
@@ -51,6 +53,7 @@ class LitterRobotDataUpdateCoordinator(DataUpdateCoordinator[None]):
         for pet in self.account.pets:
             # Need to fetch weight history for `get_visits_since`
             await pet.fetch_weight_history()
+        self.last_update = dt_util.utcnow()
 
     async def _async_setup(self) -> None:
         """Set up the coordinator."""

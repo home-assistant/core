@@ -6,6 +6,7 @@ import itertools
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntry
 
 from .const import DOMAIN
@@ -28,6 +29,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: LitterRobotConfigEntry) 
     coordinator = LitterRobotDataUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
+
+    # Create a service device for config entry-level entities
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, entry.entry_id)},
+        manufacturer="Whisker",
+        name="Whisker API",
+        entry_type=dr.DeviceEntryType.SERVICE,
+    )
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
