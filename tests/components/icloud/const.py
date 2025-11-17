@@ -40,20 +40,16 @@ TRUSTED_DEVICES = [
     {"deviceType": "SMS", "areaCode": "", "phoneNumber": "*******58", "deviceId": "1"}
 ]
 
-USER_INFO = {
-    "accountFormatter": 0,
-    "firstName": FIRST_NAME,
-    "lastName": LAST_NAME,
-    "membersInfo": {
-        MEMBER_1_PERSON_ID: {
-            "accountFormatter": 0,
-            "firstName": MEMBER_1_FIRST_NAME,
-            "lastName": MEMBER_1_LAST_NAME,
-            "deviceFetchStatus": "DONE",
-            "useAuthWidget": True,
-            "isHSA": True,
-            "appleId": MEMBER_1_APPLE_ID,
-        }
-    },
-    "hasMembers": True,
+DEVICE = {
+    "id": "device1",
+    "name": "iPhone",
+    "deviceStatus": "200",
+    "batteryStatus": "NotCharging",
+    "batteryLevel": 0.8,
+    "rawDeviceModel": "iPhone14,2",
+    "deviceClass": "iPhone",
+    "deviceDisplayName": "iPhone",
+    "prsId": None,
+    "lowPowerMode": False,
+    "location": None,
 }
