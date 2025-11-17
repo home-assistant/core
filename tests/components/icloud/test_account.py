@@ -21,6 +21,25 @@ from .const import MOCK_CONFIG, USER_INFO, USERNAME
 from tests.common import MockConfigEntry
 
 
+@pytest.fixture(name="mock_store")
+def mock_store_fixture(hass: HomeAssistant) -> Store:
+    """Return a Store instance for tests that writes to the test config dir."""
+    return Store(hass, version=1, key="icloud_account")
+
+
+@pytest.fixture(name="mock_icloud_service_no_userinfo")
+def mock_icloud_service_no_userinfo_fixture():
+    """Mock PyiCloudService with devices as dict but no userInfo."""
+    with patch(
+        "homeassistant.components.icloud.account.PyiCloudService"
+    ) as service_mock:
+        service_instance = MagicMock()
+        service_instance.requires_2fa = False
+        service_instance.devices = {}
+        service_mock.return_value = service_instance
+        yield service_instance
+
+
 @pytest.fixture(name="mock_icloud_service")
 def mock_icloud_service_fixture():
     """Mock PyiCloudService with devices as object."""
@@ -35,18 +54,15 @@ def mock_icloud_service_fixture():
         yield service_instance
 
 
-@pytest.fixture(name="mock_store")
-def mock_store_fixture(hass: HomeAssistant) -> Store:
-    """Return a Store instance for tests that writes to the test config dir."""
-    return Store(hass, version=1, key="icloud_account")
-
-
 async def test_setup_success_with_dict_devices(
     hass: HomeAssistant,
     mock_store: Mock,
     mock_icloud_service: MagicMock,
 ) -> None:
     """Test successful setup with devices as dict."""
+
+    assert mock_icloud_service is not None
+
     config_entry = MockConfigEntry(
         domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
     )
@@ -75,9 +91,12 @@ async def test_setup_success_with_dict_devices(
 async def test_setup_fails_when_userinfo_missing(
     hass: HomeAssistant,
     mock_store: Mock,
-    mock_icloud_service_no_userinfo: MagicMock,
+    mock_icloud_service_no_userinfo: Mock,
 ) -> None:
     """Test setup fails when userInfo is missing from devices dict."""
+
+    assert mock_icloud_service_no_userinfo is not None
+
     config_entry = MockConfigEntry(
         domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
     )
