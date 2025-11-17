@@ -391,7 +391,13 @@ def get_shelly_model_name(
     return cast(str, MODEL_NAMES.get(model))
 
 
-def get_rpc_component_name(device: RpcDevice, key: str) -> str | None:
+def get_rpc_key(value: str) -> tuple[bool, str, str]:
+    """Get split device key."""
+    parts = value.split(":")
+    return len(parts) > 1, parts[0], parts[-1]
+
+
+def get_rpc_custom_name(device: RpcDevice, key: str) -> str | None:
     """Get component name from device config."""
     if (
         key in device.config
@@ -401,6 +407,11 @@ def get_rpc_component_name(device: RpcDevice, key: str) -> str | None:
         return cast(str, name)
 
     return None
+
+
+def get_rpc_component_name(device: RpcDevice, key: str) -> str | None:
+    """Get component name from device config."""
+    return get_rpc_custom_name(device, key)
 
 
 def get_rpc_channel_name(device: RpcDevice, key: str) -> str | None:
@@ -414,11 +425,11 @@ def get_rpc_channel_name(device: RpcDevice, key: str) -> str | None:
     component = key.split(":")[0]
     component_id = key.split(":")[-1]
 
-    if component_name := get_rpc_component_name(device, key):
+    if custom_name := get_rpc_custom_name(device, key):
         if component in (*VIRTUAL_COMPONENTS, "input", "presencezone", "script"):
-            return component_name
+            return custom_name
 
-        return component_name if instances == 1 else None
+        return custom_name if instances == 1 else None
 
     if component in (*VIRTUAL_COMPONENTS, "input"):
         return f"{component.title()} {component_id}"
