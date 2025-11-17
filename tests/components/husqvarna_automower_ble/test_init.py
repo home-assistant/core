@@ -12,7 +12,7 @@ from homeassistant.const import CONF_ADDRESS, CONF_CLIENT_ID, CONF_PIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from . import AUTOMOWER_SERVICE_INFO
+from . import AUTOMOWER_SERVICE_INFO_SERIAL
 
 from tests.common import MockConfigEntry
 
@@ -34,7 +34,7 @@ async def test_setup(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
     device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{AUTOMOWER_SERVICE_INFO.address}_1197489078")}
+        identifiers={(DOMAIN, f"{AUTOMOWER_SERVICE_INFO_SERIAL.address}_1197489078")}
     )
 
     assert device_entry == snapshot

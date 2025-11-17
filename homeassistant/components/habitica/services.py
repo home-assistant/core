@@ -47,6 +47,7 @@ from .const import (
     ATTR_ALIAS,
     ATTR_CLEAR_DATE,
     ATTR_CLEAR_REMINDER,
+    ATTR_COLLAPSE_CHECKLIST,
     ATTR_CONFIG_ENTRY,
     ATTR_COST,
     ATTR_COUNTER_DOWN,
@@ -130,6 +131,11 @@ SERVICE_TRANSFORMATION_SCHEMA = vol.Schema(
     }
 )
 
+COLLAPSE_CHECKLIST_MAP = {
+    "collapsed": True,
+    "expanded": False,
+}
+
 BASE_TASK_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector(),
@@ -160,6 +166,7 @@ BASE_TASK_SCHEMA = vol.Schema(
         vol.Optional(ATTR_REMOVE_CHECKLIST_ITEM): vol.All(cv.ensure_list, [str]),
         vol.Optional(ATTR_SCORE_CHECKLIST_ITEM): vol.All(cv.ensure_list, [str]),
         vol.Optional(ATTR_UNSCORE_CHECKLIST_ITEM): vol.All(cv.ensure_list, [str]),
+        vol.Optional(ATTR_COLLAPSE_CHECKLIST): vol.In(COLLAPSE_CHECKLIST_MAP),
         vol.Optional(ATTR_START_DATE): cv.date,
         vol.Optional(ATTR_INTERVAL): vol.All(int, vol.Range(0)),
         vol.Optional(ATTR_REPEAT): vol.All(cv.ensure_list, [vol.In(WEEK_DAYS)]),
@@ -222,6 +229,7 @@ ITEMID_MAP = {
     "seafoam": Skill.SEAFOAM,
     "shiny_seed": Skill.SHINY_SEED,
 }
+
 
 SERVICE_TASK_TYPE_MAP = {
     SERVICE_UPDATE_REWARD: TaskType.REWARD,
@@ -713,6 +721,9 @@ async def _create_or_update_task(call: ServiceCall) -> ServiceResponse:  # noqa:
         or unscore_checklist_item
     ):
         data["checklist"] = checklist
+
+    if collapse_checklist := call.data.get(ATTR_COLLAPSE_CHECKLIST):
+        data["collapseChecklist"] = COLLAPSE_CHECKLIST_MAP[collapse_checklist]
 
     reminders = current_task.reminders if current_task else []
 

@@ -10,7 +10,7 @@ import logging
 from ohme import ApiException, OhmeApiClient
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -82,6 +82,21 @@ class OhmeAdvancedSettingsCoordinator(OhmeBaseCoordinator):
     """Coordinator to pull settings and charger state from the API."""
 
     coordinator_name = "Advanced Settings"
+
+    def __init__(
+        self, hass: HomeAssistant, config_entry: OhmeConfigEntry, client: OhmeApiClient
+    ) -> None:
+        """Initialise coordinator."""
+        super().__init__(hass, config_entry, client)
+
+        @callback
+        def _dummy_listener() -> None:
+            pass
+
+        # This coordinator is used by the API library to determine whether the
+        # charger is online and available. It is therefore required even if no
+        # entities are using it.
+        self.async_add_listener(_dummy_listener)
 
     async def _internal_update_data(self) -> None:
         """Fetch data from API endpoint."""

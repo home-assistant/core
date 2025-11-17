@@ -1,7 +1,7 @@
 """The Homee valve platform."""
 
 from pyHomee.const import AttributeType
-from pyHomee.model import HomeeAttribute
+from pyHomee.model import HomeeAttribute, HomeeNode
 
 from homeassistant.components.valve import (
     ValveDeviceClass,
@@ -14,6 +14,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import HomeeConfigEntry
 from .entity import HomeeEntity
+from .helpers import setup_homee_platform
 
 PARALLEL_UPDATES = 0
 
@@ -25,19 +26,28 @@ VALVE_DESCRIPTIONS = {
 }
 
 
+async def add_valve_entities(
+    config_entry: HomeeConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+    nodes: list[HomeeNode],
+) -> None:
+    """Add homee valve entities."""
+    async_add_entities(
+        HomeeValve(attribute, config_entry, VALVE_DESCRIPTIONS[attribute.type])
+        for node in nodes
+        for attribute in node.attributes
+        if attribute.type in VALVE_DESCRIPTIONS
+    )
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: HomeeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Add the Homee platform for the valve component."""
+    """Add the homee platform for the valve component."""
 
-    async_add_entities(
-        HomeeValve(attribute, config_entry, VALVE_DESCRIPTIONS[attribute.type])
-        for node in config_entry.runtime_data.nodes
-        for attribute in node.attributes
-        if attribute.type in VALVE_DESCRIPTIONS
-    )
+    await setup_homee_platform(add_valve_entities, async_add_entities, config_entry)
 
 
 class HomeeValve(HomeeEntity, ValveEntity):

@@ -71,7 +71,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Quest status',
     'platform': 'habitica',
@@ -86,7 +86,6 @@
 # name: test_binary_sensors[binary_sensor.test_user_s_party_quest_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
       'friendly_name': "test-user's Party Quest status",
     }),
     'context': <ANY>,

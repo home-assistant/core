@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+from http import HTTPStatus
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.scrape.const import DEFAULT_SCAN_INTERVAL, DOMAIN
@@ -16,6 +18,7 @@ from homeassistant.util import dt as dt_util
 from . import MockRestData, return_integration_config
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import WebSocketGenerator
 
 
@@ -152,3 +155,41 @@ async def test_device_remove_devices(
     )
     response = await client.remove_device(dead_device_entry.id, loaded_entry.entry_id)
     assert response["success"]
+
+
+async def test_resource_template(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test resource_template is evaluated on each scan."""
+    hass.states.async_set("sensor.input_sensor", "localhost")
+    aioclient_mock.get(
+        "http://localhost",
+        status=HTTPStatus.OK,
+        text="<h1>First</h1>",
+    )
+    aioclient_mock.get(
+        "http://localhost2",
+        status=HTTPStatus.OK,
+        text="<h1>Second</h1>",
+    )
+
+    config = {
+        DOMAIN: {
+            "resource_template": "http://{{ states.sensor.input_sensor.state }}",
+            "verify_ssl": True,
+            "sensor": [{"select": "h1", "name": "template sensor"}],
+        }
+    }
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    state = hass.states.get("sensor.template_sensor")
+    assert state.state == "First"
+
+    hass.states.async_set("sensor.input_sensor", "localhost2")
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    state = hass.states.get("sensor.template_sensor")
+    assert state.state == "Second"

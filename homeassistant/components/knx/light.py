@@ -285,13 +285,19 @@ def _create_ui_light(xknx: XKNX, knx_config: ConfigType, name: str) -> XknxLight
         group_address_switch_green_state=conf.get_state_and_passive(
             CONF_COLOR, CONF_GA_GREEN_SWITCH
         ),
-        group_address_brightness_green=conf.get_write(CONF_GA_GREEN_BRIGHTNESS),
+        group_address_brightness_green=conf.get_write(
+            CONF_COLOR, CONF_GA_GREEN_BRIGHTNESS
+        ),
         group_address_brightness_green_state=conf.get_state_and_passive(
             CONF_COLOR, CONF_GA_GREEN_BRIGHTNESS
         ),
-        group_address_switch_blue=conf.get_write(CONF_GA_BLUE_SWITCH),
-        group_address_switch_blue_state=conf.get_state_and_passive(CONF_GA_BLUE_SWITCH),
-        group_address_brightness_blue=conf.get_write(CONF_GA_BLUE_BRIGHTNESS),
+        group_address_switch_blue=conf.get_write(CONF_COLOR, CONF_GA_BLUE_SWITCH),
+        group_address_switch_blue_state=conf.get_state_and_passive(
+            CONF_COLOR, CONF_GA_BLUE_SWITCH
+        ),
+        group_address_brightness_blue=conf.get_write(
+            CONF_COLOR, CONF_GA_BLUE_BRIGHTNESS
+        ),
         group_address_brightness_blue_state=conf.get_state_and_passive(
             CONF_COLOR, CONF_GA_BLUE_BRIGHTNESS
         ),

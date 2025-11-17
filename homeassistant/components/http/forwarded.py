@@ -43,18 +43,22 @@ def async_setup_forwarded(
     some proxies, for example, Kubernetes NGINX ingress, only retain one element
     in the X-Forwarded-Proto header. In that case, we'll just use what we have.
 
-    `X-Forwarded-Host: <host>`
-    e.g., `X-Forwarded-Host: example.com`
+    `X-Forwarded-Host: <host1>, <host2>, <host3>`
+    e.g., `X-Forwarded-Host: example.com, proxy.example.com, backend.example.com`
+    OR `X-Forwarded-Host: example.com` (one entry, even with multiple proxies)
 
     If the previous headers are processed successfully, and the X-Forwarded-Host is
-    present, it will be used.
+    present, the last one in the list will be used (set by the proxy nearest to the backend).
+
+    Multiple headers are valid as stated in https://www.rfc-editor.org/rfc/rfc7239#section-7.1
+    If multiple headers are present, they are handled according to
+    https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/X-Forwarded-For#parsing
+    > "split each X-Forwarded-For header by comma into lists and then join the lists."
 
     Additionally:
       - If no X-Forwarded-For header is found, the processing of all headers is skipped.
       - Throw HTTP 400 status when untrusted connected peer provides
         X-Forwarded-For headers.
-      - If multiple instances of X-Forwarded-For, X-Forwarded-Proto or
-        X-Forwarded-Host are found, an HTTP 400 status code is thrown.
       - If malformed or invalid (IP) data in X-Forwarded-For header is found,
         an HTTP 400 status code is thrown.
       - The connected client peer on the socket of the incoming connection,
@@ -111,15 +115,12 @@ def async_setup_forwarded(
             )
             raise HTTPBadRequest
 
-        # Multiple X-Forwarded-For headers
-        if len(forwarded_for_headers) > 1:
-            _LOGGER.error(
-                "Too many headers for X-Forwarded-For: %s", forwarded_for_headers
+        # Process multiple X-Forwarded-For from the right side (by reversing the list)
+        forwarded_for_split = list(
+            reversed(
+                [addr for header in forwarded_for_headers for addr in header.split(",")]
             )
-            raise HTTPBadRequest
-
-        # Process X-Forwarded-For from the right side (by reversing the list)
-        forwarded_for_split = list(reversed(forwarded_for_headers[0].split(",")))
+        )
         try:
             forwarded_for = [ip_address(addr.strip()) for addr in forwarded_for_split]
         except ValueError as err:
@@ -148,14 +149,15 @@ def async_setup_forwarded(
             X_FORWARDED_PROTO, []
         )
         if forwarded_proto_headers:
-            if len(forwarded_proto_headers) > 1:
-                _LOGGER.error(
-                    "Too many headers for X-Forward-Proto: %s", forwarded_proto_headers
-                )
-                raise HTTPBadRequest
-
+            # Process multiple X-Forwarded-Proto from the right side (by reversing the list)
             forwarded_proto_split = list(
-                reversed(forwarded_proto_headers[0].split(","))
+                reversed(
+                    [
+                        addr
+                        for header in forwarded_proto_headers
+                        for addr in header.split(",")
+                    ]
+                )
             )
             forwarded_proto = [proto.strip() for proto in forwarded_proto_split]
 
@@ -191,14 +193,16 @@ def async_setup_forwarded(
         # Handle X-Forwarded-Host
         forwarded_host_headers: list[str] = request.headers.getall(X_FORWARDED_HOST, [])
         if forwarded_host_headers:
-            # Multiple X-Forwarded-Host headers
-            if len(forwarded_host_headers) > 1:
-                _LOGGER.error(
-                    "Too many headers for X-Forwarded-Host: %s", forwarded_host_headers
+            # Process multiple X-Forwarded-Host from the right side (by reversing the list)
+            forwarded_host = list(
+                reversed(
+                    [
+                        addr.strip()
+                        for header in forwarded_host_headers
+                        for addr in header.split(",")
+                    ]
                 )
-                raise HTTPBadRequest
-
-            forwarded_host = forwarded_host_headers[0].strip()
+            )[0]
             if not forwarded_host:
                 _LOGGER.error("Empty value received in X-Forward-Host header")
                 raise HTTPBadRequest

@@ -17,6 +17,7 @@ from homeassistant.helpers.start import async_at_started
 from .const import DOMAIN, LOGGER, format_dispatch_call
 
 PLATFORMS = [
+    Platform.EVENT,
     Platform.SENSOR,
 ]
 

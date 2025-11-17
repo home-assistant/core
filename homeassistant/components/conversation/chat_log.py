@@ -507,14 +507,18 @@ class ChatLog:
     async def async_provide_llm_data(
         self,
         llm_context: llm.LLMContext,
-        user_llm_hass_api: str | list[str] | None = None,
+        user_llm_hass_api: str | list[str] | llm.API | None = None,
         user_llm_prompt: str | None = None,
         user_extra_system_prompt: str | None = None,
     ) -> None:
         """Set the LLM system prompt."""
         llm_api: llm.APIInstance | None = None
 
-        if user_llm_hass_api:
+        if not user_llm_hass_api:
+            pass
+        elif isinstance(user_llm_hass_api, llm.API):
+            llm_api = await user_llm_hass_api.async_get_api_instance(llm_context)
+        else:
             try:
                 llm_api = await llm.async_get_api(
                     self.hass,
@@ -565,14 +569,17 @@ class ChatLog:
         if llm_api:
             prompt_parts.append(llm_api.api_prompt)
 
-        prompt_parts.append(
-            await self._async_expand_prompt_template(
-                llm_context,
-                llm.BASE_PROMPT,
-                llm_context.language,
-                user_name,
+        # Append current date and time to the prompt if the corresponding tool is not provided
+        llm_tools: list[llm.Tool] = llm_api.tools if llm_api else []
+        if not any(tool.name.endswith("GetDateTime") for tool in llm_tools):
+            prompt_parts.append(
+                await self._async_expand_prompt_template(
+                    llm_context,
+                    llm.DATE_TIME_PROMPT,
+                    llm_context.language,
+                    user_name,
+                )
             )
-        )
 
         if extra_system_prompt := (
             # Take new system prompt if one was given

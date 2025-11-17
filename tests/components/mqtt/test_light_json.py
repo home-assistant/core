@@ -182,6 +182,19 @@ class JsonValidator:
         return json_loads(self.jsondata) == json_loads(other)
 
 
+@pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
+async def test_simple_on_off_light(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test if setup fails with no command topic."""
+    assert await mqtt_mock_entry()
+    state = hass.states.get("light.test")
+    assert state and state.state == STATE_UNKNOWN
+    assert state.attributes["supported_color_modes"] == ["onoff"]
+
+
 @pytest.mark.parametrize(
     "hass_config", [{mqtt.DOMAIN: {light.DOMAIN: {"schema": "json", "name": "test"}}}]
 )

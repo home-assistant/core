@@ -4,8 +4,9 @@
   "codeowners": ["@rohankapoorcom", "@erwindouna"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/fastdotcom",
+  "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["fastdotcom"],
-  "requirements": ["fastdotcom==0.0.3"],
+  "requirements": ["fastdotcom==0.0.6"],
   "single_config_entry": true
 }

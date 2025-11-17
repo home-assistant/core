@@ -81,8 +81,9 @@ async def test_demo_statistics_growth(hass: HomeAssistant) -> None:
         "source": DOMAIN,
         "name": "Energy consumption 1",
         "statistic_id": statistic_id,
+        "unit_class": "volume",
         "unit_of_measurement": "m³",
-        "has_mean": False,
+        "mean_type": StatisticMeanType.NONE,
         "has_sum": True,
     }
     statistics = [

@@ -9,7 +9,11 @@ from aioamazondevices.exceptions import (
 )
 import pytest
 
-from homeassistant.components.alexa_devices.const import CONF_LOGIN_DATA, DOMAIN
+from homeassistant.components.alexa_devices.const import (
+    CONF_LOGIN_DATA,
+    CONF_SITE,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_CODE, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -48,6 +52,7 @@ async def test_full_flow(
         CONF_PASSWORD: TEST_PASSWORD,
         CONF_LOGIN_DATA: {
             "customer_info": {"user_id": TEST_USERNAME},
+            CONF_SITE: "https://www.amazon.com",
         },
     }
     assert result["result"].unique_id == TEST_USERNAME
@@ -158,6 +163,16 @@ async def test_reauth_successful(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
 
+    assert mock_config_entry.data == {
+        CONF_CODE: "000000",
+        CONF_USERNAME: TEST_USERNAME,
+        CONF_PASSWORD: "other_fake_password",
+        CONF_LOGIN_DATA: {
+            "customer_info": {"user_id": TEST_USERNAME},
+            CONF_SITE: "https://www.amazon.com",
+        },
+    }
+
 
 @pytest.mark.parametrize(
     ("side_effect", "error"),
@@ -206,8 +221,15 @@ async def test_reauth_not_successful(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
-    assert mock_config_entry.data[CONF_PASSWORD] == "fake_password"
-    assert mock_config_entry.data[CONF_CODE] == "111111"
+    assert mock_config_entry.data == {
+        CONF_CODE: "111111",
+        CONF_USERNAME: TEST_USERNAME,
+        CONF_PASSWORD: "fake_password",
+        CONF_LOGIN_DATA: {
+            "customer_info": {"user_id": TEST_USERNAME},
+            CONF_SITE: "https://www.amazon.com",
+        },
+    }
 
 
 async def test_reconfigure_successful(
@@ -240,7 +262,14 @@ async def test_reconfigure_successful(
     assert reconfigure_result["reason"] == "reconfigure_successful"
 
     # changed entry
-    assert mock_config_entry.data[CONF_PASSWORD] == new_password
+    assert mock_config_entry.data == {
+        CONF_USERNAME: TEST_USERNAME,
+        CONF_PASSWORD: new_password,
+        CONF_LOGIN_DATA: {
+            "customer_info": {"user_id": TEST_USERNAME},
+            CONF_SITE: "https://www.amazon.com",
+        },
+    }
 
 
 @pytest.mark.parametrize(
@@ -297,5 +326,6 @@ async def test_reconfigure_fails(
         CONF_PASSWORD: TEST_PASSWORD,
         CONF_LOGIN_DATA: {
             "customer_info": {"user_id": TEST_USERNAME},
+            CONF_SITE: "https://www.amazon.com",
         },
     }

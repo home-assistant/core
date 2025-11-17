@@ -11,11 +11,15 @@ from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_USER
 from homeassistant.const import CONF_ADDRESS, CONF_CLIENT_ID, CONF_PIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
 from . import (
     AUTOMOWER_MISSING_MANUFACTURER_DATA_SERVICE_INFO,
-    AUTOMOWER_SERVICE_INFO,
+    AUTOMOWER_SERVICE_INFO_MOWER,
+    AUTOMOWER_SERVICE_INFO_SERIAL,
     AUTOMOWER_UNNAMED_SERVICE_INFO,
+    MISSING_SERVICE_SERVICE_INFO,
+    WATER_TIMER_SERVICE_INFO,
 )
 
 from tests.common import MockConfigEntry
@@ -44,6 +48,22 @@ async def test_user_selection(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+
+    # mock connection error
+    with patch(
+        "homeassistant.components.husqvarna_automower_ble.config_flow.HusqvarnaAutomowerBleConfigFlow.probe_mower",
+        return_value=None,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_ADDRESS: "00000000-0000-0000-0000-000000000001",
+                CONF_PIN: "1234",
+            },
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {"base": "cannot_connect"}
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -121,10 +141,16 @@ async def test_user_selection_incorrect_pin(
     }
 
 
-async def test_bluetooth(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "service_info",
+    [AUTOMOWER_SERVICE_INFO_MOWER, AUTOMOWER_SERVICE_INFO_SERIAL],
+)
+async def test_bluetooth(
+    hass: HomeAssistant, service_info: BluetoothServiceInfo
+) -> None:
     """Test bluetooth device discovery."""
 
-    inject_bluetooth_service_info(hass, AUTOMOWER_SERVICE_INFO)
+    inject_bluetooth_service_info(hass, service_info)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     result = hass.config_entries.flow.async_progress_by_handler(DOMAIN)[0]
@@ -157,7 +183,7 @@ async def test_bluetooth_incorrect_pin(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_BLUETOOTH},
-        data=AUTOMOWER_SERVICE_INFO,
+        data=AUTOMOWER_SERVICE_INFO_SERIAL,
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
@@ -214,7 +240,7 @@ async def test_bluetooth_unknown_error(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_BLUETOOTH},
-        data=AUTOMOWER_SERVICE_INFO,
+        data=AUTOMOWER_SERVICE_INFO_SERIAL,
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
@@ -241,7 +267,7 @@ async def test_bluetooth_not_paired(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_BLUETOOTH},
-        data=AUTOMOWER_SERVICE_INFO,
+        data=AUTOMOWER_SERVICE_INFO_SERIAL,
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
@@ -274,18 +300,26 @@ async def test_bluetooth_not_paired(
     }
 
 
-async def test_bluetooth_invalid(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "service_info",
+    [
+        AUTOMOWER_MISSING_MANUFACTURER_DATA_SERVICE_INFO,
+        MISSING_SERVICE_SERVICE_INFO,
+        WATER_TIMER_SERVICE_INFO,
+    ],
+)
+async def test_bluetooth_invalid(
+    hass: HomeAssistant, service_info: BluetoothServiceInfo
+) -> None:
     """Test bluetooth device discovery with invalid data."""
 
-    inject_bluetooth_service_info(
-        hass, AUTOMOWER_MISSING_MANUFACTURER_DATA_SERVICE_INFO
-    )
+    inject_bluetooth_service_info(hass, service_info)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_BLUETOOTH},
-        data=AUTOMOWER_MISSING_MANUFACTURER_DATA_SERVICE_INFO,
+        data=service_info,
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
@@ -470,9 +504,8 @@ async def test_exception_probe(
         result["flow_id"],
         user_input={CONF_PIN: "1234"},
     )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_exception_connect(

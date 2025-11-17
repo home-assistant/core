@@ -514,7 +514,7 @@ TEMPLATE_TYPES = [
 ]
 
 CONFIG_FLOW = {
-    "user": SchemaFlowMenuStep(TEMPLATE_TYPES),
+    "user": SchemaFlowMenuStep(TEMPLATE_TYPES, True),
     Platform.ALARM_CONTROL_PANEL: SchemaFlowFormStep(
         config_schema(Platform.ALARM_CONTROL_PANEL),
         preview="template",
@@ -695,6 +695,7 @@ class TemplateConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
 
     config_flow = CONFIG_FLOW
     options_flow = OPTIONS_FLOW
+    options_flow_reloads = True
 
     @callback
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:

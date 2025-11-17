@@ -1,25 +1,5 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "data": {
-          "url": "[%key:common::config_flow::data::url%]",
-          "api_key": "[%key:common::config_flow::data::api_key%]"
-        },
-        "data_description": {
-          "url": "The URL of the Overseerr instance.",
-          "api_key": "The API key of the Overseerr instance."
-        }
-      },
-      "reauth_confirm": {
-        "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]"
-        },
-        "data_description": {
-          "api_key": "[%key:component::overseerr::config::step::user::data_description::api_key%]"
-        }
-      }
-    },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
@@ -29,6 +9,26 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "Authentication failed. Your API key is invalid or CSRF protection is turned on, preventing authentication.",
       "invalid_host": "The provided URL is not a valid host."
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::overseerr::config::step::user::data_description::api_key%]"
+        }
+      },
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "url": "[%key:common::config_flow::data::url%]"
+        },
+        "data_description": {
+          "api_key": "The API key of the Overseerr instance.",
+          "url": "The URL of the Overseerr instance."
+        }
+      }
     }
   },
   "entity": {
@@ -38,95 +38,95 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "pending": "Pending",
               "approved": "Approved",
+              "auto_approved": "Auto-approved",
               "available": "Available",
-              "failed": "Failed",
               "declined": "Declined",
-              "auto_approved": "Auto-approved"
+              "failed": "Failed",
+              "pending": "Pending"
             }
           }
         }
       }
     },
     "sensor": {
-      "total_requests": {
-        "name": "Total requests"
-      },
-      "movie_requests": {
-        "name": "Movie requests"
-      },
-      "tv_requests": {
-        "name": "TV requests"
-      },
-      "pending_requests": {
-        "name": "Pending requests"
+      "available_requests": {
+        "name": "Available requests"
       },
       "declined_requests": {
         "name": "Declined requests"
       },
+      "movie_requests": {
+        "name": "Movie requests"
+      },
+      "pending_requests": {
+        "name": "Pending requests"
+      },
       "processing_requests": {
         "name": "Processing requests"
       },
-      "available_requests": {
-        "name": "Available requests"
+      "total_requests": {
+        "name": "Total requests"
+      },
+      "tv_requests": {
+        "name": "TV requests"
       }
     }
   },
   "exceptions": {
-    "connection_error": {
-      "message": "Error connecting to the Overseerr instance: {error}"
-    },
     "auth_error": {
       "message": "[%key:common::config_flow::error::invalid_api_key%]"
     },
-    "not_loaded": {
-      "message": "{target} is not loaded."
+    "connection_error": {
+      "message": "Error connecting to the Overseerr instance: {error}"
     },
     "integration_not_found": {
       "message": "Integration \"{target}\" not found in registry."
-    }
-  },
-  "services": {
-    "get_requests": {
-      "name": "Get requests",
-      "description": "Retrieves a list of media requests from Overseerr.",
-      "fields": {
-        "config_entry_id": {
-          "name": "Overseerr instance",
-          "description": "The Overseerr instance to get requests from."
-        },
-        "status": {
-          "name": "Request status",
-          "description": "Filter the requests by status."
-        },
-        "sort_order": {
-          "name": "Sort order",
-          "description": "Sort the requests by added or modified date."
-        },
-        "requested_by": {
-          "name": "Requested by",
-          "description": "Filter the requests by the user ID that requested them."
-        }
-      }
+    },
+    "not_loaded": {
+      "message": "{target} is not loaded."
     }
   },
   "selector": {
-    "request_status": {
-      "options": {
-        "approved": "Approved",
-        "pending": "Pending",
-        "available": "Available",
-        "processing": "Processing",
-        "unavailable": "Unavailable",
-        "failed": "Failed"
-      }
-    },
     "request_sort_order": {
       "options": {
         "added": "Added",
         "modified": "Modified"
       }
+    },
+    "request_status": {
+      "options": {
+        "approved": "Approved",
+        "available": "Available",
+        "failed": "Failed",
+        "pending": "Pending",
+        "processing": "Processing",
+        "unavailable": "Unavailable"
+      }
+    }
+  },
+  "services": {
+    "get_requests": {
+      "description": "Retrieves a list of media requests from Overseerr.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The Overseerr instance to get requests from.",
+          "name": "Overseerr instance"
+        },
+        "requested_by": {
+          "description": "Filter the requests by the user ID that requested them.",
+          "name": "Requested by"
+        },
+        "sort_order": {
+          "description": "Sort the requests by added or modified date.",
+          "name": "Sort order"
+        },
+        "status": {
+          "description": "Filter the requests by status.",
+          "name": "Request status"
+        }
+      },
+      "name": "Get requests"
     }
   }
 }

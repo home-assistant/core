@@ -1,6 +1,6 @@
 {
   "domain": "opnsense",
-  "name": "OPNSense",
+  "name": "OPNsense",
   "codeowners": ["@mtreinish"],
   "documentation": "https://www.home-assistant.io/integrations/opnsense",
   "iot_class": "local_polling",

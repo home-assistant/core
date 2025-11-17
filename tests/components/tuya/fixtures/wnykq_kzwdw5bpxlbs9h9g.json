@@ -1,0 +1,40 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "IR Minero",
+  "category": "wnykq",
+  "product_id": "kzwdw5bpxlbs9h9g",
+  "product_name": "Smart IR ",
+  "online": true,
+  "sub": false,
+  "time_zone": "+02:00",
+  "active_time": "2023-05-07T19:07:20+00:00",
+  "create_time": "2023-05-07T19:07:20+00:00",
+  "update_time": "2025-09-03T07:44:22+00:00",
+  "function": {
+    "ir_send": {
+      "type": "String",
+      "value": {
+        "maxlen": 3072
+      }
+    }
+  },
+  "status_range": {
+    "ir_study_code": {
+      "type": "Raw",
+      "value": {
+        "maxlen": 128
+      }
+    }
+  },
+  "status": {
+    "ir_send": {
+      "control": "study_exit"
+    },
+    "ir_study_code": "UAjyBn0ALQh9AMMEfQBFBBoB5wO+CmUEvAC2BrwA1QG9CtYGnABrA30A/Eh9APYGqgiwAn0AhAR9AIMEnQCiBPoAyAOdBYMEfQCEBA0I9AGcAIQJfQAyB30ADQOUUdwKfQDCBH0AZQ59AIMEfQCECX4Kowm7ALYGgwQwdQ=="
+  },
+  "set_up": false,
+  "support_local": true
+}

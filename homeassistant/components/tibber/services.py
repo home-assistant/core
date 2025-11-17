@@ -50,7 +50,6 @@ async def __get_prices(call: ServiceCall) -> ServiceResponse:
             {
                 "start_time": starts_at,
                 "price": price,
-                "level": tibber_home.price_level.get(starts_at),
             }
             for starts_at, price in tibber_home.price_total.items()
         ]

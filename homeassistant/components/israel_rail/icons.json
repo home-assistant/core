@@ -13,14 +13,14 @@
       "duration": {
         "default": "mdi:timeline-clock"
       },
-      "trains": {
-        "default": "mdi:train"
-      },
       "platform": {
         "default": "mdi:bus-stop-uncovered"
       },
       "train_number": {
         "default": "mdi:numeric"
+      },
+      "trains": {
+        "default": "mdi:train"
       }
     }
   }

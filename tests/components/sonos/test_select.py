@@ -38,9 +38,9 @@ async def platform_binary_sensor_fixture():
     [
         (0, "off"),
         (1, "low"),
-        (2, "medium"),
-        (3, "high"),
-        (4, "max"),
+        ("2", "medium"),
+        ("3", "high"),
+        ("4", "max"),
     ],
 )
 async def test_select_dialog_level(
@@ -49,7 +49,7 @@ async def test_select_dialog_level(
     soco,
     entity_registry: er.EntityRegistry,
     speaker_info: dict[str, str],
-    level: int,
+    level: int | str,
     result: str,
 ) -> None:
     """Test dialog level select entity."""
@@ -86,6 +86,36 @@ async def test_select_dialog_invalid_level(
     dialog_level_select = entity_registry.entities[SELECT_DIALOG_LEVEL_ENTITY]
     dialog_level_state = hass.states.get(dialog_level_select.entity_id)
     assert dialog_level_state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    ("value", "result"),
+    [
+        ("invalid_integer", "Invalid value for dialog_level_enum invalid_integer"),
+        (None, "Missing value for dialog_level_enum"),
+    ],
+)
+async def test_select_dialog_value_error(
+    hass: HomeAssistant,
+    async_setup_sonos,
+    soco,
+    entity_registry: er.EntityRegistry,
+    speaker_info: dict[str, str],
+    caplog: pytest.LogCaptureFixture,
+    value: str | None,
+    result: str,
+) -> None:
+    """Test receiving a value from Sonos that is not convertible to an integer."""
+
+    speaker_info["model_name"] = MODEL_SONOS_ARC_ULTRA.lower()
+    soco.get_speaker_info.return_value = speaker_info
+    soco.dialog_level = value
+
+    with caplog.at_level(logging.WARNING):
+        await async_setup_sonos()
+    assert result in caplog.text
+
+    assert SELECT_DIALOG_LEVEL_ENTITY not in entity_registry.entities
 
 
 @pytest.mark.parametrize(
@@ -149,12 +179,12 @@ async def test_select_dialog_level_event(
 
     speaker_info["model_name"] = MODEL_SONOS_ARC_ULTRA.lower()
     soco.get_speaker_info.return_value = speaker_info
-    soco.dialog_level = 0
+    soco.dialog_level = "0"
 
     await async_setup_sonos()
 
     event = create_rendering_control_event(soco)
-    event.variables[ATTR_DIALOG_LEVEL] = 3
+    event.variables[ATTR_DIALOG_LEVEL] = "3"
     soco.renderingControl.subscribe.return_value._callback(event)
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -175,11 +205,11 @@ async def test_select_dialog_level_poll(
 
     speaker_info["model_name"] = MODEL_SONOS_ARC_ULTRA.lower()
     soco.get_speaker_info.return_value = speaker_info
-    soco.dialog_level = 0
+    soco.dialog_level = "0"
 
     await async_setup_sonos()
 
-    soco.dialog_level = 4
+    soco.dialog_level = "4"
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)

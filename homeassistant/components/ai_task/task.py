@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
-from functools import partial
+from datetime import datetime, timedelta
+import io
 import mimetypes
 from pathlib import Path
 import tempfile
@@ -12,33 +12,33 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components import camera, conversation, media_source
+from homeassistant.components import camera, conversation, image, media_source
+from homeassistant.components.http.auth import async_sign_path
 from homeassistant.core import HomeAssistant, ServiceResponse, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import llm
 from homeassistant.helpers.chat_session import ChatSession, async_get_chat_session
-from homeassistant.helpers.event import async_call_later
-from homeassistant.helpers.network import get_url
 from homeassistant.util import RE_SANITIZE_FILENAME, slugify
 
 from .const import (
     DATA_COMPONENT,
-    DATA_IMAGES,
+    DATA_MEDIA_SOURCE,
     DATA_PREFERENCES,
     DOMAIN,
+    IMAGE_DIR,
     IMAGE_EXPIRY_TIME,
-    MAX_IMAGES,
     AITaskEntityFeature,
 )
 
 
-def _save_camera_snapshot(image: camera.Image) -> Path:
+def _save_camera_snapshot(image_data: camera.Image | image.Image) -> Path:
     """Save camera snapshot to temp file."""
     with tempfile.NamedTemporaryFile(
         mode="wb",
-        suffix=mimetypes.guess_extension(image.content_type, False),
+        suffix=mimetypes.guess_extension(image_data.content_type, False),
         delete=False,
     ) as temp_file:
-        temp_file.write(image.content)
+        temp_file.write(image_data.content)
         return Path(temp_file.name)
 
 
@@ -54,26 +54,31 @@ async def _resolve_attachments(
     for attachment in attachments or []:
         media_content_id = attachment["media_content_id"]
 
-        # Special case for camera media sources
-        if media_content_id.startswith("media-source://camera/"):
-            # Extract entity_id from the media content ID
-            entity_id = media_content_id.removeprefix("media-source://camera/")
+        # Special case for certain media sources
+        for integration in camera, image:
+            media_source_prefix = f"media-source://{integration.DOMAIN}/"
+            if not media_content_id.startswith(media_source_prefix):
+                continue
 
-            # Get snapshot from camera
-            image = await camera.async_get_image(hass, entity_id)
+            # Extract entity_id from the media content ID
+            entity_id = media_content_id.removeprefix(media_source_prefix)
+
+            # Get snapshot from entity
+            image_data = await integration.async_get_image(hass, entity_id)
 
             temp_filename = await hass.async_add_executor_job(
-                _save_camera_snapshot, image
+                _save_camera_snapshot, image_data
             )
             created_files.append(temp_filename)
 
             resolved_attachments.append(
                 conversation.Attachment(
                     media_content_id=media_content_id,
-                    mime_type=image.content_type,
+                    mime_type=image_data.content_type,
                     path=temp_filename,
                 )
             )
+            break
         else:
             # Handle regular media sources
             media = await media_source.async_resolve_media(hass, media_content_id, None)
@@ -115,6 +120,7 @@ async def async_generate_data(
     instructions: str,
     structure: vol.Schema | None = None,
     attachments: list[dict] | None = None,
+    llm_api: llm.API | None = None,
 ) -> GenDataTaskResult:
     """Run a data generation task in the AI Task integration."""
     if entity_id is None:
@@ -150,37 +156,26 @@ async def async_generate_data(
                 instructions=instructions,
                 structure=structure,
                 attachments=resolved_attachments or None,
+                llm_api=llm_api,
             ),
         )
-
-
-def _cleanup_images(image_storage: dict[str, ImageData], num_to_remove: int) -> None:
-    """Remove old images to keep the storage size under the limit."""
-    if num_to_remove <= 0:
-        return
-
-    if num_to_remove >= len(image_storage):
-        image_storage.clear()
-        return
-
-    sorted_images = sorted(
-        image_storage.items(),
-        key=lambda item: item[1].timestamp,
-    )
-
-    for filename, _ in sorted_images[:num_to_remove]:
-        image_storage.pop(filename, None)
 
 
 async def async_generate_image(
     hass: HomeAssistant,
     *,
     task_name: str,
-    entity_id: str,
+    entity_id: str | None = None,
     instructions: str,
     attachments: list[dict] | None = None,
 ) -> ServiceResponse:
     """Run an image generation task in the AI Task integration."""
+    if entity_id is None:
+        entity_id = hass.data[DATA_PREFERENCES].gen_image_entity_id
+
+    if entity_id is None:
+        raise HomeAssistantError("No entity_id provided and no preferred entity set")
+
     entity = hass.data[DATA_COMPONENT].get_entity(entity_id)
     if entity is None:
         raise HomeAssistantError(f"AI Task entity {entity_id} not found")
@@ -215,32 +210,34 @@ async def async_generate_image(
     if service_result.get("revised_prompt") is None:
         service_result["revised_prompt"] = instructions
 
-    image_storage = hass.data[DATA_IMAGES]
-
-    if len(image_storage) + 1 > MAX_IMAGES:
-        _cleanup_images(image_storage, len(image_storage) + 1 - MAX_IMAGES)
+    source = hass.data[DATA_MEDIA_SOURCE]
 
     current_time = datetime.now()
     ext = mimetypes.guess_extension(task_result.mime_type, False) or ".png"
     sanitized_task_name = RE_SANITIZE_FILENAME.sub("", slugify(task_name))
-    filename = f"{current_time.strftime('%Y-%m-%d_%H%M%S')}_{sanitized_task_name}{ext}"
 
-    image_storage[filename] = ImageData(
-        data=image_data,
-        timestamp=int(current_time.timestamp()),
-        mime_type=task_result.mime_type,
-        title=service_result["revised_prompt"],
+    image_file = ImageData(
+        filename=f"{current_time.strftime('%Y-%m-%d_%H%M%S')}_{sanitized_task_name}{ext}",
+        file=io.BytesIO(image_data),
+        content_type=task_result.mime_type,
     )
 
-    def _purge_image(filename: str, now: datetime) -> None:
-        """Remove image from storage."""
-        image_storage.pop(filename, None)
+    target_folder = media_source.MediaSourceItem.from_uri(
+        hass, f"media-source://{DOMAIN}/{IMAGE_DIR}", None
+    )
 
-    if IMAGE_EXPIRY_TIME > 0:
-        async_call_later(hass, IMAGE_EXPIRY_TIME, partial(_purge_image, filename))
+    service_result["media_source_id"] = await source.async_upload_media(
+        target_folder, image_file
+    )
 
-    service_result["url"] = get_url(hass) + f"/api/{DOMAIN}/images/{filename}"
-    service_result["media_source_id"] = f"media-source://{DOMAIN}/images/{filename}"
+    item = media_source.MediaSourceItem.from_uri(
+        hass, service_result["media_source_id"], None
+    )
+    service_result["url"] = async_sign_path(
+        hass,
+        (await source.async_resolve_media(item)).url,
+        timedelta(seconds=IMAGE_EXPIRY_TIME),
+    )
 
     return service_result
 
@@ -260,6 +257,9 @@ class GenDataTask:
 
     attachments: list[conversation.Attachment] | None = None
     """List of attachments to go along the instructions."""
+
+    llm_api: llm.API | None = None
+    """API to provide to the LLM."""
 
     def __str__(self) -> str:
         """Return task as a string."""
@@ -342,20 +342,8 @@ class GenImageTaskResult:
 
 @dataclass(slots=True)
 class ImageData:
-    """Image data for stored generated images."""
+    """Implementation of media_source.local_source.UploadedFile protocol."""
 
-    data: bytes
-    """Raw image data."""
-
-    timestamp: int
-    """Timestamp when the image was generated, as a Unix timestamp."""
-
-    mime_type: str
-    """MIME type of the image."""
-
-    title: str
-    """Title of the image, usually the prompt used to generate it."""
-
-    def __str__(self) -> str:
-        """Return image data as a string."""
-        return f"<ImageData {self.title}: {id(self)}>"
+    filename: str
+    file: io.IOBase
+    content_type: str

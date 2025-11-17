@@ -203,6 +203,7 @@ async def test_entry_changed(hass: HomeAssistant, platform) -> None:
     hass.config_entries.async_update_entry(
         config_entry, options={**config_entry.options, "source": "sensor.valid"}
     )
+    hass.config_entries.async_schedule_reload(config_entry.entry_id)
     await hass.async_block_till_done()
 
     # Check that the device association has updated
