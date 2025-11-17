@@ -101,6 +101,7 @@ class MockBridge:
         self.devices = self.load_devices()
         self.buttons = self.load_buttons()
         self._subscribers: dict[str, list] = {}
+        self.smart_away_state = "Disabled"
 
     async def connect(self):
         """Connect the mock bridge."""

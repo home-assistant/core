@@ -26,8 +26,8 @@ async def async_setup_entry(
     async_add_entities(
         LutronCasetaLight(switch_device, data) for switch_device in switch_devices
     )
-
-    async_add_entities([LutronCasetaSmartAwaySwitch(data)])
+    if (bridge.smart_away_state != ""):
+        async_add_entities([LutronCasetaSmartAwaySwitch(data)])
 
 
 class LutronCasetaLight(LutronCasetaUpdatableEntity, SwitchEntity):
@@ -68,9 +68,6 @@ class LutronCasetaLight(LutronCasetaUpdatableEntity, SwitchEntity):
 class LutronCasetaSmartAwaySwitch(LutronCasetaEntity, SwitchEntity):
     """Representation of Lutron Caseta Smart Away."""
 
-    _attr_has_entity_name = True
-    _attr_translation_key = "smart_away"
-
     def __init__(self, data):
         """Init a switch entity."""
         device = {
@@ -78,7 +75,7 @@ class LutronCasetaSmartAwaySwitch(LutronCasetaEntity, SwitchEntity):
             "name": "Smart Away",
             "type": "SmartAway",
             "model": "Smart Away",
-            "area": None,
+            "area": data.bridge_device["area"],
             "serial": data.bridge_device["serial"],
         }
         super().__init__(device, data)
