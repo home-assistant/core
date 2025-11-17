@@ -52,7 +52,7 @@ SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         key=PTDevicesSensors.LEVEL_PERCENT,
         translation_key=PTDevicesSensors.LEVEL_PERCENT,
         native_unit_of_measurement=PERCENTAGE,
-        # state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=PTDevicesSensors.LEVEL_VOLUME,
@@ -60,14 +60,14 @@ SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfVolume.LITERS,
         suggested_unit_of_measurement=UnitOfVolume.LITERS,
         device_class=SensorDeviceClass.VOLUME,
-        # state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=PTDevicesSensors.LEVEL_DEPTH,
         translation_key=PTDevicesSensors.LEVEL_DEPTH,
         native_unit_of_measurement=UnitOfLength.INCHES,
         device_class=SensorDeviceClass.DISTANCE,
-        # state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=PTDevicesSensors.PROBE_TEMPERATURE,
