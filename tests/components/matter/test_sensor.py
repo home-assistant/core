@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 from matter_server.client.models.node import MatterNode
+from matter_server.common.models import EventType
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -697,3 +698,63 @@ async def test_vacuum_operational_error_sensor(
     state = hass.states.get("sensor.mock_vacuum_operational_error")
     assert state
     assert state.state == "unknown"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize("node_fixture", ["door_lock"])
+async def test_optional_door_event_sensors_from_featuremap(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test discovery of optional door event sensors in doorlock featuremap."""
+    entity_id_open = "sensor.mock_door_lock_door_open_events"
+    entity_id_closed = "sensor.mock_door_lock_door_closed_events"
+
+    # Initially, feature map is 0, so sensors should not exist in the entity registry
+    entity_open = entity_registry.async_get(entity_id_open)
+    assert entity_open is None
+    entity_closed = entity_registry.async_get(entity_id_closed)
+    assert entity_closed is None
+
+    # Update the feature map to include the optional door sensor feature (bit 5 = 32)
+    # and fire a node updated event
+    set_node_attribute(matter_node, 1, 257, 65532, 32)
+    await trigger_subscription_callback(
+        hass, matter_client, event=EventType.NODE_UPDATED, data=matter_node
+    )
+    await hass.async_block_till_done()
+
+    # This should result in new sensor entities being discovered
+    state = hass.states.get(entity_id_open)
+    assert state
+    assert state.state == "5"
+
+    state = hass.states.get(entity_id_closed)
+    assert state
+    assert state.state == "3"
+
+    # Test updating the sensor values
+    set_node_attribute(matter_node, 1, 257, 4, 10)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id_open)
+    assert state
+    assert state.state == "10"
+
+    set_node_attribute(matter_node, 1, 257, 5, 8)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id_closed)
+    assert state
+    assert state.state == "8"
+
+    # Now test the reverse, by removing the feature from the feature map
+    set_node_attribute(matter_node, 1, 257, 65532, 0)
+    await trigger_subscription_callback(
+        hass, matter_client, data=(matter_node.node_id, "1/257/65532", 0)
+    )
+    # Entities should be removed from the entity registry
+    entity_open = entity_registry.async_get(entity_id_open)
+    assert entity_open is None
+    entity_closed = entity_registry.async_get(entity_id_closed)
+    assert entity_closed is None
