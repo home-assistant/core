@@ -15,27 +15,23 @@ from homeassistant.components.tado.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from .util import async_init_integration
-
 from tests.common import MockConfigEntry, async_load_fixture
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_has_services(
     hass: HomeAssistant,
 ) -> None:
     """Test the existence of the Tado Service."""
 
-    await async_init_integration(hass)
-
     assert hass.services.has_service(DOMAIN, SERVICE_ADD_METER_READING)
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_add_meter_readings(
     hass: HomeAssistant,
 ) -> None:
     """Test the add_meter_readings service."""
-
-    await async_init_integration(hass)
 
     config_entry: MockConfigEntry = hass.config_entries.async_entries(DOMAIN)[0]
     fixture: str = await async_load_fixture(hass, "add_readings_success.json", DOMAIN)
@@ -55,12 +51,11 @@ async def test_add_meter_readings(
         assert response is None
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_add_meter_readings_exception(
     hass: HomeAssistant,
 ) -> None:
     """Test the add_meter_readings service with a RequestException."""
-
-    await async_init_integration(hass)
 
     config_entry: MockConfigEntry = hass.config_entries.async_entries(DOMAIN)[0]
     with (
@@ -83,12 +78,11 @@ async def test_add_meter_readings_exception(
     assert "Error setting Tado meter reading: Error" in str(exc.value)
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_add_meter_readings_invalid(
     hass: HomeAssistant,
 ) -> None:
     """Test the add_meter_readings service with an invalid_meter_reading response."""
-
-    await async_init_integration(hass)
 
     config_entry: MockConfigEntry = hass.config_entries.async_entries(DOMAIN)[0]
     fixture: str = await async_load_fixture(
@@ -114,12 +108,11 @@ async def test_add_meter_readings_invalid(
     assert "invalid new reading" in str(exc)
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_add_meter_readings_duplicate(
     hass: HomeAssistant,
 ) -> None:
     """Test the add_meter_readings service with a duplicated_meter_reading response."""
-
-    await async_init_integration(hass)
 
     config_entry: MockConfigEntry = hass.config_entries.async_entries(DOMAIN)[0]
     fixture: str = await async_load_fixture(

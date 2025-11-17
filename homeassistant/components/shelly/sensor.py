@@ -30,12 +30,12 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfFrequency,
     UnitOfPower,
-    UnitOfPrecipitationDepth,
     UnitOfPressure,
     UnitOfTemperature,
     UnitOfTime,
     UnitOfVolume,
     UnitOfVolumeFlowRate,
+    UnitOfVolumetricFlux,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -63,6 +63,7 @@ from .utils import (
     get_blu_trv_device_info,
     get_device_entry_gen,
     get_device_uptime,
+    get_entity_translation_attributes,
     get_rpc_channel_name,
     get_shelly_air_lamp_life,
     get_virtual_component_unit,
@@ -71,25 +72,6 @@ from .utils import (
 )
 
 PARALLEL_UPDATES = 0
-
-
-def get_entity_translation_attributes(
-    channel_name: str | None,
-    translation_key: str | None,
-    device_class: str | None,
-    default_to_device_class_name: bool,
-) -> tuple[dict[str, str] | None, str | None]:
-    """Translation attributes for entity with channel name."""
-    if channel_name is None:
-        return None, None
-
-    key = translation_key
-    if key is None and default_to_device_class_name:
-        key = device_class
-
-    final_translation_key = f"{key}_with_channel_name" if key else None
-
-    return {"channel_name": channel_name}, final_translation_key
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -1465,9 +1447,9 @@ RPC_SENSORS: Final = {
     "number_last_precipitation": RpcSensorDescription(
         key="number",
         sub_key="value",
-        translation_key="rainfall_last_24h",
-        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
-        device_class=SensorDeviceClass.PRECIPITATION,
+        translation_key="rainfall",
+        native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_DAY,
+        device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
         role="last_precipitation",
         removal_condition=lambda config, _s, _k: not config.get("service:0", {}).get(
             "weather_api", False
@@ -1633,6 +1615,78 @@ RPC_SENSORS: Final = {
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         suggested_display_precision=1,
         device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        role="phase_info",
+    ),
+    "object_phase_a_current": RpcSensorDescription(
+        key="object",
+        sub_key="value",
+        translation_key="current_with_phase_name",
+        translation_placeholders={"phase_name": "A"},
+        value=lambda status, _: float(status["phase_a"]["current"]),
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        suggested_display_precision=2,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        role="phase_info",
+    ),
+    "object_phase_b_current": RpcSensorDescription(
+        key="object",
+        sub_key="value",
+        translation_key="current_with_phase_name",
+        translation_placeholders={"phase_name": "B"},
+        value=lambda status, _: float(status["phase_b"]["current"]),
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        suggested_display_precision=2,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        role="phase_info",
+    ),
+    "object_phase_c_current": RpcSensorDescription(
+        key="object",
+        sub_key="value",
+        translation_key="current_with_phase_name",
+        translation_placeholders={"phase_name": "C"},
+        value=lambda status, _: float(status["phase_c"]["current"]),
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        suggested_display_precision=2,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        role="phase_info",
+    ),
+    "object_phase_a_power": RpcSensorDescription(
+        key="object",
+        sub_key="value",
+        translation_key="power_with_phase_name",
+        translation_placeholders={"phase_name": "A"},
+        value=lambda status, _: float(status["phase_a"]["power"]),
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
+        suggested_display_precision=2,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        role="phase_info",
+    ),
+    "object_phase_b_power": RpcSensorDescription(
+        key="object",
+        sub_key="value",
+        translation_key="power_with_phase_name",
+        translation_placeholders={"phase_name": "B"},
+        value=lambda status, _: float(status["phase_b"]["power"]),
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
+        suggested_display_precision=2,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        role="phase_info",
+    ),
+    "object_phase_c_power": RpcSensorDescription(
+        key="object",
+        sub_key="value",
+        translation_key="power_with_phase_name",
+        translation_placeholders={"phase_name": "C"},
+        value=lambda status, _: float(status["phase_c"]["power"]),
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
+        suggested_display_precision=2,
+        device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         role="phase_info",
     ),
