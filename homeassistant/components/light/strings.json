@@ -39,7 +39,7 @@
   "conditions": {
     "is_off": {
       "description": "Test if a light is off.",
-      "description_configured": "Test if a light is off",
+      "description_configured": "[%key:component::light::conditions::is_off::description%]",
       "fields": {
         "behavior": {
           "description": "How the state should match on the targeted lights.",
@@ -50,7 +50,7 @@
     },
     "is_on": {
       "description": "Test if a light is on.",
-      "description_configured": "Test if a light is on",
+      "description_configured": "[%key:component::light::conditions::is_on::description%]",
       "fields": {
         "behavior": {
           "description": "How the state should match on the targeted lights.",
@@ -509,7 +509,7 @@
   "triggers": {
     "turned_off": {
       "description": "Triggers when a light is turned off.",
-      "description_configured": "Triggers when a light is turned off",
+      "description_configured": "[%key:component::light::triggers::turned_off::description%]",
       "fields": {
         "behavior": {
           "description": "The behavior of the targeted lights to trigger on.",
@@ -520,7 +520,7 @@
     },
     "turned_on": {
       "description": "Triggers when a light is turned on.",
-      "description_configured": "Triggers when a light is turned on",
+      "description_configured": "[%key:component::light::triggers::turned_on::description%]",
       "fields": {
         "behavior": {
           "description": "[%key:component::light::triggers::turned_off::fields::behavior::description%]",
