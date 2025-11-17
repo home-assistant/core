@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 import logging
 
+from pyemby import EmbyServer
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
@@ -90,7 +91,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up the media_player platform from the Emby config entry."""
     async_add_entities(
-        EmbyDevice(entry, device_id) for device_id in entry.runtime_data.devices
+        EmbyDevice(entry.runtime_data, device_id)
+        for device_id in entry.runtime_data.devices
     )
 
 
@@ -99,12 +101,12 @@ class EmbyDevice(MediaPlayerEntity):
 
     _attr_should_poll = False
 
-    def __init__(self, entry: EmbyConfigEntry, device_id: str) -> None:
+    def __init__(self, server: EmbyServer, device_id: str) -> None:
         """Initialize the Emby device."""
         _LOGGER.debug("New Emby Device initialized with ID: %s", device_id)
-        self.emby = entry.runtime_data
+        self.emby = server
         self.device_id = device_id
-        self.device = self.emby.devices[self.device_id]
+        self.device = server.devices[self.device_id]
 
         self.media_status_last_position = None
         self.media_status_received = None

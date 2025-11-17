@@ -41,10 +41,7 @@ class EmbyConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            await self.async_set_unique_id(
-                unique_id=f"{user_input[CONF_HOST]}:{int(user_input[CONF_PORT])}"
-            )
-            self._abort_if_unique_id_configured()
+            self._async_abort_entries_match(user_input)
             return self.async_create_entry(
                 title=f"{user_input[CONF_HOST]}:{int(user_input[CONF_PORT])}",
                 data=user_input,
@@ -61,14 +58,14 @@ class EmbyConfigFlow(ConfigFlow, domain=DOMAIN):
         port = int(import_data.get(CONF_PORT) or DEFAULT_PORT)
         if ssl and port == DEFAULT_PORT:
             port = DEFAULT_SSL_PORT
-        await self.async_set_unique_id(unique_id=f"{host}:{port}")
-        self._abort_if_unique_id_configured()
+        config_data = {
+            CONF_API_KEY: api_key,
+            CONF_HOST: host,
+            CONF_PORT: port,
+            CONF_SSL: ssl,
+        }
+        self._async_abort_entries_match(config_data)
         return self.async_create_entry(
             title=f"{host}:{port}",
-            data={
-                CONF_API_KEY: api_key,
-                CONF_HOST: host,
-                CONF_PORT: port,
-                CONF_SSL: ssl,
-            },
+            data=config_data,
         )

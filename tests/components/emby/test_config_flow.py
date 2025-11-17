@@ -35,7 +35,6 @@ async def test_user_step_success(hass: HomeAssistant, mock_setup_entry) -> None:
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["context"]["unique_id"] == f"{TEST_HOST_VALUE}:{TEST_PORT_VALUE}"
     assert result["title"] == f"{TEST_HOST_VALUE}:{TEST_PORT_VALUE}"
     assert result["data"] == {
         CONF_API_KEY: TEST_API_KEY_VALUE,
@@ -91,7 +90,6 @@ async def test_yaml_import(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["context"]["unique_id"] == f"{TEST_HOST_VALUE}:8096"
     assert result["title"] == f"{TEST_HOST_VALUE}:8096"
     assert result["data"] == {
         CONF_API_KEY: TEST_API_KEY_VALUE,
@@ -119,7 +117,6 @@ async def test_yaml_import_ssl(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["context"]["unique_id"] == f"{TEST_HOST_VALUE}:{DEFAULT_SSL_PORT}"
     assert result["title"] == f"{TEST_HOST_VALUE}:{DEFAULT_SSL_PORT}"
     assert result["data"] == {
         CONF_API_KEY: TEST_API_KEY_VALUE,
