@@ -24,24 +24,19 @@ async def async_get_config_entry_diagnostics(
 
     if api_type == API_TYPE_GRAPHQL:
         runtime = domain_data.get(API_TYPE_GRAPHQL, {})
-        if runtime and hasattr(runtime, "tibber"):
-            tibber_connection: tibber.Tibber = runtime.tibber
-            return {
-                "api_type": API_TYPE_GRAPHQL,
-                "homes": [
-                    {
-                        "last_data_timestamp": home.last_data_timestamp,
-                        "has_active_subscription": home.has_active_subscription,
-                        "has_real_time_consumption": home.has_real_time_consumption,
-                        "last_cons_data_timestamp": home.last_cons_data_timestamp,
-                        "country": home.country,
-                    }
-                    for home in tibber_connection.get_homes(only_active=False)
-                ],
-            }
+        tibber_connection: tibber.Tibber = runtime.tibber
         return {
             "api_type": API_TYPE_GRAPHQL,
-            "homes": [],
+            "homes": [
+                {
+                    "last_data_timestamp": home.last_data_timestamp,
+                    "has_active_subscription": home.has_active_subscription,
+                    "has_real_time_consumption": home.has_real_time_consumption,
+                    "last_cons_data_timestamp": home.last_cons_data_timestamp,
+                    "country": home.country,
+                }
+                for home in tibber_connection.get_homes(only_active=False)
+            ],
         }
 
     runtime = domain_data.get(API_TYPE_DATA_API)

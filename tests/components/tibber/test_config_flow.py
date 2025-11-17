@@ -18,6 +18,7 @@ from homeassistant.components.recorder import Recorder
 from homeassistant.components.tibber.application_credentials import TOKEN_URL
 from homeassistant.components.tibber.config_flow import (
     APPLICATION_CREDENTIALS_DOC_URL,
+    DATA_API_DEFAULT_SCOPES,
     DATA_API_DOC_URL,
     ERR_CLIENT,
     ERR_TIMEOUT,
@@ -164,6 +165,23 @@ async def test_data_api_requires_credentials(
 
 
 @pytest.mark.usefixtures("setup_credentials", "current_request_with_host")
+async def test_data_api_extra_authorize_scope(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Ensure the Data API flow requests the default scopes."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_TYPE: API_TYPE_DATA_API}
+    )
+
+    handler = hass.config_entries.flow._progress[result["flow_id"]]
+
+    assert handler.extra_authorize_data["scope"] == " ".join(DATA_API_DEFAULT_SCOPES)
+
+
+@pytest.mark.usefixtures("setup_credentials", "current_request_with_host")
 async def test_data_api_full_flow(
     recorder_mock: Recorder,
     hass: HomeAssistant,
@@ -214,6 +232,52 @@ async def test_data_api_full_flow(
     assert result["data"]["auth_implementation"] == DOMAIN
     assert result["title"] == "mock-user@example.com"
     assert result["result"].unique_id == "mock-user@example.com"
+
+
+@pytest.mark.usefixtures("setup_credentials", "current_request_with_host")
+async def test_data_api_oauth_cannot_connect_abort(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Abort the Data API flow when userinfo cannot be retrieved."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_TYPE: API_TYPE_DATA_API}
+    )
+
+    authorize_url = result["url"]
+    state = parse_qs(urlparse(authorize_url).query)["state"][0]
+
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == HTTPStatus.OK
+
+    aioclient_mock.post(
+        TOKEN_URL,
+        json={
+            "access_token": "mock-access-token",
+            "refresh_token": "mock-refresh-token",
+            "token_type": "bearer",
+            "expires_in": 3600,
+        },
+    )
+
+    data_api_client = MagicMock()
+    data_api_client.get_userinfo = AsyncMock(side_effect=ClientError("boom"))
+
+    with patch(
+        "homeassistant.components.tibber.config_flow.TibberDataAPI",
+        return_value=data_api_client,
+        create=True,
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
 
 
 @pytest.mark.usefixtures("setup_credentials")
@@ -360,3 +424,69 @@ async def test_data_api_reauth_updates_entry(
     assert updated_entry.data["auth_implementation"] == DOMAIN
     assert updated_entry.data[CONF_API_TYPE] == API_TYPE_DATA_API
     assert updated_entry.title == "old@example.com"
+
+
+@pytest.mark.usefixtures("setup_credentials", "current_request_with_host")
+async def test_data_api_reauth_wrong_account_abort(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Abort Data API reauth when a different account is returned."""
+    existing_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_API_TYPE: API_TYPE_DATA_API,
+            "auth_implementation": DOMAIN,
+            CONF_TOKEN: {
+                "access_token": "old-access-token",
+                "refresh_token": "old-refresh-token",
+            },
+        },
+        unique_id="old@example.com",
+        title="old@example.com",
+    )
+    existing_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": existing_entry.entry_id,
+        },
+        data=existing_entry.data,
+    )
+
+    authorize_url = result["url"]
+    state = parse_qs(urlparse(authorize_url).query)["state"][0]
+
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == HTTPStatus.OK
+
+    aioclient_mock.post(
+        TOKEN_URL,
+        json={
+            "access_token": "new-access-token",
+            "refresh_token": "new-refresh-token",
+            "token_type": "bearer",
+            "expires_in": 3600,
+        },
+    )
+
+    data_api_client = MagicMock()
+    data_api_client.get_userinfo = AsyncMock(
+        return_value={"email": "other@example.com"}
+    )
+
+    with patch(
+        "homeassistant.components.tibber.config_flow.TibberDataAPI",
+        return_value=data_api_client,
+        create=True,
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "wrong_account"
+    assert result["description_placeholders"] == {"email": "old@example.com"}
