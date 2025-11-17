@@ -49,6 +49,7 @@ from homeassistant.helpers.device_registry import (
     DeviceInfo,
 )
 from homeassistant.helpers.network import NoURLAvailableError, get_url
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util.dt import utcnow
 
 from .const import (
@@ -119,15 +120,33 @@ def get_number_of_channels(device: BlockDevice, block: Block) -> int:
 def get_block_entity_name(
     device: BlockDevice,
     block: Block | None,
-    description: str | None = None,
+    name: str | UndefinedType | None = None,
 ) -> str | None:
     """Naming for block based switch and sensors."""
     channel_name = get_block_channel_name(device, block)
 
-    if description:
-        return f"{channel_name} {description.lower()}" if channel_name else description
+    if name is not UNDEFINED and name:
+        return f"{channel_name} {name.lower()}" if channel_name else name
 
     return channel_name
+
+
+def get_block_custom_name(device: BlockDevice, block: Block | None) -> str | None:
+    """Get custom name from device settings."""
+    if block and (key := cast(str, block.type) + "s") and key in device.settings:
+        assert block.channel
+
+        if name := device.settings[key][int(block.channel)].get("name"):
+            return cast(str, name)
+
+    return None
+
+
+def get_block_channel(block: Block | None, base: str = "1") -> str:
+    """Get block channel."""
+    assert block and block.channel
+
+    return chr(int(block.channel) + ord(base))
 
 
 def get_block_channel_name(device: BlockDevice, block: Block | None) -> str | None:
@@ -139,19 +158,10 @@ def get_block_channel_name(device: BlockDevice, block: Block | None) -> str | No
     ):
         return None
 
-    assert block.channel
+    if custom_name := get_block_custom_name(device, block):
+        return custom_name
 
-    channel_name: str | None = None
-    mode = cast(str, block.type) + "s"
-    if mode in device.settings:
-        channel_name = device.settings[mode][int(block.channel)].get("name")
-
-    if channel_name:
-        return channel_name
-
-    base = ord("1")
-
-    return f"Channel {chr(int(block.channel) + base)}"
+    return f"Channel {get_block_channel(block)}"
 
 
 def get_block_sub_device_name(device: BlockDevice, block: Block) -> str:
@@ -159,18 +169,13 @@ def get_block_sub_device_name(device: BlockDevice, block: Block) -> str:
     if TYPE_CHECKING:
         assert block.channel
 
-    mode = cast(str, block.type) + "s"
-    if mode in device.settings:
-        if channel_name := device.settings[mode][int(block.channel)].get("name"):
-            return cast(str, channel_name)
+    if custom_name := get_block_custom_name(device, block):
+        return custom_name
 
     if device.settings["device"]["type"] == MODEL_EM3:
-        base = ord("A")
-        return f"{device.name} Phase {chr(int(block.channel) + base)}"
+        return f"{device.name} Phase {get_block_channel(block, 'A')}"
 
-    base = ord("1")
-
-    return f"{device.name} Channel {chr(int(block.channel) + base)}"
+    return f"{device.name} Channel {get_block_channel(block)}"
 
 
 def is_block_momentary_input(
@@ -386,6 +391,18 @@ def get_shelly_model_name(
     return cast(str, MODEL_NAMES.get(model))
 
 
+def get_rpc_component_name(device: RpcDevice, key: str) -> str | None:
+    """Get component name from device config."""
+    if (
+        key in device.config
+        and key != "em:0"  # workaround for Pro 3EM, we don't want to get name for em:0
+        and (name := device.config[key].get("name"))
+    ):
+        return cast(str, name)
+
+    return None
+
+
 def get_rpc_channel_name(device: RpcDevice, key: str) -> str | None:
     """Get name based on device and channel name."""
     if BLU_TRV_IDENTIFIER in key:
@@ -397,13 +414,11 @@ def get_rpc_channel_name(device: RpcDevice, key: str) -> str | None:
     component = key.split(":")[0]
     component_id = key.split(":")[-1]
 
-    if key in device.config and key != "em:0":
-        # workaround for Pro 3EM, we don't want to get name for em:0
-        if component_name := device.config[key].get("name"):
-            if component in (*VIRTUAL_COMPONENTS, "input", "presencezone", "script"):
-                return cast(str, component_name)
+    if component_name := get_rpc_component_name(device, key):
+        if component in (*VIRTUAL_COMPONENTS, "input", "presencezone", "script"):
+            return component_name
 
-            return cast(str, component_name) if instances == 1 else None
+        return component_name if instances == 1 else None
 
     if component in (*VIRTUAL_COMPONENTS, "input"):
         return f"{component.title()} {component_id}"
@@ -442,17 +457,37 @@ def get_rpc_sub_device_name(
 
 
 def get_rpc_entity_name(
-    device: RpcDevice, key: str, name: str | None = None, role: str | None = None
+    device: RpcDevice,
+    key: str,
+    name: str | UndefinedType | None = None,
+    role: str | None = None,
 ) -> str | None:
     """Naming for RPC based switch and sensors."""
     channel_name = get_rpc_channel_name(device, key)
 
-    if name:
+    if name is not UNDEFINED and name:
         if role and role != ROLE_GENERIC:
             return name
         return f"{channel_name} {name.lower()}" if channel_name else name
 
     return channel_name
+
+
+def get_entity_translation_attributes(
+    channel_name: str | None,
+    translation_key: str | None,
+    device_class: str | None,
+    default_to_device_class_name: bool,
+) -> tuple[dict[str, str] | None, str | None]:
+    """Translation attributes for entity with channel name."""
+    if channel_name is None:
+        return None, None
+
+    key = translation_key
+    if key is None and default_to_device_class_name:
+        key = device_class
+
+    return {"channel_name": channel_name}, f"{key}_with_channel_name" if key else None
 
 
 def get_device_entry_gen(entry: ConfigEntry) -> int:

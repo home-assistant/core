@@ -78,6 +78,44 @@
           }
         }
       }
+    },
+    "sensor": {
+      "acceleration": {
+        "name": "Acceleration"
+      },
+      "channel": {
+        "name": "Channel"
+      },
+      "count": {
+        "name": "Count"
+      },
+      "dew_point": {
+        "name": "Dew point"
+      },
+      "direction": {
+        "name": "Direction"
+      },
+      "gyroscope": {
+        "name": "Gyroscope"
+      },
+      "packet_id": {
+        "name": "Packet ID"
+      },
+      "raw": {
+        "name": "Raw"
+      },
+      "rotation": {
+        "name": "Rotation"
+      },
+      "rotational_speed": {
+        "name": "Rotational speed"
+      },
+      "text": {
+        "name": "Text"
+      },
+      "uv_index": {
+        "name": "UV Index"
+      }
     }
   }
 }

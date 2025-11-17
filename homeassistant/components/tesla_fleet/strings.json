@@ -609,6 +609,9 @@
     "no_cable": {
       "message": "Charge cable will lock automatically when connected"
     },
+    "oauth2_implementation_unavailable": {
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    },
     "update_failed": {
       "message": "{endpoint} data request failed: {message}"
     }
