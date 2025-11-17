@@ -409,7 +409,7 @@ def mock_pubsub_api_responses_fixture(
     return mock_responses
 
 
-@pytest.mark.parametrize(("sdm_managed_topic"), [(True, False)])
+@pytest.mark.parametrize(("sdm_managed_topic"), [True, False])
 async def test_full_flow(
     hass: HomeAssistant,
     oauth: OAuthFixture,
@@ -612,7 +612,7 @@ async def test_config_flow_restart(
     }
 
 
-@pytest.mark.parametrize(("sdm_managed_topic"), [(True, False)])
+@pytest.mark.parametrize(("sdm_managed_topic"), [True, False])
 async def test_config_flow_wrong_project_id(
     hass: HomeAssistant,
     oauth: OAuthFixture,
@@ -669,7 +669,7 @@ async def test_config_flow_wrong_project_id(
     }
 
 
-@pytest.mark.parametrize(("sdm_managed_topic"), [(True, False)])
+@pytest.mark.parametrize(("sdm_managed_topic"), [True, False])
 @pytest.mark.parametrize(
     ("create_subscription_status"),
     [HTTPStatus.NOT_FOUND, HTTPStatus.INTERNAL_SERVER_ERROR, HTTPStatus.UNAUTHORIZED],
