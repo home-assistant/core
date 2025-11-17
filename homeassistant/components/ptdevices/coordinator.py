@@ -1,4 +1,4 @@
-"""Cordinator for PTDevices integration."""
+"""Coordinator for PTDevices integration."""
 
 from __future__ import annotations
 
