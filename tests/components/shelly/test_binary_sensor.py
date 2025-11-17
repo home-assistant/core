@@ -343,12 +343,10 @@ async def test_rpc_sleeping_binary_sensor_with_channel_name(
     entity_id = f"{BINARY_SENSOR_DOMAIN}.{suffix}"
     monkeypatch.setattr(mock_rpc_device, "connected", False)
     monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
-    entry = await init_integration(hass, 2, sleep_period=1000, model=MODEL_PLUS_SMOKE)
+    await init_integration(hass, 2, sleep_period=1000, model=MODEL_PLUS_SMOKE)
 
     # Sensor should be created when device is online
     assert hass.states.get(entity_id) is None
-
-    register_entity(hass, BINARY_SENSOR_DOMAIN, suffix, "smoke:0-smoke", entry)
 
     # Make device online
     mock_rpc_device.mock_online()
