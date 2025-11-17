@@ -24,10 +24,11 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_TOKEN,
     CONF_USERNAME,
+    EVENT_HOMEASSISTANT_STOP,
     Platform,
     __version__,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
@@ -129,6 +130,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
                     ble_device=ble_device,
                     ble_token=token,
                 )
+
+                async def disconnect_bluetooth(_: Event) -> None:
+                    """Stop push updates when hass stops."""
+                    await bluetooth_client.disconnect()
+
+                entry.async_on_unload(
+                    hass.bus.async_listen_once(
+                        EVENT_HOMEASSISTANT_STOP, disconnect_bluetooth
+                    )
+                )
+                entry.async_on_unload(bluetooth_client.disconnect)
             else:
                 _LOGGER.info(
                     "Bluetooth device not found during lamarzocco setup, continuing with cloud only"
