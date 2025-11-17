@@ -30,7 +30,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -199,33 +198,6 @@ async def test_expired_token_refresh_failure(
     assert entries[0].state is expected_state
 
 
-async def test_append_sheet(
-    hass: HomeAssistant,
-    setup_integration: ComponentSetup,
-    config_entry: MockConfigEntry,
-) -> None:
-    """Test service call appending to a sheet."""
-    await setup_integration()
-
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    assert entries[0].state is ConfigEntryState.LOADED
-
-    with patch("homeassistant.components.google_sheets.services.Client") as mock_client:
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_APPEND_SHEET,
-            {
-                DATA_CONFIG_ENTRY: config_entry.entry_id,
-                WORKSHEET: "Sheet1",
-                ADD_CREATED_COLUMN: True,
-                DATA: {"foo": "bar"},
-            },
-            blocking=True,
-        )
-    assert len(mock_client.mock_calls) == 8
-
-
 @pytest.mark.parametrize(
     ("add_created_column_param", "expected_row"),
     [
@@ -236,7 +208,7 @@ async def test_append_sheet(
     ids=["created_column_true", "created_column_false", "created_column_default"],
 )
 @freeze_time("2024-01-15 12:30:45.123456")
-async def test_created_column(
+async def test_append_sheet(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
     config_entry: MockConfigEntry,
