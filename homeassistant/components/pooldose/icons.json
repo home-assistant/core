@@ -1,10 +1,19 @@
 {
   "entity": {
     "sensor": {
-      "ofa_orp_value": {
+      "cl": {
+        "default": "mdi:pool"
+      },
+      "cl_type_dosing": {
+        "default": "mdi:flask"
+      },
+      "flow_rate": {
+        "default": "mdi:pipe-valve"
+      },
+      "ofa_orp_time": {
         "default": "mdi:clock"
       },
-      "ofa_ph_value": {
+      "ofa_ph_time": {
         "default": "mdi:clock"
       },
       "orp": {
@@ -21,6 +30,9 @@
       },
       "orp_type_dosing": {
         "default": "mdi:flask"
+      },
+      "peristaltic_cl_dosing": {
+        "default": "mdi:pump"
       },
       "peristaltic_orp_dosing": {
         "default": "mdi:pump"
