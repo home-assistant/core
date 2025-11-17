@@ -2899,7 +2899,6 @@ stookwijzer==1.6.1
 # homeassistant.components.streamlabswater
 streamlabswater==1.0.1
 
-# homeassistant.components.huawei_lte
 # homeassistant.components.traccar
 stringcase==1.2.0
 
