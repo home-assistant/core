@@ -133,7 +133,7 @@ adb-shell[async]==0.4.4
 adext==0.4.4
 
 # homeassistant.components.adguard
-adguardhome==0.7.0
+adguardhome==0.8.1
 
 # homeassistant.components.advantage_air
 advantage-air==0.4.4
@@ -473,7 +473,7 @@ anova-wifi==0.17.0
 anthemav==1.4.1
 
 # homeassistant.components.anthropic
-anthropic==0.69.0
+anthropic==0.73.0
 
 # homeassistant.components.mcp_server
 anyio==4.10.0
@@ -675,7 +675,7 @@ datadog==0.52.0
 datapoint==0.12.1
 
 # homeassistant.components.bluetooth
-dbus-fast==2.45.0
+dbus-fast==3.0.0
 
 # homeassistant.components.debugpy
 debugpy==1.8.16
@@ -686,6 +686,7 @@ deebot-client==16.3.0
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
 # homeassistant.components.ohmconnect
+# homeassistant.components.sonos
 defusedxml==0.7.1
 
 # homeassistant.components.deluge
@@ -943,7 +944,7 @@ google-genai==1.38.0
 google-maps-routing==0.6.15
 
 # homeassistant.components.nest
-google-nest-sdm==7.1.4
+google-nest-sdm==9.0.1
 
 # homeassistant.components.google_photos
 google-photos-library-api==0.12.1
@@ -1721,7 +1722,7 @@ pyhomeworks==1.1.2
 pyialarm==2.2.0
 
 # homeassistant.components.icloud
-pyicloud==2.1.0
+pyicloud==2.2.0
 
 # homeassistant.components.insteon
 pyinsteon==1.6.3
@@ -2451,7 +2452,7 @@ tessie-api==0.1.1
 thermobeacon-ble==0.10.0
 
 # homeassistant.components.thermopro
-thermopro-ble==0.13.1
+thermopro-ble==1.1.2
 
 # homeassistant.components.lg_thinq
 thinqconnect==1.0.8
