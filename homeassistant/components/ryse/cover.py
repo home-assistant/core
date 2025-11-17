@@ -25,7 +25,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up RYSE Smart Shade cover from a config entry."""
     device = RyseBLEDevice(entry.unique_id)
-    async_add_entities([RyseCoverEntity(device)])
+    async_add_entities([RyseCoverEntity(device, entry)])
 
 
 class RyseCoverEntity(CoverEntity):
@@ -33,21 +33,23 @@ class RyseCoverEntity(CoverEntity):
 
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_supported_features = (
+        CoverEntityFeature.OPEN
+        | CoverEntityFeature.CLOSE
+        | CoverEntityFeature.SET_POSITION
+    )
 
-    def __init__(self, device: RyseBLEDevice) -> None:
+    def __init__(self, device: RyseBLEDevice, config_entry: ConfigEntry) -> None:
         """Initialize the Smart Shade cover entity."""
         self._device = device
+        self._config_entry = config_entry
         self._attr_unique_id = f"{device.address}_cover"
         self._current_position: int | None = None
         self._attr_is_closed: bool | None = None
         self._device.update_callback = self._update_position
-
-    @property
-    def device_info(self) -> DeviceInfo | None:
-        """Return device information for Home Assistant device registry."""
-        return DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={("ryse", self._device.address)},
-            name=f"Smart Shade {self._device.address}",
+            name=config_entry.title,
             manufacturer="RYSE",
             model="SmartShade BLE",
             connections={("bluetooth", self._device.address)},
@@ -101,11 +103,6 @@ class RyseCoverEntity(CoverEntity):
             _LOGGER.exception("Unexpected error while reading device data")
 
     @property
-    def is_closed(self) -> bool | None:
-        """Return True if the shade is closed."""
-        return self._attr_is_closed
-
-    @property
     def current_cover_position(self) -> int | None:
         """Return current cover position."""
         if self._current_position is None:
@@ -116,10 +113,4 @@ class RyseCoverEntity(CoverEntity):
                 self._current_position,
             )
             return None
-        return int(self._current_position)
-
-    _attr_supported_features = (
-        CoverEntityFeature.OPEN
-        | CoverEntityFeature.CLOSE
-        | CoverEntityFeature.SET_POSITION
-    )
+        return self._current_position

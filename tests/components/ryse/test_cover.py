@@ -7,6 +7,18 @@ import pytest
 from homeassistant.components.cover import ATTR_POSITION, CoverEntityFeature
 from homeassistant.components.ryse.cover import RyseCoverEntity
 
+from tests.common import MockConfigEntry
+
+
+@pytest.fixture
+def mock_config_entry():
+    """Return a minimal mock ConfigEntry."""
+    entry = MockConfigEntry(
+        domain="ryse", title="Test Device", data={}, unique_id="AA:BB:CC:DD:EE:FF"
+    )
+    entry.add_to_hass = lambda hass: None  # Only needed in some tests
+    return entry
+
 
 @pytest.fixture
 def mock_device():
@@ -20,9 +32,9 @@ def mock_device():
 
 
 @pytest.mark.asyncio
-async def test_cover_properties(mock_device) -> None:
+async def test_cover_properties(mock_device, mock_config_entry) -> None:
     """Test properties of RyseCoverEntity."""
-    entity = RyseCoverEntity(mock_device)
+    entity = RyseCoverEntity(mock_device, mock_config_entry)
 
     info = entity.device_info
     assert info["manufacturer"] == "RYSE"
@@ -31,9 +43,9 @@ async def test_cover_properties(mock_device) -> None:
 
 
 @pytest.mark.asyncio
-async def test_update_position_valid(mock_device) -> None:
+async def test_update_position_valid(mock_device, mock_config_entry) -> None:
     """Test updating position calls HA state write."""
-    entity = RyseCoverEntity(mock_device)
+    entity = RyseCoverEntity(mock_device, mock_config_entry)
     entity.async_write_ha_state = AsyncMock()
 
     await entity._update_position(50)
@@ -42,12 +54,12 @@ async def test_update_position_valid(mock_device) -> None:
 
 
 @pytest.mark.asyncio
-async def test_async_open_close_and_set_cover(mock_device) -> None:
+async def test_async_open_close_and_set_cover(mock_device, mock_config_entry) -> None:
     """Test open, close and set cover methods."""
     mock_device.send_open = AsyncMock()
     mock_device.send_close = AsyncMock()
     mock_device.send_set_position = AsyncMock()
-    entity = RyseCoverEntity(mock_device)
+    entity = RyseCoverEntity(mock_device, mock_config_entry)
 
     await entity.async_open_cover()
     await entity.async_close_cover()
@@ -59,9 +71,9 @@ async def test_async_open_close_and_set_cover(mock_device) -> None:
 
 
 @pytest.mark.asyncio
-async def test_async_update_handles_exceptions(mock_device) -> None:
+async def test_async_update_handles_exceptions(mock_device, mock_config_entry) -> None:
     """Test BLE communication errors handled gracefully."""
-    entity = RyseCoverEntity(mock_device)
+    entity = RyseCoverEntity(mock_device, mock_config_entry)
     mock_device.client = None
     mock_device.pair = AsyncMock(return_value=False)
 
@@ -71,10 +83,10 @@ async def test_async_update_handles_exceptions(mock_device) -> None:
 
 @pytest.mark.asyncio
 async def test_current_cover_position_invalid(
-    mock_device, caplog: pytest.LogCaptureFixture
+    mock_device, caplog: pytest.LogCaptureFixture, mock_config_entry
 ) -> None:
     """Test invalid position returns None."""
-    entity = RyseCoverEntity(mock_device)
+    entity = RyseCoverEntity(mock_device, mock_config_entry)
     entity._current_position = 200
     mock_device.is_valid_position.return_value = False
 
