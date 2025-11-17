@@ -1,6 +1,7 @@
 """Support for LCN lights."""
 
 from collections.abc import Iterable
+from datetime import timedelta
 from functools import partial
 from typing import Any
 
@@ -33,6 +34,7 @@ from .helpers import InputType, LcnConfigEntry
 BRIGHTNESS_SCALE = (1, 100)
 
 PARALLEL_UPDATES = 0
+SCAN_INTERVAL = timedelta(minutes=1)
 
 
 def add_lcn_entities(
@@ -100,18 +102,6 @@ class LcnOutputLight(LcnEntity, LightEntity):
             self._attr_color_mode = ColorMode.ONOFF
         self._attr_supported_color_modes = {self._attr_color_mode}
 
-    async def async_added_to_hass(self) -> None:
-        """Run when entity about to be added to hass."""
-        await super().async_added_to_hass()
-        if not self.device_connection.is_group:
-            await self.device_connection.activate_status_request_handler(self.output)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Run when entity will be removed from hass."""
-        await super().async_will_remove_from_hass()
-        if not self.device_connection.is_group:
-            await self.device_connection.cancel_status_request_handler(self.output)
-
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         if ATTR_TRANSITION in kwargs:
@@ -157,6 +147,12 @@ class LcnOutputLight(LcnEntity, LightEntity):
             self._attr_is_on = False
             self.async_write_ha_state()
 
+    async def async_update(self) -> None:
+        """Update the state of the entity."""
+        await self.device_connection.request_status_output(
+            self.output, SCAN_INTERVAL.seconds
+        )
+
     def input_received(self, input_obj: InputType) -> None:
         """Set light state when LCN input object (command) is received."""
         if (
@@ -184,18 +180,6 @@ class LcnRelayLight(LcnEntity, LightEntity):
 
         self.output = pypck.lcn_defs.RelayPort[config[CONF_DOMAIN_DATA][CONF_OUTPUT]]
 
-    async def async_added_to_hass(self) -> None:
-        """Run when entity about to be added to hass."""
-        await super().async_added_to_hass()
-        if not self.device_connection.is_group:
-            await self.device_connection.activate_status_request_handler(self.output)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Run when entity will be removed from hass."""
-        await super().async_will_remove_from_hass()
-        if not self.device_connection.is_group:
-            await self.device_connection.cancel_status_request_handler(self.output)
-
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         states = [pypck.lcn_defs.RelayStateModifier.NOCHANGE] * 8
@@ -213,6 +197,10 @@ class LcnRelayLight(LcnEntity, LightEntity):
             return
         self._attr_is_on = False
         self.async_write_ha_state()
+
+    async def async_update(self) -> None:
+        """Update the state of the entity."""
+        await self.device_connection.request_status_relays(SCAN_INTERVAL.seconds)
 
     def input_received(self, input_obj: InputType) -> None:
         """Set light state when LCN input object (command) is received."""

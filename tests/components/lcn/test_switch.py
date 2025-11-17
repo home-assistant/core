@@ -93,8 +93,12 @@ async def test_output_turn_off(hass: HomeAssistant, entry: MockConfigEntry) -> N
     await init_integration(hass, entry)
 
     with patch.object(MockModuleConnection, "dim_output") as dim_output:
-        state = hass.states.get(SWITCH_OUTPUT1)
-        state.state = STATE_ON
+        await hass.services.async_call(
+            DOMAIN_SWITCH,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: SWITCH_OUTPUT1},
+            blocking=True,
+        )
 
         # command failed
         dim_output.return_value = False
@@ -176,8 +180,12 @@ async def test_relay_turn_off(hass: HomeAssistant, entry: MockConfigEntry) -> No
         states = [RelayStateModifier.NOCHANGE] * 8
         states[0] = RelayStateModifier.OFF
 
-        state = hass.states.get(SWITCH_RELAY1)
-        state.state = STATE_ON
+        await hass.services.async_call(
+            DOMAIN_SWITCH,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: SWITCH_RELAY1},
+            blocking=True,
+        )
 
         # command failed
         control_relays.return_value = False
@@ -257,8 +265,12 @@ async def test_regulatorlock_turn_off(
     await init_integration(hass, entry)
 
     with patch.object(MockModuleConnection, "lock_regulator") as lock_regulator:
-        state = hass.states.get(SWITCH_REGULATOR1)
-        state.state = STATE_ON
+        await hass.services.async_call(
+            DOMAIN_SWITCH,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: SWITCH_REGULATOR1},
+            blocking=True,
+        )
 
         # command failed
         lock_regulator.return_value = False
@@ -340,8 +352,12 @@ async def test_keylock_turn_off(hass: HomeAssistant, entry: MockConfigEntry) -> 
         states = [KeyLockStateModifier.NOCHANGE] * 8
         states[0] = KeyLockStateModifier.OFF
 
-        state = hass.states.get(SWITCH_KEYLOCKK1)
-        state.state = STATE_ON
+        await hass.services.async_call(
+            DOMAIN_SWITCH,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: SWITCH_KEYLOCKK1},
+            blocking=True,
+        )
 
         # command failed
         lock_keys.return_value = False

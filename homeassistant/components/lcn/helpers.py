@@ -251,13 +251,19 @@ async def async_update_device_config(
     """Fill missing values in device_config with infos from LCN bus."""
     # fetch serial info if device is module
     if not (is_group := device_config[CONF_ADDRESS][2]):  # is module
-        await device_connection.serial_known
+        await device_connection.serials_known()
         if device_config[CONF_HARDWARE_SERIAL] == -1:
-            device_config[CONF_HARDWARE_SERIAL] = device_connection.hardware_serial
+            device_config[CONF_HARDWARE_SERIAL] = (
+                device_connection.serials.hardware_serial
+            )
         if device_config[CONF_SOFTWARE_SERIAL] == -1:
-            device_config[CONF_SOFTWARE_SERIAL] = device_connection.software_serial
+            device_config[CONF_SOFTWARE_SERIAL] = (
+                device_connection.serials.software_serial
+            )
         if device_config[CONF_HARDWARE_TYPE] == -1:
-            device_config[CONF_HARDWARE_TYPE] = device_connection.hardware_type.value
+            device_config[CONF_HARDWARE_TYPE] = (
+                device_connection.serials.hardware_type.value
+            )
 
     # fetch name if device is module
     if device_config[CONF_NAME] != "":
