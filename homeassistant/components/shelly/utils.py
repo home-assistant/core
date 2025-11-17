@@ -397,11 +397,6 @@ def get_rpc_key(value: str) -> tuple[bool, str, str]:
     return len(parts) > 1, parts[0], parts[-1]
 
 
-def get_rpc_key_id(value: str) -> int:
-    """Get id from device key."""
-    return int(get_rpc_key(value)[-1])
-
-
 def get_rpc_custom_name(device: RpcDevice, key: str) -> str | None:
     """Get component name from device config."""
     if (
