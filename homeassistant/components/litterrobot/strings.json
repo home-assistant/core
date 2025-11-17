@@ -115,6 +115,9 @@
       "last_seen": {
         "name": "Last seen"
       },
+      "last_whisker_api_update": {
+        "name": "Last Whisker API update"
+      },
       "litter_level": {
         "name": "Litter level"
       },
