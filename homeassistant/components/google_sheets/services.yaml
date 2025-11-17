@@ -9,6 +9,11 @@ append_sheet:
       example: "Sheet1"
       selector:
         text:
+    add_created_column:
+      required: false
+      default: true
+      selector:
+        boolean:
     data:
       required: true
       example: '{"hello": world, "cool": True, "count": 5}'
