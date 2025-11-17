@@ -620,8 +620,8 @@ async def test_rpc_sleeping_sensor_with_channel_name(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC online sleeping sensor with channel name."""
-    name = "test temperature_0"
-    suffix = "test_name_test_temperature_0_temperature"
+    name = "test channel name"
+    suffix = "test_name_test_channel_name_temperature"
     entity_id = f"{SENSOR_DOMAIN}.{suffix}"
     monkeypatch.setitem(
         mock_rpc_device.config, "temperature:0", {"id": 0, "name": name}
