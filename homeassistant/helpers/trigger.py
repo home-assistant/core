@@ -275,7 +275,6 @@ class EntityTriggerBase(Trigger):
 
     _domain: str
     _schema: vol.Schema = ENTITY_STATE_TRIGGER_SCHEMA
-    _to_state: str
 
     @override
     @classmethod
@@ -388,6 +387,8 @@ class EntityTriggerBase(Trigger):
 class EntityStateTriggerBase(EntityTriggerBase):
     """Trigger for entity state changes."""
 
+    _to_state: str
+
     def is_state_same(self, from_state: State, to_state: State) -> bool:
         """Check if the old and new states are considered the same."""
         return from_state.state == to_state.state
@@ -401,6 +402,7 @@ class EntityStateAttributeTriggerBase(EntityTriggerBase):
     """Trigger for entity state attribute changes."""
 
     _attribute: str
+    _attribute_to_state: str
 
     def is_state_same(self, from_state: State, to_state: State) -> bool:
         """Check if the old and new states are considered the same."""
@@ -410,7 +412,7 @@ class EntityStateAttributeTriggerBase(EntityTriggerBase):
 
     def is_state_to_state(self, state: State) -> bool:
         """Check if the state matches the target state."""
-        return state.attributes.get(self._attribute) == self._to_state
+        return state.attributes.get(self._attribute) == self._attribute_to_state
 
 
 def make_entity_state_trigger(
@@ -436,8 +438,8 @@ def make_entity_state_attribute_trigger(
         """Trigger for entity state changes."""
 
         _domain = domain
-        _to_state = to_state
         _attribute = attribute
+        _attribute_to_state = to_state
 
     return CustomTrigger
 
