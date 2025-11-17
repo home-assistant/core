@@ -2,7 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "cannot_connect": "[%key:common::config_flow::abort::cannot_connect%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "missing_credentials": "Add Tibber Data API application credentials under application credentials before continuing. See {application_credentials_url} for guidance and {data_api_url} for API documentation.",
       "oauth_invalid_token": "[%key:common::config_flow::abort::oauth2_error%]",
