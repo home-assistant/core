@@ -22,12 +22,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
-from .models import (
-    DPCodeBooleanWrapper,
-    DPCodeEnumWrapper,
-    DPCodeIntegerWrapper,
-    DPCodeWrapper,
-)
+from .models import DPCodeBooleanWrapper, DPCodeEnumWrapper, DPCodeIntegerWrapper
 from .util import get_dpcode
 
 
@@ -78,8 +73,8 @@ class _ControlBackModePercentageMappingWrapper(_DPCodePercentageMappingWrapper):
         return device.status.get(DPCode.CONTROL_BACK_MODE) != "back"
 
 
-class _InstructionWrapper(DPCodeWrapper):
-    """Default wrapper for open/close/stop instructions."""
+class _InstructionWrapper:
+    """Default wrapper for sending open/close/stop instructions."""
 
     def get_open_command(self, device: CustomerDevice) -> dict[str, Any] | None:
         return None
@@ -92,7 +87,7 @@ class _InstructionWrapper(DPCodeWrapper):
 
 
 class _InstructionBooleanWrapper(DPCodeBooleanWrapper, _InstructionWrapper):
-    """Wrapper for boolean open/close instructions."""
+    """Wrapper for boolean-based open/close instructions."""
 
     def get_open_command(self, device: CustomerDevice) -> dict[str, Any] | None:
         return {"code": self.dpcode, "value": True}
@@ -102,7 +97,7 @@ class _InstructionBooleanWrapper(DPCodeBooleanWrapper, _InstructionWrapper):
 
 
 class _InstructionEnumWrapper(DPCodeEnumWrapper, _InstructionWrapper):
-    """Default wrapper for open/close/stop instructions."""
+    """Wrapper for enum-based open/close/stop instructions."""
 
     open_instruction = "open"
     close_instruction = "close"
@@ -125,7 +120,7 @@ class _InstructionEnumWrapper(DPCodeEnumWrapper, _InstructionWrapper):
 
 
 class _SpecialInstructionEnumWrapper(_InstructionEnumWrapper):
-    """Default wrapper for open/close/stop instructions."""
+    """Wrapper for enum-based instructions with special values (FZ/ZZ/STOP)."""
 
     open_instruction = "FZ"
     close_instruction = "ZZ"

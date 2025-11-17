@@ -67,7 +67,7 @@ class TuyaEntity(Entity):
         self.device_manager.send_commands(self.device.id, commands)
 
     async def _async_send_commands(self, commands: list[dict[str, Any]]) -> None:
-        """Send command to the device."""
+        """Send a list of commands to the device."""
         await self.hass.async_add_executor_job(self._send_command, commands)
 
     def _read_wrapper(self, dpcode_wrapper: DPCodeWrapper | None) -> Any | None:
