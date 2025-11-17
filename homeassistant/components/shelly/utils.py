@@ -403,7 +403,7 @@ def get_rpc_key_id(value: str) -> int:
 
 
 def get_rpc_custom_name(device: RpcDevice, key: str) -> str | None:
-    """Get component name from device config."""
+    """Get custom name from device config."""
     if (
         key in device.config
         and key != "em:0"  # workaround for Pro 3EM, we don't want to get name for em:0
