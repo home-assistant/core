@@ -66,7 +66,14 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
 
     @cached_property
     def name(self) -> str | UndefinedType | None:
-        """Return the name of the entity."""
+        """Return the name of the entity.
+
+        Built-in quirks have translations in HA, so those are used.
+        Custom quirks with new translation keys won't have translations.
+        For them, the fallback name should be used instead.
+        If a device class is set but no translation key,
+        the device class name is used.
+        """
         meta = self.entity_data.entity.info_object
         if meta.primary:
             self._attr_name = None
