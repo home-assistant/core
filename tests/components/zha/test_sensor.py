@@ -640,12 +640,12 @@ async def test_sensor_name(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
     zigpy_device_mock: Callable[..., Device],
-    translation_key,
-    fallback_name,
-    device_class,
-    unit,
-    entity_id_suffix,
-    expected_friendly_name_suffix,
+    translation_key: str | None,
+    fallback_name: str,
+    device_class: SensorDeviceClass | None,
+    unit: str | None,
+    entity_id_suffix: str,
+    expected_friendly_name_suffix: str,
 ) -> None:
     """Test ZHA entity name generation.
 
