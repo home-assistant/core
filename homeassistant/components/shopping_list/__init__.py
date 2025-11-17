@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from http import HTTPStatus
+import json
 import logging
+from pathlib import Path
 from typing import Any, cast
 import uuid
 
@@ -20,13 +22,17 @@ from homeassistant.core import Context, HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import save_json
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.json import JsonValueType, load_json_array
+from homeassistant.util.json import JsonValueType
 
 from .const import (
+    ATTR_CATEGORY,
+    ATTR_QUANTITY,
     ATTR_REVERSE,
+    ATTR_UNIT,
     DEFAULT_REVERSE,
     DOMAIN,
     EVENT_SHOPPING_LIST_UPDATED,
+    SERVICE_ADD_CATEGORY,
     SERVICE_ADD_ITEM,
     SERVICE_CLEAR_COMPLETED_ITEMS,
     SERVICE_COMPLETE_ALL,
@@ -41,12 +47,53 @@ PLATFORMS = [Platform.TODO]
 
 ATTR_COMPLETE = "complete"
 
+UNIT_LITERS = "liters"
+UNIT_KG = "kg"
+UNIT_PIECES = "pieces"
+UNIT_GRAMS = "grams"
+UNIT_NONE: str | None = None
+
+VALID_UNITS = [UNIT_LITERS, UNIT_KG, UNIT_PIECES, UNIT_GRAMS, UNIT_NONE]
+
 _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = vol.Schema({DOMAIN: {}}, extra=vol.ALLOW_EXTRA)
-ITEM_UPDATE_SCHEMA = vol.Schema({ATTR_COMPLETE: bool, ATTR_NAME: str})
+# ITEM_UPDATE_SCHEMA = vol.Schema({ATTR_COMPLETE: bool, ATTR_NAME: str})
+ITEM_UPDATE_SCHEMA = vol.Schema(
+    {
+        ATTR_COMPLETE: bool,
+        ATTR_NAME: str,
+        vol.Optional(ATTR_CATEGORY): vol.Any(str, None),
+        vol.Optional(ATTR_QUANTITY): vol.Any(int, float, None),
+        vol.Optional(ATTR_UNIT): vol.Any(vol.In(VALID_UNITS), None),
+    }
+)
 PERSISTENCE = ".shopping_list.json"
 
+# Add this constant after the existing imports
+PREDEFINED_CATEGORIES = [
+    "Drink",
+    "Fruit & Vegetables",
+    "Meat",
+    "Fish",
+    "Cleaning",
+    "Dairy",
+    "Bakery",
+    "Frozen",
+    "Pantry",
+    "Snacks",
+    "Other",
+]
+
+
 SERVICE_ITEM_SCHEMA = vol.Schema({vol.Required(ATTR_NAME): cv.string})
+SERVICE_ADD_ITEM_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_NAME): cv.string,
+        vol.Optional(ATTR_CATEGORY): cv.string,
+        vol.Optional(ATTR_QUANTITY): vol.Any(int, float),
+        vol.Optional(ATTR_UNIT): vol.In(VALID_UNITS),
+    }
+)
 SERVICE_LIST_SCHEMA = vol.Schema({})
 SERVICE_SORT_SCHEMA = vol.Schema(
     {vol.Optional(ATTR_REVERSE, default=DEFAULT_REVERSE): bool}
@@ -74,7 +121,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     async def add_item_service(call: ServiceCall) -> None:
         """Add an item with `name`."""
         data = hass.data[DOMAIN]
-        await data.async_add(call.data[ATTR_NAME])
+        name = call.data[ATTR_NAME]
+        category = call.data.get(ATTR_CATEGORY)
+        quantity = call.data.get(ATTR_QUANTITY)
+        unit = call.data.get(ATTR_UNIT)
+        await data.async_add(name, category=category, quantity=quantity, unit=unit)
 
     async def remove_item_service(call: ServiceCall) -> None:
         """Remove the first item with matching `name`."""
@@ -125,11 +176,17 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         """Sort all items by name."""
         await data.async_sort(call.data[ATTR_REVERSE])
 
+    async def add_category_service(call: ServiceCall) -> None:
+        """Add a new category."""
+        name = call.data.get(ATTR_NAME)
+        if name and not await data.async_add_category(name):
+            _LOGGER.error("Failed to add category '%s' (may already exist)", name)
+
     data = hass.data[DOMAIN] = ShoppingData(hass)
     await data.async_load()
 
     hass.services.async_register(
-        DOMAIN, SERVICE_ADD_ITEM, add_item_service, schema=SERVICE_ITEM_SCHEMA
+        DOMAIN, SERVICE_ADD_ITEM, add_item_service, schema=SERVICE_ADD_ITEM_SCHEMA
     )
     hass.services.async_register(
         DOMAIN, SERVICE_REMOVE_ITEM, remove_item_service, schema=SERVICE_ITEM_SCHEMA
@@ -167,6 +224,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         sort_list_service,
         schema=SERVICE_SORT_SCHEMA,
     )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_ADD_CATEGORY,
+        add_category_service,
+        schema=SERVICE_ITEM_SCHEMA,
+    )
 
     hass.http.register_view(ShoppingListView)
     hass.http.register_view(CreateShoppingListItemView)
@@ -179,6 +242,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     websocket_api.async_register_command(hass, websocket_handle_update)
     websocket_api.async_register_command(hass, websocket_handle_clear)
     websocket_api.async_register_command(hass, websocket_handle_reorder)
+    websocket_api.async_register_command(hass, websocket_handle_categories_list)
+    websocket_api.async_register_command(hass, websocket_handle_categories_add)
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
@@ -196,16 +261,30 @@ class ShoppingData:
         """Initialize the shopping list."""
         self.hass = hass
         self.items: list[dict[str, JsonValueType]] = []
+        self.categories: list[str] = PREDEFINED_CATEGORIES.copy()
         self._listeners: list[Callable[[], None]] = []
 
     async def async_add(
-        self, name: str | None, complete: bool = False, context: Context | None = None
+        self,
+        name: str | None,
+        complete: bool = False,
+        context: Context | None = None,
+        category: str | None = None,
+        quantity: float | None = None,
+        unit: str | None = None,
     ) -> dict[str, JsonValueType]:
         """Add a shopping list item."""
+        if unit is not None and unit not in VALID_UNITS:
+            _LOGGER.error("Invalid unit '%s'. Must be one of: %s", unit, VALID_UNITS)
+            unit = None
+
         item: dict[str, JsonValueType] = {
             "name": name,
             "id": uuid.uuid4().hex,
             "complete": complete,
+            "category": category,
+            "quantity": quantity,
+            "unit": unit,
         }
         self.items.append(item)
         await self.hass.async_add_executor_job(self.save)
@@ -287,6 +366,18 @@ class ShoppingData:
 
         if item is None:
             raise NoMatchingShoppingListItem
+
+        if "category" in info and info["category"] is not None:
+            if info["category"] not in self.categories:
+                _LOGGER.error("Category '%s' does not exist", info["category"])
+                raise NoMatchingShoppingListItem
+
+        if "unit" in info and info["unit"] is not None:
+            if info["unit"] not in VALID_UNITS:
+                _LOGGER.error(
+                    "Invalid unit '%s'. Must be one of: %s", info["unit"], VALID_UNITS
+                )
+                raise NoMatchingShoppingListItem
 
         info = ITEM_UPDATE_SCHEMA(info)
         item.update(info)
@@ -396,21 +487,79 @@ class ShoppingData:
             context=context,
         )
 
+    async def async_add_category(self, name: str) -> bool:
+        """Add a new category."""
+        # Validate and normalize
+        name = name.strip()
+
+        if not name:
+            _LOGGER.error("Category name cannot be empty")
+            return False
+
+        if len(name) > 50:
+            _LOGGER.error("Category name too long (max 50 characters)")
+            return False
+
+        # Check for duplicates (case-insensitive)
+        if any(cat.lower() == name.lower() for cat in self.categories):
+            _LOGGER.error("Category '%s' already exists", name)
+            return False
+
+        self.categories.append(name)
+        await self.hass.async_add_executor_job(self.save)
+        return True
+
+    def get_categories(self) -> list[dict[str, str | bool]]:
+        """Get all categories with metadata."""
+        return [
+            {"name": cat, "predefined": cat in PREDEFINED_CATEGORIES}
+            for cat in self.categories
+        ]
+
     async def async_load(self) -> None:
         """Load items."""
 
-        def load() -> list[dict[str, JsonValueType]]:
+        def load() -> dict[str, Any]:
             """Load the items synchronously."""
-            return cast(
-                list[dict[str, JsonValueType]],
-                load_json_array(self.hass.config.path(PERSISTENCE)),
-            )
+            file_path = Path(self.hass.config.path(PERSISTENCE))
 
-        self.items = await self.hass.async_add_executor_job(load)
+            if not file_path.exists():
+                return {"items": [], "categories": PREDEFINED_CATEGORIES.copy()}
+
+            try:
+                with open(file_path, encoding="utf-8") as file:
+                    data = json.load(file)
+
+                if isinstance(data, list):
+                    return {"items": data, "categories": PREDEFINED_CATEGORIES.copy()}
+                if isinstance(data, dict):
+                    return data
+                return {"items": [], "categories": PREDEFINED_CATEGORIES.copy()}
+
+            except (json.JSONDecodeError, OSError):
+                _LOGGER.exception("Error loading shopping list")
+                return {"items": [], "categories": PREDEFINED_CATEGORIES.copy()}
+
+        data = await self.hass.async_add_executor_job(load)
+
+        self.items = cast(list[dict[str, JsonValueType]], data.get("items", []))
+        self.categories = data.get("categories", PREDEFINED_CATEGORIES.copy())
+
+        # Ensure all items have required fields
+        for item in self.items:
+            if "category" not in item:
+                item["category"] = None
+            if "quantity" not in item:
+                item["quantity"] = None
+            if "unit" not in item:
+                item["unit"] = None
 
     def save(self) -> None:
         """Save the items."""
-        save_json(self.hass.config.path(PERSISTENCE), self.items)
+        save_json(
+            self.hass.config.path(PERSISTENCE),
+            {"items": self.items, "categories": self.categories},
+        )
 
     def async_add_listener(self, cb: Callable[[], None]) -> Callable[[], None]:
         """Add a listener to notify when data is updated."""
@@ -500,7 +649,13 @@ def websocket_handle_items(
 
 
 @websocket_api.websocket_command(
-    {vol.Required("type"): "shopping_list/items/add", vol.Required("name"): str}
+    {
+        vol.Required("type"): "shopping_list/items/add",
+        vol.Required("name"): str,
+        vol.Required("category"): vol.Any(str, None),
+        vol.Optional("quantity"): vol.Any(float, None),
+        vol.Optional("unit"): vol.In(VALID_UNITS),
+    }
 )
 @websocket_api.async_response
 async def websocket_handle_add(
@@ -509,8 +664,29 @@ async def websocket_handle_add(
     msg: dict[str, Any],
 ) -> None:
     """Handle adding item to shopping_list."""
-    item = await hass.data[DOMAIN].async_add(
-        msg["name"], context=connection.context(msg)
+    data = hass.data[DOMAIN]
+    category = msg.get("category")
+    quantity = msg.get("quantity")
+    unit = msg.get("unit")
+
+    if category and category not in data.categories:
+        connection.send_error(
+            msg["id"], "invalid_category", f"Category '{category}' does not exist"
+        )
+        return
+
+    if unit and unit not in VALID_UNITS:
+        connection.send_error(
+            msg["id"], "invalid_unit", f"Unit must be one of: {VALID_UNITS}"
+        )
+        return
+
+    item = await data.async_add(
+        msg["name"],
+        context=connection.context(msg),
+        category=category,
+        quantity=quantity,
+        unit=unit,
     )
     connection.send_message(websocket_api.result_message(msg["id"], item))
 
@@ -546,6 +722,9 @@ async def websocket_handle_remove(
         vol.Required("item_id"): str,
         vol.Optional("name"): str,
         vol.Optional("complete"): bool,
+        vol.Optional("category"): vol.Any(str, None),
+        vol.Optional("quantity"): vol.Any(int, float, None),
+        vol.Optional("unit"): vol.In(VALID_UNITS),
     }
 )
 @websocket_api.async_response
@@ -612,3 +791,41 @@ def websocket_handle_reorder(
         return
 
     connection.send_result(msg_id)
+
+
+@callback
+@websocket_api.websocket_command(
+    {vol.Required("type"): "shopping_list/categories/list"}
+)
+def websocket_handle_categories_list(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Handle get shopping list categories."""
+    connection.send_result(msg["id"], hass.data[DOMAIN].get_categories())
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "shopping_list/categories/add",
+        vol.Required("name"): str,
+    }
+)
+@websocket_api.async_response
+async def websocket_handle_categories_add(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Handle adding category to shopping list."""
+    data = hass.data[DOMAIN]
+    success = await data.async_add_category(msg["name"])
+
+    if not success:
+        connection.send_error(
+            msg["id"], "invalid_category", "Category already exists or invalid name"
+        )
+        return
+
+    connection.send_result(msg["id"], {"categories": data.get_categories()})

@@ -1,8 +1,33 @@
 add_item:
+  target: {}
   fields:
     name:
       required: true
-      example: Beer
+      example: "Milk"
+      selector:
+        text:
+    quantity:
+      required: false
+      example: 2
+      selector:
+        number:
+          min: 0.1
+          step: 0.1
+          mode: box
+    unit:
+      required: false
+      example: "liters"
+      selector:
+        select:
+          options:
+            - "liters"
+            - "kg"
+            - "pieces"
+            - "grams"
+          custom_value: true
+    category:
+      required: false
+      example: "Dairy"
       selector:
         text:
 
@@ -39,3 +64,12 @@ sort:
       default: false
       selector:
         boolean:
+
+add_category:
+  target: {}
+  fields:
+    name:
+      required: true
+      example: "Snacks"
+      selector:
+        text:

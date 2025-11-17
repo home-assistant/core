@@ -17,8 +17,20 @@
       "description": "Adds an item to the shopping list.",
       "fields": {
         "name": {
-          "name": "[%key:common::config_flow::data::name%]",
+          "name": "Name",
           "description": "The name of the item to add."
+        },
+        "quantity": {
+          "name": "Quantity",
+          "description": "The quantity of the item."
+        },
+        "unit": {
+          "name": "Unit",
+          "description": "The unit of measurement."
+        },
+        "category": {
+          "name": "Category",
+          "description": "The category for this item."
         }
       }
     },
@@ -71,6 +83,16 @@
         "reverse": {
           "name": "Sort reverse",
           "description": "Whether to sort in reverse (descending) order."
+        }
+      }
+    },
+    "add_category": {
+      "name": "Add category",
+      "description": "Adds a new custom category to the shopping list.",
+      "fields": {
+        "name": {
+          "name": "Name",
+          "description": "The name of the category to add."
         }
       }
     }

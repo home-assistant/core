@@ -10,6 +10,9 @@
     "add_item": {
       "service": "mdi:cart-plus"
     },
+    "add_category": {
+      "service": "mdi:cart-plus"
+    },
     "remove_item": {
       "service": "mdi:cart-remove"
     },

@@ -6,6 +6,7 @@ DOMAIN = "shopping_list"
 
 
 ATTR_REVERSE = "reverse"
+ATTR_CATEGORY = "category"
 
 DEFAULT_REVERSE = False
 
@@ -17,3 +18,6 @@ SERVICE_COMPLETE_ALL = "complete_all"
 SERVICE_INCOMPLETE_ALL = "incomplete_all"
 SERVICE_CLEAR_COMPLETED_ITEMS = "clear_completed_items"
 SERVICE_SORT = "sort"
+SERVICE_ADD_CATEGORY = "add_category"
+ATTR_QUANTITY = "quantity"
+ATTR_UNIT = "unit"
