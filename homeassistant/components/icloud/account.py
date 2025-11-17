@@ -126,13 +126,26 @@ class IcloudAccount:
 
         try:
             # Gets device owners infos
-            user_info = self.api.devices.user_info
+            # pyicloud returns devices as a dict, not an object with attributes
+            devices_data = self.api.devices
+            if not isinstance(devices_data, dict):
+                raise ConfigEntryNotReady("iCloud devices response is not a dictionary")
+            user_info = devices_data.get("userInfo")
+            if user_info is None:
+                raise ConfigEntryNotReady(
+                    "No user info found in iCloud devices response"
+                )
         except (
             PyiCloudServiceNotActivatedException,
             PyiCloudNoDevicesException,
         ) as err:
             _LOGGER.error("No iCloud device found")
             raise ConfigEntryNotReady from err
+        except (AttributeError, KeyError, TypeError) as err:
+            _LOGGER.error("ICloud devices response has unexpected structure: %s", err)
+            raise ConfigEntryNotReady(
+                "iCloud devices response has unexpected structure"
+            ) from err
 
         self._owner_fullname = f"{user_info['firstName']} {user_info['lastName']}"
 
