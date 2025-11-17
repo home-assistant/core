@@ -56,6 +56,9 @@
       "init": {
         "data": {
           "language_code": "Language code"
+        },
+        "data_description": {
+          "language_code": "Language for the Google Assistant SDK requests and responses."
         }
       }
     }
