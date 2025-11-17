@@ -5,12 +5,11 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 import base64
 from dataclasses import dataclass
-import json
-from typing import Any, Literal, Self, overload
+from typing import Any, Literal, Self, cast, overload
 
 from tuya_sharing import CustomerDevice
 
-from homeassistant.util.json import json_loads
+from homeassistant.util.json import json_loads, json_loads_object
 
 from .const import DPCode, DPType
 from .util import parse_dptype, remap_value
@@ -37,10 +36,9 @@ class IntegerTypeData(TypeInformation):
 
     min: int
     max: int
-    scale: float
-    step: float
+    scale: int
+    step: int
     unit: str | None = None
-    type: str | None = None
 
     @property
     def max_scaled(self) -> float:
@@ -57,13 +55,13 @@ class IntegerTypeData(TypeInformation):
         """Return the step scaled."""
         return self.step / (10**self.scale)
 
-    def scale_value(self, value: float) -> float:
+    def scale_value(self, value: int) -> float:
         """Scale a value."""
         return value / (10**self.scale)
 
     def scale_value_back(self, value: float) -> int:
         """Return raw value for scaled."""
-        return int(value * (10**self.scale))
+        return round(value * (10**self.scale))
 
     def remap_value_to(
         self,
@@ -88,17 +86,16 @@ class IntegerTypeData(TypeInformation):
     @classmethod
     def from_json(cls, dpcode: DPCode, data: str) -> Self | None:
         """Load JSON string and return a IntegerTypeData object."""
-        if not (parsed := json.loads(data)):
+        if not (parsed := cast(dict[str, Any] | None, json_loads_object(data))):
             return None
 
         return cls(
             dpcode,
             min=int(parsed["min"]),
             max=int(parsed["max"]),
-            scale=float(parsed["scale"]),
-            step=max(float(parsed["step"]), 1),
+            scale=int(parsed["scale"]),
+            step=int(parsed["step"]),
             unit=parsed.get("unit"),
-            type=parsed.get("type"),
         )
 
 
@@ -111,9 +108,9 @@ class BitmapTypeInformation(TypeInformation):
     @classmethod
     def from_json(cls, dpcode: DPCode, data: str) -> Self | None:
         """Load JSON string and return a BitmapTypeInformation object."""
-        if not (parsed := json.loads(data)):
+        if not (parsed := json_loads_object(data)):
             return None
-        return cls(dpcode, **parsed)
+        return cls(dpcode, **cast(dict[str, list[str]], parsed))
 
 
 @dataclass
@@ -125,9 +122,9 @@ class EnumTypeData(TypeInformation):
     @classmethod
     def from_json(cls, dpcode: DPCode, data: str) -> Self | None:
         """Load JSON string and return a EnumTypeData object."""
-        if not (parsed := json.loads(data)):
+        if not (parsed := json_loads_object(data)):
             return None
-        return cls(dpcode, **parsed)
+        return cls(dpcode, **cast(dict[str, list[str]], parsed))
 
 
 _TYPE_INFORMATION_MAPPINGS: dict[DPType, type[TypeInformation]] = {
