@@ -33,8 +33,10 @@ from .utils import (
     get_block_channel,
     get_block_custom_name,
     get_device_entry_gen,
-    get_rpc_component_name,
+    get_rpc_custom_name,
     get_rpc_entity_name,
+    get_rpc_key,
+    get_rpc_key_id,
     get_rpc_key_instances,
     is_block_momentary_input,
     is_rpc_momentary_input,
@@ -158,7 +160,7 @@ def _async_setup_rpc_entry(
         if script_name == BLE_SCRIPT_NAME:
             continue
 
-        script_id = int(script.split(":")[-1])
+        script_id = get_rpc_key_id(script)
         if script_events and (event_types := script_events[script_id]):
             entities.append(ShellyRpcScriptEvent(coordinator, script, event_types))
 
@@ -237,22 +239,22 @@ class ShellyRpcEvent(CoordinatorEntity[ShellyRpcCoordinator], EventEntity):
     ) -> None:
         """Initialize Shelly entity."""
         super().__init__(coordinator)
-        self.event_id = int(key.split(":")[-1])
         self._attr_device_info = get_entity_rpc_device_info(coordinator, key)
         self._attr_unique_id = f"{coordinator.mac}-{key}"
         self.entity_description = description
 
         if description.key == "input":
-            component = key.split(":")[0]
-            component_id = key.split(":")[-1]
-            if not get_rpc_component_name(coordinator.device, key) and (
+            _, component, component_id = get_rpc_key(key)
+            if not get_rpc_custom_name(coordinator.device, key) and (
                 component.lower() == "input" and component_id.isnumeric()
             ):
                 self._attr_translation_placeholders = {"input_number": component_id}
             else:
                 self._attr_name = get_rpc_entity_name(coordinator.device, key)
+            self.event_id = int(component_id)
         elif description.key == "script":
             self._attr_name = get_rpc_entity_name(coordinator.device, key)
+            self.event_id = get_rpc_key_id(key)
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
