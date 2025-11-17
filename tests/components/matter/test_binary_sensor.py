@@ -417,7 +417,7 @@ async def test_thermostat_occupancy(
 
 
 @pytest.mark.parametrize("node_fixture", ["eve_shutter"])
-async def test_shutter(
+async def test_shutter_problem(
     hass: HomeAssistant,
     matter_client: MagicMock,
     matter_node: MatterNode,
