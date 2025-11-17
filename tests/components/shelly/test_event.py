@@ -1,6 +1,6 @@
 """Tests for Shelly button platform."""
 
-import copy
+from copy import deepcopy
 from unittest.mock import Mock
 
 from aioshelly.ble.const import BLE_SCRIPT_NAME
@@ -233,7 +233,7 @@ async def test_block_event_shix3_1(
     hass: HomeAssistant, mock_block_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test block device event for SHIX3-1."""
-    blocks = copy.deepcopy(MOCK_BLOCKS)
+    blocks = deepcopy(MOCK_BLOCKS)
     blocks[0] = Mock(
         sensor_ids={
             "inputEvent": "S",
