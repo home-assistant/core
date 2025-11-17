@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
 from typing import Any, Final
 
@@ -19,11 +20,12 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import DOMAIN, UPDATE_INTERVAL
+from .const import DOMAIN
 from .device import ptdevices_get_data
 
 _LOGGER = logging.getLogger(__name__)
-REFRESH_COOLDOWN: Final = 10
+REFRESH_COOLDOWN: Final = 30
+UPDATE_INTERVAL = timedelta(seconds=60)
 
 type PTDevicesConfigEntry = ConfigEntry[PTDevicesCoordinator]
 
