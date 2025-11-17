@@ -79,21 +79,24 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
             self._attr_name = None
             return super().name
 
-        # if we have a translation key or no (device class) name,
-        # use translation or fallback name
-        if meta.translation_key is not None or super().name in (UNDEFINED, None):
-            # if we have a translation for this key, use it
-            if (
-                (translation_key := self._name_translation_key) is not None
-                and translation_key in self.platform_data.platform_translations
-            ):
-                return super().name
-            # a translation won't be available for custom quirks, so use fallback_name
-            if meta.fallback_name is not None:
-                self._attr_name = meta.fallback_name
-                return super().name
+        # If we do not have a fallback_name, use default behavior
+        if meta.fallback_name is None:
+            return super().name
 
-        # we should only reach this for the device class name at this point
+        # If we do not have a translation key, only use fallback_name
+        # if device class is also missing
+        if meta.translation_key is None:
+            if super().name in (UNDEFINED, None):
+                self._attr_name = meta.fallback_name
+            return super().name
+
+        # If we do have a translation key, only use fallback_name
+        # if translation is missing (custom quirks)
+        if not (
+            (translation_key := self._name_translation_key) is not None
+            and translation_key in self.platform_data.platform_translations
+        ):
+            self._attr_name = meta.fallback_name
         return super().name
 
     @property
