@@ -227,8 +227,6 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         # Extra state attributes:
         # Beolink: peer(s), listener(s), leader and self
         self._beolink_attributes: dict[str, dict[str, dict[str, str]]] = {}
-        # Media ID: Currently playing Deezer, Tidal and radio station IDs
-        self._media_id_attribute: str | None = None
 
     async def async_added_to_hass(self) -> None:
         """Turn on the dispatchers."""
@@ -373,9 +371,6 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
     ) -> None:
         """Update _playback_metadata and related."""
         self._playback_metadata = data
-
-        # Update media id attribute
-        self._media_id_attribute = data.source_internal_id
 
         # Update current artwork and remote_leader.
         self._media_image = get_highest_resolution_artwork(self._playback_metadata)
@@ -632,11 +627,18 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         return None
 
     @property
-    def media_content_type(self) -> str:
+    def media_content_type(self) -> MediaType | str | None:
         """Return the current media type."""
-        # Hard to determine content type
-        if self._source_change.id == BangOlufsenSource.URI_STREAMER.id:
-            return MediaType.URL
+        content_type = {
+            BangOlufsenSource.URI_STREAMER.id: MediaType.URL,
+            BangOlufsenSource.DEEZER.id: BangOlufsenMediaType.DEEZER,
+            BangOlufsenSource.TIDAL.id: BangOlufsenMediaType.TIDAL,
+            BangOlufsenSource.NET_RADIO.id: BangOlufsenMediaType.RADIO,
+        }
+        # Hard to determine content type.
+        if self._source_change.id in content_type:
+            return content_type[self._source_change.id]
+
         return MediaType.MUSIC
 
     @property
@@ -648,6 +650,11 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
     def media_position(self) -> int | None:
         """Return the current playback progress."""
         return self._playback_progress.progress
+
+    @property
+    def media_content_id(self) -> str | None:
+        """Return internal ID of Deezer, Tidal and radio stations."""
+        return self._playback_metadata.source_internal_id
 
     @property
     def media_image_url(self) -> str | None:
@@ -693,10 +700,6 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return information that is not returned anywhere else."""
         attributes: dict[str, Any] = {}
-
-        # Add media id attribute
-        if self._media_id_attribute:
-            attributes.update({BangOlufsenAttribute.MEDIA_ID: self._media_id_attribute})
 
         # Add Beolink attributes
         if self._beolink_attributes:
