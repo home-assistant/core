@@ -1,0 +1,336 @@
+"""Sensor entity for Electrolux Group Integration."""
+
+from collections.abc import Callable
+import logging
+from typing import Any, cast
+
+from electrolux_group_developer_sdk.client.appliances.ac_appliance import ACAppliance
+from electrolux_group_developer_sdk.client.appliances.ap_appliance import APAppliance
+from electrolux_group_developer_sdk.client.appliances.appliance_data import (
+    ApplianceData,
+)
+from electrolux_group_developer_sdk.client.appliances.cr_appliance import CRAppliance
+from electrolux_group_developer_sdk.client.appliances.dam_ac_appliance import (
+    DAMACAppliance,
+)
+from electrolux_group_developer_sdk.client.appliances.dh_appliance import DHAppliance
+from electrolux_group_developer_sdk.client.appliances.dw_appliance import DWAppliance
+from electrolux_group_developer_sdk.client.appliances.hb_appliance import HBAppliance
+from electrolux_group_developer_sdk.client.appliances.hd_appliance import HDAppliance
+from electrolux_group_developer_sdk.client.appliances.ov_appliance import OVAppliance
+from electrolux_group_developer_sdk.client.appliances.rvc_appliance import RVCAppliance
+from electrolux_group_developer_sdk.client.appliances.so_appliance import SOAppliance
+from electrolux_group_developer_sdk.client.appliances.td_appliance import TDAppliance
+from electrolux_group_developer_sdk.client.appliances.wd_appliance import WDAppliance
+from electrolux_group_developer_sdk.client.appliances.wm_appliance import WMAppliance
+from electrolux_group_developer_sdk.feature_constants import (
+    ALERTS,
+    APPLIANCE_STATE,
+    DISPLAY_FOOD_PROBE_TEMPERATURE_C,
+    DISPLAY_FOOD_PROBE_TEMPERATURE_F,
+    DISPLAY_TEMPERATURE_C,
+    DISPLAY_TEMPERATURE_F,
+    DOOR_STATE,
+    FOOD_PROBE_STATE,
+    REMOTE_CONTROL,
+    RUNNING_TIME,
+    START_TIME,
+)
+
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    dataclass,
+)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import UnitOfTemperature, UnitOfTime
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from .coordinator import ElectroluxDataUpdateCoordinator
+from .entity import ElectroluxBaseEntity
+from .entity_helper import async_setup_entities_helper
+
+_LOGGER = logging.getLogger(__name__)
+
+ELECTROLUX_TO_HA_TEMPERATURE_UNIT = {
+    "CELSIUS": UnitOfTemperature.CELSIUS,
+    "FAHRENHEIT": UnitOfTemperature.FAHRENHEIT,
+}
+
+
+@dataclass(frozen=True)
+class ElectroluxSensorDescription(SensorEntityDescription):
+    """Custom sensor description for Electrolux sensors."""
+
+    name: str = ""
+    value_fn: Callable[..., Any] = lambda *args: None
+    is_supported_fn: Callable[..., Any] = lambda *args: None
+
+
+GENERAL_ELECTROLUX_SENSORS: tuple[ElectroluxSensorDescription, ...] = (
+    ElectroluxSensorDescription(
+        key="connection_state",
+        name="Connection state",
+        icon="mdi:wifi",
+        value_fn=lambda appliance: appliance.state.connectionState,
+    ),
+)
+
+OVEN_ELECTROLUX_SENSORS: tuple[ElectroluxSensorDescription, ...] = (
+    ElectroluxSensorDescription(
+        key="start_at",
+        name="Start at",
+        icon="mdi:timer-play-outline",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda appliance: appliance.get_current_start_at(),
+        is_supported_fn=lambda appliance: appliance.is_feature_supported(START_TIME),
+    ),
+    ElectroluxSensorDescription(
+        key="runnig_time",
+        name="Running time",
+        icon="mdi:timer-outline",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        state_class="measurement",
+        value_fn=lambda appliance: appliance.get_current_running_time(),
+        is_supported_fn=lambda appliance: appliance.is_feature_supported(RUNNING_TIME),
+    ),
+    ElectroluxSensorDescription(
+        key="appliance_state",
+        name="Appliance state",
+        icon="mdi:information-outline",
+        value_fn=lambda appliance: appliance.get_current_appliance_state(),
+        is_supported_fn=lambda appliance: appliance.is_feature_supported(
+            APPLIANCE_STATE
+        ),
+    ),
+    ElectroluxSensorDescription(
+        key="food_probe_state",
+        name="Food probe state",
+        icon="mdi:thermometer-probe",
+        value_fn=lambda appliance: appliance.get_current_food_probe_insertion_state(),
+        is_supported_fn=lambda appliance: appliance.is_feature_supported(
+            FOOD_PROBE_STATE
+        ),
+    ),
+    ElectroluxSensorDescription(
+        key="door_state",
+        name="Door state",
+        icon="mdi:door",
+        value_fn=lambda appliance: appliance.get_current_door_state(),
+        is_supported_fn=lambda appliance: appliance.is_feature_supported(DOOR_STATE),
+    ),
+    ElectroluxSensorDescription(
+        key="remote_control",
+        name="Remote control",
+        icon="mdi:remote",
+        value_fn=lambda appliance: appliance.get_current_remote_control(),
+        is_supported_fn=lambda appliance: appliance.is_feature_supported(
+            REMOTE_CONTROL
+        ),
+    ),
+)
+
+OVEN_TEMPERATURE_ELECTROLUX_SENSORS: tuple[ElectroluxSensorDescription, ...] = (
+    ElectroluxSensorDescription(
+        key="food_probe_temperature",
+        name="Food probe temperature",
+        icon="mdi:thermometer-probe",
+        value_fn=lambda appliance: appliance.get_current_display_food_probe_temperature_f()
+        if appliance.get_current_temperature_unit() == "FAHRENHEIT"
+        else appliance.get_current_display_food_probe_temperature_c(),
+        is_supported_fn=lambda appliance: appliance.is_feature_supported(
+            [DISPLAY_FOOD_PROBE_TEMPERATURE_F, DISPLAY_FOOD_PROBE_TEMPERATURE_C]
+        ),
+    ),
+    ElectroluxSensorDescription(
+        key="display_temperature",
+        name="Current temperature",
+        icon="mdi:thermometer",
+        value_fn=lambda appliance: appliance.get_current_display_temperature_f()
+        if appliance.get_current_temperature_unit() == "FAHRENHEIT"
+        else appliance.get_current_display_temperature_c(),
+        is_supported_fn=lambda appliance: appliance.is_feature_supported(
+            [DISPLAY_TEMPERATURE_C, DISPLAY_TEMPERATURE_F]
+        ),
+    ),
+)
+
+
+def build_entities_for_appliance(
+    appliance_data, coordinators
+) -> list[ElectroluxBaseEntity]:
+    """Return all entities for a single appliance."""
+    appliance = appliance_data.appliance
+    coordinator = coordinators[appliance.applianceId]
+    entities: list[ElectroluxBaseEntity] = []
+
+    if isinstance(
+        appliance_data,
+        (
+            APAppliance,
+            RVCAppliance,
+            WMAppliance,
+            WDAppliance,
+            TDAppliance,
+            DWAppliance,
+            OVAppliance,
+            HDAppliance,
+            HBAppliance,
+            CRAppliance,
+            DHAppliance,
+            ACAppliance,
+            SOAppliance,
+            DAMACAppliance,
+        ),
+    ):
+        entities.extend(
+            ElectroluxSensor(appliance_data, coordinator, description)
+            for description in GENERAL_ELECTROLUX_SENSORS
+        )
+
+    if isinstance(appliance_data, OVAppliance):
+        entities.extend(
+            ElectroluxSensor(appliance_data, coordinator, description)
+            for description in OVEN_ELECTROLUX_SENSORS
+            if description.is_supported_fn(appliance_data)
+        )
+
+        entities.extend(
+            ElectroluxTemperatureSensor(appliance_data, coordinator, description)
+            for description in OVEN_TEMPERATURE_ELECTROLUX_SENSORS
+            if description.is_supported_fn(appliance_data)
+        )
+
+        if appliance_data.is_feature_supported(ALERTS):
+            entities.append(
+                ApplianceAlertSensor(
+                    appliance_data=appliance_data,
+                    coordinator=coordinator,
+                )
+            )
+
+    return entities
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set sensor for Electrolux Integration."""
+    await async_setup_entities_helper(
+        hass, entry, async_add_entities, build_entities_for_appliance
+    )
+
+
+class ElectroluxSensor(ElectroluxBaseEntity[ApplianceData], SensorEntity):
+    """Representation of a generic sensor for Electrolux appliances."""
+
+    def __init__(
+        self,
+        appliance_data: ApplianceData,
+        coordinator: ElectroluxDataUpdateCoordinator,
+        description: ElectroluxSensorDescription,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(appliance_data, coordinator)
+        self.entity_description = description
+        self._attr_name = description.name
+        self._attr_icon = description.icon
+        self._attr_device_class = description.device_class
+        self._attr_native_unit_of_measurement = getattr(
+            description, "native_unit_of_measurement", None
+        )
+        self._attr_suggested_unit_of_measurement = getattr(
+            description, "suggested_unit_of_measurement", None
+        )
+        self._attr_state_class = getattr(description, "state_class", None)
+        self._attr_unique_id = (
+            f"{appliance_data.appliance.applianceId}_{description.key}"
+        )
+        self._value_fn = description.value_fn
+        self._update_attr_state()
+
+    def _update_attr_state(self) -> None:
+        self._attr_native_value = self._get_value()
+
+    def _get_value(self) -> Any:
+        return self._value_fn(self._appliance_data)
+
+
+class ElectroluxTemperatureSensor(ElectroluxSensor):
+    """Representation of a temperature sensor for Electrolux appliances."""
+
+    def __init__(
+        self,
+        appliance_data: ApplianceData,
+        coordinator: ElectroluxDataUpdateCoordinator,
+        description: ElectroluxSensorDescription,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(appliance_data, coordinator, description)
+        self._attr_device_class = SensorDeviceClass.TEMPERATURE
+        self._attr_state_class = "measurement"
+        self._appliance = cast(OVAppliance | CRAppliance, appliance_data)
+        self._attr_native_unit_of_measurement = ELECTROLUX_TO_HA_TEMPERATURE_UNIT.get(
+            self._appliance.get_current_temperature_unit()
+        )
+        self._update_attr_state()
+
+    def _update_attr_state(self) -> None:
+        self._attr_native_value = self._get_value()
+
+    def _get_value(self) -> Any:
+        return self._value_fn(self._appliance_data)
+
+
+class ApplianceAlertSensor(ElectroluxBaseEntity[ApplianceData], SensorEntity):
+    """Representation of appliance alerts."""
+
+    def __init__(
+        self,
+        appliance_data: ApplianceData,
+        coordinator: ElectroluxDataUpdateCoordinator,
+    ) -> None:
+        """Initialize the alerts sensor."""
+        super().__init__(appliance_data, coordinator)
+        self._attr_name = "Alerts"
+        self._attr_icon = "mdi:alert-circle-outline"
+        self._attr_unique_id = f"{appliance_data.appliance.applianceId}_alerts"
+        self._attr_device_class = SensorDeviceClass.ENUM
+        self._appliance = cast(
+            WMAppliance
+            | WDAppliance
+            | TDAppliance
+            | DWAppliance
+            | OVAppliance
+            | SOAppliance
+            | CRAppliance
+            | HDAppliance
+            | HBAppliance,
+            appliance_data,
+        )
+        self._update_attr_state()
+
+    def _update_attr_state(self) -> None:
+        alerts = self._get_value()
+        if alerts:
+            self._attr_native_value = f"{len(alerts)} alert(s)"
+            self._attr_extra_state_attributes = {
+                f"alert_{i + 1}": {
+                    "code": alert["code"],
+                    "severity": alert["severity"],
+                    "acknowledge_status": alert["acknowledgeStatus"],
+                }
+                for i, alert in enumerate(alerts)
+            }
+        else:
+            self._attr_native_value = "No alerts"
+            self._attr_extra_state_attributes = {}
+
+    def _get_value(self) -> Any:
+        return self._appliance.get_current_alerts()
