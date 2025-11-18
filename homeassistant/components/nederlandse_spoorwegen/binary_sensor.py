@@ -6,61 +6,32 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 import logging
-from typing import Any
 
-import voluptuous as vol
+from ns_api import Trip
 
 from homeassistant.components.binary_sensor import (
-    PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.const import CONF_API_KEY, CONF_NAME, EntityCategory
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    CONF_FROM,
-    CONF_ROUTES,
-    CONF_TIME,
-    CONF_TO,
-    CONF_VIA,
-    DOMAIN,
-    INTEGRATION_TITLE,
-    ROUTE_MODEL,
-)
+from .const import DOMAIN, INTEGRATION_TITLE, ROUTE_MODEL
 from .coordinator import NSConfigEntry, NSDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0  # since we use coordinator pattern
 
-ROUTE_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_NAME): cv.string,
-        vol.Required(CONF_FROM): cv.string,
-        vol.Required(CONF_TO): cv.string,
-        vol.Optional(CONF_VIA): cv.string,
-        vol.Optional(CONF_TIME): cv.time,
-    }
-)
-
-ROUTES_SCHEMA = vol.All(cv.ensure_list, [ROUTE_SCHEMA])
-
-PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_API_KEY): cv.string, vol.Optional(CONF_ROUTES): ROUTES_SCHEMA}
-)
-
 
 @dataclass(frozen=True, kw_only=True)
-class NSSensorEntityDescription(BinarySensorEntityDescription):
+class NSBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes Nederlandse Spoorwegen sensor entity."""
 
-    entity_category: EntityCategory | None = None
-    value_fn: Callable[[Any], Any] | None = None
+    value_fn: Callable[[Trip], bool]
 
 
 def get_delay(planned: datetime | None, actual: datetime | None) -> bool:
@@ -69,28 +40,29 @@ def get_delay(planned: datetime | None, actual: datetime | None) -> bool:
 
 
 BINARY_SENSOR_DESCRIPTIONS = [
-    NSSensorEntityDescription(
+    NSBinarySensorEntityDescription(
         key="is_departure_delayed",
         translation_key="is_departure_delayed",
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda trip: get_delay(
-            getattr(trip, "departure_time_planned", None),
-            getattr(trip, "departure_time_actual", None),
+            trip.departure_time_planned, trip.departure_time_actual
         ),
         entity_registry_enabled_default=False,
     ),
-    NSSensorEntityDescription(
+    NSBinarySensorEntityDescription(
         key="is_arrival_delayed",
         translation_key="is_arrival_delayed",
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda trip: get_delay(
-            getattr(trip, "arrival_time_planned", None),
-            getattr(trip, "arrival_time_actual", None),
+            trip.arrival_time_planned, trip.arrival_time_actual
         ),
         entity_registry_enabled_default=False,
     ),
-    NSSensorEntityDescription(
+    NSBinarySensorEntityDescription(
         key="is_going",
         translation_key="is_going",
-        value_fn=lambda trip: getattr(trip, "going", None),
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda trip: trip.going,
         entity_registry_enabled_default=False,
     ),
 ]
@@ -106,17 +78,13 @@ async def async_setup_entry(
     coordinators = config_entry.runtime_data
 
     for subentry_id, coordinator in coordinators.items():
-        subentry_entities: list[BinarySensorEntity] = []
-        # Build entity from coordinator fields directly
-        subentry_entities.extend(
-            [
+        async_add_entities(
+            (
                 NSBinarySensor(coordinator, subentry_id, description)
                 for description in BINARY_SENSOR_DESCRIPTIONS
-            ]
+            ),
+            config_subentry_id=subentry_id,
         )
-
-        # Add all entities for this subentry
-        async_add_entities(subentry_entities, config_subentry_id=subentry_id)
 
 
 class NSBinarySensor(CoordinatorEntity[NSDataUpdateCoordinator], BinarySensorEntity):
@@ -124,19 +92,18 @@ class NSBinarySensor(CoordinatorEntity[NSDataUpdateCoordinator], BinarySensorEnt
 
     _attr_has_entity_name = True
     _attr_attribution = "Data provided by NS"
-    entity_description: NSSensorEntityDescription
+    entity_description: NSBinarySensorEntityDescription
 
     def __init__(
         self,
         coordinator: NSDataUpdateCoordinator,
         subentry_id: str,
-        description: NSSensorEntityDescription,
+        description: NSBinarySensorEntityDescription,
     ) -> None:
         """Initialize the binary sensor."""
         super().__init__(coordinator)
         self.entity_description = description
         self._subentry_id = subentry_id
-        self._attr_entity_category = EntityCategory.DIAGNOSTIC
         self._attr_unique_id = f"{subentry_id}-{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, subentry_id)},
@@ -148,18 +115,6 @@ class NSBinarySensor(CoordinatorEntity[NSDataUpdateCoordinator], BinarySensorEnt
     @property
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
-        if (
-            not self.coordinator
-            or not self.coordinator.data
-            or not self.entity_description.value_fn
-        ):
+        if not (trip := self.coordinator.data.first_trip):
             return None
-
-        data = getattr(self.coordinator.data, "first_trip", None)
-        if data is None:
-            return None
-        value = self.entity_description.value_fn(data)
-        # Accept bool, or interpret truthy/falsy values
-        if isinstance(value, bool):
-            return value
-        return bool(value)
+        return self.entity_description.value_fn(trip)
