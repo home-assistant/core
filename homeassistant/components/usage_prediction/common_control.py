@@ -18,8 +18,8 @@ from homeassistant.components.recorder.db_schema import (
     EventData,
     Events,
     EventTypes,
-    StateAttributes,
     States,
+    StatesMeta,
 )
 from homeassistant.components.recorder.models import uuid_hex_to_bytes_or_none
 from homeassistant.components.recorder.util import session_scope
@@ -267,32 +267,17 @@ def _fetch_and_process_data(
         )
         return session.connection().execute(query).all()
 
-    # Get the entity registry entry for the person
-    person_entry = ent_reg.async_get(person_entity_id)
-    if not person_entry or not person_entry.id:
-        # No valid person entry, return without person states
-        query = (
-            select(
-                Events.context_id_bin,
-                Events.time_fired_ts,
-                EventData.shared_data,
-                None,
-            )
-            .select_from(Events)
-            .outerjoin(EventData, Events.data_id == EventData.data_id)
-            .outerjoin(EventTypes, Events.event_type_id == EventTypes.event_type_id)
-            .where(Events.time_fired_ts >= thirty_days_ago_ts)
-            .where(Events.context_user_id_bin == user_id_bytes)
-            .where(EventTypes.event_type == "call_service")
-            .order_by(Events.time_fired_ts)
-        )
-        return session.connection().execute(query).all()
-
     # Create a subquery to get the most recent person state before each event
+    # First, we need to get the metadata_id for the person entity
     PersonStates = States.__table__.alias("person_states")
     subquery = (
         select(PersonStates.c.state)
-        .where(PersonStates.c.metadata_id == person_entry.id)
+        .select_from(PersonStates)
+        .join(
+            StatesMeta,
+            PersonStates.c.metadata_id == StatesMeta.metadata_id,
+        )
+        .where(StatesMeta.entity_id == person_entity_id)
         .where(PersonStates.c.last_updated_ts <= Events.time_fired_ts)
         .order_by(PersonStates.c.last_updated_ts.desc())
         .limit(1)
