@@ -146,15 +146,27 @@ class ColorTypeData:
 
 
 DEFAULT_COLOR_TYPE_DATA = ColorTypeData(
-    h_type=IntegerTypeData(DPCode.COLOUR_DATA_HSV, min=1, scale=0, max=360, step=1),
-    s_type=IntegerTypeData(DPCode.COLOUR_DATA_HSV, min=1, scale=0, max=255, step=1),
-    v_type=IntegerTypeData(DPCode.COLOUR_DATA_HSV, min=1, scale=0, max=255, step=1),
+    h_type=IntegerTypeData(
+        dpcode=DPCode.COLOUR_DATA_HSV, min=1, scale=0, max=360, step=1
+    ),
+    s_type=IntegerTypeData(
+        dpcode=DPCode.COLOUR_DATA_HSV, min=1, scale=0, max=255, step=1
+    ),
+    v_type=IntegerTypeData(
+        dpcode=DPCode.COLOUR_DATA_HSV, min=1, scale=0, max=255, step=1
+    ),
 )
 
 DEFAULT_COLOR_TYPE_DATA_V2 = ColorTypeData(
-    h_type=IntegerTypeData(DPCode.COLOUR_DATA_HSV, min=1, scale=0, max=360, step=1),
-    s_type=IntegerTypeData(DPCode.COLOUR_DATA_HSV, min=1, scale=0, max=1000, step=1),
-    v_type=IntegerTypeData(DPCode.COLOUR_DATA_HSV, min=1, scale=0, max=1000, step=1),
+    h_type=IntegerTypeData(
+        dpcode=DPCode.COLOUR_DATA_HSV, min=1, scale=0, max=360, step=1
+    ),
+    s_type=IntegerTypeData(
+        dpcode=DPCode.COLOUR_DATA_HSV, min=1, scale=0, max=1000, step=1
+    ),
+    v_type=IntegerTypeData(
+        dpcode=DPCode.COLOUR_DATA_HSV, min=1, scale=0, max=1000, step=1
+    ),
 )
 
 MAX_MIREDS = 500  # 2000 K
@@ -629,9 +641,15 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
             # Fetch color data type information
             if function_data := json_loads_object(values):
                 self._color_data_type = ColorTypeData(
-                    h_type=IntegerTypeData(dpcode, **cast(dict, function_data["h"])),
-                    s_type=IntegerTypeData(dpcode, **cast(dict, function_data["s"])),
-                    v_type=IntegerTypeData(dpcode, **cast(dict, function_data["v"])),
+                    h_type=IntegerTypeData(
+                        dpcode=dpcode, **cast(dict, function_data["h"])
+                    ),
+                    s_type=IntegerTypeData(
+                        dpcode=dpcode, **cast(dict, function_data["s"])
+                    ),
+                    v_type=IntegerTypeData(
+                        dpcode=dpcode, **cast(dict, function_data["v"])
+                    ),
                 )
             else:
                 # If no type is found, use a default one
