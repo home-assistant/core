@@ -126,7 +126,7 @@
           },
           "preset_mode": {
             "state": {
-              "heating_ventilation_air_conditioning_air_conditioner_program_active_clean": "Active clean"
+              "active_clean": "Active clean"
             }
           }
         }

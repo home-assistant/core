@@ -21,13 +21,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .common import setup_home_connect_entry
-from .const import (
-    BSH_POWER_ON,
-    BSH_POWER_STANDBY,
-    DOMAIN,
-    PROGRAMS_TRANSLATION_KEYS_MAP,
-    TRANSLATION_KEYS_PROGRAMS_MAP,
-)
+from .const import BSH_POWER_ON, BSH_POWER_STANDBY, DOMAIN
 from .coordinator import (
     HomeConnectApplianceData,
     HomeConnectConfigEntry,
@@ -49,6 +43,11 @@ HVAC_MODES_PROGRAMS_MAP = {
 }
 
 PROGRAMS_HVAC_MODES_MAP = {v: k for k, v in HVAC_MODES_PROGRAMS_MAP.items()}
+
+PRESET_MODES_PROGRAMS_MAP = {
+    "active_clean": ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_ACTIVE_CLEAN,
+}
+PROGRAMS_PRESET_MODES_MAP = {v: k for k, v in PRESET_MODES_PROGRAMS_MAP.items()}
 
 FAN_MODES_OPTIONS = {
     FAN_AUTO: "HeatingVentilationAirConditioning.AirConditioner.EnumType.FanSpeedMode.Automatic",
@@ -139,7 +138,7 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
 
         self._attr_preset_modes = (
             [
-                PROGRAMS_TRANSLATION_KEYS_MAP[
+                PROGRAMS_PRESET_MODES_MAP[
                     ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_ACTIVE_CLEAN
                 ]
             ]
@@ -197,7 +196,7 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
             PROGRAMS_HVAC_MODES_MAP.get(program_key) if program_key else None
         )
         self._attr_preset_mode = (
-            PROGRAMS_TRANSLATION_KEYS_MAP.get(program_key)
+            PROGRAMS_PRESET_MODES_MAP.get(program_key)
             if program_key
             == ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_ACTIVE_CLEAN
             else None
@@ -312,7 +311,7 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        await self._set_program(TRANSLATION_KEYS_PROGRAMS_MAP[preset_mode])
+        await self._set_program(PRESET_MODES_PROGRAMS_MAP[preset_mode])
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""

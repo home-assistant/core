@@ -471,18 +471,14 @@ async def test_set_hvac_mode_raises_home_assistant_error_on_api_errors(
             [
                 ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_ACTIVE_CLEAN
             ],
-            [
-                "heating_ventilation_air_conditioning_air_conditioner_program_active_clean"
-            ],
+            ["active_clean"],
         ),
         (
             [
                 ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_ACTIVE_CLEAN,
                 ProgramKey.LAUNDRY_CARE_DRYER_ANTI_SHRINK,
             ],
-            [
-                "heating_ventilation_air_conditioning_air_conditioner_program_active_clean"
-            ],
+            ["active_clean"],
         ),
     ],
 )
@@ -566,7 +562,7 @@ async def test_set_preset_mode_raises_home_assistant_error_on_api_errors(
             SERVICE_SET_PRESET_MODE,
             {
                 ATTR_ENTITY_ID: "climate.air_conditioner",
-                ATTR_PRESET_MODE: "heating_ventilation_air_conditioning_air_conditioner_program_active_clean",
+                ATTR_PRESET_MODE: "active_clean",
             },
             blocking=True,
         )
