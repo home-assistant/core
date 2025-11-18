@@ -156,6 +156,8 @@ class LcnVariableSensor(LcnEntity, SensorEntity):
 class LcnLedLogicSensor(LcnEntity, SensorEntity):
     """Representation of a LCN sensor for leds and logicops."""
 
+    source: pypck.lcn_defs.LedPort | pypck.lcn_defs.LogicOpPort
+
     def __init__(self, config: ConfigType, config_entry: LcnConfigEntry) -> None:
         """Initialize the LCN sensor."""
         super().__init__(config, config_entry)

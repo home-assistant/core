@@ -61,7 +61,7 @@ type LcnConfigEntry = ConfigEntry[LcnRuntimeData]
 
 type AddressType = tuple[int, int, bool]
 
-type InputType = type[pypck.inputs.Input]
+type InputType = pypck.inputs.Input
 
 # Regex for address validation
 PATTERN_ADDRESS = re.compile(
@@ -269,10 +269,10 @@ async def async_update_device_config(
     if device_config[CONF_NAME] != "":
         return
 
-    device_name = ""
+    device_name: str | None = None
     if not is_group:
         device_name = await device_connection.request_name()
-    if is_group or device_name == "":
+    if is_group or device_name is None:
         module_type = "Group" if is_group else "Module"
         device_name = (
             f"{module_type} "
