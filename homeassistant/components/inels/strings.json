@@ -15,6 +15,29 @@
     }
   },
   "entity": {
+    "light": {
+      "aout": {
+        "name": "Analog output{index}"
+      },
+      "dali": {
+        "name": "DALI{index}"
+      },
+      "light_coa_toa": {
+        "name": "Light{index}"
+      },
+      "rgb": {
+        "name": "RGB light{index}"
+      },
+      "rgbw": {
+        "name": "RGBW light{index}"
+      },
+      "simple_light": {
+        "name": "Light{index}"
+      },
+      "warm_light": {
+        "name": "Tunable white light{index}"
+      }
+    },
     "switch": {
       "bit": {
         "name": "Bit{addr}"
