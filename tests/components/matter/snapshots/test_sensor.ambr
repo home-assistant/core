@@ -7259,7 +7259,7 @@
     'state': 'stopped',
   })
 # ---
-# name: test_sensors[mock_thermostat][sensor.test_product_last_change-entry]
+# name: test_sensors[mock_thermostat][sensor.mock_thermostat_last_change-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7272,7 +7272,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_product_last_change',
+    'entity_id': 'sensor.mock_thermostat_last_change',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -7294,21 +7294,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[mock_thermostat][sensor.test_product_last_change-state]
+# name: test_sensors[mock_thermostat][sensor.mock_thermostat_last_change-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'friendly_name': 'TEST_PRODUCT Last change',
+      'friendly_name': 'Mock Thermostat Last change',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_product_last_change',
+    'entity_id': 'sensor.mock_thermostat_last_change',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2025-10-31T23:00:00+00:00',
   })
 # ---
-# name: test_sensors[mock_thermostat][sensor.test_product_last_change_amount-entry]
+# name: test_sensors[mock_thermostat][sensor.mock_thermostat_last_change_amount-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7323,7 +7323,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_product_last_change_amount',
+    'entity_id': 'sensor.mock_thermostat_last_change_amount',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -7348,23 +7348,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[mock_thermostat][sensor.test_product_last_change_amount-state]
+# name: test_sensors[mock_thermostat][sensor.mock_thermostat_last_change_amount-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'TEST_PRODUCT Last change amount',
+      'friendly_name': 'Mock Thermostat Last change amount',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_product_last_change_amount',
+    'entity_id': 'sensor.mock_thermostat_last_change_amount',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.5',
   })
 # ---
-# name: test_sensors[mock_thermostat][sensor.test_product_last_change_source-entry]
+# name: test_sensors[mock_thermostat][sensor.mock_thermostat_last_change_source-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7383,7 +7383,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_product_last_change_source',
+    'entity_id': 'sensor.mock_thermostat_last_change_source',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -7405,11 +7405,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[mock_thermostat][sensor.test_product_last_change_source-state]
+# name: test_sensors[mock_thermostat][sensor.mock_thermostat_last_change_source-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'TEST_PRODUCT Last change source',
+      'friendly_name': 'Mock Thermostat Last change source',
       'options': list([
         'manual',
         'schedule',
@@ -7417,14 +7417,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_product_last_change_source',
+    'entity_id': 'sensor.mock_thermostat_last_change_source',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'manual',
   })
 # ---
-# name: test_sensors[mock_thermostat][sensor.test_product_temperature-entry]
+# name: test_sensors[mock_thermostat][sensor.mock_thermostat_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7439,7 +7439,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_product_temperature',
+    'entity_id': 'sensor.mock_thermostat_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -7464,16 +7464,16 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[mock_thermostat][sensor.test_product_temperature-state]
+# name: test_sensors[mock_thermostat][sensor.mock_thermostat_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'TEST_PRODUCT Temperature',
+      'friendly_name': 'Mock Thermostat Temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_product_temperature',
+    'entity_id': 'sensor.mock_thermostat_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
