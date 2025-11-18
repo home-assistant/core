@@ -8,7 +8,7 @@ from .const import DOMAIN
 
 
 class MediaPlayerStoppedPlayingTrigger(EntityTriggerBase):
-    """Class for media player stopped playing triggers."""
+    """Class for media player stopped playing trigger."""
 
     _domain: str = DOMAIN
     _from_states = {
