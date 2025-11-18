@@ -34,7 +34,6 @@ from .models import (
     DPCodeEnumWrapper,
     DPCodeIntegerWrapper,
     IntegerTypeData,
-    find_dpcode,
 )
 from .util import get_dpcode, get_dptype, remap_value
 
@@ -106,6 +105,35 @@ class _BrightnessWrapper(DPCodeIntegerWrapper):
             # Remap the brightness value from our 0-255 scale to their min-max
             value = remap_value(value, to_min=brightness_min, to_max=brightness_max)
         return round(self.type_information.remap_value_from(value))
+
+
+class _ColorTempWrapper(DPCodeIntegerWrapper):
+    """Wrapper for color temperature DP code."""
+
+    def read_device_status(self, device: CustomerDevice) -> Any | None:
+        """Return the color temperature value in Kelvin."""
+        if (temperature := self._read_device_status_raw(device)) is None:
+            return None
+
+        return color_util.color_temperature_mired_to_kelvin(
+            self.type_information.remap_value_to(
+                temperature,
+                MIN_MIREDS,
+                MAX_MIREDS,
+                reverse=True,
+            )
+        )
+
+    def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
+        """Convert a Home Assistant value (Kelvin) back to a raw device value."""
+        return round(
+            self.type_information.remap_value_from(
+                color_util.color_temperature_kelvin_to_mired(value),
+                MIN_MIREDS,
+                MAX_MIREDS,
+                reverse=True,
+            )
+        )
 
 
 @dataclass
@@ -529,6 +557,9 @@ async def async_setup_entry(
                         color_mode_wrapper=DPCodeEnumWrapper.find_dpcode(
                             device, description.color_mode, prefer_function=True
                         ),
+                        color_temp_wrapper=_ColorTempWrapper.find_dpcode(
+                            device, description.color_temp, prefer_function=True
+                        ),
                         switch_wrapper=switch_wrapper,
                     )
                     for description in descriptions
@@ -555,7 +586,6 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
 
     _color_data_dpcode: DPCode | None = None
     _color_data_type: ColorTypeData | None = None
-    _color_temp: IntegerTypeData | None = None
     _white_color_mode = ColorMode.COLOR_TEMP
     _fixed_color_mode: ColorMode | None = None
     _attr_min_color_temp_kelvin = 2000  # 500 Mireds
@@ -567,8 +597,9 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         device_manager: Manager,
         description: TuyaLightEntityDescription,
         *,
-        brightness_wrapper: DPCodeIntegerWrapper | None,
+        brightness_wrapper: _BrightnessWrapper | None,
         color_mode_wrapper: DPCodeEnumWrapper | None,
+        color_temp_wrapper: _ColorTempWrapper | None,
         switch_wrapper: DPCodeBooleanWrapper,
     ) -> None:
         """Init TuyaHaLight."""
@@ -577,6 +608,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         self._attr_unique_id = f"{super().unique_id}{description.key}"
         self._brightness_wrapper = brightness_wrapper
         self._color_mode_wrapper = color_mode_wrapper
+        self._color_temp_wrapper = color_temp_wrapper
         self._switch_wrapper = switch_wrapper
 
         color_modes: set[ColorMode] = {ColorMode.ONOFF}
@@ -611,13 +643,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
                     self._color_data_type = DEFAULT_COLOR_TYPE_DATA_V2
 
         # Check if the light has color temperature
-        if int_type := find_dpcode(
-            self.device,
-            description.color_temp,
-            dptype=DPType.INTEGER,
-            prefer_function=True,
-        ):
-            self._color_temp = int_type
+        if color_temp_wrapper:
             color_modes.add(ColorMode.COLOR_TEMP)
         # If light has color but does not have color_temp, check if it has
         # work_mode "white"
@@ -654,21 +680,11 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
                 ),
             ]
 
-        if self._color_temp and ATTR_COLOR_TEMP_KELVIN in kwargs:
+        if self._color_temp_wrapper and ATTR_COLOR_TEMP_KELVIN in kwargs:
             commands += [
-                {
-                    "code": self._color_temp.dpcode,
-                    "value": round(
-                        self._color_temp.remap_value_from(
-                            color_util.color_temperature_kelvin_to_mired(
-                                kwargs[ATTR_COLOR_TEMP_KELVIN]
-                            ),
-                            MIN_MIREDS,
-                            MAX_MIREDS,
-                            reverse=True,
-                        )
-                    ),
-                },
+                self._color_temp_wrapper.get_update_command(
+                    self.device, kwargs[ATTR_COLOR_TEMP_KELVIN]
+                )
             ]
 
         if self._color_data_type and (
@@ -748,18 +764,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
     @property
     def color_temp_kelvin(self) -> int | None:
         """Return the color temperature value in Kelvin."""
-        if not self._color_temp:
-            return None
-
-        temperature = self.device.status.get(self._color_temp.dpcode)
-        if temperature is None:
-            return None
-
-        return color_util.color_temperature_mired_to_kelvin(
-            self._color_temp.remap_value_to(
-                temperature, MIN_MIREDS, MAX_MIREDS, reverse=True
-            )
-        )
+        return self._read_wrapper(self._color_temp_wrapper)
 
     @property
     def hs_color(self) -> tuple[float, float] | None:
