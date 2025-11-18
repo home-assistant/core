@@ -16,6 +16,13 @@
         "id": "Answer ID",
         "sentences": "Sentences"
       }
+    },
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
+      }
     }
   },
   "services": {
@@ -98,5 +105,51 @@
       "name": "Start conversation"
     }
   },
-  "title": "Assist satellite"
+  "title": "Assist satellite",
+  "triggers": {
+    "idle": {
+      "description": "Triggers when an assist satellite is idle.",
+      "description_configured": "[%key:component::assist_satellite::triggers::idle::description%]",
+      "fields": {
+        "behavior": {
+          "description": "The behavior of the targeted assist satellites to trigger on.",
+          "name": "Behavior"
+        }
+      },
+      "name": "When an assist satellite is idle"
+    },
+    "listening": {
+      "description": "Triggers when an assist satellite is listening.",
+      "description_configured": "[%key:component::assist_satellite::triggers::listening::description%]",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::assist_satellite::triggers::idle::fields::behavior::description%]",
+          "name": "[%key:component::assist_satellite::triggers::idle::fields::behavior::name%]"
+        }
+      },
+      "name": "When an assist satellite is listening"
+    },
+    "processing": {
+      "description": "Triggers when an assist satellite is processing.",
+      "description_configured": "[%key:component::assist_satellite::triggers::processing::description%]",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::assist_satellite::triggers::idle::fields::behavior::description%]",
+          "name": "[%key:component::assist_satellite::triggers::idle::fields::behavior::name%]"
+        }
+      },
+      "name": "When an assist satellite is processing"
+    },
+    "responding": {
+      "description": "Triggers when an assist satellite is responding.",
+      "description_configured": "[%key:component::assist_satellite::triggers::responding::description%]",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::assist_satellite::triggers::idle::fields::behavior::description%]",
+          "name": "[%key:component::assist_satellite::triggers::idle::fields::behavior::name%]"
+        }
+      },
+      "name": "When an assist satellite is responding"
+    }
+  }
 }
