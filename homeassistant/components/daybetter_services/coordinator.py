@@ -12,6 +12,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from .const import DayBetterConfigEntry
+
 
 class DayBetterCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
     """Coordinator fetching DayBetter device data periodically."""
@@ -19,6 +21,7 @@ class DayBetterCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: DayBetterConfigEntry,
         client: DayBetterClient,
         interval: timedelta,
     ) -> None:
@@ -28,6 +31,7 @@ class DayBetterCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
             logger=logging.getLogger(__name__),
             name="DayBetter Coordinator",
             update_interval=interval,
+            config_entry=config_entry,
         )
         self._client = client
 
@@ -39,5 +43,3 @@ class DayBetterCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
             raise ConfigEntryAuthFailed("Authentication failed") from err
         except APIError as err:
             raise UpdateFailed(f"API error: {err}") from err
-        except Exception as err:
-            raise UpdateFailed(f"Unexpected error: {err}") from err

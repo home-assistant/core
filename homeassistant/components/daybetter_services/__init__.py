@@ -22,6 +22,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DayBetterConfigEntry) ->
 
     coordinator = DayBetterCoordinator(
         hass,
+        entry,
         client,
         SCAN_INTERVAL,
     )
