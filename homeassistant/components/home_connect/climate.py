@@ -1,7 +1,6 @@
 """Provides climate entities for Home Connect."""
 
 import contextlib
-from dataclasses import dataclass
 import logging
 from typing import Any, cast
 
@@ -59,15 +58,10 @@ FAN_MODES_OPTIONS = {
 FAN_MODES_OPTIONS_INVERTED = {v: k for k, v in FAN_MODES_OPTIONS.items()}
 
 
-@dataclass(frozen=True, kw_only=True)
-class HomeConnectClimateEntityDescription(ClimateEntityDescription):
-    """Climate entity description."""
-
-
-AIR_CONDITIONER_ENTITY_DESCRIPTION = HomeConnectClimateEntityDescription(
+AIR_CONDITIONER_ENTITY_DESCRIPTION = ClimateEntityDescription(
     key="air_conditioner",
     translation_key="air_conditioner",
-    name="",
+    name=None,
 )
 
 
@@ -102,7 +96,6 @@ async def async_setup_entry(
 class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
     """Representation of a Home Connect climate entity."""
 
-    entity_description: HomeConnectClimateEntityDescription
     # Air Conditioner does not report / support temperature yet
     # Whenever it does, this should be updated
     # but by the moment this is required to make it work
@@ -125,8 +118,9 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
                 EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
             ),
         )
-        self._attr_supported_features |= ClimateEntityFeature.TURN_ON
-        self._attr_supported_features |= ClimateEntityFeature.TURN_OFF
+        self._attr_supported_features |= (
+            ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
+        )
         self.update_fan_mode()
         self.set_hvac_modes_and_preset()
 
@@ -158,10 +152,8 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
         )
         if self._attr_preset_modes:
             self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
-            self.__dict__.pop("supported_features", None)
         else:
             self._attr_supported_features &= ~ClimateEntityFeature.PRESET_MODE
-            self.__dict__.pop("supported_features", None)
 
     @callback
     def _handle_coordinator_update_fan_mode(self) -> None:
