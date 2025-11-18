@@ -268,7 +268,7 @@ class Analytics:
         return self._data.uuid
 
     @property
-    def endpoint(self) -> str:
+    def endpoint_basic(self) -> str:
         """Return the endpoint that will receive the payload."""
         if RELEASE_CHANNEL is ReleaseChannel.DEV:
             # dev installations will contact the dev analytics environment
@@ -463,7 +463,7 @@ class Analytics:
 
         try:
             async with timeout(30):
-                response = await self.session.post(self.endpoint, json=payload)
+                response = await self.session.post(self.endpoint_basic, json=payload)
                 if response.status == 200:
                     LOGGER.info(
                         (
@@ -476,7 +476,7 @@ class Analytics:
                     LOGGER.warning(
                         "Sending analytics failed with statuscode %s from %s",
                         response.status,
-                        self.endpoint,
+                        self.endpoint_basic,
                     )
         except TimeoutError:
             LOGGER.error("Timeout sending analytics to %s", ANALYTICS_ENDPOINT_URL)

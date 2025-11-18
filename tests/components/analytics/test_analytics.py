@@ -1624,13 +1624,18 @@ async def test_send_snapshot_error(
     assert expected_log in caplog.text
 
 
-async def test_async_schedule_not_onboarded(
+@pytest.mark.usefixtures("ha_dev_version_mock", "supervisor_client")
+async def test_async_schedule(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Test scheduling when not onboarded."""
+    """Test scheduling."""
+    aioclient_mock.post(ANALYTICS_ENDPOINT_URL_DEV, status=200)
+    aioclient_mock.post(ANALYTICS_SNAPSHOT_ENDPOINT_URL, status=200, json={})
+
     analytics = Analytics(hass)
 
+    # Schedule when not onboarded
     await analytics.async_schedule()
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=25))
@@ -1638,26 +1643,8 @@ async def test_async_schedule_not_onboarded(
 
     assert len(aioclient_mock.mock_calls) == 0
 
-
-@pytest.mark.usefixtures("ha_dev_version_mock", "supervisor_client")
-async def test_async_schedule_enabled(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-) -> None:
-    """Test scheduling when enabled."""
-    aioclient_mock.post(ANALYTICS_ENDPOINT_URL_DEV, status=200)
-    aioclient_mock.post(ANALYTICS_SNAPSHOT_ENDPOINT_URL, status=200, json={})
-
-    analytics = Analytics(hass)
-    with patch(
-        "homeassistant.helpers.storage.Store.async_load",
-        return_value={
-            "onboarded": True,
-            "preferences": {ATTR_BASE: True, ATTR_SNAPSHOTS: True},
-            "uuid": "12345",
-        },
-    ):
-        await analytics.load()
+    # Onboard and enable both
+    analytics.save_preferences({ATTR_BASE: True, ATTR_SNAPSHOTS: True})
 
     await analytics.async_schedule()
 
