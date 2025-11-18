@@ -178,7 +178,7 @@ async def test_sensor_with_custom_time_parsing(
     await setup_integration(hass, config_entry)
     await hass.async_block_till_done()
 
-    # Should create 1 sensor for the route with time parsing
+    # Should create one sensor for the route with time parsing
     sensor_states = hass.states.async_all("sensor")
     assert len(sensor_states) == 1
 
@@ -187,6 +187,7 @@ async def test_sensor_with_custom_time_parsing(
     assert state is not None
     assert state.state != "unavailable"
     assert state.attributes.get("attribution") == "Data provided by NS"
+    assert state.attributes.get("device_class") == "timestamp"
     assert state.attributes.get("icon") == "mdi:train"
 
     # The sensor should have a friendly name based on the route name
