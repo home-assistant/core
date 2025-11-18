@@ -517,43 +517,14 @@ def _extract_sensor_unique_id(webhook_id: str, unique_id: str) -> str:
     return unique_id[len(webhook_id) + 1 :]
 
 
-@WEBHOOK_COMMANDS.register("register_sensor")
-@validate_schema(
-    vol.All(
-        {
-            vol.Optional(ATTR_SENSOR_ATTRIBUTES, default={}): dict,
-            vol.Optional(ATTR_SENSOR_DEVICE_CLASS): vol.Any(
-                None,
-                vol.All(vol.Lower, vol.Coerce(BinarySensorDeviceClass)),
-                vol.All(vol.Lower, vol.Coerce(SensorDeviceClass)),
-            ),
-            vol.Required(ATTR_SENSOR_NAME): cv.string,
-            vol.Required(ATTR_SENSOR_TYPE): vol.In(SENSOR_TYPES),
-            vol.Required(ATTR_SENSOR_UNIQUE_ID): cv.string,
-            vol.Optional(ATTR_SENSOR_UOM): vol.Any(None, cv.string),
-            vol.Optional(ATTR_SENSOR_STATE, default=None): vol.Any(
-                None, bool, int, float, str
-            ),
-            vol.Optional(ATTR_SENSOR_ENTITY_CATEGORY): vol.Any(
-                None, vol.Coerce(EntityCategory)
-            ),
-            vol.Optional(ATTR_SENSOR_ICON, default="mdi:cellphone"): vol.Any(
-                None, cv.icon
-            ),
-            vol.Optional(ATTR_SENSOR_STATE_CLASS): vol.Any(
-                None, vol.Coerce(SensorStateClass)
-            ),
-            vol.Optional(ATTR_SENSOR_DISABLED): bool,
-        },
-        _validate_state_class_sensor,
-    )
-)
-async def webhook_register_sensor(
-    hass: HomeAssistant, config_entry: ConfigEntry, data: dict[str, Any]
-) -> Response:
-    """Handle a register sensor webhook."""
-    entity_type: str = data[ATTR_SENSOR_TYPE]
-    unique_id: str = data[ATTR_SENSOR_UNIQUE_ID]
+def _register_or_update_sensor(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    sensor_data: dict[str, Any],
+) -> None:
+    """Register a new sensor or update an existing one."""
+    entity_type: str = sensor_data[ATTR_SENSOR_TYPE]
+    unique_id: str = sensor_data[ATTR_SENSOR_UNIQUE_ID]
     device_name: str = config_entry.data[ATTR_DEVICE_NAME]
 
     unique_store_key = _gen_unique_id(config_entry.data[CONF_WEBHOOK_ID], unique_id)
@@ -562,7 +533,7 @@ async def webhook_register_sensor(
         entity_type, DOMAIN, unique_store_key
     )
 
-    data[CONF_WEBHOOK_ID] = config_entry.data[CONF_WEBHOOK_ID]
+    sensor_data[CONF_WEBHOOK_ID] = config_entry.data[CONF_WEBHOOK_ID]
 
     # If sensor already is registered, update current state instead
     if existing_sensor:
@@ -575,12 +546,12 @@ async def webhook_register_sensor(
         changes: dict[str, Any] = {}
 
         if (
-            new_name := f"{device_name} {data[ATTR_SENSOR_NAME]}"
+            new_name := f"{device_name} {sensor_data[ATTR_SENSOR_NAME]}"
         ) != entry.original_name:
             changes["original_name"] = new_name
 
         if (
-            should_be_disabled := data.get(ATTR_SENSOR_DISABLED)
+            should_be_disabled := sensor_data.get(ATTR_SENSOR_DISABLED)
         ) is None or should_be_disabled == entry.disabled:
             pass
         elif should_be_disabled:
@@ -594,29 +565,93 @@ async def webhook_register_sensor(
             ("entity_category", ATTR_SENSOR_ENTITY_CATEGORY),
             ("original_icon", ATTR_SENSOR_ICON),
         ):
-            if data_key in data and getattr(entry, ent_reg_key) != data[data_key]:
-                changes[ent_reg_key] = data[data_key]
+            if (
+                data_key in sensor_data
+                and getattr(entry, ent_reg_key) != sensor_data[data_key]
+            ):
+                changes[ent_reg_key] = sensor_data[data_key]
 
         if changes:
             entity_registry.async_update_entity(existing_sensor, **changes)
 
         _async_update_sensor_entity(
-            hass, entity_type=entity_type, unique_store_key=unique_store_key, data=data
+            hass,
+            entity_type=entity_type,
+            unique_store_key=unique_store_key,
+            data=sensor_data,
         )
     else:
-        data[CONF_UNIQUE_ID] = unique_store_key
-        data[CONF_NAME] = (
-            f"{config_entry.data[ATTR_DEVICE_NAME]} {data[ATTR_SENSOR_NAME]}"
+        sensor_data[CONF_UNIQUE_ID] = unique_store_key
+        sensor_data[CONF_NAME] = (
+            f"{config_entry.data[ATTR_DEVICE_NAME]} {sensor_data[ATTR_SENSOR_NAME]}"
         )
 
         register_signal = f"{DOMAIN}_{entity_type}_register"
-        async_dispatcher_send(hass, register_signal, data)
+        async_dispatcher_send(hass, register_signal, sensor_data)
+
+
+_register_sensor_schema = vol.All(
+    {
+        vol.Optional(ATTR_SENSOR_ATTRIBUTES, default={}): dict,
+        vol.Optional(ATTR_SENSOR_DEVICE_CLASS): vol.Any(
+            None,
+            vol.All(vol.Lower, vol.Coerce(BinarySensorDeviceClass)),
+            vol.All(vol.Lower, vol.Coerce(SensorDeviceClass)),
+        ),
+        vol.Required(ATTR_SENSOR_NAME): cv.string,
+        vol.Required(ATTR_SENSOR_TYPE): vol.In(SENSOR_TYPES),
+        vol.Required(ATTR_SENSOR_UNIQUE_ID): cv.string,
+        vol.Optional(ATTR_SENSOR_UOM): vol.Any(None, cv.string),
+        vol.Optional(ATTR_SENSOR_STATE, default=None): vol.Any(
+            None, bool, int, float, str
+        ),
+        vol.Optional(ATTR_SENSOR_ENTITY_CATEGORY): vol.Any(
+            None, vol.Coerce(EntityCategory)
+        ),
+        vol.Optional(ATTR_SENSOR_ICON, default="mdi:cellphone"): vol.Any(None, cv.icon),
+        vol.Optional(ATTR_SENSOR_STATE_CLASS): vol.Any(
+            None, vol.Coerce(SensorStateClass)
+        ),
+        vol.Optional(ATTR_SENSOR_DISABLED): bool,
+    },
+    _validate_state_class_sensor,
+)
+
+
+@WEBHOOK_COMMANDS.register("register_sensor")
+@validate_schema(_register_sensor_schema)
+async def webhook_register_sensor(
+    hass: HomeAssistant, config_entry: ConfigEntry, data: dict[str, Any]
+) -> Response:
+    """Handle a register sensor webhook."""
+    _register_or_update_sensor(hass, config_entry, data)
 
     return webhook_response(
         {"success": True},
         registration=config_entry.data,
         status=HTTPStatus.CREATED,
     )
+
+
+@WEBHOOK_COMMANDS.register("register_sensors")
+@validate_schema(
+    vol.All(
+        cv.ensure_list,
+        [_register_sensor_schema],
+    )
+)
+async def webhook_register_sensors(
+    hass: HomeAssistant, config_entry: ConfigEntry, data: list[dict[str, Any]]
+) -> Response:
+    """Handle a register sensors webhook."""
+    resp: dict[str, Any] = {}
+
+    for sensor_data in data:
+        unique_id: str = sensor_data[ATTR_SENSOR_UNIQUE_ID]
+        _register_or_update_sensor(hass, config_entry, sensor_data)
+        resp[unique_id] = {"success": True}
+
+    return webhook_response(resp, registration=config_entry.data)
 
 
 @WEBHOOK_COMMANDS.register("update_sensor_states")
