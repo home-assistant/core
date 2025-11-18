@@ -16,7 +16,7 @@ from homeassistant.const import CONF_EXCLUDE, CONF_INCLUDE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import ServiceNotFound
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.storage import Store
 
 from . import (
@@ -257,14 +257,20 @@ class NotifyAuthModule(MultiFactorAuthModule):
         )
 
     async def async_notify(
-        self, code: str, notify_service: str, target: str | None = None
+        self, code: str, notify_service: str, target: dict[str, Any] | str | None = None
     ) -> None:
         """Send code by notify service."""
         data = {"message": self._message_template.format(code)}
-        if target:
+
+        if target and notify_service == "notify":
             data["target"] = [target]
 
-        await self.hass.services.async_call("notify", notify_service, data)
+        await self.hass.services.async_call(
+            "notify",
+            notify_service,
+            data,
+            target=target if isinstance(target, dict) else None,
+        )
 
 
 class NotifySetupFlow(SetupFlow[NotifyAuthModule]):
@@ -306,7 +312,11 @@ class NotifySetupFlow(SetupFlow[NotifyAuthModule]):
         schema = vol.Schema(
             {
                 vol.Required("notify_service"): vol.In(self._available_notify_services),
-                vol.Optional("target"): str,
+                vol.Optional("target"): selector.TargetSelector(
+                    selector.TargetSelectorConfig(
+                        entity=selector.EntityFilterSelectorConfig(domain="notify")
+                    )
+                ),
             }
         )
 
