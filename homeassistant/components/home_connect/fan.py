@@ -3,7 +3,6 @@
 from collections import defaultdict
 from collections.abc import Callable
 import contextlib
-from dataclasses import dataclass
 from functools import partial
 import logging
 from typing import cast
@@ -36,15 +35,10 @@ PARALLEL_UPDATES = 1
 FAN_SPEED_MODE_OPTIONS_INVERTED = {v: k for k, v in FAN_SPEED_MODE_OPTIONS.items()}
 
 
-@dataclass(frozen=True, kw_only=True)
-class HomeConnectFanEntityDescription(FanEntityDescription):
-    """Fan entity description."""
-
-
-AIR_CONDITIONER_ENTITY_DESCRIPTION = HomeConnectFanEntityDescription(
+AIR_CONDITIONER_ENTITY_DESCRIPTION = FanEntityDescription(
     key="air_conditioner",
     translation_key="air_conditioner",
-    name="",
+    name=None,
 )
 
 
@@ -206,8 +200,6 @@ async def async_setup_entry(
 class HomeConnectAirConditioningFanEntity(HomeConnectEntity, FanEntity):
     """Representation of a Home Connect fan entity."""
 
-    entity_description: HomeConnectFanEntityDescription
-
     def __init__(
         self,
         coordinator: HomeConnectCoordinator,
@@ -251,7 +243,7 @@ class HomeConnectAirConditioningFanEntity(HomeConnectEntity, FanEntity):
         )
 
     def update_native_value(self) -> None:
-        """Set the HVAC Mode and preset mode values."""
+        """Set the speed percentage and speed mode values."""
         option_value = None
         option_key = OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_PERCENTAGE
         if event := self.appliance.events.get(EventKey(option_key)):
@@ -265,10 +257,8 @@ class HomeConnectAirConditioningFanEntity(HomeConnectEntity, FanEntity):
         ):
             case (0, True):
                 self._attr_supported_features |= FanEntityFeature.SET_SPEED
-                self.__dict__.pop("supported_features", None)
             case (FanEntityFeature.SET_SPEED, False):
                 self._attr_supported_features &= ~FanEntityFeature.SET_SPEED
-                self.__dict__.pop("supported_features", None)
 
     def update_preset_mode(self) -> None:
         """Set the preset mode value."""
