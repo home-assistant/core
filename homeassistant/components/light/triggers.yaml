@@ -1,4 +1,4 @@
-turned_on:
+.trigger_common: &trigger_common
   target:
     entity:
       domain: light
@@ -14,18 +14,5 @@ turned_on:
             - any
           translation_key: trigger_behavior
 
-turned_off:
-  target:
-    entity:
-      domain: light
-  fields:
-    behavior:
-      required: true
-      default: any
-      selector:
-        select:
-          translation_key: trigger_behavior
-          options:
-            - first
-            - last
-            - any
+turned_on: *trigger_common
+turned_off: *trigger_common
