@@ -124,8 +124,6 @@ class DayBetterServicesConfigFlow(ConfigFlow, domain=DOMAIN):
                 await client_with_token.fetch_pids()
             except (AuthenticationError, APIError) as err:
                 raise CannotConnect from err
-            except Exception as err:
-                raise CannotConnect from err
         finally:
             await client.close()
             if client_with_token is not None:
