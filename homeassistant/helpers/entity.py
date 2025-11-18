@@ -1397,30 +1397,6 @@ class Entity(
 
     async def add_to_platform_finish(self) -> None:
         """Finish adding an entity to a platform."""
-        entity_registry = er.async_get(self.hass)
-
-        async def _handle_entity_registry_updated(event: Event[Any]) -> None:
-            """Handle registry create or update event."""
-            if (
-                event.data["action"] in {"create", "update"}
-                and (entry := entity_registry.async_get(event.data["entity_id"]))
-                and self.included_unique_ids is not None
-                and entry.unique_id in self.included_unique_ids
-            ) or (
-                event.data["action"] == "remove"
-                and self._included_entities is not None
-                and event.data["entity_id"] in self._included_entities
-            ):
-                self.async_write_ha_state()
-
-        if self.included_unique_ids is not None:
-            self.async_on_remove(
-                self.hass.bus.async_listen(
-                    er.EVENT_ENTITY_REGISTRY_UPDATED,
-                    _handle_entity_registry_updated,
-                )
-            )
-
         await self.async_internal_added_to_hass()
         await self.async_added_to_hass()
         self._platform_state = EntityPlatformState.ADDED
@@ -1534,6 +1510,30 @@ class Entity(
                 )
             )
             self._async_subscribe_device_updates()
+
+        entity_registry = er.async_get(self.hass)
+
+        async def _handle_entity_registry_updated(event: Event[Any]) -> None:
+            """Handle registry create or update event."""
+            if (
+                event.data["action"] in {"create", "update"}
+                and (entry := entity_registry.async_get(event.data["entity_id"]))
+                and self.included_unique_ids is not None
+                and entry.unique_id in self.included_unique_ids
+            ) or (
+                event.data["action"] == "remove"
+                and self._included_entities is not None
+                and event.data["entity_id"] in self._included_entities
+            ):
+                self.async_write_ha_state()
+
+        if self.included_unique_ids is not None:
+            self.async_on_remove(
+                self.hass.bus.async_listen(
+                    er.EVENT_ENTITY_REGISTRY_UPDATED,
+                    _handle_entity_registry_updated,
+                )
+            )
 
     async def async_internal_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass.
