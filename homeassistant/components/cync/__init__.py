@@ -9,6 +9,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.util.ssl import get_default_context
 
 from .const import (
     CONF_AUTHORIZE_STRING,
@@ -33,7 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: CyncConfigEntry) -> bool
     cync_auth = Auth(async_get_clientsession(hass), user=user_info)
 
     try:
-        cync = await Cync.create(cync_auth)
+        cync = await Cync.create(cync_auth, ssl_context=get_default_context())
     except AuthFailedError as ex:
         raise ConfigEntryAuthFailed("User token invalid") from ex
     except CyncError as ex:
