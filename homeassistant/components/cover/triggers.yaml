@@ -1,7 +1,7 @@
 garage_opened:
   target:
     entity:
-      domain: climate
+      domain: cover
       device_class: garage
   fields:
     behavior:
