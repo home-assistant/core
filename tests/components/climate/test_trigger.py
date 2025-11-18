@@ -74,7 +74,9 @@ async def setup_automation(
 @pytest.mark.parametrize(
     ("trigger", "initial_state", "states"),
     [
-        *parametrize_trigger_states("climate.turned_off", HVACMode.OFF, HVACMode.HEAT),
+        *parametrize_trigger_states(
+            "climate.turned_off", (HVACMode.OFF,), (HVACMode.HEAT,)
+        ),
     ],
 )
 async def test_climate_state_trigger_behavior_any(
@@ -178,7 +180,9 @@ async def test_climate_state_attribute_trigger_behavior_any(
 @pytest.mark.parametrize(
     ("trigger", "initial_state", "states"),
     [
-        *parametrize_trigger_states("climate.turned_off", HVACMode.OFF, HVACMode.HEAT),
+        *parametrize_trigger_states(
+            "climate.turned_off", (HVACMode.OFF,), (HVACMode.HEAT,)
+        ),
     ],
 )
 async def test_climate_state_trigger_behavior_first(
@@ -280,7 +284,9 @@ async def test_climate_state_attribute_trigger_behavior_first(
 @pytest.mark.parametrize(
     ("trigger", "initial_state", "states"),
     [
-        *parametrize_trigger_states("climate.turned_off", HVACMode.OFF, HVACMode.HEAT),
+        *parametrize_trigger_states(
+            "climate.turned_off", (HVACMode.OFF,), (HVACMode.HEAT,)
+        ),
     ],
 )
 async def test_climate_state_trigger_behavior_last(

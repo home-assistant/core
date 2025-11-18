@@ -293,6 +293,10 @@ class EntityTriggerBase(Trigger):
         self._options = config.options
         self._target = config.target
 
+    def is_from_state(self, state: State) -> bool:
+        """Check if the state matches the origin state."""
+        return not self.is_to_state(state)
+
     @abc.abstractmethod
     def is_to_state(self, state: State) -> bool:
         """Check if the state matches the target state."""
@@ -346,8 +350,8 @@ class EntityTriggerBase(Trigger):
             if not from_state or from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
                 return
 
-            # The trigger should never fire if the previous state was already the to state
-            if self.is_to_state(from_state):
+            # The trigger should never fire if the previous state was not the from state
+            if not self.is_from_state(from_state):
                 return
 
             # The trigger should never fire if the new state is not the to state
