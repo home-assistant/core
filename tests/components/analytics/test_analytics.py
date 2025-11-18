@@ -1644,7 +1644,7 @@ async def test_async_schedule(
     assert len(aioclient_mock.mock_calls) == 0
 
     # Onboard and enable both
-    analytics.save_preferences({ATTR_BASE: True, ATTR_SNAPSHOTS: True})
+    await analytics.save_preferences({ATTR_BASE: True, ATTR_SNAPSHOTS: True})
 
     await analytics.async_schedule()
 

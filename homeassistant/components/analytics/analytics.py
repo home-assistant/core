@@ -217,7 +217,7 @@ class AnalyticsData:
 
     onboarded: bool
     preferences: dict[str, bool]
-    uuid: str | None
+    uuid: str | None = None
     submission_identifier: str | None = None
     snapshot_submission_time: float | None = None
 
@@ -240,7 +240,7 @@ class Analytics:
         """Initialize the Analytics class."""
         self.hass: HomeAssistant = hass
         self.session = async_get_clientsession(hass)
-        self._data = AnalyticsData(False, {}, None)
+        self._data = AnalyticsData(False, {})
         self._store = Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY)
         self._basic_scheduled: CALLBACK_TYPE | None = None
         self._snapshot_scheduled: CALLBACK_TYPE | None = None
