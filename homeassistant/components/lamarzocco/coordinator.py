@@ -95,7 +95,8 @@ class LaMarzoccoConfigUpdateCoordinator(LaMarzoccoUpdateCoordinator):
         # ensure token stays valid; does nothing if token is still valid
         await self.cloud_client.async_get_access_token()
 
-        if self.device.websocket.connected:
+        # Only skip websocket reconnection if it's currently connected and the task is still running
+        if self.device.websocket.connected and not self.websocket_terminated:
             return
 
         await self.device.get_dashboard()
