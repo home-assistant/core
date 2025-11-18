@@ -337,7 +337,7 @@
         <HVACMode.COOL: 'cool'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
-      'max_temp': 30.0,
+      'max_temp': 32.0,
       'min_temp': 7.0,
     }),
     'config_entry_id': <ANY>,
@@ -372,27 +372,28 @@
 # name: test_climates[mock_thermostat][climate.mock_thermostat-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': None,
+      'current_temperature': 18.0,
       'friendly_name': 'Mock Thermostat',
+      'hvac_action': <HVACAction.HEATING: 'heating'>,
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
-      'max_temp': 30.0,
+      'max_temp': 32.0,
       'min_temp': 7.0,
       'supported_features': <ClimateEntityFeature: 387>,
-      'target_temp_high': None,
-      'target_temp_low': None,
-      'temperature': 20.0,
+      'target_temp_high': 26.0,
+      'target_temp_low': 20.0,
+      'temperature': None,
     }),
     'context': <ANY>,
     'entity_id': 'climate.mock_thermostat',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'heat_cool',
   })
 # ---
 # name: test_climates[room_airconditioner][climate.room_airconditioner-entry]
