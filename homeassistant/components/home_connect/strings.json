@@ -120,8 +120,8 @@
         "state_attributes": {
           "preset_mode": {
             "state": {
-              "heating_ventilation_air_conditioning_air_conditioner_enum_type_fan_speed_mode_automatic": "[%key:common::state::auto%]",
-              "heating_ventilation_air_conditioning_air_conditioner_enum_type_fan_speed_mode_manual": "[%key:common::state::manual%]"
+              "auto": "[%key:common::state::auto%]",
+              "manual": "[%key:common::state::manual%]"
             }
           }
         }

@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, FAN_SPEED_MODE_OPTIONS
+from .const import DOMAIN
 from .coordinator import (
     HomeConnectApplianceData,
     HomeConnectConfigEntry,
@@ -32,6 +32,10 @@ _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
+FAN_SPEED_MODE_OPTIONS = {
+    "auto": "HeatingVentilationAirConditioning.AirConditioner.EnumType.FanSpeedMode.Automatic",
+    "manual": "HeatingVentilationAirConditioning.AirConditioner.EnumType.FanSpeedMode.Manual",
+}
 FAN_SPEED_MODE_OPTIONS_INVERTED = {v: k for k, v in FAN_SPEED_MODE_OPTIONS.items()}
 
 

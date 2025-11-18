@@ -364,37 +364,27 @@ async def test_set_speed_raises_home_assistant_error_on_api_errors(
     [
         (
             None,
-            [
-                "heating_ventilation_air_conditioning_air_conditioner_enum_type_fan_speed_mode_automatic",
-                "heating_ventilation_air_conditioning_air_conditioner_enum_type_fan_speed_mode_manual",
-            ],
+            ["auto", "manual"],
         ),
         (
             [
                 "HeatingVentilationAirConditioning.AirConditioner.EnumType.FanSpeedMode.Automatic",
                 "HeatingVentilationAirConditioning.AirConditioner.EnumType.FanSpeedMode.Manual",
             ],
-            [
-                "heating_ventilation_air_conditioning_air_conditioner_enum_type_fan_speed_mode_automatic",
-                "heating_ventilation_air_conditioning_air_conditioner_enum_type_fan_speed_mode_manual",
-            ],
+            ["auto", "manual"],
         ),
         (
             [
                 "HeatingVentilationAirConditioning.AirConditioner.EnumType.FanSpeedMode.Automatic",
             ],
-            [
-                "heating_ventilation_air_conditioning_air_conditioner_enum_type_fan_speed_mode_automatic"
-            ],
+            ["auto"],
         ),
         (
             [
                 "HeatingVentilationAirConditioning.AirConditioner.EnumType.FanSpeedMode.Manual",
                 "A.Non.Documented.Option",
             ],
-            [
-                "heating_ventilation_air_conditioning_air_conditioner_enum_type_fan_speed_mode_manual"
-            ],
+            ["manual"],
         ),
     ],
 )
@@ -487,7 +477,7 @@ async def test_set_preset_mode_raises_home_assistant_error_on_api_errors(
             SERVICE_SET_PRESET_MODE,
             {
                 ATTR_ENTITY_ID: "fan.air_conditioner",
-                ATTR_PRESET_MODE: "heating_ventilation_air_conditioning_air_conditioner_enum_type_fan_speed_mode_automatic",
+                ATTR_PRESET_MODE: "auto",
             },
             blocking=True,
         )
