@@ -36,5 +36,13 @@
     "alarm_trigger": {
       "service": "mdi:bell-ring"
     }
+  },
+  "triggers": {
+    "disarmed": {
+      "trigger": "mdi:shield-off"
+    },
+    "triggered": {
+      "trigger": "mdi:bell-ring"
+    }
   }
 }

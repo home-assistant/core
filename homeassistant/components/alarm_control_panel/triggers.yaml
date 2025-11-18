@@ -1,0 +1,19 @@
+.trigger_common: &trigger_common
+  target:
+    entity:
+      domain: alarm_control_panel
+  fields:
+    behavior:
+      required: true
+      default: any
+      selector:
+        select:
+          options:
+            - first
+            - last
+            - any
+          translation_key: trigger_behavior
+
+disarmed: *trigger_common
+
+triggered: *trigger_common
