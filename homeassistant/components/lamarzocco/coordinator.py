@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-import asyncio
+from asyncio import Task
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -45,7 +45,7 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
 
     _default_update_interval = SCAN_INTERVAL
     config_entry: LaMarzoccoConfigEntry
-    _websocket_task: asyncio.Task[None] | None = None
+    _websocket_task: Task | None = None
 
     def __init__(
         self,
