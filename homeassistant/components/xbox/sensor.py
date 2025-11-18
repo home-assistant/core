@@ -335,7 +335,7 @@ class XboxStorageDeviceSensorEntity(
         )
 
     @property
-    def data(self):
+    def data(self) -> StorageDevice | None:
         """Storage device data."""
         consoles = self.coordinator.data.result
         console = next((c for c in consoles if c.id == self._console.id), None)
