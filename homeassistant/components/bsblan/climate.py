@@ -63,7 +63,6 @@ BSBLAN_HVAC_ACTION_HEATING: Final[set[int]] = {
     0x77,
     0x78,
     0x79,
-    0x7A,
     0x89,
 }
 
