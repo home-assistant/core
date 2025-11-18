@@ -130,6 +130,33 @@ def get_compressors(device: PyViCareDevice) -> list[PyViCareHeatingDeviceCompone
     return []
 
 
+def get_condensers(device: PyViCareDevice) -> list[PyViCareHeatingDeviceComponent]:
+    """Return the list of condensers."""
+    try:
+        return device.condensors
+    except PyViCareNotSupportedFeatureError:
+        _LOGGER.debug("No condensers found")
+    except AttributeError as error:
+        _LOGGER.debug("No condensers found: %s", error)
+    return []
+
+
+def get_evaporators(device: PyViCareDevice) -> list[PyViCareHeatingDeviceComponent]:
+    """Return the list of evaporators."""
+    try:
+        return device.evaporators
+    except PyViCareNotSupportedFeatureError:
+        _LOGGER.debug("No evaporators found")
+    except AttributeError as error:
+        _LOGGER.debug("No evaporators found: %s", error)
+    return []
+
+
 def filter_state(state: str) -> str | None:
     """Return the state if not 'nothing' or 'unknown'."""
     return None if state in ("nothing", "unknown") else state
+
+
+def normalize_state(state: str) -> str:
+    """Return the state with underscores instead of hyphens."""
+    return state.replace("-", "_")

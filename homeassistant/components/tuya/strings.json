@@ -77,6 +77,12 @@
       }
     },
     "button": {
+      "factory_reset": {
+        "name": "Factory reset"
+      },
+      "manual_clean": {
+        "name": "Manual clean"
+      },
       "reset_duster_cloth": {
         "name": "Reset duster cloth"
       },
@@ -165,6 +171,9 @@
       },
       "cook_time": {
         "name": "Cooking time"
+      },
+      "delay_clean_time": {
+        "name": "Delay clean time"
       },
       "down_delay": {
         "name": "Down delay"
@@ -483,6 +492,15 @@
           "on": "[%key:common::state::on%]",
           "power_off": "[%key:common::state::off%]",
           "power_on": "[%key:common::state::on%]"
+        }
+      },
+      "siren_mode": {
+        "name": "Siren mode",
+        "state": {
+          "alarm_light": "Light",
+          "alarm_sound": "Sound",
+          "alarm_sound_light": "Sound & light",
+          "normal": "[%key:common::state::normal%]"
         }
       },
       "target_humidity": {

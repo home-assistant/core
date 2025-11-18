@@ -344,7 +344,6 @@ class NSSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity):
         if not first_trip:
             return None
 
-        route = _get_route(first_trip)
         status = first_trip.status
 
         # Static attributes
@@ -369,6 +368,6 @@ class NSSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity):
             "next": _get_time_str(get_departure_time(next_trip)),
             "status": status.lower() if status else None,
             "transfers": first_trip.nr_transfers,
-            "route": route,
+            "route": _get_route(first_trip),
             "remarks": None,
         }
