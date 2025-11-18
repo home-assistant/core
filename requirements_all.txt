@@ -209,7 +209,7 @@ aioaseko==1.0.0
 aioasuswrt==1.5.1
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2.7.0
+aioautomower==2.7.1
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.2.2
@@ -1601,7 +1601,7 @@ odp-amsterdam==6.1.2
 oemthermostat==1.1.1
 
 # homeassistant.components.ohme
-ohme==1.5.2
+ohme==1.6.0
 
 # homeassistant.components.ollama
 ollama==0.5.1
@@ -2269,7 +2269,7 @@ pypaperless==4.1.1
 pypca==0.0.7
 
 # homeassistant.components.lcn
-pypck==0.9.3
+pypck==0.9.4
 
 # homeassistant.components.pglab
 pypglab==0.0.5
@@ -3087,6 +3087,9 @@ velbus-aio==2025.11.0
 
 # homeassistant.components.venstar
 venstarcolortouch==0.21
+
+# homeassistant.components.victron_ble
+victron-ble-ha-parser==0.4.9
 
 # homeassistant.components.victron_remote_monitoring
 victron-vrm==0.1.8
