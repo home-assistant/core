@@ -433,7 +433,6 @@ async def test_reorder_areas_persistence(
     assert msg["success"]
 
     await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     area_ids = [area.id for area in area_registry.async_list_areas()]
     assert area_ids == [area2.id, area3.id, area1.id]
