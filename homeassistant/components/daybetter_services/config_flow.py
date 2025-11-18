@@ -28,9 +28,6 @@ class DayBetterServicesConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        await self.async_set_unique_id(DOMAIN)
-        self._abort_if_unique_id_configured()
-
         default_user_code = user_input[CONF_USER_CODE] if user_input else ""
         return await self._async_handle_step(
             user_input,
@@ -67,6 +64,7 @@ class DayBetterServicesConfigFlow(ConfigFlow, domain=DOMAIN):
         is_reauth: bool,
     ) -> ConfigFlowResult:
         """Validate user input and either create or update the entry."""
+
         errors: dict[str, str] = {}
         current_user_code = default_user_code
 

@@ -28,8 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DayBetterConfigEntry) ->
 
     await coordinator.async_config_entry_first_refresh()
 
-    runtime_data = DayBetterRuntimeData(coordinator=coordinator, client=client)
-    entry.runtime_data = runtime_data
+    entry.runtime_data = DayBetterRuntimeData(coordinator=coordinator, client=client)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
