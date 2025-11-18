@@ -370,7 +370,6 @@ async def test_reorder_floors_persistence(
     assert msg["success"]
 
     await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     floor_ids = [floor.floor_id for floor in floor_registry.async_list_floors()]
     assert floor_ids == [floor2.floor_id, floor3.floor_id, floor1.floor_id]
