@@ -1,5 +1,4 @@
 add_item:
-  target: {}
   fields:
     name:
       required: true
@@ -66,7 +65,6 @@ sort:
         boolean:
 
 add_category:
-  target: {}
   fields:
     name:
       required: true
