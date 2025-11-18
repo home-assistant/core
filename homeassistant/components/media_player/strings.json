@@ -177,6 +177,13 @@
         "off": "[%key:common::state::off%]",
         "one": "Repeat one"
       }
+    },
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
+      }
     }
   },
   "services": {
@@ -367,5 +374,18 @@
       "name": "Turn up volume"
     }
   },
-  "title": "Media player"
+  "title": "Media player",
+  "triggers": {
+    "stopped_playing": {
+      "description": "Triggers when a media player stops playing.",
+      "description_configured": "[%key:component::media_player::triggers::stopped_playing::description%]",
+      "fields": {
+        "behavior": {
+          "description": "The behavior of the targeted media players to trigger on.",
+          "name": "Behavior"
+        }
+      },
+      "name": "When a media player stops playing"
+    }
+  }
 }

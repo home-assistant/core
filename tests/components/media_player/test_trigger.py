@@ -1,16 +1,10 @@
-"""Test light trigger."""
+"""Test media player trigger."""
 
 import pytest
 
 from homeassistant.components import automation
-from homeassistant.const import (
-    CONF_ENTITY_ID,
-    CONF_OPTIONS,
-    CONF_PLATFORM,
-    CONF_TARGET,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.components.media_player import MediaPlayerState
+from homeassistant.const import CONF_ENTITY_ID, CONF_OPTIONS, CONF_PLATFORM, CONF_TARGET
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.setup import async_setup_component
 
@@ -27,17 +21,22 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
 
 
 @pytest.fixture
-async def target_lights(hass: HomeAssistant) -> None:
-    """Create multiple light entities associated with different targets."""
-    return await target_entities(hass, "light")
+async def target_media_players(hass: HomeAssistant) -> None:
+    """Create multiple media player entities associated with different targets."""
+    return await target_entities(hass, "media_player")
 
 
-def set_or_remove_state(hass: HomeAssistant, entity_id: str, state: str | None) -> None:
+def set_or_remove_state(
+    hass: HomeAssistant,
+    entity_id: str,
+    state: str | None,
+    attributes: dict | None = None,
+) -> None:
     """Set or clear the state of an entity."""
     if state is None:
         hass.states.async_remove(entity_id)
     else:
-        hass.states.async_set(entity_id, state, force_update=True)
+        hass.states.async_set(entity_id, state, attributes, force_update=True)
 
 
 async def setup_automation(
@@ -65,32 +64,39 @@ async def setup_automation(
 
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
-    parametrize_target_entities("light"),
+    parametrize_target_entities("media_player"),
 )
 @pytest.mark.parametrize(
     ("trigger", "states"),
     [
-        *parametrize_trigger_states("light.turned_on", (STATE_ON,), (STATE_OFF,)),
-        *parametrize_trigger_states("light.turned_off", (STATE_OFF,), (STATE_ON,)),
+        *parametrize_trigger_states(
+            "media_player.stopped_playing",
+            (MediaPlayerState.IDLE, MediaPlayerState.OFF, MediaPlayerState.ON),
+            (
+                MediaPlayerState.BUFFERING,
+                MediaPlayerState.PAUSED,
+                MediaPlayerState.PLAYING,
+            ),
+        ),
     ],
 )
-async def test_light_state_trigger_behavior_any(
+async def test_media_player_state_trigger_behavior_any(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_lights: list[str],
+    target_media_players: list[str],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
     trigger: str,
     states: list[tuple[str, int]],
 ) -> None:
-    """Test that the light state trigger fires when any light state changes to a specific state."""
-    await async_setup_component(hass, "light", {})
+    """Test that the media player state trigger fires when any media player state changes to a specific state."""
+    await async_setup_component(hass, "media_player", {})
 
-    other_entity_ids = set(target_lights) - {entity_id}
+    other_entity_ids = set(target_media_players) - {entity_id}
 
-    # Set all lights, including the tested light, to the initial state
-    for eid in target_lights:
+    # Set all media players, including the tested media player, to the initial state
+    for eid in target_media_players:
         set_or_remove_state(hass, eid, states[0][0])
         await hass.async_block_till_done()
 
@@ -104,7 +110,7 @@ async def test_light_state_trigger_behavior_any(
             assert service_call.data[CONF_ENTITY_ID] == entity_id
         service_calls.clear()
 
-        # Check if changing other lights also triggers
+        # Check if changing other media players also triggers
         for other_entity_id in other_entity_ids:
             set_or_remove_state(hass, other_entity_id, state)
             await hass.async_block_till_done()
@@ -114,32 +120,39 @@ async def test_light_state_trigger_behavior_any(
 
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
-    parametrize_target_entities("light"),
+    parametrize_target_entities("media_player"),
 )
 @pytest.mark.parametrize(
     ("trigger", "states"),
     [
-        *parametrize_trigger_states("light.turned_on", (STATE_ON,), (STATE_OFF,)),
-        *parametrize_trigger_states("light.turned_off", (STATE_OFF,), (STATE_ON,)),
+        *parametrize_trigger_states(
+            "media_player.stopped_playing",
+            (MediaPlayerState.IDLE, MediaPlayerState.OFF, MediaPlayerState.ON),
+            (
+                MediaPlayerState.BUFFERING,
+                MediaPlayerState.PAUSED,
+                MediaPlayerState.PLAYING,
+            ),
+        ),
     ],
 )
-async def test_light_state_trigger_behavior_first(
+async def test_media_player_state_trigger_behavior_first(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_lights: list[str],
+    target_media_players: list[str],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
     trigger: str,
     states: list[tuple[str, int, list[str]]],
 ) -> None:
-    """Test that the light state trigger fires when the first light changes to a specific state."""
-    await async_setup_component(hass, "light", {})
+    """Test that the media player state trigger fires when the first media player changes to a specific state."""
+    await async_setup_component(hass, "media_player", {})
 
-    other_entity_ids = set(target_lights) - {entity_id}
+    other_entity_ids = set(target_media_players) - {entity_id}
 
-    # Set all lights, including the tested light, to the initial state
-    for eid in target_lights:
+    # Set all media players, including the tested media player, to the initial state
+    for eid in target_media_players:
         set_or_remove_state(hass, eid, states[0][0])
         await hass.async_block_till_done()
 
@@ -153,7 +166,7 @@ async def test_light_state_trigger_behavior_first(
             assert service_call.data[CONF_ENTITY_ID] == entity_id
         service_calls.clear()
 
-        # Triggering other lights should not cause the trigger to fire again
+        # Triggering other media players should not cause the trigger to fire again
         for other_entity_id in other_entity_ids:
             set_or_remove_state(hass, other_entity_id, state)
             await hass.async_block_till_done()
@@ -162,32 +175,39 @@ async def test_light_state_trigger_behavior_first(
 
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
-    parametrize_target_entities("light"),
+    parametrize_target_entities("media_player"),
 )
 @pytest.mark.parametrize(
     ("trigger", "states"),
     [
-        *parametrize_trigger_states("light.turned_on", (STATE_ON,), (STATE_OFF,)),
-        *parametrize_trigger_states("light.turned_off", (STATE_OFF,), (STATE_ON,)),
+        *parametrize_trigger_states(
+            "media_player.stopped_playing",
+            (MediaPlayerState.IDLE, MediaPlayerState.OFF, MediaPlayerState.ON),
+            (
+                MediaPlayerState.BUFFERING,
+                MediaPlayerState.PAUSED,
+                MediaPlayerState.PLAYING,
+            ),
+        ),
     ],
 )
-async def test_light_state_trigger_behavior_last(
+async def test_media_player_state_trigger_behavior_last(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_lights: list[str],
+    target_media_players: list[str],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
     trigger: str,
     states: list[tuple[str, int]],
 ) -> None:
-    """Test that the light state trigger fires when the last light changes to a specific state."""
-    await async_setup_component(hass, "light", {})
+    """Test that the media player state trigger fires when the last media player changes to a specific state."""
+    await async_setup_component(hass, "media_player", {})
 
-    other_entity_ids = set(target_lights) - {entity_id}
+    other_entity_ids = set(target_media_players) - {entity_id}
 
-    # Set all lights, including the tested light, to the initial state
-    for eid in target_lights:
+    # Set all media players, including the tested media player, to the initial state
+    for eid in target_media_players:
         set_or_remove_state(hass, eid, states[0][0])
         await hass.async_block_till_done()
 

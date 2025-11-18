@@ -1,5 +1,8 @@
 """The tests for components."""
 
+from collections.abc import Iterable
+import itertools
+
 from homeassistant.const import (
     ATTR_AREA_ID,
     ATTR_DEVICE_ID,
@@ -100,42 +103,88 @@ def parametrize_target_entities(domain: str) -> list[tuple[dict, str, int]]:
 
 
 def parametrize_trigger_states(
-    trigger: str, target_state: str, other_state: str
-) -> list[tuple[str, str | None, list[tuple[str, int]]]]:
+    trigger: str, target_states: Iterable[str], other_states: Iterable[str]
+) -> list[tuple[str, list[tuple[str | None, int]]]]:
     """Parametrize states and expected service call counts.
 
-    Returns a list of tuples with (trigger, initial_state, list of states),
+    Returns a list of tuples with (trigger, list of states),
     where states is a list of tuples (state to set, expected service call count).
     """
     return [
         # Initial state None
         (
             trigger,
-            None,
-            [(target_state, 0), (other_state, 0), (target_state, 1)],
+            list(
+                itertools.chain.from_iterable(
+                    ((None, 0), (target_state, 0), (other_state, 0), (target_state, 1))
+                    for target_state in target_states
+                    for other_state in other_states
+                )
+            ),
         ),
         # Initial state different from target state
         (
             trigger,
-            other_state,
-            [(target_state, 1), (other_state, 0), (target_state, 1)],
+            # other_state,
+            list(
+                itertools.chain.from_iterable(
+                    (
+                        (other_state, 0),
+                        (target_state, 1),
+                        (other_state, 0),
+                        (target_state, 1),
+                    )
+                    for target_state in target_states
+                    for other_state in other_states
+                )
+            ),
         ),
         # Initial state same as target state
         (
             trigger,
-            target_state,
-            [(target_state, 0), (other_state, 0), (target_state, 1)],
+            list(
+                itertools.chain.from_iterable(
+                    (
+                        (target_state, 0),
+                        (target_state, 0),
+                        (other_state, 0),
+                        (target_state, 1),
+                    )
+                    for target_state in target_states
+                    for other_state in other_states
+                )
+            ),
         ),
         # Initial state unavailable / unknown
         (
             trigger,
-            STATE_UNAVAILABLE,
-            [(target_state, 0), (other_state, 0), (target_state, 1)],
+            list(
+                itertools.chain.from_iterable(
+                    (
+                        (STATE_UNAVAILABLE, 0),
+                        (target_state, 0),
+                        (other_state, 0),
+                        (target_state, 1),
+                    )
+                    for target_state in target_states
+                    for other_state in other_states
+                )
+            ),
         ),
         (
             trigger,
-            STATE_UNKNOWN,
-            [(target_state, 0), (other_state, 0), (target_state, 1)],
+            list(
+                itertools.chain.from_iterable(
+                    (
+                        (STATE_UNKNOWN, 0),
+                        (target_state, 0),
+                        (other_state, 0),
+                        (target_state, 1),
+                    )
+                    for target_state in target_states
+                    for other_state in other_states
+                )
+            ),
         ),
     ]
 
