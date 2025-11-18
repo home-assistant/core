@@ -496,9 +496,6 @@
     "external_reason_mow": {
       "message": "External reason is only allowed with override mode `park`"
     },
-    "work_areas_not_supported": {
-      "message": "This mower does not support work areas."
-    },
     "work_area_not_existing": {
       "message": "The selected work area does not exist."
     },
@@ -522,13 +519,13 @@
           "description": "Minimum: 1 minute, maximum: 42 days, seconds will be ignored.",
           "name": "Duration"
         },
-        "override_mode": {
-          "name": "Override mode",
-          "description": "With which action the schedule should be overridden."
-        },
         "external_reason": {
-          "name": "External reason",
-          "description": "For parking the mower with a duration. The external reason is only available if the mower support work areas. Else the external reason will be ignored. The exernal reason will be automatically removed after 25 hours."
+          "description": "For parking the mower with a duration. The external reason is only available if the mower support work areas. Else the external reason will be ignored. The exernal reason will be automatically removed after 25 hours.",
+          "name": "External reason"
+        },
+        "override_mode": {
+          "description": "With which action the schedule should be overridden.",
+          "name": "Override mode"
         }
       },
       "name": "Override schedule"
