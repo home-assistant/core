@@ -1,4 +1,4 @@
- "data": {
+"data": {
     "endpoint": "https://apigw.tuyaeu.com",
     "mqtt_connected": true,
     "disabled_by": null,
@@ -179,4 +179,22 @@
         "type": "Boolean",
         "value": {}
       }
-    }
+    },
+    "status": {
+      "switch": false,
+      "dehumidify_set_value": 65,
+      "fan_speed_enum": "low",
+      "humidity_indoor": 72,
+      "temp_indoor": 16,
+      "anion": false,
+      "child_lock": false,
+      "countdown_set": "cancel",
+      "fault": 1,
+      "filter_reset": false,
+      "filter_life": 0,
+      "temp_unit_convert": "c",
+      "runtime_total_reset": false
+    },
+    "set_up": true,
+    "support_local": true
+  }
