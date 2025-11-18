@@ -4,10 +4,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import IntEnum
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from chip.clusters import Objects as clusters
+from chip.clusters.Objects import NullValue
 from matter_server.client.models import device_types
+from matter_server.common.errors import MatterError
 
 from homeassistant.components.vacuum import (
     StateVacuumEntity,
@@ -17,13 +19,14 @@ from homeassistant.components.vacuum import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, ServiceResponse, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
+from .services import ATTR_CURRENT_AREA, ATTR_CURRENT_AREA_NAME, ATTR_SELECTED_AREAS
 
 
 class OperationalState(IntEnum):
@@ -73,8 +76,22 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
     _supported_run_modes: (
         dict[int, clusters.RvcRunMode.Structs.ModeOptionStruct] | None
     ) = None
+    matter_areas: dict[str, Any] | None = None
+    _attr_current_area: int | None = None
+    _attr_current_area_name: str | None = None
+    _attr_selected_areas: list[int] | None = None
+    _attr_supported_maps: list[dict[str, Any]] | None = None
     entity_description: MatterStateVacuumEntityDescription
     _platform_translation_key = "vacuum"
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return the state attributes of the entity."""
+        return {
+            ATTR_CURRENT_AREA: self._attr_current_area,
+            ATTR_CURRENT_AREA_NAME: self._attr_current_area_name,
+            ATTR_SELECTED_AREAS: self._attr_selected_areas,
+        }
 
     def _get_run_mode_by_tag(
         self, tag: ModeTag
@@ -144,10 +161,114 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
         """Pause the cleaning task."""
         await self.send_device_command(clusters.RvcOperationalState.Commands.Pause())
 
+    async def async_handle_get_areas(self, **kwargs: Any) -> ServiceResponse:
+        """Get available area and map IDs from vacuum appliance."""
+        # Group by area_id: {area_id: {"map_id": ..., "name": ...}}
+        areas = {}
+        if self.matter_areas is not None:
+            for area in self.matter_areas:
+                area_id = getattr(area, "areaID", None)
+                map_id = getattr(area, "mapID", None)
+                location_name = self._get_area_name_by_id(area_id) if area_id else None
+                if area_id is not None:
+                    if map_id is NullValue:
+                        areas[area_id] = {"name": location_name}
+                    else:
+                        areas[area_id] = {"map_id": map_id, "name": location_name}
+
+            # Optionally, also extract supported maps if available
+            supported_maps = self.get_matter_attribute_value(
+                clusters.ServiceArea.Attributes.SupportedMaps
+            )
+            maps = []
+            if supported_maps != NullValue:
+                maps = [
+                    {
+                        "map_id": getattr(m, "mapID", None)
+                        if getattr(m, "mapID", None) != NullValue
+                        else None,
+                        "name": getattr(m, "name", None),
+                    }
+                    for m in supported_maps
+                ]
+
+            return cast(
+                ServiceResponse,
+                {
+                    "areas": areas,
+                    "maps": maps,
+                },
+            )
+        return None
+
+    async def async_handle_clean_areas(
+        self, areas: list[int], **kwargs: Any
+    ) -> ServiceResponse:
+        """Start cleaning the specified areas."""
+        try:
+            # Matter command to the vacuum cleaner to select the areas.
+            await self.send_device_command(
+                clusters.ServiceArea.Commands.SelectAreas(newAreas=areas)
+            )
+            # Start the vacuum cleaner after selecting areas.
+            await self.async_start()
+        except MatterError as err:
+            raise HomeAssistantError(
+                f"Failed to start cleaning areas {areas}: {err}"
+            ) from err
+        return None
+
+    async def async_get_areas(self, **kwargs: Any) -> ServiceResponse:
+        """Entity service wrapper for getting areas.
+
+        This wrapper exists because the entity service machinery expects an
+        `async_<service_name>` method on the entity. Delegate to the
+        existing handler implementation.
+        """
+        return await self.async_handle_get_areas(**kwargs)
+
+    async def async_clean_areas(self, areas: list[int], **kwargs: Any) -> None:
+        """Entity service wrapper for cleaning areas.
+
+        Delegate to the existing handler implementation.
+        """
+        await self.async_handle_clean_areas(areas=areas, **kwargs)
+
+    def _get_area_name_by_id(self, area_id: int) -> str | None:
+        """Get the area name by area ID."""
+        if self.matter_areas:
+            for area in self.matter_areas:
+                if getattr(area, "areaID", None) == area_id:
+                    area_info = getattr(area, "areaInfo", None)
+                    if area_info is not None:
+                        location_info = getattr(area_info, "locationInfo", None)
+                        if location_info is not None:
+                            return getattr(location_info, "locationName", None)
+        return None
+
     @callback
     def _update_from_device(self) -> None:
         """Update from device."""
         self._calculate_features()
+        # ServiceArea: get areas from the device
+        self.matter_areas = self.get_matter_attribute_value(
+            clusters.ServiceArea.Attributes.SupportedAreas
+        )
+        # optional CurrentArea attribute
+        current_area = self.get_matter_attribute_value(
+            clusters.ServiceArea.Attributes.CurrentArea
+        )
+        if current_area is not None:
+            area_name = self._get_area_name_by_id(current_area)
+            self._attr_current_area = current_area
+            self._attr_current_area_name = area_name
+        else:
+            self._attr_current_area = None
+        selected_areas = self.get_matter_attribute_value(
+            clusters.ServiceArea.Attributes.SelectedAreas
+        )
+        if selected_areas is not None:
+            self._attr_selected_areas = selected_areas
         # derive state from the run mode + operational state
         run_mode_raw: int = self.get_matter_attribute_value(
             clusters.RvcRunMode.Attributes.CurrentMode
@@ -227,6 +348,10 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.RvcRunMode.Attributes.CurrentMode,
             clusters.RvcOperationalState.Attributes.OperationalState,
+        ),
+        optional_attributes=(
+            clusters.ServiceArea.Attributes.SelectedAreas,
+            clusters.ServiceArea.Attributes.CurrentArea,
         ),
         device_type=(device_types.RoboticVacuumCleaner,),
         allow_none_value=True,

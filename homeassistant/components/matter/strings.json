@@ -594,6 +594,20 @@
       },
       "name": "Open commissioning window"
     },
+    "clean_areas": {
+      "name": "Clean areas",
+      "description": "Instructs the Matter vacuum cleaner to clean the specified areas.",
+      "fields": {
+        "areas": {
+          "name": "Areas",
+          "description": "A list of area IDs to clean."
+        }
+      }
+    },
+    "get_areas": {
+      "name": "Get areas",
+      "description": "Returns a list of available areas and maps for robot vacuum cleaners."
+    },
     "water_heater_boost": {
       "description": "Enables water heater boost for a specific duration.",
       "fields": {

@@ -165,6 +165,12 @@
     }
   },
   "services": {
+    "clean_areas": {
+      "service": "mdi:robot-vacuum"
+    },
+    "get_areas": {
+      "service": "mdi:map"
+    },
     "water_heater_boost": {
       "service": "mdi:water-boiler"
     }
