@@ -77,7 +77,13 @@ async def async_attach_trigger(
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
     if config[CONF_TYPE] == "cleaning":
-        to_state = VacuumActivity.CLEANING
+        # Trigger on any cleaning-related activity
+        to_state = [
+            VacuumActivity.CLEANING,
+            VacuumActivity.VACUUMING,
+            VacuumActivity.MOPPING,
+            VacuumActivity.VACUUMING_AND_MOPPING,
+        ]
     else:
         to_state = VacuumActivity.DOCKED
 

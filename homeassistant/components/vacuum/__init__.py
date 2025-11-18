@@ -39,10 +39,18 @@ from homeassistant.loader import bind_hass
 from homeassistant.util.hass_dict import HassKey
 
 from .const import (  # noqa: F401
+    _DEPRECATED_STATE_AUTO_EMPTYING,
     _DEPRECATED_STATE_CLEANING,
+    _DEPRECATED_STATE_CLEANING_MOPS,
     _DEPRECATED_STATE_DOCKED,
+    _DEPRECATED_STATE_DRYING_MOPS,
     _DEPRECATED_STATE_ERROR,
+    _DEPRECATED_STATE_MOPPING,
     _DEPRECATED_STATE_RETURNING,
+    _DEPRECATED_STATE_VACUUMING,
+    _DEPRECATED_STATE_VACUUMING_AND_MOPPING,
+    DEFAULT_CLEANING_MODES,
+    DEFAULT_WATER_LEVELS,
     DOMAIN,
     VacuumActivity,
 )
@@ -61,12 +69,19 @@ ATTR_FAN_SPEED = "fan_speed"
 ATTR_FAN_SPEED_LIST = "fan_speed_list"
 ATTR_PARAMS = "params"
 ATTR_STATUS = "status"
+ATTR_CLEANING_MODE = "cleaning_mode"
+ATTR_CLEANING_MODES = "cleaning_modes"
+ATTR_CURRENT_WATER_LEVEL = "water_level"
+ATTR_WATER_LEVELS = "water_levels"
+ATTR_EMPTY_REQUIRED = "empty_required"
 
 SERVICE_CLEAN_SPOT = "clean_spot"
 SERVICE_LOCATE = "locate"
 SERVICE_RETURN_TO_BASE = "return_to_base"
 SERVICE_SEND_COMMAND = "send_command"
 SERVICE_SET_FAN_SPEED = "set_fan_speed"
+SERVICE_SET_CLEANING_MODE = "set_cleaning_mode"
+SERVICE_SET_WATER_LEVEL = "set_water_level"
 SERVICE_START_PAUSE = "start_pause"
 SERVICE_START = "start"
 SERVICE_PAUSE = "pause"
@@ -88,20 +103,26 @@ _BATTERY_DEPRECATION_IGNORED_PLATFORMS = (
 class VacuumEntityFeature(IntFlag):
     """Supported features of the vacuum entity."""
 
-    TURN_ON = 1  # Deprecated, not supported by StateVacuumEntity
-    TURN_OFF = 2  # Deprecated, not supported by StateVacuumEntity
-    PAUSE = 4
-    STOP = 8
-    RETURN_HOME = 16
-    FAN_SPEED = 32
+    AUTO_EMPTY = 65536
     BATTERY = 64
-    STATUS = 128  # Deprecated, not supported by StateVacuumEntity
-    SEND_COMMAND = 256
-    LOCATE = 512
     CLEAN_SPOT = 1024
+    CLEANING_MODE = 262144
+    DRYING_MOP = 131072
+    FAN_SPEED = 32
+    LOCATE = 512
     MAP = 2048
-    STATE = 4096  # Must be set by vacuum platforms derived from StateVacuumEntity
+    MOP = 16384
+    MOP_VACUUM = 32768
+    PAUSE = 4
+    RETURN_HOME = 16
+    SEND_COMMAND = 256
     START = 8192
+    STATE = 4096  # Must be set by vacuum platforms derived from StateVacuumEntity
+    STATUS = 128  # Deprecated, not supported by StateVacuumEntity
+    STOP = 8
+    TURN_OFF = 2  # Deprecated, not supported by StateVacuumEntity
+    TURN_ON = 1  # Deprecated, not supported by StateVacuumEntity
+    WATER_LEVEL = 524288
 
 
 # mypy: disallow-any-generics
@@ -164,6 +185,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         [VacuumEntityFeature.FAN_SPEED],
     )
     component.async_register_entity_service(
+        SERVICE_SET_CLEANING_MODE,
+        {vol.Required(ATTR_CLEANING_MODE): cv.string},
+        "async_set_cleaning_mode",
+        [VacuumEntityFeature.CLEANING_MODE],
+    )
+    component.async_register_entity_service(
+        SERVICE_SET_WATER_LEVEL,
+        {vol.Required(ATTR_CURRENT_WATER_LEVEL): cv.string},
+        "async_set_water_level",
+        [VacuumEntityFeature.WATER_LEVEL],
+    )
+    component.async_register_entity_service(
         SERVICE_SEND_COMMAND,
         {
             vol.Required(ATTR_COMMAND): cv.string,
@@ -196,6 +229,10 @@ STATE_VACUUM_CACHED_PROPERTIES_WITH_ATTR_ = {
     "battery_icon",
     "fan_speed",
     "fan_speed_list",
+    "cleaning_mode",
+    "cleaning_modes",
+    "water_level",
+    "water_levels",
     "activity",
 }
 
@@ -207,12 +244,19 @@ class StateVacuumEntity(
 
     entity_description: StateVacuumEntityDescription
 
-    _entity_component_unrecorded_attributes = frozenset({ATTR_FAN_SPEED_LIST})
+    _entity_component_unrecorded_attributes = frozenset(
+        {ATTR_FAN_SPEED_LIST, ATTR_CLEANING_MODES, ATTR_WATER_LEVELS}
+    )
 
     _attr_battery_icon: str
     _attr_battery_level: int | None = None
     _attr_fan_speed: str | None = None
     _attr_fan_speed_list: list[str]
+    _attr_cleaning_mode: str | None = None
+    _attr_cleaning_modes: list[str] = DEFAULT_CLEANING_MODES
+    _attr_water_level: str | None = None
+    _attr_water_levels: list[str] = DEFAULT_WATER_LEVELS
+    _attr_empty_required: bool | None = None
     _attr_activity: VacuumActivity | None = None
     _attr_supported_features: VacuumEntityFeature = VacuumEntityFeature(0)
 
@@ -350,9 +394,19 @@ class StateVacuumEntity(
     @property
     def capability_attributes(self) -> dict[str, Any] | None:
         """Return capability attributes."""
-        if VacuumEntityFeature.FAN_SPEED in self.supported_features:
-            return {ATTR_FAN_SPEED_LIST: self.fan_speed_list}
-        return None
+        data: dict[str, Any] = {}
+        supported_features = self.supported_features
+
+        if VacuumEntityFeature.FAN_SPEED in supported_features:
+            data[ATTR_FAN_SPEED_LIST] = self.fan_speed_list
+
+        if VacuumEntityFeature.CLEANING_MODE in supported_features:
+            data[ATTR_CLEANING_MODES] = self.cleaning_modes
+
+        if VacuumEntityFeature.WATER_LEVEL in supported_features:
+            data[ATTR_WATER_LEVELS] = self.water_levels
+
+        return data if data else None
 
     @cached_property
     def fan_speed(self) -> str | None:
@@ -363,6 +417,26 @@ class StateVacuumEntity(
     def fan_speed_list(self) -> list[str]:
         """Get the list of available fan speed steps of the vacuum cleaner."""
         return self._attr_fan_speed_list
+
+    @cached_property
+    def cleaning_mode(self) -> str | None:
+        """Return the cleaning mode of the vacuum cleaner."""
+        return self._attr_cleaning_mode
+
+    @cached_property
+    def cleaning_modes(self) -> list[str]:
+        """Get the list of available cleaning modes of the vacuum cleaner."""
+        return self._attr_cleaning_modes
+
+    @cached_property
+    def water_level(self) -> str | None:
+        """Return the water level of the vacuum cleaner."""
+        return self._attr_water_level
+
+    @cached_property
+    def water_levels(self) -> list[str]:
+        """Get the list of available water levels of the vacuum cleaner."""
+        return self._attr_water_levels
 
     @property
     def state_attributes(self) -> dict[str, Any]:
@@ -379,6 +453,12 @@ class StateVacuumEntity(
 
         if VacuumEntityFeature.FAN_SPEED in supported_features:
             data[ATTR_FAN_SPEED] = self.fan_speed
+
+        if VacuumEntityFeature.CLEANING_MODE in supported_features:
+            data[ATTR_CLEANING_MODE] = self.cleaning_mode
+
+        if VacuumEntityFeature.WATER_LEVEL in supported_features:
+            data[ATTR_CURRENT_WATER_LEVEL] = self.water_level
 
         return data
 
@@ -465,6 +545,32 @@ class StateVacuumEntity(
         """
         await self.hass.async_add_executor_job(
             partial(self.set_fan_speed, fan_speed, **kwargs)
+        )
+
+    def set_cleaning_mode(self, cleaning_mode: str, **kwargs: Any) -> None:
+        """Set cleaning mode."""
+        raise NotImplementedError
+
+    async def async_set_cleaning_mode(self, cleaning_mode: str, **kwargs: Any) -> None:
+        """Set cleaning mode.
+
+        This method must be run in the event loop.
+        """
+        await self.hass.async_add_executor_job(
+            partial(self.set_cleaning_mode, cleaning_mode, **kwargs)
+        )
+
+    def set_water_level(self, water_level: str, **kwargs: Any) -> None:
+        """Set water level."""
+        raise NotImplementedError
+
+    async def async_set_water_level(self, water_level: str, **kwargs: Any) -> None:
+        """Set water level.
+
+        This method must be run in the event loop.
+        """
+        await self.hass.async_add_executor_job(
+            partial(self.set_water_level, water_level, **kwargs)
         )
 
     def send_command(

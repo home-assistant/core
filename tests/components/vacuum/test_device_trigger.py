@@ -386,3 +386,92 @@ async def test_if_fires_on_state_change_with_for(
         service_calls[0].data["some"]
         == f"turn_off device - {entry.entity_id} - docked - cleaning - 0:00:05"
     )
+
+
+async def test_if_fires_on_all_cleaning_activities(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    service_calls: list[ServiceCall],
+) -> None:
+    """Test that cleaning trigger fires for all cleaning-related activities."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entry = entity_registry.async_get_or_create(
+        DOMAIN, "test", "5678", device_id=device_entry.id
+    )
+
+    hass.states.async_set(entry.entity_id, VacuumActivity.DOCKED)
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": device_entry.id,
+                        "entity_id": entry.id,
+                        "type": "cleaning",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": "{{ trigger.to_state.state}}"
+                        },
+                    },
+                },
+            ]
+        },
+    )
+
+    # Test that trigger fires for CLEANING
+    hass.states.async_set(entry.entity_id, VacuumActivity.CLEANING)
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+    assert service_calls[0].data["some"] == "cleaning"
+
+    # Reset to docked
+    hass.states.async_set(entry.entity_id, VacuumActivity.DOCKED)
+    await hass.async_block_till_done()
+
+    # Test that trigger fires for VACUUMING
+    hass.states.async_set(entry.entity_id, VacuumActivity.VACUUMING)
+    await hass.async_block_till_done()
+    assert len(service_calls) == 2
+    assert service_calls[1].data["some"] == "vacuuming"
+
+    # Reset to docked
+    hass.states.async_set(entry.entity_id, VacuumActivity.DOCKED)
+    await hass.async_block_till_done()
+
+    # Test that trigger fires for MOPPING
+    hass.states.async_set(entry.entity_id, VacuumActivity.MOPPING)
+    await hass.async_block_till_done()
+    assert len(service_calls) == 3
+    assert service_calls[2].data["some"] == "mopping"
+
+    # Reset to docked
+    hass.states.async_set(entry.entity_id, VacuumActivity.DOCKED)
+    await hass.async_block_till_done()
+
+    # Test that trigger fires for VACUUMING_AND_MOPPING
+    hass.states.async_set(entry.entity_id, VacuumActivity.VACUUMING_AND_MOPPING)
+    await hass.async_block_till_done()
+    assert len(service_calls) == 4
+    assert service_calls[3].data["some"] == "vacuuming_and_mopping"
+
+    # Test that trigger does NOT fire for other states like IDLE or RETURNING
+    hass.states.async_set(entry.entity_id, VacuumActivity.IDLE)
+    await hass.async_block_till_done()
+    assert len(service_calls) == 4  # Should still be 4, no new trigger
+
+    hass.states.async_set(entry.entity_id, VacuumActivity.RETURNING)
+    await hass.async_block_till_done()
+    assert len(service_calls) == 4  # Should still be 4, no new trigger

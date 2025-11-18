@@ -20,14 +20,20 @@
     "_": {
       "name": "[%key:component::vacuum::title%]",
       "state": {
+        "auto_emptying": "Auto emptying dust bin",
         "cleaning": "Cleaning",
+        "cleaning_mop_tool": "Cleaning mop pads",
         "docked": "Docked",
+        "drying_mop_tool": "Drying mop pads",
         "error": "[%key:common::state::error%]",
         "idle": "[%key:common::state::idle%]",
+        "mopping": "Mopping",
         "off": "[%key:common::state::off%]",
         "on": "[%key:common::state::on%]",
         "paused": "[%key:common::state::paused%]",
-        "returning": "Returning to dock"
+        "returning": "Returning to dock",
+        "vacuuming": "Vacuuming",
+        "vacuuming_and_mopping": "Vacuuming and mopping"
       }
     }
   },
@@ -62,6 +68,16 @@
       },
       "name": "Send command"
     },
+    "set_cleaning_mode": {
+      "description": "Sets the cleaning mode of the vacuum cleaner.",
+      "fields": {
+        "cleaning_mode": {
+          "description": "Cleaning mode. The available modes depend on the integration.",
+          "name": "Cleaning mode"
+        }
+      },
+      "name": "Set cleaning mode"
+    },
     "set_fan_speed": {
       "description": "Sets the fan speed of the vacuum cleaner.",
       "fields": {
@@ -71,6 +87,16 @@
         }
       },
       "name": "Set fan speed"
+    },
+    "set_water_level": {
+      "description": "Sets the water level of the vacuum cleaner.",
+      "fields": {
+        "water_level": {
+          "description": "Water level. The available levels depend on the integration.",
+          "name": "Water level"
+        }
+      },
+      "name": "Set water level"
     },
     "start": {
       "description": "Starts or resumes the cleaning task.",
