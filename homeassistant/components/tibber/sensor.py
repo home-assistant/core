@@ -462,7 +462,6 @@ class TibberDataAPISensor(CoordinatorEntity[TibberDataAPICoordinator], SensorEnt
         """Return the value reported by the device."""
         device = self.coordinator.data.get(self._device_id)
         if device is None:
-            _LOGGER.error("Device %s not found", self._device_id)
             return None
 
         for sensor in device.sensors:

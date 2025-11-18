@@ -116,18 +116,17 @@ async def test_data_api_coordinator_first_refresh_auth_failed(
 @pytest.mark.parametrize(
     "exception",
     [
-        (aiohttp.ClientError("err"),),
-        (TimeoutError(),),
-        (tibber.UserAgentMissingError("err"),),
+        aiohttp.ClientError("err"),
+        TimeoutError(),
+        tibber.UserAgentMissingError("err"),
     ],
 )
 async def test_data_api_coordinator_update_failures(
-    hass: HomeAssistant, data_api_entry: MockConfigEntry, exception: tuple[Exception]
+    hass: HomeAssistant, data_api_entry: MockConfigEntry, exception: Exception
 ) -> None:
     """Ensure update failures are wrapped in UpdateFailed."""
     runtime = MagicMock()
-    (side_effect,) = exception
-    runtime.async_get_client = AsyncMock(side_effect=side_effect)
+    runtime.async_get_client = AsyncMock(side_effect=exception)
     hass.data.setdefault(DOMAIN, {})[API_TYPE_DATA_API] = runtime
 
     coordinator = TibberDataAPICoordinator(hass, data_api_entry, runtime)

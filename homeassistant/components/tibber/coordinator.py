@@ -211,10 +211,13 @@ class TibberDataAPICoordinator(DataUpdateCoordinator[dict[str, TibberDevice]]):
         )
         self._runtime_data = runtime_data
 
-    async def _async_setup(self) -> None:
-        """Initial load of Tibber Data API devices."""
+    async def _async_get_client(self) -> TibberDataAPI:
+        """Get the Tibber Data API client with error handling."""
         try:
-            client: TibberDataAPI = await self._runtime_data.async_get_client(self.hass)
+            return cast(
+                TibberDataAPI,
+                await self._runtime_data.async_get_client(self.hass),
+            )
         except ConfigEntryAuthFailed:
             raise
         except (ClientError, TimeoutError, tibber.UserAgentMissingError) as err:
@@ -222,18 +225,13 @@ class TibberDataAPICoordinator(DataUpdateCoordinator[dict[str, TibberDevice]]):
                 f"Unable to create Tibber Data API client: {err}"
             ) from err
 
+    async def _async_setup(self) -> None:
+        """Initial load of Tibber Data API devices."""
+        client = await self._async_get_client()
         self.data = await client.get_all_devices()
 
     async def _async_update_data(self) -> dict[str, TibberDevice]:
         """Fetch the latest device capabilities from the Tibber Data API."""
-        try:
-            client: TibberDataAPI = await self._runtime_data.async_get_client(self.hass)
-        except ConfigEntryAuthFailed:
-            raise
-        except (ClientError, TimeoutError, tibber.UserAgentMissingError) as err:
-            raise UpdateFailed(
-                f"Unable to create Tibber Data API client: {err}"
-            ) from err
-
+        client = await self._async_get_client()
         devices: dict[str, TibberDevice] = await client.update_devices()
         return devices

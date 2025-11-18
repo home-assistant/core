@@ -58,7 +58,7 @@ async def async_get_config_entry_diagnostics(
         tibber.FatalHttpExceptionError,
     ) as err:
         devices = {}
-        error = repr(err)
+        error = f"Unexpected error: {type(err).__name__}"
 
     return {
         "api_type": API_TYPE_DATA_API,
