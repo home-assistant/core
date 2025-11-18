@@ -420,6 +420,22 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         self.async_schedule_save()
         return new
 
+    @callback
+    def async_reorder(self, area_ids: list[str]) -> None:
+        """Reorder areas."""
+        self.hass.verify_event_loop_thread("area_registry.async_reorder")
+
+        if set(area_ids) != set(self.areas.data.keys()):
+            raise ValueError(
+                "The area_ids list must contain all existing area IDs exactly once"
+            )
+
+        reordered_data = {area_id: self.areas.data[area_id] for area_id in area_ids}
+        self.areas.data.clear()
+        self.areas.data.update(reordered_data)
+
+        self.async_schedule_save()
+
     async def async_load(self) -> None:
         """Load the area registry."""
         self._async_setup_cleanup()

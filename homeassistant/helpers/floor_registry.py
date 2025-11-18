@@ -261,6 +261,24 @@ class FloorRegistry(BaseRegistry[FloorRegistryStoreData]):
 
         return new
 
+    @callback
+    def async_reorder(self, floor_ids: list[str]) -> None:
+        """Reorder floors."""
+        self.hass.verify_event_loop_thread("floor_registry.async_reorder")
+
+        if set(floor_ids) != set(self.floors.data.keys()):
+            raise ValueError(
+                "The floor_ids list must contain all existing floor IDs exactly once"
+            )
+
+        reordered_data = {
+            floor_id: self.floors.data[floor_id] for floor_id in floor_ids
+        }
+        self.floors.data.clear()
+        self.floors.data.update(reordered_data)
+
+        self.async_schedule_save()
+
     async def async_load(self) -> None:
         """Load the floor registry."""
         data = await self._store.async_load()
