@@ -1501,10 +1501,41 @@ DISCOVERY_SCHEMAS = [
             key="SetpointChangeSource",
             translation_key="setpoint_change_source",
             device_class=SensorDeviceClass.ENUM,
-            options=[v for v in SETPOINT_CHANGE_SOURCE_MAP.values() if v is not None],
-            device_to_ha=SETPOINT_CHANGE_SOURCE_MAP.get,
+            state_class=None,
+            # convert to set first to remove the duplicate unknown value
+            options=[x for x in SETPOINT_CHANGE_SOURCE_MAP.values() if x is not None],
+            device_to_ha=lambda x: SETPOINT_CHANGE_SOURCE_MAP[x],
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.Thermostat.Attributes.SetpointChangeSource,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="SetpointChangeSourceTimestamp",
+            translation_key="setpoint_change_timestamp",
+            device_class=SensorDeviceClass.TIMESTAMP,
+            state_class=None,
+            device_to_ha=(lambda x: dt_util.utc_from_timestamp(x) if x > 0 else None),
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.Thermostat.Attributes.SetpointChangeSourceTimestamp,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="ThermostatSetpointChangeAmount",
+            translation_key="setpoint_change_amount",
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            suggested_display_precision=1,
+            device_class=SensorDeviceClass.TEMPERATURE,
+            device_to_ha=lambda x: x / TEMPERATURE_SCALING_FACTOR,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.Thermostat.Attributes.SetpointChangeAmount,),
+        device_type=(device_types.Thermostat,),
     ),
 ]

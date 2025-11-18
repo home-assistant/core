@@ -223,6 +223,9 @@
       "pump_setpoint": {
         "name": "Setpoint"
       },
+      "setpoint_change_source_timestamp": {
+        "name": "Last change"
+      },
       "temperature_offset": {
         "name": "Temperature offset"
       },
@@ -518,13 +521,19 @@
       "rms_voltage": {
         "name": "Effective voltage"
       },
+      "setpoint_change_amount": {
+        "name": "Last change amount"
+      },
       "setpoint_change_source": {
-        "name": "Setpoint change source",
+        "name": "Last change source",
         "state": {
           "external": "External",
           "manual": "Manual",
           "schedule": "Schedule"
         }
+      },
+      "setpoint_change_timestamp": {
+        "name": "Last change"
       },
       "switch_current_position": {
         "name": "Current switch position"
