@@ -1086,26 +1086,28 @@ class Entity(
         entry = self.registry_entry
 
         capability_attr = self.capability_attributes
+        if self.included_unique_ids is not None:
+            entity_registry = er.async_get(self.hass)
+            self._included_entities = [
+                entity_id
+                for included_id in self.included_unique_ids
+                if (
+                    entity_id := entity_registry.async_get_entity_id(
+                        self.platform.domain,
+                        self.platform.platform_name,
+                        included_id,
+                    )
+                )
+                is not None
+            ]
+            capability_attr = capability_attr.copy() if capability_attr else {}
+            capability_attr[ATTR_ENTITY_ID] = self._included_entities.copy()
+
         attr = capability_attr.copy() if capability_attr else {}
 
         available = self.available  # only call self.available once per update cycle
         state = self._stringify_state(available)
         if available:
-            if self.included_unique_ids is not None:
-                entity_registry = er.async_get(self.hass)
-                self._included_entities = [
-                    entity_id
-                    for included_id in self.included_unique_ids
-                    if (
-                        entity_id := entity_registry.async_get_entity_id(
-                            self.platform.domain,
-                            self.platform.platform_name,
-                            included_id,
-                        )
-                    )
-                    is not None
-                ]
-                attr[ATTR_ENTITY_ID] = self._included_entities.copy()
             if state_attributes := self.state_attributes:
                 attr |= state_attributes
             if extra_state_attributes := self.extra_state_attributes:
