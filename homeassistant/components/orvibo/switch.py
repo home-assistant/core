@@ -17,7 +17,7 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
-    AddEntitiesCallback,
+    AsyncAddEntitiesCallback,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -33,7 +33,7 @@ PARALLEL_UPDATES = 1
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities_callback: AddEntitiesCallback,
+    add_entities_callback: AsyncAddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the integration from configuration.yaml."""
@@ -52,7 +52,7 @@ async def async_setup_platform(
                 hass,
                 DOMAIN,
                 f"yaml_deprecation_import_issue_{switch.get('mac').replace(':', '').lower()}",
-                breaks_in_ha_version="2026.11.0",
+                breaks_in_ha_version="2026.5.0",
                 is_fixable=False,
                 issue_domain=DOMAIN,
                 severity=ir.IssueSeverity.WARNING,
@@ -111,7 +111,7 @@ class S20Switch(SwitchEntity):
         self._state = False
         self._exc = S20Exception
         self._s20 = S20(self._host, self._mac)
-        self._unique_id = "S20Switch_" + self._mac
+        self._unique_id = self._mac
 
     @property
     def is_on(self):

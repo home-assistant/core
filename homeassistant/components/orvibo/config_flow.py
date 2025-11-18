@@ -6,8 +6,7 @@ from typing import Any
 
 from orvibo.s20 import discover
 
-# from homeassistant.core import callback
-# from homeassistant.data_entry_flow import AbortFlow
+
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -58,7 +57,7 @@ class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
                 if not mac_bytes:
                     continue  # skip if no MAC
 
-                unique_id = f"S20Switch_{_format_mac(mac_bytes)}"
+                unique_id = _format_mac(mac_bytes)
                 if unique_id not in existing_ids:
                     filtered[ip] = info
             _LOGGER.debug("New switches: %s", filtered)
@@ -96,7 +95,7 @@ class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
             user_input[CONF_MAC] = format_mac(user_input[CONF_MAC])
             error = self._input_error(user_input)
             if not error:
-                await self.async_set_unique_id("S20Switch_" + user_input[CONF_MAC])
+                await self.async_set_unique_id(user_input[CONF_MAC])
                 self._abort_if_unique_id_configured()
                 user_input[CONF_NAME] = f"{DEFAULT_NAME} ({user_input[CONF_HOST]})"
                 return self.async_create_entry(
@@ -148,9 +147,7 @@ class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
                     self.chosen_switch[CONF_MAC] = _format_mac(data[CONF_MAC])
                     self.chosen_switch[CONF_NAME] = f"{DEFAULT_NAME} ({host})"
 
-                await self.async_set_unique_id(
-                    "S20Switch_" + self.chosen_switch[CONF_MAC]
-                )
+                await self.async_set_unique_id(self.chosen_switch[CONF_MAC])
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
@@ -185,7 +182,7 @@ class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
         if error:
             return self.async_abort(reason=error)
 
-        await self.async_set_unique_id("S20Switch_" + user_input[CONF_MAC])
+        await self.async_set_unique_id(user_input[CONF_MAC])
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
