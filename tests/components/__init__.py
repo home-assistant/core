@@ -9,6 +9,9 @@ from homeassistant.const import (
     ATTR_FLOOR_ID,
     ATTR_LABEL_ID,
     CONF_ENTITY_ID,
+    CONF_OPTIONS,
+    CONF_PLATFORM,
+    CONF_TARGET,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -262,3 +265,30 @@ def parametrize_attribute_trigger_states(
             ],
         ),
     ]
+
+
+async def arm_trigger(
+    hass: HomeAssistant, trigger: str, trigger_options: dict, trigger_target: dict
+) -> None:
+    """Arm the specified trigger, call service test.automation when it triggers."""
+
+    # Local include to avoid importing the automation component unnecessarily
+    from homeassistant.components import automation  # noqa: PLC0415
+
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    CONF_PLATFORM: trigger,
+                    CONF_OPTIONS: {**trigger_options},
+                    CONF_TARGET: {**trigger_target},
+                },
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {CONF_ENTITY_ID: "{{ trigger.entity_id }}"},
+                },
+            }
+        },
+    )

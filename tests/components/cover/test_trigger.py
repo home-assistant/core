@@ -2,20 +2,12 @@
 
 import pytest
 
-from homeassistant.components import automation
 from homeassistant.components.cover import ATTR_CURRENT_POSITION, CoverState
-from homeassistant.const import (
-    CONF_ENTITY_ID,
-    CONF_OPTIONS,
-    CONF_PLATFORM,
-    CONF_TARGET,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import CONF_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.setup import async_setup_component
 
-from tests.components import parametrize_target_entities, target_entities
+from tests.components import arm_trigger, parametrize_target_entities, target_entities
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
@@ -40,29 +32,6 @@ def set_or_remove_state(
         hass.states.async_remove(entity_id)
     else:
         hass.states.async_set(entity_id, state, attributes, force_update=True)
-
-
-async def setup_automation(
-    hass: HomeAssistant, trigger: str, trigger_options: dict, trigger_target: dict
-) -> None:
-    """Set up automation component with given config."""
-    await async_setup_component(
-        hass,
-        automation.DOMAIN,
-        {
-            automation.DOMAIN: {
-                "trigger": {
-                    CONF_PLATFORM: trigger,
-                    CONF_OPTIONS: {**trigger_options},
-                    CONF_TARGET: {**trigger_target},
-                },
-                "action": {
-                    "service": "test.automation",
-                    "data_template": {CONF_ENTITY_ID: "{{ trigger.entity_id }}"},
-                },
-            }
-        },
-    )
 
 
 def parametrize_opened_closed_trigger_states(
@@ -282,7 +251,7 @@ async def test_cover_state_attribute_trigger_behavior_any(
         )
         await hass.async_block_till_done()
 
-    await setup_automation(hass, trigger, trigger_options, trigger_target_config)
+    await arm_trigger(hass, trigger, trigger_options, trigger_target_config)
 
     for state, expected_calls in states:
         set_or_remove_state(
@@ -357,7 +326,7 @@ async def test_cover_state_attribute_trigger_behavior_first(
         )
         await hass.async_block_till_done()
 
-    await setup_automation(
+    await arm_trigger(
         hass,
         trigger,
         {"behavior": "first"} | trigger_options,
@@ -436,7 +405,7 @@ async def test_cover_state_attribute_trigger_behavior_last(
         )
         await hass.async_block_till_done()
 
-    await setup_automation(
+    await arm_trigger(
         hass, trigger, {"behavior": "last"} | trigger_options, trigger_target_config
     )
 

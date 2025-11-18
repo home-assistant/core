@@ -2,17 +2,17 @@
 
 import pytest
 
-from homeassistant.components import automation
 from homeassistant.components.climate.const import (
     ATTR_HVAC_ACTION,
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import CONF_ENTITY_ID, CONF_OPTIONS, CONF_PLATFORM, CONF_TARGET
+from homeassistant.const import CONF_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.setup import async_setup_component
 
 from tests.components import (
+    arm_trigger,
     parametrize_attribute_trigger_states,
     parametrize_target_entities,
     parametrize_trigger_states,
@@ -42,29 +42,6 @@ def set_or_remove_state(
         hass.states.async_remove(entity_id)
     else:
         hass.states.async_set(entity_id, state, attributes, force_update=True)
-
-
-async def setup_automation(
-    hass: HomeAssistant, trigger: str, trigger_options: dict, trigger_target: dict
-) -> None:
-    """Set up automation component with given config."""
-    await async_setup_component(
-        hass,
-        automation.DOMAIN,
-        {
-            automation.DOMAIN: {
-                "trigger": {
-                    CONF_PLATFORM: trigger,
-                    CONF_OPTIONS: {**trigger_options},
-                    CONF_TARGET: {**trigger_target},
-                },
-                "action": {
-                    "service": "test.automation",
-                    "data_template": {CONF_ENTITY_ID: "{{ trigger.entity_id }}"},
-                },
-            }
-        },
-    )
 
 
 @pytest.mark.parametrize(
@@ -99,7 +76,7 @@ async def test_climate_state_trigger_behavior_any(
         set_or_remove_state(hass, eid, states[0][0])
         await hass.async_block_till_done()
 
-    await setup_automation(hass, trigger, {}, trigger_target_config)
+    await arm_trigger(hass, trigger, {}, trigger_target_config)
 
     for state, expected_calls in states[1:]:
         set_or_remove_state(hass, entity_id, state)
@@ -154,7 +131,7 @@ async def test_climate_state_attribute_trigger_behavior_any(
         set_or_remove_state(hass, eid, *initial_state)
         await hass.async_block_till_done()
 
-    await setup_automation(hass, trigger, {}, trigger_target_config)
+    await arm_trigger(hass, trigger, {}, trigger_target_config)
 
     for state, expected_calls in states:
         set_or_remove_state(hass, entity_id, *state)
@@ -204,7 +181,7 @@ async def test_climate_state_trigger_behavior_first(
         set_or_remove_state(hass, eid, states[0][0])
         await hass.async_block_till_done()
 
-    await setup_automation(hass, trigger, {"behavior": "first"}, trigger_target_config)
+    await arm_trigger(hass, trigger, {"behavior": "first"}, trigger_target_config)
 
     for state, expected_calls in states[1:]:
         set_or_remove_state(hass, entity_id, state)
@@ -258,7 +235,7 @@ async def test_climate_state_attribute_trigger_behavior_first(
         set_or_remove_state(hass, eid, *initial_state)
         await hass.async_block_till_done()
 
-    await setup_automation(hass, trigger, {"behavior": "first"}, trigger_target_config)
+    await arm_trigger(hass, trigger, {"behavior": "first"}, trigger_target_config)
 
     for state, expected_calls in states:
         set_or_remove_state(hass, entity_id, *state)
@@ -307,7 +284,7 @@ async def test_climate_state_trigger_behavior_last(
         set_or_remove_state(hass, eid, states[0][0])
         await hass.async_block_till_done()
 
-    await setup_automation(hass, trigger, {"behavior": "last"}, trigger_target_config)
+    await arm_trigger(hass, trigger, {"behavior": "last"}, trigger_target_config)
 
     for state, expected_calls in states[1:]:
         for other_entity_id in other_entity_ids:
@@ -360,7 +337,7 @@ async def test_climate_state_attribute_trigger_behavior_last(
         set_or_remove_state(hass, eid, *initial_state)
         await hass.async_block_till_done()
 
-    await setup_automation(hass, trigger, {"behavior": "last"}, trigger_target_config)
+    await arm_trigger(hass, trigger, {"behavior": "last"}, trigger_target_config)
 
     for state, expected_calls in states:
         for other_entity_id in other_entity_ids:
