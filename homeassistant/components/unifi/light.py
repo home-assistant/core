@@ -24,7 +24,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.color import rgb_hex_to_rgb_list
 
 from . import UnifiConfigEntry
-from .const import LOGGER
 from .entity import (
     UnifiEntity,
     UnifiEntityDescription,
@@ -51,18 +50,7 @@ def convert_brightness_to_ha(
 def get_device_brightness_or_default(device: Device) -> int:
     """Get device's current LED brightness. Defaults to 100 (full brightness) if not set."""
     value = device.led_override_color_brightness
-    if value is None:
-        return 100
-    try:
-        # Cast to safeguard against unexpected types from the Unifi API
-        return int(value)
-    except (ValueError, TypeError):
-        LOGGER.warning(
-            "Invalid brightness value %r (type: %s), using default 100",
-            value,
-            type(value).__name__,
-        )
-        return 100
+    return value if value is not None else 100
 
 
 @callback
