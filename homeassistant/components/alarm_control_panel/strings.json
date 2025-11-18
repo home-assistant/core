@@ -71,6 +71,15 @@
       "message": "Arming requires a code but none was given for {entity_id}."
     }
   },
+  "selector": {
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
+      }
+    }
+  },
   "services": {
     "alarm_arm_away": {
       "description": "Arms the alarm in the away mode.",
@@ -143,5 +152,29 @@
       "name": "Trigger"
     }
   },
-  "title": "Alarm control panel"
+  "title": "Alarm control panel",
+  "triggers": {
+    "disarmed": {
+      "description": "Triggers when an alarm is disarmed.",
+      "description_configured": "[%key:component::alarm_control_panel::triggers::disarmed::description%]",
+      "fields": {
+        "behavior": {
+          "description": "The behavior of the targeted alarms to trigger on.",
+          "name": "Behavior"
+        }
+      },
+      "name": "When an alarm is disarmed"
+    },
+    "triggered": {
+      "description": "Triggers when an alarm is triggered.",
+      "description_configured": "[%key:component::alarm_control_panel::triggers::triggered::description%]",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::alarm_control_panel::triggers::disarmed::fields::behavior::description%]",
+          "name": "[%key:component::alarm_control_panel::triggers::disarmed::fields::behavior::name%]"
+        }
+      },
+      "name": "When an alarm is triggered"
+    }
+  }
 }
