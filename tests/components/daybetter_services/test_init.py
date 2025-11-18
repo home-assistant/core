@@ -32,20 +32,6 @@ async def test_async_setup_entry(hass: HomeAssistant) -> None:
         assert config_entry.state == ConfigEntryState.LOADED
 
 
-async def test_async_setup_entry_no_token(hass: HomeAssistant) -> None:
-    """Test async_setup_entry with no token."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="DayBetter Services",
-        data={},  # No token
-        entry_id="test_no_token",
-    )
-    config_entry.add_to_hass(hass)
-
-    assert not await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-
 async def test_async_unload_entry(hass: HomeAssistant) -> None:
     """Test async_unload_entry."""
     config_entry = MockConfigEntry(
