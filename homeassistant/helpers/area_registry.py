@@ -68,8 +68,8 @@ class AreasRegistryStoreData(TypedDict):
 class EventAreaRegistryUpdatedData(TypedDict):
     """EventAreaRegistryUpdated data."""
 
-    action: Literal["create", "remove", "update"]
-    area_id: str
+    action: Literal["create", "remove", "update", "reorder"]
+    area_id: str | None
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
@@ -435,6 +435,10 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         self.areas.data.update(reordered_data)
 
         self.async_schedule_save()
+        self.hass.bus.async_fire_internal(
+            EVENT_AREA_REGISTRY_UPDATED,
+            EventAreaRegistryUpdatedData(action="reorder", area_id=None),
+        )
 
     async def async_load(self) -> None:
         """Load the area registry."""
@@ -505,7 +509,9 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         @callback
         def _handle_floor_registry_update(event: fr.EventFloorRegistryUpdated) -> None:
             """Update areas that are associated with a floor that has been removed."""
-            floor_id = event.data["floor_id"]
+            floor_id = event.data.get("floor_id")
+            if floor_id is None:
+                return
             for area in self.areas.get_areas_for_floor(floor_id):
                 self.async_update(area.id, floor_id=None)
 

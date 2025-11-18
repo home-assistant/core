@@ -54,8 +54,8 @@ class FloorRegistryStoreData(TypedDict):
 class EventFloorRegistryUpdatedData(TypedDict):
     """Event data for when the floor registry is updated."""
 
-    action: Literal["create", "remove", "update"]
-    floor_id: str
+    action: Literal["create", "remove", "update", "reorder"]
+    floor_id: str | None
 
 
 type EventFloorRegistryUpdated = Event[EventFloorRegistryUpdatedData]
@@ -278,6 +278,10 @@ class FloorRegistry(BaseRegistry[FloorRegistryStoreData]):
         self.floors.data.update(reordered_data)
 
         self.async_schedule_save()
+        self.hass.bus.async_fire_internal(
+            EVENT_FLOOR_REGISTRY_UPDATED,
+            EventFloorRegistryUpdatedData(action="reorder", floor_id=None),
+        )
 
     async def async_load(self) -> None:
         """Load the floor registry."""
