@@ -1,7 +1,7 @@
 """Test the Cloudflare integration."""
 
 from datetime import timedelta
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, patch
 
 import pycfdns
 import pytest
