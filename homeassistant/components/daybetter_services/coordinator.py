@@ -34,7 +34,7 @@ class DayBetterCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
     async def _async_update_data(self) -> list[dict[str, Any]]:
         """Fetch data from API."""
         try:
-            return await self._client.fetch_sensor_data()  # type: ignore[no-any-return]
+            return await self._client.fetch_sensor_data()
         except AuthenticationError as err:
             raise ConfigEntryAuthFailed("Authentication failed") from err
         except APIError as err:
