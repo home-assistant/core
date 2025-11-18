@@ -96,15 +96,7 @@ class LutronCasetaSmartAwaySwitch(LutronCasetaEntity, SwitchEntity):
         return self._smart_away_unique_id
 
     async def async_added_to_hass(self) -> None:
-        self.unsubscribe = self._smartbridge.add_smart_away_subscriber(
-            self._handle_bridge_update
-        )
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Unsubscribe from the events."""
-        if self.unsubscribe:
-            self.unsubscribe()
-        await super().async_will_remove_from_hass()
+        self._smartbridge.add_smart_away_subscriber(self._handle_bridge_update)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn Smart Away on."""
