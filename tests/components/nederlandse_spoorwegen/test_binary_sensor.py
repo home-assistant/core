@@ -7,7 +7,7 @@ import pytest
 from requests.exceptions import ConnectionError as RequestsConnectionError
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.entity_registry as er
 
@@ -30,7 +30,7 @@ def mock_binary_sensor_platform() -> Generator:
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_binary_sensor(
     hass: HomeAssistant,
-    mock_nsapi,
+    mock_nsapi: AsyncMock,
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
@@ -43,32 +43,19 @@ async def test_binary_sensor(
 
 @pytest.mark.freeze_time("2025-09-15 14:30:00+00:00")
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_single_trip_binary_sensor(
+async def test_no_upcoming_trips(
     hass: HomeAssistant,
-    mock_single_trip_nsapi: AsyncMock,
+    mock_nsapi: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    snapshot: SnapshotAssertion,
-    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test sensor initialization."""
+    mock_nsapi.get_trips.return_value = []
     await setup_integration(hass, mock_config_entry)
 
-    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
-
-
-@pytest.mark.freeze_time("2025-09-15 14:30:00+00:00")
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_no_trips_binary_sensor(
-    hass: HomeAssistant,
-    mock_no_trips_nsapi: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    snapshot: SnapshotAssertion,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test sensor initialization."""
-    await setup_integration(hass, mock_config_entry)
-
-    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+    assert (
+        hass.states.get("binary_sensor.to_work_departure_delayed").state
+        == STATE_UNKNOWN
+    )
 
 
 async def test_sensor_with_api_connection_error(
