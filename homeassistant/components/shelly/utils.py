@@ -872,8 +872,7 @@ def get_rpc_device_info(
         return DeviceInfo(connections={(CONNECTION_NETWORK_MAC, mac)})
 
     key = get_rpc_key_normalized(key)
-
-    has_idx, component, _ = get_rpc_key(key)
+    has_id, component, _ = get_rpc_key(key)
 
     if emeter_phase is not None:
         return DeviceInfo(
@@ -892,7 +891,7 @@ def get_rpc_device_info(
             component not in (*All_LIGHT_TYPES, "cover", "em1", "switch")
             and get_irrigation_zone_id(device, key) is None
         )
-        or not has_idx
+        or not has_id
         or len(get_rpc_key_instances(device.status, component, all_lights=True)) < 2
     ):
         return DeviceInfo(connections={(CONNECTION_NETWORK_MAC, mac)})
