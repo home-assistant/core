@@ -697,3 +697,91 @@ async def test_vacuum_operational_error_sensor(
     state = hass.states.get("sensor.mock_vacuum_operational_error")
     assert state
     assert state.state == "unknown"
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_thermostat"])
+async def test_thermostat_setpoint_change_source(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test Thermostat SetpointChangeSource sensor."""
+    # Thermostat Cluster / SetpointChangeSource attribute (1/513/48)
+    state = hass.states.get("sensor.mock_thermostat_last_change_source")
+    assert state
+    assert state.state == "manual"
+    assert state.attributes["options"] == ["manual", "schedule", "external"]
+
+    # Test schedule source
+    set_node_attribute(matter_node, 1, 513, 48, 1)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.mock_thermostat_last_change_source")
+    assert state
+    assert state.state == "schedule"
+
+    # Test external source
+    set_node_attribute(matter_node, 1, 513, 48, 2)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.mock_thermostat_last_change_source")
+    assert state
+    assert state.state == "external"
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_thermostat"])
+async def test_thermostat_setpoint_change_timestamp(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test Thermostat SetpointChangeSourceTimestamp sensor."""
+    # Thermostat Cluster / SetpointChangeSourceTimestamp attribute (1/513/50)
+    state = hass.states.get("sensor.mock_thermostat_last_change")
+    assert state
+    assert state.state == "2025-10-31T23:00:00+00:00"
+
+    # Update to a new timestamp (2024-11-15 12:00:00 UTC)
+    set_node_attribute(matter_node, 1, 513, 50, 1731672000)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.mock_thermostat_last_change")
+    assert state
+    assert state.state == "2024-11-15T12:00:00+00:00"
+
+    # Test zero value (should be None/unknown)
+    set_node_attribute(matter_node, 1, 513, 50, 0)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.mock_thermostat_last_change")
+    assert state
+    assert state.state == "unknown"
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_thermostat"])
+async def test_thermostat_setpoint_change_amount(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test Thermostat SetpointChangeAmount sensor."""
+    # Thermostat Cluster / SetpointChangeAmount attribute (1/513/49)
+    state = hass.states.get("sensor.mock_thermostat_last_change_amount")
+    assert state
+    assert state.state == "1.5"
+
+    # Update to 2.0°C (200 in Matter units)
+    set_node_attribute(matter_node, 1, 513, 49, 200)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.mock_thermostat_last_change_amount")
+    assert state
+    assert state.state == "2.0"
+
+    # Update to -0.5°C (-50 in Matter units)
+    set_node_attribute(matter_node, 1, 513, 49, -50)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.mock_thermostat_last_change_amount")
+    assert state
+    assert state.state == "-0.5"
