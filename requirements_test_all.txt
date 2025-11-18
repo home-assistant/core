@@ -1722,7 +1722,7 @@ pyhomeworks==1.1.2
 pyialarm==2.2.0
 
 # homeassistant.components.icloud
-pyicloud==2.1.0
+pyicloud==2.2.0
 
 # homeassistant.components.insteon
 pyinsteon==1.6.3
@@ -1892,7 +1892,7 @@ pypalazzetti==0.1.20
 pypaperless==4.1.1
 
 # homeassistant.components.lcn
-pypck==0.8.12
+pypck==0.9.3
 
 # homeassistant.components.pglab
 pypglab==0.0.5
