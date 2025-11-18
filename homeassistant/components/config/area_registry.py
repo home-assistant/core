@@ -169,4 +169,4 @@ def websocket_reorder_areas(
     except ValueError as err:
         connection.send_error(msg["id"], "invalid_info", str(err))
     else:
-        connection.send_message(websocket_api.result_message(msg["id"], "success"))
+        connection.send_result(msg["id"])
