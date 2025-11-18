@@ -31,7 +31,7 @@ class TypeInformation:
         return cls(dpcode=dpcode, type_data=type_data)
 
 
-@dataclass
+@dataclass(kw_only=True)
 class IntegerTypeData(TypeInformation):
     """Integer Type Data."""
 
@@ -101,7 +101,7 @@ class IntegerTypeData(TypeInformation):
         )
 
 
-@dataclass
+@dataclass(kw_only=True)
 class BitmapTypeInformation(TypeInformation):
     """Bitmap type information."""
 
@@ -119,7 +119,7 @@ class BitmapTypeInformation(TypeInformation):
         )
 
 
-@dataclass
+@dataclass(kw_only=True)
 class EnumTypeData(TypeInformation):
     """Enum Type Data."""
 
