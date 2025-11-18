@@ -580,31 +580,55 @@ async def test_rpc_polling_sensor(
 async def test_rpc_sleeping_sensor(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
-    device_registry: DeviceRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC online sleeping sensor."""
     entity_id = f"{SENSOR_DOMAIN}.test_name_temperature"
     monkeypatch.setattr(mock_rpc_device, "connected", False)
     monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
-    entry = await init_integration(hass, 2, sleep_period=1000)
+    await init_integration(hass, 2, sleep_period=1000)
 
     # Sensor should be created when device is online
     assert hass.states.get(entity_id) is None
-
-    register_entity(
-        hass,
-        SENSOR_DOMAIN,
-        "test_name_temperature",
-        "temperature:0-temperature_0",
-        entry,
-    )
 
     # Make device online
     mock_rpc_device.mock_online()
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (state := hass.states.get(entity_id))
+    assert state.state == "22.9"
+
+    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "temperature:0", "tC", 23.4)
+    mock_rpc_device.mock_update()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "23.4"
+
+
+async def test_rpc_sleeping_sensor_with_channel_name(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC online sleeping sensor with channel name."""
+    name = "test channel name"
+    entity_id = f"{SENSOR_DOMAIN}.test_name_test_channel_name_temperature"
+    monkeypatch.setitem(
+        mock_rpc_device.config, "temperature:0", {"id": 0, "name": name}
+    )
+    monkeypatch.setattr(mock_rpc_device, "connected", False)
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
+    await init_integration(hass, 2, sleep_period=1000)
+
+    # Sensor should be created when device is online
+    assert hass.states.get(entity_id) is None
+
+    # Make device online
+    mock_rpc_device.mock_online()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.attributes["friendly_name"] == f"Test name {name} temperature"
     assert state.state == "22.9"
 
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "temperature:0", "tC", 23.4)
