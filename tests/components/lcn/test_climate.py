@@ -29,7 +29,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import MockConfigEntry, MockModuleConnection, init_integration
+from .conftest import MockConfigEntry, MockDeviceConnection, init_integration
 
 from tests.common import snapshot_platform
 
@@ -51,7 +51,7 @@ async def test_set_hvac_mode_heat(hass: HomeAssistant, entry: MockConfigEntry) -
     """Test the hvac mode is set to heat."""
     await init_integration(hass, entry)
 
-    with patch.object(MockModuleConnection, "lock_regulator") as lock_regulator:
+    with patch.object(MockDeviceConnection, "lock_regulator") as lock_regulator:
         await hass.services.async_call(
             DOMAIN_CLIMATE,
             SERVICE_SET_HVAC_MODE,
@@ -106,7 +106,7 @@ async def test_set_hvac_mode_off(hass: HomeAssistant, entry: MockConfigEntry) ->
     """Test the hvac mode is set off."""
     await init_integration(hass, entry)
 
-    with patch.object(MockModuleConnection, "lock_regulator") as lock_regulator:
+    with patch.object(MockDeviceConnection, "lock_regulator") as lock_regulator:
         state = hass.states.get("climate.testmodule_climate1")
         state.state = HVACMode.HEAT
 
@@ -154,7 +154,7 @@ async def test_set_temperature(hass: HomeAssistant, entry: MockConfigEntry) -> N
     """Test the temperature is set."""
     await init_integration(hass, entry)
 
-    with patch.object(MockModuleConnection, "var_abs") as var_abs:
+    with patch.object(MockDeviceConnection, "var_abs") as var_abs:
         state = hass.states.get("climate.testmodule_climate1")
         state.state = HVACMode.HEAT
 

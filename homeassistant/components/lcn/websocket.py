@@ -7,6 +7,7 @@ from functools import wraps
 from typing import Any, Final
 
 import lcn_frontend as lcn_panel
+from pypck.device import DeviceConnection
 import voluptuous as vol
 
 from homeassistant.components import panel_custom, websocket_api
@@ -37,7 +38,6 @@ from .const import (
     DOMAIN,
 )
 from .helpers import (
-    DeviceConnectionType,
     LcnConfigEntry,
     async_update_device_config,
     generate_unique_id,
@@ -182,7 +182,7 @@ async def websocket_scan_devices(
     host_connection = config_entry.runtime_data.connection
     await host_connection.scan_modules()
 
-    for device_connection in host_connection.address_conns.values():
+    for device_connection in host_connection.device_connections.values():
         if not device_connection.is_group:
             await async_create_or_update_device_in_config_entry(
                 hass, device_connection, config_entry
@@ -421,7 +421,7 @@ async def websocket_delete_entity(
 
 async def async_create_or_update_device_in_config_entry(
     hass: HomeAssistant,
-    device_connection: DeviceConnectionType,
+    device_connection: DeviceConnection,
     config_entry: LcnConfigEntry,
 ) -> None:
     """Create or update device in config_entry according to given device_connection."""
