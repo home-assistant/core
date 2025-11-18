@@ -37,7 +37,7 @@ def cfupdate_flow() -> Generator[MagicMock]:
 
 
 @pytest.fixture
-def location_info() -> Generator:
+def location_info() -> Generator[None]:
     """Mock the CloudflareUpdater for easier testing."""
     with patch(
         LOCATION_PATCH_TARGET,
