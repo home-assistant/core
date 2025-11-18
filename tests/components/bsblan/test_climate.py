@@ -1,6 +1,7 @@
 """Tests for the BSB-Lan climate platform."""
 
 from datetime import timedelta
+from numbers import Real
 from unittest.mock import AsyncMock, MagicMock
 
 from bsblan import BSBLANError
@@ -147,32 +148,40 @@ async def test_hvac_action_handles_empty_and_invalid_inputs(
     assert await _async_set_hvac_action(hass, mock_bsblan, freezer, mock_action) is None
 
 
+@pytest.mark.parametrize(
+    ("raw_value", "expected"),
+    [
+        ("117", HVACAction.HEATING),
+        ("0x18", HVACAction.HEATING),
+        ("0xB1", HVACAction.COOLING),
+        (0xB3, HVACAction.COOLING),
+        (0x7D, HVACAction.DEFROSTING),
+        (0x66, HVACAction.DRYING),
+        (0x6B, HVACAction.FAN),
+        (0x6F, HVACAction.PREHEATING),
+        (161.0, HVACAction.OFF),  # 0xA1 stored as float
+        ("0x8A", HVACAction.OFF),
+        (0x02, HVACAction.OFF),
+        (0x76, HVACAction.OFF),
+        (0x01, HVACAction.IDLE),
+    ],
+)
 async def test_hvac_action_numeric_mappings(
     hass: HomeAssistant,
     mock_bsblan: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    raw_value: str | Real,
+    expected: HVACAction,
 ) -> None:
-    """Validate numeric hvac_action mappings and idle fallback."""
+    """Validate hvac_action mapping for all HVACAction enums we expose."""
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
 
     mock_action = MagicMock()
-    mock_action.value = "117"
+    mock_action.value = raw_value
     assert (
         await _async_set_hvac_action(hass, mock_bsblan, freezer, mock_action)
-        == HVACAction.HEATING
-    )
-
-    mock_action.value = 161.0
-    assert (
-        await _async_set_hvac_action(hass, mock_bsblan, freezer, mock_action)
-        == HVACAction.OFF
-    )
-
-    mock_action.value = 0x01
-    assert (
-        await _async_set_hvac_action(hass, mock_bsblan, freezer, mock_action)
-        == HVACAction.IDLE
+        == expected
     )
 
 
