@@ -15,7 +15,7 @@ from .const import DPCode, DPType
 from .util import parse_dptype, remap_value
 
 
-@dataclass
+@dataclass(kw_only=True)
 class TypeInformation:
     """Type information.
 
@@ -23,11 +23,12 @@ class TypeInformation:
     """
 
     dpcode: DPCode
+    type_data: str | None = None
 
     @classmethod
-    def from_json(cls, dpcode: DPCode, data: str) -> Self | None:
+    def from_json(cls, dpcode: DPCode, type_data: str) -> Self | None:
         """Load JSON string and return a TypeInformation object."""
-        return cls(dpcode)
+        return cls(dpcode=dpcode, type_data=type_data)
 
 
 @dataclass
@@ -84,13 +85,14 @@ class IntegerTypeData(TypeInformation):
         return remap_value(value, from_min, from_max, self.min, self.max, reverse)
 
     @classmethod
-    def from_json(cls, dpcode: DPCode, data: str) -> Self | None:
+    def from_json(cls, dpcode: DPCode, type_data: str) -> Self | None:
         """Load JSON string and return a IntegerTypeData object."""
-        if not (parsed := cast(dict[str, Any] | None, json_loads_object(data))):
+        if not (parsed := cast(dict[str, Any] | None, json_loads_object(type_data))):
             return None
 
         return cls(
-            dpcode,
+            dpcode=dpcode,
+            type_data=type_data,
             min=int(parsed["min"]),
             max=int(parsed["max"]),
             scale=int(parsed["scale"]),
@@ -106,11 +108,15 @@ class BitmapTypeInformation(TypeInformation):
     label: list[str]
 
     @classmethod
-    def from_json(cls, dpcode: DPCode, data: str) -> Self | None:
+    def from_json(cls, dpcode: DPCode, type_data: str) -> Self | None:
         """Load JSON string and return a BitmapTypeInformation object."""
-        if not (parsed := json_loads_object(data)):
+        if not (parsed := json_loads_object(type_data)):
             return None
-        return cls(dpcode, **cast(dict[str, list[str]], parsed))
+        return cls(
+            dpcode=dpcode,
+            type_data=type_data,
+            **cast(dict[str, list[str]], parsed),
+        )
 
 
 @dataclass
@@ -120,11 +126,15 @@ class EnumTypeData(TypeInformation):
     range: list[str]
 
     @classmethod
-    def from_json(cls, dpcode: DPCode, data: str) -> Self | None:
+    def from_json(cls, dpcode: DPCode, type_data: str) -> Self | None:
         """Load JSON string and return a EnumTypeData object."""
-        if not (parsed := json_loads_object(data)):
+        if not (parsed := json_loads_object(type_data)):
             return None
-        return cls(dpcode, **cast(dict[str, list[str]], parsed))
+        return cls(
+            dpcode=dpcode,
+            type_data=type_data,
+            **cast(dict[str, list[str]], parsed),
+        )
 
 
 _TYPE_INFORMATION_MAPPINGS: dict[DPType, type[TypeInformation]] = {
@@ -147,7 +157,7 @@ class DPCodeWrapper(ABC):
     native_unit: str | None = None
     suggested_unit: str | None = None
 
-    def __init__(self, dpcode: str) -> None:
+    def __init__(self, dpcode: DPCode) -> None:
         """Init DPCodeWrapper."""
         self.dpcode = dpcode
 
@@ -190,7 +200,7 @@ class DPCodeTypeInformationWrapper[T: TypeInformation](DPCodeWrapper):
     DPTYPE: DPType
     type_information: T
 
-    def __init__(self, dpcode: str, type_information: T) -> None:
+    def __init__(self, dpcode: DPCode, type_information: T) -> None:
         """Init DPCodeWrapper."""
         super().__init__(dpcode)
         self.type_information = type_information
@@ -297,7 +307,7 @@ class DPCodeIntegerWrapper(DPCodeTypeInformationWrapper[IntegerTypeData]):
 
     DPTYPE = DPType.INTEGER
 
-    def __init__(self, dpcode: str, type_information: IntegerTypeData) -> None:
+    def __init__(self, dpcode: DPCode, type_information: IntegerTypeData) -> None:
         """Init DPCodeIntegerWrapper."""
         super().__init__(dpcode, type_information)
         self.native_unit = type_information.unit
@@ -327,7 +337,7 @@ class DPCodeIntegerWrapper(DPCodeTypeInformationWrapper[IntegerTypeData]):
 class DPCodeBitmapBitWrapper(DPCodeWrapper):
     """Simple wrapper for a specific bit in bitmap values."""
 
-    def __init__(self, dpcode: str, mask: int) -> None:
+    def __init__(self, dpcode: DPCode, mask: int) -> None:
         """Init DPCodeBitmapWrapper."""
         super().__init__(dpcode)
         self._mask = mask
@@ -428,7 +438,7 @@ def find_dpcode(
                 and parse_dptype(current_definition.type) is dptype
                 and (
                     type_information := type_information_cls.from_json(
-                        dpcode, current_definition.values
+                        dpcode=dpcode, type_data=current_definition.values
                     )
                 )
             ):
