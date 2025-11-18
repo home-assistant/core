@@ -163,8 +163,7 @@ def _async_setup_rpc_entry(
         if script_name == BLE_SCRIPT_NAME:
             continue
 
-        script_id = get_rpc_key_id(script)
-        if script_events and (event_types := script_events[script_id]):
+        if script_events and (event_types := script_events[get_rpc_key_id(script)]):
             entities.append(ShellyRpcScriptEvent(coordinator, script, event_types))
 
     # If a script is removed, from the device configuration, we need to remove orphaned entities
