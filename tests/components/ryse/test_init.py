@@ -2,8 +2,7 @@
 
 import pytest
 
-from homeassistant.components.ryse import async_setup_entry
-from homeassistant.const import Platform
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -19,29 +18,22 @@ def mock_config_entry() -> MockConfigEntry:
     )
 
 
-@pytest.mark.asyncio
-async def test_async_setup_entry(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+async def test_setup_and_unload(
+    hass: HomeAssistant,
 ) -> None:
-    """Test setting up integration."""
-    mock_config_entry.add_to_hass(hass)
+    """Test integration setup and unload."""
 
-    called = {}
+    config_entry = MockConfigEntry(
+        domain="ryse", title="Test Device", unique_id="AA:BB:CC:DD:EE:FF", data={}
+    )
 
-    async def fake_forward_entry_setups(entry, platforms):
-        called["entry"] = entry
-        called["platforms"] = platforms
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    # Use monkeypatch fixture provided by pytest instead of context manager
-    with pytest.MonkeyPatch.context() as mp:
-        mp.setattr(
-            hass.config_entries,
-            "async_forward_entry_setups",
-            fake_forward_entry_setups,
-        )
+    assert config_entry.state is ConfigEntryState.LOADED
 
-        result = await async_setup_entry(hass, mock_config_entry)
+    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    assert result is True
-    assert called["platforms"] == [Platform.COVER]
-    assert called["entry"] == mock_config_entry
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
