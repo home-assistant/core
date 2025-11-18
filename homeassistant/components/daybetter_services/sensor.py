@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
 from typing import Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.const import PERCENTAGE, UnitOfTemperature
@@ -19,6 +22,77 @@ from .const import DOMAIN, DayBetterConfigEntry, DayBetterRuntimeData
 from .coordinator import DayBetterCoordinator
 
 PARALLEL_UPDATES = 1
+
+
+@dataclass(frozen=True, kw_only=True)
+class DayBetterSensorEntityDescription(SensorEntityDescription):
+    """Describes a DayBetter sensor."""
+
+    exists_fn: Callable[[dict[str, Any]], bool]
+    value_fn: Callable[[dict[str, Any]], float | int | None]
+
+
+def _safe_div(value: Any, divisor: float) -> float | None:
+    """Divide a raw value if possible."""
+    if value is None:
+        return None
+    try:
+        return int(value) / divisor
+    except (TypeError, ValueError):
+        return None
+
+
+def _safe_int(value: Any) -> int | None:
+    """Cast a value to int if possible."""
+    if value is None:
+        return None
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
+DESCRIPTIONS: tuple[DayBetterSensorEntityDescription, ...] = (
+    DayBetterSensorEntityDescription(
+        key="temperature",
+        name="Temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        exists_fn=lambda device: device.get("temp") is not None
+        or device.get("temperature") is not None,
+        value_fn=lambda device: _safe_div(
+            device.get("temp")
+            if device.get("temp") is not None
+            else device.get("temperature"),
+            10,
+        ),
+    ),
+    DayBetterSensorEntityDescription(
+        key="humidity",
+        name="Humidity",
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        exists_fn=lambda device: device.get("humi") is not None
+        or device.get("humidity") is not None,
+        value_fn=lambda device: _safe_div(
+            device.get("humi")
+            if device.get("humi") is not None
+            else device.get("humidity"),
+            10,
+        ),
+    ),
+    DayBetterSensorEntityDescription(
+        key="battery",
+        name="Battery",
+        device_class=SensorDeviceClass.BATTERY,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        exists_fn=lambda device: device.get("battery") is not None,
+        value_fn=lambda device: _safe_int(device.get("battery")),
+    ),
+)
 
 
 async def async_setup_entry(
@@ -39,27 +113,27 @@ async def async_setup_entry(
             str(device.get("deviceGroupName", device_name)).lower().replace(" ", "_")
         )
 
-        if "temp" in device:
-            entities.append(
-                DayBetterTemperatureSensor(coordinator, device, device_id, group)
-            )
+        for description in DESCRIPTIONS:
+            if not description.exists_fn(device):
+                continue
 
-        if "humi" in device:
             entities.append(
-                DayBetterHumiditySensor(coordinator, device, device_id, group)
-            )
-
-        if "battery" in device:
-            entities.append(
-                DayBetterBatterySensor(coordinator, device, device_id, group)
+                DayBetterSensor(
+                    coordinator=coordinator,
+                    device=device,
+                    device_id=device_id,
+                    group_name=group,
+                    description=description,
+                )
             )
 
     async_add_entities(entities)
 
 
-class DayBetterSensorBase(CoordinatorEntity[DayBetterCoordinator], SensorEntity):
-    """Base class for DayBetter sensors."""
+class DayBetterSensor(CoordinatorEntity[DayBetterCoordinator], SensorEntity):
+    """DayBetter sensor built from an entity description."""
 
+    entity_description: DayBetterSensorEntityDescription
     _attr_has_entity_name = True
 
     def __init__(
@@ -68,12 +142,16 @@ class DayBetterSensorBase(CoordinatorEntity[DayBetterCoordinator], SensorEntity)
         device: dict[str, Any],
         device_id: int | str,
         group_name: str,
+        description: DayBetterSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
+        self.entity_description = description
         self._device_name = device.get("deviceName", "unknown")
         self._device_id = device_id
         self._group_name = group_name
+        self._attr_unique_id = f"{device_id}_{description.key}"
+        self._attr_translation_key = description.key
 
     @property
     def device_info(self) -> dr.DeviceInfo:
@@ -103,110 +181,11 @@ class DayBetterSensorBase(CoordinatorEntity[DayBetterCoordinator], SensorEntity)
 
         return None
 
-
-class DayBetterTemperatureSensor(DayBetterSensorBase):
-    """Temperature sensor entity."""
-
-    _attr_device_class = SensorDeviceClass.TEMPERATURE
-    _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
-
-    def __init__(
-        self,
-        coordinator: DayBetterCoordinator,
-        device: dict[str, Any],
-        device_id: int | str,
-        group_name: str,
-    ) -> None:
-        """Initialize temperature sensor."""
-        super().__init__(coordinator, device, device_id, group_name)
-        self._attr_unique_id = f"{device_id}_temperature"
-        self._attr_name = "Temperature"
-
     @property
-    def native_value(self) -> float | None:
-        """Return the temperature value."""
+    def native_value(self) -> float | int | None:
+        """Return the sensor value."""
         device = self._get_device()
         if not device:
             return None
 
-        temp_raw = device.get("temp") or device.get("temperature")
-        if temp_raw is None:
-            return None
-
-        try:
-            return int(temp_raw) / 10.0
-        except (TypeError, ValueError):
-            return None
-
-
-class DayBetterHumiditySensor(DayBetterSensorBase):
-    """Humidity sensor entity."""
-
-    _attr_device_class = SensorDeviceClass.HUMIDITY
-    _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_native_unit_of_measurement = PERCENTAGE
-
-    def __init__(
-        self,
-        coordinator: DayBetterCoordinator,
-        device: dict[str, Any],
-        device_id: int | str,
-        group_name: str,
-    ) -> None:
-        """Initialize humidity sensor."""
-        super().__init__(coordinator, device, device_id, group_name)
-        self._attr_unique_id = f"{device_id}_humidity"
-        self._attr_name = "Humidity"
-
-    @property
-    def native_value(self) -> float | None:
-        """Return the humidity value."""
-        device = self._get_device()
-        if not device:
-            return None
-
-        humi_raw = device.get("humi") or device.get("humidity")
-        if humi_raw is None:
-            return None
-
-        try:
-            return int(humi_raw) / 10.0
-        except (TypeError, ValueError):
-            return None
-
-
-class DayBetterBatterySensor(DayBetterSensorBase):
-    """Battery sensor entity."""
-
-    _attr_device_class = SensorDeviceClass.BATTERY
-    _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_native_unit_of_measurement = PERCENTAGE
-
-    def __init__(
-        self,
-        coordinator: DayBetterCoordinator,
-        device: dict[str, Any],
-        device_id: int | str,
-        group_name: str,
-    ) -> None:
-        """Initialize battery sensor."""
-        super().__init__(coordinator, device, device_id, group_name)
-        self._attr_unique_id = f"{device_id}_battery"
-        self._attr_name = "Battery"
-
-    @property
-    def native_value(self) -> int | None:
-        """Return the battery value."""
-        device = self._get_device()
-        if not device:
-            return None
-
-        battery = device.get("battery")
-        if battery is None:
-            return None
-
-        try:
-            return int(battery)
-        except (TypeError, ValueError):
-            return None
+        return self.entity_description.value_fn(device)
