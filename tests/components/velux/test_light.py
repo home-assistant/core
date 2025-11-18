@@ -155,7 +155,6 @@ async def test_light_turn_on_without_brightness_calls_turn_on(
     assert mock_light.set_intensity.await_count == 0
 
 
-@pytest.mark.usefixtures("setup_integration")
 async def test_light_turn_off_calls_turn_off(
     hass: HomeAssistant, mock_light: AsyncMock
 ) -> None:
