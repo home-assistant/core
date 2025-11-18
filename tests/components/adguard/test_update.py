@@ -17,14 +17,8 @@ from tests.common import MockConfigEntry, snapshot_platform
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_update(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    aioclient_mock: AiohttpClientMocker,
-    snapshot: SnapshotAssertion,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test the adguard update platform."""
+def aioclient_mock_update_available(aioclient_mock: AiohttpClientMocker) -> None:
+    """Mock AdGuard Home update available response."""
     aioclient_mock.post(
         "https://127.0.0.1:3000/control/version.json",
         json={
@@ -36,6 +30,17 @@ async def test_update(
         },
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )
+
+
+async def test_update(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    aioclient_mock: AiohttpClientMocker,
+    snapshot: SnapshotAssertion,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the adguard update platform."""
+    aioclient_mock_update_available(aioclient_mock)
 
     with patch("homeassistant.components.adguard.PLATFORMS", [Platform.UPDATE]):
         await setup_integration(hass, mock_config_entry, aioclient_mock)
@@ -67,17 +72,7 @@ async def test_update_install(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the adguard update installation."""
-    aioclient_mock.post(
-        "https://127.0.0.1:3000/control/version.json",
-        json={
-            "new_version": "v0.107.59",
-            "announcement": "AdGuard Home v0.107.59 is now available!",
-            "announcement_url": "https://github.com/AdguardTeam/AdGuardHome/releases/tag/v0.107.59",
-            "can_autoupdate": True,
-            "disabled": False,
-        },
-        headers={"Content-Type": CONTENT_TYPE_JSON},
-    )
+    aioclient_mock_update_available(aioclient_mock)
     aioclient_mock.post("https://127.0.0.1:3000/control/update")
 
     with patch("homeassistant.components.adguard.PLATFORMS", [Platform.UPDATE]):
@@ -104,17 +99,7 @@ async def test_update_install_failed(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the adguard update install failed."""
-    aioclient_mock.post(
-        "https://127.0.0.1:3000/control/version.json",
-        json={
-            "new_version": "v0.107.59",
-            "announcement": "AdGuard Home v0.107.59 is now available!",
-            "announcement_url": "https://github.com/AdguardTeam/AdGuardHome/releases/tag/v0.107.59",
-            "can_autoupdate": True,
-            "disabled": False,
-        },
-        headers={"Content-Type": CONTENT_TYPE_JSON},
-    )
+    aioclient_mock_update_available(aioclient_mock)
     aioclient_mock.post(
         "https://127.0.0.1:3000/control/update", exc=AdGuardHomeError("boom")
     )
