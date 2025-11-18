@@ -8,21 +8,12 @@ from daybetter_python import DayBetterClient
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_TOKEN, DOMAIN, DayBetterConfigEntry, DayBetterRuntimeData
+from .const import CONF_TOKEN, DayBetterConfigEntry, DayBetterRuntimeData
 from .coordinator import DayBetterCoordinator
 
 PLATFORMS = [Platform.SENSOR]
 SCAN_INTERVAL = timedelta(seconds=300)
-
-CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up via YAML (not used)."""
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: DayBetterConfigEntry) -> bool:
