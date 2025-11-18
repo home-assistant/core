@@ -146,7 +146,7 @@ WRAP_UP_TIMEOUT = 300
 COOLDOWN_TIME = 60
 
 # Core integrations are unconditionally loaded
-CORE_INTEGRATIONS = {"homeassistant", "persistent_notification"}
+CORE_INTEGRATIONS = {"homeassistant", "persistent_notification", "labs"}
 
 # Integrations that are loaded right after the core is set up
 LOGGING_AND_HTTP_DEPS_INTEGRATIONS = {
