@@ -17,6 +17,7 @@ from homeassistant.components.climate import (
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_TEMPERATURE,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform
@@ -89,6 +90,90 @@ async def test_climate_entity_properties(
 
     state = hass.states.get(ENTITY_ID)
     assert state.attributes["preset_mode"] == PRESET_ECO
+
+    # Test hvac_action mapping
+    mock_hvac_action = MagicMock()
+    mock_hvac_action.value = "0x7F"
+    mock_bsblan.state.return_value.hvac_action = mock_hvac_action
+
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes["hvac_action"] == HVACAction.COOLING
+
+
+async def _async_set_hvac_action(
+    hass: HomeAssistant,
+    mock_bsblan: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    value: MagicMock | None,
+) -> HVACAction | None:
+    """Helper to push a new hvac_action value through coordinator."""
+    mock_bsblan.state.return_value.hvac_action = value
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    state = hass.states.get(ENTITY_ID)
+    return state.attributes.get("hvac_action")
+
+
+async def test_hvac_action_handles_empty_and_invalid_inputs(
+    hass: HomeAssistant,
+    mock_bsblan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Ensure hvac_action gracefully handles None and malformed values."""
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
+
+    assert await _async_set_hvac_action(hass, mock_bsblan, freezer, None) is None
+
+    mock_action = MagicMock()
+    mock_action.value = None
+    assert await _async_set_hvac_action(hass, mock_bsblan, freezer, mock_action) is None
+
+    mock_action.value = ""
+    assert await _async_set_hvac_action(hass, mock_bsblan, freezer, mock_action) is None
+
+    mock_action.value = "    "
+    assert await _async_set_hvac_action(hass, mock_bsblan, freezer, mock_action) is None
+
+    mock_action.value = "0xGG"
+    assert await _async_set_hvac_action(hass, mock_bsblan, freezer, mock_action) is None
+
+    mock_action.value = {"unexpected": True}
+    assert await _async_set_hvac_action(hass, mock_bsblan, freezer, mock_action) is None
+
+
+async def test_hvac_action_numeric_mappings(
+    hass: HomeAssistant,
+    mock_bsblan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Validate numeric hvac_action mappings and idle fallback."""
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
+
+    mock_action = MagicMock()
+    mock_action.value = "117"
+    assert (
+        await _async_set_hvac_action(hass, mock_bsblan, freezer, mock_action)
+        == HVACAction.HEATING
+    )
+
+    mock_action.value = 161.0
+    assert (
+        await _async_set_hvac_action(hass, mock_bsblan, freezer, mock_action)
+        == HVACAction.OFF
+    )
+
+    mock_action.value = 0x01
+    assert (
+        await _async_set_hvac_action(hass, mock_bsblan, freezer, mock_action)
+        == HVACAction.IDLE
+    )
 
 
 async def test_climate_without_current_temperature_sensor(
