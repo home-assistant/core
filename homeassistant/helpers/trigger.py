@@ -294,17 +294,13 @@ class EntityTriggerBase(Trigger):
         self._target = config.target
 
     @abc.abstractmethod
-    def is_state_same(self, from_state: State, to_state: State) -> bool:
-        """Check if the old and new states are considered the same."""
-
-    @abc.abstractmethod
-    def is_state_to_state(self, state: State) -> bool:
+    def is_to_state(self, state: State) -> bool:
         """Check if the state matches the target state."""
 
     def check_all_match(self, entity_ids: set[str]) -> bool:
         """Check if all entity states match."""
         return all(
-            self.is_state_to_state(state)
+            self.is_to_state(state)
             for entity_id in entity_ids
             if (state := self._hass.states.get(entity_id)) is not None
         )
@@ -313,7 +309,7 @@ class EntityTriggerBase(Trigger):
         """Check that only one entity state matches."""
         return (
             sum(
-                self.is_state_to_state(state)
+                self.is_to_state(state)
                 for entity_id in entity_ids
                 if (state := self._hass.states.get(entity_id)) is not None
             )
@@ -350,12 +346,12 @@ class EntityTriggerBase(Trigger):
             if not from_state or from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
                 return
 
-            # The trigger should never fire if the new state is not the to state
-            if not to_state or not self.is_state_to_state(to_state):
+            # The trigger should never fire if the previous state was already the to state
+            if self.is_to_state(from_state):
                 return
 
-            # The trigger should never fire if the previous and new states are the same
-            if self.is_state_same(from_state, to_state):
+            # The trigger should never fire if the new state is not the to state
+            if not to_state or not self.is_to_state(to_state):
                 return
 
             if behavior == BEHAVIOR_LAST:
@@ -389,11 +385,7 @@ class EntityStateTriggerBase(EntityTriggerBase):
 
     _to_state: str
 
-    def is_state_same(self, from_state: State, to_state: State) -> bool:
-        """Check if the old and new states are considered the same."""
-        return from_state.state == to_state.state
-
-    def is_state_to_state(self, state: State) -> bool:
+    def is_to_state(self, state: State) -> bool:
         """Check if the state matches the target state."""
         return state.state == self._to_state
 
@@ -404,13 +396,7 @@ class EntityStateAttributeTriggerBase(EntityTriggerBase):
     _attribute: str
     _attribute_to_state: str
 
-    def is_state_same(self, from_state: State, to_state: State) -> bool:
-        """Check if the old and new states are considered the same."""
-        return from_state.attributes.get(self._attribute) == to_state.attributes.get(
-            self._attribute
-        )
-
-    def is_state_to_state(self, state: State) -> bool:
+    def is_to_state(self, state: State) -> bool:
         """Check if the state matches the target state."""
         return state.attributes.get(self._attribute) == self._attribute_to_state
 
