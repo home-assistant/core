@@ -77,7 +77,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DATA_DEVICES: {},
         DATA_PUSH_CHANNEL: {},
         DATA_STORE: store,
-        **{sensor_type: {DATA_PENDING_UPDATES: {}} for sensor_type in SENSOR_TYPES},
+        DATA_PENDING_UPDATES: {sensor_type: {} for sensor_type in SENSOR_TYPES},
     }
 
     hass.http.register_view(RegistrationsView())

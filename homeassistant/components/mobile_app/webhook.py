@@ -711,7 +711,7 @@ def _async_update_sensor_entity(
 ) -> None:
     """Update a sensor entity with new data."""
     # Replace existing pending update with the latest sensor data.
-    hass.data[DOMAIN][entity_type][DATA_PENDING_UPDATES][unique_store_key] = data
+    hass.data[DOMAIN][DATA_PENDING_UPDATES][entity_type][unique_store_key] = data
 
     # The signal might not be handled if the entity was just enabled, but the data is stored
     # in pending updates and will be applied on entity initialization.
