@@ -1,11 +1,13 @@
 """Test the Nederlandse Spoorwegen binary sensor."""
 
-from unittest.mock import AsyncMock
+from collections.abc import Generator
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from requests.exceptions import ConnectionError as RequestsConnectionError
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.entity_registry as er
 
@@ -14,13 +16,22 @@ from . import setup_integration
 from tests.common import MockConfigEntry, snapshot_platform
 
 
+@pytest.fixture(autouse=True)
+def mock_binary_sensor_platform() -> Generator:
+    """Override PLATFORMS for NS integration."""
+    with patch(
+        "homeassistant.components.nederlandse_spoorwegen.PLATFORMS",
+        [Platform.BINARY_SENSOR],
+    ) as mock_platform:
+        yield mock_platform
+
+
 @pytest.mark.freeze_time("2025-09-15 14:30:00+00:00")
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_binary_sensor(
     hass: HomeAssistant,
     mock_nsapi,
     mock_config_entry: MockConfigEntry,
-    mock_binary_sensor_platform,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
 ) -> None:
@@ -36,7 +47,6 @@ async def test_single_trip_binary_sensor(
     hass: HomeAssistant,
     mock_single_trip_nsapi: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    mock_binary_sensor_platform,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
 ) -> None:
@@ -52,7 +62,6 @@ async def test_no_trips_binary_sensor(
     hass: HomeAssistant,
     mock_no_trips_nsapi: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    mock_binary_sensor_platform,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
 ) -> None:
@@ -65,7 +74,6 @@ async def test_no_trips_binary_sensor(
 async def test_sensor_with_api_connection_error(
     hass: HomeAssistant,
     mock_nsapi: AsyncMock,
-    mock_binary_sensor_platform,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test sensor behavior when API connection fails."""

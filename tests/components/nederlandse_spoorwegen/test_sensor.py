@@ -1,6 +1,7 @@
 """Test the Nederlandse Spoorwegen sensor."""
 
-from unittest.mock import AsyncMock
+from collections.abc import Generator
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from requests.exceptions import ConnectionError as RequestsConnectionError
@@ -18,7 +19,7 @@ from homeassistant.components.nederlandse_spoorwegen.const import (
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigSubentryDataWithId
-from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_PLATFORM
+from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_PLATFORM, Platform
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 import homeassistant.helpers.entity_registry as er
 import homeassistant.helpers.issue_registry as ir
@@ -30,10 +31,19 @@ from .const import API_KEY
 from tests.common import MockConfigEntry, snapshot_platform
 
 
+@pytest.fixture(autouse=True)
+def mock_sensor_platform() -> Generator:
+    """Override PLATFORMS for NS integration."""
+    with patch(
+        "homeassistant.components.nederlandse_spoorwegen.PLATFORMS",
+        [Platform.SENSOR],
+    ) as mock_platform:
+        yield mock_platform
+
+
 async def test_config_import(
     hass: HomeAssistant,
     mock_nsapi,
-    mock_sensor_platform,
     mock_setup_entry: AsyncMock,
     issue_registry: ir.IssueRegistry,
 ) -> None:
@@ -111,7 +121,6 @@ async def test_no_trips_sensor(
 async def test_sensor_with_api_connection_error(
     hass: HomeAssistant,
     mock_nsapi: AsyncMock,
-    mock_sensor_platform,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test sensor behavior when API connection fails."""
@@ -137,7 +146,6 @@ async def test_sensor_with_api_connection_error(
 async def test_sensor_with_custom_time_parsing(
     hass: HomeAssistant,
     mock_nsapi: AsyncMock,
-    mock_sensor_platform,
     time_input,
     route_name,
     description,
