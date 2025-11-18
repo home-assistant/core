@@ -140,7 +140,6 @@ async def test_cover_closed(
 # Window command tests
 
 
-@pytest.mark.parametrize("mock_pyvlx", ["mock_window"], indirect=True)
 async def test_window_open_close_stop_services(
     hass: HomeAssistant, mock_window: AsyncMock
 ) -> None:
@@ -164,7 +163,6 @@ async def test_window_open_close_stop_services(
     mock_window.stop.assert_awaited_once_with(wait_for_completion=False)
 
 
-@pytest.mark.parametrize("mock_pyvlx", ["mock_window"], indirect=True)
 async def test_window_set_cover_position_inversion(
     hass: HomeAssistant, mock_window: AsyncMock
 ) -> None:
@@ -187,7 +185,6 @@ async def test_window_set_cover_position_inversion(
     assert kwargs.get("wait_for_completion") is False
 
 
-@pytest.mark.parametrize("mock_pyvlx", ["mock_window"], indirect=True)
 async def test_window_current_position_and_opening_closing_states(
     hass: HomeAssistant, mock_window: AsyncMock
 ) -> None:
@@ -223,7 +220,6 @@ async def test_window_current_position_and_opening_closing_states(
 # Blind command tests
 
 
-@pytest.mark.parametrize("mock_pyvlx", ["mock_blind"], indirect=True)
 async def test_blind_open_close_stop_tilt_services(
     hass: HomeAssistant, mock_blind: AsyncMock
 ) -> None:
@@ -256,7 +252,6 @@ async def test_blind_open_close_stop_tilt_services(
     mock_blind.stop_orientation.assert_awaited_once_with(wait_for_completion=False)
 
 
-@pytest.mark.parametrize("mock_pyvlx", ["mock_blind"], indirect=True)
 async def test_blind_set_cover_tilt_position_inversion(
     hass: HomeAssistant, mock_blind: AsyncMock
 ) -> None:
@@ -278,7 +273,6 @@ async def test_blind_set_cover_tilt_position_inversion(
     assert call.kwargs.get("wait_for_completion") is False
 
 
-@pytest.mark.parametrize("mock_pyvlx", ["mock_blind"], indirect=True)
 async def test_blind_current_tilt_position(
     hass: HomeAssistant, mock_blind: AsyncMock
 ) -> None:
@@ -292,7 +286,6 @@ async def test_blind_current_tilt_position(
     assert state.attributes.get("current_tilt_position") == 90
 
 
-@pytest.mark.parametrize("mock_pyvlx", ["mock_window"], indirect=True)
 async def test_non_blind_has_no_tilt_position(
     hass: HomeAssistant, mock_window: AsyncMock
 ) -> None:
