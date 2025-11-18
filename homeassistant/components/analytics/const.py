@@ -7,6 +7,8 @@ import voluptuous as vol
 
 ANALYTICS_ENDPOINT_URL = "https://analytics-api.home-assistant.io/v1"
 ANALYTICS_ENDPOINT_URL_DEV = "https://analytics-api-dev.home-assistant.io/v1"
+SNAPSHOT_VERSION = "1"
+ANALYTICS_SNAPSHOT_ENDPOINT_URL = f"https://device-database.eco-dev-aws.openhomefoundation.com/api/v1/snapshot/{SNAPSHOT_VERSION}"
 DOMAIN = "analytics"
 INTERVAL = timedelta(days=1)
 STORAGE_KEY = "core.analytics"
@@ -38,6 +40,7 @@ ATTR_PREFERENCES = "preferences"
 ATTR_PROTECTED = "protected"
 ATTR_RECORDER = "recorder"
 ATTR_SLUG = "slug"
+ATTR_SNAPSHOTS = "snapshots"
 ATTR_STATE_COUNT = "state_count"
 ATTR_STATISTICS = "statistics"
 ATTR_SUPERVISOR = "supervisor"
@@ -51,6 +54,7 @@ ATTR_VERSION = "version"
 PREFERENCE_SCHEMA = vol.Schema(
     {
         vol.Optional(ATTR_BASE): bool,
+        vol.Optional(ATTR_SNAPSHOTS): bool,
         vol.Optional(ATTR_DIAGNOSTICS): bool,
         vol.Optional(ATTR_STATISTICS): bool,
         vol.Optional(ATTR_USAGE): bool,
