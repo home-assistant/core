@@ -240,14 +240,14 @@ def parametrize_opened_trigger_states(
     ("trigger", "trigger_options", "device_class", "initial_state", "states"),
     [
         *parametrize_opened_trigger_states("cover.garage_opened", "garage"),
-        # No initial state attribute.
+        # No initial state attribute, doesn't trigger because it's already in target state.
         (
             "cover.garage_opened",
             {"fully_opened": True},
             "garage",
             (CoverState.OPEN, {}),
             [
-                ((CoverState.OPEN, {ATTR_CURRENT_POSITION: 100}), 1),
+                ((CoverState.OPEN, {ATTR_CURRENT_POSITION: 100}), 0),
                 ((CoverState.OPEN, {ATTR_CURRENT_POSITION: 0}), 0),
                 ((CoverState.OPEN, {ATTR_CURRENT_POSITION: 100}), 1),
             ],
@@ -315,6 +315,18 @@ async def test_cover_state_attribute_trigger_behavior_any(
     ("trigger", "trigger_options", "device_class", "initial_state", "states"),
     [
         *parametrize_opened_trigger_states("cover.garage_opened", "garage"),
+        # No initial state attribute, doesn't trigger because it's already in target state.
+        (
+            "cover.garage_opened",
+            {"fully_opened": True},
+            "garage",
+            (CoverState.OPEN, {}),
+            [
+                ((CoverState.OPEN, {ATTR_CURRENT_POSITION: 100}), 0),
+                ((CoverState.OPEN, {ATTR_CURRENT_POSITION: 0}), 0),
+                ((CoverState.OPEN, {ATTR_CURRENT_POSITION: 100}), 1),
+            ],
+        ),
     ],
 )
 async def test_cover_state_attribute_trigger_behavior_first(
@@ -382,6 +394,18 @@ async def test_cover_state_attribute_trigger_behavior_first(
     ("trigger", "trigger_options", "device_class", "initial_state", "states"),
     [
         *parametrize_opened_trigger_states("cover.garage_opened", "garage"),
+        # No initial state attribute, doesn't trigger because it's already in target state.
+        (
+            "cover.garage_opened",
+            {"fully_opened": True},
+            "garage",
+            (CoverState.OPEN, {}),
+            [
+                ((CoverState.OPEN, {ATTR_CURRENT_POSITION: 100}), 0),
+                ((CoverState.OPEN, {ATTR_CURRENT_POSITION: 0}), 0),
+                ((CoverState.OPEN, {ATTR_CURRENT_POSITION: 100}), 1),
+            ],
+        ),
     ],
 )
 async def test_cover_state_attribute_trigger_behavior_last(

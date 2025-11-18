@@ -49,18 +49,7 @@ class CoverOpenedClosedTrigger(EntityTriggerBase):
     _domain: str = DOMAIN
     _to_states: set[str]
 
-    def is_state_same(self, from_state: State, to_state: State) -> bool:
-        """Check if the old and new states are considered the same."""
-        if from_state.state != to_state.state:
-            return False
-        if self._attribute_value is not None:
-            from_value = from_state.attributes.get(self._attribute)
-            to_value = to_state.attributes.get(self._attribute)
-            if from_value != to_value:
-                return False
-        return True
-
-    def is_state_to_state(self, state: State) -> bool:
+    def is_to_state(self, state: State) -> bool:
         """Check if the state matches the target state."""
         if state.state not in self._to_states:
             return False
